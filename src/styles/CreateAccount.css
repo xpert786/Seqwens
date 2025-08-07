@@ -1,0 +1,64 @@
+
+.create-account-page {
+ background: linear-gradient(180deg, #FFFFFF 0%, #FFF4E6 100%);
+}
+
+
+
+.outer-container {
+  max-width: 700px;
+  width: 100%;
+  background-color: #3B4A66;
+  border-radius: 20px;
+}
+
+
+.inner-box {
+  background-color: #ffffff;
+  border-radius: 20px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #000;
+}
+
+input.form-control {
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.outer-container {
+  width: 75%;
+  max-width: 900px;
+  height: auto;
+  border-radius: 30px;
+}
+
+.inner-box {
+  border-radius: 25px;
+}
+
+.info-box {
+  background-color: #e6f0ff;
+  border-radius: 15px;
+  color: #003366;
+}
+
+/* //Dataintake// */
+
+.custom-btn-bg {
+  background-color: #F3F7FF !important;
+  border-color:  #e5e7eb !important;
+  border-radius: 6px !important;
+  color: #3B4A66 !important;
+}
+
+.custom-btn-bg:hover {
+  background-color: #F3F7FF !important;
+  color: #3B4A66 !important;
+  border-color:  #e5e7eb !important;
+}
+
+

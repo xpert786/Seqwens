@@ -1,0 +1,14 @@
+
+
+.custom-btn-bg {
+  background-color: #F3F7FF !important;
+  border-color: gray !important;
+  border-radius: 6px !important;
+  color: black !important;
+}
+
+.custom-btn-bg:hover {
+  background-color: #F3F7FF !important;
+  color: black !important;
+  border-color: gray !important;
+}

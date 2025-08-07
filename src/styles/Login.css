@@ -1,0 +1,120 @@
+/* src/pages/Login.css */
+.login-wrapper {
+  background: linear-gradient(to bottom right, #fff, #fdf3eb);
+}
+
+/* two-Auth */
+
+.twofa-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 140vh;
+  background: linear-gradient(to bottom, #ffffff, #f8f3ed);
+  padding: 40px;
+}
+
+.twofa-box {
+  background-color: #2f4160;
+  color: white;
+  padding: 60px 50px;
+  border-radius: 32px;
+  width: 700px;
+  height: 600px; 
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.twofa-content {
+  max-width: 600px;
+  width: 100%;
+}
+
+.twofa-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background-color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+
+.twofa-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: auto;
+}
+
+.twofa-btn {
+  background-color: #fff;
+  color: #2f4160;
+  border: none;
+  padding: 20px;
+  border-radius: 12px; 
+  width: 100%;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: left;
+  transition: background 0.2s ease;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.twofa-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.twofa-btn i {
+  margin-right: 10px;
+}
+
+.twofa-btn span {
+  display: block;
+  font-weight: normal;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* forget-password */
+
+.forgot-password-page input::placeholder {
+  color: #ccc;
+}
+
+.forgot-box input:focus {
+  outline: 2px solid #f5663f;
+}
+
+
+
+/* Paymentpopup */
+
+.modal-scrollable {
+  overflow-y: auto;
+  max-height: 75vh;
+  padding: 20px;
+}
+
+.modal-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-scrollable::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.small-icon svg {
+  width: 12px !important;
+  height: 12px !important;
+}
+ .print svg{
+  margin-right: 5px;
+ }

@@ -1,0 +1,79 @@
+.custom-topbar {
+  height: 70px;
+  z-index: 1030;
+}
+
+.topbar-logo {
+  height: 40px;
+  margin-right: 7px;
+}
+
+/* General search box styling */
+.topbar-search {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.topbar-search input.form-control {
+  padding-left: 52px; /* केवल search input ke liye */
+  border-radius: 6px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.topbar-search i {
+  position: absolute;
+  top: 50%;
+  left: 16px; /* icon ke thoda aur right */
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+
+
+.notification-bell {
+  width: 35px;
+  height: 35px;
+  border-radius: 6px;
+  background-color: #00C0C6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.topbar-user img {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* Default logo icon spacing */
+
+
+
+@media (max-width: 1280px) {
+  .topbar-search {
+    max-width: 260px;
+    margin-left: 0.8rem;
+  }
+}
+
+/* 📌 Extra small (≤1200px) */
+@media (max-width: 1200px) {
+  .topbar-search {
+    max-width: 220px;
+    margin-left: 0.5rem;
+  }
+}
+
+/* 📌 Large screens (≥1600px) → thoda aage karo */
+@media (min-width: 1600px) {
+  .topbar-search {
+    margin-left: 3rem; /* search box ko aage push */
+    max-width: 500px; /* thoda bada bhi kar do */
+  }
+}

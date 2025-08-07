@@ -1,0 +1,140 @@
+/* Sidebar Container */
+.sidebar-container {
+  width: 280px;
+  height: calc(100vh - 70px);
+  position: fixed;
+  top: 70px;
+  left: 0;
+  background-color: #3b4a66;
+  z-index: 1000;
+  overflow-y: auto;
+  font-family: "BasisGrotesquePro";
+
+}
+
+.sidebar-container ul {
+  padding-top: 15px;
+}
+
+.active-link {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+.inactive-link {
+  color: #FFFFFF !important;
+}
+
+
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+/* Force icons white */
+.icon-wrapper svg {
+  width: 20px;
+  /* smaller icon inside */
+  height: 20px;
+  filter: brightness(0) invert(1);
+}
+
+/* Default state */
+.icon-inactive {
+  background-color: transparent;
+}
+
+
+.icon-active {
+  background-color: #F56D2D;
+}
+
+
+.bottom-icon-wrapper {
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.bottom-icon-wrapper svg {
+  color: black;
+  width: 20px;
+  height: 20px;
+}
+
+.bottom-icon-wrapper.active {
+  background-color: #FFFF;
+}
+
+
+
+
+.sidebar-bottom-box {
+  background-color: #ffffff;
+  border-radius: 10px;
+  margin: 20px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-bottom-link {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3b4a66;
+  background-color: #ffffff;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.sidebar-bottom-link:hover {
+  background-color: #ffebd6;
+}
+
+.sidebar-bottom-link.bottom-active {
+  background-color: #ff7700 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 1366px) {
+  .sidebar-container {
+    width: 240px;
+  }
+
+  .sidebar-container ul {
+    padding-top: 12px;
+  }
+
+  .sidebar-bottom-box {
+    margin: 15px;
+    padding: 10px;
+  }
+
+  .icon-wrapper {
+    width: 30px;
+    height: 30px;
+  }
+
+  .icon-wrapper svg {
+    width: 16px;
+    height: 16px;
+  }
+}
