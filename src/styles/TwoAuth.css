@@ -1,0 +1,116 @@
+.twofa-container {
+
+  padding: 60px 20px;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.twofa-box {
+  background-color: #3b4a66;
+  padding: 60px;
+  border-radius: 25px;
+  width: 100%;
+  max-width: 590px;
+  min-height: 500px;
+  color: white;
+}
+
+.twofa-content {
+  width: 100%;
+}
+
+.twofa-header h5 {
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 28px;
+  font-family: BasisGrotesquePro;
+  margin-bottom: 15px;
+}
+
+.twofa-header p {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 400;
+  font-family: BasisGrotesquePro;
+}
+
+.twofa-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 60px;
+}
+
+.twofa-btn {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.twofa-btn:hover {
+  background-color: #f3f3f3;
+}
+
+.twofa-btn-left {
+  display: flex;
+  align-items: center;
+}
+
+.twofa-icon {
+  padding: 10px;
+  margin-right: 16px;
+}
+
+.twofa-text {
+  text-align: left;
+}
+
+.twofa-title {
+  font-weight: 500;
+  color: #3b4a66;
+  font-size: 18px;
+  font-family: BasisGrotesquePro;
+}
+
+.twofa-desc {
+  font-size: 12px;
+  color: #3b4a66;
+  font-weight: 400;
+  font-family: BasisGrotesquePro;
+}
+
+.arrow-icon {
+  font-size: 16px;
+  color: #3b4a66;
+}
+
+/* Responsive for laptop (1100px and below) */
+@media (max-width: 1100px) {
+  .twofa-box {
+    padding: 40px 30px;
+  }
+
+  .twofa-header h5 {
+    font-size: 26px;
+  }
+
+  .twofa-header p {
+    font-size: 18px;
+  }
+
+  .twofa-title {
+    font-size: 16px;
+  }
+
+  .twofa-desc {
+    font-size: 13px;
+  }
+}

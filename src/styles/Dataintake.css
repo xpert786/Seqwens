@@ -1,0 +1,14 @@
+/* //Dataintake// */
+
+.custom-btn-bg {
+  background-color: #F3F7FF !important;
+  border-color:  #e5e7eb !important;
+  border-radius: 6px !important;
+  color: #3B4A66 !important;
+}
+
+.custom-btn-bg:hover {
+  background-color: #F3F7FF !important;
+  color: #3B4A66 !important;
+  border-color:  #e5e7eb !important;
+}

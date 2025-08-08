@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Accordion } from "react-bootstrap";
 import PhoneInput from 'react-phone-input-2';
-import "../styles/CreateAccount.css";
+import "../styles/Dataintake.css";
 import { FaPlus, FaTrash, FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 

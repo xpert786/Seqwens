@@ -1,4 +1,3 @@
-/* Sidebar Container */
 .sidebar-container {
   width: 280px;
   height: calc(100vh - 70px);
@@ -7,25 +6,38 @@
   left: 0;
   background-color: #3b4a66;
   z-index: 1000;
-  overflow-y: auto;
   font-family: "BasisGrotesquePro";
-
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
 }
 
-.sidebar-container ul {
+.sidebar-top {
+  flex: 1;
+  overflow-y: auto;
   padding-top: 15px;
+  padding-bottom: 10px;
+}
+
+/* Scrollbar style (optional) */
+.sidebar-top::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-top::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
 }
 
 .active-link {
-  background-color: #FFFFFF !important;
+  background-color: #ffffff !important;
   color: #000000 !important;
   font-weight: 600;
 }
 
 .inactive-link {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
-
 
 .icon-wrapper {
   display: inline-flex;
@@ -39,24 +51,19 @@
   transition: background-color 0.3s ease;
 }
 
-/* Force icons white */
 .icon-wrapper svg {
   width: 20px;
-  /* smaller icon inside */
   height: 20px;
   filter: brightness(0) invert(1);
 }
 
-/* Default state */
 .icon-inactive {
   background-color: transparent;
 }
 
-
 .icon-active {
-  background-color: #F56D2D;
+  background-color: #f56d2d;
 }
-
 
 .bottom-icon-wrapper {
   background-color: transparent;
@@ -76,11 +83,8 @@
 }
 
 .bottom-icon-wrapper.active {
-  background-color: #FFFF;
+  background-color: #fff;
 }
-
-
-
 
 .sidebar-bottom-box {
   background-color: #ffffff;
@@ -90,6 +94,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .sidebar-bottom-link {
@@ -114,12 +119,13 @@
   color: #ffffff !important;
 }
 
+/* Responsive for smaller laptop screens */
 @media (max-width: 1366px) {
   .sidebar-container {
     width: 240px;
   }
 
-  .sidebar-container ul {
+  .sidebar-top {
     padding-top: 12px;
   }
 

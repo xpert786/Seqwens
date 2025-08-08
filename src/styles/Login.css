@@ -1,7 +1,145 @@
 /* src/pages/Login.css */
-.login-wrapper {
-  background: linear-gradient(to bottom right, #fff, #fdf3eb);
+.login-page {
+
+  padding: 60px 20px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.login-card {
+  background-color: #3b4a66;
+  width: 600px;
+  border-radius: 30px;
+  min-height: 580px;
+  padding: 60px 50px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.login-header {
+  margin-bottom: 30px;
+}
+
+.login-title {
+  color: #ffffff;
+  font-size: 35px;
+  font-weight: 500;
+  font-family: BasisGrotesquePro;
+  margin-bottom: 5px;
+}
+
+.login-subtitle {
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 400;
+  font-family: BasisGrotesquePro;
+  margin: 0;
+}
+
+.login-form {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-label {
+  font-family: BasisGrotesquePro;
+  font-weight: 400;
+  font-size: 15px;
+  color: #ffffff;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: BasisGrotesquePro;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.password-group .form-control {
+  padding-right: 40px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 60%;
+  transform: translateY(-25%);
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.form-check-label {
+  font-family: BasisGrotesquePro;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.forgot-link {
+  font-family: BasisGrotesquePro;
+  color: #ef4444;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.login-btn {
+  width: 100%;
+  background-color: #f56d2d;
+  color: white;
+  font-weight: 500;
+  padding: 10px;
+  font-family: BasisGrotesquePro;
+  border: none;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+/* ✅ Responsive adjustments for laptop screens and smaller */
+@media (max-width: 1100px) {
+  .login-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 40px 30px;
+  }
+
+  .login-title {
+    font-size: 30px;
+  }
+
+  .login-subtitle {
+    font-size: 18px;
+  }
+
+  .form-control {
+    font-size: 14px;
+  }
+
+  .login-btn {
+    font-size: 16px;
+  }
+
+  .form-check-label,
+  .forgot-link {
+    font-size: 14px;
+  }
+}
+
 
 /* two-Auth */
 
