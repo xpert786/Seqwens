@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { FaFileAlt, FaEye, FaPen } from "react-icons/fa";
+import { FaEye, } from "react-icons/fa";
 import "../../styles/Popup.css";
+import "../../styles/Esignpop.css"
 import ESignatureModal from "../../components/ESignatureModal";
 import page1Image from "../../assets/page1.png";
 import page2Image from "../../assets/page2.png";
@@ -13,8 +14,54 @@ export default function ESignature() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
-  // const [showSignModal, setShowSignModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [activePage, setActivePage] = useState(0);
+  const [showCommentPanel, setShowCommentPanel] = useState(false);
+  const [markers, setMarkers] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [commentText, setCommentText] = useState("");
 
+  const [previewPages] = useState([
+    { id: 1, image: page1Image },
+    { id: 2, image: page2Image },
+    { id: 3, image: page3Image },
+    { id: 4, image: page4Image },
+  ]);
+
+  const highlights = [
+    {
+      page: 0,
+      top: "20%",
+      left: "35%",
+      width: "120px",
+      height: "20px",
+      text: "Movement Feedback"
+    }
+  ];
+
+  const handleHighlightClick = (highlight) => {
+    const newMarker = {
+      id: Date.now(),
+      page: highlight.page,
+      top: highlight.top,
+      left: `calc(${highlight.left} + ${highlight.width} + 5px)`,
+      comment: ""
+    };
+    setMarkers((prev) => [...prev, newMarker]);
+  };
+
+
+  const handleSaveComment = () => {
+    if (selectedMarker !== null) {
+      setMarkers((prev) =>
+        prev.map((m) =>
+          m.id === selectedMarker ? { ...m, comment: commentText } : m
+        )
+      );
+      setCommentText("");
+      setSelectedMarker(null);
+    }
+  };
 
 
   const signatureData = [
@@ -73,7 +120,6 @@ export default function ESignature() {
         ))}
       </div>
 
-      {/* E-Signature Requests Section */}
       <div className="bg-white p-4 rounded">
         <div className="align-items-center mb-3 ">
           <h5
@@ -115,7 +161,9 @@ export default function ESignature() {
           >
 
             <div className="d-flex align-items-start gap-3 flex-grow-1">
-              <FileIcon size={24} style={{ marginTop: "30px" }} />
+              <span className="mydocs-icon">
+                <FileIcon />
+              </span>
 
               <div>
                 <div className="fw-semibold">{doc.fileName}</div>
@@ -125,10 +173,11 @@ export default function ESignature() {
                 <span
                   className="mt-2 d-inline-block px-3 py-1 rounded-pill"
                   style={{
-                    backgroundColor: "#E8F0FF",
+                    backgroundColor: "#FFFFFF",
                     color: "#3B4A66",
                     fontSize: "12px",
                     fontWeight: "500",
+                    border: "1px solid #E8F0FF"
                   }}
                 >
                   {doc.status}
@@ -136,18 +185,17 @@ export default function ESignature() {
               </div>
             </div>
 
-            {/* Buttons */}
-            <div className="d-flex gap-2 mt-3 mt-md-0">
+            <div className="d-flex gap-4 mt-3 mt-md-0">
+
               <button
-                className="btn d-flex align-items-center gap-2 rounded"
-                style={{
-                  backgroundColor: "#E8F0FF",
-                  color: "#3B4A66",
-                }}
+                className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
+                onClick={() => setShowPreviewModal(true)}
               >
-                <FaEye size={14} style={{ color: "#3B4A66" }} />
+                <FaEye size={14} className="icon-eye" />
                 Preview
               </button>
+
+
 
               <button
                 className="btn d-flex align-items-center gap-2 rounded text-white"
@@ -157,8 +205,8 @@ export default function ESignature() {
                 <div
                   className="d-flex align-items-center justify-content-center"
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: "30px",
+                    height: "30px",
                     borderRadius: "50%",
                     color: "#FFFFFF",
                   }}
@@ -172,140 +220,60 @@ export default function ESignature() {
         ))}
       </div>
 
-      {/* Signature Modal */}
+
+
+
+
+
       {showModal && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
-            zIndex: showSignModal ? 1040 : 1050,
-            opacity: showSignModal ? 0 : 1,
-            pointerEvents: showSignModal ? "none" : "auto",
-            transition: "opacity 0.3s ease",
-            padding: "16px",
-          }}
-        >
-          <div
-            className="bg-white p-3"
-            style={{
-              width: "100%",
-              maxWidth: "700px",
-              borderRadius: "16px",
-            }}
-          >
+        <div className={`esign-overlay ${showSignModal ? "esign-overlay-hidden" : ""}`}>
+          <div className="esign-modal-box">
             {/* Header */}
-            <div className="align-items-center mb-3 ">
-              <h5
-                className="mb-0 me-3"
-                style={{
-                  color: "#3B4A66",
-                  fontSize: "23px",
-                  fontWeight: "500",
-                  fontFamily: "BasisGrotesquePro",
-                }}
-              >
-                E-Signature
-              </h5>
-              <p
-                className="mb-0"
-                style={{
-                  color: "#4B5563",
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  fontFamily: "BasisGrotesquePro",
-                }}
-              >
-                Review and electronically sign this document
-              </p>
+            <div className="esign-header">
+              <h5 className="esign-title">E-Signature</h5>
+              <p className="esign-subtitle">Review and electronically sign this document</p>
             </div>
 
-
             {/* File Info */}
-            <div className="p-2 rounded mb-3 d-flex align-items-start" style={{ backgroundColor: "#FFF4E6" }}>
-              {/* File Icon */}
-              <div className="me-2">
-                <FileIcon />
+            <div className="esign-fileinfo">
+              <div className="esign-file-icon">
+                <span className='files'>  <FileIcon /></span>
               </div>
-
-              {/* File Info */}
               <div>
-                <div className="fw-semibold small">Tax_Return_2023_DRAFT.pdf</div>
-                <div className="text-muted small">
+                <div className="esign-file-name">Tax_Return_2023_DRAFT.pdf</div>
+                <div className="esign-file-details">
                   Type: Tax Return · Size: 2.1MB · Version: v3 · Prepared by Sarah Johnson
                 </div>
-                <span
-                  className="d-inline-block px-2 py-1 rounded-pill mt-2"
-                  style={{
-                    backgroundColor: "#E8F0FF",
-                    color: "#3B4A66",
-                    fontSize: "11px",
-                    fontWeight: "500",
-                  }}
-                >
-                  Signature Required
-                </span>
+                <span className="esign-file-badge">Signature Required</span>
               </div>
             </div>
 
             {/* Signer Info */}
-            <div className="d-flex gap-2 mb-3 flex-wrap">
+            <div className="esign-signers">
               {[
                 { title: "Primary Taxpayer", signer: "Michael Brown" },
                 { title: "Spouse", signer: "Jennifer Brown" },
               ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-2 rounded"
-                  style={{
-                    backgroundColor: "#F6F9FF",
-                    flex: "1 1 45%",
-                    minWidth: "180px",
-                  }}
-                >
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="d-flex align-items-center gap-2">
-                      <div
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "50%",
-                          backgroundColor: "#E8F0FF",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
+                <div key={idx} className="esign-signer-card">
+                  <div className="esign-signer-top">
+                    <div className="esign-signer-left">
+                      <div className="esign-signer-icon">
                         <ProfileIcon size={16} color="#3B4A66" />
                       </div>
                       <div>
-                        <div className="fw-semibold small" style={{ color: "#3B4A66" }}>
-                          {item.title}
-                        </div>
-                        <div className="text-muted small">Signer: {item.signer}</div>
+                        <div className="esign-signer-title">{item.title}</div>
+                        <div className="esign-signer-subtitle">Signer: {item.signer}</div>
                       </div>
                     </div>
-
-                    <span
-                      className="px-2 py-1 rounded-pill"
-                      style={{
-                        backgroundColor: "#ffffff",
-                        color: "#3B4A66",
-                        fontSize: "11px",
-                        fontWeight: "500",
-                        border: "1px solid #E0E7F1",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Signature Required
-                    </span>
+                    <span className="esign-signer-badge">Signature Required</span>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Signature Requirements */}
-            <h6 className="text-muted fw-semibold mb-2 small">Signature Requirements</h6>
-            <div className="d-flex flex-column gap-2 mb-3">
+            <h6 className="esign-requirements-title">Signature Requirements</h6>
+            <div className="esign-requirements-list">
               {[
                 { label: "Signature", icon: <SignatureIcon />, who: "Taxpayer", req: "Required" },
                 { label: "Date", icon: <DateIcon />, who: "Taxpayer", req: "Required" },
@@ -313,92 +281,46 @@ export default function ESignature() {
                 { label: "Date", icon: <DateIcon />, who: "Spouse", req: "Required" },
                 { label: "Initial", icon: <InitialIcon />, who: "Taxpayer", req: "Optional" },
               ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="d-flex justify-content-between align-items-center px-2 py-2 rounded"
-                  style={{
-                    backgroundColor: "#ffffff",
-                    boxShadow: "0 0 4px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  <span className="d-flex align-items-center gap-2 small">
-                    <span style={{ fontSize: "16px" }}>{item.icon}</span>
+                <div key={idx} className="esign-requirement-item">
+                  <span className="esign-requirement-left">
+                    <span className="esign-requirement-icon">{item.icon}</span>
                     {item.label}
                   </span>
-                  <span className="d-flex gap-1 small">
-                    <span className="px-2 py-1 rounded-pill" style={{
-                      backgroundColor: "#E8F0FF",
-                      fontSize: "11px",
-                      color: "#3B4A66",
-                    }}>{item.who}</span>
-                    <span className="px-2 py-1 rounded-pill" style={{
-                      backgroundColor: "#E8F0FF",
-                      fontSize: "11px",
-                      color: "#3B4A66",
-                    }}>{item.req}</span>
+                  <span className="esign-requirement-tags">
+                    <span className="esign-tag">{item.who}</span>
+                    <span className="esign-tag">{item.req}</span>
                   </span>
                 </div>
               ))}
             </div>
 
             {/* Legal Notice */}
-            <div
-              className="d-flex align-items-start gap-2 p-2 rounded mb-3"
-              style={{
-                backgroundColor: "#FFF4E6",
-                fontSize: "12px",
-                borderRadius: "10px",
-                lineHeight: "1.4",
-              }}
-            >
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  backgroundColor: "#FFE8D0",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: "6px",
-                }}
-              >
+            <div className="esign-legal-notice">
+              <div className="esign-legal-icon">
                 <LegalIcon size={14} color="#F56D2D" />
               </div>
-
               <div>
-                <div className="fw-semibold mb-1" style={{ color: "#9A3412", fontSize: "13px" }}>
-                  Legal Notice:
-                </div>
-                <div className="text-muted">
+                <div className="esign-legal-title">Legal Notice:</div>
+                <div className="esign-legal-text">
                   By proceeding to sign, you agree that your electronic signature has the same legal effect as a handwritten one.
                 </div>
               </div>
             </div>
 
             {/* Footer Buttons */}
-            <div className="d-flex justify-content-end gap-2">
-              <button
-                className="btn btn-sm border text-dark"
-                onClick={() => setShowModal(false)}
-              >
+            <div className="esign-footer">
+              <button className="esign-btn-cancel" onClick={() => setShowModal(false)}>
                 Cancel
               </button>
-              <button
-                className="btn btn-sm text-white d-flex align-items-center gap-2"
-                style={{ backgroundColor: "#F56D2D", padding: "6px 16px" }}
-                onClick={() => setShowSignModal(true)}
-              >
+              <button className="esign-btn-proceed" onClick={() => setShowSignModal(true)}>
                 <Sign2WhiteIcon />
                 Proceed signature
               </button>
-
-
-
             </div>
           </div>
         </div>
       )}
+
 
       {showSignModal && (
         <ESignatureModal
@@ -412,6 +334,90 @@ export default function ESignature() {
           ]}
         />
       )}
+
+      {showPreviewModal && (
+        <div className="esign-preview-overlay">
+          <div className="esign-preview-modal">
+            <div className="esign-preview-header">
+              E-Signature – Tax_Return_2023_DRAFT.pdf
+            </div>
+            <h6 className='pre'>Documents preview</h6>
+
+            <div className="esign-preview-body">
+              <div className="esign-preview-sidebar">
+                {previewPages.map((p, idx) => (
+                  <div
+                    key={p.id}
+                    className={`esign-preview-thumb ${activePage === idx ? "active" : ""}`}
+                    onClick={() => setActivePage(idx)}
+                  >
+                    <img src={p.image} alt={`Page ${p.id}`} />
+                  </div>
+                ))}
+              </div>
+
+              <div className="esign-preview-main">
+                <img
+                  className="esign-preview-page"
+                  src={previewPages[activePage].image}
+                  alt={`Page ${previewPages[activePage].id}`}
+                />
+
+                {highlights
+                  .filter((h) => h.page === activePage)
+                  .map((h, i) => (
+                    <div
+                      key={i}
+                      className="highlight-overlay"
+                      style={{
+                        top: h.top,
+                        left: h.left,
+                        width: h.width,
+                        height: h.height
+                      }}
+                      onClick={() => handleHighlightClick(h)}
+                    ></div>
+                  ))}
+
+                {markers
+                  .filter((m) => m.page === activePage)
+                  .map((m) => (
+                    <div
+                      key={m.id}
+                      className="teal-marker"
+                      style={{
+                        top: m.top,
+                        left: `calc(${m.left} + ${m.width} + 5px)`
+                      }}
+                      onClick={() => setSelectedMarker(m.id)}
+                    ></div>
+                  ))}
+              </div>
+
+              {selectedMarker !== null && (
+                <div className="comment-panel-outside">
+                  <textarea
+                    placeholder="Type your comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  ></textarea>
+                  <div className="comment-buttons">
+                    <button onClick={() => setSelectedMarker(null)}>Cancel</button>
+                    <button>Comment</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="esign-preview-footer">
+              <button className="btn-cancel" onClick={() => setShowPreviewModal(false)}>Cancel</button>
+              <button className="btn-preview">Preview</button>
+              <button className="btn-complete">Complete Signature</button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
 
 

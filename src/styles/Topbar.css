@@ -8,15 +8,16 @@
   margin-right: 7px;
 }
 
-/* General search box styling */
+
 .topbar-search {
   position: relative;
   flex: 1;
   max-width: 400px;
+  margin-top: 5px;
 }
 
 .topbar-search input.form-control {
-  padding-left: 52px; /* केवल search input ke liye */
+  padding-left: 52px;
   border-radius: 6px;
   height: 40px;
   font-size: 14px;
@@ -24,8 +25,8 @@
 
 .topbar-search i {
   position: absolute;
-  top: 50%;
-  left: 16px; /* icon ke thoda aur right */
+  top: 41%;
+  left: 16px; 
   transform: translateY(-50%);
   color: #888;
   font-size: 16px;

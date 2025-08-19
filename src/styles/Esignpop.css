@@ -1,0 +1,668 @@
+/* Sign documents click popup pages */
+
+.esign-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    z-index: 1050;
+    transition: opacity 0.3s ease;
+    font-family: BasisGrotesquePro;
+}
+
+.esign-overlay-hidden {
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1040;
+}
+
+.esign-modal-box {
+    background: #fff;
+    padding: 16px;
+    width: 100%;
+    max-width: 700px;
+    border-radius: 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+
+.esign-header {
+    margin-bottom: 16px;
+}
+
+.esign-title {
+    color: #3B4A66;
+    font-size: 23px;
+    font-weight: 500;
+    font-family: BasisGrotesquePro;
+    margin-bottom: 4px;
+}
+
+.esign-subtitle {
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: BasisGrotesquePro;
+    margin: 0;
+}
+
+.esign-fileinfo {
+    background-color: #FFF4E6;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.esign-file-name {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.esign-file-details {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.esign-file-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: #E8F0FF;
+    color: #3B4A66;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.esign-signers {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.esign-signer-card {
+    background-color: #F6F9FF;
+    padding: 8px;
+    border-radius: 8px;
+    flex: 1 1 45%;
+    min-width: 180px;
+}
+
+.esign-signer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.esign-signer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.esign-signer-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #E8F0FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.esign-signer-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #3B4A66;
+}
+
+.esign-signer-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.esign-signer-badge {
+    background: #fff;
+    border: 1px solid #E0E7F1;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #3B4A66;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+
+.esign-requirements-title {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.esign-requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.esign-requirement-item {
+    background: #FFFFFF;
+    border: 1px solid #E8F0FF;
+    border-radius: 6px;
+    padding: 6px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: none;
+}
+
+.esign-requirement-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.esign-requirement-icon {
+    font-size: 16px;
+}
+
+.esign-requirement-tags {
+    display: flex;
+    gap: 4px;
+}
+
+.esign-tag {
+    background-color: #E8F0FF;
+    color: #3B4A66;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 999px;
+}
+
+.esign-legal-notice {
+    background-color: #FFF4E6;
+    font-size: 12px;
+    border-radius: 10px;
+    line-height: 1.4;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.esign-legal-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #FFE8D0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.esign-legal-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #9A3412;
+    margin-bottom: 4px;
+}
+
+.esign-legal-text {
+    color: #C2410C;
+}
+
+.esign-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.esign-btn-cancel {
+    background: white;
+    border: 1px solid #E8F0FF;
+    color: #3B4A66;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.esign-btn-proceed {
+    background-color: #F56D2D !important;
+    color: #FFFFFF !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 16px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    border: none;
+}
+
+.files {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #E8F0FF;
+    border-radius: 20px;
+    padding: 6px;
+    margin-top: 10px;
+}
+
+
+
+
+@media (max-width: 1100px) {
+    .esign-modal-box {
+        max-width: 90%;
+    }
+
+    .esign-signers {
+        flex-direction: column;
+    }
+}
+
+
+@media (max-width: 900px) {
+    .esign-modal-box {
+        max-width: 95%;
+        padding: 12px;
+    }
+
+    .esign-title {
+        font-size: 20px;
+    }
+
+    .esign-subtitle {
+        font-size: 13px;
+    }
+
+    .esign-fileinfo {
+        padding: 6px;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .esign-modal-box {
+        max-width: 98%;
+        padding: 10px;
+    }
+
+    .esign-title {
+        font-size: 18px;
+    }
+
+    .esign-subtitle {
+        font-size: 12px;
+    }
+
+    .esign-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .esign-btn-cancel,
+    .esign-btn-proceed {
+        width: 100%;
+        font-size: 12px;
+        padding: 8px;
+    }
+}
+
+
+@media (max-width: 576px) {
+    .esign-modal-box {
+        border-radius: 10px;
+        padding: 8px;
+        max-height: 95vh;
+    }
+
+    .esign-title {
+        font-size: 16px;
+    }
+
+    .esign-subtitle {
+        font-size: 11px;
+    }
+
+    .esign-file-name {
+        font-size: 12px;
+    }
+
+    .esign-file-details {
+        font-size: 11px;
+    }
+}
+
+
+/* preview popup pages */
+
+.esign-preview-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 1200 !important;
+    padding: 10px !important;
+    font-family: "BasisGrotesquePro"!important;
+}
+
+
+.esign-preview-modal {
+    background: #fff !important;
+    border-radius: 15px !important;
+    max-width: 1200px !important;
+    height: 85% !important;
+    max-height: 800px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 10px 20px;
+}
+
+
+.esign-preview-header {
+    padding: 12px 2px !important;
+    font-weight: 500 !important;
+    color: #3B4A66 !important;
+    font-family: BasisGrotesquePro !important;
+    font-size: 18px !important;
+
+}
+
+
+.esign-preview-body {
+    display: flex !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    gap: 10px !important;
+}
+
+
+.esign-preview-sidebar {
+    width: 120px !important;
+    padding: 10px !important;
+    overflow-y: auto !important;
+    background: #EEEEEE !important;
+}
+
+
+.esign-preview-thumb {
+    border: 2px solid transparent !important;
+    border-radius: 4px !important;
+    margin-bottom: 8px !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+}
+
+.esign-preview-thumb img {
+    width: 100% !important;
+    display: block !important;
+}
+
+.esign-preview-thumb.active {
+    border-color: #F49C2D !important;
+}
+
+
+.esign-preview-main {
+
+    display: flex !important;
+    align-items: flex-start !important;
+    padding: 10px !important;
+    overflow-y: auto !important;
+    background: #EEEEEE !important;
+    direction: rtl;
+}
+
+.esign-preview-main img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+
+.esign-preview-main::-webkit-scrollbar {
+    width: 8px;
+}
+
+.esign-preview-main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.esign-preview-main::-webkit-scrollbar-thumb {
+    background-color: #999;
+    border-radius: 4px;
+}
+
+.esign-preview-footer {
+    padding: 12px 20px !important;
+    display: flex !important;
+    gap: 12px !important;
+    margin-left: 700px;
+}
+
+
+.btn-cancel {
+    background: #FFFFFF !important;
+    border: 1px solid #E8F0FF !important;
+    padding: 7px 14px !important;
+    color: #3B4A66 !important;
+    font-size: 15px;
+    font-weight: 400;
+    border-radius: 7px !important;
+    cursor: pointer !important;
+}
+
+.btn-preview {
+    background: #FFFFFF !important;
+    color: #3B4A66 !important;
+    border: none !important;
+    padding: 7px 14px !important;
+    font-size: 15px;
+    font-weight: 400;
+    border-radius: 7px !important;
+    cursor: pointer !important;
+}
+
+.btn-complete {
+    background: #F56D2D !important;
+    color: white !important;
+    border: none !important;
+    padding: 7px 14px !important;
+    font-size: 15px;
+    font-weight: 400;
+    border-radius: 7px !important;
+    cursor: pointer !important;
+}
+
+.esign-preview-body {
+    display: flex;
+    position: relative;
+}
+
+
+.highlight-overlay {
+    position: absolute;
+    background: rgba(255, 230, 150, 0.5);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+
+.teal-marker {
+    position: absolute;
+    width: 23px;
+    height: 23px;
+    background: #00C0C6;
+    margin-right: 16%;
+    padding: 6px 5px;
+    border-radius: 50px;
+    cursor: pointer;
+
+}
+
+.comment-panel-outside {
+    position: absolute;
+    right: 80px;
+    left: 720px;
+    width: 320px;
+    background: #fff;
+    border: 1px solid #E8F0FF;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.comment-panel-outside textarea {
+    width: 100%;
+    height: 40px;
+    border: 0.5px solid #4B5563;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+    resize: none;
+}
+
+.comment-panel-outside textarea:focus {
+    border-color: #00c0c6;
+}
+
+.comment-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.comment-buttons button {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+
+.comment-buttons button:first-child {
+    background: white;
+    border: 1px solid #d0d7de;
+    color: #344054;
+}
+
+.comment-buttons button:first-child:hover {
+    background: #f9fafb;
+}
+
+
+.comment-buttons button:last-child {
+    background: #f56d2d;
+    border: none;
+    color: white;
+}
+
+.comment-buttons button:last-child:hover {
+    background: #e85b1c;
+}
+
+.pre {
+    font-size: 14px;
+    color: #3B4A66;
+    font-weight: 500;
+}
+
+
+
+
+@media (max-width: 1366px) {
+    .esign-preview-modal {
+        width: 90% !important;
+        height: 85% !important;
+    }
+}
+
+@media (max-width: 1280px) {
+    .esign-preview-modal {
+
+        height: 82% !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .esign-preview-modal {
+        width: 85% !important;
+        height: 80% !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .esign-preview-modal {
+        width: 95% !important;
+        height: 85% !important;
+    }
+
+    .esign-preview-body {
+        flex-direction: column !important;
+    }
+
+    .esign-preview-sidebar {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        padding: 5px !important;
+    }
+
+    .esign-preview-thumb {
+        margin-right: 8px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .esign-preview-main {
+        padding: 10px !important;
+    }
+}
+
+
+
+
+
+
+
+/* Esignature first pages */
+
+.mydocs-icon{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #E8F0FF;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-top: 20px;
+}
+
+.btn-preview-trigger {
+  background-color: #FFFFFF !important;
+  color: #3B4A66;
+  border: 1px solid #E8F0FF;
+  border-radius: 7px;
+}

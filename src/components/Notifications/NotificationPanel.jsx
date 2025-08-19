@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { FaTimes, FaEnvelopeOpen, FaFileAlt, FaBell, FaCheckDouble } from "react-icons/fa";
+import { FileIcon, BalanceIcon, Message3Icon, SignIcon, SignatureIcon, CrossIcon, MakeIcon, Cross2Icon } from "../../components/icons"
+import "../../styles/NotificationsPanel.css";
 
 export default function NotificationsPanel() {
   const [selectedTab, setSelectedTab] = useState("all");
+  const [visible, setVisible] = useState(true);
 
   const tabs = [
     { label: "All", key: "all" },
@@ -14,11 +16,11 @@ export default function NotificationsPanel() {
     {
       id: 1,
       title: "New message from Sarah Johnson",
-      message: "Your tax return has been completed and is ready for review.",
+      message: "Your tax return has been completed andfor review.",
       priority: "High",
       time: "2 minutes ago",
       group: "Today",
-      icon: <FaEnvelopeOpen />,
+      icon: <Message3Icon />,
     },
     {
       id: 2,
@@ -27,7 +29,7 @@ export default function NotificationsPanel() {
       priority: "Medium",
       time: "1 hour ago",
       group: "Today",
-      icon: <FaFileAlt />,
+      icon: <FileIcon />,
     },
     {
       id: 3,
@@ -36,7 +38,7 @@ export default function NotificationsPanel() {
       priority: "Low",
       time: "3 hours ago",
       group: "Today",
-      icon: <FaBell />,
+      icon: <BalanceIcon />,
     },
     {
       id: 4,
@@ -45,7 +47,7 @@ export default function NotificationsPanel() {
       priority: "Medium",
       time: "1 day ago",
       group: "Yesterday",
-      icon: <FaBell />,
+      icon: <SignatureIcon />,
     },
     {
       id: 5,
@@ -54,7 +56,7 @@ export default function NotificationsPanel() {
       priority: "High",
       time: "2 days ago",
       group: "2 Days Ago",
-      icon: <FaFileAlt />,
+      icon: <SignIcon />,
     },
   ];
 
@@ -70,45 +72,31 @@ export default function NotificationsPanel() {
     Low: "#22C55E",
   };
 
-  const [visible, setVisible] = useState(true);
   if (!visible) return null;
 
   return (
-    <div
-      className="position-absolute top-0 end-0 bg-white shadow rounded-4 p-3"
-      style={{
-        width: "540px",
-        height: "90vh",
-        zIndex: 1050,
-        marginTop: "80px",
-        marginRight: "20px",
-        overflowY: "auto",
-      }}
-    >
+    <div className="notifications-panel shadow rounded-4">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-3 px-2">
-        <h5 className="mb-0" style={{ color: "#FF9D19" }}>Notifications</h5>
-        <FaTimes className="cursor-pointer" onClick={() => setVisible(false)} />
+        <h5 className="mb-0 txts">Notifications</h5>
+        <CrossIcon
+          className="cursor-pointer"
+          onClick={() => setVisible(false)}
+        />
       </div>
 
-      {/* Tabs and "Make All Read" */}
-      <div className="bg-white border p-3 rounded-4 mb-3 mx-2">
-        <div className="d-flex justify-content-between align-items-center flex-wrap">
-          <div className="d-flex gap-2 flex-grow-1">
+      {/* Tabs */}
+      <div className="bg-white mb-3 mx-2">
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+          {/* Tabs Box */}
+          <div className="bg-white p-1 rounded-2 d-flex gap-3 bor">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setSelectedTab(tab.key)}
-                className="btn btn-sm"
-                style={{
-                  backgroundColor:
-                    selectedTab === tab.key ? "#00C0C6" : "transparent",
-                  color: selectedTab === tab.key ? "#fff" : "#000",
-                  borderRadius: "6px",
-                  border: "none",
-                  fontWeight: 500,
-                  padding: "6px 12px",
-                }}
+                className={`btn btn-sm ${selectedTab === tab.key ? "active-tab" : "inactive-tab"
+                  }`}
               >
                 {tab.label} (
                 {
@@ -120,52 +108,57 @@ export default function NotificationsPanel() {
               </button>
             ))}
           </div>
-          <button className="btn btn-sm d-flex align-items-center gap-2" style={{ fontWeight: 500 }}>
-            <FaCheckDouble />
-            Make All Read
-          </button>
+
+          {/* Make All Read Box */}
+          <div className="colour4 p-1 rounded-2">
+            <button className="btn btn-sm d-flex align-items-center gap-2 ">
+              <MakeIcon />
+              Make All read
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* Notification Groups */}
+
+
       {Object.keys(groupedNotifications).map((group) => (
         <div key={group} className="mb-3">
           <h6 className="text-muted px-2">{group}</h6>
           {groupedNotifications[group].map((note) => (
             <div
               key={note.id}
-              className="bg-white rounded-4 border d-flex justify-content-between align-items-start p-3 shadow-sm mx-2 mb-3"
-              style={{ width: "100%" }}
+              className="bg-white rounded-2 border d-flex justify-content-between align-items-start p-3 mx-2 mb-3"
             >
-              <div className="d-flex align-items-start gap-3" style={{ flex: 1 }}>
-                <div className="pt-1 text-secondary">{note.icon}</div>
+              <div className="d-flex align-items-start gap-3 flex-fill">
+               
+                <span className="notification-icon d-flex align-items-center justify-content-center">
+                  {note.icon}
+                </span>
+
                 <div>
                   <div className="d-flex align-items-center gap-2 mb-1">
-                    <strong style={{ color: "#3B4A66" }}>{note.title}</strong>
+                    <strong className="colour1">{note.title}</strong>
                     <span
-                      style={{
-                        backgroundColor: priorityColor[note.priority],
-                        color: "#fff",
-                        borderRadius: "10px",
-                        padding: "2px 6px",
-                        fontSize: "0.75rem",
-                      }}
+                      className="priority-badge"
+                      style={{ backgroundColor: priorityColor[note.priority] }}
                     >
                       {note.priority}
                     </span>
                   </div>
-                  <small className="text-muted d-block" style={{ color: "#4B5563" }}>{note.message}</small>
+                  <small className="text-colour d-block">{note.message}</small>
                 </div>
               </div>
 
               <div className="d-flex flex-column align-items-end justify-content-between">
-                <FaTimes className="text-muted mb-2" style={{ cursor: "pointer" }} />
-                <small className="text-muted">{note.time}</small>
+                <Cross2Icon className="text-muted mb-2 cursor-pointer" />
+                <small className="txt-colour2">{note.time}</small>
               </div>
             </div>
           ))}
         </div>
       ))}
+
     </div>
   );
 }

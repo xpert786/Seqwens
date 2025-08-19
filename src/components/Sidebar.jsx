@@ -27,7 +27,7 @@ export default function Sidebar() {
 
   return (
     <div className="sidebar-container">
-      {/* Top Scrollable Links */}
+    
       <div className="sidebar-top">
         <ul className="nav flex-column px-3">
           <li className="nav-item mb-2">

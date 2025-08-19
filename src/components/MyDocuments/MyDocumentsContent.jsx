@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { FileIcon, OverdueIcon, UploadIcons, CompletedIcon, AwaitingIcon } from "../icons";
-import "../../styles/Popup.css"
+import "../../styles/Document.css"
 
 const documents = [
     {
@@ -96,16 +96,16 @@ export default function MyDocumentsContent() {
 
             {/* Filters */}
             <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                <div className="input-group" style={{ maxWidth: "300px" }}>
-                    <span className="input-group-text bg-white border-end-0">
-                        <i className="bi bi-search" />
-                    </span>
+
+                <div className="mydocs-search-wrapper">
+                    <i className="bi bi-search mydocs-search-icon"></i>
                     <input
                         type="text"
-                        className="form-control border-start-0"
+                        className="form-control mydocs-search-input"
                         placeholder="Search..."
                     />
                 </div>
+
 
                 <div className="d-flex align-items-center gap-2 flex-wrap">
                     <select className="form-select" style={{ width: "140px" }}>
@@ -175,7 +175,9 @@ export default function MyDocumentsContent() {
                                                 className="d-flex align-items-center justify-content-center"
                                                 style={{ width: 40, height: 40 }}
                                             >
-                                                <FileIcon />
+                                                <span className="mydocs-icon-wrapper">
+                                                    <FileIcon />
+                                                </span>
                                             </div>
 
                                             <div>
@@ -239,3 +241,5 @@ export default function MyDocumentsContent() {
         </div>
     );
 }
+
+

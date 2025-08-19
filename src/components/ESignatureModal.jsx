@@ -1,7 +1,10 @@
 import React, { useState, useRef } from "react";
+import "../styles/ESignatureModal.css";
+import { InitialIcon, DateIcon, SignatureIcon, UsersIcon, DoubleUserIcon, Legal2Icon } from "../components/icons";
 
 const ESignatureModal = ({ show, onClose, pages }) => {
   const [activeTab, setActiveTab] = useState("draw");
+  const [step, setStep] = useState(1);
   const canvasRef = useRef(null);
   const [typedSignature, setTypedSignature] = useState("");
   const [uploadedSignature, setUploadedSignature] = useState(null);
@@ -24,121 +27,322 @@ const ESignatureModal = ({ show, onClose, pages }) => {
   };
 
   return (
-    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 2000, backgroundColor: "rgba(0,0,0,0.6)" }}>
-      <div className="bg-white rounded shadow p-4 w-100" style={{ maxWidth: "1300px", maxHeight: "95vh", overflow: "hidden" }}>
+    <div className="esignature-overlay">
+      <div className="esignature-modal">
+
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="esignature-header">
           <div>
-            <h5 className="mb-0 fw-semibold" style={{ fontFamily: "BasisGrotesquePro",}}>E-Signature – Tax_Return_2023_DRAFT.Pdf</h5>
-            <small className="text-muted" style={{ fontFamily: "BasisGrotesquePro",}}>Review and electronically sign this document</small>
+            <h5 className="mb-0">E-Signature – Tax_Return_2023_DRAFT.Pdf</h5>
+            <small className="text-muted">
+              Review and electronically sign this document
+            </small>
           </div>
-          <button className="btn btn-outline-secondary" onClick={onClose}>✖</button>
+
         </div>
 
-        {/* Signer Selection */}
-             <h6>Select current Signer</h6>
-        <div className="d-flex gap-3 mb-3">
-       
-          <div className="flex-grow-1  text-white rounded d-flex align-items-center justify-content-between px-3 py-2" style={{backgroundColor:"#00C0C6"}}>
-            <div>
-              <div className="fw-bold" >Primary Taxpayer</div>
-              <small>Signer: Michael Brown</small>
-            </div>
-            <span className="badge bg-light text-dark">Pending</span>
+        {step === 1 && (
+          <div className="selected-signer-header">
+            <DoubleUserIcon />
+            <span>Selected Current Signer</span>
           </div>
-          <div className="flex-grow-1 border rounded d-flex align-items-center justify-content-between px-3 py-2" style={{backgroundColor:"#F3F7FF"}}>
-            <div>
-              <div className="fw-bold">Spouse</div>
-              <small>Signer: Jennifer Brown</small>
-            </div>
-            <span className="badge bg-light text-dark">Pending</span>
-          </div>
-        </div>
+        )}
 
-        <div className="d-flex" style={{ height: "calc(100% - 150px)" }}>
-          {/* Thumbnails */}
-          <div className="border-end pe-2" style={{ width: "100px", overflowY: "auto" }}>
-            {pages.map((page, index) => (
-              <img
-                key={page.id}
-                src={page.image}
-                alt={`Page ${page.id}`}
-                className={`img-thumbnail mb-2 ${currentPageIndex === index ? "border-primary border-2" : ""}`}
-                style={{ cursor: "pointer", width: "100%" }}
-                onClick={() => setCurrentPageIndex(index)}
-              />
-            ))}
-          </div>
+        {step === 1 && (
+          <div className="signer-section">
 
-          {/* Page Preview */}
-          <div className="flex-grow-1 px-3" style={{ overflowY: "auto", maxHeight: "80vh" }}>
-            <img src={pages[currentPageIndex].image} alt={`Page ${currentPageIndex + 1}`} style={{ width: "100%", borderRadius: "6px" }} />
-            <div className="text-center mt-2">
-              Page {currentPageIndex + 1} of {pages.length}
-            </div>
-          </div>
-
-          {/* Signature Form */}
-          <div className="border-start ps-3" style={{ width: "360px" }}>
-            <h6 className="mb-3">Complete Signature Fields <small className="text-muted">(Primary Taxpayer: Michael Brown)</small></h6>
-
-            <label className="fw-semibold mb-2 d-block">Signature <span className="text-danger">(Required)</span></label>
-            <ul className="nav nav-tabs mb-3">
-              {['draw', 'type', 'upload'].map(tab => (
-                <li className="nav-item" key={tab}>
-                  <button
-                    className={`nav-link ${activeTab === tab ? 'active' : ''}`}
-                    onClick={() => setActiveTab(tab)}
-                  >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            {activeTab === 'draw' && (
-              <>
-                <canvas ref={canvasRef} width={300} height={100} style={{ border: '1px solid #ccc', borderRadius: '4px', width: '100%' }} />
-                <div className="d-flex justify-content-between mt-2">
-                  <button className="btn btn-sm btn-outline-danger" onClick={clearCanvas}>Clear</button>
-                  <button className="btn btn-sm btn-warning">Apply Signature</button>
+            <div className={`signer-box ${step === 2 ? "complete" : "primary"}`}>
+              <div className="taxpayer-container">
+                <span className="icon-background">
+                  <UsersIcon />
+                </span>
+                <div>
+                  <div className="fw-bold">Primary Taxpayer</div>
+                  <small>Signer: Michael Brown</small>
                 </div>
-              </>
-            )}
+              </div>
 
-            {activeTab === 'type' && (
-              <input type="text" value={typedSignature} onChange={(e) => setTypedSignature(e.target.value)} placeholder="Type your signature" className="form-control mb-3" />
-            )}
+              <span className="badge">{step === 2 ? "Complete" : "Pending"}</span>
+            </div>
+            <div className="signer-box secondary">
+              <div className="taxpayer-container">
+                <span className="icon-background-gray">
+                  <UsersIcon />
+                </span>
+                <div>
+                  <div className="fw-bold">Spouse</div>
+                  <small>Signer: Jennifer Brown</small>
+                </div>
+              </div>
 
-            {activeTab === 'upload' && (
-              <>
-                <input type="file" accept="image/*" onChange={handleUpload} className="form-control mb-2" />
-                {uploadedSignature && <img src={uploadedSignature} alt="Uploaded Signature" style={{ maxWidth: '100%', height: 'auto' }} />}
-              </>
-            )}
+              <span className="badge">Pending</span>
+            </div>
+          </div>
+        )}
+        <div className="top-headings">
+          <div className="left-title">Document Preview</div>
+          <div className="right-title">
+            Completed Signature Fields
+            <small className="text-muted subtitle ml-2">
+              (Primary Taxpayer: Michael Brown)
+            </small>
+          </div>
 
-            <div className="mb-3 mt-3">
-              <label>Date <span className="text-danger">(Required)</span></label>
-              <input type="date" className="form-control" value={today} readOnly />
+        </div>
+
+        {/* Main Wrapper */}
+        <div className="esignature-wrapper">
+          {/* Left Side - Pages */}
+          <div className="left-section">
+            <div className="thumbnail-list">
+              {pages.map((page, index) => (
+                <img
+                  key={page.id}
+                  src={page.image}
+                  alt={`Page ${page.id}`}
+                  className={`thumb ${currentPageIndex === index ? "active" : ""}`}
+                  onClick={() => setCurrentPageIndex(index)}
+                />
+              ))}
             </div>
 
-            <div className="mb-3">
-              <label>Initial <span className="text-muted">(Optional)</span></label>
-              <input type="text" className="form-control" placeholder="Enter Initials" value={initials} onChange={(e) => setInitials(e.target.value)} />
-            </div>
-
-            <div className="d-flex justify-content-between mt-4">
-              <button className="btn btn-outline-secondary" onClick={onClose}>Cancel</button>
-              <div>
-                <button className="btn btn-outline-primary me-2">Preview</button>
-                <button className="btn text-white" style={{ backgroundColor: "#F56D2D" }}>Complete Signature</button>
+            {/* Large Preview */}
+            <div className="preview-area">
+              <div className="preview-scroll">
+                {pages.map((page, index) => (
+                  <div
+                    key={page.id}
+                    className={`preview-page ${currentPageIndex === index ? "active" : ""}`}
+                    onClick={() => setCurrentPageIndex(index)}
+                  >
+                    <img
+                      src={page.image}
+                      alt={`Page ${index + 1}`}
+                      className="preview-img"
+                    />
+                    <div className="page-count">
+                      Page {index + 1} of {pages.length}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
           </div>
+
+
+          <div className="right-section">
+
+            {step === 1 ? (
+              <div className="form-section">
+                {/* Signature */}
+                <div className="form-control">
+                  <div className="top-headings">
+                    <span className="icon-label"><SignatureIcon /></span>
+                    <span className="left-title">Signature</span>
+                    <span className="required">Signature Required</span>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="nav-tabs">
+                    {["draw", "type", "upload"].map((tab) => (
+                      <button
+                        key={tab}
+                        className={activeTab === tab ? "active" : ""}
+                        onClick={() => setActiveTab(tab)}
+                      >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+
+
+                  {/* Draw */}
+                  {activeTab === "draw" && (
+                    <>
+                      <canvas
+                        ref={canvasRef}
+                        width={300}
+                        height={120}
+                        className="signature-canvas"
+                      />
+                      <div className="form-actions-inline">
+                        <button onClick={clearCanvas} className="btn-outline-danger">
+                          Clear
+                        </button>
+                        <button className="btn-orange">Apply Singnature</button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Type */}
+                  {activeTab === "type" && (
+                    <input
+                      type="text"
+                      value={typedSignature}
+                      onChange={(e) => setTypedSignature(e.target.value)}
+                      placeholder="Type your signature"
+                      className="form-control"
+                    />
+                  )}
+
+                  {/* Upload */}
+                  {activeTab === "upload" && (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleUpload}
+                        className="form-control"
+                      />
+                      {uploadedSignature && (
+                        <img
+                          src={uploadedSignature}
+                          alt="Uploaded Signature"
+                          className="uploaded-img"
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Date */}
+                <div className="form-control">
+                  <div className="top-headings">
+                    <span className="icon-label"><DateIcon /></span>
+                    <span className="left-title">Date</span>
+                    <span className="required">Signature Required</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="__/__/____"
+                    value={today}
+                    readOnly
+                    className="form-control"
+                  />
+                </div>
+
+                {/* Initial */}
+                <div className="form-control">
+                  <div className="top-headings">
+                    <span className="icon-label"><InitialIcon /></span>
+                    <span className="left-title">Initial</span>
+                    <span className="required">Optional</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter Initials"
+                    value={initials}
+                    onChange={(e) => setInitials(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+
+              </div>
+
+            ) : (
+              <>
+
+
+                <div className="completed-field">
+                  <div className="icon-text">
+                    <SignatureIcon />
+                    <strong className="text-complete">Signature</strong>
+                  </div>
+                  <span className="status complete">Complete</span>
+                </div>
+
+                <div className="completed-field">
+                  <div className="icon-text">
+                    <DateIcon />
+                    <strong className="text-complete">Date</strong>
+                  </div>
+                  <span className="status complete">Complete</span>
+                </div>
+
+                <div className="completed-field">
+                  <div className="icon-text">
+                    <InitialIcon />
+                    <strong className="text-complete">Initial</strong>
+                  </div>
+                  <span className="status complete">Complete</span>
+                </div>
+
+                {/* Spouse */}
+                <h6 className="mt-4 mb-3 completed-header">
+                  Completed Signature Fields{" "}
+                  <small className="text-muted subtitle">
+                    (Spouse: Jennifer Brown)
+                  </small>
+                </h6>
+
+                <div className="completed-field">
+                  <div className="icon-text">
+                    <SignatureIcon />
+                    <strong className="text-complete">Signature</strong>
+                  </div>
+                  <span className="status complete">Complete</span>
+                </div>
+
+                <div className="completed-field">
+                  <div className="icon-text">
+                    <DateIcon />
+                    <strong className="text-complete">Date</strong>
+                  </div>
+                  <span className="status complete">Complete</span>
+                </div>
+              </>
+
+            )}
+          </div>
         </div>
+        {step === 2 && (
+          <div className="legal-notice alert alert-success d-flex align-items-start mt-3">
+            <span className="legal-icons me-2 mt-3">
+              <Legal2Icon />
+            </span>
+            <div>
+              <strong className="legal">Legal Notice</strong>
+              <div className="legal-text">
+                By proceeding to sign this document, you agree that your electronic signature will have the same legal effect
+                as a handwritten signature. This document<br />will be legally binding once signed.
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        <div className="footer-buttons">
+          {step === 1 ? (
+            <>
+              <button onClick={onClose} className="sig-btn-cancel">
+                Cancel
+              </button>
+              <button className="sig-btn-preview">Preview</button>
+              <button className="sig-btn-complete" onClick={() => setStep(2)}>
+                Complete Signature
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setStep(1)} className="sig-btn-cancel">
+                Cancel
+              </button>
+              <button onClick={() => setStep(1)} className="sig-btn-cancel">
+                Edit
+              </button>
+              <button className="sig-btn-complete" onClick={onClose}>
+                Complete Signature
+              </button>
+            </>
+          )}
+        </div>
+
+
+
       </div>
     </div>
+
   );
 };
 

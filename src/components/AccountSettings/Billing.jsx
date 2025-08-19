@@ -81,7 +81,7 @@ const Billing = () => {
           className="mb-3 rounded p-3"
           style={{
             border: "1px solid #F49C2D",
-            backgroundColor: selectedId === method.id ? "#FFF4E6" : "#f8f9fa",
+            backgroundColor: selectedId === method.id ? "#FFF4E6" : "#FFFFFF",
             cursor: "pointer",
           }}
           onClick={() => handleCardClick(method.id)}
@@ -96,7 +96,7 @@ const Billing = () => {
                   <span className="fw-bold">•••• •••• •••• {method.last4}</span>
                   {method.isPrimary && (
                     <span
-                      className="badge ms-2"
+                      className="ms-2"
                       style={{
                         backgroundColor: "#22C55E",
                         borderRadius: "1rem",
@@ -261,12 +261,6 @@ const Billing = () => {
               type="switch"
               id="set-default"
               label="Set as default payment method"
-              style={{
-                color: "#3B4A66",
-                fontSize: "12px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}
               className="custom-switch"
             />
           </Form>

@@ -16,14 +16,14 @@ export default function Topbar() {
             <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-3">
                 <div className="container-fluid d-flex justify-content-between align-items-center">
 
-                    {/* LEFT - Logo + Icon + Search */}
+               
                     <div className="d-flex align-items-center gap-3 flex-grow-1">
                         <Link to="/" className="navbar-brand d-flex align-items-center m-0">
                             <img src={logo} alt="Logo" className="topbar-logo" />
                         </Link>
                         <LogoIcon />
 
-                        {/* Search Box */}
+                   
                         <div className="topbar-search">
                             <i className="bi bi-search"></i>
                             <input type="text" className="form-control" placeholder="Search..." />
@@ -33,7 +33,6 @@ export default function Topbar() {
                     </div>
 
 
-                    {/* RIGHT - Notification + User */}
                     <div className="d-flex align-items-center gap-3">
                         <div
                             className="notification-bell"

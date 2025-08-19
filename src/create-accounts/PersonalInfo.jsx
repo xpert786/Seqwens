@@ -106,7 +106,7 @@ const PersonalInfo = () => {
                   type="checkbox"
                   id="termsCheck"
                 />
-                <label className="form-check-label" htmlFor="termsCheck">
+                <label className="form-check-label txts" htmlFor="termsCheck">
                   I agree to the{" "}
                   <span className="highlight">Terms of Use</span> &{" "}
                   <span className="highlight">Privacy Policy</span>.

@@ -49,8 +49,8 @@
 .otp-inputs {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin: 55px 0 30px;
+  gap: 20px !important;
+  margin: 20px 0 30px !important;
 }
 
 .otp-digit {
@@ -66,7 +66,7 @@
 
 .otp-btn {
   width: 100%;
-  padding: 10px;
+  padding: 6px;
   background-color: #f56d2d;
   color: white;
   border: none;
@@ -104,6 +104,37 @@
   font-family: BasisGrotesquePro;
   border-bottom: 2px solid #f56d2d;
   padding-bottom: 2px;
+}
+
+@media (max-height: 700px) {
+  .otp-box {
+    padding: 30px !important;      
+    max-height: 80vh !important;  
+    border-radius: 20px !important;
+  }
+
+  .otp-title {
+    font-size: 26px !important; 
+  }
+
+  .otp-description {
+    font-size: 14px;
+  }
+
+  .otp-digit {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .otp-btn {
+    font-size: 15px;
+    padding: 5px;
+  }
+
+  .resend-info, .resend-link {
+    font-size: 14px;
+  }
 }
 
 /* ✅ Responsive for laptops */

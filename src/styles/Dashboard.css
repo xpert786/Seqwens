@@ -20,6 +20,7 @@
   margin: 0;
 }
 
+
 /* Buttons */
 .dashboard-btn {
   font-family: "BasisGrotesquePro", sans-serif;
@@ -103,7 +104,9 @@
   background-color: #f4f6fa !important;
 }
 
-/* 📌 Responsive */
+
+
+
 
 /* Small laptops (13"–14", ~1366px) */
 @media (max-width: 1366px) {
@@ -147,4 +150,50 @@
     font-size: 13px;
     padding: 5px 12px;
   }
+}
+
+
+
+
+/* Font & Colors */
+.section-title {
+  color: #3B4A66;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+}
+
+.section-subtitle {
+  color: #4B5563;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.task-title {
+  color: #3B4A66;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.task-due {
+  color: #4B5563;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.task-badge {
+  font-size: 11px;
+  color: #fff !important;
+}
+
+.car{
+  border: 1px solid #E8F0FF;
+}
+
+.dashboard-card-btn{
+border: 1px solid #E8F0FF !important;
+background-color: #FFFFFF;
 }

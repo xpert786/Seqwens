@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { FaPlus, FaPaperclip, FaPaperPlane } from "react-icons/fa";
-import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon } from "../components/icons";
+import { FaPaperPlane, FaSearch } from "react-icons/fa";
+import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
 
 const initialConversations = [
   {
@@ -51,7 +51,7 @@ export default function Messages() {
     (c) => c.id === activeConversationId
   );
 
-  // send new message in existing conversation
+
   const handleSend = () => {
     if (newMessage.trim() === "") return;
     const updatedConversations = conversations.map((conv) =>
@@ -76,7 +76,7 @@ export default function Messages() {
     setNewMessage("");
   };
 
-  // create a new chat with optional attachments
+
   const handleCreateChat = () => {
     if (chatSubject.trim() === "" && chatMessage.trim() === "" && attachedFiles.length === 0) return;
 
@@ -115,7 +115,7 @@ export default function Messages() {
     setAttachedFiles([]);
   };
 
-  // handle file selection
+
   const handleFileChange = (e) => {
     setAttachedFiles(Array.from(e.target.files));
   };
@@ -128,17 +128,45 @@ export default function Messages() {
           <h5 className="mb-0" style={{ color: "#3B4A66", fontSize: "26px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}>Messages</h5>
           <small style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>Communicate with your tax professional</small>
         </div>
-        <button className="btn d-flex align-items-center" style={{ background: "#F56D2D", color: "#3B4A66", fontFamily: "BasisGrotesquePro", }} onClick={() => setShowModal(true)}>
-          <FaPlus className="me-2" style={{ color: "#3B4A66" }} /> New Message
+        <button
+          className="btn d-flex align-items-center"
+          style={{ backgroundColor: "#F56D2D", color: "#FFFFFF", fontFamily: "BasisGrotesquePro" }}
+          onClick={() => setShowModal(true)}
+        >
+          <span className="me-2 text-white" ><PLusIcon /></span>
+          New Message
         </button>
+
       </div>
 
       <div className="d-flex flex-grow-1 overflow-hidden">
-        {/* Sidebar */}
+
         <div className="p-3 me-3 d-flex flex-column" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px" }}>
           <div className="mb-2">
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
-            <input type="text" className="form-control" placeholder="Search..." style={{ fontFamily: "BasisGrotesquePro" }} />
+
+
+            <div style={{ position: "relative", width: "100%" }}>
+              <FaSearch
+                style={{
+                  position: "absolute",
+                  left: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#6c757d",
+                }}
+              />
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search..."
+                style={{
+                  fontFamily: "BasisGrotesquePro",
+                  paddingLeft: "35px",
+                }}
+              />
+            </div>
+
           </div>
           <div className="flex-grow-1 overflow-auto d-flex flex-column gap-2 mt-3">
             {conversations.map((conv) => (
@@ -185,13 +213,13 @@ export default function Messages() {
                 return (
                   <div key={msg.id} className="d-flex mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>
                     <JdIcon color="#f97316" className="me-2" />
-                    <div className="bg-warning-subtle p-3 rounded">
+                    <div className="-subtle p-3 rounded" style={{ marginLeft: "10px", backgroundColor: "#FFF4E6" }}>
                       <strong style={{ fontFamily: "BasisGrotesquePro" }}>{msg.title}</strong>
                       <p style={{ fontFamily: "BasisGrotesquePro" }}>{msg.text}</p>
                       {msg.options?.map((opt, idx) => (
                         <div className="form-check small" key={idx}>
                           <input className="form-check-input" type="checkbox" />
-                          <label className="form-check-label">{opt}</label>
+                          <label className="form-check-labels">{opt}</label>
                         </div>
                       ))}
                     </div>
@@ -201,7 +229,7 @@ export default function Messages() {
                 return (
                   <div key={msg.id} className="d-flex mb-3">
                     <JdIcon color="#f97316" className="me-2" />
-                    <div className="bg-light p-2 px-3 rounded " style={{ fontFamily: "BasisGrotesquePro" }}>{msg.text}</div>
+                    <div className="bg-light p-2 px-3 rounded " style={{ fontFamily: "BasisGrotesquePro", marginLeft: "10px" }}>{msg.text}</div>
                   </div>
                 );
               } else if (msg.type === "file") {
@@ -283,7 +311,7 @@ export default function Messages() {
                 style={{ cursor: "pointer", gap: "8px" }}
               >
                 <PlusIcon />
-                <span style={{ fontFamily: "BasisGrotesquePro" }}>Attach Document</span>
+                <span style={{ fontFamily: "BasisGrotesquePro", color: "#131323" }}>Attach Document</span>
                 <input
                   type="file"
                   multiple

@@ -1,5 +1,4 @@
 .twofa-container {
-
   padding: 60px 20px;
   height: 100vh;
   display: flex;
@@ -92,7 +91,33 @@
   color: #3b4a66;
 }
 
-/* Responsive for laptop (1100px and below) */
+
+@media (max-height: 700px) {
+  .twofa-box {
+    min-height: auto;       
+    padding: 45px 45px;
+  }
+
+  .twofa-header h5 {
+    font-size: 22px;
+  }
+
+  .twofa-header p {
+    font-size: 14px;
+  }
+
+  .twofa-options {
+    margin-top: 40px;
+    gap: 15px;
+  }
+
+  .twofa-btn {
+    padding: 12px 16px;
+  }
+}
+
+
+
 @media (max-width: 1100px) {
   .twofa-box {
     padding: 40px 30px;

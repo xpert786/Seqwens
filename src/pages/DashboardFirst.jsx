@@ -9,7 +9,8 @@ import {
   BalanceIcon,
   MessageIcon,
 } from "../components/icons";
-import {AiOutlineCalendar} from "react-icons/ai";
+import { AiOutlineCalendar } from "react-icons/ai";
+import "../styles/Dashfirst.css"
 
 export default function DashboardFirst() {
   const navigate = useNavigate();
@@ -52,12 +53,12 @@ export default function DashboardFirst() {
     {
       title: "Schedule a Consultation",
       description: "Book a meeting from the Dashboard",
-      status: "incomplete",
+      status: "continue",
     },
     {
       title: "Set Up Payment Method",
       description: "Pick a billing method for services",
-      status: "incomplete",
+      status: "Add payment",
     },
   ];
 
@@ -89,12 +90,12 @@ export default function DashboardFirst() {
 
   return (
     <div className="p-2">
-      {/* Welcome Bar */}
+      
       <div
         className="p-4 rounded mb-4 position-relative"
         style={{ backgroundColor: "#FFF3E1", border: "1px solid #FFD6A5" }}
       >
-        {/* Completion % Box */}
+       
         <div
           className="position-absolute top-0 end-0 m-3 text-end"
           style={{ lineHeight: 1.1 }}
@@ -124,7 +125,7 @@ export default function DashboardFirst() {
         >
           Welcome, Michael Brown! 👋
         </h5>
-        <p className="text-muted" style = {{fontSize:"18px", fontFamily: "BasisGrotesquePro"}}>
+        <p className="text-muted" style={{ fontSize: "18px", fontFamily: "BasisGrotesquePro" }}>
           Let's get your tax dashboard set up. You're making great progress!
         </p>
         <div className="progress" style={{ height: "8px" }}>
@@ -152,7 +153,7 @@ export default function DashboardFirst() {
       </div>
 
       {/* Setup Tasks */}
-      <div className="bg-white rounded shadow-sm p-4 mb-4">
+      <div className="bg-white rounded  p-4 mb-4">
         <h6
           style={{
             color: "#3B4A66",
@@ -188,24 +189,27 @@ export default function DashboardFirst() {
                     <h6 className="mb-1" style={{ color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
                       {task.title}
                     </h6>
-                    <small className="text-muted" style={{fontFamily: "BasisGrotesquePro", color:"#3B4A66"}}>{task.description}</small>
+                    <small className="text-muted" style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66" }}>{task.description}</small>
                   </div>
                 </div>
-
                 <span
-                  className={`badge bg-${priorityBadgeClass[status]} rounded-pill`}
-                  style={{ height: "fit-content" }}
+                  className={`badge ${status === "complete"
+                    ? "badge bg-success text-white"
+                    : status === "incomplete"
+                      ? "badge-incomplete"
+                      : ""
+                    }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
-              </li>
+                </li>
             );
           })}
         </ul>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded shadow-sm p-4 mt-4">
+      <div className="bg-white rounded  p-4 mt-4">
         <h6
           className="mb-1"
           style={{ color: "#3B4A66", fontSize: "18px", fontWeight: 600, fontFamily: "BasisGrotesquePro" }}
@@ -218,56 +222,20 @@ export default function DashboardFirst() {
         <div className="row">
           {quickActions.map((action, idx) => (
             <div key={idx} className="col-md-3 col-sm-6 mb-3">
-              <div
-                className="p-3 rounded border h-100"
-                style={{
-                  border: "1px solid #E0E6ED",
-                  backgroundColor: "#F9FBFF",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                }}
-              >
+              <div className="quick-card p-3 rounded border h-100">
                 <div>
-                  <div
-                    className="text-info"
-                    style={{
-                      fontSize: "40px",
-                      fontFamily: "BasisGrotesquePro",
-                      marginBottom: "60px",
-                      marginTop: "0px",
-                    }}
-                  >
+                  <div className="quick-icon-wrapper text-info">
                     {action.icon}
                   </div>
 
-                  <h6
-                    style={{
-                      fontSize: "15px",
-                      color: "#3B4A66",
-                      fontWeight: 500,
-                      fontFamily: "BasisGrotesquePro",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    {action.title}
-                  </h6>
+                  <h6 className="quick-card-title">{action.title}</h6>
                 </div>
 
-                <button
-                  className="btn btn-sm w-100"
-                  style={{
-                    backgroundColor: "#ffffff",
-                    border: "1px solid #E0E6ED",
-                    color: "#3B4A66",
-                    fontWeight: 500,
-                    fontFamily: "BasisGrotesquePro",
-                    fontSize: "14px",
-                  }}
-                >
+                <button className="btn btn-sm w-100 quick-card-btn">
                   {action.button}
                 </button>
               </div>
+
             </div>
           ))}
         </div>

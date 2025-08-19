@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Otpveri.css"; // or a separate OtpVerification.css
+import "../styles/Otpveri.css";
 import FixedLayout from "../components/FixedLayout";
 
 export default function OtpVerification() {

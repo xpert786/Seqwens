@@ -3,7 +3,6 @@ import Homepage from "./pages/Homepage";
 import DashboardLayout from "./components/DashboardLayout";
 import ESignatureModal from './components/ESignatureModal';
 import NotificationPanel from './components/Notifications/NotificationPanel';
-import UploadModal from "./upload/UploadModal";
 import Dashboard from "./pages/Dashboard";
 import MyDocuments from "./pages/MyDocuments";
 import DataIntake from "./pages/DataIntake";
@@ -18,7 +17,7 @@ import PersonalInfo from "./create-accounts/PersonalInfo";
 import Login from "./Login-setup/Login";
 import ForgotPassword from "./Login-setup/ForgotPassword";
 import OtpVerification from "./Login-setup/OtpVerification";
-import SetNewPassword from"./Login-setup/SetNewPassword";
+import SetNewPassword from "./Login-setup/SetNewPassword";
 import TwoFactorAuth from "./Login-setup/TwoFactorAuth";
 import VerifyEmail from "./Login-setup/VerifyEmail";
 import VerifyPhone from "./Login-setup/VerifyPhone";
@@ -34,14 +33,14 @@ export default function App() {
       <Route path="/" element={<Homepage />} />
       {/* Old users login */}
       <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/otp-verification" element={<OtpVerification />} />
-        <Route path="/set-new-password" element={<SetNewPassword />} />
-        <Route path="/two-auth" element={<  TwoFactorAuth />} />
-        <Route path="/verify-email" element={<VerifyEmail/>} />
-         <Route path="/verify-phone" element={<VerifyPhone/>} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/otp-verification" element={<OtpVerification />} />
+      <Route path="/set-new-password" element={<SetNewPassword />} />
+      <Route path="/two-auth" element={<  TwoFactorAuth />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/verify-phone" element={<VerifyPhone />} />
 
-        
+
 
       {/* New users */}
       <Route path="/create-account" element={<CreateAccount />} />
@@ -56,15 +55,15 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-{/* Clients dashboard */}
-     <Route
-    path="dashboard"
-    element={
-      isNewUser()
-        ? <DashboardFirst />
-        : <Dashboard />
-    }
-  />
+        {/* Clients dashboard */}
+        <Route
+          path="dashboard"
+          element={
+            isNewUser()
+              ? <DashboardFirst />
+              : <Dashboard />
+          }
+        />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="dashboard-first" element={<DashboardFirst />} />
         <Route path="documents" element={<MyDocuments />} />
@@ -72,23 +71,23 @@ export default function App() {
         <Route path="invoices" element={<Invoices />} />
         <Route path="messages" element={<Messages />} />
         <Route path="appointments" element={<Appointments />} />
-         <Route path="accounts" element={<Accounts/>} />
-          <Route path="helpers" element={<Helper/>} />
+        <Route path="accounts" element={<Accounts />} />
+        <Route path="helpers" element={<Helper />} />
 
 
         {/* iconbell click notifications */}
         <Route path="/notifications" element={<NotificationPanel />} />
         <Route path="/esignature" element={<ESignatureModal />} />
-        {/* <Route path="/upload" element={<UploadModal />} /> */}
-
-
-      
-
-      
 
 
 
-          
+
+
+
+
+
+
+
       </Route>
 
     </Routes>

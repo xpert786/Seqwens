@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FaCloudUploadAlt } from 'react-icons/fa';
+import { UpIcon } from "../icons";
 import DocumentRequests from './DocumentRequests';
 import MyDocumentsContent from './MyDocumentsContent';
+import UploadModal from "../../upload/UploadModal";
 import Folders from './Folders';
 import ESignature from './ESignature';
 
@@ -14,26 +15,31 @@ const tabs = [
 
 export default function MyDocumentsMain() {
   const [activeTab, setActiveTab] = useState('requests');
+    const [showUploadModal, setShowUploadModal] = useState(false);
 
   return (
     <div className='px-2'>
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h5 className="mb-0" style={{ fontSize: '26px', fontWeight: '500', color: '#3B4A66',  fontFamily: "BasisGrotesquePro", }}>
+          <h5 className="mb-0" style={{ fontSize: '26px', fontWeight: '500', color: '#3B4A66', fontFamily: "BasisGrotesquePro", }}>
             My Documents
           </h5>
-          <small style={{ fontFamily: "BasisGrotesquePro",fontWeight:"400", fontWeight:"15px"}}>
+          <small style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontWeight: "15px" }}>
             Upload, organize, and manage your tax documents securely
           </small>
         </div>
         <button
-          className="btn text-white fw-semibold px-3"
-          style={{ backgroundColor: '#F56D2D' }}
+          className="btn text-white fw-semibold px-3 d-flex align-items-center gap-2"
+          onClick={() => setShowUploadModal(true)}
+          style={{ backgroundColor: "#F56D2D" }}
         >
-          <FaCloudUploadAlt className="me-2" />
+          <UpIcon />
           Upload Documents
         </button>
+
+          <UploadModal show={showUploadModal} handleClose={() => setShowUploadModal(false)} />
+
       </div>
 
 

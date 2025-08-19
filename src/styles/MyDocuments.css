@@ -1,0 +1,153 @@
+.mydocs-container {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.mydocs-header {
+    margin-bottom: 12px;
+}
+
+.mydocs-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #3B4A66;
+    font-family: "BasisGrotesquePro";
+    margin-bottom: 0;
+}
+
+.mydocs-subtitle {
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: "BasisGrotesquePro";
+    margin-bottom: 0;
+}
+
+.mydocs-card {
+    cursor: pointer;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.mydocs-card.active {
+    background-color: #FFF3E1;
+    border-color: #F49C2D;
+}
+
+.mydocs-doc-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #3B4A66;
+    font-family: "BasisGrotesquePro";
+}
+
+.mydocs-badge-priority {
+    background-color: #EF4444;
+    font-size: 12px;
+    color: #FFFFFF !important;
+    font-family: "BasisGrotesquePro";
+}
+
+.mydocs-badge-status {
+    background-color: #854D0E;
+    font-size: 12px;
+    color: #FFFFFF !important;
+    font-family: "BasisGrotesquePro";
+}
+
+.mydocs-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #E8F0FF;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+}
+
+
+.mydocs-upload-btn {
+    background-color: #F56D2D !important;
+    color: white !important;
+    font-family: "BasisGrotesquePro" !important;
+    gap: 6px;
+    display: flex;
+    align-items: center;
+}
+
+.mydocs-description {
+    margin-left: 50px;
+    font-family: "BasisGrotesquePro";
+    font-size: 14px;
+    font-weight: 400;
+    color: #4B5563;
+    margin-bottom: 4px;
+}
+
+.mydocs-info {
+    margin-left: 50px;
+    font-family: "BasisGrotesquePro";
+    font-size: 14px;
+    font-weight: 400;
+    color: #4B5563;
+}
+
+.mydocs-reminder {
+    color: #51E7BB;
+}
+
+.mydocs-overdue {
+    margin-left: 50px;
+    font-family: "BasisGrotesquePro";
+    font-size: 14px;
+    font-weight: 400;
+    color: #51E7BB;
+    margin-bottom: 8px;
+}
+
+.mydocs-instructions {
+    background-color: #fff;
+    border: 1px solid #FFF4E6;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 14px;
+    font-family: "BasisGrotesquePro";
+    margin-bottom: 8px;
+}
+
+.mydocs-instructions-title {
+    color: #3B4A66;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.mydocs-instructions-text {
+    font-family: "BasisGrotesquePro";
+    font-weight: 400;
+    font-size: 13px;
+    color: #4B5563;
+    margin-bottom: 0;
+}
+
+.mydocs-req-title {
+    color: #3B4A66;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: "BasisGrotesquePro";
+    margin-left: 8px;
+}
+
+.mydocs-req-chip {
+    background-color: #fff;
+    border: 1px solid #FFF4E6;
+    border-radius: 2000px;
+    font-size: 12px;
+    font-weight: 400;
+    font-family: "BasisGrotesquePro";
+    padding: 8px 16px;
+    display: inline-block;
+}

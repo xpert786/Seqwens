@@ -1,5 +1,4 @@
 .verify-page {
-
   padding: 60px 20px;
   min-height: 100vh;
   display: flex;
@@ -144,4 +143,62 @@
   font-size: 16px;
   font-weight: 400;
   cursor: pointer;
+}
+
+
+@media (max-height: 750px) {
+  .otp-box {
+    padding: 30px 20px;
+    min-height: auto; /* fix height hata diya */
+  }
+
+  .otp-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .otp-subtext {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+
+  .otp-inputs {
+    gap: 12px;
+    margin: 25px 0 15px;
+  }
+
+  .otp-inputs input {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .verify-btn {
+    padding: 8px;
+    font-size: 15px;
+  }
+
+  .resend-text,
+  .resend-link {
+    font-size: 14px;
+  }
+
+  /* Popup bhi adjust ho */
+  .popup {
+    width: 300px;
+    padding: 25px 20px;
+  }
+
+  .popup-title {
+    font-size: 18px;
+  }
+
+  .popup-message {
+    font-size: 14px;
+  }
+
+  .dashboard-btn {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
 }

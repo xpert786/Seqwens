@@ -1,4 +1,3 @@
-import React from "react";
 import "../styles/CreateAccount.css";
 import { Link } from "react-router-dom";
 import FixedLayout from "../components/FixedLayout";

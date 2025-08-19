@@ -1,0 +1,56 @@
+.mydocs-search-wrapper {
+    position: relative;
+    max-width: 300px;
+}
+
+.mydocs-search-icon {
+    position: absolute !important;
+    left: 10px !important;
+    top: 41%;
+    transform: translateY(-50%) !important;
+    color: #6B7280 !important;
+    font-size: 14px !important;
+    pointer-events: none !important;
+}
+
+.mydocs-search-input {
+    padding-left: 32px !important;
+    font-size: 14px !important;
+    height: 38px !important;
+    border: none !important;
+}
+
+.mydocs-search-wrapper {
+    position: relative;
+    width: 400px;
+}
+
+.bg-darkblue {
+    background-color: #1E40AF !important;
+}
+
+.bg-darkgreen {
+    background-color: #22C55E !important;
+}
+
+.bg-darkbroun {
+    background-color: #854D0E !important;
+}
+
+.bg-darkcolour {
+    background-color: #991B1B !important;
+}
+
+
+.modal-content {
+    border-radius: 20px !important;
+}
+
+
+
+
+
+
+
+
+

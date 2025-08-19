@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCalendarAlt, FaClock, FaPlus } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 import { BsCameraVideo } from "react-icons/bs";
 import { DateIcon, AwaitingIcon, MobileIcon, PersonIcon, DiscusIcon, EditIcon, DeleteIcon, AppoinIcon, MonthIcon, ZoomIcon, EsternTimeIcon, CrossIcon } from "../components/icons";
 import "../styles/Icon.css"
@@ -84,7 +84,7 @@ export default function Appointments() {
 
   return (
     <div className="px-2" >
-     
+
       <div className="d-flex justify-content-between align-items-center mb-2">
 
         <div className="align-items-center mb-3 ">
@@ -385,28 +385,50 @@ export default function Appointments() {
 
 
       {/* ---------- Custom Modal Popup ---------- */}
-{showModal && (
-  <div className="custom-popup-overlay">
-    <div className="custom-popup-container">
-      {/* Header */}
-      <div className="popup-header">
-        <div className="popup-header-top">
-          <h5 className="popup-title">Schedule New Appointment</h5>
-          <button onClick={() => setShowModal(false)} className="popup-close-btn">
-            <CrossIcon />
-          </button>
-        </div>
-        <p className="popup-subtitle">Schedule a meeting with your tax professional</p>
-      </div>
+      {showModal && (
+        <div className="custom-popup-overlay">
+          <div className="custom-popup-container">
+            {/* Header */}
+            <div className="popup-header">
+              <div className="popup-header-top">
+                <h5 className="popup-title">Schedule New Appointment</h5>
+                <button onClick={() => setShowModal(false)} className="popup-close-btn">
+                  <CrossIcon />
+                </button>
+              </div>
+              <p className="popup-subtitle">Schedule a meeting with your tax professional</p>
+            </div>
 
-      {/* Step 1 */}
-      {step === 1 && (
-        <div className="popup-body">
-          {(selectedBox
-            ? [
-                {
-                  id: selectedBox,
-                  ...[
+            {/* Step 1 */}
+            {step === 1 && (
+              <div className="popup-body">
+                {(selectedBox
+                  ? [
+                    {
+                      id: selectedBox,
+                      ...[
+                        {
+                          id: 1,
+                          icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
+                          title: "Schedule a free Phone call with Sarah Johnson",
+                          desc: "Use this to schedule 30 minute phone call meeting",
+                        },
+                        {
+                          id: 2,
+                          icon: <span className="icon-custom"><ZoomIcon /></span>,
+                          title: "Schedule a free Zoom call with John Smith",
+                          desc: "Use this to schedule 1 hour long zoom meeting",
+                        },
+                        {
+                          id: 3,
+                          icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
+                          title: "Schedule a free Phone call with Sarah Johnson",
+                          desc: "Use this to schedule 30 minute phone call meeting",
+                        },
+                      ].find((opt) => opt.id === selectedBox),
+                    },
+                  ]
+                  : [
                     {
                       id: 1,
                       icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
@@ -425,137 +447,113 @@ export default function Appointments() {
                       title: "Schedule a free Phone call with Sarah Johnson",
                       desc: "Use this to schedule 30 minute phone call meeting",
                     },
-                  ].find((opt) => opt.id === selectedBox),
-                },
-              ]
-            : [
-                {
-                  id: 1,
-                  icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
-                  title: "Schedule a free Phone call with Sarah Johnson",
-                  desc: "Use this to schedule 30 minute phone call meeting",
-                },
-                {
-                  id: 2,
-                  icon: <span className="icon-custom"><ZoomIcon /></span>,
-                  title: "Schedule a free Zoom call with John Smith",
-                  desc: "Use this to schedule 1 hour long zoom meeting",
-                },
-                {
-                  id: 3,
-                  icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
-                  title: "Schedule a free Phone call with Sarah Johnson",
-                  desc: "Use this to schedule 30 minute phone call meeting",
-                },
-              ]
-          ).map((option) => (
-            <div key={option.id} className="option-box">
-              <div
-                onClick={() => setHighlightBox(highlightBox === option.id ? null : option.id)}
-                className={`info  ${highlightBox === option.id ? "active" : ""}`}
-              >
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="d-flex gap-2 align-items-start">
-                    <span>{option.icon}</span>
-                    <div>
-                      <strong className="option-title">{option.title}</strong>
-                      <p className="option-desc">{option.desc}</p>
-                    </div>
-                  </div>
-
-                  {selectedBox !== option.id && (
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedBox(option.id);
-                      }}
-                      className="arrow-icon"
+                  ]
+                ).map((option) => (
+                  <div key={option.id} className="option-box">
+                    <div
+                      onClick={() => setHighlightBox(highlightBox === option.id ? null : option.id)}
+                      className={`info  ${highlightBox === option.id ? "active" : ""}`}
                     >
-                      ›
-                    </span>
-                  )}
-                </div>
-
-                {selectedBox === option.id && (
-                  <div className="mt-3">
-                    <button className="btn schedule-btn d-flex align-items-center gap-2">
-                      <span className="d-flex align-items-center small-icon">
-                        <AwaitingIcon className="text-success" />
-                      </span>
-                      <span className="schedule-time">30 min</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {selectedBox === option.id && (
-                <>
-                  <div className="selection-box">
-                    <div className="row">
-                      <div className="col-7">
-                        <h6 className="selection-title">Select a date</h6>
-                        <div className="calendar-grid">
-                          {dates.map((day) => (
-                            <button
-                              key={day}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedDate(day);
-                              }}
-                              className={`calendar-btn ${
-                                selectedDate === day ? "active" : ""
-                              }`}
-                            >
-                              {day}
-                            </button>
-                          ))}
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex gap-2 align-items-start">
+                          <span>{option.icon}</span>
+                          <div>
+                            <strong className="option-title">{option.title}</strong>
+                            <p className="option-desc">{option.desc}</p>
+                          </div>
                         </div>
+
+                        {selectedBox !== option.id && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBox(option.id);
+                            }}
+                            className="arrow-icon"
+                          >
+                            ›
+                          </span>
+                        )}
                       </div>
 
-                      <div className="col-5">
-                        <h6 className="selection-title">Select a time</h6>
-                        <div className="time-list">
-                          {times.map((time) => (
-                            <button
-                              key={time}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTime(time);
-                              }}
-                              className={`time-btn ${
-                                selectedTime === time ? "active" : ""
-                              }`}
-                            >
-                              {time}
-                            </button>
-                          ))}
+                      {selectedBox === option.id && (
+                        <div className="mt-3">
+                          <button className="btn schedule-btn d-flex align-items-center gap-2">
+                            <span className="d-flex align-items-center small-icon">
+                              <AwaitingIcon className="text-success" />
+                            </span>
+                            <span className="schedule-time">30 min</span>
+                          </button>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
 
-                  <div className="d-flex justify-content-between mt-3">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedBox(null);
-                      }}
-                      className="btn btn-secondary"
-                    >
-                      Back
-                    </button>
-                    <button
-                      disabled={!selectedDate || !selectedTime}
-                      onClick={() => setStep(2)}
-                      className="nex-btn"
-                    >
-                      Next
-                    </button>
+                    {selectedBox === option.id && (
+                      <>
+                        <div className="selection-box">
+                          <div className="row">
+                            <div className="col-7">
+                              <h6 className="selection-title">Select a date</h6>
+                              <div className="calendar-grid">
+                                {dates.map((day) => (
+                                  <button
+                                    key={day}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedDate(day);
+                                    }}
+                                    className={`calendar-btn ${selectedDate === day ? "active" : ""
+                                      }`}
+                                  >
+                                    {day}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="col-5">
+                              <h6 className="selection-title">Select a time</h6>
+                              <div className={`time-list ${selectedTime ? "clicked" : ""}`}>
+                                {times.map((time) => (
+                                  <button
+                                    key={time}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedTime(time);
+                                    }}
+                                    className={`time-btn ${selectedTime === time ? "active" : ""}`}
+                                  >
+                                    {time}
+                                  </button>
+                                ))}
+                              </div>
+
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="d-flex justify-content-between mt-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBox(null);
+                            }}
+                            className="btn btn-secondary"
+                          >
+                            Back
+                          </button>
+                          <button
+                            disabled={!selectedDate || !selectedTime}
+                            onClick={() => setStep(2)}
+                            className="nex-btn"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
-                </>
-              )}
-            </div>
-          ))}
+                ))}
               </div>
             )}
 
@@ -577,7 +575,7 @@ export default function Appointments() {
                       borderRadius: "8px",
                       padding: "15px",
                       background: "#fff",
-                       fontFamily: "BasisGrotesquePro"
+                      fontFamily: "BasisGrotesquePro"
                     }}
                   >
                     {/* Selected Appointment Info */}
@@ -661,7 +659,7 @@ export default function Appointments() {
                               marginLeft: "20px",
                             }}
                           >
-                            {/* Date & Time with AwaitingIcon */}
+
                             <p
                               style={{
                                 fontSize: "13px",
@@ -677,7 +675,7 @@ export default function Appointments() {
                               {selectedDate} June 2025 {selectedTime}
                             </p>
 
-                            {/* Eastern Time with EsternTimeIcon */}
+
                             <p
                               style={{
                                 fontSize: "13px",
@@ -697,7 +695,7 @@ export default function Appointments() {
                       ))}
                   </div>
 
-                  {/* RIGHT CARD : Subject of Meeting */}
+
                   <div
                     style={{
                       border: "1px solid #E5E7EB",
@@ -732,7 +730,7 @@ export default function Appointments() {
                   </div>
                 </div>
 
-                {/* Bottom Buttons */}
+
                 <div
                   style={{
                     marginTop: "20px",

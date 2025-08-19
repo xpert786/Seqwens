@@ -117,7 +117,7 @@ const InvoicesMain = () => {
       </div>
 
 
-      {/* Tab Content */}
+  
       <div>
         {activeTab === 'outstanding' ? <OutstandingTab /> : <PaymentHistoryTab />}
       </div>

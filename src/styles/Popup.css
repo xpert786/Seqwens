@@ -40,31 +40,6 @@
   justify-content: center;
 }
 
-/* mydocuments colour */
-.bg-darkblue {
-  background-color: #1E40AF !important;
-}
-
-.bg-darkgreen {
-  background-color: #22C55E !important;
-}
-
-.bg-darkbroun {
-  background-color: #854D0E !important;
-}
-
-.bg-darkcolour {
-  background-color: #991B1B !important;
-}
-
-
-.modal-content {
-  border-radius: 20px !important;
-}
-
-
-/* upload css */
-
 
 
 /* Header */
@@ -459,7 +434,7 @@
   color: #fff;
 }
 
-/* Info Box */
+
 /* Info Box */
 .info {
   border: 1px solid #E5E7EB;
@@ -497,4 +472,5 @@
   border: none !important;
   background: #fff;
 }
+
 

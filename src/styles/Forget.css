@@ -12,7 +12,7 @@
   padding: 60px;
   border-radius: 25px;
   width: 100%;
-  max-width: 590px;
+  max-width: 590px;  
   min-height: 500px;
   color: white;
   display: flex;
@@ -28,7 +28,7 @@
   color: #ffffff;
   font-size: 35px;
   font-weight: 500;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
   margin-bottom: 10px;
 }
 
@@ -36,7 +36,7 @@
   color: #ffffff;
   font-size: 21px;
   font-weight: 400;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
   margin: 0;
 }
 
@@ -68,24 +68,41 @@
 .send-btn {
   width: 100%;
   padding: 10px;
-  background-color: #f56d2d;
-  color: white;
+  background-color: #f56d2d !important;
+  color: white !important;
   border: none;
   border-radius: 8px;
-  font-weight: 500;
-  font-size: 18px;
+  font-weight: 500 !important;
+  font-size: 18px !important;
   cursor: pointer;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
   transition: none;
 }
 
-.send-btn:hover,
-.send-btn:focus,
-.send-btn:active {
-  background-color: #f56d2d !important;
-  color: white !important;
-  box-shadow: none !important;
-  outline: none !important;
+@media (max-height: 700px) {
+  .forgot-box {
+    padding: 25px 25px !important;
+    max-height: 65vh !important;    
+     min-height: 400px !important;  
+  }
+
+  .forgot-title {
+    font-size: 24px;
+  }
+
+  .forgot-subtitle {
+    font-size: 16px;
+  }
+
+  .form-label,
+  .form-control {
+    font-size: 13px;
+  }
+
+  .send-btn {
+    font-size: 15px;
+    padding: 8px;
+  }
 }
 
 /* ✅ Responsive for laptops */

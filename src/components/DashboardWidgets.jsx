@@ -10,7 +10,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* Dashboard Header Section */}
+     
       <div className="dashboard-header">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
@@ -24,10 +24,10 @@ export default function Dashboard() {
               Contact Firm
             </button>
 
-            <button className="btn dashboard-btn btn-scan d-flex align-items-center gap-2">
+            {/* <button className="btn dashboard-btn btn-scan d-flex align-items-center gap-2">
               <UpIcon />
               Scan Document
-            </button>
+            </button> */}
 
             <button
               className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"

@@ -4,7 +4,7 @@
   align-items: center;
   padding: 40px 10px;
   min-height: 100vh;
- 
+
 }
 
 .personal-info-container {
@@ -17,7 +17,7 @@
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Titles */
+
 .personal-info-title {
   font-family: "BasisGrotesquePro";
   font-weight: 700;
@@ -34,7 +34,7 @@
   margin-bottom: 25px;
 }
 
-/* Form box */
+
 .form-wrapper {
   background: #ffffff;
   padding: 25px;
@@ -42,7 +42,7 @@
   color: #000;
 }
 
-/* Labels */
+
 .custom-label {
   font-size: 16px;
   font-weight: 500;
@@ -52,25 +52,25 @@
   display: block;
 }
 
-/* Inputs */
+
 .custom-input {
   width: 100%;
   font-family: "BasisGrotesquePro";
   border: 1px solid #4b5563;
   border-radius: 8px;
-  padding: 10px 40px 10px 14px; /* space for icon */
+  padding: 10px 40px 10px 14px;
   font-size: 14px;
   box-sizing: border-box;
 }
 
-/* Password input wrapper to position the icon */
+
 .password-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-/* Eye button inside input */
+
 .toggle-visibility-btn {
   position: absolute;
   right: 10px;
@@ -84,7 +84,7 @@
   align-items: center;
 }
 
-/* Strength meter */
+
 .password-strength {
   background: #ffffff;
   border: 1px solid #e8f0ff;
@@ -129,7 +129,7 @@
   border: none;
   margin-top: 25px;
   width: fit-content;
-  cursor: default; 
+  cursor: default;
 }
 
 
@@ -138,6 +138,58 @@
   color: white;
   cursor: default;
 }
+
+.txts {
+  color: #3b4a66 !important;
+}
+
+
+/* @media screen and (max-height: 750px) {
+  .personal-info-wrapper {
+    padding: 0;
+    align-items: center;
+  }
+
+  .personal-info-container {
+    height: 100vh !important;
+    width: 85% !important;
+    padding: 25px !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 20px !important;
+  }
+
+  .personal-info-title {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+
+  .personal-info-subtitle {
+    font-size: 12px;
+    margin-bottom: 15px;
+  }
+
+  .form-wrapper {
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .custom-input {
+    padding: 8px 32px 8px 12px;
+    font-size: 13px;
+  }
+
+  .criteria-item {
+    font-size: 12px;
+  }
+
+  .create-account-btn {
+    font-size: 15px;
+    padding: 8px 15px;
+    margin-top: 15px;
+  }
+} */
 
 
 
