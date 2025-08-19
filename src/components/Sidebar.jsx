@@ -87,7 +87,7 @@ export default function Sidebar() {
       </div>
 
       {/* Fixed Bottom Box */}
-      <div className="sidebar-bottom-box">
+      <div className="sidebar-bottom-boxs">
         <Link to="/accounts" className={bottomLinkClass("/accounts")}>
           <span className={`bottom-icon-wrapper ${location.pathname === "/accounts" ? "active" : ""}`}>
             <AccountIcon />

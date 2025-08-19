@@ -253,7 +253,7 @@
   padding-right: 6px;
 }
 
-/* Folder UI */
+
 .folder-box {
   border: 1px dashed #999;
   padding: 0.5rem 1rem;
@@ -289,7 +289,7 @@
   background-color: #f1f3f5;
 }
 
-/* Toggle buttons */
+
 .toggle-btn {
   background-color: white !important;
   color: black !important;
@@ -315,7 +315,7 @@
   font-family: 'BasisGrotesquePro';
 }
 
-/* Error box */
+
 .doc-error-box {
   border: 1px solid #EF4444;
   background-color: #EF444417;
@@ -346,26 +346,6 @@
   flex-shrink: 0;
   font-family: 'BasisGrotesquePro';
 }
-
-/* 
-.folder-dropdown-content::-webkit-scrollbar,
-.doc-scroll::-webkit-scrollbar,
-.config-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.folder-dropdown-content::-webkit-scrollbar-thumb,
-.doc-scroll::-webkit-scrollbar-thumb,
-.config-scroll::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 3px;
-}
-
-.folder-dropdown-content::-webkit-scrollbar-track,
-.doc-scroll::-webkit-scrollbar-track,
-.config-scroll::-webkit-scrollbar-track {
-  background: transparent;
-} */
 
 
 .sticky-footer {

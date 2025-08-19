@@ -85,7 +85,7 @@
   background-color: #fff !important;
 }
 
-.sidebar-bottom-box {
+.sidebar-bottom-boxs {
   background-color: #ffffff !important;
   border-radius: 10px !important;
   margin: 20px !important;
@@ -141,5 +141,32 @@
   .icon-wrapper svg {
     width: 16px !important;
     height: 16px !important;
+  }
+}
+@media (max-height: 700px) {
+  .sidebar-container {
+    width: 240px !important;
+  }
+  .sidebar-top {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  .sidebar-bottom-boxs {
+    margin: 10px !important;
+    padding: 8px !important;
+    gap: 6px !important;
+  }
+  .icon-wrapper {
+    width: 26px !important;
+    height: 26px !important;
+    margin-right: 6px !important;
+  }
+  .icon-wrapper svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .sidebar-bottom-link {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
   }
 }
