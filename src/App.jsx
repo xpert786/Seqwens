@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import Homepage from "./pages/Homepage";
+// import Homepage from "./pages/Homepage";
 import DashboardLayout from "./components/DashboardLayout";
 import ESignatureModal from './components/ESignatureModal';
 import NotificationPanel from './components/Notifications/NotificationPanel';
@@ -30,7 +30,7 @@ export default function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Homepage />} />
+      {/* <Route path="/" element={<Homepage />} /> */}
       {/* Old users login */}
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -43,7 +43,7 @@ export default function App() {
 
 
       {/* New users */}
-      <Route path="/create-account" element={<CreateAccount />} />
+      <Route path="/" element={<CreateAccount />} />
       <Route path="/personal-info" element={<PersonalInfo />} />
 
       {/* Protected Routes */}
