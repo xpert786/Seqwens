@@ -4,8 +4,9 @@ import "../../styles/NotificationsPanel.css";
 
 export default function NotificationsPanel() {
   const [selectedTab, setSelectedTab] = useState("all");
-  const [visible, setVisible] = useState(true);
+ const [visible, setVisible] = useState(true);
 
+  if (!visible) return null;
   const tabs = [
     { label: "All", key: "all" },
     { label: "Unread", key: "unread" },
@@ -72,7 +73,7 @@ export default function NotificationsPanel() {
     Low: "#22C55E",
   };
 
-  if (!visible) return null;
+
 
   return (
     <div className="notifications-panel shadow rounded-4">

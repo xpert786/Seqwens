@@ -1,26 +1,27 @@
-/* === REUSABLE FIXED BACKGROUND AND LOGO === */
-.fixed-screen {
-  background: linear-gradient(180deg, #ffffff 0%, #fff4e6 100%);
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
+.abc {
+  background: linear-gradient(180deg, #ffffff 0%, #fff4e6 100%) !important;
+  min-height: 100vh !important;        
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.fixed-logo {
-  position: absolute;
-  top: 20px;
-  left: 40px;
-  height: 50px;
-  object-fit: contain;
-  z-index: 2;
+.top img {
+  width: 300px !important;
+  padding: 30px 40px !important;
 }
 
-/* Disable page scroll globally */
-body {
-  overflow: hidden;
+.content-rap {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 20px !important;
+  overflow: hidden !important; 
+}
+
+@media screen and (max-height: 750px) {
+  .content-rap {
+    align-items: flex-start !important;
+    overflow-y: auto !important;  
+  }
 }

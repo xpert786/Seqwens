@@ -3,7 +3,7 @@
 }
 
 .dashboard-main {
-  margin-left: 280px; 
+  margin-left: 280px !important; 
   margin-top: 70px; 
   height: calc(100vh - 70px);
   overflow-y: auto;
@@ -15,7 +15,7 @@
 
 @media (max-width: 1366px) {
   .dashboard-main {
-    margin-left: 240px;
-    width: calc(100% - 240px);
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
   }
 }

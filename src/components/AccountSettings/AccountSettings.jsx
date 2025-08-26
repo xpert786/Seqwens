@@ -15,7 +15,7 @@ export default function AccountSettings() {
     ];
 
     return (
-        <div className="container-fluid px-2">
+        <div className="container-fluid px-4">
 
             <div className="align-items-center mb-3">
                 <h5
@@ -45,7 +45,7 @@ export default function AccountSettings() {
             <div
                 className="d-inline-block mb-4"
                 style={{
-                    padding: "10px 12px", 
+                    padding: "10px 12px",
                     borderRadius: "12px",
                     backgroundColor: "#FFFFFF",
                     fontSize: "14px",
@@ -63,7 +63,7 @@ export default function AccountSettings() {
                             <button
                                 onClick={() => setActiveTab(tab.id)}
                                 style={{
-                                    padding: "8px 22px", 
+                                    padding: "8px 22px",
                                     borderRadius: "8px",
                                     border: "none",
                                     fontSize: "15px",

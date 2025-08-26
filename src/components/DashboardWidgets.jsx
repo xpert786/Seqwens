@@ -11,7 +11,7 @@ export default function Dashboard() {
   return (
     <div>
      
-      <div className="dashboard-header">
+      <div className="dashboard-header px-4">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
             <h2 className="dashboard-title">Dashboard</h2>
@@ -69,7 +69,7 @@ export default function Dashboard() {
             button: "View All",
           },
         ].map((card, index) => (
-          <div className="col-sm-6 col-md-3" key={index}>
+          <div className="col-sm-6 col-md-3 px-4" key={index}>
             <div className="card dashboard-card">
               <div className="d-flex justify-content-between align-items-start">
                 {card.icon}

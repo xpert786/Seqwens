@@ -1,13 +1,18 @@
-// src/components/Layout.js
 import React from "react";
-import "../styles/FixedLayout.css";
 import logo from "../assets/logo.png";
+import "../styles/FixedLayout.css";
 
 const FixedLayout = ({ children }) => {
   return (
-    <div className="fixed-screen">
-      <img src={logo} alt="Logo" className="fixed-logo" />
-      {children}
+    <div className="abc">
+      <div className="top">
+        <img src={logo} alt="Logo" />
+      </div>
+
+ 
+      <div className=".content-rap">
+        {children}
+      </div>
     </div>
   );
 };

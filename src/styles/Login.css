@@ -1,7 +1,6 @@
 .login-page {
 
   padding: 60px 20px;
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,9 +9,9 @@
 .login-card {
   background-color: #3b4a66;
   width: 600px;
-  border-radius: 30px;
-  min-height: 580px;
-  padding: 60px 50px;
+  border-radius: 25px;
+  min-height: 500px;
+  padding: 70px 70px;
 
 }
 
@@ -30,7 +29,7 @@
 
 .login-subtitle {
   color: #ffffff;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 400;
   font-family: BasisGrotesquePro;
   margin: 0;
@@ -42,7 +41,7 @@
 
 .form-group {
   margin-bottom: 20px !important;
-   margin-top: 5px !important;
+  margin-top: 5px !important;
   position: relative;
 }
 
@@ -161,7 +160,7 @@
   padding: 60px 50px;
   border-radius: 32px;
   width: 700px;
-  height: 600px; 
+  height: 600px;
 
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -199,7 +198,7 @@
   color: #2f4160;
   border: none;
   padding: 20px;
-  border-radius: 12px; 
+  border-radius: 12px;
   width: 100%;
   cursor: pointer;
   font-weight: bold;
@@ -247,6 +246,7 @@
 .modal-scrollable::-webkit-scrollbar {
   width: 6px;
 }
+
 .modal-scrollable::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 4px;
@@ -256,17 +256,18 @@
   width: 12px !important;
   height: 12px !important;
 }
- .print svg{
-  margin-right: 5px;
- }
 
- /* Login Page Responsive for Small Laptop Screens */
+.print svg {
+  margin-right: 5px;
+}
+
+
 @media (max-height: 800px) {
   .login-card {
-    min-height: auto; /* Fix large fixed height issue */
-    padding: 30px 25px;
-    max-height: 90vh; /* box screen ke andar fit ho */
-    overflow-y: auto; /* andar scroll aa jaye */
+
+    padding: 30px 60px !important;
+    min-height: 450px !important;
+
   }
 
   .login-title {
@@ -280,7 +281,7 @@
   .form-label,
   .form-check-label,
   .forgot-link {
-    font-size: 13px;
+    font-size: 14px !important;
   }
 
   .form-control {
@@ -297,7 +298,7 @@
 
 @media (max-height: 800px) {
   .twofa-wrapper {
-    height: 100vh; 
+    height: 100vh;
     padding: 20px;
   }
 
@@ -305,9 +306,9 @@
     width: 100%;
     max-width: 600px;
     height: auto;
-    max-height: 90vh; 
+    max-height: 90vh;
     padding: 40px 40px;
-    overflow-y: auto; 
+    overflow-y: auto;
   }
 
   .twofa-btn {

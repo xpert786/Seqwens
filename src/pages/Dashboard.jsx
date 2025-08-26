@@ -106,10 +106,10 @@ export default function Dashboard() {
     <div className="container-fluid px-2 px-md-2">
       <DashboardWidgets />
 
-      <div className="row mt-1 g-3">
+      <div className="row mt-1 g-3 px-4">
         {/* What's Due Section */}
-        <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-4 h-100">
+        <div className="col-12 col-md-6 ">
+          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
             <div className="mb-3">
               <h1 className="section-title mb-1">What's Due</h1>
               <p className="section-subtitle m-0">Your latest interactions</p>

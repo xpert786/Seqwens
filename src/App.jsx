@@ -29,8 +29,10 @@ import { isNewUser } from "../src/utils/userUtils";
 export default function App() {
   return (
     <Routes>
-      {/* Public Routes */}
+    
       {/* <Route path="/" element={<Homepage />} /> */}
+
+
       {/* Old users login */}
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -39,12 +41,15 @@ export default function App() {
       <Route path="/two-auth" element={<  TwoFactorAuth />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
+   
 
 
 
       {/* New users */}
       <Route path="/" element={<CreateAccount />} />
       <Route path="/personal-info" element={<PersonalInfo />} />
+      
+      
 
       {/* Protected Routes */}
       <Route
@@ -78,18 +83,15 @@ export default function App() {
         {/* iconbell click notifications */}
         <Route path="/notifications" element={<NotificationPanel />} />
         <Route path="/esignature" element={<ESignatureModal />} />
-
-
-
-
-
-
-
-
-
-
-      </Route>
+        
+         </Route>
 
     </Routes>
   );
 }
+
+
+
+
+
+

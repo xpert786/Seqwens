@@ -83,7 +83,7 @@ export default function Appointments() {
   });
 
   return (
-    <div className="px-2" >
+    <div className="px-4" >
 
       <div className="d-flex justify-content-between align-items-center mb-2">
 

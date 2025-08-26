@@ -86,7 +86,7 @@ export default function ESignature() {
         {cardData.map((item, index) => (
           <div className="col-md-4" key={index}>
             <div
-              className="bg-white rounded shadow-sm p-3 d-flex flex-column justify-content-between"
+              className="bg-white rounded p-3 d-flex flex-column justify-content-between"
               style={{ borderRadius: "12px", height: "130px" }}
             >
               <div className="d-flex justify-content-between align-items-start">
@@ -104,7 +104,7 @@ export default function ESignature() {
                 <div
                   className="px-3 py-1 rounded text-dark fw-bold"
                   style={{
-                    backgroundColor: "#f1f1f1",
+
                     minWidth: "38px",
                     textAlign: "center",
                   }}

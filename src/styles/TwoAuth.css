@@ -1,18 +1,17 @@
 .twofa-container {
   padding: 60px 20px;
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.twofa-box {
+.twofa-boxs {
   background-color: #3b4a66;
   padding: 60px;
   border-radius: 25px;
   width: 100%;
   max-width: 590px;
-  min-height: 500px;
+  min-height: 300px !important;
   color: white;
 }
 
@@ -23,16 +22,16 @@
 .twofa-header h5 {
   color: #ffffff;
   font-weight: 500;
-  font-size: 28px;
-  font-family: BasisGrotesquePro;
+  font-size: 28px !important;
+  font-family: "BasisGrotesquePro";
   margin-bottom: 15px;
 }
 
-.twofa-header p {
+.twofa-header p{
   color: #ffffff;
-  font-size: 18px;
+  font-size: 15px !important;
   font-weight: 400;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
 }
 
 .twofa-options {
@@ -76,14 +75,14 @@
   font-weight: 500;
   color: #3b4a66;
   font-size: 18px;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
 }
 
 .twofa-desc {
   font-size: 12px;
   color: #3b4a66;
   font-weight: 400;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
 }
 
 .arrow-icon {
@@ -93,17 +92,17 @@
 
 
 @media (max-height: 700px) {
-  .twofa-box {
+  .twofa-boxs {
     min-height: auto;       
     padding: 45px 45px;
   }
 
   .twofa-header h5 {
-    font-size: 22px;
+    font-size: 22px !important;
   }
 
   .twofa-header p {
-    font-size: 14px;
+    font-size: 14px !important;
   }
 
   .twofa-options {
@@ -119,15 +118,15 @@
 
 
 @media (max-width: 1100px) {
-  .twofa-box {
+  .twofa-boxs {
     padding: 40px 30px;
   }
 
-  .twofa-header h5 {
+  .twofa-header {
     font-size: 26px;
   }
 
-  .twofa-header p {
+  .twofa-header{
     font-size: 18px;
   }
 
@@ -139,3 +138,5 @@
     font-size: 13px;
   }
 }
+
+

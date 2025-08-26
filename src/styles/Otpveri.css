@@ -1,7 +1,6 @@
 .otp-page {
 
   padding: 60px 20px;
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,14 +28,14 @@
   font-weight: 500;
   font-size: 35px;
   color: #ffffff;
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
   margin-bottom: 15px;
 }
 
 .otp-description {
-  font-family: BasisGrotesquePro;
+  font-family: "BasisGrotesquePro";
   font-weight: 400;
-  font-size: 18px;
+  font-size: 18px !important;
   color: #ffffff;
   line-height: 1.5;
 }

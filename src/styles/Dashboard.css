@@ -121,12 +121,12 @@
     padding: 8px 14px;
   }
   .card.dashboard-card {
-    min-height: 180px; /* ✅ smaller cards */
+    min-height: 180px; 
     padding: 16px;
   }
 }
 
-/* Very small laptops (12" ~1280px) */
+
 @media (max-width: 1280px) {
   .dashboard-title {
     font-size: 22px;
@@ -139,7 +139,7 @@
     padding: 7px 12px;
   }
   .card.dashboard-card {
-    min-height: 170px; /* ✅ even smaller */
+    min-height: 170px; 
     padding: 14px;
   }
   .dashboard-card-value {

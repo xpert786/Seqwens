@@ -12,7 +12,7 @@ const InvoicesMain = () => {
   ];
 
   return (
-    <div className='px-2' >
+    <div className='px-4' >
 
 
       <div className="align-items-center mb-3 ">

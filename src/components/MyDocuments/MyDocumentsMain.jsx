@@ -18,7 +18,7 @@ export default function MyDocumentsMain() {
     const [showUploadModal, setShowUploadModal] = useState(false);
 
   return (
-    <div className='px-2'>
+    <div className='px-4'>
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>

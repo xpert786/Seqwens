@@ -1,9 +1,9 @@
 .verify-container {
-  padding: 60px 20px;
+  padding: 60px 40px;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+ 
 }
 
 .otp-box {
@@ -87,7 +87,7 @@
   padding-bottom: 2px;
 }
 
-.popup-overlay {
+.popup-overlays {
   position: fixed;
   top: 0;
   left: 0;
@@ -102,7 +102,7 @@
 
 .popup-box {
   background-color: #FFFFFF;
-  padding: 40px;
+  padding: 30px;
   border-radius: 25px;
   width: 420px;
   text-align: center;
@@ -124,8 +124,8 @@
 }
 
 .popup-desc {
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 16px !important;
+  font-weight: 400 !;
   margin-bottom: 25px;
   color: #3B4A66;
   font-family: BasisGrotesquePro;
@@ -145,12 +145,12 @@
 
 @media (max-height: 750px) {
   .otp-box {
-    padding: 40px 30px !important;
+     padding: 60px 40px !important;
     min-height: auto !important;  
   }
 
   .otp-title {
-    font-size: 22px !important; 
+    font-size: 26px !important; 
     margin-bottom: 10px !important;
   }
 

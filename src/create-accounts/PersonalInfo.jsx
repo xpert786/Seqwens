@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import FixedLayout from "../components/FixedLayout";
 import "../styles/PersonalInfo.css";
 import { PasswordStrengthBar } from "../components/icons";
+import FixedLayout from "../components/FixedLayout";
 
 const PersonalInfo = () => {
   const [password, setPassword] = useState("");
@@ -49,42 +49,49 @@ const PersonalInfo = () => {
                     className="toggle-visibility-btn"
                     onClick={togglePasswordVisibility}
                   >
-                    <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                    <i
+                      className={`bi ${
+                        showPassword ? "bi-eye-slash" : "bi-eye"
+                      }`}
+                    ></i>
                   </button>
                 </div>
               </div>
-
 
               {/* Strength Meter */}
               <div className="password-strength">
                 <PasswordStrengthBar />
                 <div className="criteria">
                   <div
-                    className={`criteria-item ${validateLength ? "valid" : "invalid"
-                      }`}
+                    className={`criteria-item ${
+                      validateLength ? "valid" : "invalid"
+                    }`}
                   >
                     {validateLength ? "✔" : "✘"} At Least 8 Characters
                   </div>
                   <div
-                    className={`criteria-item ${validateNumber ? "valid" : "invalid"
-                      }`}
+                    className={`criteria-item ${
+                      validateNumber ? "valid" : "invalid"
+                    }`}
                   >
                     {validateNumber ? "✔" : "✘"} At least one number
                   </div>
                   <div
-                    className={`criteria-item ${validateUpperLower ? "valid" : "invalid"
-                      }`}
+                    className={`criteria-item ${
+                      validateUpperLower ? "valid" : "invalid"
+                    }`}
                   >
                     {validateUpperLower ? "✔" : "✘"} Uppercase/Lowercase letter
                   </div>
                   <div
-                    className={`criteria-item ${validateSpecialChar ? "valid" : "invalid"
-                      }`}
+                    className={`criteria-item ${
+                      validateSpecialChar ? "valid" : "invalid"
+                    }`}
                   >
-                    {validateSpecialChar ? "✔" : "✘"} At least one special character
+                    {validateSpecialChar ? "✔" : "✘"} At least one special
+                    character
                   </div>
                 </div>
-                
               </div>
 
               {/* Confirm Password */}
@@ -129,6 +136,3 @@ const PersonalInfo = () => {
 };
 
 export default PersonalInfo;
-
-
-

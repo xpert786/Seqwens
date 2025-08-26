@@ -11,7 +11,7 @@ export default function TwoFactorAuth() {
   return (
     <FixedLayout>
       <div className="twofa-container">
-        <div className="twofa-box">
+        <div className="twofa-boxs">
           <div className="twofa-content">
             <div className="twofa-header">
               <h5>SECURE YOUR ACCOUNT WITH 2FA</h5>

@@ -15,7 +15,7 @@ export default function HelpSupport() {
   ];
 
   return (
-    <div className="container-fluid px-2">
+    <div className="container-fluid px-4">
       <div className="align-items-center mb-3">
         <h5
           className="mb-0 me-3"

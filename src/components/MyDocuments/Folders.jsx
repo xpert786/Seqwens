@@ -28,7 +28,7 @@ export default function Folders() {
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="form-control custom-input ps-5"
+                                className="form-control  ps-5"
                             />
                         </div>
 

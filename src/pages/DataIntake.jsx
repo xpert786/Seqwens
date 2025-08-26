@@ -49,7 +49,7 @@ export default function DataIntakeForm() {
     setDependents(updated);
   };
   return (
-    <div className="row g-0 px-2 " >
+    <div className="row g-0 px-4 " >
       <div className="align-items-center mb-3 ">
         <h5 className="mb-0 me-3 " style={{
           color: "#3B4A66",

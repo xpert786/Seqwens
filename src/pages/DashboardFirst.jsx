@@ -89,7 +89,7 @@ export default function DashboardFirst() {
   const completionPercentage = Math.round((completedCount / setupTasks.length) * 100);
 
   return (
-    <div className="p-2">
+    <div className="p-4">
       
       <div
         className="p-4 rounded mb-4 position-relative"
