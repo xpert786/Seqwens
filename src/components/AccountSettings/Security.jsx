@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import "../../styles/icon.css";
 import { SaveIcon } from "../icons";
 
