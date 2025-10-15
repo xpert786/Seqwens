@@ -4,6 +4,7 @@ import SuperDashboard from './Pages/SuperDashboard';
 import SuperDashboardContent from './Pages/SuperDashboardContent';
 import UserManagement from './Pages/UserManagement';
 import UserDetail from './Pages/UserDetail';
+import Subscriptions from './Pages/Subscriptions';
 
 export default function SuperRoutes() {
   return (
@@ -14,6 +15,7 @@ export default function SuperRoutes() {
         <Route path="dashboard" element={<SuperDashboardContent />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="users/:userId" element={<UserDetail />} />
+        <Route path="subscriptions" element={<Subscriptions />} />
         
         {/* Add more routes here as needed */}
         {/* <Route path="settings" element={<SettingsPage />} /> */}

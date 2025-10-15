@@ -75,11 +75,11 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="p-6 bg-[#F6F7FF] min-h-screen">
+    <div className="p-6 bg-[#F6F7FF]">
       {/* Page Title and Description */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">User Management</h1>
-        <p className="text-gray-600">Manage all platform users across firms</p>
+        <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+        <p className="text-sm">Manage all platform users across firms</p>
       </div>
 
         {/* Action Buttons */}
