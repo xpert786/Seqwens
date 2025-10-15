@@ -1,0 +1,246 @@
+.personal-info-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 40px 10px !important;
+}
+
+.personal-info-container {
+  width: 100% !important;
+  max-width: 600px !important;
+  background: #3b4a66 !important;
+  padding: 40px !important;
+  border-radius: 25px !important;
+  color: white !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.personal-info-title {
+  font-family: "BasisGrotesquePro" !important;
+  font-weight: 700 !important;
+  font-size: 28px !important;
+  margin-bottom: 5px !important;
+  color: #fff !important;
+}
+
+.personal-info-subtitle {
+  font-family: "BasisGrotesquePro" !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: #ffffff !important;
+  margin-bottom: 25px !important;
+}
+
+.form-wrapper {
+  background: #ffffff !important;
+  padding: 25px !important;
+  border-radius: 15px !important;
+  color: #000 !important;
+}
+
+.custom-label {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  color: #3b4a66 !important;
+  font-family: "BasisGrotesquePro" !important;
+  margin-bottom: 5px !important;
+  display: block !important;
+}
+
+.custom-input {
+  width: 100% !important;
+  font-family: "BasisGrotesquePro" !important;
+  border: 1px solid #4b5563 !important;
+  border-radius: 8px !important;
+  padding: 10px 40px 10px 14px !important;
+  font-size: 14px !important;
+  box-sizing: border-box !important;
+}
+
+.password-input-wrapper {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.toggle-visibility-btn {
+  position: absolute !important;
+  right: 10px !important;
+  background: none !important;
+  border: none !important;
+  color: #4b5563 !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.password-strength {
+  background: #ffffff !important;
+  border: 1px solid #e8f0ff !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  margin-bottom: 15px !important;
+}
+
+.criteria {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  margin-top: 10px !important;
+}
+
+.criteria-item {
+  font-family: "BasisGrotesquePro" !important;
+  font-size: 13px !important;
+}
+
+.criteria-item.valid {
+  color: green !important;
+}
+
+.criteria-item.invalid {
+  color: red !important;
+}
+
+.highlight {
+  color: #f49c2d !important;
+  font-weight: 600 !important;
+}
+
+.create-account-btn {
+  background-color: #f56d2d !important;
+  color: white !important;
+  font-family: "BasisGrotesquePro" !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  padding: 10px 30px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  margin-top: 25px !important;
+  width: fit-content !important;
+  cursor: default !important;
+}
+
+.create-account-btn:hover {
+  background-color: #f56d2d !important;
+  color: white !important;
+  cursor: default !important;
+}
+
+.txts {
+  color: #3b4a66 !important;
+}
+
+@media screen and (max-width: 1024px) {
+  .personal-info-container {
+    padding: 25px !important;
+    max-width: 90% !important;
+  }
+
+  .personal-info-title {
+    font-size: 24px !important;
+  }
+
+  .personal-info-subtitle {
+    font-size: 14px !important;
+  }
+
+  .create-account-btn {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
+
+
+@media screen and (max-height: 750px) {
+  .personal-info-wrapper {
+    padding: 10px 10px !important;
+  }
+
+  .personal-info-container {
+    padding: 30px !important;
+    border-radius: 15px !important;
+  }
+
+  .personal-info-title {
+    font-size: 20px !important;
+  }
+
+  .personal-info-subtitle {
+    font-size: 14px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .form-wrapper {
+    padding: 20px !important;
+  }
+
+  .custom-label {
+    font-size: 14px !important;
+  }
+
+  .custom-input {
+    padding: 8px 35px 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .create-account-btn {
+    font-size: 14px !important;
+    padding: 10px 20px !important;
+  }
+}
+
+/* For mobile / very small screens (including small-height laptops) */
+@media screen and (max-width: 480px) {
+  .personal-info-wrapper {
+    padding: 15px 8px !important;
+  }
+
+  .personal-info-container {
+    padding: 15px !important;
+    border-radius: 12px !important;
+    max-width: 100% !important;
+  }
+
+  .personal-info-title {
+    font-size: 18px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .personal-info-subtitle {
+    font-size: 12px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .form-wrapper {
+    padding: 15px !important;
+    border-radius: 10px !important;
+  }
+
+  .custom-label {
+    font-size: 13px !important;
+  }
+
+  .custom-input {
+    padding: 8px 30px 8px 10px !important;
+    font-size: 12px !important;
+  }
+
+  .criteria {
+    gap: 10px !important;
+    margin-top: 8px !important;
+  }
+
+  .criteria-item {
+    font-size: 12px !important;
+  }
+
+  .create-account-btn {
+    font-size: 14px !important;
+    padding: 8px 15px !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+}

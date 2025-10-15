@@ -1,0 +1,307 @@
+/* -------------------- Dashboard Header -------------------- */
+.taxdashboard-header {
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.taxdashboard-title {
+  font-family: "BasisGrotesquePro", sans-serif;
+  color: #3B4A66;
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.taxdashboard-subtitle {
+  font-family: "BasisGrotesquePro", sans-serif;
+  color: #4B5563;
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* Buttons */
+.taxdashboard-btn {
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  border-radius: 6px;
+  padding: 10px 18px;
+  transition: background-color 0.3s ease;
+}
+
+/* Contacted / Uploaded Buttons */
+.btn-contacted {
+  background-color: #ffffff !important;
+  color: #3B4A66 !important;
+}
+.btn-contacted:hover {
+  background-color: #fff4ec;
+}
+.btn-uploaded {
+  background-color: #F56D2D !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.btn-uploaded:hover {
+  background-color: #e85c1c;
+}
+
+/* -------------------- Cards -------------------- */
+.carded.dashboard-carded {
+  min-height: 200px;
+  border: 1px solid #E8F0FF;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboarded-carded-labeled {
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
+.dashboarded-carded-valued {
+  border-radius: 27px;
+  padding: 5px 12px;
+  font-size: 20px;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  margin: 0;
+  color: #3B4A66;
+}
+
+.dashboarded-carded-btned {
+  border: 1px solid #CED4DA !important;
+  border-radius: 5px !important;
+  padding: 6px 14px !important;
+  font-size: 14px;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  background-color: #ffffff !important;
+  color: #3B4A66 !important;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+p.card-contented {
+  color: rgba(244, 156, 45, 1);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* -------------------- Task Card -------------------- */
+.car {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.5rem; /* remove extra space */
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+}
+
+.bother {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start; /* align left */
+  gap: 12px;
+  align-items: center;
+}
+
+.db-user {
+  display: inline-flex;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3B4A66;
+}
+
+.task-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #3B4A66;
+  margin-bottom: 4px;
+}
+
+.task-due {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Badge */
+.task-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  color: #fff;
+}
+
+/* Icon circle */
+.icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #f3f3f3;
+  border-radius: 50%;
+}
+
+.db-user-icon-wrapper {
+  display: inline-flex;
+  width: 16px;  
+  height: 16px;  
+  transform: scale(1);
+  transform-origin: center;
+}
+
+.msg-role{
+  font-family: "BasisGrotesquePro", sans-serif;
+}
+
+/* -------------------- Responsive -------------------- */
+@media (max-width: 1366px) {
+  .taxdashboard-title { font-size: 24px; }
+  .taxdashboard-subtitle { font-size: 14px; }
+  .taxdashboard-btn { font-size: 14px; padding: 8px 14px; }
+  .card.dashboard-card { min-height: 180px; padding: 16px; }
+}
+
+@media (max-width: 1280px) {
+  .taxdashboard-title { font-size: 22px; }
+  .taxdashboard-subtitle { font-size: 13px; }
+  .taxdashboard-btn { font-size: 13px; padding: 7px 12px; }
+  .card.dashboard-card { min-height: 170px; padding: 14px; }
+  .dashboarded-carded-valued { font-size: 13px; padding: 4px 10px; }
+  .dashboarded-carded-btned { font-size: 13px; padding: 5px 12px; }
+  
+}
+
+@media (max-width: 768px) {
+  .bother { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .car { flex-direction: column; gap: 0.5rem; }
+  .icon-circle { width: 24px; height: 24px; }
+
+}
+
+/* View All Button */
+.view-all-btn {
+  background: var(--White-900, #FFFFFF);
+  border: 1px solid var(--Palette2-Dark-blue-100, #E8F0FF);
+  color: var(--Palette2-Orange-900, #F56D2D);
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 27px;
+  cursor: pointer;
+  min-height: 28px;
+}
+
+/* Role badge for messages */
+.role-badge {
+  padding: 4px 8px;
+  border-radius: 27px;
+  font-size: 10px;
+  line-height: 100%;
+  display: flex;
+  align-items: center;
+  border: 0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF);
+  font-family: "BasisGrotesquePro", sans-serif;
+  justify-content: center;
+  background: var(--White-900, #FFFFFF);
+  color: black;
+}
+.msg-content{
+  font-family: "BasisGrotesquePro", sans-serif;
+}
+.name-role-circle {
+  width: 6px;
+  height: 6px;
+  background: var(--Palette2-Gold-800, #F49C2D);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* -------------------- Quick Action Cards -------------------- */
+.quick-action-container {
+  display: flex;
+  justify-content: center; /* center horizontally */
+  flex-wrap: wrap;
+  gap: 40px; /* increased spacing */
+  margin-top: 12px;
+}
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 130px;  /* slightly bigger */
+  height: auto;  /* height adjusts to icon + label */
+  background: var(--White-900, #FFFFFF);
+  border: 0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  text-align: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.quick-action-card:hover {
+  background-color: #FFF4E6;
+}
+
+.action-icon {
+  width: 24px;
+  height: 24px;
+  color: #F56D2D;
+}
+
+/* Ensure parent card wraps tightly around quick-action cards */
+.card.custom-card {
+  height: auto;  /* dynamic height */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* align top */
+  padding: 16px; /* reduce vertical padding */
+}
+
+/* Upcoming Deadlines card wrapper */
+.upcoming-deadlines-card {
+  height: auto;              /* wrap tightly */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* align top */
+  padding: 16px;             /* optional padding */
+}
+
+/* Container for all tasks inside Upcoming Deadlines */
+.upcoming-deadlines-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;                 /* spacing between tasks */
+}
+
+/* Each task card inside Upcoming Deadlines */
+.upcoming-deadline-task {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.5rem;   /* minimal space inside task */
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+}

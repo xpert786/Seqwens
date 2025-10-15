@@ -1,0 +1,108 @@
+.small-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.mobile-icon-custom {
+  width: 34px;
+  height: 34px;
+  margin-top: 10px;
+  color: #3B4A66;
+  flex-shrink: 0;
+}
+
+.icon-custom {
+  width: 24px;
+  height: 24px;
+  margin-top: 10px;
+  color: #3B4A66;
+  flex-shrink: 0;
+}
+
+
+.custom-toggle {
+  position: relative;
+  width: 38px;
+  height: 20px;
+}
+
+.custom-toggle input {
+  display: none;
+}
+
+.custom-toggle label {
+  position: absolute;
+  cursor: pointer;
+  background-color: #d1d5db;
+  border-radius: 999px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.custom-toggle label::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Checked state */
+.custom-toggle input:checked+label {
+  background-color: #F56D2D;
+}
+
+.custom-toggle input:checked+label::after {
+  transform: translateX(18px);
+}
+
+.bill {
+  margin-top: 8px;
+}
+
+.custom-switch .form-check-input:checked {
+  background-color: #F56D2D;
+  border-color: #F56D2D;
+
+}
+.custom-switch label {
+  color: #3B4A66 !important;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: 'BasisGrotesquePro';
+}
+
+.search-icon {
+  top: 80px;
+  left: 12px;
+  color: #aaa;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.file-icon svg {
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+
+}
+
+/* Apointments */
+.time-list.clicked .time-btn {
+  padding: 4px 10px !important;
+}
+
+
+
+.calendar-btn.active {
+  border-radius: 8px !important;
+  background-color: #F56D2D !important;
+  color: #FFFFFF !important;
+}

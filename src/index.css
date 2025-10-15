@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+
+/* Global font: use BasisGrotesquePro from fonts.css, with sensible fallbacks */
+html, body, #root, button, input, select, textarea {
+  font-family: 'BasisGrotesquePro', 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
+}
+/* Ensure all elements inherit the global font */
+*, *::before, *::after {
+  font-family: inherit !important;
+}
+
+/* Remove underline from all links */
+a {
+  text-decoration: none !important;
+}
+
+/* Ensure all sidebar icons are black when not selected */
+/* .sidebar-container svg {
+  color: black !important;
+  fill: black !important;
+} */
+
+/* Override any icon colors in sidebar */
+.sidebar-container [class*="icon"] svg,
+.sidebar-container .icon-wrapper svg {
+  color: black !important;
+  fill: black !important;
+}
+
+.custom-btn-bg {
+  background-color: #F3F7FF !important;
+  border-color: gray !important;
+  border-radius: 6px !important;
+  color: black !important;
+}
+
+.custom-btn-bg:hover {
+  background-color: #F3F7FF !important;
+  color: black !important;
+  border-color: gray !important;
+}

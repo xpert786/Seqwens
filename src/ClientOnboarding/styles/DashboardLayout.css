@@ -1,0 +1,21 @@
+.dashboard-layout {
+  display: flex;
+}
+
+.dashboard-main {
+  margin-left: 280px !important; 
+  margin-top: 70px; 
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  background-color: rgb(243, 247, 255);
+  padding: 20px;
+  width: calc(100% - 280px);
+}
+
+
+@media (max-width: 1366px) {
+  .dashboard-main {
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+  }
+}

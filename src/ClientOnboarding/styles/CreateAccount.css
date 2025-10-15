@@ -1,0 +1,139 @@
+.create-account-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 40px 10px !important;
+ 
+}
+
+.create-account-container {
+  width: 80% !important;
+  max-width: 600px !important;
+  background: var(--Palette2-Dark-blue-900, #3B4A66) !important;
+  padding: 40px !important;
+  border-radius: 25px !important;
+  color: white !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.create-account-title {
+  font-family: 'BasisGrotesquePro' !important;
+  font-weight: 700 !important;
+  font-size: 28px !important;
+  margin-bottom: 5px !important;
+  color: #fff !important;
+}
+
+.create-account-subtitle {
+  font-family: 'BasisGrotesquePro' !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: #ffffff !important;
+  margin-bottom: 25px !important;
+}
+
+.form-wrapper {
+  background: #ffffff !important;
+  padding: 30px !important;
+  border-radius: 20px !important;
+  margin-top: 30px !important;
+  color: #000 !important;
+}
+
+.custom-label {
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  color: #3B4A66 !important;
+  font-family: 'BasisGrotesquePro' !important;
+}
+
+.form-wrapper .custom-input {
+  font-family: 'BasisGrotesquePro' !important;
+  border: 1px solid #4B5563 !important; 
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important; 
+}
+
+.form-wrapper .custom-input::placeholder {
+  font-size: 13px !important;
+}
+
+.required {
+  color: #EF4444 !important;
+}
+
+.continue-btn {
+  background-color: #F56D2D !important;
+  color: white !important;
+  font-family: 'BasisGrotesquePro' !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  padding: 10px 30px !important;
+  border-radius: 10px !important;
+  margin-top: 30px !important;
+  border: none !important;
+  transition: background 0.3s ease !important;
+  width: fit-content !important;
+}
+
+@media screen and (max-height: 750px) {
+  .create-account-wrapper {
+    padding: 20px 5px !important;
+  }
+
+  .create-account-container {
+    max-width: 600px !important;
+    padding: 30px !important;
+    border-radius: 15px !important;
+  }
+
+  .create-account-title {
+    font-size: 20px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .create-account-subtitle {
+    font-size: 14px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .form-wrapper {
+    padding: 15px !important;
+    border-radius: 12px !important;
+    margin-top: 20px !important;
+  }
+
+  .custom-label {
+    font-size: 15px !important;
+  }
+
+  .form-wrapper .custom-input {
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+  }
+
+  .continue-btn {
+    margin-top: 20px !important;
+    font-size: 14px !important;
+    padding: 8px 20px !important;
+  }
+}
+
+@media screen and (max-width: 1100px) {
+  .create-account-container {
+    max-width: 90% !important;
+    padding: 25px !important;
+  }
+}
+
+@media screen and (max-width: 1100px) and (max-height: 750px) {
+  .create-account-container {
+    max-width: 85% !important;
+    padding: 18px !important;
+  }
+  .form-wrapper {
+    padding: 12px !important;
+  }
+}

@@ -1,0 +1,27 @@
+.abc {
+  background: linear-gradient(180deg, #ffffff 0%, #fff4e6 100%) !important;
+  min-height: 100vh !important;        
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.top img {
+  width: 300px !important;
+  padding: 30px 40px !important;
+}
+
+.content-rap {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 20px !important;
+  overflow: hidden !important; 
+}
+
+@media screen and (max-height: 750px) {
+  .content-rap {
+    align-items: flex-start !important;
+    overflow-y: auto !important;  
+  }
+}

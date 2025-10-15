@@ -1,0 +1,107 @@
+.folders-wrapper {
+    background: #F5F9FF;
+    min-height: 100vh;
+    font-family: "BasisGrotesquePro", sans-serif;
+}
+
+.folders-title {
+    color: #3B4A66;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    font-family: "BasisGrotesquePro", sans-serif;
+}
+
+.folders-subtitle {
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-family: "BasisGrotesquePro", sans-serif;
+}
+
+.search-box {
+    width: 200% !important;
+    max-width: 900px;
+    position: relative;
+    
+}
+
+
+.search-icon-inside {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 16px;
+    pointer-events: none;
+    border: none !important;
+}
+
+.custom-input {
+    font-family: "BasisGrotesquePro";
+    height: 42px;
+    line-height: normal;
+}
+
+
+
+.custom-btn {
+    font-family: "BasisGrotesquePro";
+}
+
+.folders-title {
+    color: #3B4A66;
+    font-size: 20px;
+    font-weight: 500;
+    font-family: "BasisGrotesquePro", sans-serif;
+}
+
+.folders-subtitle {
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: "BasisGrotesquePro", sans-serif;
+}
+
+.folder-card {
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.folder-card.active {
+    background-color: #FFF4E6;
+}
+
+.folder-icon {
+    color: #F8B500;
+}
+
+.folder-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #3B4A66;
+}
+
+.template-badge {
+    font-size: 11px;
+}
+
+.folder-desc,
+.folder-info {
+    font-family: "BasisGrotesquePro", sans-serif;
+}
+
+/* ✅ Responsiveness */
+@media (max-width: 1200px) {
+    .folders-title {
+        font-size: 18px;
+    }
+
+    .folders-subtitle {
+        font-size: 13px;
+    }
+}
