@@ -1,0 +1,199 @@
+/* Dashboard Header */
+.dashboard-header {
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.dashboard-title {
+  font-family: "BasisGrotesquePro", sans-serif;
+  color: #3B4A66;
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.dashboard-subtitle {
+  font-family: "BasisGrotesquePro", sans-serif;
+  color: #4B5563;
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+}
+
+
+/* Buttons */
+.dashboard-btn {
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  border-radius: 6px;
+  padding: 10px 18px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-contact {
+  background-color: #ffffff !important;
+  color: #3B4A66 !important;
+}
+
+.btn-scan,
+.btn-upload {
+  background-color: #F56D2D !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+
+/* Hover effects */
+.btn-contact:hover {
+  background-color: #fff4ec;
+}
+
+.btn-scan:hover,
+.btn-upload:hover {
+  background-color: #e85c1c;
+}
+
+
+
+.card.dashboard-card {
+  min-height: 200px; 
+  border: 1px solid #E8F0FF;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Value Box */
+.dashboard-card-value {
+  border: 1px solid #CED4DA;
+  border-radius: 27px;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* Label */
+.dashboard-card-label {
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
+/* Button */
+.dashboard-card-btn {
+  border: 1px solid #CED4DA !important;
+  border-radius: 5px !important;
+  padding: 6px 14px !important;
+  font-size: 14px;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  background-color: #ffffff !important;
+  color: #3B4A66 !important;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.dashboard-card-btn:hover {
+  background-color: #f4f6fa !important;
+}
+
+
+
+
+
+/* Small laptops (13"–14", ~1366px) */
+@media (max-width: 1366px) {
+  .dashboard-title {
+    font-size: 24px;
+  }
+  .dashboard-subtitle {
+    font-size: 14px;
+  }
+  .dashboard-btn {
+    font-size: 14px;
+    padding: 8px 14px;
+  }
+  .card.dashboard-card {
+    min-height: 180px; 
+    padding: 16px;
+  }
+}
+
+
+@media (max-width: 1280px) {
+  .dashboard-title {
+    font-size: 22px;
+  }
+  .dashboard-subtitle {
+    font-size: 13px;
+  }
+  .dashboard-btn {
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+  .card.dashboard-card {
+    min-height: 170px; 
+    padding: 14px;
+  }
+  .dashboard-card-value {
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+  .dashboard-card-btn {
+    font-size: 13px;
+    padding: 5px 12px;
+  }
+}
+
+
+
+
+/* Font & Colors */
+.section-title {
+  color: #3B4A66;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+}
+
+.section-subtitle {
+  color: #4B5563;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.task-title {
+  color: #3B4A66;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.task-due {
+  color: #4B5563;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.task-badge {
+  font-size: 11px;
+  color: #fff !important;
+}
+
+.car{
+  border: 1px solid #E8F0FF;
+}
+
+.dashboard-card-btn{
+border: 1px solid #E8F0FF !important;
+background-color: #FFFFFF;
+}

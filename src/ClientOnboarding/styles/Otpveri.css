@@ -1,0 +1,182 @@
+.otp-page {
+
+  padding: 60px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.otp-box {
+  background-color: #3b4a66;
+  padding: 60px;
+  border-radius: 25px;
+  width: 100%;
+  max-width: 590px;
+  min-height: 500px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.otp-header {
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+.otp-title {
+  font-weight: 500;
+  font-size: 35px;
+  color: #ffffff;
+  font-family: "BasisGrotesquePro";
+  margin-bottom: 15px;
+}
+
+.otp-description {
+  font-family: "BasisGrotesquePro";
+  font-weight: 400;
+  font-size: 18px !important;
+  color: #ffffff;
+  line-height: 1.5;
+}
+
+.highlighted-email {
+  color: #f49c2d;
+  font-weight: bold;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 20px !important;
+  margin: 20px 0 30px !important;
+}
+
+.otp-digit {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  outline: none;
+  color: #333333;
+  font-weight: 500;
+  font-family: BasisGrotesquePro;
+  transition: border-color 0.3s ease;
+}
+
+.otp-digit:focus {
+  border-color: #f5663f;
+  box-shadow: 0 0 0 2px rgba(245, 102, 63, 0.2);
+}
+
+.otp-btn {
+  width: 100%;
+  padding: 6px;
+  background-color: #f56d2d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 18px;
+  cursor: pointer;
+  font-family: BasisGrotesquePro;
+  transition: none;
+}
+
+.otp-btn:hover,
+.otp-btn:focus,
+.otp-btn:active {
+  background-color: #f56d2d !important;
+  color: white !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.resend-info {
+  text-align: center;
+  font-family: BasisGrotesquePro;
+  font-weight: 400;
+  font-size: 16px;
+  color: #ffffff;
+  margin-top: 20px;
+}
+
+.resend-link {
+  color: #f56d2d;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 16px;
+  font-family: BasisGrotesquePro;
+  border-bottom: 2px solid #f56d2d;
+  padding-bottom: 2px;
+}
+
+@media (max-height: 700px) {
+  .otp-box {
+    padding: 30px !important;      
+    max-height: 80vh !important;  
+    border-radius: 20px !important;
+  }
+
+  .otp-title {
+    font-size: 26px !important; 
+  }
+
+  .otp-description {
+    font-size: 14px;
+  }
+
+  .otp-digit {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .otp-btn {
+    font-size: 15px;
+    padding: 5px;
+  }
+
+  .resend-info, .resend-link {
+    font-size: 14px;
+  }
+}
+
+/* ✅ Responsive for laptops */
+@media (max-width: 1100px) {
+  .otp-box {
+    padding: 40px;
+  }
+
+  .otp-title {
+    font-size: 30px;
+  }
+
+  .otp-description {
+    font-size: 16px;
+  }
+
+  .otp-digit {
+    width: 45px;
+    height: 45px;
+    font-size: 22px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .otp-btn {
+    font-size: 16px;
+  }
+
+  .resend-info,
+  .resend-link {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,65 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Layouts
+import TaxDashboardLayout from './component/TaxDashboardLayout';
+
+// Pages
+import TaxDashboard from './pages/TaxDashboard';
+import TaxDashboardFirst from './pages/TaxDashboardFirst';
+import DocumentsPage from './pages/Documents/DocumentsPage';
+import AllDocumentsPage from './pages/Documents/AllDocumentsPage';
+import ArchivedFilesPage from './pages/Documents/ArchivedFilesPage';
+import TasksPage from './pages/Tasks/TasksPage';
+import MessagePage from './pages/Messages/Messages';
+import MyClients from './pages/MyClients/MyClients';
+import ClientDetails from './pages/MyClients/ClientDetails';
+import ClientDocuments from './pages/MyClients/ClientDocuments';
+import InvoicesPage from './pages/MyClients/InvoicesPage';
+import SchedulePage from './pages/MyClients/SchedulePage';
+
+export default function TaxRoutes() {
+  return (
+    <Routes>
+      {/* Main tax dashboard route with layout */}
+      <Route path="/" element={<TaxDashboardLayout />}>
+        <Route index element={<TaxDashboard />} />
+        <Route path="dashboard" element={<TaxDashboard />} />
+        <Route path="dashboard-first" element={<TaxDashboardFirst />} />
+        
+        {/* Documents routes */}
+        <Route path="documents">
+          <Route index element={<DocumentsPage />} />
+          <Route path="all" element={<AllDocumentsPage />}>
+            <Route path=":documentId" element={<AllDocumentsPage />} />
+          </Route>
+          <Route path="archived" element={<ArchivedFilesPage />} />
+        </Route>
+        
+        {/* Tasks */}
+        <Route path="tasks" element={<TasksPage />} />
+        
+        {/* Messages */}
+        <Route path="messages" element={<MessagePage />} />
+        
+        {/* Invoices */}
+        <Route path="invoices" element={<InvoicesPage />} />
+        
+        {/* My Clients */}
+        <Route path="clients">
+          <Route index element={<MyClients />} />
+          <Route path=":clientId" element={<ClientDetails />}>
+            <Route path="documents" element={<ClientDocuments />} />
+            <Route path="invoices" element={<InvoicesPage />} />
+            <Route path="schedule" element={<SchedulePage />} />
+          </Route>
+        </Route>
+        
+        {/* Add more routes here as needed */}
+        
+        {/* 404 - Not Found */}
+        <Route path="*" element={<Navigate to="/taxdashboard" replace />} />
+      </Route>
+    </Routes>
+  );
+}

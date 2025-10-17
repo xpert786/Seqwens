@@ -1,0 +1,342 @@
+/* Header */
+.tickets-header {
+    margin-bottom: 1rem !important;
+}
+
+.tickets-title {
+    font-family: BasisGrotesquePro !important;
+    color: #3b4a66 !important;
+    font-size: 19px !important;
+    font-weight: 500 !important;
+    margin-bottom: 0 !important;
+}
+
+.tickets-subtitle {
+    font-size: 13px !important;
+    color: #4b5563 !important;
+    font-weight: 400 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Ticket Box */
+.ticket-box {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    border-radius: 1rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: start !important;
+    cursor: pointer !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e8f0ff !important;
+    transition: 0.2s !important;
+}
+
+.ticket-box.active {
+    background-color: #fff4e6 !important;
+    border: 1px solid #f49c2d !important;
+}
+
+/* Ticket Info */
+.ticket-info {
+    margin-bottom: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.ticket-id {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #3b4a66 !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+.ticket-title {
+    font-size: 12px !important;
+    color: #4b5563 !important;
+    font-weight: 400 !important;
+    font-family: BasisGrotesquePro !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.ticket-dates {
+    font-size: 12px !important;
+    color: #4b5563 !important;
+    font-weight: 400 !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+/* Badges */
+.status-badge {
+    font-size: 11px !important;
+    border-radius: 12px !important;
+    border: 1px solid !important;
+    font-weight: 400 !important;
+    margin-left: 0.75rem !important;
+}
+
+.status-badge.open {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
+    border-color: #854d0e !important;
+    padding: 3px 15px !important;
+    border-radius: 10px !important;
+}
+
+.status-badge.resolved {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    border-color: #166534 !important;
+    padding: 3px 8px !important;
+    border-radius: 10px !important;
+}
+
+.priority-badge {
+    font-size: 11px !important;
+    font-family: BasisGrotesquePro !important;
+    border-radius: 10px !important;
+    margin-left: 0.5rem !important;
+    font-weight: 400 !important;
+    padding: 3px 8px !important;
+}
+
+.priority-badge.medium {
+    background-color: #fbbf24 !important;
+    color: #3b4a66 !important;
+    padding: 3px 15px !important;
+}
+
+.priority-badge.low {
+    background-color: #ef4444 !important;
+    color: #3b4a66 !important;
+    padding: 3px 20px !important;
+    border-radius: 10px !important;
+}
+
+/* View button */
+.view-btn {
+    border: 1px solid #e8f0ff !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    background-color: #ffffff !important;
+    font-family: BasisGrotesquePro !important;
+    border-radius: 8px !important;
+    padding: 4px 12px !important;
+}
+
+
+
+/* popup css */
+
+
+/* Overlay */
+.ticket-popup-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 9999 !important;
+    padding: 10px !important;
+}
+
+/* Popup Box */
+.ticket-popup-box {
+    width: 750px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e8f0ff !important;
+    border-radius: 1rem !important;
+    padding: 1.5rem !important;
+    max-height: 90vh !important;
+    /* 👈 chhoti screen par adjust */
+    overflow-y: auto !important;
+    /* 👈 andar scroll aa jayega */
+}
+
+/* Header */
+.ticket-popup-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.ticket-popup-title {
+    font-family: BasisGrotesquePro !important;
+    font-size: 22px !important;
+    color: #3b4a66 !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+.ticket-popup-close {
+    border: none !important;
+    background: transparent !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+}
+
+.ticket-popup-sub {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #4b5563 !important;
+    margin: 0 !important;
+    padding-top: 2px !important;
+    line-height: 1.2 !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+/* Issue Box */
+.ticket-issue-box {
+    border: 1px solid #e8f0ff !important;
+    background-color: #ffffff !important;
+    margin-top: 20px !important;
+    border-radius: 0.75rem !important;
+    padding: 1rem !important;
+}
+
+.ticket-issue-title {
+    font-size: 14px !important;
+    color: #3b4a66 !important;
+    font-weight: 500 !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+.ticket-issue-text {
+    font-size: 13px !important;
+    color: #4b5563 !important;
+    margin: 6px 0 !important;
+    font-weight: 400 !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+.ticket-meta {
+    font-size: 11px !important;
+    font-family: BasisGrotesquePro !important;
+    color: #4b5563 !important;
+    font-weight: 400 !important;
+}
+
+.ticket-meta-value {
+    color: #3b4a66 !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+/* Quick Actions */
+.ticket-actions {
+    margin-bottom: 1rem !important;
+}
+
+.ticket-actions span {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #4b5563 !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+.ticket-actions button {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    font-family: BasisGrotesquePro !important;
+    border: 1px solid #e8f0ff !important;
+    background-color: #ffffff !important;
+    color: #3b4a66 !important;
+    margin-left: 20px !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+}
+
+.ticket-actions button.close-btn {
+    background-color: #f56d2d !important;
+    color: #ffffff !important;
+    border: none !important;
+    margin-left: 12px !important;
+}
+
+/* Conversation */
+.ticket-conversation {
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e8f0ff !important;
+    border-radius: 0.75rem !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.ticket-message {
+    font-size: 12px !important;
+    color: #3b4a66 !important;
+    font-weight: 400 !important;
+    font-family: BasisGrotesquePro !important;
+    margin: 0 !important;
+}
+
+.ticket-message-date {
+    font-size: 11px !important;
+    color: #4b5563 !important;
+    font-weight: 400 !important;
+    font-family: BasisGrotesquePro !important;
+    margin-top: 4px !important;
+    margin-left: 50px !important;
+}
+
+/* Input */
+.ticket-message-input {
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    padding: 10px !important;
+    font-family: BasisGrotesquePro !important;
+}
+
+.ticket-send-btn {
+    background-color: #F97316 !important;
+    color: #ffffff !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    border: none !important;
+
+}
+
+/* Common Message Icon */
+.msg-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 8px !important;
+}
+
+.msg-icon-inner {
+    width: 18px !important;
+    height: 18px !important;
+    color: #fff !important;
+}
+
+/* Agent ka Icon (orange theme) */
+.agent-icon {
+    background-color: #f49c2d !important;
+}
+
+/* User ka Icon (dark orange theme) */
+.user-icon {
+    background-color: #f56d2d !important;
+}
+
+/* Bubble adjustment */
+.msg-bubble {
+    max-width: 48% !important;
+}

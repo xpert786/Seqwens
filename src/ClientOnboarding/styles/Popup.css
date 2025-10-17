@@ -1,0 +1,476 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Paymentpopup */
+
+.modal-content {
+  max-height: 90vh;
+  overflow: hidden !important;
+}
+
+.modal-body {
+  overflow: visible !important;
+}
+
+
+.icon-circle {
+  width: 38px;
+  height: 38px;
+  background-color: #E8F4FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+/* Header */
+.popup-title {
+  font-family: BasisGrotesquePro;
+  color: #f56d2d;
+  font-weight: 600;
+}
+
+.popup-subtitle {
+  font-family: BasisGrotesquePro;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.popup-section {
+  font-family: BasisGrotesquePro;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Upload Drop Zone */
+.upload-dropzone {
+  border: 2px dashed #e5e7eb;
+  background-color: #fafafa;
+  border-radius: 8px;
+  text-align: center;
+  padding: 1.5rem;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 28px;
+  color: #00c0c6;
+}
+
+.upload-text {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-family: BasisGrotesquePro;
+  font-size: 14px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  font-family: BasisGrotesquePro;
+  margin-bottom: 0;
+}
+
+/* Buttons */
+.btn-orange {
+  background-color: #f56d2d !important;
+  border-color: #f56d2d !important;
+  color: #fff !important;
+  font-family: BasisGrotesquePro;
+}
+
+.btn-cyan {
+  background-color: #00c0c6 !important;
+  color: #ffffff !important;
+  padding: 4px 22px !important;
+  border-radius: 5px !important;
+  border: none !important;
+  min-width: 110px;
+}
+
+.btn-gray {
+  background-color: gray !important;
+  color: #ffffff !important;
+  padding: 4px 22px !important;
+  border-radius: 5px !important;
+  border: none !important;
+  min-width: 110px;
+}
+
+/* Files Panel */
+.files-panel {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  flex: 1 1 280px;
+  min-width: 260px;
+}
+
+.files-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.files-list {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.file-item {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-item.active {
+  border: 1px solid #0d6efd;
+  background-color: #f8f9fa;
+}
+
+.file-icon {
+  color: #00c0c6;
+  font-size: 18px;
+}
+
+.remove-icon {
+  cursor: pointer;
+}
+
+/* Config Box */
+.config-box {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.folder-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+}
+
+
+
+
+
+
+/* Appointments popup css */
+
+.step-two-container {
+  font-family: "BasisGrotesquePro", sans-serif;
+}
+
+.schedule-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.schedule-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #3b4a66;
+}
+
+.schedule-desc {
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+
+.schedule-btn {
+  background: #e8f0ff !important;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151 !important;
+}
+
+.schedule-time {
+  font-size: 15px;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+.schedule-info {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.schedule-meta {
+  font-size: 13px;
+  margin: 4px 0;
+  color: #6b7280;
+}
+
+.meeting-textarea {
+  min-height: 80px;
+  font-size: 13px;
+  border-radius: 6px;
+  resize: none;
+}
+
+.submit-btn {
+  background-color: #f56d2d;
+  border: none;
+}
+
+.submit-btn:hover {
+  background-color: #e45c20;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Overlay */
+.custom-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+/* Popup Container */
+.custom-popup-container {
+  background: #fff;
+  border-radius: 12px;
+  width: 750px;
+  max-width: 95%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  font-family: "BasisGrotesquePro", sans-serif;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Header */
+.popup-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.popup-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.popup-title {
+  margin: 0;
+  color: #3B4A66;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.popup-subtitle {
+  margin: 2px 0 0;
+  color: #4B5563;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.popup-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6B7280;
+}
+
+/* Body */
+.popup-body {
+  padding: 20px;
+}
+
+/* Info Box */
+.info-box {
+
+  background: #FFFF;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.info-box.active {
+  border: 1px solid #FBD5B5;
+  background: #FFF4E6;
+}
+
+.option-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3B4A66;
+}
+
+.option-desc {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 4px;
+}
+
+.arrow-icon {
+  font-size: 20px;
+  color: #9CA3AF;
+  cursor: pointer;
+}
+
+/* Buttons */
+.schedule-btn {
+  background: #E8F0FF;
+  color: #374151;
+  padding: 7px 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.schedule-time {
+  font-size: 15px;
+  color: #4B5563;
+  font-weight: 400;
+}
+
+.selection-box {
+  margin-top: 15px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+/* Calendar */
+.selection-title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-btn {
+  padding: 8px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #374151;
+  cursor: pointer;
+}
+
+.calendar-btn.active {
+  background: #FF6600;
+  color: #fff;
+}
+
+/* Time Slots */
+.time-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-btn {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.time-btn.active {
+  background: #FF6600;
+  border: 2px solid #FF6600;
+  color: #fff;
+}
+
+
+/* Info Box */
+.info {
+  border: 1px solid #E5E7EB;
+  background-color: #FFFF;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+/* Active state (on click) */
+.info.active {
+  border: 1px solid #FBD5B5;
+  background: #FFF4E6;
+}
+
+
+/* Next Button */
+.nex-btn {
+  background: #F56D2D;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.nex-btn:disabled {
+  background: #F56D2D;
+  cursor: not-allowed;
+}
+
+.custom-card {
+  border: none !important;
+  background: #fff;
+}
+
+
