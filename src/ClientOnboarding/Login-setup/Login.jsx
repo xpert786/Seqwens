@@ -71,6 +71,7 @@ export default function Login() {
       // If either email or phone is verified, go directly to dashboard
       if (isEmailVerified || isPhoneVerified) {
         navigate("/dashboard");
+        console.log(import.meta.env.VITE_IS_SERVER, "------------------------------------");
       } else {
         // If neither is verified, go to two-factor authentication
         navigate("/two-auth");

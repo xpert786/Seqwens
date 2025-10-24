@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -28,6 +28,7 @@ export default function Overview() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All Status");
     const [priorityFilter, setPriorityFilter] = useState("All Priority");
+    const [activeDropdown, setActiveDropdown] = useState(null);
 
     const kpiData = [
         { label: "Total Tickets", value: "247" },
@@ -333,6 +334,41 @@ export default function Overview() {
         }
     };
 
+    // Action handlers
+    const handleViewDetails = (ticketId) => {
+        console.log('View Details for ticket:', ticketId);
+        setActiveDropdown(null);
+    };
+
+    const handleAssign = (ticketId) => {
+        console.log('Assign ticket:', ticketId);
+        setActiveDropdown(null);
+    };
+
+    const handleReply = (ticketId) => {
+        console.log('Reply to ticket:', ticketId);
+        setActiveDropdown(null);
+    };
+
+    const handleCloseTicket = (ticketId) => {
+        console.log('Close ticket:', ticketId);
+        setActiveDropdown(null);
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (activeDropdown && !event.target.closest('.dropdown-container')) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);  
+
     return (
         <div className="space-y-4">
             {/* KPI Cards */}
@@ -571,12 +607,47 @@ export default function Overview() {
                             </div>
                             
                             {/* Actions */}
-                            <div>
-                                <button className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
+                            <div className="relative dropdown-container">
+                                <button 
+                                    className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+                                    onClick={() => setActiveDropdown(activeDropdown === ticket.id ? null : ticket.id)}
+                                >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                     </svg>
                                 </button>
+                                
+                                {/* Dropdown Menu */}
+                                {activeDropdown === ticket.id && (
+                                    <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
+                                        <div className="py-1">
+                                            <button
+                                                onClick={() => handleViewDetails(ticket.id)}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                                            >
+                                                View Details
+                                            </button>
+                                            <button
+                                                onClick={() => handleAssign(ticket.id)}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                                            >
+                                                Assign
+                                            </button>
+                                            <button
+                                                onClick={() => handleReply(ticket.id)}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                                            >
+                                                Reply
+                                            </button>
+                                            <button
+                                                onClick={() => handleCloseTicket(ticket.id)}
+                                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-[BasisGrotesquePro]"
+                                            >
+                                                Close Ticket
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}

@@ -73,7 +73,7 @@ export default function DataIntakeForm() {
         // Call both APIs to check for existing data
         const [personalDataResponse, fileDataResponse] = await Promise.all([
           // Check for personal data
-          fetch("/api/taxpayer/personal-data-intake/", {
+          fetch(`${import.meta.env.VITE_API_URL}/taxpayer/personal-data-intake/`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -81,7 +81,7 @@ export default function DataIntakeForm() {
             }
           }),
           // Check for uploaded files
-          fetch("/api/taxpayer/income-data-intake/", {
+          fetch(`${import.meta.env.VITE_API_URL}/taxpayer/income-data-intake/`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -282,7 +282,7 @@ export default function DataIntakeForm() {
       // Call both APIs simultaneously using Promise.all
       const [personalDataResult, fileUploadResult] = await Promise.all([
         // First API: Personal data (JSON)
-        fetch("/seqwens/api/taxpayer/personal-data-intake/", {
+        fetch(`${import.meta.env.VITE_API_URL}/taxpayer/personal-data-intake/`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -292,7 +292,7 @@ export default function DataIntakeForm() {
         }),
         
         // Second API: File upload
-        fetch("/api/taxpayer/income-data-intake/", {
+        fetch(`${import.meta.env.VITE_API_URL}/taxpayer/income-data-intake/`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,

@@ -19,34 +19,23 @@ export const corsConfig = {
 
 // Alternative API base URL for development (using proxy)
 export const getApiBaseUrl = () => {
-  // Check if running on server or locally
-  const isServer = import.meta.env.VITE_IS_SERVER === 'true';
-  
-  if (import.meta.env.DEV) {
-    // Development mode
-    if (isServer) {
-      return '/seqwens/api';
-    } else {
-      return '/api';
-    }
-  }
-  
-  // Production mode
-  if (isServer) {
-    return 'http://168.231.121.7/seqwens/api';
-  } else {
-    return '/api';
-  }
+  return 'http://168.231.121.7/seqwens/api';
+
 };
 
 // Fallback API base URL for when proxy fails
 export const getFallbackApiBaseUrl = () => {
   const isServer = import.meta.env.VITE_IS_SERVER === 'true';
   
+  if (import.meta.env.DEV) {
+    // In development, use proxy
+    return '/api';
+  }
+  
   if (isServer) {
     return 'http://168.231.121.7/seqwens/api';
   } else {
-    return '/api';
+    return 'http://168.231.121.7/seqwens/api';
   }
 };
 
