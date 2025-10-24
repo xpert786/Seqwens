@@ -12,6 +12,7 @@ const Notifications = () => {
     invoice: true,
     message: true,
     marketing: false,
+    login: false,
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -24,19 +25,20 @@ const Notifications = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await notificationAPI.getNotificationPreferences();
-        console.log('Fetched notification preferences:', data);
+        const response = await notificationAPI.getNotificationPreferences();
+        console.log('Fetched notification preferences:', response);
         
         // Map API response to component state
-        if (data) {
+        if (response.success && response.data) {
           setPreferences({
-            email: data.email_notifications || false,
-            sms: data.sms_notifications || false,
-            upload: data.document_upload_confirmation || false,
-            appointment: data.appointment_reminders || false,
-            invoice: data.invoice_alerts || false,
-            message: data.message_notifications || false,
-            marketing: data.marketing_emails || false,
+            email: response.data.email_notifications || false,
+            sms: response.data.sms_notifications || false,
+            upload: response.data.document_upload_confirmation || false,
+            appointment: response.data.appointment_reminders || false,
+            invoice: response.data.invoice_alerts || false,
+            message: response.data.message_notifications || false,
+            marketing: response.data.marketing_emails || false,
+            login: response.data.login_alerts || false,
           });
         }
       } catch (err) {
@@ -69,6 +71,7 @@ const Notifications = () => {
         invoice_alerts: preferences.invoice,
         message_notifications: preferences.message,
         marketing_emails: preferences.marketing,
+        login_alerts: preferences.login,
       };
 
       console.log('Saving notification preferences:', apiData);
@@ -167,6 +170,11 @@ const Notifications = () => {
             title: "Marketing Emails",
             desc: "Receive updates about new features and services",
           },
+          {
+            key: "login",
+            title: "Login Alerts",
+            desc: "Get notified when someone logs into your account",
+          },
         ].map((item) => (
           <div
             key={item.key}
@@ -208,7 +216,14 @@ const Notifications = () => {
       {/* Error Message */}
       {error && (
         <div className="alert alert-danger mt-3" role="alert">
-          {error}
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div className="alert alert-success mt-3" role="alert">
+          <strong>Success:</strong> Notification preferences updated successfully!
         </div>
       )}
 

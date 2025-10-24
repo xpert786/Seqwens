@@ -609,6 +609,11 @@ export const profileAPI = {
     return await apiRequest('/user/account/', 'GET');
   },
   
+  // Get profile picture
+  getProfilePicture: async () => {
+    return await apiRequest('/user/profile-picture/', 'GET');
+  },
+  
   // Update user account information
   updateUserAccount: async (userData) => {
     return await apiRequest('/user/account/', 'PATCH', userData);
@@ -741,19 +746,57 @@ export const dashboardAPI = {
   }
 };
 
+// Support Ticket API functions
+export const supportTicketAPI = {
+  // Create support ticket
+  createSupportTicket: async (ticketData) => {
+    return await apiRequest('/taxpayer/support-tickets/', 'POST', ticketData);
+  },
+  
+  // Get support tickets
+  getSupportTickets: async () => {
+    return await apiRequest('/taxpayer/support-tickets/', 'GET');
+  },
+  
+  // Get support ticket by ID
+  getSupportTicket: async (ticketId) => {
+    return await apiRequest(`/taxpayer/support-tickets/${ticketId}/`, 'GET');
+  },
+  
+  // Update support ticket
+  updateSupportTicket: async (ticketId, ticketData) => {
+    return await apiRequest(`/taxpayer/support-tickets/${ticketId}/`, 'PATCH', ticketData);
+  }
+};
+
 export const billingAPI = {
   // Get billing information
   getBillingInformation: async () => {
-    return await apiRequest('/user/billing/', 'GET');
+    return await apiRequest('/taxpayer/billing-address/', 'GET');
+  },
+  
+  // Add billing information
+  addBillingInformation: async (billingData) => {
+    return await apiRequest('/taxpayer/billing-address/', 'POST', billingData);
   },
   
   // Update billing information
   updateBillingInformation: async (billingData) => {
-    return await apiRequest('/taxpayer/payment-methods/', 'PATCH', billingData);
+    return await apiRequest('/taxpayer/billing-address/', 'PATCH', billingData);
   },
+  
+  // Get payment methods
+  getPaymentMethods: async () => {
+    return await apiRequest('/taxpayer/payment-methods/', 'GET');
+  },
+  
   // Add payment method
   addPaymentMethod: async (paymentMethodData) => {
     return await apiRequest('/taxpayer/payment-methods/', 'POST', paymentMethodData);
+  },
+  // Update payment method
+  updatePaymentMethod: async (paymentMethodId, paymentMethodData) => {
+    return await apiRequest(`/taxpayer/payment-methods/${paymentMethodId}/`, 'PATCH', paymentMethodData);
   },
   // Delete payment method
   deletePaymentMethod: async (paymentMethodId) => {

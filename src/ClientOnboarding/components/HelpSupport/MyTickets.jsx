@@ -1,88 +1,156 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaPaperPlane } from "react-icons/fa";
 import { CrossIcon, ConversIcon } from "../icons";
+import { supportTicketAPI, handleAPIError } from "../../utils/apiUtils";
 import "../../styles/MyTickets.css";
 
 const MyTickets = () => {
   const [selectedTicketBox, setSelectedTicketBox] = useState(null);
   const [openPopupTicket, setOpenPopupTicket] = useState(null);
   const [messageInput, setMessageInput] = useState("");
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedTicketDetails, setSelectedTicketDetails] = useState(null);
+  const [loadingTicketDetails, setLoadingTicketDetails] = useState(false);
 
-  const [tickets, setTickets] = useState([
-    {
-      id: "TCK-001",
-      status: "Open",
-      priority: "Medium",
-      title: "Unable to upload W2 document",
-      description:
-        "I’m having trouble uploading my W-2 document.to get stuck at 50% upload progress.",
-      created: "Mar 12, 2024",
-      updated: "Mar 13, 2024",
-      category: "Technical",
-      messages: [
-        {
-          sender: "Support Agent",
-          role: "agent",
-          text: "Hi Michael, I see you’re having upload issues. Can you try clearing your cache and uploading again?",
-          date: "19/06/2025",
-          time: "10:25 AM",
-        },
-        {
-          sender: "Michael",
-          role: "user",
-          text: "I tried clearing the cache but still having the same issue. The file stops at 50%.",
-          date: "19/06/2025",
-          time: "10:30 AM",
-        },
-      ],
-    },
-    {
-      id: "TCK-002",
-      status: "Resolved",
-      priority: "Low",
-      title: "Question about direct deposit",
-      description: "I have a question about my direct deposit details.",
-      created: "Feb 28, 2024",
-      updated: "Mar 1, 2024",
-      category: "General",
-      messages: [],
-    },
-  ]);
+  // Fetch support tickets from API
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        console.log('🔄 Fetching support tickets...');
+        setLoading(true);
+        setError(null);
+        
+        const response = await supportTicketAPI.getSupportTickets();
+        console.log('📋 Support tickets API response:', response);
+        
+        if (response.success && response.data) {
+          console.log('✅ Support tickets fetched successfully:', response.data);
+          setTickets(response.data);
+        } else {
+          console.log('❌ Failed to fetch support tickets:', response.message);
+          setError(response.message || 'Failed to fetch support tickets');
+        }
+      } catch (err) {
+        console.error('💥 Error fetching support tickets:', err);
+        const errorMsg = handleAPIError(err);
+        setError(errorMsg);
+      } finally {
+        setLoading(false);
+        console.log('🏁 Finished fetching support tickets');
+      }
+    };
 
-  const closePopup = () => setOpenPopupTicket(null);
+    fetchTickets();
+  }, []);
+
+  // Function to refresh tickets (can be called after creating a new ticket)
+  const refreshTickets = async () => {
+    try {
+      console.log('🔄 Refreshing support tickets...');
+      const response = await supportTicketAPI.getSupportTickets();
+      
+      if (response.success && response.data) {
+        console.log('✅ Support tickets refreshed:', response.data);
+        setTickets(response.data);
+      }
+    } catch (err) {
+      console.error('💥 Error refreshing support tickets:', err);
+    }
+  };
+
+  // Expose refresh function to window for global access
+  useEffect(() => {
+    window.refreshSupportTickets = refreshTickets;
+    return () => {
+      delete window.refreshSupportTickets;
+    };
+  }, []);
+
+  // Function to fetch ticket details
+  const fetchTicketDetails = async (ticketId) => {
+    try {
+      console.log('🔄 Fetching ticket details for ID:', ticketId);
+      setLoadingTicketDetails(true);
+      
+      const response = await supportTicketAPI.getSupportTicket(ticketId);
+      console.log('📋 Ticket details API response:', response);
+      
+      if (response.success && response.data) {
+        console.log('✅ Ticket details fetched successfully:', response.data);
+        setSelectedTicketDetails(response.data);
+      } else {
+        console.log('❌ Failed to fetch ticket details:', response.message);
+        setError(response.message || 'Failed to fetch ticket details');
+      }
+    } catch (err) {
+      console.error('💥 Error fetching ticket details:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg);
+    } finally {
+      setLoadingTicketDetails(false);
+    }
+  };
+
+  const closePopup = () => {
+    setOpenPopupTicket(null);
+    setSelectedTicketDetails(null);
+  };
+
+  // Handle View Details button click
+  const handleViewDetails = async (ticket, index) => {
+    setOpenPopupTicket(index);
+    await fetchTicketDetails(ticket.id);
+  };
 
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
-    const newTickets = [...tickets];
-    const now = new Date();
-
-    const newMessage = {
-      sender: "You",
-      role: "user",
-      text: messageInput,
-      date: now.toLocaleDateString("en-GB"),
-      time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    newTickets[openPopupTicket].messages.push(newMessage);
-    setTickets(newTickets);
+    
+    // For now, just clear the input since we don't have a send message API
+    // In a real implementation, you would call an API to send the message
+    console.log('Sending message:', messageInput);
     setMessageInput("");
+    
+    // Show a message that this feature is not implemented yet
+    alert('Message sending feature will be implemented soon!');
   };
 
   const getStatusBadge = (status) => {
-    if (status === "Open") {
+    const statusLower = status?.toLowerCase();
+    if (statusLower === "open") {
       return <span className="status-badge open">{status}</span>;
-    } else if (status === "Resolved") {
+    } else if (statusLower === "resolved") {
       return <span className="status-badge resolved">{status}</span>;
+    } else if (statusLower === "closed") {
+      return <span className="status-badge resolved">{status}</span>;
+    } else if (statusLower === "in_progress") {
+      return <span className="status-badge in-progress">{status}</span>;
     }
+    return <span className="status-badge open">{status}</span>;
   };
 
   const getPriorityBadge = (priority) => {
-    if (priority === "Medium") {
+    const priorityLower = priority?.toLowerCase();
+    if (priorityLower === "high") {
+      return <span className="priority-badge high">{priority}</span>;
+    } else if (priorityLower === "medium") {
       return <span className="priority-badge medium">{priority}</span>;
-    } else if (priority === "Low") {
+    } else if (priorityLower === "low") {
       return <span className="priority-badge low">{priority}</span>;
     }
+    return <span className="priority-badge medium">{priority}</span>;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -92,37 +160,69 @@ const MyTickets = () => {
         <p className="tickets-subtitle">Track your support requests</p>
       </div>
 
-      {tickets.map((ticket, index) => (
-        <div
-          key={index}
-          onClick={() => setSelectedTicketBox(index)}
-          className={`ticket-box ${selectedTicketBox === index ? "active" : ""
-            }`}
-        >
-          <div>
-            <div className="ticket-info">
-              <span className="ticket-id">{ticket.id}</span>
-              {getStatusBadge(ticket.status)}
-              {getPriorityBadge(ticket.priority)}
-            </div>
-
-            <div className="ticket-title">{ticket.title}</div>
-            <div className="ticket-dates">
-              Created: {ticket.created} &nbsp;&nbsp;|&nbsp;&nbsp; Last update:{" "}
-              {ticket.updated}
-            </div>
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
-          <button
-            className="view-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenPopupTicket(index);
-            }}
-          >
-            View Details
-          </button>
+          <p className="mt-2 text-muted">Loading support tickets...</p>
         </div>
-      ))}
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {/* No Tickets State */}
+      {!loading && !error && tickets.length === 0 && (
+        <div className="text-center py-4">
+          <p className="text-muted">No support tickets found. Create your first ticket!</p>
+        </div>
+      )}
+
+      {/* Tickets List */}
+      {!loading && !error && tickets.length > 0 && (
+        <>
+          {tickets.map((ticket, index) => (
+            <div
+              key={ticket.id || index}
+              onClick={() => setSelectedTicketBox(index)}
+              className={`ticket-box ${selectedTicketBox === index ? "active" : ""
+                }`}
+            >
+              <div>
+                <div className="ticket-info">
+                  <span className="ticket-id">{ticket.ticket_number || ticket.id}</span>
+                  {getStatusBadge(ticket.status)}
+                  {getPriorityBadge(ticket.priority)}
+                </div>
+
+                <div className="ticket-title">{ticket.subject}</div>
+                <div className="ticket-dates">
+                  Created: {formatDate(ticket.created_at)} &nbsp;&nbsp;|&nbsp;&nbsp; Last update:{" "}
+                  {formatDate(ticket.updated_at)}
+                </div>
+                <div className="ticket-category">
+                  Category: {ticket.category?.charAt(0).toUpperCase() + ticket.category?.slice(1) || 'N/A'}
+                </div>
+              </div>
+              <button
+                className="view-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewDetails(ticket, index);
+                }}
+              >
+                View Details
+              </button>
+            </div>
+          ))}
+        </>
+      )}
 
       {/* popup view details click */}
 
@@ -130,10 +230,9 @@ const MyTickets = () => {
         <div className="ticket-popup-overlay">
           <div className="ticket-popup-box">
 
-   
             <div className="ticket-popup-header">
               <h6 className="ticket-popup-title">
-                Ticket Details - {tickets[openPopupTicket].id}
+                Ticket Details - {selectedTicketDetails?.ticket_number || tickets[openPopupTicket]?.ticket_number || tickets[openPopupTicket]?.id}
               </h6>
               <button className="ticket-popup-close" onClick={closePopup}>
                 <CrossIcon />
@@ -143,38 +242,91 @@ const MyTickets = () => {
               View and respond to your support ticket
             </p>
 
-            <div className="ticket-issue-box">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <strong className="ticket-issue-title">
-                  {tickets[openPopupTicket].title}
-                </strong>
-                <div className="d-flex align-items-center" style={{ marginLeft: "300px" }}>
-                  {getStatusBadge(tickets[openPopupTicket].status)}
-                  {getPriorityBadge(tickets[openPopupTicket].priority)}
+            {/* Loading State for Ticket Details */}
+            {loadingTicketDetails && (
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
                 </div>
+                <p className="mt-2 text-muted">Loading ticket details...</p>
               </div>
-              <p className="ticket-issue-text">{tickets[openPopupTicket].description}</p>
+            )}
 
-            
-              <div className="d-flex justify-content-between">
-                <div>
-                  <div className="ticket-meta">Category:</div>
-                  <div className="ticket-meta-value">{tickets[openPopupTicket].category}</div>
+            {/* Ticket Details Content */}
+            {!loadingTicketDetails && selectedTicketDetails && (
+              <div className="ticket-issue-box">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <strong className="ticket-issue-title">
+                    {selectedTicketDetails.subject}
+                  </strong>
+                  <div className="d-flex align-items-center" style={{ marginLeft: "300px" }}>
+                    {getStatusBadge(selectedTicketDetails.status)}
+                    {getPriorityBadge(selectedTicketDetails.priority)}
+                  </div>
                 </div>
-                <div>
-                  <div className="ticket-meta">Created:</div>
-                  <div className="ticket-meta-value">{tickets[openPopupTicket].created}</div>
-                </div>
-                <div>
-                  <div className="ticket-meta">Last Update:</div>
-                  <div className="ticket-meta-value">{tickets[openPopupTicket].updated}</div>
-                </div>
-                <div>
-                  <div className="ticket-meta">Messages:</div>
-                  <div className="ticket-meta-value">{tickets[openPopupTicket].messages.length}</div>
+                <p className="ticket-issue-text">{selectedTicketDetails.description}</p>
+
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <div className="ticket-meta">Category:</div>
+                    <div className="ticket-meta-value">
+                      {selectedTicketDetails.category?.charAt(0).toUpperCase() + selectedTicketDetails.category?.slice(1) || 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="ticket-meta">Created:</div>
+                    <div className="ticket-meta-value">{formatDate(selectedTicketDetails.created_at)}</div>
+                  </div>
+                  <div>
+                    <div className="ticket-meta">Last Update:</div>
+                    <div className="ticket-meta-value">{formatDate(selectedTicketDetails.updated_at)}</div>
+                  </div>
+                  <div>
+                    <div className="ticket-meta">User:</div>
+                    <div className="ticket-meta-value">{selectedTicketDetails.user_name || 'N/A'}</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Fallback to basic ticket info if details not loaded */}
+            {!loadingTicketDetails && !selectedTicketDetails && (
+              <div className="ticket-issue-box">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <strong className="ticket-issue-title">
+                    {tickets[openPopupTicket]?.subject}
+                  </strong>
+                  <div className="d-flex align-items-center" style={{ marginLeft: "300px" }}>
+                    {getStatusBadge(tickets[openPopupTicket]?.status)}
+                    {getPriorityBadge(tickets[openPopupTicket]?.priority)}
+                  </div>
+                </div>
+                <p className="ticket-issue-text">
+                  {tickets[openPopupTicket]?.description || 'No description available'}
+                </p>
+
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <div className="ticket-meta">Category:</div>
+                    <div className="ticket-meta-value">
+                      {tickets[openPopupTicket]?.category?.charAt(0).toUpperCase() + tickets[openPopupTicket]?.category?.slice(1) || 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="ticket-meta">Created:</div>
+                    <div className="ticket-meta-value">{formatDate(tickets[openPopupTicket]?.created_at)}</div>
+                  </div>
+                  <div>
+                    <div className="ticket-meta">Last Update:</div>
+                    <div className="ticket-meta-value">{formatDate(tickets[openPopupTicket]?.updated_at)}</div>
+                  </div>
+                  <div>
+                    <div className="ticket-meta">Ticket Number:</div>
+                    <div className="ticket-meta-value">{tickets[openPopupTicket]?.ticket_number || tickets[openPopupTicket]?.id}</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
          
             <div className="ticket-actions">
@@ -189,7 +341,9 @@ const MyTickets = () => {
 
           
             <div className="ticket-conversation">
-              {tickets[openPopupTicket].messages.map((msg, idx) => (
+              {/* Check if messages exist and handle the case where they don't */}
+              {selectedTicketDetails?.messages && selectedTicketDetails.messages.length > 0 ? (
+                selectedTicketDetails.messages.map((msg, idx) => (
                 <div key={idx} className="mb-4">
              
                   <div
@@ -233,7 +387,13 @@ const MyTickets = () => {
                     {msg.date} {msg.time}
                   </div>
                 </div>
-              ))}
+              ))
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted">No conversation messages available yet.</p>
+                  <p className="text-muted small">Support team will respond to your ticket soon.</p>
+                </div>
+              )}
             </div>
 
      

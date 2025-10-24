@@ -44,6 +44,8 @@ export default function DashboardFirst() {
         return <ComFirstIcon width={50} height={50} />;
       case "Complete Data Intake Form":
         return <UploadIcon width={24} height={24} />;
+      case "Upload Tax Documents":
+        return <FileIcon width={24} height={24} />;
       case "Schedule a Consultation":
         return <SignIcon width={24} height={24} />;
       case "Set Up Payment Method":
@@ -64,49 +66,61 @@ export default function DashboardFirst() {
       return [
         {
           title: "Complete Profile Setup",
-          description: "Add your personal information and preferences",
+          description: "Complete your personal profile details and upload profile picture",
           status: "incomplete",
         },
         {
           title: "Complete Data Intake Form",
-          description: "Add personal details and upload documents",
+          description: "Complete data intake form",
+          status: "incomplete",
+        },
+        {
+          title: "Upload Tax Documents",
+          description: "Upload your tax documents",
           status: "incomplete",
         },
         {
           title: "Schedule a Consultation",
-          description: "Book a meeting from the Dashboard",
+          description: "Schedule your first consultation",
           status: "incomplete",
         },
         {
           title: "Set Up Payment Method",
-          description: "Pick a billing method for services",
+          description: "Add a payment method",
           status: "incomplete",
         },
       ];
     }
 
-    // Map API response to setup tasks
+    // Map API response to setup tasks using the actual API structure
     const apiData = dashboardData.data || dashboardData;
+    const steps = apiData.steps || {};
+    
     return [
       {
         title: "Complete Profile Setup",
-        description: "Add your personal information and preferences",
-        status: apiData.profile_complete ? "complete" : "incomplete",
+        description: steps.profile_setup?.description || "Complete your personal profile details and upload profile picture",
+        status: steps.profile_setup?.completed ? "complete" : "incomplete",
       },
       {
         title: "Complete Data Intake Form",
-        description: "Add personal details and upload documents",
-        status: apiData.data_intake_complete ? "complete" : "incomplete",
+        description: steps.data_intake_form?.description || "Complete data intake form",
+        status: steps.data_intake_form?.completed ? "complete" : "incomplete",
+      },
+      {
+        title: "Upload Tax Documents",
+        description: steps.tax_documents?.description || "Upload your tax documents",
+        status: steps.tax_documents?.completed ? "complete" : "incomplete",
       },
       {
         title: "Schedule a Consultation",
-        description: "Book a meeting from the Dashboard",
-        status: apiData.consultation_scheduled ? "complete" : "incomplete",
+        description: steps.schedule_consultation?.description || "Schedule your first consultation",
+        status: steps.schedule_consultation?.completed ? "complete" : "incomplete",
       },
       {
         title: "Set Up Payment Method",
-        description: "Pick a billing method for services",
-        status: apiData.payment_method_setup ? "complete" : "incomplete",
+        description: steps.payment_method?.description || "Add a payment method",
+        status: steps.payment_method?.completed ? "complete" : "incomplete",
       },
     ];
   };
@@ -137,7 +151,9 @@ export default function DashboardFirst() {
   ];
 
   const completedCount = setupTasks.filter((task) => task.status === "complete").length;
-  const completionPercentage = Math.round((completedCount / setupTasks.length) * 100);
+  const completionPercentage = dashboardData?.data?.profile_completion?.percentage 
+    ? Math.round(dashboardData.data.profile_completion.percentage)
+    : Math.round((completedCount / setupTasks.length) * 100);
 
   // Show loading state
   if (loading) {
@@ -204,7 +220,7 @@ export default function DashboardFirst() {
           className="mb-1"
           style={{ color: "#3B4A66", fontSize: "28px", fontWeight: 500, fontFamily: "BasisGrotesquePro" }}
         >
-          Welcome, Michael Brown! 👋
+          Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
         </h5>
         <p className="text-muted" style={{ fontSize: "18px", fontFamily: "BasisGrotesquePro" }}>
           Let's get your tax dashboard set up. You're making great progress!
@@ -229,7 +245,7 @@ export default function DashboardFirst() {
             fontFamily: "BasisGrotesquePro"
           }}
         >
-          {completedCount} of {setupTasks.length} setup tasks completed
+          {dashboardData?.data?.profile_completion?.completed_steps || completedCount} of {dashboardData?.data?.profile_completion?.total_steps || setupTasks.length} setup tasks completed
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SaveIcon } from "../icons";
 import { profileAPI } from "../../utils/apiUtils";
+import { setUserData as persistUserData, getUserData, getStorage } from "../../utils/userUtils";
 
 export default function Profile() {
     const [userData, setUserData] = useState({
@@ -24,8 +25,17 @@ export default function Profile() {
             try {
                 setLoading(true);
                 setError(null);
+                
+                // First, try to get user data from storage for immediate display
+                const storedUserData = getUserData();
+                if (storedUserData) {
+                    console.log('Found stored user data:', storedUserData);
+                    setUserData(storedUserData);
+                }
+                
+                // Then fetch fresh data from API
                 const response = await profileAPI.getUserAccount();
-                console.log('User account data:', response);
+                console.log('User account data from API:', response);
                 console.log('Response structure:', Object.keys(response));
                 
                 // Handle different possible response structures
@@ -37,18 +47,28 @@ export default function Profile() {
                 }
                 
                 console.log('Extracted user info:', userInfo);
+                console.log('Profile image fields in API response:', {
+                    profile_picture: userInfo.profile_picture,
+                    profile_image: userInfo.profile_image,
+                    profileImage: userInfo.profileImage,
+                    avatar: userInfo.avatar,
+                    profile_photo: userInfo.profile_photo
+                });
                 
-                // Update state with fetched data
+                // Update state with fetched data from API (this takes precedence)
                 const updatedUserData = {
                     first_name: userInfo.first_name || userInfo.firstName || '',
                     middle_name: userInfo.middle_name || userInfo.middleName || '',
                     last_name: userInfo.last_name || userInfo.lastName || '',
                     email: userInfo.email || '',
                     phone_number: userInfo.phone_number || userInfo.phoneNumber || userInfo.phone || '',
-                    profile_image: userInfo.profile_image || userInfo.profileImage || userInfo.avatar || null
+                    profile_image: userInfo.profile_picture || userInfo.profile_image || userInfo.profileImage || userInfo.avatar || userInfo.profile_photo || null
                 };
-                console.log('Updated user data:', updatedUserData);
+                console.log('Updated user data from API:', updatedUserData);
                 setUserData(updatedUserData);
+                
+                // Update storage with fresh API data
+                persistUserData(updatedUserData);
             } catch (err) {
                 console.error('Error fetching user data:', err);
                 setError(err.message || 'Failed to fetch user data');
@@ -118,22 +138,29 @@ export default function Profile() {
             // Update userData with new profile image URL
             let newProfileImageUrl = null;
             
-            // Try different possible response structures
-            if (response.profile_image) {
-                newProfileImageUrl = response.profile_image;
-            } else if (response.profile_picture) {
+            // Try different possible response structures - prioritize profile_picture since that's what the API uses
+            if (response.profile_picture) {
                 newProfileImageUrl = response.profile_picture;
+            } else if (response.profile_image) {
+                newProfileImageUrl = response.profile_image;
+            } else if (response.user && response.user.profile_picture) {
+                newProfileImageUrl = response.user.profile_picture;
             } else if (response.user && response.user.profile_image) {
                 newProfileImageUrl = response.user.profile_image;
+            } else if (response.data && response.data.profile_picture) {
+                newProfileImageUrl = response.data.profile_picture;
             } else if (response.data && response.data.profile_image) {
                 newProfileImageUrl = response.data.profile_image;
             }
             
             if (newProfileImageUrl) {
-                setUserData(prev => ({
-                    ...prev,
+                const updatedUserData = {
+                    ...userData,
                     profile_image: newProfileImageUrl
-                }));
+                };
+                setUserData(updatedUserData);
+                // Persist to storage
+                persistUserData(updatedUserData);
                 console.log('Updated profile image URL:', newProfileImageUrl);
             } else {
                 // If no URL in response, refetch user data to get updated profile
@@ -148,15 +175,28 @@ export default function Profile() {
                     userInfo = updatedUserData.data;
                 }
                 
-                setUserData(prev => ({
-                    ...prev,
-                    profile_image: userInfo.profile_image || userInfo.profile_picture || prev.profile_image
-                }));
+                const finalUserData = {
+                    ...userData,
+                    profile_image: userInfo.profile_picture || userInfo.profile_image || userInfo.profileImage || userInfo.avatar || userData.profile_image
+                };
+                setUserData(finalUserData);
+                // Persist to storage
+                persistUserData(finalUserData);
             }
             
             // Clear selected image and preview
             setSelectedImage(null);
             setImagePreview(null);
+            
+            // Refresh navbar and topbar profile pictures
+            if (window.refreshNavbarProfilePicture) {
+                console.log('🔄 Refreshing navbar profile picture...');
+                window.refreshNavbarProfilePicture();
+            }
+            if (window.refreshTopbarProfilePicture) {
+                console.log('🔄 Refreshing topbar profile picture...');
+                window.refreshTopbarProfilePicture();
+            }
             
             alert('Profile picture updated successfully!');
         } catch (err) {
@@ -176,7 +216,30 @@ export default function Profile() {
             
             // Prepare data for API (exclude profile_image for now)
             const { profile_image, ...dataToSave } = userData;
-            await profileAPI.updateUserAccount(dataToSave);
+            const response = await profileAPI.updateUserAccount(dataToSave);
+            
+            // Update local state with any changes from the API response
+            if (response) {
+                let updatedData = response;
+                if (response.user) {
+                    updatedData = response.user;
+                } else if (response.data) {
+                    updatedData = response.data;
+                }
+                
+                const finalUserData = {
+                    ...userData,
+                    first_name: updatedData.first_name || userData.first_name,
+                    middle_name: updatedData.middle_name || userData.middle_name,
+                    last_name: updatedData.last_name || userData.last_name,
+                    email: updatedData.email || userData.email,
+                    phone_number: updatedData.phone_number || userData.phone_number,
+                };
+                
+                setUserData(finalUserData);
+                // Persist to storage
+                persistUserData(finalUserData);
+            }
             
             alert('Profile updated successfully!');
         } catch (err) {
@@ -245,6 +308,13 @@ export default function Profile() {
                     width="99.96px"
                     height="98px"
                     style={{ objectFit: 'cover' }}
+                    onError={(e) => {
+                        console.error('Failed to load profile image:', e.target.src);
+                        // Fallback to default avatar if image fails to load
+                        if (e.target.src !== "https://i.pravatar.cc/120") {
+                            e.target.src = "https://i.pravatar.cc/120";
+                        }
+                    }}
                 />
                 <div>
                     <div className="mb-2">
