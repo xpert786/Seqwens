@@ -351,7 +351,7 @@ const Billing = () => {
                   fontFamily: "BasisGrotesquePro",
                   fontSize: "14px",
                   fontWeight: "400",
-                  color: "#4B5563",
+                 
                   marginLeft: "8px",
                   marginBottom: "0",
                 }}

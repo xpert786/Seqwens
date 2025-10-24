@@ -25,7 +25,7 @@ export default function MyDocumentsMain() {
           <h5 className="mb-0" style={{ fontSize: '26px', fontWeight: '500', color: '#3B4A66', fontFamily: "BasisGrotesquePro", }}>
             My Documents
           </h5>
-          <small style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontWeight: "15px" }}>
+          <small style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "15px" }}>
             Upload, organize, and manage your tax documents securely
           </small>
         </div>

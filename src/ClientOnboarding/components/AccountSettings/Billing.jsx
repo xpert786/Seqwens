@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BillIcon, DelIcon, CrossIcon } from "../icons";
-import "../../styles/icon.css";
+import "../../styles/Icon.css";
 import { Modal, Button, Form } from "react-bootstrap";
 import { billingAPI, handleAPIError } from "../../utils/apiUtils";
 
@@ -380,7 +380,7 @@ const Billing = () => {
                   fontFamily: "BasisGrotesquePro",
                   fontSize: "14px",
                   fontWeight: "400",
-                  color: "#4B5563",
+                 
                   marginLeft: "8px",
                   marginBottom: "0",
                 }}
