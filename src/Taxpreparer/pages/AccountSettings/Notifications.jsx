@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../styles/icon.css";
+import "../../styles/Icon.css";
 import { SaveIcon } from "../../component/icons"
 
 const Notifications = () => {

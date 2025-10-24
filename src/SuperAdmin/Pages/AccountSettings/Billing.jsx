@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { BillIcon, DelIcon, CrossIcon } from "../../Components/icons";
 import { Modal, Button, Form } from "react-bootstrap";
-import "../../../Taxpreparer/styles/icon.css";
+import "../../../Taxpreparer/styles/Icon.css";
 
 const Billing = () => {
   const [showEditModal, setShowEditModal] = useState(false);

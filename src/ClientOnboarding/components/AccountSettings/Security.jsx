@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../../styles/icon.css";
+import "../../styles/Icon.css";
 import { SaveIcon } from "../icons";
 import { securityAPI, handleAPIError } from "../../utils/apiUtils";
 
