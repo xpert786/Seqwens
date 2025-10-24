@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { AwaitingIcon, CompletedIcon, Contacted, DoubleuserIcon, DoubleUserIcon, FaildIcon, Task1, ZoomIcon } from "../../component/icons";
+import { AddTask, AwaitingIcon, CompletedIcon, Contacted, DoubleuserIcon, DoubleUserIcon, FaildIcon, Task1, ZoomIcon } from "../../component/icons";
+import CreateEventModal from "./CreateEventModal";
 
 export default function CalendarPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("Monthly");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
   const [events, setEvents] = useState([
     {
       id: 1,
@@ -109,6 +111,30 @@ export default function CalendarPage() {
 
   const timePeriods = ["Day", "Week", "Monthly", "Years"];
 
+  // Modal handlers
+  const handleOpenCreateEventModal = () => {
+    setIsCreateEventModalOpen(true);
+  };
+
+  const handleCloseCreateEventModal = () => {
+    setIsCreateEventModalOpen(false);
+  };
+
+  const handleCreateEvent = (eventData) => {
+    // Create new event from modal data
+    const newEvent = {
+      id: events.length + 1,
+      title: eventData.eventTitle,
+      date: new Date(eventData.selectedDate.split('/').reverse().join('-')), // Convert DD/MM/YYYY to Date
+      time: `${eventData.timeSlots[0]?.startTime || '09:00 am'} - ${eventData.timeSlots[0]?.endTime || '09:30 am'}`,
+      type: eventData.eventType,
+      confirmed: false
+    };
+    
+    setEvents(prev => [...prev, newEvent]);
+    setIsCreateEventModalOpen(false);
+  };
+
   return (
     <div className="p-6 min-h-screen bg-[#F3F7FF]">
       {/* Header */}
@@ -117,9 +143,20 @@ export default function CalendarPage() {
           <h3 className="text-2xl font-semibold text-gray-900">Calendar</h3>
           <p className="text-gray-600">Manage your appointments and schedule</p>
         </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors" style={{ borderRadius: '10px' }}>
-          + Create New Event
+        <button 
+          onClick={handleOpenCreateEventModal}
+          className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+          // style={{ borderRadius: '10px' }}
+        >
+           <AddTask />Create New Event
         </button>
+        {/* <button 
+          onClick={() => setShowAddTaskModal(true)}
+          className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+        >
+          <AddTask />
+          Create New Task
+        </button> */}
       </div>
 
       {/* Stats - First 4 Cards */}
@@ -302,6 +339,13 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Event Modal */}
+      <CreateEventModal
+        isOpen={isCreateEventModalOpen}
+        onClose={handleCloseCreateEventModal}
+        onSubmit={handleCreateEvent}
+      />
       </div>
   );
 }
