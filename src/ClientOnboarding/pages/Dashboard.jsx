@@ -96,8 +96,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const isFirstTime = localStorage.getItem("firstTimeUser");
-    if (isFirstTime === "true") {
+    // Check if user is completed from stored user data
+    const userData = JSON.parse(localStorage.getItem("userData") || sessionStorage.getItem("userData") || "{}");
+    
+    // If user is not completed, redirect to dashboard-first
+    if (userData && userData.is_completed === false) {
       navigate("/dashboard-first");
     }
   }, [navigate]);

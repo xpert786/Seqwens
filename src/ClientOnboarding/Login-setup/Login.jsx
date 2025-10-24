@@ -67,14 +67,19 @@ export default function Login() {
       const user = response.user;
       const isEmailVerified = user.is_email_verified;
       const isPhoneVerified = user.is_phone_verified;
+      const isCompleted = user.is_completed;
       
-      // If either email or phone is verified, go directly to dashboard
-      if (isEmailVerified || isPhoneVerified) {
-        navigate("/dashboard");
-        console.log(import.meta.env.VITE_IS_SERVER, "------------------------------------");
-      } else {
-        // If neither is verified, go to two-factor authentication
+      if (!isEmailVerified && !isPhoneVerified) {
         navigate("/two-auth");
+      } else {
+        // If either email or phone is verified, check completion status
+        if (isCompleted) {
+          // User is completed, go to main dashboard
+          navigate("/dashboard");
+        } else {
+          // User is not completed, go to first-time dashboard
+          navigate("/dashboard-first");
+        }
       }
     } catch (error) {
       console.error('Login error:', error);

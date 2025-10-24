@@ -117,6 +117,18 @@ export default function App() {
         </Route>
         
         {/* Protected Routes */}
+        {/* Dashboard First Route - for new/incomplete users */}
+        <Route
+          path="/dashboard-first"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardFirst />} />
+        </Route>
+        
         {/* Client Dashboard Routes */}
         <Route
           path="/dashboard"
@@ -130,7 +142,6 @@ export default function App() {
             index
             element={<DashboardRouter />}
           />
-          <Route path="dashboard-first" element={<DashboardFirst />} />
           <Route path="documents" element={<MyDocuments />} />
           <Route path="dataintake" element={<DataIntake />} />
           <Route path="invoices" element={<Invoices />} />
