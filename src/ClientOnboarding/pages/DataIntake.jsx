@@ -282,7 +282,7 @@ export default function DataIntakeForm() {
       // Call both APIs simultaneously using Promise.all
       const [personalDataResult, fileUploadResult] = await Promise.all([
         // First API: Personal data (JSON)
-        fetch("/api/taxpayer/personal-data-intake/", {
+        fetch("/seqwens/api/taxpayer/personal-data-intake/", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
