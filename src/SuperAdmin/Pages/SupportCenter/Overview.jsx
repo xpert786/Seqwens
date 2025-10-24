@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import TicketDetail from "./TicketDetail";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -23,12 +24,13 @@ ChartJS.register(
     ChartDataLabels
 );
 
-export default function Overview() {
+export default function Overview({ showHeader = false, onTicketDetailToggle }) {
     const [selectedCategory, setSelectedCategory] = useState("compliance");
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All Status");
     const [priorityFilter, setPriorityFilter] = useState("All Priority");
     const [activeDropdown, setActiveDropdown] = useState(null);
+    const [selectedTicketId, setSelectedTicketId] = useState(null);
 
     const kpiData = [
         { label: "Total Tickets", value: "247" },
@@ -337,7 +339,11 @@ export default function Overview() {
     // Action handlers
     const handleViewDetails = (ticketId) => {
         console.log('View Details for ticket:', ticketId);
+        setSelectedTicketId(ticketId);
         setActiveDropdown(null);
+        if (onTicketDetailToggle) {
+            onTicketDetailToggle(true);
+        }
     };
 
     const handleAssign = (ticketId) => {
@@ -355,6 +361,13 @@ export default function Overview() {
         setActiveDropdown(null);
     };
 
+    const handleBackToOverview = () => {
+        setSelectedTicketId(null);
+        if (onTicketDetailToggle) {
+            onTicketDetailToggle(false);
+        }
+    };
+
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -368,6 +381,15 @@ export default function Overview() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [activeDropdown]);  
+
+    // If a ticket is selected, show the ticket detail within the same layout
+    if (selectedTicketId) {
+        return (
+            <div className="space-y-4">
+                <TicketDetail ticketId={selectedTicketId} onBack={handleBackToOverview} />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4">
@@ -619,7 +641,7 @@ export default function Overview() {
                                 
                                 {/* Dropdown Menu */}
                                 {activeDropdown === ticket.id && (
-                                    <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
+                                    <div className="absolute right-0 top-8 bg-white border border-[#E8F0FF] rounded-lg z-10 min-w-[160px]">
                                         <div className="py-1">
                                             <button
                                                 onClick={() => handleViewDetails(ticket.id)}

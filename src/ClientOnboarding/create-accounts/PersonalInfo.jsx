@@ -56,7 +56,7 @@ const PersonalInfo = () => {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userData", JSON.stringify(response));
       
-      navigate("/dataintake");
+      navigate("/login");
     } catch (error) {
       console.error('Registration completion error:', error);
       setErrors({ 
