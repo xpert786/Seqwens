@@ -58,9 +58,18 @@
   font-size: 24px;
   text-align: center;
   border-radius: 8px;
-  border: none;
+  border: 1px solid #e0e0e0;
+  background-color: #ffffff;
   outline: none;
+  color: #333333;
+  font-weight: 500;
   font-family: BasisGrotesquePro;
+  transition: border-color 0.3s ease;
+}
+
+.otp-digit:focus {
+  border-color: #f5663f;
+  box-shadow: 0 0 0 2px rgba(245, 102, 63, 0.2);
 }
 
 .otp-btn {
@@ -124,6 +133,9 @@
     width: 40px;
     height: 40px;
     font-size: 20px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    color: #333333;
   }
 
   .otp-btn {
@@ -154,6 +166,9 @@
     width: 45px;
     height: 45px;
     font-size: 22px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    color: #333333;
   }
 
   .otp-btn {

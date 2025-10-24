@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/TwoAuth.css";
 import { EmailIcon, PhoneIcon } from "../components/icons";
@@ -7,6 +7,28 @@ import FixedLayout from "../components/FixedLayout";
 
 export default function TwoFactorAuth() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already verified and redirect accordingly
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        const isEmailVerified = user.is_email_verified;
+        const isPhoneVerified = user.is_phone_verified;
+        
+        console.log('TwoFactorAuth - User verification status:', { isEmailVerified, isPhoneVerified });
+        
+        // If either email or phone is verified, redirect to dashboard
+        if (isEmailVerified || isPhoneVerified) {
+          console.log('User is already verified, redirecting to dashboard');
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, [navigate]);
 
   return (
     <FixedLayout>

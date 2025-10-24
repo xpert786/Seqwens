@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ComFirstIcon,
@@ -10,13 +10,32 @@ import {
   MessageIcon,
 } from "../components/icons";
 import { AiOutlineCalendar } from "react-icons/ai";
-import "../styles/Dashfirst.css"
+import "../styles/Dashfirst.css";
+import { dashboardAPI, handleAPIError } from "../utils/apiUtils";
 
 export default function DashboardFirst() {
   const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem("userStatus", "existing");
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await dashboardAPI.getInitialDashboard();
+        console.log('Fetched initial dashboard data:', data);
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(handleAPIError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const getTaskIcon = (title) => {
@@ -39,28 +58,60 @@ export default function DashboardFirst() {
     incomplete: "secondary",
   };
 
-  const setupTasks = [
-    {
-      title: "Complete Profile Setup",
-      description: "Add your personal information and preferences",
-      status: "complete",
-    },
-    {
-      title: "Complete Data Intake Form",
-      description: "Add personal details and upload documents",
-      status: "complete",
-    },
-    {
-      title: "Schedule a Consultation",
-      description: "Book a meeting from the Dashboard",
-      status: "continue",
-    },
-    {
-      title: "Set Up Payment Method",
-      description: "Pick a billing method for services",
-      status: "Add payment",
-    },
-  ];
+  // Get setup tasks from API data or use defaults
+  const getSetupTasks = () => {
+    if (!dashboardData) {
+      return [
+        {
+          title: "Complete Profile Setup",
+          description: "Add your personal information and preferences",
+          status: "incomplete",
+        },
+        {
+          title: "Complete Data Intake Form",
+          description: "Add personal details and upload documents",
+          status: "incomplete",
+        },
+        {
+          title: "Schedule a Consultation",
+          description: "Book a meeting from the Dashboard",
+          status: "incomplete",
+        },
+        {
+          title: "Set Up Payment Method",
+          description: "Pick a billing method for services",
+          status: "incomplete",
+        },
+      ];
+    }
+
+    // Map API response to setup tasks
+    const apiData = dashboardData.data || dashboardData;
+    return [
+      {
+        title: "Complete Profile Setup",
+        description: "Add your personal information and preferences",
+        status: apiData.profile_complete ? "complete" : "incomplete",
+      },
+      {
+        title: "Complete Data Intake Form",
+        description: "Add personal details and upload documents",
+        status: apiData.data_intake_complete ? "complete" : "incomplete",
+      },
+      {
+        title: "Schedule a Consultation",
+        description: "Book a meeting from the Dashboard",
+        status: apiData.consultation_scheduled ? "complete" : "incomplete",
+      },
+      {
+        title: "Set Up Payment Method",
+        description: "Pick a billing method for services",
+        status: apiData.payment_method_setup ? "complete" : "incomplete",
+      },
+    ];
+  };
+
+  const setupTasks = getSetupTasks();
 
   const quickActions = [
     {
@@ -87,6 +138,36 @@ export default function DashboardFirst() {
 
   const completedCount = setupTasks.filter((task) => task.status === "complete").length;
   const completionPercentage = Math.round((completedCount / setupTasks.length) * 100);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="p-4 d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <span className="ms-2">Loading dashboard...</span>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="alert alert-danger" role="alert">
+          <h5>Error Loading Dashboard</h5>
+          <p>{error}</p>
+          <button 
+            className="btn btn-outline-danger" 
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">

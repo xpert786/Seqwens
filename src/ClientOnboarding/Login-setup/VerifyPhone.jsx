@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/VerifyPhone.css";
 import FixedLayout from "../components/FixedLayout";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,24 @@ export default function VerifyPhone() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if phone is already verified
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      try {
+        const parsedUserData = JSON.parse(userData);
+        
+        // Check if phone is already verified
+        if (parsedUserData.is_phone_verified) {
+          console.log('Phone is already verified, redirecting to dashboard');
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (value, index) => {
     if (/^[0-9]?$/.test(value)) {

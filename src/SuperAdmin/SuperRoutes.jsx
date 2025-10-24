@@ -5,20 +5,25 @@ import SuperDashboardContent from './Pages/SuperDashboardContent';
 import UserManagement from './Pages/UserManagement';
 import UserDetail from './Pages/UserDetail';
 import Subscriptions from './Pages/Subscriptions';
+import Analytics from './Pages/Analytics';
+import AccountSettings from './Pages/AccountSettings/AccountSettings';
+import SupportCenter from './Pages/SupportCenter/SupportCenter';
 
 export default function SuperRoutes() {
   return (
     <Routes>
       {/* Main super admin dashboard route with layout */}
-      <Route path="/" element={<SuperDashboard />}>
+        <Route path="/" element={<SuperDashboard />}>
         <Route index element={<SuperDashboardContent />} />
         <Route path="dashboard" element={<SuperDashboardContent />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="users/:userId" element={<UserDetail />} />
         <Route path="subscriptions" element={<Subscriptions />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="settings" element={<AccountSettings />} />
+        <Route path="support" element={<SupportCenter />} />
         
         {/* Add more routes here as needed */}
-        {/* <Route path="settings" element={<SettingsPage />} /> */}
         {/* <Route path="reports" element={<ReportsPage />} /> */}
         {/* <Route path="messages" element={<MessagesPage />} /> */}
         {/* <Route path="logs" element={<LogsPage />} /> */}

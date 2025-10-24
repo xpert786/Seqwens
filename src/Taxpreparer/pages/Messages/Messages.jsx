@@ -1,0 +1,1339 @@
+import React, { useState, useRef, useEffect } from "react";
+import {  AddTask, Cliented, Clocking, Completed, Message3Icon,  Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
+import { FaSearch, FaChevronDown, FaPaperPlane } from "react-icons/fa";
+import taxheaderlogo from "../../../assets/logo.png";
+export default function MessagePage() {
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("All Messages");
+  const [newMessage, setNewMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("Messages");
+  const [showOptions, setShowOptions] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [showTaskPopup, setShowTaskPopup] = useState(false);
+  const [showComposeModal, setShowComposeModal] = useState(false);
+  const [composeForm, setComposeForm] = useState({
+    recipients: ["@everyone", "@smithjohnson", "@everyone"],
+    subject: "",
+    category: "Client",
+    priority: "Medium",
+    message: ""
+  });
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "Review all sections carefully", completed: true },
+    { id: 2, text: "Check personal information", completed: true },
+    { id: 3, text: "", completed: false, isInput: true }
+  ]);
+  const [newTaskText, setNewTaskText] = useState("");
+  const dropdownRef = useRef(null);
+ 
+  const filterOptions = [
+    "All Messages",
+    "Unread",
+    "Read",
+    "Internal",
+    "Archived"
+  ];
+const handleSend = () => {
+    if (newMessage.trim() === "") return;
+    const updatedConversations = conversations.map((conv) =>
+      conv.id === activeConversationId
+        ? {
+          ...conv,
+          messages: [
+            ...conv.messages,
+            {
+              id: Date.now(),
+              type: "user",
+              text: newMessage,
+              date: new Date().toLocaleString(),
+            },
+          ],
+          lastMessage: newMessage,
+          time: "Just now",
+        }
+        : conv
+    );
+    setConversations(updatedConversations);
+    setNewMessage("");
+  };
+
+  const handleTaskToggle = (taskId) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, completed: !task.completed }
+        : task
+    ));
+  };
+
+  const handleDeleteTask = (taskId) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
+  };
+
+  const handleAddTask = () => {
+    if (newTaskText.trim()) {
+      const newTask = {
+        id: Date.now(),
+        text: newTaskText,
+        completed: false,
+        isInput: false
+      };
+      setTasks([...tasks.filter(task => !task.isInput), newTask, { id: Date.now() + 1, text: "", completed: false, isInput: true }]);
+      setNewTaskText("");
+    }
+  };
+
+  const handleTaskInputChange = (value) => {
+    setNewTaskText(value);
+  };
+ 
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowFilterDropdown(false);
+      }
+    };
+ 
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+ 
+  const stats = [
+    {
+      label: "Total",
+      count: 8,
+      icon: <Message3Icon />,
+      color: "#4F46E5"
+    },
+    {
+      label: "Unread",
+      count: 3,
+      icon: <Clocking />,
+      color: "#F59E0B"
+    },
+    {
+      label: "Client",
+      count: 4,
+      icon: <Cliented />,
+      color: "#3B82F6"
+    },
+    {
+      label: "Internal",
+      count: 1,
+      icon: <Completed />,
+      color: "#10B981"
+    },
+    {
+      label: "Starred",
+      count: 0,
+      icon: <Stared />,
+      color: "#EF4444"
+    },
+  ];
+ 
+  return (
+    <div className="p-4">
+      <style>
+        {`
+          @keyframes slideUp {
+            from {
+              transform: translateY(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 className="fw-semibold" style={{ marginBottom: 4 }}>Messages</h3>
+          <small className="text-muted">Communicate with clients and team members</small>
+        </div>
+        <button
+          onClick={() => setShowComposeModal(true)}
+          className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+        >
+          <AddTask />
+          New Messages
+        </button>
+      </div>
+     
+ 
+      {/* Stat cards row (Bootstrap grid) */}
+      <div className="row g-3 mb-4">
+        {stats.map((s, i) => (
+          <div key={i} className="col-12 col-sm-6 col-md-4 col-lg">
+            <div className="card h-100" style={{
+              borderRadius: 16,
+              border: "1px solid #E8F0FF",
+              minHeight: '120px'
+            }}>
+              <div className="card-body d-flex flex-column p-3">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="stat-icon" style={{
+                    color: "#00C0C6",
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '10px',
+                    flexShrink: 0
+                  }}>
+                    {s.icon}
+                  </div>
+                  <div className="stat-count ms-3" style={{
+                    color: "#3B4A66",
+                    fontWeight: 600,
+                    fontSize: '24px',
+                    textAlign: 'right',
+                    flexGrow: 1
+                  }}>
+                    {s.count}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <p className="mb-0 text-muted fw-semibold">{s.label}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+ 
+      {/* Two Column Layout */}
+      <div style={{ display: "flex", gap: "24px", marginTop: "24px" }}>
+       
+        {/* Left Column - Conversations */}
+        <div
+          className="card"
+          style={{
+            borderRadius: "12px",
+            border: "none",
+            backgroundColor: "#fff",
+            padding: "20px",
+            flex: "0 0 300px",
+            height: "390px"
+          }}
+        >
+          {/* Conversations Title */}
+          <h2
+            style={{
+              fontSize: "24px",
+              fontWeight: "700",
+              color: "#2D3748",
+              marginBottom: "16px",
+              textAlign: "left"
+            }}
+          >
+            Conversations
+          </h2>
+ 
+          {/* Search Bar */}
+          <div
+            className="position-relative mb-4"
+            style={{ marginBottom: "16px" }}
+          >
+            <FaSearch
+              style={{
+                position: "absolute",
+                left: "16px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#718096",
+                fontSize: "16px"
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Search..."
+              style={{
+                width: "100%",
+                padding: "12px 16px 12px 48px",
+                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                borderRadius: "8px",
+                fontSize: "16px",
+                backgroundColor: "#fff",
+                outline: "none",
+                transition: "border-color 0.2s ease"
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#4A90E2";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "var(--Palette2-Dark-blue-100, #E8F0FF)";
+              }}
+            />
+          </div>
+ 
+          {/* Message Entry */}
+          <div
+            style={{
+              backgroundColor: "#FFF5E6",
+              borderRadius: "12px",
+              padding: "16px",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#FFEDCC";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#FFF5E6";
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+              {/* Avatar with Logo */}
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  overflow: "hidden"
+                }}
+              >
+                <img
+                  src={taxheaderlogo}
+                  alt="User Avatar"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%"
+                  }}
+                />
+              </div>
+ 
+              {/* Message Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+                  <h3
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#2D3748",
+                      margin: 0,
+                      lineHeight: "1.4"
+                    }}
+                  >
+                    John Doe
+                  </h3>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#A0AEC0",
+                      fontWeight: "400"
+                    }}
+                  >
+                    2 hours ago
+                  </span>
+                </div>
+ 
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#718096",
+                    margin: "0 0 4px 0",
+                    fontWeight: "500"
+                  }}
+                >
+                  Tax Document Review
+                </p>
+
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#718096",
+                    margin: 0,
+                    lineHeight: "1.4"
+                  }}
+                >
+                  Thank you for reviewing my documents. When can we...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+ 
+        {/* Right Column - Chat Interface */}
+        <div
+          className="card"
+          style={{
+            borderRadius: "12px",
+            border: "none",
+            backgroundColor: "#fff",
+            flex: "1",
+            display: "flex",
+            flexDirection: "column",
+            height: "600px"
+          }}
+        >
+          {/* Chat Header */}
+          <div
+            style={{
+              padding: "20px 24px",
+              borderBottom: "1px solid #F1F5F9",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}
+          >
+            {/* User Info */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  overflow: "hidden"
+                }}
+              >
+                <img
+                  src={taxheaderlogo}
+                  alt="User Avatar"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%"
+                  }}
+                />
+              </div>
+              <div>
+                <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#2D3748", margin: 0 }}>
+                  John Doe
+                </h3>
+                <p style={{ fontSize: "14px", color: "#718096", margin: 0 }}>
+                  Tax Document Review
+                </p>
+              </div>
+            </div>
+ 
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setActiveTab("Messages")}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  border: "none",
+                  backgroundColor: activeTab === "Messages" ? "#00C0C6" : "white",
+                  color: activeTab === "Messages" ? "white" : "#718096",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer"
+                }}
+              >
+                Messages
+              </button>
+              <button
+                onClick={() => setActiveTab("Tasks")}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  border: "1px solid #E2E8F0",
+                  backgroundColor: activeTab === "Tasks" ? "#00C0C6" : "white",
+                  color: activeTab === "Tasks" ? "white" : "#718096",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer"
+                }}
+              >
+                Tasks
+              </button>
+            </div>
+          </div>
+ 
+          {/* Chat Content and Input Area */}
+          {activeTab === "Tasks" ? (
+            /* Tasks Tab Content */
+            <>
+              {/* Task Content Area */}
+              <div
+                style={{
+                  flex: "1",
+                  backgroundColor: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  padding: "20px"
+                }}
+              >
+                <div style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "flex-start",
+                  paddingTop: "40px"
+                }}>
+                  {/* Task Card */}
+                  <div style={{
+                    position: "relative",
+                    maxWidth: "350px"
+                  }}>
+                    {/* Task Card */}
+                    <div style={{
+                      backgroundColor: "#F7F9FC",
+                      borderRadius: "12px",
+                      padding: "20px",
+                      border: "1px solid #E2E8F0",
+                      marginBottom: "10px",
+                      marginRight: "35px"
+                    }}>
+                      {/* Task Title */}
+                      <h3 style={{
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        color: "#2D3748",
+                        margin: "0 0 8px 0",
+                        lineHeight: "1.4"
+                      }}>
+                        Review Tax Return Draft
+                      </h3>
+                      
+                      {/* Task Description */}
+                      <p style={{
+                        fontSize: "14px",
+                        color: "#718096",
+                        margin: "0 0 16px 0",
+                        lineHeight: "1.5"
+                      }}>
+                        Please review your 2023 tax return draft and approve or request changes
+                      </p>
+                      
+                      {/* Task Checklist */}
+                      <div style={{ marginBottom: "16px" }}>
+                        {[
+                          "Review all sections carefully",
+                          "Check personal information", 
+                          "Verify income amounts"
+                        ].map((item, index) => (
+                          <div key={index} style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginBottom: "8px"
+                          }}>
+                            <div style={{
+                              width: "16px",
+                              height: "16px",
+                              border: "2px solid #CBD5E0",
+                              borderRadius: "50%",
+                              flexShrink: 0
+                            }}></div>
+                            <span style={{
+                              fontSize: "14px",
+                              color: "#4A5568",
+                              lineHeight: "1.4"
+                            }}>
+                              {item}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                
+                    </div>
+                    
+                    {/* User Avatar */}
+                    <div style={{
+                      position: "absolute",
+                      right: "-10px",
+                      top: "10px",
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      overflow: "hidden"
+                    }}>
+                      <img
+                        src={taxheaderlogo}
+                        alt="User Avatar"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "50%"
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Input Section for Tasks Tab */}
+              <div style={{ 
+                padding: "20px 24px",
+                backgroundColor: "white"
+              }}>
+                {/* Message Input */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  {/* Message Input with Crossing Icon inside */}
+                  <div style={{ flex: "1", position: "relative" }}>
+                    <input
+                      type="text"
+                      placeholder="Write your messages here..."
+                      value={newMessage}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                      style={{
+                        width: "100%",
+                        padding: "12px 50px 12px 50px",
+                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                        borderRadius: "8px",
+                        fontSize: "16px",
+                        backgroundColor: "#fff",
+                        outline: "none",
+                        fontFamily: "BasisGrotesquePro"
+                      }}
+                    />
+                    {/* Crossing Icon - Inside input field, left side */}
+                    <button
+                      onClick={() => {
+                        setShowOptions(!showOptions);
+                      }}
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "30%",
+                        border: "none",
+                        backgroundColor: "#F56D2D",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}
+                    >
+                      <Crossing style={{ color: "white", fontSize: "12px" }} />
+                    </button>
+
+                    {/* Sendingg Icon - Inside input field, right side */}
+                    <button
+                      onClick={handleSend}
+                      style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "30%",
+                        border: "none",
+                        backgroundColor: "#F56D2D",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}
+                    >
+                      <Sendingg style={{ color: "white", fontSize: "12px" }} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Messages Tab Content */
+            <>
+              {/* Chat Content Area */}
+              <div
+                style={{
+                  flex: "1",
+                  backgroundColor: showTaskPopup ? "#00000099" : "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  padding: "20px"
+                }}
+              >
+                {/* Empty space - messages would appear here */}
+                {!showTaskPopup && (
+                  <div style={{
+                    color: "#9CA3AF",
+                    fontSize: "16px",
+                    opacity: 0.7
+                  }}>
+                    Select a conversation to start messaging
+                  </div>
+                )}
+                
+                {/* Create New Task Popup - positioned in bottom left */}
+                {showTaskPopup && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "0px",
+                      left: "20px",
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      padding: "24px",
+                      width: "400px",
+                      maxWidth: "90%",
+                      zIndex: 100,
+                      border: "1px solid #E2E8F0",
+                      animation: "slideUp 0.3s ease-out",
+                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)"
+                    }}
+                  >
+                    {/* Header */}
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "20px"
+                    }}>
+                      <h3 style={{
+                        fontSize: "18px",
+                        fontWeight: "600",
+                        color: "#2D3748",
+                        margin: 0
+                      }}>
+                        Create New Task
+                      </h3>
+                      <button
+                        onClick={() => setShowTaskPopup(false)}
+                      >
+                        <Cut2/> 
+                      </button>
+                    </div>
+
+                    {/* Task List */}
+                    <div style={{ marginBottom: "16px" }}>
+                      {tasks.map((task) => (
+                        <div
+                          key={task.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            marginBottom: "12px",
+                            padding: "8px 0"
+                          }}
+                        >
+                          {/* Checkbox */}
+                          <div
+                            onClick={() => !task.isInput && handleTaskToggle(task.id)}
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              border: task.completed ? "none" : "2px solid #E2E8F0",
+                              borderRadius: "4px",
+                              backgroundColor: task.completed ? "#00C0C6" : "white",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: task.isInput ? "default" : "pointer",
+                              flexShrink: 0
+                            }}
+                          >
+                            {task.completed && (
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path
+                                  d="M10 3L4.5 8.5L2 6"
+                                  stroke="white"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* Task Text or Input */}
+                          {task.isInput ? (
+                            <input
+                              type="text"
+                              placeholder="Enter task title"
+                              value={newTaskText}
+                              onChange={(e) => handleTaskInputChange(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleAddTask();
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                border: "none",
+                                outline: "none",
+                                fontSize: "14px",
+                                color: "#374151",
+                                backgroundColor: "transparent",
+                                fontFamily: "inherit"
+                              }}
+                            />
+                          ) : (
+                            <span style={{
+                              flex: 1,
+                              fontSize: "14px",
+                              color: task.completed ? "#9CA3AF" : "#374151",
+                              textDecoration: task.completed ? "line-through" : "none"
+                            }}>
+                              {task.text}
+                            </span>
+                          )}
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                           
+                          >
+                            <DeleteIcon style={{ color: "#EF4444" }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add New Task Button */}
+                    <div
+                      onClick={handleAddTask}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        padding: "8px 0",
+                        color: "#F59E0B"
+                      }}
+                    >
+                      <span style={{ fontSize: "16px", fontWeight: "bold", color: "#F56D2D" }}>+</span>
+                      <span style={{ fontSize: "14px", color: "#F56D2D" }}>Enter task title</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Input Section */}
+              <div style={{ 
+                padding: "20px 24px",
+                backgroundColor: showTaskPopup ? "#00000099" : "white"
+              }}>
+                {/* Show Add Task / Attach Files only when Messages tab is active and showOptions is true */}
+              {showOptions && !showTaskPopup && (
+              <div
+                style={{
+                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  marginBottom: "16px",
+                  backgroundColor: "white",
+                  display: "inline-block"
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                      padding: "8px",
+                      borderRadius: "6px",
+                      transition: "background-color 0.2s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--Palette2-Gold-200, #FFF4E6)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <span style={{ color: "#3B82F6", fontSize: "20px" }}><Linked /></span>
+                    <span 
+                      style={{ fontSize: "14px", color: "#374151", fontWeight: "400", cursor: "pointer" }}
+                      onClick={() => setShowTaskPopup(true)}
+                    >
+                      Add Task
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                      padding: "8px",
+                      borderRadius: "6px",
+                      transition: "background-color 0.2s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--Palette2-Gold-200, #FFF4E6)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <span style={{ color: "#3B82F6", fontSize: "16px" }}><Linked /></span>
+                    <span style={{ fontSize: "14px", color: "#374151", fontWeight: "400" }}>Attach Files</span>
+                  </div>
+                </div>
+              </div>
+            )}
+                </div>
+                <div>
+ 
+            {/* Message Input */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {/* Message Input with Crossing Icon inside */}
+              <div style={{ flex: "1", position: "relative" }}>
+                <input
+                  type="text"
+                  placeholder="Write your messages here..."
+                  value={newMessage}
+                   onChange={(e) => {
+                     setNewMessage(e.target.value);
+                   }}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  style={{
+                    width: "100%",
+                    padding: "12px 50px 12px 50px",
+                    border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    backgroundColor: "#fff",
+                    outline: "none",
+                    fontFamily: "BasisGrotesquePro"
+                  }}
+                />
+                 {/* Crossing Icon - Inside input field, left side */}
+                 <button
+                   onClick={() => {
+                     setShowOptions(!showOptions);
+                   }}
+                  style={{
+                    position: "absolute",
+                    left: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "30%",
+                    border: "none",
+                    backgroundColor: "#F56D2D",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "bold"
+                  }}
+                >
+                  <Crossing style={{ color: "white", fontSize: "12px" }} />
+                </button>
+ 
+                {/* Sendingg Icon - Inside input field, right side */}
+                <button
+                  onClick={handleSend}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "30%",
+                    border: "none",
+                    backgroundColor: "#F56D2D",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "bold"
+                  }}
+                >
+                  <Sendingg style={{ color: "white", fontSize: "12px" }} />
+                </button>
+              </div>
+              </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Compose Message Modal */}
+      {showComposeModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#00000099",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+        
+        }}
+        onClick={() => setShowComposeModal(false)}
+        >
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: "16px",
+            padding: "40px",
+            width: "95%",
+            maxWidth: "700px",
+            maxHeight: "85vh",
+            overflowY: "auto",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+            position: "relative"
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              marginBottom: "32px"
+            }}>
+              <div>
+                <h2 style={{
+                  fontSize: "28px",
+                  fontWeight: "700",
+                  color: "#1A202C",
+                  margin: "0 0 8px 0",
+                  lineHeight: "1.2"
+                }}>
+                  Compose Message
+                </h2>
+                <p style={{
+                  fontSize: "16px",
+                  color: "#718096",
+                  margin: 0,
+                  lineHeight: "1.4"
+                }}>
+                  Send a new message to a client or team member.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowComposeModal(false)}
+                style={{
+                  background: "#F7F9FC",
+                  border: "none",
+                  fontSize: "18px",
+                  color: "#718096",
+                  cursor: "pointer",
+                  padding: "12px",
+                  borderRadius: "50%",
+                  width: "40px",
+                  height: "40px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#E2E8F0";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#F7F9FC";
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Form Fields */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* Enter Recipients */}
+              <div>
+                <label style={{
+                  display: "block",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "#2D3748",
+                  marginBottom: "12px"
+                }}>
+                  Enter Recipients
+                </label>
+                <div style={{
+                  border: "1px solid #E2E8F0",
+                  borderRadius: "12px",
+                  padding: "16px",
+                  minHeight: "60px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  alignItems: "center",
+                  backgroundColor: "#FAFAFA"
+                }}>
+                  {composeForm.recipients.map((recipient, index) => (
+                    <div key={index} style={{
+                      backgroundColor: "#E3F2FD",
+                      color: "#1976D2",
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontWeight: "500"
+                    }}>
+                      {recipient}
+                      <button
+                        onClick={() => {
+                          const newRecipients = composeForm.recipients.filter((_, i) => i !== index);
+                          setComposeForm({ ...composeForm, recipients: newRecipients });
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#1976D2",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          padding: 0,
+                          width: "18px",
+                          height: "18px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: "50%",
+                          backgroundColor: "rgba(25, 118, 210, 0.1)"
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button style={{
+                    backgroundColor: "#F56D2D",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    width: "32px",
+                    height: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    fontWeight: "bold"
+                  }}>
+                    @
+                  </button>
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label style={{
+                  display: "block",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "#2D3748",
+                  marginBottom: "12px"
+                }}>
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter message subject"
+                  value={composeForm.subject}
+                  onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "16px",
+                    border: "1px solid #E2E8F0",
+                    borderRadius: "12px",
+                    fontSize: "16px",
+                    outline: "none",
+                    backgroundColor: "#FAFAFA"
+                  }}
+                />
+              </div>
+
+              {/* Category & Priority */}
+              <div style={{ display: "flex", gap: "20px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{
+                    display: "block",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#2D3748",
+                    marginBottom: "12px"
+                  }}>
+                    Category
+                  </label>
+                  <select
+                    value={composeForm.category}
+                    onChange={(e) => setComposeForm({ ...composeForm, category: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      border: "1px solid #E2E8F0",
+                      borderRadius: "12px",
+                      fontSize: "16px",
+                      outline: "none",
+                      backgroundColor: "#FAFAFA",
+                      cursor: "pointer"
+                    }}
+                  >
+                    <option value="Client">Client</option>
+                    <option value="Internal">Internal</option>
+                    <option value="Team">Team</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{
+                    display: "block",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#2D3748",
+                    marginBottom: "12px"
+                  }}>
+                    Priority
+                  </label>
+                  <select
+                    value={composeForm.priority}
+                    onChange={(e) => setComposeForm({ ...composeForm, priority: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      border: "1px solid #E2E8F0",
+                      borderRadius: "12px",
+                      fontSize: "16px",
+                      outline: "none",
+                      backgroundColor: "#FAFAFA",
+                      cursor: "pointer"
+                    }}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label style={{
+                  display: "block",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "#2D3748",
+                  marginBottom: "12px"
+                }}>
+                  Message
+                </label>
+                <textarea
+                  placeholder="Enter your message"
+                  value={composeForm.message}
+                  onChange={(e) => setComposeForm({ ...composeForm, message: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "16px",
+                    border: "1px solid #E2E8F0",
+                    borderRadius: "12px",
+                    fontSize: "16px",
+                    outline: "none",
+                    minHeight: "140px",
+                    resize: "vertical",
+                    backgroundColor: "#FAFAFA",
+                    fontFamily: "inherit"
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "16px",
+              marginTop: "40px"
+            }}>
+              <button
+                onClick={() => setShowComposeModal(false)}
+                style={{
+                  padding: "16px 32px",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: "12px",
+                  backgroundColor: "white",
+                  color: "#718096",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#F7F9FC";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "white";
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle send message logic here
+                  console.log("Sending message:", composeForm);
+                  setShowComposeModal(false);
+                }}
+                style={{
+                  padding: "16px 32px",
+                  border: "none",
+                  borderRadius: "12px",
+                  backgroundColor: "#F56D2D",
+                  color: "white",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#E55A1A";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#F56D2D";
+                }}
+              >
+                Send Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+ 
+ 

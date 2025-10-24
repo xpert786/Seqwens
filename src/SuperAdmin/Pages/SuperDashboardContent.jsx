@@ -1,4 +1,18 @@
 import React from 'react';
+import {
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip
+} from 'recharts';
 
 import { RefreshIcon, UserManage, SubscriptionIcon, MesIcon, SystemSettingsIcon, HelpsIcon, TotalFirmsIcon, ActiveUsersIcon, MonthlyRevenueIcon, SystemHealthIcon, SecurityGreenIcon, SecurityBlueIcon, SecurityYellowIcon, DashIcon   } from '../Components/icons';
 // Mock data for charts
@@ -6,24 +20,25 @@ const revenueData = [
   { month: 'Jan', revenue: 180000, users: 6500 },
   { month: 'Feb', revenue: 200000, users: 7200 },
   { month: 'Mar', revenue: 220000, users: 7800 },
-  { month: 'Apr', revenue: 250000, users: 8200 },
-  { month: 'May', revenue: 280000, users: 8500 },
-  { month: 'Jun', revenue: 284750, users: 8432 }
+  { month: 'Apr', revenue: 240000, users: 8200 },
+  { month: 'May', revenue: 265000, users: 8500 },
+  { month: 'Jun', revenue: 290000, users: 8432 }
 ];
 
 const subscriptionData = [
+  { name: 'Solo', value: 650, color: '#10B981' },
   { name: 'Solo', value: 456, color: '#3B82F6' },
-  { name: 'Pro', value: 234, color: '#10B981' },
-  { name: 'Team', value: 189, color: '#F59E0B' },
-  { name: 'Enterprise', value: 45, color: '#06B6D4' }
+  { name: 'Team', value: 270, color: '#F59E0B' },
+  { name: 'Team', value: 90, color: '#06B6D4' }
 ];
 
 const activityData = [
-  { time: '04:00', users: 1200 },
-  { time: '08:00', users: 2800 },
-  { time: '12:00', users: 4200 },
-  { time: '16:00', users: 4800 },
-  { time: '20:00', users: 3200 }
+  { time: '00:00', users: 1400 },
+  { time: '04:00', users: 800 },
+  { time: '08:00', users: 3200 },
+  { time: '12:00', users: 4800 },
+  { time: '16:00', users: 5200 },
+  { time: '20:00', users: 3800 }
 ];
 
 const performanceData = [
@@ -84,6 +99,52 @@ const quickActions = [
 ];
 
 export default function SuperDashboardContent() {
+  // Custom tooltip for area chart
+  const RevenueTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
+          <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
+          <div className="text-sm" style={{color: '#374151'}}>
+            Revenue: {payload[0].value.toLocaleString()}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom tooltip for pie chart
+  const SubscriptionTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
+          <div className="text-sm font-semibold mb-1" style={{color: data.payload.color}}>{data.name}</div>
+          <div className="text-lg font-bold" style={{color: data.payload.color}}>
+            {data.value}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom tooltip for activity chart
+  const ActivityTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
+          <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
+          <div className="text-sm" style={{color: '#374151'}}>
+            Active : <span style={{color: '#10B981'}}>{payload[0].value}</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen">
       {/* Header */}
@@ -162,67 +223,56 @@ export default function SuperDashboardContent() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* Revenue Growth Trend */}
-            <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6">
+        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
           <h3 className="text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
           <p className="text-sm text-gray-600 mb-4">Monthly recurring revenue and user growth</p>
-          <div className="h-80 relative border-b border-l border-gray-200">
-            {/* Grid lines */}
-            <div className="absolute inset-0">
-              {[0, 1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="absolute w-full border-t border-gray-100" style={{ top: `${i * 20}%` }}></div>
-              ))}
-            </div>
-            
-            {/* Line chart */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
-              {/* Revenue line */}
-              <polyline
-                fill="none"
-                stroke="#10B981"
-                strokeWidth="3"
-                points={revenueData.map((item, index) => 
-                  `${50 + (index * 60)},${250 - (item.revenue / 300000) * 200}`
-                ).join(' ')}
-              />
-              
-              {/* Area under the line */}
-              <polygon
-                fill="url(#revenueGradient)"
-                points={`50,250 ${revenueData.map((item, index) => 
-                  `${50 + (index * 60)},${250 - (item.revenue / 300000) * 200}`
-                ).join(' ')} 350,250`}
-              />
-              
-              {/* Data points */}
-              {revenueData.map((item, index) => (
-                <g key={index}>
-                  <circle
-                    cx={50 + (index * 60)}
-                    cy={250 - (item.revenue / 300000) * 200}
-                    r="4"
-                    fill="#10B981"
-                    className="hover:r-6 transition-all cursor-pointer"
-                  />
-                  <text
-                    x={50 + (index * 60)}
-                    y="290"
-                    textAnchor="middle"
-                    className="text-xs fill-gray-600"
-                  >
-                    {item.month}
-                  </text>
-                </g>
-              ))}
-            </svg>
-            
-            {/* Gradient definition */}
-            <defs>
-              <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#10B981" stopOpacity="0.3"/>
-                <stop offset="100%" stopColor="#10B981" stopOpacity="0"/>
-              </linearGradient>
-            </defs>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={revenueData}
+                margin={{
+                  top: 10,
+                  right: 30,
+                  left: 0,
+                  bottom: 0,
+                }}
+              >
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                <XAxis 
+                  dataKey="month" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  domain={[0, 300000]}
+                  ticks={[0, 75000, 150000, 225000, 300000]}
+                />
+                <Tooltip content={<RevenueTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10B981"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                  dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
+                  activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
+          
           <div className="mt-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
@@ -232,41 +282,41 @@ export default function SuperDashboardContent() {
         </div>
 
         {/* Subscription Distribution */}
-        <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6">
+        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
           <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
           <p className="text-sm text-gray-600 mb-4">Revenue breakdown by plan type</p>
-          <div className="flex items-center justify-center">
-            <div className="relative w-64 h-64">
-              {/* Simple donut chart using CSS */}
-              <div className="absolute inset-0 rounded-full border-8 border-blue-500" style={{clipPath: 'polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%)'}}></div>
-              <div className="absolute inset-2 rounded-full border-8 border-green-500" style={{clipPath: 'polygon(50% 50%, 100% 0%, 100% 50%)'}}></div>
-              <div className="absolute inset-4 rounded-full border-8 border-yellow-500" style={{clipPath: 'polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%)'}}></div>
-              <div className="absolute inset-6 rounded-full border-8 border-cyan-500" style={{clipPath: 'polygon(50% 50%, 50% 100%, 0% 100%, 0% 50%)'}}></div>
-              <div className="absolute inset-8 bg-white rounded-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">924</div>
-                  <div className="text-sm text-gray-600">Total</div>
-                </div>
-              </div>
-            </div>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={subscriptionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={120}
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {subscriptionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<SubscriptionTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
+          
+          {/* Legend */}
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span>Solo: 456</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span>Pro: 234</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-              <span>Team: 189</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-cyan-500 rounded"></div>
-              <span>Enterprise: 45</span>
-            </div>
+            {subscriptionData.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded" style={{backgroundColor: item.color}}></div>
+                <span>{item.name}: {item.value}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -276,51 +326,48 @@ export default function SuperDashboardContent() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Real-Time Activity */}
-          <div className="bg-white rounded-xl  border border-[#E8F0FF] p-3 h-100 flex flex-col">
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Real-time Activity</h4>
+          <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 h-100 flex flex-col">
+            <h4 className="text-base font-semibold text-gray-900 mb-1">Real-Time Activity</h4>
             <p className="text-sm text-gray-600 mb-4">Active users throughout the day</p>
-            <div className="flex-1 relative border-b border-l border-gray-200">
-              {/* Grid lines */}
-              <div className="absolute inset-0">
-                {[0, 1, 2, 3, 4].map(i => (
-                  <div key={i} className="absolute w-full border-t border-gray-100" style={{ top: `${i * 25}%` }}></div>
-                ))}
-              </div>
-              
-              {/* Line chart */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 180">
-                {/* Activity line */}
-                <polyline
-                  fill="none"
-                  stroke="#10B981"
-                  strokeWidth="2"
-                  points={activityData.map((item, index) => 
-                    `${40 + (index * 80)},${160 - (item.users / 5000) * 120}`
-                  ).join(' ')}
-                />
-                
-                {/* Data points */}
-                {activityData.map((item, index) => (
-                  <g key={index}>
-                    <circle
-                      cx={40 + (index * 80)}
-                      cy={160 - (item.users / 5000) * 120}
-                      r="3"
-                      fill="#10B981"
-                      className="hover:r-5 transition-all cursor-pointer"
-                    />
-                    <text
-                      x={40 + (index * 80)}
-                      y="175"
-                      textAnchor="middle"
-                      className="text-xs fill-gray-600"
-                    >
-                      {item.time}
-                    </text>
-                  </g>
-                ))}
-              </svg>
+            
+            <div className="flex-1 h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={activityData}
+                  margin={{
+                    top: 10,
+                    right: 30,
+                    left: 0,
+                    bottom: 0,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                  <XAxis 
+                    dataKey="time" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    domain={[0, 6000]}
+                    ticks={[0, 1500, 3000, 4500, 6000]}
+                  />
+                  <Tooltip content={<ActivityTooltip />} />
+                  <Line
+                    type="monotone"
+                    dataKey="users"
+                    stroke="#10B981"
+                    strokeWidth={3}
+                    dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
+                    activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
+            
             <div className="mt-4 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded"></div>

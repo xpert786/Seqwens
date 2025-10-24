@@ -11,11 +11,14 @@ import DocumentsPage from './pages/Documents/DocumentsPage';
 import AllDocumentsPage from './pages/Documents/AllDocumentsPage';
 import ArchivedFilesPage from './pages/Documents/ArchivedFilesPage';
 import TasksPage from './pages/Tasks/TasksPage';
+import MessagePage from './pages/Messages/Messages';
 import MyClients from './pages/MyClients/MyClients';
 import ClientDetails from './pages/MyClients/ClientDetails';
 import ClientDocuments from './pages/MyClients/ClientDocuments';
 import InvoicesPage from './pages/MyClients/InvoicesPage';
 import SchedulePage from './pages/MyClients/SchedulePage';
+import CalendarPage from './pages/Calender/Calender';
+import AccountSettings from './pages/AccountSettings/AccountSettings';
 
 export default function TaxRoutes() {
   return (
@@ -34,9 +37,19 @@ export default function TaxRoutes() {
           </Route>
           <Route path="archived" element={<ArchivedFilesPage />} />
         </Route>
-        
+         
         {/* Tasks */}
         <Route path="tasks" element={<TasksPage />} />
+        
+        {/* Messages */}
+        <Route path="messages" element={<MessagePage />} />
+        
+        {/* Calendar */}
+        <Route path="calendar" element={<CalendarPage />} />
+        
+        {/* Account Settings */}
+        <Route path="account" element={<AccountSettings />} />
+        <Route path="settings" element={<AccountSettings />} />
         
         {/* Invoices */}
         <Route path="invoices" element={<InvoicesPage />} />

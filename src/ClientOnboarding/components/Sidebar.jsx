@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "../styles/Sidebar.css";
 import {
   DashIcon,
@@ -11,9 +12,13 @@ import {
   LogOutIcon,
   HelpsIcon,
 } from "../components/icons";
+import { userAPI } from "../utils/apiUtils";
+import { clearUserData } from "../utils/userUtils";
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const linkClass = (path) =>
     `nav-link d-flex align-items-center px-2 py-2 rounded ${location.pathname === path ? "active-link" : "inactive-link"
@@ -25,8 +30,30 @@ export default function Sidebar() {
   const bottomLinkClass = (path) =>
     `sidebar-bottom-link ${location.pathname === path ? "bottom-active" : ""}`;
 
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+    
+    setIsLoggingOut(true);
+    
+    try {
+      // Call logout API
+      await userAPI.logout();
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Continue with logout even if API fails
+    } finally {
+      // Clear local data regardless of API response
+      clearUserData();
+      
+      // Navigate to login page
+      navigate('/login');
+      
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
-    <div className="sidebar-container">
+    <div className="client-sidebar-container">
     
       <div className="sidebar-top">
         <ul className="nav flex-column px-3">
@@ -102,12 +129,16 @@ export default function Sidebar() {
           Help & Support
         </Link>
 
-        <Link to="/login" className={bottomLinkClass("/login")}>
-          <span className={`bottom-icon-wrapper ${location.pathname === "/login" ? "active" : ""}`}>
+        <button 
+          onClick={handleLogout}
+          className={`sidebar-bottom-link ${isLoggingOut ? 'logging-out' : ''}`}
+          disabled={isLoggingOut}
+        >
+          <span className="bottom-icon-wrapper">
             <LogOutIcon />
           </span>
-          Log Out
-        </Link>
+          {isLoggingOut ? 'Logging out...' : 'Log Out'}
+        </button>
       </div>
     </div>
   );

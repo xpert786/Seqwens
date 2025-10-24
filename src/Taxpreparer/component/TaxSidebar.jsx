@@ -58,20 +58,29 @@ export default function TaxSidebar() {
           </li>
 
           <li className="mb-2">
-            <Link to="/messages" className={linkClass("/messages")}>
-              <span className={iconWrapperClass("/messages")}>
+            <Link to="/taxdashboard/messages" className={linkClass("/taxdashboard/messages")}>
+              <span className={iconWrapperClass("/taxdashboard/messages")}>
                 <MesIconed />
               </span>
               Messages
             </Link>
           </li>
 
-          <li>
-            <Link to="/calendar" className={linkClass("/calendar")}>
-              <span className={iconWrapperClass("/calendar")}>
+          <li className="mb-2">
+            <Link to="/taxdashboard/calendar" className={linkClass("/taxdashboard/calendar")}>
+              <span className={iconWrapperClass("/taxdashboard/calendar")}>
                 <MonthIconed />
               </span>
               Calendar / Appointments
+            </Link>
+          </li>
+
+          <li className="mb-2">
+            <Link to="/taxdashboard/settings" className={linkClass("/taxdashboard/settings")}>
+              <span className={iconWrapperClass("/taxdashboard/settings")}>
+                <AccountIcon />
+              </span>
+              System Settings
             </Link>
           </li>
         </ul>
@@ -79,8 +88,8 @@ export default function TaxSidebar() {
 
       {/* Fixed Bottom Box */}
       <div className="tsb-bottom-box">
-        <Link to="/account" className={bottomLinkClass("/account")}>
-          <span className={`tsb-bottom-icon ${isActive("/account") ? "active" : ""}`}>
+        <Link to="/taxdashboard/account" className={bottomLinkClass("/taxdashboard/account")}>
+          <span className={`tsb-bottom-icon ${isActive("/taxdashboard/account") ? "active" : ""}`}>
             <AccountIcon />
           </span>
           Account Settings

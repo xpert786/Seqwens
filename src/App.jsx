@@ -12,6 +12,7 @@ import Appointments from "./ClientOnboarding/pages/Appointments";
 import Accounts from "./ClientOnboarding/pages/Accounts";
 import Helper from "./ClientOnboarding/pages/Helper";
 import DashboardFirst from "./ClientOnboarding/pages/DashboardFirst";
+import DashboardRouter from "./ClientOnboarding/components/DashboardRouter";
 import CreateAccount from "./ClientOnboarding/create-accounts/CreateAccount";
 import PersonalInfo from "./ClientOnboarding/create-accounts/PersonalInfo";
 import Login from "./ClientOnboarding/Login-setup/Login";
@@ -22,7 +23,6 @@ import TwoFactorAuth from "./ClientOnboarding/Login-setup/TwoFactorAuth";
 import VerifyEmail from "./ClientOnboarding/Login-setup/VerifyEmail";
 import VerifyPhone from "./ClientOnboarding/Login-setup/VerifyPhone";
 import ProtectedRoute from "./ClientOnboarding/components/ProtectedRoute";
-import { isNewUser } from "./ClientOnboarding/utils/userUtils";
 import TailwindTest from "./TailwindTest";
 import TaxRoutes from "./Taxpreparer/TaxRoutes";
 import SuperRoutes from "./SuperAdmin/SuperRoutes";
@@ -43,11 +43,70 @@ export default function App() {
         <Route path="/tw-test" element={<TailwindTest />} />
         {/* New users */}
         <Route path="/" element={<CreateAccount />} />
+        <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/personal-info" element={<PersonalInfo />} />
+        
+        {/* Protected Routes - Top level dashboard routes */}
+        <Route path="/dataintake" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<DataIntake />} />
+        </Route>
+        
+        <Route path="/documents" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<MyDocuments />} />
+        </Route>
+        
+        <Route path="/invoices" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Invoices />} />
+        </Route>
+        
+        <Route path="/messages" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Messages />} />
+        </Route>
+        
+        <Route path="/appointments" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Appointments />} />
+        </Route>
+        
+        <Route path="/accounts" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Accounts />} />
+        </Route>
+        
+        <Route path="/helpers" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Helper />} />
+        </Route>
+        
         {/* Protected Routes */}
         {/* Client Dashboard Routes */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardLayout />
@@ -55,14 +114,9 @@ export default function App() {
           }
         >
           <Route
-            path="dashboard"
-            element={
-              isNewUser()
-                ? <DashboardFirst />
-                : <Dashboard />
-            }
+            index
+            element={<DashboardRouter />}
           />
-          <Route path="dashboard" element={<Dashboard />} />
           <Route path="dashboard-first" element={<DashboardFirst />} />
           <Route path="documents" element={<MyDocuments />} />
           <Route path="dataintake" element={<DataIntake />} />

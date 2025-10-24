@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../styles/icon.css";
-import { SaveIcon } from "../icons"
+import { SaveIcon } from "../icons";
+import { notificationAPI, handleAPIError } from "../../utils/apiUtils";
 
 const Notifications = () => {
   const [preferences, setPreferences] = useState({
@@ -12,10 +13,90 @@ const Notifications = () => {
     message: true,
     marketing: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  // Fetch notification preferences on component mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await notificationAPI.getNotificationPreferences();
+        console.log('Fetched notification preferences:', data);
+        
+        // Map API response to component state
+        if (data) {
+          setPreferences({
+            email: data.email_notifications || false,
+            sms: data.sms_notifications || false,
+            upload: data.document_upload_confirmation || false,
+            appointment: data.appointment_reminders || false,
+            invoice: data.invoice_alerts || false,
+            message: data.message_notifications || false,
+            marketing: data.marketing_emails || false,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching notification preferences:', err);
+        setError(handleAPIError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, []);
 
   const togglePreference = (key) => {
     setPreferences({ ...preferences, [key]: !preferences[key] });
   };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+    
+    try {
+      // Map component state to API format
+      const apiData = {
+        email_notifications: preferences.email,
+        sms_notifications: preferences.sms,
+        document_upload_confirmation: preferences.upload,
+        appointment_reminders: preferences.appointment,
+        invoice_alerts: preferences.invoice,
+        message_notifications: preferences.message,
+        marketing_emails: preferences.marketing,
+      };
+
+      console.log('Saving notification preferences:', apiData);
+      
+      await notificationAPI.updateNotificationPreferences(apiData);
+      setSuccess(true);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error saving notification preferences:', err);
+      setError(handleAPIError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Show loading state while fetching preferences
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "200px" }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <span className="ms-2">Loading notification preferences...</span>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -69,7 +150,7 @@ const Notifications = () => {
           {
             key: "appointment",
             title: "Appointment Reminders",
-            desc: "Reminders for upcoming appointments",
+            desc: "Get reminded about upcoming appointments and meetings",
           },
           {
             key: "invoice",
@@ -124,23 +205,33 @@ const Notifications = () => {
         ))}
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-danger mt-3" role="alert">
+          {error}
+        </div>
+      )}
+
+    
+
       {/* Save Button */}
       <div className="mt-4">
         <button
           className="btn d-flex align-items-center gap-2"
+          onClick={handleSave}
+          disabled={saving || loading}
           style={{
-            backgroundColor: "#F56D2D",
+            backgroundColor: saving || loading ? "#ccc" : "#F56D2D",
             color: "#fff",
             fontWeight: "400",
-             fontSize: "15px",
+            fontSize: "15px",
             fontFamily: "BasisGrotesquePro",
-          
+            cursor: saving || loading ? "not-allowed" : "pointer",
           }}
         >
-             <SaveIcon />
-          Save Preferences
+          <SaveIcon />
+          {saving ? "Saving..." : "Save Preferences"}
         </button>
-  
       </div>
     </div>
   );

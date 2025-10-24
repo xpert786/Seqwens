@@ -63,16 +63,27 @@
 }
 
 .password-group .form-control {
-  padding-right: 40px;
+  padding-right: 45px;
 }
 
 .toggle-password {
   position: absolute;
-  right: 10px;
-  top: 60%;
-  transform: translateY(-25%);
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
   color: #6c757d;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: #495057;
 }
 
 .form-options {

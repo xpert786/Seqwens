@@ -1,11 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BillIcon, DelIcon, CrossIcon } from "../icons";
 import "../../styles/icon.css";
 import { Modal, Button, Form } from "react-bootstrap";
-
-
+import { billingAPI, handleAPIError } from "../../utils/apiUtils";
 
 const Billing = () => {
+  const [billingInformation, setBillingInformation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+  const fetchBillingInformation = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await billingAPI.getBillingInformation();
+      setBillingInformation(data);
+    } catch (err) {
+      setError(handleAPIError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchBillingInformation();
+}, []);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editCard, setEditCard] = useState(null);
   const [editMonth, setEditMonth] = useState("");

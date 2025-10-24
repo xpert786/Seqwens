@@ -4,20 +4,84 @@ import { Link } from "react-router-dom";
 import "../styles/Login.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FixedLayout from "../components/FixedLayout";
+import { userAPI, validateEmail, handleAPIError } from "../utils/apiUtils";
+import { setTokens } from "../utils/userUtils";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      localStorage.setItem("isLoggedIn", "true");
-      navigate("/two-auth");
-    } else {
-      alert("Please enter email and password");
+    
+    // Clear previous errors
+    setErrors({});
+    
+    // Validate form
+    if(!password.trim() && !email.trim()) {
+      setErrors({ 
+        email: 'Please enter your email',
+        password: 'Please enter your password'
+      });
+      return;
+    }
+
+    if (!email.trim()) {
+      setErrors({ email: 'Email is required' });
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setErrors({ email: 'Please enter a valid email address' });
+      return;
+    }
+    
+    if (!password.trim()) {
+      setErrors({ password: 'Password is required' });
+      return;
+    }
+
+
+
+    setIsLoading(true);
+    
+    try {
+      const response = await userAPI.login({ email, password });
+      
+      // Choose storage based on Remember Me selection
+      const storage = rememberMe ? localStorage : sessionStorage;
+      
+      // Store user data
+      storage.setItem("isLoggedIn", "true");
+      storage.setItem("userData", JSON.stringify(response.user));
+      
+      // Store tokens using the utility function
+      setTokens(response.access_token, response.refresh_token, rememberMe);
+      
+      // Check verification status and navigate accordingly
+      const user = response.user;
+      const isEmailVerified = user.is_email_verified;
+      const isPhoneVerified = user.is_phone_verified;
+      
+      // If either email or phone is verified, go directly to dashboard
+      if (isEmailVerified || isPhoneVerified) {
+        navigate("/dashboard");
+      } else {
+        // If neither is verified, go to two-factor authentication
+        navigate("/two-auth");
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({ 
+        general: handleAPIError(error) 
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -30,38 +94,65 @@ export default function Login() {
             <p className="login-subtitle">Sign in to your account to continue</p>
           </div>
 
+          {errors.general && (
+            <div className="alert alert-danger" role="alert">
+              {errors.general}
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="login-form">
             <div className="form-group">
               <label className="form-label">Email or Username</label>
               <input
-                type="text"
-                className="form-control"
+                type="email"
+                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                 placeholder="Enter your email or username"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) {
+                    setErrors(prev => ({ ...prev, email: '' }));
+                  }
+                }}
               />
+              {errors.email && (
+                <div className="invalid-feedback">{errors.email}</div>
+              )}
             </div>
 
             <div className="form-group password-group">
               <label className="form-label">Password</label>
               <input
                 type={showPassword ? "text" : "password"}
-                className="form-control"
+                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) {
+                    setErrors(prev => ({ ...prev, password: '' }));
+                  }
+                }}
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 className="toggle-password"
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                {showPassword ? <FaEye /> : <FaEyeSlash />}
               </span>
+              {errors.password && (
+                <div className="invalid-feedback">{errors.password}</div>
+              )}
             </div>
 
             <div className="form-options">
               <div className="form-check">
-                <input type="checkbox" className="form-check-input" />
+                <input 
+                  type="checkbox" 
+                  className="form-check-input" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 <label className="form-check-label">Remember Me</label>
               </div>
               <Link to="/forgot-password" className="forgot-link">
@@ -69,8 +160,12 @@ export default function Login() {
               </Link>
             </div>
 
-            <button type="submit" className="login-btn">
-              Login
+            <button 
+              type="submit" 
+              className="login-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
         </div>
