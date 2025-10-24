@@ -23,6 +23,7 @@ import TwoFactorAuth from "./ClientOnboarding/Login-setup/TwoFactorAuth";
 import VerifyEmail from "./ClientOnboarding/Login-setup/VerifyEmail";
 import VerifyPhone from "./ClientOnboarding/Login-setup/VerifyPhone";
 import ProtectedRoute from "./ClientOnboarding/components/ProtectedRoute";
+import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
 import TailwindTest from "./TailwindTest";
 import TaxRoutes from "./Taxpreparer/TaxRoutes";
 import SuperRoutes from "./SuperAdmin/SuperRoutes";
@@ -32,7 +33,11 @@ export default function App() {
     <>
       <Routes>
         {/* Old users login */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={
+          <AuthRedirect>
+            <Login />
+          </AuthRedirect>
+        } />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/otp-verification" element={<OtpVerification />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
@@ -42,8 +47,16 @@ export default function App() {
         {/* Tailwind test route */}
         <Route path="/tw-test" element={<TailwindTest />} />
         {/* New users */}
-        <Route path="/" element={<CreateAccount />} />
-        <Route path="/create-account" element={<CreateAccount />} />
+        <Route path="/" element={
+          <AuthRedirect>
+            <CreateAccount />
+          </AuthRedirect>
+        } />
+        <Route path="/create-account" element={
+          <AuthRedirect>
+            <CreateAccount />
+          </AuthRedirect>
+        } />
         <Route path="/personal-info" element={<PersonalInfo />} />
         
         {/* Protected Routes - Top level dashboard routes */}
