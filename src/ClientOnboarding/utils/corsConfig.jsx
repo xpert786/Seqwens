@@ -19,16 +19,35 @@ export const corsConfig = {
 
 // Alternative API base URL for development (using proxy)
 export const getApiBaseUrl = () => {
-  // Use proxy in development, direct URL in production
+  // Check if running on server or locally
+  const isServer = import.meta.env.VITE_IS_SERVER === 'true';
+  
   if (import.meta.env.DEV) {
-    return '/api'; // This will use the Vite proxy
+    // Development mode
+    if (isServer) {
+      return '/seqwens/api';
+    } else {
+      return '/api';
+    }
   }
-  return 'http://168.231.121.7/seqwens/api';
+  
+  // Production mode
+  if (isServer) {
+    return 'http://168.231.121.7/seqwens/api';
+  } else {
+    return '/api';
+  }
 };
 
 // Fallback API base URL for when proxy fails
 export const getFallbackApiBaseUrl = () => {
-  return 'http://168.231.121.7/seqwens/api';
+  const isServer = import.meta.env.VITE_IS_SERVER === 'true';
+  
+  if (isServer) {
+    return 'http://168.231.121.7/seqwens/api';
+  } else {
+    return '/api';
+  }
 };
 
 // CORS error handling
@@ -49,28 +68,17 @@ export const handleCorsError = (error) => {
 export const fetchWithCors = async (url, options = {}) => {
   const defaultOptions = {
     mode: 'cors',
-    credentials: 'include', // Include credentials for authenticated requests
+    credentials: 'omit', // Don't send credentials to avoid CORS issues
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
       ...options.headers
     }
   };
 
-  const finalOptions = { ...defaultOptions, ...options };
-  
-  console.log('fetchWithCors - URL:', url);
-  console.log('fetchWithCors - Options:', finalOptions);
-  console.log('fetchWithCors - Body:', finalOptions.body);
-
   try {
-    const response = await fetch(url, finalOptions);
-    console.log('fetchWithCors - Response Status:', response.status);
-    console.log('fetchWithCors - Response Headers:', Object.fromEntries(response.headers.entries()));
-    console.log('fetchWithCors - Response URL:', response.url);
+    const response = await fetch(url, { ...defaultOptions, ...options });
     return response;
   } catch (error) {
-    console.error('fetchWithCors - Error:', error);
     const corsError = handleCorsError(error);
     if (corsError.isCorsError) {
       console.error('CORS Error:', corsError.message);

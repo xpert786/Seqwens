@@ -38,13 +38,8 @@ export default function Overview() {
         { label: "Satisfaction", value: "543" }
     ];
 
-    const categories = [
-        { id: "compliance", label: "Compliance", count: 4, active: true },
-        { id: "billing", label: "Billing", count: 2, active: false },
-        { id: "technical", label: "Technical", count: 3, active: false }
-    ];
-
-    const tickets = [
+    const allTickets = [
+        // Compliance Tickets
         {
             id: "TICK-001",
             subject: "Unable to process payments",
@@ -66,9 +61,116 @@ export default function Overview() {
             priority: "Medium",
             status: "In Progress",
             assignee: "John Davis",
-            updated: "2024-01-1",
+            updated: "2024-01-15",
             time: "10:15"
+        },
+        {
+            id: "TICK-003",
+            subject: "Tax form validation error",
+            category: "Compliance",
+            firm: "ABC Tax Group",
+            contact: "Robert Smith",
+            priority: "High",
+            status: "Open",
+            assignee: "Sarah Wilson",
+            updated: "2024-01-14",
+            time: "16:30"
+        },
+        {
+            id: "TICK-004",
+            subject: "Audit trail missing",
+            category: "Compliance",
+            firm: "Tax Solutions Inc",
+            contact: "Emily Brown",
+            priority: "Low",
+            status: "Closed",
+            assignee: "John Davis",
+            updated: "2024-01-13",
+            time: "09:45"
+        },
+        // Billing Tickets
+        {
+            id: "TICK-005",
+            subject: "Invoice generation failed",
+            category: "Billing",
+            firm: "Premium Tax Services",
+            contact: "David Lee",
+            priority: "High",
+            status: "Open",
+            assignee: "Mike Johnson",
+            updated: "2024-01-15",
+            time: "13:20"
+        },
+        {
+            id: "TICK-006",
+            subject: "Payment processing delay",
+            category: "Billing",
+            firm: "Elite Accounting",
+            contact: "Lisa Wang",
+            priority: "Medium",
+            status: "In Progress",
+            assignee: "Mike Johnson",
+            updated: "2024-01-14",
+            time: "11:30"
+        },
+        // Technical Tickets
+        {
+            id: "TICK-007",
+            subject: "System login issues",
+            category: "Technical",
+            firm: "Quick Tax Pro",
+            contact: "James Wilson",
+            priority: "High",
+            status: "Open",
+            assignee: "Alex Chen",
+            updated: "2024-01-15",
+            time: "15:45"
+        },
+        {
+            id: "TICK-008",
+            subject: "Database connection timeout",
+            category: "Technical",
+            firm: "Tax Masters",
+            contact: "Jennifer Taylor",
+            priority: "Medium",
+            status: "In Progress",
+            assignee: "Alex Chen",
+            updated: "2024-01-14",
+            time: "12:15"
+        },
+        {
+            id: "TICK-009",
+            subject: "API integration error",
+            category: "Technical",
+            firm: "Smart Tax Solutions",
+            contact: "Mark Anderson",
+            priority: "Low",
+            status: "Closed",
+            assignee: "Alex Chen",
+            updated: "2024-01-13",
+            time: "14:20"
         }
+    ];
+
+    // Filter tickets based on selected category
+    const tickets = allTickets.filter(ticket => 
+        ticket.category.toLowerCase() === selectedCategory
+    );
+
+    const categories = [
+        { id: "compliance", label: "Compliance", count: allTickets.filter(t => t.category === "Compliance").length, active: true },
+        { id: "billing", label: "Billing", count: allTickets.filter(t => t.category === "Billing").length, active: false },
+        { id: "technical", label: "Technical", count: allTickets.filter(t => t.category === "Technical").length, active: false }
+    ];
+
+    // Update KPI data based on filtered tickets
+    const filteredKpiData = [
+        { label: "Total Tickets", value: tickets.length.toString() },
+        { label: "Open", value: tickets.filter(t => t.status === "Open").length.toString() },
+        { label: "In Progress", value: tickets.filter(t => t.status === "In Progress").length.toString() },
+        { label: "Closed Today", value: tickets.filter(t => t.status === "Closed").length.toString() },
+        { label: "Avg Response", value: "2.4 hours" },
+        { label: "Satisfaction", value: "543" }
     ];
 
     const getPriorityColor = (priority) => {
@@ -235,7 +337,7 @@ export default function Overview() {
         <div className="space-y-4">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                {kpiData.map((kpi, index) => (
+                {filteredKpiData.map((kpi, index) => (
                     <div key={index} className="bg-white border border-[#E8F0FF] rounded-lg p-3">
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
                             {kpi.label}
@@ -327,7 +429,7 @@ export default function Overview() {
                 {/* Header */}
                 <div className="mb-6">
                     <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
-                        Support Tickets (4)
+                        Support Tickets ({tickets.length})
                     </h4>
                     <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
                         All customer support requests and their current status
@@ -356,7 +458,7 @@ export default function Overview() {
                 {/* Search and Filter Bar */}
                 <div className="flex flex-col md:flex-row gap-4 mb-6">
                     {/* Search */}
-                    <div className="relative flex-1 max-w-md">
+                    <div className="relative flex-1 w-[10%]">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
