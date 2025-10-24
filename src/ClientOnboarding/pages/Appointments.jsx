@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { BsCameraVideo } from "react-icons/bs";
 import { DateIcon, AwaitingIcon, MobileIcon, PersonIcon, DiscusIcon, EditIcon, DeleteIcon, AppoinIcon, MonthIcon, ZoomIcon, EsternTimeIcon, CrossIcon } from "../components/icons";
-import "../styles/icon.css"
+import "../styles/Icon.css"
 import "../styles/fonts.css"
 export default function Appointments() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
