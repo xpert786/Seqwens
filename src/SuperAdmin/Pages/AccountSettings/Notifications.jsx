@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { SaveIcon } from "../../Components/icons"
-import "../../../Taxpreparer/styles/icon.css"
 
 const Notifications = () => {
   const [preferences, setPreferences] = useState({

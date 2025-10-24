@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { FaYoutube } from "react-icons/fa";
 import { FileIcon } from "../icons";
-import "../../styles/icon.css";
 
 const Resources = () => {
   const [activeCard, setActiveCard] = useState({ type: null, index: null });
