@@ -67,15 +67,6 @@ export default function Login() {
       const user = response.user;
       const userType = user.user_type;
       
-<<<<<<< HEAD
-      if (!isEmailVerified && !isPhoneVerified) {
-        navigate("/two-auth");
-      } else {
-        // If either email or phone is verified, check completion status
-        if (isCompleted) {
-          // User is completed, go to main dashboard
-          navigate("/dashboard");
-=======
       console.log('User logged in with type:', userType);
       
       // Store user type in storage for future reference
@@ -97,7 +88,6 @@ export default function Login() {
         // If neither email nor phone is verified, go to two-factor authentication
         if (!isEmailVerified && !isPhoneVerified) {
           navigate("/two-auth");
->>>>>>> 71fed26f72d69dda19d4f158e5275b3965208915
         } else {
           // If either email or phone is verified, check completion status
           if (isCompleted) {
@@ -220,4 +210,5 @@ export default function Login() {
     </FixedLayout>
   );
 }
+
 
