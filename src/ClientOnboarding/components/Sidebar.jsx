@@ -14,6 +14,7 @@ import {
 } from "../components/icons";
 import { userAPI } from "../utils/apiUtils";
 import { clearUserData } from "../utils/userUtils";
+import { navigateToLogin } from "../utils/urlUtils";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -45,8 +46,8 @@ export default function Sidebar() {
       // Clear local data regardless of API response
       clearUserData();
       
-      // Navigate to login page
-      navigate('/login');
+      // Navigate to login page using conditional URL
+      navigateToLogin(navigate);
       
       setIsLoggingOut(false);
     }

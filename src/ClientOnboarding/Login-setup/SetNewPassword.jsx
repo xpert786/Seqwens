@@ -4,6 +4,7 @@ import "../styles/SetNewPassword.css";
 import { PasswordStrengthBar } from "../components/icons";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validatePassword, handleAPIError } from "../utils/apiUtils";
+import { navigateToLogin } from "../utils/urlUtils";
 
 export default function SetNewPassword() {
   const [showPassword, setShowPassword] = useState(false);
@@ -67,8 +68,8 @@ export default function SetNewPassword() {
       localStorage.removeItem('resetEmail');
       localStorage.removeItem('resetOtp');
       
-      // Navigate to login page
-      navigate('/login');
+      // Navigate to login page using conditional URL
+      navigateToLogin(navigate);
     } catch (error) {
       console.error('Password reset error:', error);
       setErrors({ 

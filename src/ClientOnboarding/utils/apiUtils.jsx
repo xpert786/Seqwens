@@ -1,5 +1,6 @@
 import { getApiBaseUrl, getFallbackApiBaseUrl, fetchWithCors } from './corsConfig';
 import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData } from './userUtils';
+import { getLoginUrl } from './urlUtils';
 
 // API Configuration
 const API_BASE_URL = getApiBaseUrl();
@@ -130,13 +131,13 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = '/login';
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -451,7 +452,7 @@ export const dataIntakeAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = '/login';
+            window.location.href = getLoginUrl();
             throw new Error('Session expired. Please login again.');
           }
           
@@ -463,7 +464,7 @@ export const dataIntakeAPI = {
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = '/login';
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -657,13 +658,13 @@ export const profileAPI = {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = '/login';
+          window.location.href = getLoginUrl();
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = '/login';
+        window.location.href = getLoginUrl();
         throw new Error('Session expired. Please login again.');
       }
     }
