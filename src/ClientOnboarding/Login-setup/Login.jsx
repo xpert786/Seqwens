@@ -69,7 +69,6 @@ export default function Login() {
       const isPhoneVerified = user.is_phone_verified;
       const isCompleted = user.is_completed;
       
-      // If neither email nor phone is verified, go to two-factor authentication
       if (!isEmailVerified && !isPhoneVerified) {
         navigate("/two-auth");
       } else {
