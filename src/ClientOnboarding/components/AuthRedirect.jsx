@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { isLoggedIn } from "../utils/userUtils";
+import { isLoggedIn, getStorage } from "../utils/userUtils";
 
 /**
- * AuthRedirect component that redirects authenticated users to dashboard
+ * AuthRedirect component that redirects authenticated users to their appropriate dashboard
  * Use this to wrap login and register pages to prevent logged-in users from accessing them
  */
 export default function AuthRedirect({ children }) {
@@ -12,8 +12,21 @@ export default function AuthRedirect({ children }) {
   useEffect(() => {
     // Check if user is already logged in
     if (isLoggedIn()) {
-      // Redirect to dashboard if user is already authenticated
-      navigate("/dashboard", { replace: true });
+      // Get user type from storage
+      const storage = getStorage();
+      const userType = storage?.getItem("userType");
+      
+      console.log('AuthRedirect - User type:', userType);
+      
+      // Redirect based on user type
+      if (userType === 'super_admin') {
+        navigate("/superadmin", { replace: true });
+      } else if (userType === 'admin') {
+        navigate("/taxdashboard", { replace: true });
+      } else {
+        // Default to client dashboard
+        navigate("/dashboard", { replace: true });
+      }
     }
   }, [navigate]);
 

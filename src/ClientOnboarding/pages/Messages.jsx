@@ -1,124 +1,313 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPaperPlane, FaSearch } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
-
-const initialConversations = [
-  {
-    id: 1,
-    name: "Seqwens Tax Co.",
-    lastMessage: "Please upload all W-2s forms for 2023 tax year",
-    time: "2 hours ago",
-    task: { current: 3, total: 5 },
-    messages: [
-      {
-        id: 1,
-        type: "system",
-        title: "Review Tax Return Draft",
-        text: "Please review your 2023 tax return draft and approve or request changes.",
-        options: ["Approve and e-sign", "Request changes"],
-        date: "26/07/2025",
-      },
-      {
-        id: 2,
-        type: "user",
-        text: "Thank You!",
-        date: "26/07/2025 12:45",
-      },
-      {
-        id: 3,
-        type: "file",
-        files: [
-          "Tax_Return_2023_1.pdf",
-          "Tax_Return_2023_2.pdf",
-          "Tax_Return_2023_3.pdf",
-        ],
-        date: "26/07/2025 12:50",
-      },
-    ],
-  },
-];
+import { getAccessToken } from "../utils/userUtils";
+import { getApiBaseUrl } from "../utils/corsConfig";
 
 export default function Messages() {
-  const [conversations, setConversations] = useState(initialConversations);
-  const [activeConversationId, setActiveConversationId] = useState(1);
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [chatSubject, setChatSubject] = useState("");
   const [chatMessage, setChatMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeChatMessages, setActiveChatMessages] = useState([]);
+  const [superadminId, setSuperadminId] = useState("");
+  const [creatingChat, setCreatingChat] = useState(false);
+  const [superadmins, setSuperadmins] = useState([]);
+  const [loadingSuperadmins, setLoadingSuperadmins] = useState(false);
+
+  const API_BASE_URL = getApiBaseUrl();
+
+  // Fetch superadmins from API
+  const fetchSuperadmins = async () => {
+    try {
+      setLoadingSuperadmins(true);
+      const token = getAccessToken();
+      const apiUrl = `${API_BASE_URL}/user/superadmins/`;
+
+      console.log('Fetching superadmins from:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch superadmins');
+      }
+
+      const data = await response.json();
+      console.log('Superadmins API Response:', data);
+
+      if (data.success && data.data && data.data.superadmins) {
+        setSuperadmins(data.data.superadmins);
+        console.log('✅ Superadmins loaded:', data.data.superadmins.length);
+      } else {
+        setSuperadmins([]);
+      }
+    } catch (err) {
+      console.error('Error fetching superadmins:', err);
+      setSuperadmins([]);
+    } finally {
+      setLoadingSuperadmins(false);
+    }
+  };
+
+  // Fetch superadmins when modal opens
+  useEffect(() => {
+    if (showModal) {
+      fetchSuperadmins();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showModal]);
+
+  // Fetch chats from API
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const token = getAccessToken();
+        const apiUrl = `${API_BASE_URL}/user/chats/`;
+        
+        console.log('Fetching chats from:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch chats');
+        }
+
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        if (data.success && data.chats) {
+          // Transform API data to match component structure
+          const transformedChats = data.chats.map(chat => ({
+            id: chat.id,
+            name: chat.taxpayer_name || chat.superadmin_name || 'Unknown User',
+            lastMessage: chat.last_message_preview || 'No message',
+            time: chat.last_message_at_formatted || 'N/A',
+            status: chat.status,
+            unreadCount: chat.unread_count || 0,
+            createdAt: chat.created_at_formatted,
+            subject: chat.subject,
+            // Store additional data
+            superadminName: chat.superadmin_name,
+            taxpayerName: chat.taxpayer_name,
+            // Initialize messages array for each chat
+            messages: [],
+          }));
+          
+          console.log('Transformed chats:', transformedChats);
+          console.log('Number of conversations:', transformedChats.length);
+          
+          setConversations(transformedChats);
+          console.log('✅ Conversations state set');
+          
+          // Set first chat as active if available
+          if (transformedChats.length > 0) {
+            console.log('Setting active conversation ID:', transformedChats[0].id);
+            console.log('First conversation data:', transformedChats[0]);
+            setActiveConversationId(transformedChats[0].id);
+          }
+        } else {
+          console.log('No chats in response');
+          setConversations([]);
+        }
+      } catch (err) {
+        console.error('Error fetching chats:', err);
+        setError(err.message || 'Failed to load chats');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChats();
+  }, []);
 
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId
-  );
+  ) || null;
 
 
-  const handleSend = () => {
-    if (newMessage.trim() === "") return;
-    const updatedConversations = conversations.map((conv) =>
-      conv.id === activeConversationId
-        ? {
-          ...conv,
-          messages: [
-            ...conv.messages,
-            {
-              id: Date.now(),
-              type: "user",
-              text: newMessage,
-              date: new Date().toLocaleString(),
-            },
-          ],
-          lastMessage: newMessage,
-          time: "Just now",
-        }
-        : conv
-    );
-    setConversations(updatedConversations);
-    setNewMessage("");
+  const handleSend = async () => {
+    if (newMessage.trim() === "" || !activeConversationId) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage(""); // Clear input immediately for better UX
+
+    try {
+      const token = getAccessToken();
+      
+      const payload = {
+        chat: activeConversationId,
+        content: messageText
+      };
+
+      console.log('Sending message with payload:', payload);
+
+      const response = await fetch(`${API_BASE_URL}/user/messages/send/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      console.log('Send message response:', data);
+
+      if (response.ok && data.success) {
+        // Update conversations with the new message
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === activeConversationId
+            ? {
+              ...conv,
+              messages: [
+                ...conv.messages,
+                {
+                  id: data.message_data.id,
+                  type: "user",
+                  text: data.message_data.content,
+                  date: data.message_data.created_at_formatted,
+                  sender: data.message_data.sender_name,
+                },
+              ],
+              lastMessage: data.message_data.content,
+              time: data.message_data.created_at_formatted,
+            }
+            : conv
+        );
+        setConversations(updatedConversations);
+        
+        console.log('✅ Message sent successfully');
+      } else {
+        throw new Error(data.message || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      // Restore the message to input on error
+      setNewMessage(messageText);
+      alert('Failed to send message: ' + err.message);
+    }
   };
 
 
-  const handleCreateChat = () => {
-    if (chatSubject.trim() === "" && chatMessage.trim() === "" && attachedFiles.length === 0) return;
-
-    const newChat = {
-      id: Date.now(),
-      name: chatSubject || "New Chat",
-      lastMessage: chatMessage || (attachedFiles.length > 0 ? `${attachedFiles.length} file(s) attached` : ""),
-      time: "Just now",
-      task: null,
-      messages: [],
-    };
-
-    if (chatMessage.trim()) {
-      newChat.messages.push({
-        id: Date.now() + 1,
-        type: "user",
-        text: chatMessage,
-        date: new Date().toLocaleString(),
-      });
+  const handleCreateChat = async () => {
+    if (chatSubject.trim() === "" || !superadminId) {
+      alert('Please fill in subject and select a superadmin');
+      return;
     }
 
-    if (attachedFiles.length > 0) {
-      newChat.messages.push({
-        id: Date.now() + 2,
-        type: "file",
-        files: attachedFiles.map((file) => file.name),
-        date: new Date().toLocaleString(),
-      });
-    }
+    try {
+      setCreatingChat(true);
+      const token = getAccessToken();
+      
+      const payload = {
+        subject: chatSubject,
+        superadmin_id: parseInt(superadminId),
+        initial_message: chatMessage.trim() || "Hello, I need assistance with my taxes."
+      };
 
-    setConversations([newChat, ...conversations]);
-    setActiveConversationId(newChat.id);
-    setShowModal(false);
-    setChatSubject("");
-    setChatMessage("");
-    setAttachedFiles([]);
+      console.log('Creating chat with payload:', payload);
+
+      const response = await fetch(`${API_BASE_URL}/user/chats/create/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      console.log('Create chat response:', data);
+
+      if (response.ok && data.success) {
+        // Transform the created chat to match component structure
+        const newChat = {
+          id: data.chat.id,
+          name: data.chat.superadmin_name || 'Admin',
+          lastMessage: data.chat.last_message?.content || chatMessage || 'No message',
+          time: data.chat.last_message_at_formatted || 'N/A',
+          status: data.chat.status,
+          unreadCount: data.chat.unread_count || 0,
+          subject: data.chat.subject,
+          createdAt: data.chat.created_at_formatted,
+          superadminName: data.chat.superadmin_name,
+          taxpayerName: data.chat.taxpayer_name,
+          messages: [],
+        };
+
+        // Add the new chat to the beginning of conversations list
+        setConversations([newChat, ...conversations]);
+        setActiveConversationId(newChat.id);
+        
+        // Reset form
+        setShowModal(false);
+        setChatSubject("");
+        setChatMessage("");
+        setAttachedFiles([]);
+        setSuperadminId("");
+        
+        console.log('✅ Chat created successfully:', newChat);
+      } else {
+        throw new Error(data.message || 'Failed to create chat');
+      }
+    } catch (err) {
+      console.error('Error creating chat:', err);
+      alert('Failed to create chat: ' + err.message);
+    } finally {
+      setCreatingChat(false);
+    }
   };
 
 
   const handleFileChange = (e) => {
     setAttachedFiles(Array.from(e.target.files));
   };
+
+  // Debug logging - useEffect to track conversations changes
+  useEffect(() => {
+    console.log('🔄 Conversations state changed:', {
+      conversations: conversations,
+      conversationsLength: conversations.length,
+      loading: loading,
+      error: error,
+      activeConversationId: activeConversationId,
+      activeConversation: activeConversation
+    });
+    
+    if (conversations.length > 0) {
+      console.log('📝 First conversation details:', conversations[0]);
+    }
+  }, [conversations, loading, error, activeConversationId, activeConversation]);
+  
+  // Component render logging
+  console.log('🎨 Messages Component Rendering:', {
+    conversations: conversations,
+    conversationsLength: conversations.length,
+    loading: loading,
+    error: error,
+    activeConversationId: activeConversationId
+  });
 
   return (
     <div className="px-4">
@@ -141,7 +330,7 @@ export default function Messages() {
 
       <div className="d-flex flex-grow-1 overflow-hidden">
 
-        <div className="p-3 me-3 d-flex flex-column" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px" }}>
+        <div className="p-3 me-3 d-flex flex-column" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
           <div className="mb-2">
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
@@ -168,47 +357,122 @@ export default function Messages() {
             </div>
 
           </div>
-          <div className="flex-grow-1 overflow-auto d-flex flex-column gap-2 mt-3">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                className={`p-3 w-100 ${conv.id === activeConversationId ? "#F3F7FF" : ""}`}
-                style={{ cursor: "pointer", border: "1px solid #E8F0FF", backgroundColor: "#F3F7FF", borderRadius: "12px", fontFamily: "BasisGrotesquePro", color: "#3B4A66" }}
-                onClick={() => setActiveConversationId(conv.id)}
-              >
-                <div className="d-flex justify-content-between align-items-center mb-1">
-                  <div className="d-flex align-items-center">
-                    <ConverIcon className="me-2 text-primary" />
-                    <div style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
-                  </div>
-                  <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+          <div className="flex-grow-1 overflow-auto d-flex flex-column mt-3" style={{ gap: "12px" }}>
+            {/* Loading State */}
+            {loading && (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
                 </div>
-                <small style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage}</small>
-                {conv.task && (
-                  <div className="mt-2 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "12px" }}>
-                    <span style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Task:</span>
-                    <span className="px-2 py-1 rounded-pill text-dark small" style={{ backgroundColor: "#fff", border: "1px solid #ddd" }}>
-                      {conv.task.current}/{conv.task.total}
-                    </span>
-                  </div>
-                )}
+                <p className="mt-2 text-muted small">Loading conversations...</p>
               </div>
-            ))}
+            )}
+            
+            {/* Error State */}
+            {error && !loading && (
+              <div className="text-center py-5">
+                <p className="text-danger small">{error}</p>
+                <button 
+                  className="btn btn-sm btn-outline-primary mt-2"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            
+            {/* Empty State */}
+            {!loading && !error && conversations.length === 0 && (
+              <div className="text-center py-5">
+                <ConverIcon className="text-muted mb-3" size={48} />
+                <p className="text-muted small mb-0">No conversations yet</p>
+                <p className="text-muted small">Start a new message to begin</p>
+              </div>
+            )}
+            
+            {/* Conversations List */}
+            {!loading && !error && conversations.length > 0 && (
+              <div style={{ width: "100%" }}>
+                {console.log('🎯 Rendering conversations list, count:', conversations.length)}
+                {conversations.map((conv, index) => {
+                  console.log(`📦 Rendering conversation ${index + 1}:`, conv);
+                  return (
+                  <div
+                    key={conv.id || `conv-${index}`}
+                    className="conversation-item p-3"
+                    style={{ 
+                      cursor: "pointer", 
+                      border: "2px solid #E8F0FF", 
+                      backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF", 
+                      borderRadius: "12px", 
+                      fontFamily: "BasisGrotesquePro", 
+                      color: "#3B4A66",
+                      marginBottom: index < conversations.length - 1 ? "12px" : "0",
+                      width: "100%",
+                      minHeight: "80px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    onClick={() => {
+                      console.log('Clicked conversation:', conv.id);
+                      setActiveConversationId(conv.id);
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="d-flex align-items-center">
+                        <ConverIcon className="me-2 text-primary" />
+                        <div className="d-flex align-items-center gap-2">
+                          <div style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
+                          {conv.unreadCount > 0 && (
+                            <span className="badge bg-danger" style={{ fontSize: "10px" }}>
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                    </div>
+                    <small style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
+                    {conv.subject && (
+                      <div className="mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
+                        <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
+                        <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
+                      </div>
+                    )}
+                    {conv.task && (
+                      <div className="mt-2 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "12px" }}>
+                        <span style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Task:</span>
+                        <span className="px-2 py-1 rounded-pill text-dark small" style={{ backgroundColor: "#fff", border: "1px solid #ddd" }}>
+                          {conv.task.current}/{conv.task.total}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Chat Area */}
         <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column">
-          <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
-            <ConverIcon className="text-primary" size={20} />
-            <div>
-              <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
-              <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>John Doe, You</small>
-            </div>
-          </div>
+          {activeConversation ? (
+            <>
+              <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+                <ConverIcon className="text-primary" size={20} />
+                <div>
+                  <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
+                  <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
+                    {activeConversation.status === 'active' ? 'Active' : 'Closed'}
+                  </small>
+                </div>
+              </div>
 
-          <div className="flex-grow-1 overflow-auto mb-3">
-            {activeConversation.messages.map((msg) => {
+              <div className="flex-grow-1 overflow-auto mb-3">
+                {activeChatMessages.length > 0 ? (
+                  activeChatMessages.map((msg) => {
               if (msg.type === "system") {
                 return (
                   <div key={msg.id} className="d-flex mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>
@@ -267,25 +531,39 @@ export default function Messages() {
                 );
               }
               return null;
-            })}
-          </div>
+                  })
+                ) : (
+                  <div className="text-center py-5">
+                    <p className="text-muted">No messages yet. Start the conversation!</p>
+                  </div>
+                )}
+              </div>
 
-          <div className="border-top pt-2">
-            <div className="d-flex align-items-center">
-              <input
-                type="text"
-                className="form-control me-2"
-                placeholder="Write a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                style={{ fontFamily: "BasisGrotesquePro" }}
-              />
-              <button className="btn" style={{ background: "#F56D2D", color: "#fff" }} onClick={handleSend}>
-                <FaPaperPlane />
-              </button>
+              <div className="border-top pt-2">
+                <div className="d-flex align-items-center">
+                  <input
+                    type="text"
+                    className="form-control me-2"
+                    placeholder="Write a message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    style={{ fontFamily: "BasisGrotesquePro" }}
+                  />
+                  <button className="btn" style={{ background: "#F56D2D", color: "#fff" }} onClick={handleSend}>
+                    <FaPaperPlane />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="d-flex align-items-center justify-content-center h-100">
+              <div className="text-center">
+                <ConverIcon className="text-muted mb-3" size={64} />
+                <p className="text-muted mb-0">Select a conversation to view messages</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -304,6 +582,34 @@ export default function Messages() {
               <label className="form-label" style={{ color: "#131323", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Message</label>
               <textarea className="form-control" rows="3" placeholder="Write your message here.. " style={{ fontFamily: "BasisGrotesquePro" }}
                 value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} />
+            </div>
+            <div className="mb-3">
+              <label className="form-label" style={{ color: "#131323", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Select Superadmin *</label>
+              {loadingSuperadmins ? (
+                <div className="text-center py-3">
+                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <small className="d-block mt-2 text-muted">Loading superadmins...</small>
+                </div>
+              ) : (
+                <select 
+                  className="form-select" 
+                  value={superadminId}
+                  onChange={(e) => setSuperadminId(e.target.value)}
+                  required
+                >
+                  <option value="">-- Select a Superadmin --</option>
+                  {superadmins.map((superadmin) => (
+                    <option key={superadmin.id} value={superadmin.id}>
+                      {superadmin.full_name} ({superadmin.role_display_name}) - {superadmin.email}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {superadmins.length === 0 && !loadingSuperadmins && (
+                <small className="text-danger">No superadmins available</small>
+              )}
             </div>
             <div className="mb-3 ms-1">
               <label
@@ -329,9 +635,20 @@ export default function Messages() {
               )}
             </div>
             <div className="text-end">
-              <button className="btn btn-outline-secondary me-2" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn" style={{ background: "#F56D2D", color: "#fff", fontFamily: "BasisGrotesquePro" }} onClick={handleCreateChat}>
-                Create Chat
+              <button 
+                className="btn btn-outline-secondary me-2" 
+                onClick={() => setShowModal(false)}
+                disabled={creatingChat}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn" 
+                style={{ background: "#F56D2D", color: "#fff", fontFamily: "BasisGrotesquePro" }} 
+                onClick={handleCreateChat}
+                disabled={creatingChat || loadingSuperadmins || !superadminId}
+              >
+                {creatingChat ? 'Creating...' : 'Create Chat'}
               </button>
             </div>
           </div>

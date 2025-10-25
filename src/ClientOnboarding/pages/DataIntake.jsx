@@ -1370,13 +1370,14 @@ export default function DataIntakeForm() {
                   fontFamily: "BasisGrotesquePro" 
                 }}
               >
-                Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS (Max 10MB per file)
+                Supported formats: All file types (AVIF, JPG, PNG, PDF, DOC, DOCX, XLS, etc.) - Max 50MB per file
               </small>
             </label>
             <input 
               id="file-upload" 
               type="file" 
               onChange={handleFileChange} 
+              accept="*/*"
               className="d-none" 
             />
           </div>
