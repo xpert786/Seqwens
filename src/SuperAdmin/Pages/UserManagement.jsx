@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiChevronDown, FiUpload, FiDownload, FiMoreVertical, FiUsers } from 'react-icons/fi';
+import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
+import { getApiBaseUrl } from '../../ClientOnboarding/utils/corsConfig';
+
+const API_BASE_URL = getApiBaseUrl();
 
 export default function UserManagement() {
   const navigate = useNavigate();
@@ -8,62 +12,73 @@ export default function UserManagement() {
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [planFilter, setPlanFilter] = useState('All Plans');
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [firms, setFirms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data for firms
-  const firms = [
-    {
-      id: 1,
-      firmName: 'Johnson & Associates CPA',
-      adminName: 'Michael Johnson',
-      email: 'admin@johnsonassociates.com',
-      plan: 'Professional',
-      planColor: 'text-white',
-      status: 'Active',
-      statusColor: 'text-white',
-      users: 15,
-      revenue: '$2,999 per month',
-      lastActive: '2 hours ago'
-    },
-    {
-      id: 2,
-      firmName: 'Metro Tax Services',
-      adminName: 'Sarah Martinez',
-      email: 'contact@metrotax.com',
-      plan: 'Team',
-      planColor: 'text-white',
-      status: 'Active',
-      statusColor: 'text-white',
-      users: 8,
-      revenue: '$1,499 per month',
-      lastActive: '1 hours ago'
-    },
-    {
-      id: 3,
-      firmName: 'Elite CPA Group',
-      adminName: 'David Chen',
-      email: 'info@elitecpa.com',
-      plan: 'Enterprise',
-      planColor: 'text-white',
-      status: 'Trial',
-      statusColor: 'text-white',
-      users: 45,
-      revenue: '$0 per month',
-      lastActive: '3 hours ago'
-    },
-    {
-      id: 4,
-      firmName: 'Coastal Accounting',
-      adminName: 'Jennifer Wilson',
-      email: 'owner@coastalaccounting.com',
-      plan: 'Solo',
-      planColor: 'text-white',
-      status: 'Suspended',
-      statusColor: 'text-white',
-      users: 1,
-      revenue: '$499 per month',
-      lastActive: '2 Day ago'
-    }
-  ];
+  // Fetch firms from API
+  useEffect(() => {
+    const fetchFirms = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const token = getAccessToken();
+        const apiUrl = `${API_BASE_URL}/user/superadmin/firms/`;
+        console.log('Fetching firms from:', apiUrl);
+        console.log('Using token:', token ? 'Token present' : 'No token');
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch firms');
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.firms) {
+          // Transform API data to match component structure
+          const transformedFirms = data.data.firms.map(firm => ({
+            id: firm.id,
+            firmName: firm.name,
+            adminName: firm.admin_user_name || 'N/A',
+            email: firm.admin_user_email || firm.email || 'N/A',
+            plan: firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : 'N/A',
+            planColor: 'text-white',
+            status: firm.status ? firm.status.charAt(0).toUpperCase() + firm.status.slice(1) : 'N/A',
+            statusColor: 'text-white',
+            users: firm.staff_count || 0,
+            revenue: `$${(parseFloat(firm.total_revenue) || 0).toFixed(2)}`,
+            lastActive: firm.trial_days_remaining ? `${firm.trial_days_remaining} days left` : 'N/A',
+            // Additional API data
+            clientCount: firm.client_count || 0,
+            monthlyFee: firm.monthly_fee || '0.00',
+            trialEndDate: firm.trial_end_date,
+            subscriptionStartDate: firm.subscription_start_date,
+            rawPlan: firm.subscription_plan || '',
+            rawStatus: firm.status || '',
+          }));
+          
+          setFirms(transformedFirms);
+        } else {
+          setFirms([]);
+        }
+      } catch (err) {
+        console.error('Error fetching firms:', err);
+        setError(err.message || 'Failed to load firms');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFirms();
+  }, []);
 
   const handleActionClick = (firmId, action) => {
     if (action === 'View Details') {
@@ -144,29 +159,65 @@ export default function UserManagement() {
 
      
 
-      {/* Firms Section */}
-      <div className="bg-white rounded-lg border border-[#E8F0FF]">
-        {/* Section Header */}
-        <div className="p-2  border-[#E8F0FF]">
-          <h6 className="text-xs font-semibold text-gray-800 mb-0">Firms (4)</h6>
-          <p className="text-xs text-gray-600" style={{fontSize: '10px'}}>Comprehensive list of all firms registered on the platform.</p>
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-12 text-center">
+          <div className="spinner-border text-primary mx-auto" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-gray-600">Loading firms...</p>
         </div>
+      )}
 
-        {/* Table Headers */}
-        <div className=" px-3 py-2  border-[#E8F0FF]">
-          <div className="flex items-center gap-4 text-[#4B5563] uppercase tracking-wider" style={{fontSize: '11px'}}>
-            <div className="flex-1 text-left">Firm</div>
-            <div className="w-20 text-center">Plan</div>
-            <div className="w-20 text-center">Status</div>
-            <div className="w-16 text-center">Users</div>
-            <div className="w-24 text-center">Revenue</div>
-            <div className="w-20 text-center">Last Active</div>
-            <div className="w-12 text-center">Actions</div>
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-white rounded-lg border border-red-200 p-6">
+          <div className="text-red-600 text-center">
+            <p className="font-semibold">Error loading firms</p>
+            <p className="text-sm mt-1">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Firms List with Borders */}
-        <div className="space-y-2 p-2">
+      {/* No Firms Message */}
+      {!loading && !error && firms.length === 0 && (
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-12 text-center">
+          <FiUsers className="mx-auto text-gray-400 mb-4" size={48} />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">No Firms Found</h3>
+          <p className="text-gray-600">There are no firms registered on the platform yet.</p>
+        </div>
+      )}
+
+      {/* Firms Section */}
+      {!loading && !error && firms.length > 0 && (
+        <div className="bg-white rounded-lg border border-[#E8F0FF]">
+          {/* Section Header */}
+          <div className="p-2  border-[#E8F0FF]">
+            <h6 className="text-xs font-semibold text-gray-800 mb-0">Firms ({firms.length})</h6>
+            <p className="text-xs text-gray-600" style={{fontSize: '10px'}}>Comprehensive list of all firms registered on the platform.</p>
+          </div>
+
+          {/* Table Headers */}
+          <div className=" px-3 py-2  border-[#E8F0FF]">
+            <div className="flex items-center gap-4 text-[#4B5563] uppercase tracking-wider" style={{fontSize: '11px'}}>
+              <div className="flex-1 text-left">Firm</div>
+              <div className="w-20 text-center">Plan</div>
+              <div className="w-20 text-center">Status</div>
+              <div className="w-16 text-center">Users</div>
+              <div className="w-24 text-center">Revenue</div>
+              <div className="w-20 text-center">Last Active</div>
+              <div className="w-12 text-center">Actions</div>
+            </div>
+          </div>
+
+          {/* Firms List with Borders */}
+          <div className="space-y-2 p-2">
           {firms.map((firm) => (
             <div key={firm.id} className="border border-[#E8F0FF] rounded-lg p-2  transition-colors">
               <div className="flex items-center gap-4">
@@ -188,10 +239,10 @@ export default function UserManagement() {
                     className={`inline-flex items-center px-1.5 py-1 rounded-full font-medium ${firm.planColor}`} 
                     style={{
                       fontSize: '10px',
-                      backgroundColor: firm.plan === 'Professional' ? '#1E40AF' : 
-                                     firm.plan === 'Team' ? '#22C55E' :
-                                     firm.plan === 'Enterprise' ? '#3AD6F2' :
-                                     firm.plan === 'Solo' ? '#FBBF24' : '#6B7280'
+                      backgroundColor: firm.rawPlan === 'professional' ? '#1E40AF' : 
+                                     firm.rawPlan === 'team' ? '#22C55E' :
+                                     firm.rawPlan === 'enterprise' ? '#3AD6F2' :
+                                     firm.rawPlan === 'solo' ? '#FBBF24' : '#6B7280'
                     }}
                   >
                     {firm.plan}
@@ -204,9 +255,9 @@ export default function UserManagement() {
                     className={`inline-flex items-center px-1.5 py-1 rounded-full font-medium ${firm.statusColor}`} 
                     style={{
                       fontSize: '10px',
-                      backgroundColor: firm.status === 'Trial' ? '#1E40AF' : 
-                                     firm.status === 'Active' ? '#22C55E' :
-                                     firm.status === 'Suspended' ? '#EF4444' : '#6B7280'
+                      backgroundColor: firm.rawStatus === 'trial' ? '#1E40AF' : 
+                                     firm.rawStatus === 'active' ? '#22C55E' :
+                                     firm.rawStatus === 'suspended' ? '#EF4444' : '#6B7280'
                     }}
                   >
                     {firm.status}
@@ -280,7 +331,8 @@ export default function UserManagement() {
             </div>
           ))}
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

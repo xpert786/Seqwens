@@ -627,6 +627,20 @@ export const profileAPI = {
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
     
+    // Log file details for debugging
+    console.log('Uploading profile picture:', {
+      name: profilePictureFile.name,
+      type: profilePictureFile.type,
+      size: profilePictureFile.size,
+      lastModified: profilePictureFile.lastModified
+    });
+    
+    // Log FormData contents for debugging
+    console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+      console.log('  Key:', pair[0], 'Value:', pair[1]);
+    }
+    
     const config = {
       method: 'PATCH',
       headers: {
@@ -637,7 +651,7 @@ export const profileAPI = {
     };
 
     console.log('Profile Picture Update URL:', `${API_BASE_URL}/user/account/`);
-    console.log('Profile Picture Update Config:', config);
+    console.log('Request config:', { method: config.method, headers: config.headers });
 
     let response = await fetchWithCors(`${API_BASE_URL}/user/account/`, config);
     
@@ -674,15 +688,30 @@ export const profileAPI = {
       try {
         const errorData = await response.json();
         console.error('Profile Picture Update Error Response:', errorData);
+        console.error('Full error data:', JSON.stringify(errorData, null, 2));
         
-        if (errorData.errors) {
+        if (errorData.profile_picture) {
+          // Handle Django validation errors
+          const profileErrors = Array.isArray(errorData.profile_picture) 
+            ? errorData.profile_picture.join(', ') 
+            : errorData.profile_picture;
+          errorMessage = `Profile picture: ${profileErrors}`;
+        } else if (errorData.errors && errorData.errors.profile_picture) {
+          // Handle nested errors structure
+          const errors = errorData.errors.profile_picture;
+          errorMessage = `Profile picture: ${Array.isArray(errors) ? errors.join(', ') : errors}`;
+        } else if (errorData.errors) {
           console.error('Profile Picture Update Field Validation Errors:', errorData.errors);
           const fieldErrors = Object.entries(errorData.errors)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
             .join('; ');
           errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
-        } else {
-          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
         }
       } catch (parseError) {
         console.error('Error parsing profile picture update response:', parseError);

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
 
 // Layouts
 import TaxDashboardLayout from './component/TaxDashboardLayout';
@@ -20,11 +21,42 @@ import SchedulePage from './pages/MyClients/SchedulePage';
 import CalendarPage from './pages/Calender/Calender';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
 
+// Protected Route Component for Admin/Tax Preparer
+function AdminProtectedRoute({ children }) {
+  // Check if user is logged in
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Check user type
+  const storage = getStorage();
+  const userType = storage?.getItem("userType");
+  
+  console.log('Admin Protected Route - User type:', userType);
+  
+  // Only allow admin and super_admin access
+  if (userType !== 'admin' && userType !== 'super_admin') {
+    console.warn('Unauthorized access attempt to Admin Dashboard');
+    // Redirect based on user type
+    if (userType === 'client' || !userType) {
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      return <Navigate to="/login" replace />;
+    }
+  }
+  
+  return children;
+}
+
 export default function TaxRoutes() {
   return (
     <Routes>
       {/* Main tax dashboard route with layout */}
-      <Route path="/" element={<TaxDashboardLayout />}>
+      <Route path="/" element={
+        <AdminProtectedRoute>
+          <TaxDashboardLayout />
+        </AdminProtectedRoute>
+      }>
         <Route index element={<TaxDashboard />} />
         <Route path="dashboard" element={<TaxDashboard />} />
         <Route path="dashboard-first" element={<TaxDashboardFirst />} />

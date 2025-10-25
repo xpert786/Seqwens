@@ -217,7 +217,7 @@ export default function TaxUploadModal({ show, handleClose }) {
                         <strong className="texts">Drop files here or click to browse</strong>
                     </p>
                     <p className="upload-hint">
-                        Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Max 10MB per file)
+                        Supported formats: All file types (AVIF, JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, etc.) - Max 50MB per file
                     </p>
                     <input
                         type="file"
@@ -225,7 +225,7 @@ export default function TaxUploadModal({ show, handleClose }) {
                         hidden
                         ref={fileInputRef}
                         onChange={handleFileChange}
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                        accept="*/*"
                     />
                 </div>
 

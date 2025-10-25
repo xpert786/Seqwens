@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import "../../styles/Icon.css";
 import { SaveIcon } from "../icons";
 import { securityAPI, handleAPIError } from "../../utils/apiUtils";
@@ -10,7 +11,6 @@ const Security = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
   
   // Password update states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -18,7 +18,6 @@ const Security = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   useEffect(() => {
     const fetchSecurityPreferences = async () => {
@@ -53,7 +52,6 @@ const Security = () => {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
-    setSuccess(false);
     
     try {
       const apiData = {
@@ -65,13 +63,33 @@ const Security = () => {
       console.log('Saving security preferences:', apiData);
       
       await securityAPI.updateSecurityPreferences(apiData);
-      setSuccess(true);
       
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
+      // Show success toast
+      toast.success("Security settings saved successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+      });
     } catch (err) {
       console.error('Error saving security preferences:', err);
-      setError(handleAPIError(err));
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+      
+      // Show error toast
+      toast.error(errorMessage || "Failed to save security settings", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -80,7 +98,6 @@ const Security = () => {
   const handlePasswordUpdate = async () => {
     setPasswordSaving(true);
     setPasswordError(null);
-    setPasswordSuccess(false);
     
     // Validate passwords
     if (newPassword !== confirmPassword) {
@@ -105,18 +122,38 @@ const Security = () => {
       console.log('Updating password...');
       
       await securityAPI.updatePassword(passwordData);
-      setPasswordSuccess(true);
       
-      // Clear form and success message after 3 seconds
-      setTimeout(() => {
-        setPasswordSuccess(false);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-      }, 3000);
+      // Show success toast
+      toast.success("Password updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+      });
+      
+      // Clear form
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err) {
       console.error('Error updating password:', err);
-      setPasswordError(handleAPIError(err));
+      const errorMessage = handleAPIError(err);
+      setPasswordError(errorMessage);
+      
+      // Show error toast
+      toast.error(errorMessage || "Failed to update password", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setPasswordSaving(false);
     }
@@ -298,15 +335,17 @@ const Security = () => {
           onClick={handlePasswordUpdate}
           disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
           style={{ 
-            color: passwordSaving ? "#9CA3AF" : "#3B4A66", 
+            color: "#3B4A66", 
             fontSize: "16px", 
             fontWeight: "400", 
             fontFamily: "BasisGrotesquePro", 
-            background: passwordSaving ? "#F3F4F6" : "#E8F0FF",
-            cursor: passwordSaving ? "not-allowed" : "pointer"
+            background: "#E8F0FF",
+            opacity: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? 0.6 : 1,
+            cursor: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? "not-allowed" : "pointer",
+            transition: "opacity 0.2s ease",
           }}
         >
-          {passwordSaving ? "Updating..." : "Update Password"}
+          Update Password
         </button>
       </form>
 
@@ -323,16 +362,18 @@ const Security = () => {
         onClick={handleSave}
         disabled={saving}
         style={{
-          backgroundColor: saving ? "#ccc" : "#F56D2D",
+          backgroundColor: saving ? "#F56D2D" : "#F56D2D",
+          opacity: saving ? 0.7 : 1,
           color: "#fff",
           fontWeight: "400",
           fontSize: "15px",
           fontFamily: "BasisGrotesquePro",
           cursor: saving ? "not-allowed" : "pointer",
+          transition: "opacity 0.2s ease",
         }}
       >
         <SaveIcon />
-        {saving ? "Saving..." : "Save Security Settings"}
+        Save Security Settings
       </button>
 
 

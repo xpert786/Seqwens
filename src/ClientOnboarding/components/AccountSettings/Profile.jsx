@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { SaveIcon } from "../icons";
 import { profileAPI } from "../../utils/apiUtils";
 import { setUserData as persistUserData, getUserData, getStorage } from "../../utils/userUtils";
+import { toast } from "react-toastify";
 
 export default function Profile() {
     const [userData, setUserData] = useState({
@@ -97,43 +98,43 @@ export default function Profile() {
     const handleImageSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                setError('Please select a valid image file');
+            // Validate it's an image file (including .avif)
+            const isValidImage = file.type.startsWith('image/') || 
+                                 file.name.toLowerCase().endsWith('.avif') ||
+                                 file.name.toLowerCase().endsWith('.webp') ||
+                                 file.name.toLowerCase().endsWith('.heic') ||
+                                 file.name.toLowerCase().endsWith('.heif');
+            
+            if (!isValidImage) {
+                setError('Please select a valid image file (JPG, PNG, GIF, AVIF, WEBP, etc.)');
                 return;
             }
             
-            // Validate file size (2MB limit)
-            if (file.size > 2 * 1024 * 1024) {
-                setError('Image size should be less than 2MB');
+            // Validate file size (10MB limit for images)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                setError(`Image size should be less than ${Math.round(maxSize / (1024 * 1024))}MB`);
                 return;
             }
             
             setSelectedImage(file);
             setError(null);
             
-            // Create preview
+            // Create preview for images
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImagePreview(e.target.result);
+            };
+            reader.onerror = () => {
+                setError('Failed to load image preview');
             };
             reader.readAsDataURL(file);
         }
     };
 
-    // Handle profile picture upload
-    const handleImageUpload = async () => {
-        if (!selectedImage) {
-            setError('Please select an image first');
-            return;
-        }
-        
-        try {
-            setUploadingImage(true);
-            setError(null);
-            
-            const response = await profileAPI.updateProfilePicture(selectedImage);
-            console.log('Profile picture upload response:', response);
+    // Handle successful profile picture upload
+    const handleUploadSuccess = async (response) => {
+        console.log('Profile picture upload response:', response);
             
             // Update userData with new profile image URL
             let newProfileImageUrl = null;
@@ -198,10 +199,141 @@ export default function Profile() {
                 window.refreshTopbarProfilePicture();
             }
             
-            alert('Profile picture updated successfully!');
+        setUploadingImage(false);
+        toast.success('Profile picture updated successfully!', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            icon: false,
+            className: "custom-toast-success",
+            bodyClassName: "custom-toast-body",
+        });
+    };
+    
+    // Handle profile picture upload
+    const handleImageUpload = async () => {
+        if (!selectedImage) {
+            setError('Please select an image first');
+            return;
+        }
+        
+        try {
+            setUploadingImage(true);
+            setError(null);
+            
+            // Log file details before upload
+            console.log('Uploading file details:', {
+                name: selectedImage.name,
+                type: selectedImage.type,
+                size: selectedImage.size,
+                lastModified: selectedImage.lastModified
+            });
+            
+            // Check if the file type is AVIF
+            const isAVIF = selectedImage.name.toLowerCase().endsWith('.avif') || 
+                          selectedImage.type === 'image/avif' || 
+                          selectedImage.type === 'image/avif-sequence';
+            
+            let fileToUpload = selectedImage;
+            
+            // If the file is .avif, provide helpful error message
+            if (isAVIF) {
+                console.log('AVIF file detected. Backend may not support AVIF format.');
+                
+                // Try to convert to a format that backend will accept
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        // Create an image element to convert AVIF to canvas
+                        const img = new Image();
+                        img.onload = async function() {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+                            
+                            // Convert canvas to blob as PNG
+                            canvas.toBlob(async (blob) => {
+                                if (!blob) {
+                                    setError('Failed to convert AVIF image. Please upload a JPG or PNG file instead.');
+                                    toast.error('❌ Failed to convert AVIF image. Please upload a JPG or PNG file instead.', {
+                                        position: "top-right",
+                                        autoClose: 4000,
+                                        hideProgressBar: false,
+                                        closeOnClick: true,
+                                        pauseOnHover: true,
+                                        draggable: true,
+                                    });
+                                    setUploadingImage(false);
+                                    return;
+                                }
+                                
+                                // Convert blob to File
+                                const convertedFile = new File([blob], selectedImage.name.replace(/\.avif$/i, '.png'), {
+                                    type: 'image/png',
+                                    lastModified: Date.now()
+                                });
+                                
+                                console.log('Converted AVIF to PNG:', {
+                                    name: convertedFile.name,
+                                    type: convertedFile.type,
+                                    size: convertedFile.size
+                                });
+                                
+                                try {
+                                    const response = await profileAPI.updateProfilePicture(convertedFile);
+                                    handleUploadSuccess(response);
+                                } catch (err) {
+                                    console.error('Error uploading converted image:', err);
+                                    setError(err.message || 'Failed to upload profile picture');
+                                    toast.error(`❌ ${err.message || 'Failed to upload profile picture'}`, {
+                                        position: "top-right",
+                                        autoClose: 4000,
+                                        hideProgressBar: false,
+                                        closeOnClick: true,
+                                        pauseOnHover: true,
+                                        draggable: true,
+                                    });
+                                    setUploadingImage(false);
+                                }
+                            }, 'image/png', 0.9);
+                        };
+                        img.src = e.target.result;
+                    } catch (err) {
+                        console.error('Error converting AVIF:', err);
+                        setError('AVIF files are not supported. Please convert to JPG or PNG and try again.');
+                        toast.error('❌ AVIF files are not supported. Please convert to JPG or PNG and try again.', {
+                            position: "top-right",
+                            autoClose: 4000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                        });
+                        setUploadingImage(false);
+                    }
+                };
+                reader.readAsDataURL(selectedImage);
+                return; // Exit early, async conversion will handle the upload
+            }
+            
+            const response = await profileAPI.updateProfilePicture(fileToUpload);
+            await handleUploadSuccess(response);
         } catch (err) {
             console.error('Error uploading profile picture:', err);
             setError(err.message || 'Failed to upload profile picture');
+            toast.error(`❌ ${err.message || 'Failed to upload profile picture'}`, {
+                position: "top-right",
+                autoClose: 4000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
         } finally {
             setUploadingImage(false);
         }
@@ -241,10 +373,28 @@ export default function Profile() {
                 persistUserData(finalUserData);
             }
             
-            alert('Profile updated successfully!');
+            toast.success('Profile updated successfully!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-success",
+                bodyClassName: "custom-toast-body",
+            });
         } catch (err) {
             console.error('Error updating profile:', err);
             setError(err.message || 'Failed to update profile');
+            toast.error(`❌ ${err.message || 'Failed to update profile'}`, {
+                position: "top-right",
+                autoClose: 4000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
         } finally {
             setSaving(false);
         }
@@ -301,27 +451,50 @@ export default function Profile() {
 
             {/* Profile Image */}
             <div className="d-flex align-items-center mb-4 mt-6">
+                {imagePreview || (userData.profile_image && userData.profile_image !== 'null' && userData.profile_image !== 'undefined') ? (
+                    <div className="me-3" style={{ position: 'relative' }}>
                 <img
-                    src={imagePreview || userData.profile_image || "https://i.pravatar.cc/120"}
+                            src={imagePreview || userData.profile_image}
                     alt="Profile"
-                    className="rounded-circle me-3"
-                    width="99.96px"
-                    height="98px"
-                    style={{ objectFit: 'cover' }}
+                            style={{ 
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'cover',
+                                borderRadius: '50%',
+                                border: '3px solid #e0e0e0',
+                                display: 'block'
+                            }}
                     onError={(e) => {
                         console.error('Failed to load profile image:', e.target.src);
                         // Fallback to default avatar if image fails to load
-                        if (e.target.src !== "https://i.pravatar.cc/120") {
                             e.target.src = "https://i.pravatar.cc/120";
-                        }
-                    }}
-                />
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <div 
+                        className="me-3"
+                        style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            backgroundColor: '#e0e0e0',
+                            border: '3px solid #ccc',
+                            color: '#666',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <span style={{ fontSize: '32px' }}>👤</span>
+                    </div>
+                )}
                 <div>
                     <div className="mb-2">
                         <input
                             type="file"
                             id="profileImageInput"
-                            accept="image/*"
+                            accept="image/*,.avif,.webp,.heic,.heif"
                             onChange={handleImageSelect}
                             style={{ display: 'none' }}
                         />
@@ -373,7 +546,7 @@ export default function Profile() {
                     )}
                     
                     <p className="text-muted small mb-0" style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                        JPG, PNG up to 2MB
+                        JPG, PNG, AVIF, WEBP, GIF up to 10MB
                     </p>
                 </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import "../../styles/Icon.css";
 import { SaveIcon } from "../icons";
 import { notificationAPI, handleAPIError } from "../../utils/apiUtils";
@@ -17,7 +18,6 @@ const Notifications = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
 
   // Fetch notification preferences on component mount
   useEffect(() => {
@@ -59,7 +59,6 @@ const Notifications = () => {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
-    setSuccess(false);
     
     try {
       // Map component state to API format
@@ -77,13 +76,33 @@ const Notifications = () => {
       console.log('Saving notification preferences:', apiData);
       
       await notificationAPI.updateNotificationPreferences(apiData);
-      setSuccess(true);
       
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
+      // Show success toast
+      toast.success("Notification preferences updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+      });
     } catch (err) {
       console.error('Error saving notification preferences:', err);
-      setError(handleAPIError(err));
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+      
+      // Show error toast
+      toast.error(errorMessage || "Failed to update notification preferences", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -220,12 +239,7 @@ const Notifications = () => {
         </div>
       )}
 
-      {/* Success Message */}
-      {success && (
-        <div className="alert alert-success mt-3" role="alert">
-          <strong>Success:</strong> Notification preferences updated successfully!
-        </div>
-      )}
+
 
     
 
@@ -236,16 +250,18 @@ const Notifications = () => {
           onClick={handleSave}
           disabled={saving || loading}
           style={{
-            backgroundColor: saving || loading ? "#ccc" : "#F56D2D",
+            backgroundColor: "#F56D2D",
+            opacity: (saving || loading) ? 0.7 : 1,
             color: "#fff",
             fontWeight: "400",
             fontSize: "15px",
             fontFamily: "BasisGrotesquePro",
-            cursor: saving || loading ? "not-allowed" : "pointer",
+            cursor: (saving || loading) ? "not-allowed" : "pointer",
+            transition: "opacity 0.2s ease",
           }}
         >
           <SaveIcon />
-          {saving ? "Saving..." : "Save Preferences"}
+          Save Preferences
         </button>
       </div>
     </div>
