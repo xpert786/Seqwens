@@ -69,9 +69,9 @@ export default function TicketDetail({ ticketId, onBack }) {
                         </svg>
                         Back to Tickets
                     </button>
-                    <h1 className="text-3xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                    <h4  className="text-xl font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                         {ticket.id} - {ticket.subject}
-                    </h1>
+                    </h4>
                     <p className="text-[#6B7280] font-[BasisGrotesquePro]">
                         Support ticket details and conversation history
                     </p>
@@ -84,21 +84,21 @@ export default function TicketDetail({ ticketId, onBack }) {
                         <div className="space-y-4">
                             <div>
                                 <span className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Status:</span>
-                                <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border ${
+                                <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
                                     ticket.status === 'Open' 
-                                        ? 'bg-gray-100 text-gray-700 border-gray-300' 
-                                        : 'bg-green-100 text-green-700 border-green-300'
-                                }`}>
+                                        ? 'bg-white text-gray-700' 
+                                        : 'bg-green-100 text-green-700 border border-green-300'
+                                }`} style={ticket.status === 'Open' ? { border: '0.5px solid #1E40AF' } : {}}>
                                     {ticket.status}
                                 </span>
                             </div>
                             <div>
                                 <span className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Priority:</span>
-                                <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border ${
+                                <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
                                     ticket.priority === 'High' 
-                                        ? 'bg-red-100 text-red-700 border-red-300' 
-                                        : 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                                }`}>
+                                        ? 'bg-white text-[#EF4444]' 
+                                        : 'bg-white text-[#F59E0B]'
+                                }`} style={ticket.priority === 'High' ? { border: '0.5px solid #EF4444' } : { border: '0.5px solid #F59E0B' }}>
                                     {ticket.priority}
                                 </span>
                             </div>
