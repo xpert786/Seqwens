@@ -24,6 +24,7 @@ import VerifyEmail from "./ClientOnboarding/Login-setup/VerifyEmail";
 import VerifyPhone from "./ClientOnboarding/Login-setup/VerifyPhone";
 import ProtectedRoute from "./ClientOnboarding/components/ProtectedRoute";
 import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
+import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
 import TailwindTest from "./TailwindTest";
 import TaxRoutes from "./Taxpreparer/TaxRoutes";
 import SuperRoutes from "./SuperAdmin/SuperRoutes";
@@ -46,12 +47,8 @@ export default function App() {
         <Route path="/verify-phone" element={<VerifyPhone />} />
         {/* Tailwind test route */}
         <Route path="/tw-test" element={<TailwindTest />} />
-        {/* New users */}
-        <Route path="/" element={
-          <AuthRedirect>
-            <CreateAccount />
-          </AuthRedirect>
-        } />
+        {/* Root path - Authentication check */}
+        <Route path="/" element={<RootAuthCheck />} />
         <Route path="/create-account" element={
           <AuthRedirect>
             <CreateAccount />

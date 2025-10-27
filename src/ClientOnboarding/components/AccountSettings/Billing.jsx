@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { BillIcon, DelIcon, CrossIcon } from "../icons";
 import "../../styles/Icon.css";
 import { Modal, Button, Form } from "react-bootstrap";
@@ -8,8 +9,6 @@ const Billing = () => {
   const [billingInformation, setBillingInformation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -196,9 +195,19 @@ const Billing = () => {
           isPrimary: method.id === id,
         }));
         setPaymentMethods(updatedMethods);
-        setSuccessMessage('Payment method set as primary successfully!');
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        
+        // Show success toast
+        toast.success('Payment method set as primary successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
       }
     } catch (err) {
       console.error('Error setting payment method as primary:', err);
@@ -284,9 +293,19 @@ const Billing = () => {
         });
         
         setShowModal(false);
-        setSuccessMessage('Payment method added successfully!');
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        
+        // Show success toast
+        toast.success('Payment method added successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
       } else {
         setError('Failed to add payment method');
       }
@@ -317,9 +336,18 @@ const Billing = () => {
         setShowEditModal(false);
         setEditCard(null);
         
-        setSuccessMessage('Payment method deleted successfully!');
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        // Show success toast
+        toast.success('Payment method deleted successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
       } else {
         setError('Failed to delete payment method');
       }
@@ -368,9 +396,18 @@ const Billing = () => {
         setShowEditModal(false);
         setEditCard(null);
         
-        setSuccessMessage('Payment method updated successfully!');
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        // Show success toast
+        toast.success('Payment method updated successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
       } else {
         setError(response.message || 'Failed to update payment method');
       }
@@ -444,9 +481,18 @@ const Billing = () => {
           full_address: response.data.full_address,
         });
         setIsEditingAddress(false);
-        setSuccessMessage(billingAddress ? 'Billing address updated successfully!' : 'Billing address added successfully!');
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        // Show success toast
+        toast.success(billingAddress ? 'Billing address updated successfully!' : 'Billing address added successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
       } else {
         setError(response.message || 'Failed to save billing address');
       }
@@ -486,12 +532,7 @@ const Billing = () => {
         </div>
       )}
 
-      {/* Success Message */}
-      {success && (
-        <div className="alert alert-success mb-4" role="alert">
-          <strong>Success:</strong> {successMessage}
-        </div>
-      )}
+
 
       <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Payment Methods</h5>
 

@@ -63,12 +63,11 @@ export default function Login() {
       // Store tokens using the utility function
       setTokens(response.access_token, response.refresh_token, rememberMe);
       
-      // Check verification status and navigate accordingly
+      // Check user type and navigate to appropriate dashboard
       const user = response.user;
-      const isEmailVerified = user.is_email_verified;
-      const isPhoneVerified = user.is_phone_verified;
-      const isCompleted = user.is_completed;
+      const userType = user.user_type;
       
+<<<<<<< HEAD
       if (!isEmailVerified && !isPhoneVerified) {
         navigate("/two-auth");
       } else {
@@ -76,10 +75,43 @@ export default function Login() {
         if (isCompleted) {
           // User is completed, go to main dashboard
           navigate("/dashboard");
+=======
+      console.log('User logged in with type:', userType);
+      
+      // Store user type in storage for future reference
+      storage.setItem("userType", userType);
+      
+      // Route based on user type
+      if (userType === 'super_admin') {
+        // Redirect to super admin dashboard
+        navigate("/superadmin");
+      } else if (userType === 'admin') {
+        // Redirect to admin dashboard (using tax preparer dashboard for now)
+        navigate("/taxdashboard");
+      } else if (userType === 'client' || !userType) {
+        // Client routing - check verification status
+        const isEmailVerified = user.is_email_verified;
+        const isPhoneVerified = user.is_phone_verified;
+        const isCompleted = user.is_completed;
+        
+        // If neither email nor phone is verified, go to two-factor authentication
+        if (!isEmailVerified && !isPhoneVerified) {
+          navigate("/two-auth");
+>>>>>>> 71fed26f72d69dda19d4f158e5275b3965208915
         } else {
-          // User is not completed, go to first-time dashboard
-          navigate("/dashboard-first");
+          // If either email or phone is verified, check completion status
+          if (isCompleted) {
+            // User is completed, go to main dashboard
+            navigate("/dashboard");
+          } else {
+            // User is not completed, go to first-time dashboard
+            navigate("/dashboard-first");
+          }
         }
+      } else {
+        // Fallback for unknown user types
+        console.warn('Unknown user type:', userType);
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -173,6 +205,15 @@ export default function Login() {
             >
               {isLoading ? 'Logging in...' : 'Login'}
             </button>
+            
+            <p className="resend-text" style={{paddingTop:"20px"}}>
+                Didn't have an Account?{" "}
+               <Link to="/create-account">
+               <span className="resend-link">
+                 Sign Up
+                </span>
+               </Link> 
+              </p>
           </form>
         </div>
       </div>
