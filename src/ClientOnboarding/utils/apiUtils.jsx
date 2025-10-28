@@ -833,3 +833,56 @@ export const billingAPI = {
     return await apiRequest(`/taxpayer/payment-methods/${paymentMethodId}/`, 'DELETE');
   }
 };
+
+// Appointments API functions
+export const appointmentsAPI = {
+  // Get all appointments for the authenticated user
+  getAllAppointments: async () => {
+    return await apiRequest('/taxpayer/appointments/', 'GET');
+  },
+  
+  // Get a specific appointment by ID
+  getAppointmentById: async (appointmentId) => {
+    return await apiRequest(`/taxpayer/appointments/${appointmentId}/`, 'GET');
+  },
+  
+  // Create a new appointment
+  createAppointment: async (appointmentData) => {
+    return await apiRequest('/taxpayer/appointments/', 'POST', appointmentData);
+  },
+  
+  // Update an existing appointment
+  updateAppointment: async (appointmentId, appointmentData) => {
+    return await apiRequest(`/taxpayer/appointments/${appointmentId}/`, 'PATCH', appointmentData);
+  },
+  
+  // Delete/Cancel an appointment
+  deleteAppointment: async (appointmentId) => {
+    return await apiRequest(`/taxpayer/appointments/${appointmentId}/`, 'DELETE');
+  }
+};
+
+// Admin Availability API functions
+export const adminAvailabilityAPI = {
+  // Get admin availability for a specific month
+  getAdminAvailability: async (adminId, year, month) => {
+    const params = new URLSearchParams({
+      admin_id: adminId,
+      year: year.toString(),
+      month: month.toString()
+    });
+    return await apiRequest(`/taxpayer/admin-availability/?${params}`, 'GET');
+  }
+};
+
+// Time Slots API functions
+export const timeSlotsAPI = {
+  // Get available time slots for a specific date
+  getTimeSlots: async (adminId, date) => {
+    const params = new URLSearchParams({
+      admin_id: adminId,
+      date: date
+    });
+    return await apiRequest(`/taxpayer/time-slots/?${params}`, 'GET');
+  }
+};
