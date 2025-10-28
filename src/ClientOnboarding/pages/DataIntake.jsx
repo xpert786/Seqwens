@@ -6,6 +6,7 @@ import { FaPlus, FaTrash, FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { dataIntakeAPI, handleAPIError } from "../utils/apiUtils";
 import { getAccessToken, getUserData } from "../utils/userUtils";
+import { getApiBaseUrl } from "../utils/corsConfig";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState("");
@@ -71,9 +72,10 @@ export default function DataIntakeForm() {
         console.log("Checking for existing data intake data...");
         
         // Call both APIs to check for existing data
+        const apiBaseUrl = getApiBaseUrl();
         const [personalDataResponse, fileDataResponse] = await Promise.all([
           // Check for personal data
-          fetch(`${import.meta.env.VITE_API_URL}/taxpayer/personal-data-intake/`, {
+          fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -81,7 +83,7 @@ export default function DataIntakeForm() {
             }
           }),
           // Check for uploaded files
-          fetch(`${import.meta.env.VITE_API_URL}/taxpayer/income-data-intake/`, {
+          fetch(`${apiBaseUrl}/taxpayer/income-data-intake/`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -280,9 +282,10 @@ export default function DataIntakeForm() {
       });
       
       // Call both APIs simultaneously using Promise.all
+      const apiBaseUrl = getApiBaseUrl();
       const [personalDataResult, fileUploadResult] = await Promise.all([
         // First API: Personal data (JSON)
-        fetch(`${import.meta.env.VITE_API_URL}/taxpayer/personal-data-intake/`, {
+        fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -292,7 +295,7 @@ export default function DataIntakeForm() {
         }),
         
         // Second API: File upload
-        fetch(`${import.meta.env.VITE_API_URL}/taxpayer/income-data-intake/`, {
+        fetch(`${apiBaseUrl}/taxpayer/income-data-intake/`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
