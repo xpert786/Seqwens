@@ -2,6 +2,8 @@ import React, { useState } from "react";
 
 export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrainingModal }) {
 
+    const [selectedResourceType, setSelectedResourceType] = useState("tax-resources");
+
     const taxResources = [
         {
             title: "2023 Tax Checklist",
@@ -41,6 +43,18 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
     const handleCloseModal = () => {
         onAddTrainingModalToggle(false);
     };
+
+    const handleResourceTypeChange = (e) => {
+        setSelectedResourceType(e.target.value);
+    };
+
+    const buttonText =
+    selectedResourceType === "tax-resources"
+      ? "Upload Files"
+      : selectedResourceType === "video-tutorials"
+      ? "Upload Video"
+      : "Upload";
+
 
     return (
         <div className="space-y-6 mb-10">
@@ -158,7 +172,7 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
                                     Select the what you want to upload.
                                 </label>
-                                <select className="w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <select value={selectedResourceType} onChange={(e) => setSelectedResourceType(e.target.value)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <option value="tax-resources">Tax Resources</option>
                                     <option value="video-tutorials">Video Tutorials</option>
                                 </select>
@@ -209,8 +223,8 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                         <button 
                                             className="px-3 py-1 text-sm bg-[#E8F0FF] text-black rounded-lg hover:bg-blue-100 transition-colors" 
                                             style={{ borderRadius: '7px' }}
-                                        >
-                                            Upload Files
+                                        >   
+                                            {buttonText}
                                         </button>
                                     </div>
                                 </div>
