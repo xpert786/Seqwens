@@ -110,6 +110,14 @@ export default function SuperSidebar() {
                     Analytics
                   </Link>
                 </li>
+                <li className="mb-2">
+                  <Link to="/superadmin/firms" className={linkClass("/superadmin/firms")}>
+                    <span className={iconWrapperClass("/superadmin/firms")}>
+                      <UserManage />
+                    </span>
+                    Firm Management
+                  </Link>
+                </li>
               </ul>
             )}
           </li>
