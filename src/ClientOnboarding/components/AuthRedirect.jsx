@@ -22,7 +22,7 @@ export default function AuthRedirect({ children }) {
       if (userType === 'super_admin') {
         navigate("/superadmin", { replace: true });
       } else if (userType === 'admin') {
-        navigate("/taxdashboard", { replace: true });
+        navigate("/firmadmin", { replace: true });
       } else {
         // Default to client dashboard
         navigate("/dashboard", { replace: true });
