@@ -1,16 +1,10 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "../styles/TaxSidebar.css";
 import { DashIconed, FileIconed, MesIconed, MonthIconed, AccountIcon, LogOutIcon } from "./icons";
 import { Clients, Task } from "./icons";
-import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
-import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
-import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
  
 export default function TaxSidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isActive = (path) => {
     const p = location.pathname;
@@ -24,28 +18,6 @@ export default function TaxSidebar() {
     }
     // Generic: active if exact or nested under the path
     return p === path || p.startsWith(path + "/");
-  };
-
-  const handleLogout = async () => {
-    if (isLoggingOut) return; // Prevent multiple clicks
-    
-    setIsLoggingOut(true);
-    
-    try {
-      // Call logout API
-      await userAPI.logout();
-    } catch (error) {
-      console.error('Logout API error:', error);
-      // Continue with logout even if API fails
-    } finally {
-      // Clear local data regardless of API response
-      clearUserData();
-      
-      // Navigate to login page using conditional URL
-      navigateToLogin(navigate);
-      
-      setIsLoggingOut(false);
-    }
   };
 
   const linkClass = (path) =>
@@ -123,17 +95,12 @@ export default function TaxSidebar() {
           Account Settings
         </Link>
 
-        <button 
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className={`tsb-bottom-link ${isLoggingOut ? "disabled" : ""}`}
-          style={{background: 'transparent', border: 'none', width: '100%', textAlign: 'left', cursor: isLoggingOut ? 'not-allowed' : 'pointer'}}
-        >
-          <span className={`tsb-bottom-icon ${isLoggingOut ? "disabled" : ""}`}>
+        <Link to="/logout" className={bottomLinkClass("/logout")}>
+          <span className={`tsb-bottom-icon ${isActive("/logout") ? "active" : ""}`}>
             <LogOutIcon />
           </span>
-          {isLoggingOut ? 'Logging out...' : 'Log Out'}
-        </button>
+          Log Out
+        </Link>
       </div>
     </div>
   );

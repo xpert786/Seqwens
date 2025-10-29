@@ -1,4 +1,5 @@
 import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ComposedChart } from 'recharts';
 import TabNavigation from '../../Components/TabNavigation';
 
 export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
@@ -68,6 +69,64 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
     }
   ];
 
+  // Chart data for Revenue & Profit Trend
+  const revenueData = [
+    { month: 'Jan', collected: 23000, outstanding: 5000, refundTransfer: 2000, netProfit: 21150, bankAdoption: 58 },
+    { month: 'Feb', collected: 25000, outstanding: 5000, refundTransfer: 3000, netProfit: 24000, bankAdoption: 60 },
+    { month: 'Mar', collected: 31000, outstanding: 5000, refundTransfer: 3000, netProfit: 28000, bankAdoption: 62 },
+    { month: 'Apr', collected: 29000, outstanding: 5000, refundTransfer: 3000, netProfit: 27000, bankAdoption: 64 },
+    { month: 'May', collected: 33000, outstanding: 5000, refundTransfer: 5000, netProfit: 30000, bankAdoption: 68 },
+    { month: 'Jun', collected: 26000, outstanding: 5000, refundTransfer: 4000, netProfit: 24000, bankAdoption: 64 }
+  ];
+
+  // Chart data for Fees Collected
+  const feesData = [
+    { month: 'Jan', officeA: 10000, officeB: 9000, officeC: 7000, netProfit: 19400 },
+    { month: 'Feb', officeA: 12000, officeB: 10000, officeC: 8000, netProfit: 22000 },
+    { month: 'Mar', officeA: 15000, officeB: 12000, officeC: 10000, netProfit: 26000 },
+    { month: 'Apr', officeA: 13000, officeB: 11000, officeC: 9000, netProfit: 24000 },
+    { month: 'May', officeA: 16000, officeB: 13000, officeC: 11000, netProfit: 28000 },
+    { month: 'Jun', officeA: 14000, officeB: 12000, officeC: 10000, netProfit: 25000 }
+  ];
+
+  // Custom tooltip for Revenue chart
+  const RevenueTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs shadow-lg">
+          <div className="font-semibold text-gray-900 mb-2">{label}</div>
+          <div className="space-y-1">
+            <div className="text-gray-600">Gross: <span className="font-medium">$28,000</span></div>
+            <div className="text-blue-600">Collected: <span className="font-medium">${payload[0]?.value?.toLocaleString()}</span></div>
+            <div className="text-blue-400">Outstanding: <span className="font-medium">${payload[1]?.value?.toLocaleString()}</span></div>
+            <div className="text-red-500">Refund Transfer: <span className="font-medium">${payload[2]?.value?.toLocaleString()}</span></div>
+            <div className="text-gray-600">Fees (Bank + Software): <span className="font-medium">$1,850</span></div>
+            <div className="text-green-600">Net Profit: <span className="font-medium">${payload[3]?.value?.toLocaleString()}</span></div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom tooltip for Fees chart
+  const FeesTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs shadow-lg">
+          <div className="font-semibold text-gray-900 mb-2">{label}</div>
+          <div className="space-y-1">
+            <div className="text-green-600">Net Profit: <span className="font-medium">{payload[3]?.value?.toLocaleString()}</span></div>
+            <div className="text-blue-600">Office A: <span className="font-medium">{payload[0]?.value?.toLocaleString()}</span></div>
+            <div className="text-purple-600">Office B: <span className="font-medium">{payload[1]?.value?.toLocaleString()}</span></div>
+            <div className="text-purple-800">Office C: <span className="font-medium">{payload[2]?.value?.toLocaleString()}</span></div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
       {/* KPI Cards */}
@@ -132,143 +191,53 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Revenue & Profit Trend</h3>
         </div>
-        <div className="h-96 relative">
-          {/* Chart Container */}
-          <div className="absolute inset-0 bg-white rounded-lg">
-            {/* Y-axis labels (Left - Money) */}
-            <div className="absolute left-0 right-8 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-              <span>38000</span>
-              <span>28500</span>
-              <span>19000</span>
-              <span>9500</span>
-              <span>0</span>
-            </div>
-            
-            {/* Y-axis labels (Right - Percentage) */}
-            <div className="absolute right-0 left-8 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-              <span>80%</span>
-              <span>60%</span>
-              <span>40%</span>
-              <span>20%</span>
-              <span>0%</span>
-            </div>
-            
-            {/* Chart Area */}
-            <div className="absolute left-12 right-12 top-4 bottom-8">
-              {/* Grid Lines */}
-              <div className="absolute inset-0">
-                {/* Horizontal grid lines */}
-                <div className="absolute top-0 left-0 right-0 h-px border-t border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute top-1/4 left-0 right-0 h-px border-t border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute top-3/4 left-0 right-0 h-px border-t border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-px border-t border-dashed border-[#E5E7EB]"></div>
-                
-                {/* Vertical grid lines */}
-                <div className="absolute left-0 top-0 bottom-0 w-px border-l border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute left-1/5 top-0 bottom-0 w-px border-l border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute left-2/5 top-0 bottom-0 w-px border-l border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute left-3/5 top-0 bottom-0 w-px border-l border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute left-4/5 top-0 bottom-0 w-px border-l border-dashed border-[#E5E7EB]"></div>
-                <div className="absolute right-0 top-0 bottom-0 w-px border-l border-dashed border-[#E5E7EB]"></div>
-              </div>
+        <div className="h-96">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={revenueData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
+              <XAxis 
+                dataKey="month" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+              />
+              <YAxis 
+                yAxisId="left"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                domain={[0, 38000]}
+                ticks={[0, 9500, 19000, 28500, 38000]}
+              />
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                domain={[0, 80]}
+                ticks={[0, 20, 40, 60, 80]}
+              />
+              <Tooltip content={<RevenueTooltip />} />
               
-              {/* Combination Chart */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                {/* Stacked Bars - January */}
-                <rect x="2" y="26" width="14" height="48" fill="#1E40AF" /> {/* Collected: 23000 */}
-                <rect x="2" y="74" width="14" height="13" fill="#3B82F6" /> {/* Outstanding: 5000 */}
-                <rect x="2" y="87" width="14" height="5" fill="#EF4444" /> {/* Refund Transfer: 2000 */}
-                
-                {/* Stacked Bars - February */}
-                <rect x="18" y="24" width="14" height="50" fill="#1E40AF" /> {/* Collected: 25000 */}
-                <rect x="18" y="74" width="14" height="13" fill="#3B82F6" /> {/* Outstanding: 5000 */}
-                <rect x="18" y="87" width="14" height="8" fill="#EF4444" /> {/* Refund Transfer: 3000 */}
-                
-                {/* Stacked Bars - March */}
-                <rect x="34" y="18" width="14" height="56" fill="#1E40AF" /> {/* Collected: 31000 */}
-                <rect x="34" y="74" width="14" height="13" fill="#3B82F6" /> {/* Outstanding: 5000 */}
-                <rect x="34" y="87" width="14" height="8" fill="#EF4444" /> {/* Refund Transfer: 3000 */}
-                
-                {/* Stacked Bars - April */}
-                <rect x="50" y="20" width="14" height="54" fill="#1E40AF" /> {/* Collected: 29000 */}
-                <rect x="50" y="74" width="14" height="13" fill="#3B82F6" /> {/* Outstanding: 5000 */}
-                <rect x="50" y="87" width="14" height="8" fill="#EF4444" /> {/* Refund Transfer: 3000 */}
-                
-                {/* Stacked Bars - May */}
-                <rect x="66" y="16" width="14" height="58" fill="#1E40AF" /> {/* Collected: 33000 */}
-                <rect x="66" y="74" width="14" height="13" fill="#3B82F6" /> {/* Outstanding: 5000 */}
-                <rect x="66" y="87" width="14" height="10" fill="#EF4444" /> {/* Refund Transfer: 5000 */}
-                
-                {/* Stacked Bars - June */}
-                <rect x="82" y="24" width="14" height="50" fill="#1E40AF" /> {/* Collected: 26000 */}
-                <rect x="82" y="74" width="14" height="13" fill="#3B82F6" /> {/* Outstanding: 5000 */}
-                <rect x="82" y="87" width="14" height="8" fill="#EF4444" /> {/* Refund Transfer: 4000 */}
-                
-                {/* Net Profit Line (Green) */}
-                <path
-                  d="M 9,44 L 25,40 L 41,36 L 57,38 L 73,34 L 89,42"
-                  fill="none"
-                  stroke="#10B981"
-                  strokeWidth="2"
-                />
-                
-                {/* Net Profit Data Points */}
-                <circle cx="9" cy="44" r="3" fill="#10B981" />
-                <circle cx="25" cy="40" r="3" fill="#10B981" />
-                <circle cx="41" cy="36" r="3" fill="#10B981" />
-                <circle cx="57" cy="38" r="3" fill="#10B981" />
-                <circle cx="73" cy="34" r="3" fill="#10B981" />
-                <circle cx="89" cy="42" r="3" fill="#10B981" />
-                
-                {/* Bank Adoption % Line (Orange) */}
-                <path
-                  d="M 9,25 L 25,27 L 41,29 L 57,31 L 73,33 L 89,35"
-                  fill="none"
-                  stroke="#F97316"
-                  strokeWidth="2"
-                  strokeDasharray="4,4"
-                />
-                
-                {/* Bank Adoption Data Points */}
-                <circle cx="9" cy="25" r="3" fill="#F97316" />
-                <circle cx="25" cy="27" r="3" fill="#F97316" />
-                <circle cx="41" cy="29" r="3" fill="#F97316" />
-                <circle cx="57" cy="31" r="3" fill="#F97316" />
-                <circle cx="73" cy="33" r="3" fill="#F97316" />
-                <circle cx="89" cy="35" r="3" fill="#F97316" />
-              </svg>
+              {/* Stacked Bars */}
+              <Bar yAxisId="left" dataKey="collected" stackId="a" fill="#1E40AF" name="Collected" />
+              <Bar yAxisId="left" dataKey="outstanding" stackId="a" fill="#3B82F6" name="Outstanding" />
+              <Bar yAxisId="left" dataKey="refundTransfer" fill="#EF4444" name="Refund Transfer" />
               
-              {/* Tooltip for January */}
-              <div className="absolute top-8 left-1/6 transform -translate-x-1/2 -translate-y-full">
-                <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs shadow-lg">
-                  <div className="font-semibold text-gray-900 mb-2">Jan</div>
-                  <div className="space-y-1">
-                    <div className="text-gray-600">Gross: <span className="font-medium">$28,000</span></div>
-                    <div className="text-blue-600">Collected: <span className="font-medium">$23,000</span></div>
-                    <div className="text-blue-400">Outstanding: <span className="font-medium">$5,000</span></div>
-                    <div className="text-red-500">Refund Transfer: <span className="font-medium">$2,000</span></div>
-                    <div className="text-gray-600">Fees (Bank + Software): <span className="font-medium">$1,850</span></div>
-                    <div className="text-green-600">Net Profit: <span className="font-medium">$21,150</span></div>
-                  </div>
-                </div>
-                {/* Tooltip connector line */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-px h-2 bg-gray-300 border-dashed border-l"></div>
-                {/* Data point circle */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-1 bg-white rounded-full border border-gray-300"></div>
-              </div>
-            </div>
-            
-            {/* X-axis labels */}
-            <div className="absolute bottom-0 left-12 right-12 flex justify-between text-xs text-gray-500">
-              <span>Jan</span>
-              <span>Feb</span>
-              <span>Mar</span>
-              <span>Apr</span>
-              <span>May</span>
-              <span>Jun</span>
-            </div>
-          </div>
+              {/* Lines */}
+              <Line yAxisId="left" type="monotone" dataKey="netProfit" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} name="Net Profit" />
+              <Line yAxisId="right" type="monotone" dataKey="bankAdoption" stroke="#F97316" strokeWidth={2} strokeDasharray="4 4" dot={{ fill: '#F97316', r: 4 }} name="Bank Adoption %" />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
         
         {/* Legend */}
@@ -302,105 +271,42 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
           <h3 className="text-lg font-semibold text-gray-900">Fees Collected</h3>
           <p className="text-sm text-gray-600">Total collected vs outstanding in the selected time range.</p>
         </div>
-        <div className="h-80 relative">
-          {/* Chart Container */}
-          <div className="absolute inset-0 bg-white rounded-lg">
-            {/* Y-axis labels */}
-            <div className="absolute left-0 right-8 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-              <span>28000</span>
-              <span>21000</span>
-              <span>14000</span>
-              <span>7000</span>
-              <span>0</span>
-            </div>
-            
-            {/* Chart Area */}
-            <div className="absolute left-12 right-4 top-4 bottom-8">
-              {/* Grid Lines */}
-              <div className="absolute inset-0">
-                {/* Horizontal grid lines */}
-                <div className="absolute top-0 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute top-1/4 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute top-3/4 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                
-                {/* Vertical grid lines */}
-                <div className="absolute left-0 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute left-1/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute left-2/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute left-3/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute left-4/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                <div className="absolute right-0 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-              </div>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={feesData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
+              <XAxis 
+                dataKey="month" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                domain={[0, 28000]}
+                ticks={[0, 7000, 14000, 21000, 28000]}
+              />
+              <Tooltip content={<FeesTooltip />} />
               
-              {/* Bar Chart */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                {/* Office A Bars (Blue) */}
-                <rect x="5" y="65" width="12" height="30" fill="#3B82F6" />
-                <rect x="25" y="60" width="12" height="35" fill="#3B82F6" />
-                <rect x="45" y="55" width="12" height="40" fill="#3B82F6" />
-                <rect x="65" y="50" width="12" height="45" fill="#3B82F6" />
-                <rect x="85" y="45" width="12" height="50" fill="#3B82F6" />
-                
-                {/* Office B Bars (Light Purple) */}
-                <rect x="5" y="80" width="12" height="15" fill="#8B5CF6" />
-                <rect x="25" y="75" width="12" height="20" fill="#8B5CF6" />
-                <rect x="45" y="70" width="12" height="25" fill="#8B5CF6" />
-                <rect x="65" y="65" width="12" height="30" fill="#8B5CF6" />
-                <rect x="85" y="60" width="12" height="35" fill="#8B5CF6" />
-                
-                {/* Office C Bars (Dark Purple) */}
-                <rect x="5" y="90" width="12" height="5" fill="#5B21B6" />
-                <rect x="25" y="85" width="12" height="10" fill="#5B21B6" />
-                <rect x="45" y="80" width="12" height="15" fill="#5B21B6" />
-                <rect x="65" y="75" width="12" height="20" fill="#5B21B6" />
-                <rect x="85" y="70" width="12" height="25" fill="#5B21B6" />
-                
-                {/* Net Profit Line (Green) */}
-                <path
-                  d="M 11,70 L 31,65 L 51,60 L 71,55 L 91,50"
-                  fill="none"
-                  stroke="#10B981"
-                  strokeWidth="1.5"
-                />
-                
-                {/* Net Profit Data Points */}
-                <circle cx="11" cy="70" r="2" fill="#10B981" />
-                <circle cx="31" cy="65" r="2" fill="#10B981" />
-                <circle cx="51" cy="60" r="2" fill="#10B981" />
-                <circle cx="71" cy="55" r="2" fill="#10B981" />
-                <circle cx="91" cy="50" r="2" fill="#10B981" />
-              </svg>
+              {/* Bars */}
+              <Bar dataKey="officeA" fill="#3B82F6" name="Office A" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="officeB" fill="#8B5CF6" name="Office B" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="officeC" fill="#5B21B6" name="Office C" radius={[4, 4, 0, 0]} />
               
-              {/* Tooltip for January */}
-              <div className="absolute top-8 left-1/5 transform -translate-x-1/2 -translate-y-full">
-                <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs shadow-lg">
-                  <div className="font-semibold text-gray-900 mb-2">Jan</div>
-                  <div className="space-y-1">
-                    <div className="text-green-600">Net Profit: <span className="font-medium">19,400</span></div>
-                    <div className="text-blue-600">Office A: <span className="font-medium">10000</span></div>
-                    <div className="text-purple-600">Office B: <span className="font-medium">9000</span></div>
-                    <div className="text-purple-800">Office C: <span className="font-medium">7000</span></div>
-                  </div>
-                </div>
-                {/* Tooltip connector line */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-px h-2 bg-gray-300 border-dotted border-l"></div>
-                {/* Data point circle */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-1 bg-white rounded-full border border-gray-300"></div>
-              </div>
-            </div>
-            
-            {/* X-axis labels */}
-            <div className="absolute bottom-0 left-12 right-4 flex justify-between text-xs text-gray-500">
-              <span>Jan</span>
-              <span>Feb</span>
-              <span>Mar</span>
-              <span>Apr</span>
-              <span>May</span>
-              <span>Jun</span>
-            </div>
-          </div>
+              {/* Net Profit Line */}
+              <Line type="monotone" dataKey="netProfit" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} name="Net Profit" />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
         
         {/* Legend */}
