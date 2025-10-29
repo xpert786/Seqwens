@@ -218,6 +218,58 @@ export const superAdminAPI = {
     if (userId) params.append('user_id', userId);
     
     return await apiRequest(`/seqwens/api/user/admin/activity-logs/?${params}`, 'GET');
+  },
+
+  // Get firms data
+  getFirms: async (page = 1, limit = 20, search = '', status = '', plan = '') => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (plan) params.append('subscription_plan', plan);
+    
+    return await apiRequest(`/user/superadmin/firms/?${params}`, 'GET');
+  },
+
+  // Get firm details by ID
+  getFirmById: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/`, 'GET');
+  },
+
+  // Update firm
+  updateFirm: async (firmId, firmData) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/`, 'PATCH', firmData);
+  },
+
+  // Delete firm
+  deleteFirm: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/`, 'DELETE');
+  },
+
+  // Create new firm
+  createFirm: async (firmData) => {
+    return await apiRequest('/user/superadmin/firms/create/', 'POST', firmData);
+  },
+
+  // Suspend firm
+  suspendFirm: async (firmId, reason) => {
+    const suspendData = {
+      reason: reason,
+      action: 'suspend'
+    };
+    return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', suspendData);
+  },
+
+  // Reactivate firm
+  reactivateFirm: async (firmId, reason) => {
+    const reactivateData = {
+      reason: reason,
+      action: 'reactivate'
+    };
+    return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', reactivateData);
   }
 };
 
