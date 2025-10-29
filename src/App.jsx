@@ -28,6 +28,7 @@ import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
 import TailwindTest from "./TailwindTest";
 import TaxRoutes from "./Taxpreparer/TaxRoutes";
 import SuperRoutes from "./SuperAdmin/SuperRoutes";
+import FirmRoutes from "./FirmAdmin/FirmRoutes";
 
 export default function App() {
   return (
@@ -155,6 +156,9 @@ export default function App() {
 
         {/* Super Admin Routes - No authentication required */}
         <Route path="/superadmin/*" element={<SuperRoutes />} /> 
+
+        {/* Firm Admin Routes - No authentication required */}
+        <Route path="/firmadmin/*" element={<FirmRoutes />} /> 
       </Routes>
     </>
   );

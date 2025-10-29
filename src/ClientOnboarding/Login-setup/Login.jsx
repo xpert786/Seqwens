@@ -77,8 +77,8 @@ export default function Login() {
         // Redirect to super admin dashboard
         navigate("/superadmin");
       } else if (userType === 'admin') {
-        // Redirect to admin dashboard (using tax preparer dashboard for now)
-        navigate("/taxdashboard");
+        // Redirect to firm admin dashboard
+        navigate("/firmadmin");
       } else if (userType === 'client' || !userType) {
         // Client routing - check verification status
         const isEmailVerified = user.is_email_verified;
