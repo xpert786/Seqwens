@@ -4,14 +4,14 @@ import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 
-import { UserManage, ClientIcon, DashIcon, MesIcon, AppointmentIcon, DocumentIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon } from "./icons";
+import { UserManage, ClientIcon, DashIcon, MesIcon, AppointmentIcon, DocumentIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon, AnalyticsIcon } from "./icons";
 
 export default function FirmSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
-    firmManagement: true,
+    dashboard: true,
     clientManagement: true,
     operations: true,
     businessOperations: true,
@@ -72,20 +72,20 @@ export default function FirmSidebar() {
           <li className="mb-4">
             <div 
               className="flex justify-between items-center px-1 py-2 text-[12px] font-semibold text-white uppercase tracking-wider border-b border-white/20 m-0 mb-3 cursor-pointer transition-colors duration-200 hover:text-white/80 whitespace-nowrap"
-              onClick={() => toggleSection('firmManagement')}
+              onClick={() => toggleSection('dashboard')}
             >
               <span className="text-left">Dashboard</span>
-              <span className={`transition-transform duration-200 ${expandedSections.firmManagement ? 'rotate-180' : ''}`}>
+              <span className={`transition-transform duration-200 ${expandedSections.dashboard ? 'rotate-180' : ''}`}>
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </span>
             </div>
-            {expandedSections.firmManagement && (
+            {expandedSections.dashboard && (
               <ul className="flex flex-col space-y-1">
                 <li>
-                  <Link to="/firmadmin" className={linkClass("/firmadmin")}>
-                    <span className={iconWrapperClass("/firmadmin")}>
+                  <Link to="/firmadmin/overview" className={linkClass("/firmadmin/overview")}>
+                    <span className={iconWrapperClass("/firmadmin/overview")}>
                       <DashIcon />
                     </span>
                     Overview
@@ -94,7 +94,7 @@ export default function FirmSidebar() {
                 <li>
                   <Link to="/firmadmin/analytics" className={linkClass("/firmadmin/analytics")}>
                     <span className={iconWrapperClass("/firmadmin/analytics")}>
-                      <MesIcon />
+                      <AnalyticsIcon />
                     </span>
                     Analytics & Reports
                   </Link>
