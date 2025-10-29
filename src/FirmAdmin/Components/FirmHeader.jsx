@@ -1,40 +1,55 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
 import image from "../../assets/image.png";
-import { LogoIcond, UserIconBuild } from "./icons";
+import { LogoIcon } from "../../ClientOnboarding/components/icons";
+import "../styles/FirmHeader.css";
 
 export default function FirmHeader() {
+    const [showNotifications, setShowNotifications] = useState(false);
+
     return (
         <>
-            <nav className="bg-white fixed top-0 left-0 right-0 border-b border-gray-200 h-[70px] z-[1030] px-0">
-                <div className="flex justify-between items-center h-full px-4">
-                    <div className="flex items-center gap-3 flex-grow">
-                        <Link to="/firmadmin" className="flex items-center m-0">
-                            <img src={logo} alt="Logo" className="h-10 mr-[7px]" />
+            <nav className="navbar bg-white fixed-top border-bottom firm-custom-topbar px-3">
+                <div className="container-fluid d-flex justify-content-between align-items-center">
+                    <div className="d-flex align-items-center gap-3 flex-grow-1">
+                        <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
+                            <img src={logo} alt="Logo" className="firm-topbar-logo" />
                         </Link>
-                        <LogoIcond />   
-                       <div className="flex items-center justify-between w-full h-full px-[14px] rounded-lg bg-white m-0 gap-5">
-  {/* Search */}
-  <div className="relative flex-1 max-w-[400px] xl:max-w-[500px] xl:ml-12 lg:max-w-[220px] lg:ml-2 2xl:max-w-[500px] 2xl:ml-12">
-    <i className="bi bi-search absolute top-1/2 left-4 -translate-y-1/2 text-gray-500 text-base pointer-events-none"></i>
-    <input type="text" className="pl-[52px] rounded-md h-10 text-sm w-full border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Search..." />
-  </div>
-
-  {/* Right side */}
-  <div className="flex items-center gap-3">
-    <div className="w-[35px] h-[35px] rounded-md bg-[#F56D2D] flex items-center justify-center cursor-pointer">
-      <FaBell size={14} color="white" />
-    </div>
-    <UserIconBuild />
-  </div>
-</div>
-
-
+                        <LogoIcon />
+                        <div className="firm-topbar-search">
+                            <i className="bi bi-search"></i>
+                            <input type="text" className="form-control" placeholder="Search..." />
+                        </div>
                     </div>
-                    
+
+                    <div className="d-flex align-items-center gap-3">
+                        <div
+                            className="firm-notification-bell"
+                            onClick={() => setShowNotifications(!showNotifications)}
+                        >
+                            <FaBell size={14} color="white" />
+                        </div>
+
+                        <div className="d-flex align-items-center gap-2 firm-topbar-user cursor-pointer">
+                            <div 
+                                className="rounded-circle d-flex align-items-center justify-content-center"
+                                style={{ 
+                                    width: "32px", 
+                                    height: "32px", 
+                                    backgroundColor: "#F56D2D",
+                                    color: "white",
+                                    fontSize: "14px",
+                                    fontWeight: "600"
+                                }}
+                            >
+                                <i className="bi bi-person-fill"></i>
+                            </div>
+                            <FiChevronDown size={18} className="text-muted" />
+                        </div>
+                    </div>
                 </div>
             </nav>
 

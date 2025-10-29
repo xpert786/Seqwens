@@ -886,3 +886,11 @@ export const timeSlotsAPI = {
     return await apiRequest(`/taxpayer/time-slots/?${params}`, 'GET');
   }
 };
+
+// Staff API functions
+export const staffAPI = {
+  // Get available staff members for appointments
+  getAvailableStaff: async () => {
+    return await apiRequest('/seqwens/api/taxpayer/appointments/staff/', 'GET');
+  }
+};

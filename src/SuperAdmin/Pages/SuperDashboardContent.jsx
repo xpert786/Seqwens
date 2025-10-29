@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AreaChart,
   Area,
@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 
 import { RefreshIcon, UserManage, SubscriptionIcon, MesIcon, SystemSettingsIcon, HelpsIcon, TotalFirmsIcon, ActiveUsersIcon, MonthlyRevenueIcon, SystemHealthIcon, SecurityGreenIcon, SecurityBlueIcon, SecurityYellowIcon, DashIcon   } from '../Components/icons';
+import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 // Mock data for charts
 const revenueData = [
   { month: 'Jan', revenue: 180000, users: 6500 },
@@ -99,6 +100,136 @@ const quickActions = [
 ];
 
 export default function SuperDashboardContent() {
+  // State management
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await superAdminAPI.getAdminDashboard();
+      
+      if (response.success && response.data) {
+        setDashboardData(response.data);
+        setLastRefresh(new Date());
+      } else {
+        throw new Error(response.message || 'Failed to fetch dashboard data');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(handleAPIError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Handle refresh button click
+  const handleRefresh = () => {
+    fetchDashboardData();
+  };
+
+  // Process data for charts
+  const processChartData = () => {
+    if (!dashboardData) return { revenueData: [], subscriptionData: [], activityData: [] };
+
+    // Process trends data for revenue chart
+    const revenueData = dashboardData.trends?.daily_registrations?.map(item => ({
+      month: new Date(item.date).toLocaleDateString('en-US', { month: 'short' }),
+      revenue: item.count * 1000, // Mock revenue calculation
+      users: item.count
+    })) || [];
+
+    // Process user statistics for subscription chart
+    const subscriptionData = dashboardData.user_statistics?.users_by_role?.map(role => ({
+      name: role.role.charAt(0).toUpperCase() + role.role.slice(1),
+      value: role.count,
+      color: getRoleColor(role.role)
+    })) || [];
+
+    // Process activity data
+    const activityData = dashboardData.trends?.daily_activities?.map(item => ({
+      time: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      users: item.count
+    })) || [];
+
+    return { revenueData, subscriptionData, activityData };
+  };
+
+  // Get color for role
+  const getRoleColor = (role) => {
+    const colors = {
+      'admin': '#10B981',
+      'client': '#3B82F6',
+      'staff': '#F59E0B',
+      'support_admin': '#06B6D4',
+      'super_admin': '#8B5CF6',
+      'billing_admin': '#EF4444'
+    };
+    return colors[role] || '#6B7280';
+  };
+
+  // Process performance data
+  const processPerformanceData = () => {
+    if (!dashboardData) return [];
+
+    return [
+      { 
+        metric: 'API Response', 
+        current: 24, 
+        target: 300, 
+        unit: 'ms' 
+      },
+      { 
+        metric: 'Database Query', 
+        current: 88, 
+        target: 100, 
+        unit: 'ms' 
+      },
+      { 
+        metric: 'Page Load', 
+        current: 1.2, 
+        target: 3, 
+        unit: 's' 
+      },
+      { 
+        metric: 'Error Rate', 
+        current: 0.01, 
+        target: 0.01, 
+        unit: '%' 
+      }
+    ];
+  };
+
+  // Process recent users data
+  const processRecentUsers = () => {
+    if (!dashboardData?.user_statistics?.recent_users) return [];
+
+    return dashboardData.user_statistics.recent_users.map(user => ({
+      name: `${user.first_name} ${user.last_name}`,
+      users: 1,
+      cost: 0,
+      lastActive: new Date(user.date_joined).toLocaleDateString(),
+      plan: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+      planColor: getRoleColor(user.role) === '#10B981' ? 'bg-green-100 text-green-800' : 
+                 getRoleColor(user.role) === '#3B82F6' ? 'bg-blue-100 text-blue-800' :
+                 getRoleColor(user.role) === '#F59E0B' ? 'bg-orange-100 text-orange-800' :
+                 'bg-gray-100 text-gray-800'
+    }));
+  };
+
+  const { revenueData, subscriptionData, activityData } = processChartData();
+  const performanceData = processPerformanceData();
+  const recentUsers = processRecentUsers();
+
   // Custom tooltip for area chart
   const RevenueTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -106,7 +237,7 @@ export default function SuperDashboardContent() {
         <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
           <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
           <div className="text-sm" style={{color: '#374151'}}>
-            Revenue: {payload[0].value.toLocaleString()}
+            Users: {payload[0].value.toLocaleString()}
           </div>
         </div>
       );
@@ -145,6 +276,43 @@ export default function SuperDashboardContent() {
     return null;
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="spinner-border text-primary mb-4" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Dashboard</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={handleRefresh}
+            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen">
       {/* Header */}
@@ -152,10 +320,20 @@ export default function SuperDashboardContent() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Platform Overview</h1>
           <p className="text-gray-600 mt-1">Monitor and manage the entire tax practice platform</p>
+          {lastRefresh && (
+            <p className="text-xs text-gray-500 mt-1">
+              Last updated: {lastRefresh.toLocaleTimeString()}
+            </p>
+          )}
         </div>
-        <button className="flex items-center gap-2 px-6 py-3   text-black bg-white  rounded-3xl  transition-colors" style={{borderRadius: '7px'}}>
-            <RefreshIcon className="w-4 h-4" />  
-          Refresh Status
+        <button 
+          onClick={handleRefresh}
+          disabled={loading}
+          className="flex items-center gap-2 px-6 py-3 text-black bg-white rounded-3xl transition-colors disabled:opacity-50" 
+          style={{borderRadius: '7px'}}
+        >
+            <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />  
+          {loading ? 'Refreshing...' : 'Refresh Status'}
         </button>
       </div>
 
@@ -166,10 +344,14 @@ export default function SuperDashboardContent() {
             <TotalFirmsIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Total Firms</p>
-            <p className="text-2xl font-bold text-gray-900">1,247</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Users</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {dashboardData?.overview?.total_users?.toLocaleString() || '0'}
+            </p>
             <div className="flex items-center mt-2">
-              <span className="text-sm text-[#10B981] font-medium">+19%</span>
+              <span className="text-sm text-[#10B981] font-medium">
+                +{dashboardData?.overview?.new_users_30_days || 0} this month
+              </span>
             </div>
           </div>
         </div>
@@ -179,13 +361,17 @@ export default function SuperDashboardContent() {
             <ActiveUsersIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Active Users</p>
-            <p className="text-2xl font-bold text-gray-900">8,432</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Active Users (30d)</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {dashboardData?.overview?.active_users_30_days?.toLocaleString() || '0'}
+            </p>
             <div className="flex items-center mt-2">
               <svg className="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm text-green-600 font-medium">+8%</span>
+              <span className="text-sm text-green-600 font-medium">
+                {dashboardData?.user_statistics?.activity_metrics?.activity_rate_30_days?.toFixed(1) || 0}% activity rate
+              </span>
             </div>
           </div>
         </div>
@@ -197,13 +383,17 @@ export default function SuperDashboardContent() {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Monthly Revenue</p>
-            <p className="text-2xl font-bold text-gray-900">$284,750</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Documents</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {dashboardData?.overview?.total_documents?.toLocaleString() || '0'}
+            </p>
             <div className="flex items-center mt-2">
               <svg className="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm text-green-600 font-medium">+15%</span>
+              <span className="text-sm text-green-600 font-medium">
+                {dashboardData?.document_statistics?.documents_30_days || 0} this month
+              </span>
             </div>
           </div>
         </div>
@@ -213,19 +403,23 @@ export default function SuperDashboardContent() {
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">System Health</p>
-            <p className="text-2xl font-bold text-gray-900">99.9%</p>
-            <p className="text-sm text-gray-500 mt-1">Uptime</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Activities</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {dashboardData?.overview?.total_activities?.toLocaleString() || '0'}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              {dashboardData?.activity_statistics?.activities_today || 0} today
+            </p>
           </div>
         </div>
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
-        {/* Revenue Growth Trend */}
+        {/* User Registration Trend */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
-          <p className="text-sm text-gray-600 mb-4">Monthly recurring revenue and user growth</p>
+          <h3 className="text-base font-medium text-gray-900 mb-1">User Registration Trend</h3>
+          <p className="text-sm text-gray-600 mb-4">Daily user registrations and activity</p>
           
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -276,15 +470,15 @@ export default function SuperDashboardContent() {
           <div className="mt-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span>Revenue Growth</span>
+              <span>User Registrations</span>
             </div>
           </div>
         </div>
 
-        {/* Subscription Distribution */}
+        {/* User Role Distribution */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
-          <p className="text-sm text-gray-600 mb-4">Revenue breakdown by plan type</p>
+          <h3 className="text-base font-medium text-gray-900 mb-1">User Role Distribution</h3>
+          <p className="text-sm text-gray-600 mb-4">Breakdown of users by role type</p>
           
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -452,25 +646,29 @@ export default function SuperDashboardContent() {
 
       {/* Bottom Row - Recent Firms and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-6">
-        {/* Recent Firm Registrations */}
+        {/* Recent User Registrations */}
           <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6 h-100 flex flex-col">
           <div className="flex justify-between items-center">
-            <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
+            <h4 className="text-lg font-semibold text-gray-900">Recent User Registrations</h4>
             <a href="#" className="text-black text-sm font-medium hover:underline cursor-pointer rounded-md px-3 py-2" style={{border: '1px solid #E8F0FF'}}>View All</a>
           </div>
-          <p className="text-sm text-gray-500 mb-3">Latest firms that joined the platform</p>  
+          <p className="text-sm text-gray-500 mb-3">Latest users that joined the platform</p>  
           <div className="flex-1 space-y-2 overflow-y-auto">
-            {recentFirms.map((firm, index) => (
+            {recentUsers.length > 0 ? recentUsers.map((user, index) => (
               <div key={index} className="flex items-center justify-between p-1 bg-gray-50 rounded-lg">
                 <div className="flex-1">
-                  <h6 className="font-medium text-gray-900">{firm.name}</h6>
-                  <p className="text-xs text-gray-600">{firm.users} users • ${firm.cost}/month • Last active: {firm.lastActive}</p>
+                  <h6 className="font-medium text-gray-900">{user.name}</h6>
+                  <p className="text-xs text-gray-600">Joined: {user.lastActive} • Role: {user.plan}</p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${firm.plan === 'Enterprise' ? 'bg-[#22C55E] text-white' : 'bg-[#E8F0FF] text-black'}`}>
-                  {firm.plan}
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.planColor}`}>
+                  {user.plan}
                 </span>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500">No recent users</p>
+              </div>
+            )}
           </div>
         </div>
 

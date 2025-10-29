@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaPlus } from "react-icons/fa";
 import { BsCameraVideo } from "react-icons/bs";
 import { DateIcon, AwaitingIcon, MobileIcon, PersonIcon, DiscusIcon, EditIcon, DeleteIcon, AppoinIcon, MonthIcon, ZoomIcon, EsternTimeIcon, CrossIcon } from "../components/icons";
-import { appointmentsAPI, adminAvailabilityAPI, timeSlotsAPI, handleAPIError } from "../utils/apiUtils";
+import { appointmentsAPI, adminAvailabilityAPI, timeSlotsAPI, staffAPI, handleAPIError } from "../utils/apiUtils";
 import "../styles/Icon.css"
 import "../styles/fonts.css"
 export default function Appointments() {
@@ -49,6 +49,11 @@ export default function Appointments() {
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
   const [adminAvailability, setAdminAvailability] = useState({});
   const [selectedAdminId, setSelectedAdminId] = useState(1);
+  
+  // Staff members state
+  const [staffMembers, setStaffMembers] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [staffError, setStaffError] = useState(null);
 
 
   const dates = Array.from({ length: 30 }, (_, i) => i + 1);
@@ -145,6 +150,32 @@ export default function Appointments() {
       setAppointments({ upcoming: [], past: [] });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to fetch staff members from API
+  const fetchStaffMembers = async () => {
+    try {
+      setLoadingStaff(true);
+      setStaffError(null);
+      const response = await staffAPI.getAvailableStaff();
+      
+      if (response.success && response.data && response.data.available_staff) {
+        setStaffMembers(response.data.available_staff);
+        // Set the first staff member as default selected
+        if (response.data.available_staff.length > 0) {
+          setSelectedAdminId(response.data.available_staff[0].id);
+          setFormData(prev => ({ ...prev, appointment_with: response.data.available_staff[0].id }));
+        }
+      } else {
+        throw new Error(response.message || 'Failed to fetch staff members');
+      }
+    } catch (err) {
+      console.error('Error fetching staff members:', err);
+      setStaffError(handleAPIError(err));
+      setStaffMembers([]);
+    } finally {
+      setLoadingStaff(false);
     }
   };
 
@@ -343,9 +374,10 @@ export default function Appointments() {
     setCreateSuccess(false);
   };
 
-  // Load appointments on component mount
+  // Load appointments and staff members on component mount
   useEffect(() => {
     fetchAppointments();
+    fetchStaffMembers();
   }, []);
 
   return (
@@ -778,19 +810,19 @@ export default function Appointments() {
                     {
                       id: 1,
                       icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
-                      title: "Schedule a free Phone call with Sarah Johnson",
+                      title: `Schedule a free Phone call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                       desc: "Use this to schedule 30 minute phone call meeting",
                     },
                     {
                       id: 2,
                       icon: <span className="icon-custom"><ZoomIcon /></span>,
-                      title: "Schedule a free Zoom call with John Smith",
+                      title: `Schedule a free Zoom call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                       desc: "Use this to schedule 1 hour long zoom meeting",
                     },
                     {
                       id: 3,
                       icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
-                      title: "Schedule a free Phone call with Sarah Johnson",
+                      title: `Schedule a free Phone call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                       desc: "Use this to schedule 30 minute phone call meeting",
                     },
                   ]
@@ -955,6 +987,20 @@ export default function Appointments() {
             {/* Step 2 : Subject of Meeting */}
             {step === 2 && (
               <div style={{ padding: "20px" }}>
+                {/* Error Message */}
+                {createError && (
+                  <div className="alert alert-danger mb-3" role="alert">
+                    <strong>Error:</strong> {createError}
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {createSuccess && (
+                  <div className="alert alert-success mb-3" role="alert">
+                    <strong>Success:</strong> Appointment created successfully!
+                  </div>
+                )}
+
                 <div
                   style={{
                     display: "grid",
@@ -977,19 +1023,19 @@ export default function Appointments() {
                       {
                         id: 1,
                         icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
-                        title: "Schedule a free Phone call with Sarah Johnson",
+                        title: `Schedule a free Phone call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                         desc: "Use this to schedule 30 minute phone call meeting",
                       },
                       {
                         id: 2,
                         icon: <span className="icon-custom"><ZoomIcon /></span>,
-                        title: "Schedule a free Zoom call with John Smith",
+                        title: `Schedule a free Zoom call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                         desc: "Use this to schedule 1 hour long zoom meeting",
                       },
                       {
                         id: 3,
                         icon: <span className="mobile-icon-custom"><MobileIcon /></span>,
-                        title: "Schedule a free Phone call with Sarah Johnson",
+                        title: `Schedule a free Phone call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                         desc: "Use this to schedule 30 minute phone call meeting",
                       },
                     ]
@@ -1107,10 +1153,57 @@ export default function Appointments() {
                         marginBottom: "10px",
                       }}
                     >
+                      Select Staff Member
+                    </h6>
+                    {loadingStaff ? (
+                      <div className="d-flex align-items-center">
+                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <small>Loading staff members...</small>
+                      </div>
+                    ) : staffError ? (
+                      <div className="alert alert-danger py-2" role="alert">
+                        <small>{staffError}</small>
+                      </div>
+                    ) : (
+                      <select
+                        className="form-select"
+                        value={formData.appointment_with}
+                        onChange={(e) => {
+                          const selectedStaffId = parseInt(e.target.value);
+                          setSelectedAdminId(selectedStaffId);
+                          setFormData(prev => ({ ...prev, appointment_with: selectedStaffId }));
+                        }}
+                        style={{
+                          fontSize: "13px",
+                          fontFamily: "BasisGrotesquePro",
+                          marginBottom: "15px"
+                        }}
+                      >
+                        {staffMembers.map((staff) => (
+                          <option key={staff.id} value={staff.id}>
+                            {staff.name} ({staff.role_display})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    
+                    <h6
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#3B4A66",
+                        fontFamily: "BasisGrotesquePro",
+                        marginBottom: "10px",
+                      }}
+                    >
                       Subject of Meeting
                     </h6>
                     <textarea
                       placeholder="Write meeting subject (e.g., Tax Return Review)"
+                      value={formData.subject}
+                      onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
                       style={{
                         width: "100%",
                         minHeight: "80px",
@@ -1146,17 +1239,19 @@ export default function Appointments() {
                     Back
                   </button>
                   <button
+                    onClick={createAppointment}
+                    disabled={creatingAppointment || !selectedDate || !selectedTime || !formData.subject.trim()}
                     style={{
-                      background: "#F56D2D",
+                      background: creatingAppointment ? "#ccc" : "#F56D2D",
                       color: "#fff",
                       border: "none",
                       padding: "8px 16px",
                       borderRadius: "6px",
-                      cursor: "pointer",
+                      cursor: creatingAppointment ? "not-allowed" : "pointer",
                       fontFamily: "BasisGrotesquePro",
                     }}
                   >
-                    Submit
+                    {creatingAppointment ? 'Creating...' : 'Submit'}
                   </button>
                 </div>
               </div>
