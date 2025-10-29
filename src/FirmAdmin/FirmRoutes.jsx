@@ -6,8 +6,8 @@ import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
 import FirmDashboardLayout from './Components/FirmDashboardLayout';
 
 // Pages
-import FirmDashboard from './Pages/FirmDashboard';
-import StaffManagement from './Pages/StaffManagement';
+import OverviewFirm from './Pages/OverView/OverviewFirm';
+import StaffManagement from './Pages/Staff/StaffManagement';
 import ClientManage from './Pages/ClientManagement/ClientManage';
 import Analytics from './Pages/Analytics';
 import Appointments from './Pages/Appointments';
@@ -56,8 +56,11 @@ export default function FirmRoutes() {
           <FirmDashboardLayout />
         </FirmAdminProtectedRoute>
       }>
-        <Route index element={<FirmDashboard />} />
-        <Route path="dashboard" element={<FirmDashboard />} />
+        <Route index element={<OverviewFirm />} />
+        <Route path="dashboard" element={<OverviewFirm />} />
+        
+        {/* Overview routes */}
+        <Route path="overview" element={<OverviewFirm />} />
         
         {/* Firm Management routes */}
         <Route path="staff" element={<StaffManagement />} />

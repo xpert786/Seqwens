@@ -25,6 +25,8 @@ import {
   Out
 } from "./icons";
 
+import { UserManage, ClientIcon, DashIcon, MesIcon, AppointmentIcon, DocumentIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon, AnalyticsIcon } from "./icons";
+
 export default function FirmSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ export default function FirmSidebar() {
   const [expandedSections, setExpandedSections] = useState({
     dashboard: true,
     clientStaff: true,
+    clientManagement: true,
     operations: true,
     businessOperations: true,
     systemSecurity: true
@@ -136,6 +139,26 @@ export default function FirmSidebar() {
                 </Link>
               </div>
             )}
+            {/* {expandedSections.dashboard && (
+              <ul className="flex flex-col space-y-1">
+                <li>
+                  <Link to="/firmadmin/overview" className={linkClass("/firmadmin/overview")}>
+                    <span className={iconWrapperClass("/firmadmin/overview")}>
+                      <DashIcon />
+                    </span>
+                    Overview
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/firmadmin/analytics" className={linkClass("/firmadmin/analytics")}>
+                    <span className={iconWrapperClass("/firmadmin/analytics")}>
+                      <AnalyticsIcon />
+                    </span>
+                    Analytics & Reports
+                  </Link>
+                </li>
+              </ul>
+            )} */}
           </div>
 
           {/* Client & Staff Management Section */}
