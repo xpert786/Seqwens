@@ -130,9 +130,9 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
   return (
     <>
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-4 mb-6 sm:mb-8">
         {kpiData.map((kpi, index) => (
-          <div key={index} className="bg-white rounded-lg border-1 border-[#E8F0FF] p-6 h-[160px]">
+          <div key={index} className="bg-white rounded-lg border-1 border-[#E8F0FF] p-4 sm:p-6 h-[140px] sm:h-[160px]">
             <div className="flex items-start justify-between mb-2">
               <p className="text-xs font-thin text-gray-600">{kpi.title}</p>
               <div className="text-[#3B4A66]">
@@ -146,18 +146,20 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
       </div>
 
       {/* Tab Navigation */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <TabNavigation
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-          
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+          <div className="flex-1 lg:flex-none">
+            <TabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </div>
+
           {/* Tab-specific filters */}
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <select className="appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-4 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 lg:ml-4">
+            <div className="relative w-full sm:w-40">
+              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 <option>Tax Year 2024</option>
                 <option>Tax Year 2023</option>
                 <option>Tax Year 2022</option>
@@ -168,9 +170,9 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
                 </svg>
               </div>
             </div>
-            
-            <div className="relative">
-              <select className="appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-4 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+            <div className="relative w-full sm:w-32">
+              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 <option>All Office</option>
                 <option>Office A</option>
                 <option>Office B</option>
@@ -187,11 +189,11 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
       </div>
 
       {/* Revenue & Profit Trend Chart */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
-        <div className="mb-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Revenue & Profit Trend</h3>
         </div>
-        <div className="h-96">
+        <div className="h-80 sm:h-96">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={revenueData}
@@ -202,7 +204,7 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
                 bottom: 5,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
               <XAxis 
                 dataKey="month" 
                 axisLine={false}
@@ -266,12 +268,12 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
       </div>
 
       {/* Fees Collected Chart */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="mb-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+        <div className="mb-4 sm:mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Fees Collected</h3>
           <p className="text-sm text-gray-600">Total collected vs outstanding in the selected time range.</p>
         </div>
-        <div className="h-80">
+        <div className="h-72 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={feesData}
@@ -282,7 +284,7 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
                 bottom: 5,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
               <XAxis 
                 dataKey="month" 
                 axisLine={false}

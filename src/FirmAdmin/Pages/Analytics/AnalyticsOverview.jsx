@@ -107,11 +107,11 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
   return (
     <>
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {kpiData.map((kpi, index) => (
-          <div key={index} className="bg-white rounded-lg border-1 border-[#E8F0FF] p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h6 className="text-sm font-medium text-gray-600">{kpi.title}</h6>
+          <div key={index} className="bg-white rounded-lg border-1 border-[#E8F0FF] p-4 sm:p-6">
+            <div className="flex items-start justify-between">
+            <p className="text-sm font-thin text-gray-600">{kpi.title}</p>
               <div className="text-[#3B4A66]">
                 {kpi.icon}
               </div>
@@ -128,25 +128,23 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
       </div>
 
       {/* Tab Navigation */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <TabNavigation
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
+      <div className="mb-6 sm:mb-8">
+        <TabNavigation className='w-fit'
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Revenue Trend Chart */}
-        <div className="bg-white rounded-lg  border border-gray-200 p-3">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
             <p className="text-sm text-gray-600">Monthly revenue, expenses, and profit</p>
           </div>
-          <div className="h-64 relative">
+          <div className="h-56 sm:h-64 relative">
             {/* Chart Container */}
             <div className="absolute inset-0 bg-white rounded-lg">
               {/* Y-axis labels */}
@@ -231,12 +229,12 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
         </div>
 
         {/* Client Growth Chart */}
-        <div className="bg-white rounded-lg border border-gray-200 p-3">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Client Growth</h3>
             <p className="text-sm text-gray-600">New vs lost clients and retention rate</p>
           </div>
-          <div className="h-64 relative">
+          <div className="h-56 sm:h-64 relative">
             {/* Chart Container */}
             <div className="absolute inset-0 bg-white rounded-lg">
               {/* Y-axis labels */}
@@ -332,16 +330,16 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
       </div>
 
       {/* Client Segmentation Section */}
-      <div className="bg-white rounded-lg  border border-gray-200 p-6">
-        <div className="mb-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+        <div className="mb-4 sm:mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
           <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Donut Chart */}
           <div className="flex items-center justify-center">
-            <div className="w-64 h-64">
+            <div className="w-56 h-56 sm:w-64 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

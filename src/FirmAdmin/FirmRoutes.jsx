@@ -16,6 +16,7 @@ import Messages from './Pages/Messages';
 import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
+import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -62,6 +63,7 @@ export default function FirmRoutes() {
         <Route path="staff" element={<StaffManagement />} />
         <Route path="clients" element={<ClientManage />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="tasks" element={<TaskManagementMain />} />
         
         {/* Client Management routes */}
         <Route path="appointments" element={<Appointments />} />

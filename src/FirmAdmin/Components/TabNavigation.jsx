@@ -9,13 +9,13 @@ const TabNavigation = ({
   activeTabClassName = "",
   inactiveTabClassName = ""
 }) => {
-  const defaultTabClassName = "px-0.5 py-1.5 text-[6px] whitespace-nowrap";
+  const defaultTabClassName = "px-1 py-1 text-[6px] sm:text-[4px] md:text-[6px] text-center flex-shrink-0 min-w-0 h-8 sm:h-10 md:h-12 flex items-center justify-center gap-1";
   const defaultActiveTabClassName = "bg-[#3AD6F2] text-white";
   const defaultInactiveTabClassName = "text-black hover:text-black";
 
   return (
-    <div className={`border-2 border-[#E8F0FF] bg-white rounded-lg p-1 ${className}`}>
-      <nav className="flex gap-1">
+    <div className={`border-2 border-[#E8F0FF] bg-white rounded-lg p-0.5 sm:p-1 ${className}`}>
+      <nav className="flex gap-0.5 overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -27,7 +27,7 @@ const TabNavigation = ({
             }`}
             style={{borderRadius: '7px'}}
           >
-            {tab}
+            <div dangerouslySetInnerHTML={{ __html: tab.replace(/\n/g, '<br/>') }} />
           </button>
         ))}
       </nav>
