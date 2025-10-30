@@ -1,13 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding } from 'react-icons/fa';
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
-import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action } from '../../Components/icons';
+import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action, CrossesIcon } from '../../Components/icons';
 import '../../../Taxpreparer/styles/taxdashboard.css';
 import FirmAdmin from '../../../assets/FirmAdmin.png';
-
+import BulkActionModal from './BulkAction';
+import BulkImportModal from './BulkImportModal';
+import AddClientModal from "./AddClientModal";
+import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 export default function ClientManage() {
   const [selectedClients, setSelectedClients] = useState([]);
   const [showDropdown, setShowDropdown] = useState(null);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [showBulkActionModal, setShowBulkActionModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+const [showFormBuilder, setShowFormBuilder] = useState(false);
+  // Filter states
+  const [statusFilters, setStatusFilters] = useState({
+    allStatus: false,
+    lead: false,
+    prospect: false,
+    active: true,
+    inactive: false,
+    pending: false,
+    archived: false
+  });
+  
+  const [typeFilters, setTypeFilters] = useState({
+    allTypes: false,
+    individual: false,
+    business: false,
+    partnership: false,
+    corporation: false
+  });
+  
+  const [returnFilters, setReturnFilters] = useState({
+    allReturns: false,
+    '1040': false,
+    '1065': false,
+    '1120': false,
+    '990': false
+  });
+  
+  const [tagFilters, setTagFilters] = useState({
+    eicFiler: false,
+    smallBusiness: false,
+    highIncome: false,
+    auditRisk: false
+  });
+  
+  const [segmentFilters, setSegmentFilters] = useState({
+    eicFilers: false,
+    highIncome: false
+  });
+  
+  const [commFilters, setCommFilters] = useState({
+    sms: false,
+    email: false,
+    portal: false
+  });
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -158,28 +210,28 @@ export default function ClientManage() {
             <h2 className="taxdashboard-title">Client Management</h2>
             <h5 className="taxdashboard-subtitle">Manage all firm clients and assignments</h5>
           </div>
-
           <div className="d-flex gap-3">
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2">
+          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{fontSize:"15px"}} onClick={() => setShowFormBuilder(true)}>
               <SettingIcon />
               Build Intake Forms
             </button>
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2">
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{fontSize:"15px"}}
+            onClick={() => setShowBulkImportModal(true)}>
               <BulkImport />
               Bulk Import
             </button>
-            <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2">
+            <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2" style={{fontSize:"15px"}} onClick={() => setShowAddClientModal(true)}>
               <AddClient />
               Add Client
             </button>
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2">
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{fontSize:"15px"}}>
               <ExportReport />
               Export Report
             </button>
           </div>
         </div>
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
         {[
           {
             label:"Active Clients",
@@ -213,14 +265,14 @@ export default function ClientManage() {
               content: "Recurring: $27,720\nSeasonal: $8,750"
             },
         ].map((card, index) => (
-          <div className="w-full" key={index}>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-full h-full" key={index}>
+            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col">
               <div className="flex justify-between items-start mb-4">
                 <div className="text-sm font-medium text-gray-600">{card.label}</div>
                 {card.icon}
               </div>
               {card.value && <h5 className="text-3xl font-bold text-gray-900 mb-2">{card.value}</h5>}
-              <div>
+              <div className="flex-1">
                 <p className="text-sm" style={{ color: card.contentColor || '#6B7280', whiteSpace: 'pre-line' }}>{card.content}</p>
               </div>
             </div>
@@ -232,7 +284,7 @@ export default function ClientManage() {
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Section Header */}
         <div className="p-6">
-          <h2 className="taxdashboard-title">All Clients (4)</h2>
+          <h2 className="taxdashboardr-titler">All Clients (4)</h2>
           <h5 className="taxdashboard-subtitle">Complete list of firm clients with status and assignment information</h5>
         </div>
 
@@ -250,11 +302,19 @@ export default function ClientManage() {
                 <SearchIcon />
               </div>
             </div>
-             <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+             <button 
+               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" 
+               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+               onClick={() => setShowFiltersModal(true)}
+             >
                <Filter />
                Filter
              </button>
-             <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+             <button 
+               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" 
+               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+               onClick={() => setShowBulkActionModal(true)}
+             >
                <BulkAction/>
                Bulk Action ({selectedClients.length})
              </button>
@@ -513,6 +573,233 @@ export default function ClientManage() {
         </div>
          
       </div>
+
+      {/* Filters Modal */}
+      {showFiltersModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ zIndex: 9999 }}
+          onClick={() => setShowFiltersModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-lg p-3 max-w-2xl w-full mx-4"
+            style={{ 
+              borderRadius: '12px',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-3">
+              <div className="flex justify-between items-center pb-2" style={{ borderBottom: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                <h2 className="taxdashboardr-titler text-base font-bold text-gray-900" style={{ color: '#3B4A66' }}>Filters</h2>
+                <button
+                  onClick={() => setShowFiltersModal(false)}
+                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <CrossesIcon />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Columns */}
+            <div className="grid grid-cols-4 gap-3 items-start">
+              {/* Column 1: Status */}
+              <div className="p-2 rounded-lg self-start" style={{border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                <h3 className="taxdashboardr-titler mb-2">Status</h3>
+                <div className="space-y-1 flex flex-col">
+                  {['All Status', 'Lead', 'Prospect', 'Active', 'Inactive', 'Pending', 'Archived'].map((status) => {
+                    const key = status.toLowerCase().replace(' ', '');
+                    const filterKey = key === 'allstatus' ? 'allStatus' : key;
+                    return (
+                      <label key={status} className="flex items-center gap-4 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={statusFilters[filterKey] || false}
+                          onChange={(e) => {
+                            setStatusFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                          }}
+                          className="w-3 h-3 rounded border-gray-300"
+                          style={{
+                            accentColor: '#3AD6F2',
+                            border: '1px solid #E5E7EB'
+                          }}
+                        />
+                        <span className="text-xs text-gray-600 ml-4">{status}</span>
+                      </label>
+                    );
+                  })}
+                  
+                  {/* Types sub-section */}
+                  <div className="mt-3">
+                    <h4 className="taxdashboardr-titler mb-2">Types</h4>
+                    <div className="space-y-1 flex flex-col">
+                      {['All Types', 'Individual', 'Business', 'Partnership', 'Corporation'].map((type) => {
+                        const key = type.toLowerCase().replace(' ', '');
+                        const filterKey = key === 'alltypes' ? 'allTypes' : key;
+                        return (
+                          <label key={type} className="flex items-center gap-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={typeFilters[filterKey] || false}
+                              onChange={(e) => {
+                                setTypeFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                              }}
+                              className="w-3 h-3 rounded border-gray-300"
+                              style={{
+                                accentColor: '#3AD6F2',
+                                border: '1px solid #E5E7EB'
+                              }}
+                            />
+                            <span className="text-xs text-gray-600 ml-4">{type}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              {/* Column 2: Returns */}
+              <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                <h3 className="taxdashboardr-titler mb-2">Returns</h3>
+                <div className="space-y-1 flex flex-col">
+                  {['All Returns', '1040', '1065', '1120', '990'].map((returnType) => {
+                    const key = returnType.toLowerCase().replace(' ', '');
+                    const filterKey = key === 'allreturns' ? 'allReturns' : key;
+                    return (
+                      <label key={returnType} className="flex items-center gap-4 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={returnFilters[filterKey] || false}
+                          onChange={(e) => {
+                            setReturnFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                          }}
+                          className="w-3 h-3 rounded border-gray-300"
+                          style={{
+                            accentColor: '#3AD6F2',
+                            border: '1px solid #E5E7EB'
+                          }}
+                        />
+                        <span className="text-xs text-gray-600 ml-4">{returnType}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Column 3: All Tags */}
+              <div className="p-2 rounded-lg self-start" style={{  border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                <h3 className="taxdashboardr-titler mb-2">All Tags</h3>
+                <div className="space-y-1 flex flex-col">
+                  {['EIC filer', 'Small Business', 'High Income', 'Audit Risk'].map((tag) => {
+                    const key = tag.toLowerCase().replace(' ', '');
+                    const filterKey = key === 'eicfiler' ? 'eicFiler' : 
+                                     key === 'smallbusiness' ? 'smallBusiness' : 
+                                     key === 'highincome' ? 'highIncome' : 
+                                     key === 'auditrisk' ? 'auditRisk' : key;
+                    return (
+                      <label key={tag} className="flex items-center gap-4 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={tagFilters[filterKey] || false}
+                          onChange={(e) => {
+                            setTagFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                          }}
+                          className="w-3 h-3 rounded border-gray-300"
+                          style={{
+                            accentColor: '#3AD6F2',
+                            border: '1px solid #E5E7EB'
+                          }}
+                        />
+                        <span className="text-xs text-gray-600 ml-4">{tag}</span>
+                      </label>
+                    );
+                  })}
+                  
+                  {/* Segments sub-section */}
+                  <div className="mt-3">
+                    <h4 className="taxdashboardr-titler mb-2">Segments</h4>
+                    <div className="space-y-1 flex flex-col">
+                      {['EIC Filers', 'High Income'].map((segment) => {
+                        const key = segment.toLowerCase().replace(' ', '');
+                        const filterKey = key === 'eicfilers' ? 'eicFilers' : key;
+                        return (
+                          <label key={segment} className="flex items-center gap-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={segmentFilters[filterKey] || false}
+                              onChange={(e) => {
+                                setSegmentFilters(prev => ({ ...prev, [filterKey]: e.target.checked }));
+                              }}
+                              className="w-3 h-3 rounded border-gray-300"
+                              style={{
+                                accentColor: '#3AD6F2',
+                                border: '1px solid #E5E7EB'
+                              }}
+                            />
+                            <span className="text-xs text-gray-600 ml-4">{segment}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 4: All Comm */}
+              <div className="p-2 rounded-lg self-start" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                <h4 className="taxdashboardr-titler mb-2">All Comm</h4>
+                <div className="space-y-1 flex flex-col">
+                  {['SMS', 'Email', 'Portal'].map((comm) => {
+                    const key = comm.toLowerCase();
+                    return (
+                      <label key={comm} className="flex items-center gap-4 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={commFilters[key] || false}
+                          onChange={(e) => {
+                            setCommFilters(prev => ({ ...prev, [key]: e.target.checked }));
+                          }}
+                          className="w-3 h-3 rounded border-gray-300"
+                          style={{
+                            accentColor: '#3AD6F2',
+                            border: '1px solid #E5E7EB'
+                          }}
+                        />
+                        <span className="text-xs text-gray-600 ml-4">{comm}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Action Modal */}
+      <BulkActionModal
+        isOpen={showBulkActionModal}
+        onClose={() => setShowBulkActionModal(false)}
+        selectedCount={selectedClients.length}
+      />
+      {/* Bulk Impot modal  */}
+      <BulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+      />
+            <AddClientModal
+        isOpen={showAddClientModal}
+        onClose={() => setShowAddClientModal(false)}
+      />
+ 
+      <IntakeFormBuilderModal
+        isOpen={showFormBuilder}
+        onClose={() => setShowFormBuilder(false)}
+      />
     </div>
   );
 }

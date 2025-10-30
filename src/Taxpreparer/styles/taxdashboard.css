@@ -24,9 +24,9 @@
 .taxdashboard-btn {
   font-family: "BasisGrotesquePro", sans-serif;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 6px;
-  padding: 10px 18px;
+  padding: 8px 14px;
   transition: background-color 0.3s ease;
 }
 
@@ -170,14 +170,23 @@ p.card-contented {
 @media (max-width: 1366px) {
   .taxdashboard-title { font-size: 24px; }
   .taxdashboard-subtitle { font-size: 14px; }
-  .taxdashboard-btn { font-size: 14px; padding: 8px 14px; }
+  .taxdashboard-btn { font-size: 13px; padding: 7px 12px; }
   .card.dashboard-card { min-height: 180px; padding: 16px; }
 }
 
 @media (max-width: 1280px) {
   .taxdashboard-title { font-size: 22px; }
   .taxdashboard-subtitle { font-size: 13px; }
-  .taxdashboard-btn { font-size: 13px; padding: 7px 12px; }
+  .taxdashboard-btn { font-size: 12px; padding: 6px 10px; }
+  .card.dashboard-card { min-height: 170px; padding: 14px; }
+  .dashboarded-carded-valued { font-size: 13px; padding: 4px 10px; }
+  .dashboarded-carded-btned { font-size: 13px; padding: 5px 12px; }
+  
+}
+@media (max-width: 1280px) {
+  .taxdashboardr-titler { font-size: 15px; }
+  .taxdashboard-subtitle { font-size: 13px; }
+  .taxdashboard-btn { font-size: 12px; padding: 6px 10px; }
   .card.dashboard-card { min-height: 170px; padding: 14px; }
   .dashboarded-carded-valued { font-size: 13px; padding: 4px 10px; }
   .dashboarded-carded-btned { font-size: 13px; padding: 5px 12px; }
