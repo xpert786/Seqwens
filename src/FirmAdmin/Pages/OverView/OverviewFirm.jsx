@@ -405,7 +405,7 @@ export default function FirmAdminDashboard() {
       {/* System Alerts Section */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">System Alerts</h2>
+          <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">System Alerts</h4>
           <div className="px-3 py-1 bg-orange-100 border border-orange-300 rounded-full">
             <span className="text-xs font-medium text-orange-600 font-[BasisGrotesquePro]">3 Active</span>
           </div>
@@ -421,7 +421,7 @@ export default function FirmAdminDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">EFIN Expiring Soon</h3>
+                <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">EFIN Expiring Soon</h6>
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Quarterly Tax Filing</p>
               </div>
             </div>
@@ -447,7 +447,7 @@ export default function FirmAdminDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Missing Compliance Docs</h3>
+                <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">Missing Compliance Docs</h6>
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">5 Client Missing required Documents</p>
               </div>
             </div>
@@ -473,7 +473,7 @@ export default function FirmAdminDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Failed E Signatures</h3>
+                <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">Failed E Signatures</h6>
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">3 Signature Request Need Attention</p>
               </div>
             </div>
