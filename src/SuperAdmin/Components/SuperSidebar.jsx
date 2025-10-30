@@ -1,10 +1,15 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
+import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
+import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 
 import { UserManage, SubscriptionIcon, DashIcon, MesIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon } from "./icons";
 
 export default function SuperSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     platformManagement: true,
     systemAdministration: true
@@ -15,6 +20,28 @@ export default function SuperSidebar() {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+    
+    setIsLoggingOut(true);
+    
+    try {
+      // Call logout API
+      await userAPI.logout();
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Continue with logout even if API fails
+    } finally {
+      // Clear local data regardless of API response
+      clearUserData();
+      
+      // Navigate to login page using conditional URL
+      navigateToLogin(navigate);
+      
+      setIsLoggingOut(false);
+    }
   };
 
   const linkClass = (path) =>
@@ -83,6 +110,14 @@ export default function SuperSidebar() {
                     Analytics
                   </Link>
                 </li>
+                <li className="mb-2">
+                  <Link to="/superadmin/firms" className={linkClass("/superadmin/firms")}>
+                    <span className={iconWrapperClass("/superadmin/firms")}>
+                      <UserManage />
+                    </span>
+                    Firm Management
+                  </Link>
+                </li>
               </ul>
             )}
           </li>
@@ -130,12 +165,16 @@ export default function SuperSidebar() {
           </span>
           Account Settings
         </Link>
-        <Link to="/login" className="flex items-center justify-start px-2 py-1 rounded-md text-[10px] font-medium !text-[#EF4444] bg-transparent transition-all duration-200 hover:bg-gray-200 hover:!text-[#EF4444] whitespace-nowrap text-left no-underline">
+        <button 
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="flex items-center justify-start px-2 py-1 rounded-md text-[10px] font-medium !text-[#EF4444] bg-transparent transition-all duration-200 hover:bg-gray-200 hover:!text-[#EF4444] whitespace-nowrap text-left no-underline w-full border-none cursor-pointer"
+        >
           <span className="inline-flex items-center justify-center mr-2 w-6 h-6" style={{color: '#EF4444'}}>
             <LogOutIcon />
           </span>
-          Log Out
-        </Link>
+          {isLoggingOut ? 'Logging out...' : 'Log Out'}
+        </button>
       </div>
     </div>
   );
