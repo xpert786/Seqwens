@@ -193,6 +193,21 @@ export const superAdminAPI = {
     return await apiRequest(`/seqwens/api/user/admin/subscriptions/?${params}`, 'GET');
   },
 
+  // Get subscription plans analytics
+  getSubscriptionPlans: async () => {
+    return await apiRequest('/user/subscriptions/plans/', 'GET');
+  },
+
+  // Get subscription charts data
+  getSubscriptionCharts: async (type = 'revenue', period = 30) => {
+    const params = new URLSearchParams({
+      type: type,
+      period: period.toString(),
+    });
+    
+    return await apiRequest(`/user/subscriptions/charts/?${params}`, 'GET');
+  },
+
   // Get analytics data
   getAnalytics: async (period = '30d') => {
     const params = new URLSearchParams({
