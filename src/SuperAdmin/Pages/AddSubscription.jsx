@@ -77,8 +77,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
         {/* Header */}
         <div className="flex justify-between items-center p-6">
           <div>
-            <h2 className="text-2xl font-bold" style={{color: '#3B4A66'}}>Edit Subscription Plans</h2>
-            <p className="text-sm mt-1" style={{color: '#3B4A66'}}>Modify pricing, features, and limits for subscription plans</p>
+            <h2 className="text-2xl font-bold" style={{color: '#3B4A66'}}>Add New Subscription Plan</h2>
+            <p className="text-sm mt-1" style={{color: '#3B4A66'}}>Create a new subscription plan with custom pricing, features, and limits</p>
           </div>
           <button 
             onClick={onClose}
@@ -235,7 +235,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     className="px-4 py-2 rounded-lg text-white transition-colors"
                     style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
                   >
-                    Edit Plan
+                    Add Plan
                   </button>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             className="px-4 py-2 transition-colors"
             style={{backgroundColor: '#F56D2D', color: 'white', borderRadius: '7px'}}
           >
-            Save Changes
+            Add Plan
           </button>
         </div>
       </div>

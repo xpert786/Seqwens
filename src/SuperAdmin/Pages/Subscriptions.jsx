@@ -1,18 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaChevronDown, FaDownload, FaEdit, FaEllipsisV } from 'react-icons/fa';
-import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon } from '../Components/icons';
+import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
+import AddSubscription from './AddSubscription';
+import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 
 export default function Subscriptions() {
   const [showPlanDetails, setShowPlanDetails] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
   const [showEditPlan, setShowEditPlan] = useState(false);
+  const [showAddPlan, setshowAddPlan] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('Solo');
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [tooltipTimeout, setTooltipTimeout] = useState(null);
   const [hoveredBar, setHoveredBar] = useState(null);
   const [barTooltipTimeout, setBarTooltipTimeout] = useState(null);
+  
+  // API data states
+  const [plansData, setPlansData] = useState(null);
+  const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch data from APIs
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch both plans and chart data in parallel
+        const [plansResponse, chartsResponse] = await Promise.all([
+          superAdminAPI.getSubscriptionPlans(),
+          superAdminAPI.getSubscriptionCharts('revenue', 30)
+        ]);
+        
+        setPlansData(plansResponse.data);
+        setChartData(chartsResponse.data);
+      } catch (err) {
+        console.error('Error fetching subscription data:', err);
+        setError(handleAPIError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // If edit plan is open, show the edit plan screen
   if (showEditPlan) {
@@ -24,25 +59,80 @@ export default function Subscriptions() {
     );
   }
 
+  // If add plan is open, show the add plan screen
+  if (showAddPlan) {
+    return (
+      <AddSubscription 
+        planType="Solo"
+        onClose={() => setshowAddPlan(false)}
+      />
+    );
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full h-full p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading subscription data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="w-full h-full p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Data</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="w-full h-full p-6">
         {/* Header Section */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h3 className="text-3xl font-bold mb-2" style={{color: '#3B4A66'}}>Subscription & Billing Management</h3>
+            <h3 className="taxdashboardr-titler font-bold mb-2" style={{color: '#3B4A66'}}>Subscription & Billing Management</h3>
             <p style={{color: '#3B4A66'}}>Monitor and manage all platform subscriptions</p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white transition-colors" style={{border: '1px solid #E8F0FF', borderRadius: '7px', color: '#3B4A66'}} onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'} onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}>
-              <FaDownload className="text-sm" />
+            <button className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" style={{borderRadius: '7px',}}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
               Export Report
             </button>
+             <button 
+               onClick={() => {
+                 setshowAddPlan(true);
+               }}
+               className="flex items-center gap-2 px-4 py-2 text-[10px] text-white transition-colors" 
+               style={{backgroundColor: '#F56D2D', borderRadius: '7px'}} 
+               onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2b'} 
+               onMouseLeave={(e) => e.target.style.backgroundColor = '#F56D2D'}
+             >
+               <AddSubscriptionPlanIcon className="text-sm" />
+               Add Subscription Plan
+             </button>
             <button 
               onClick={() => {
                 setSelectedPlan('Solo');
                 setShowEditPlan(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 text-white transition-colors" 
+              className="flex items-center gap-2 px-4 py-2 text-[10px] text-white transition-colors" 
               style={{backgroundColor: '#F56D2D', borderRadius: '7px'}} 
               onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2b'} 
               onMouseLeave={(e) => e.target.style.backgroundColor = '#F56D2D'}
@@ -52,7 +142,6 @@ export default function Subscriptions() {
             </button>
           </div>
         </div>
-
         {/* Metric Cards */}
         <div className="grid grid-cols-4 gap-6 mb-8">
           {/* Total Revenue */}
@@ -60,10 +149,14 @@ export default function Subscriptions() {
             <div className="flex justify-between items-start">
               <div>
                 <p  className="text-xs font-medium mb-2" style={{color: '#3B4A66'}}>Total Revenue</p>
-                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>$284,750.00</p>
+                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>
+                  {plansData?.formatted_total_revenue || '$0.00'}
+                </p>
                 <div className="flex items-center gap-1">
                     <ArrowgreenIcon className="text-xs" style={{color: '#10B981'}} />
-                  <span className="text-xs font-medium" style={{color: '#10B981'}}>+15.2%</span>
+                  <span className="text-xs font-medium" style={{color: '#10B981'}}>
+                    +{plansData?.average_growth || '0'}%
+                  </span>
                   
                 </div>
               </div>
@@ -78,10 +171,14 @@ export default function Subscriptions() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-xs font-medium mb-2" style={{color: '#3B4A66'}}>Active Subscriptions</p>
-                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>1,432</p>
+                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>
+                  {plansData?.plans?.reduce((total, plan) => total + plan.total_subscribers, 0) || 0}
+                </p>
                 <div className="flex items-center gap-1">
                 <ArrowgreenIcon className="text-xs" style={{color: '#10B981'}} />
-                  <span className="text-xs font-medium" style={{color: '#10B981'}}>+12%</span>
+                  <span className="text-xs font-medium" style={{color: '#10B981'}}>
+                    +{plansData?.average_growth || '0'}%
+                  </span>
                   
                 </div>
               </div>
@@ -93,11 +190,13 @@ export default function Subscriptions() {
           <div className="bg-white p-4" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-medium mb-2" style={{color: '#3B4A66'}}>Trial Subscriptions</p>
-                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>89</p>
+                <p className="text-xs font-medium mb-2" style={{color: '#3B4A66'}}>Most Popular Plan</p>
+                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>
+                  {plansData?.most_popular_plan?.charAt(0).toUpperCase() + plansData?.most_popular_plan?.slice(1) || 'N/A'}
+                </p>
                 <div className="flex items-center gap-1">
                 <ClockgreenIcon className="text-xs" style={{color: '#10B981'}} />
-                  <span className="text-xs font-medium" style={{color: '#10B981'}}>Active trials</span>
+                  <span className="text-xs font-medium" style={{color: '#10B981'}}>Top performer</span>
                     
                 </div>
               </div>
@@ -105,15 +204,17 @@ export default function Subscriptions() {
             </div>
           </div>
 
-          {/* Churn Rate */}
+          {/* Growth Rate */}
           <div className="bg-white p-4" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-medium mb-2" style={{color: '#3B4A66'}}>Churn Rate</p>
-                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>2.3%</p>
+                <p className="text-xs font-medium mb-2" style={{color: '#3B4A66'}}>Average Growth</p>
+                <p className="text-xl font-bold mb-1" style={{color: '#3B4A66'}}>
+                  {plansData?.average_growth || '0'}%
+                </p>
                 <div className="flex items-center gap-1">
-                      <RedDownIcon className="text-xs" style={{color: '#EF4444'}} />
-                  <span className="text-xs font-medium" style={{color: '#EF4444'}}>Monthly</span>
+                      <ArrowgreenIcon className="text-xs" style={{color: '#10B981'}} />
+                  <span className="text-xs font-medium" style={{color: '#10B981'}}>Monthly</span>
                  
                 </div>
               </div>
@@ -134,113 +235,58 @@ export default function Subscriptions() {
             </div>
             
             <div className="space-y-2">
-                {/* Solo Plan */}
-                <div 
-                  className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors" 
-                  style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-                  onClick={() => {
-                    setSelectedPlan('Solo');
-                    setShowEditPlan(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span className="bg-[#FBBF24] text-white px-3 py-1 rounded-full text-sm font-medium">Solo</span>
-                      <div>
-                        <p className="text-xs mb-1" style={{color: '#3B4A66', fontWeight: '800'}}>456 subscribers</p>
-                         <div className='flex flex-row gap-2'>
-                          <p className="text-xs" style={{color: '#3B4A66'}}>$22,800.00 revenue.</p>
-                          <p className="text-xs" style={{color: '#3B4A66'}}>8.2% growth</p>
-                         </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold mb-1" style={{color: '#3B4A66'}}>$49.00/month</p>
-                      <p className="text-xs" style={{color: '#3B4A66'}}>12.5% conversion</p>
-                    </div>
-                  </div>
-                </div>
+                {plansData?.plans?.map((plan) => {
+                  const getPlanColor = (planType) => {
+                    switch (planType) {
+                      case 'solo': return 'bg-[#FBBF24]';
+                      case 'team': return 'bg-green-500';
+                      case 'professional': return 'bg-[#1E40AF]';
+                      case 'enterprise': return 'bg-[#CEC6FF]';
+                      default: return 'bg-gray-500';
+                    }
+                  };
 
-                {/* Team Plan */}
-                <div 
-                  className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors" 
-                  style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-                  onClick={() => {
-                    setSelectedPlan('Team');
-                    setShowEditPlan(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">Team</span>
-                      <div>
-                        <p className="text-xs mb-1" style={{color: '#3B4A66', fontWeight: '800'}}>523 subscribers</p>
-                         <div className='flex flex-row gap-2'> 
-                          <p className="text-xs" style={{color: '#3B4A66'}}>$78,450.00 revenue.</p>
-                           <p className="text-xs" style={{color: '#3B4A66'}}>12.8% growth</p>
+                  return (
+                    <div 
+                      key={plan.id}
+                      className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors" 
+                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
+                      onClick={() => {
+                        setSelectedPlan(plan.plan_display);
+                        setShowEditPlan(true);
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start gap-3">
+                          <span className={`${getPlanColor(plan.plan_type)} text-white px-3 py-1 rounded-full text-sm font-medium`}>
+                            {plan.plan_display}
+                          </span>
+                          <div>
+                            <p className="text-xs mb-1" style={{color: '#3B4A66', fontWeight: '800'}}>
+                              {plan.total_subscribers} subscribers
+                            </p>
+                             <div className='flex flex-row gap-2'>
+                              <p className="text-xs" style={{color: '#3B4A66'}}>
+                                {plan.formatted_revenue} revenue.
+                              </p>
+                              <p className="text-xs" style={{color: '#3B4A66'}}>
+                                {plan.formatted_growth} growth
+                              </p>
+                             </div>
                           </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold mb-1" style={{color: '#3B4A66'}}>
+                            {plan.formatted_price}/month
+                          </p>
+                          <p className="text-xs" style={{color: '#3B4A66'}}>
+                            {plan.is_active ? 'Active' : 'Inactive'}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold mb-1" style={{color: '#3B4A66'}}>$149.00/month</p>
-                      <p className="text-xs" style={{color: '#3B4A66'}}>18.4% conversion</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Professional Plan */}
-                <div 
-                  className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors" 
-                  style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-                  onClick={() => {
-                    setSelectedPlan('Professional');
-                    setShowEditPlan(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span className="bg-[#1E40AF] text-white px-3 py-1 rounded-full text-sm font-medium">Professional</span>
-                      <div>
-                        <p className="text-xs mb-1" style={{color: '#3B4A66', fontWeight: '800'}}>234 subscribers</p>
-                         <div className='flex flex-row gap-2'>
-                          <p className="text-xs" style={{color: '#3B4A66'}}>$70,020.00 revenue.</p>
-                          <p className="text-xs" style={{color: '#3B4A66'}}>18.5% growth</p>
-                          </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold mb-1" style={{color: '#3B4A66'}}>$299.00/month</p>
-                      <p className="text-xs" style={{color: '#3B4A66'}}>24.3% conversion</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enterprise Plan */}
-                <div 
-                  className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors" 
-                  style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-                  onClick={() => {
-                    setSelectedPlan('Enterprise');
-                    setShowEditPlan(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span className="bg-[#CEC6FF] text-white px-3 py-1 rounded-full text-sm font-medium">Enterprise</span>
-                      <div>
-                        <p className="text-xs mb-1" style={{color: '#3B4A66', fontWeight: '800'}}>34 subscribers</p>
-                         <div className='flex flex-row gap-2'> 
-                          <p className="text-xs" style={{color: '#3B4A66'}}>$113,480.00 revenue.</p>
-                          <p className="text-xs" style={{color: '#3B4A66'}}>25.3% growth</p>
-                          </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold mb-1" style={{color: '#3B4A66'}}>$.00/month</p>
-                      <p className="text-xs" style={{color: '#3B4A66'}}>35.9% conversion</p>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
             </div>
           </div>
 
@@ -341,116 +387,117 @@ export default function Subscriptions() {
 
                 {/* Y-axis labels */}
                 <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs" style={{color: '#3B4A66'}}>
-                  <span>28000</span>
-                  <span>21000</span>
-                  <span>14000</span>
-                  <span>7000</span>
-                  <span>0</span>
+                  {(() => {
+                    if (chartData?.datasets?.[0]?.data) {
+                      const data = chartData.datasets[0].data;
+                      const maxValue = Math.max(...data);
+                      const minValue = Math.min(...data);
+                      const range = maxValue - minValue || 1;
+                      const step = range / 4;
+                      
+                      return [4, 3, 2, 1, 0].map(i => {
+                        const value = minValue + (step * i);
+                        return <span key={i}>{Math.round(value).toLocaleString()}</span>;
+                      });
+                    }
+                    return [28000, 21000, 14000, 7000, 0].map((value, i) => (
+                      <span key={i}>{value.toLocaleString()}</span>
+                    ));
+                  })()}
                 </div>
                 
                 {/* Chart area */}
                 <div className="ml-8 h-full flex items-end justify-between px-4 pb-4 relative">
                   {/* Chart lines and points */}
                   <svg className="absolute inset-0 w-full h-full" style={{zIndex: 10}}>
-                    {/* Green line - connecting all points */}
-                    <path
-                      d={`M 16,${200 - (15500 / 28000) * 200} L 96,${200 - (19000 / 28000) * 200} L 176,${200 - (19000 / 28000) * 200} L 256,${200 - (19500 / 28000) * 200} L 336,${200 - (22000 / 28000) * 200} L 416,${200 - (17000 / 28000) * 200}`}
-                      fill="none"
-                      stroke="#4CAF50"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    {/* Orange line - connecting all points */}
-                    <path
-                      d={`M 16,${200 - (7000 / 28000) * 200} L 96,${200 - (8500 / 28000) * 200} L 176,${200 - (10000 / 28000) * 200} L 256,${200 - (11500 / 28000) * 200} L 336,${200 - (13000 / 28000) * 200} L 416,${200 - (13800 / 28000) * 200}`}
-                      fill="none"
-                      stroke="#FF7043"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    
-                  {/* Green line data points */}
-                    {[15500, 19000, 19000, 19500, 22000, 17000].map((value, index) => (
-                      <g key={`green-${index}`}>
-                        {/* Invisible larger hover area */}
-                        <circle
-                          cx={index * 80 + 16}
-                          cy={200 - (value / 28000) * 200}
-                          r="12"
-                          fill="transparent"
-                          style={{ cursor: 'pointer' }}
-                          onMouseEnter={() => {
-                            if (tooltipTimeout) clearTimeout(tooltipTimeout);
-                            setHoveredPoint({ 
-                              type: 'green', 
-                              index, 
-                              value, 
-                              month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][index],
-                              x: index * 80 + 16,
-                              y: 200 - (value / 28000) * 200
-                            });
-                          }}
-                          onMouseLeave={() => {
-                            const timeout = setTimeout(() => setHoveredPoint(null), 100);
-                            setTooltipTimeout(timeout);
-                          }}
-                        />
-                        {/* Visible dot */}
-                        <circle
-                          cx={index * 80 + 16}
-                          cy={200 - (value / 28000) * 200}
-                          r="4"
-                          fill="white"
-                          stroke="#4CAF50"
-                          strokeWidth="2"
-                        />
-                      </g>
-                    ))}
-                    
-                    {/* Orange line data points */}
-                    {[7000, 8500, 10000, 11500, 13000, 13800].map((value, index) => (
-                      <g key={`orange-${index}`}>
-                        {/* Invisible larger hover area */}
-                        <circle
-                          cx={index * 80 + 16}
-                          cy={200 - (value / 28000) * 200}
-                          r="12"
-                          fill="transparent"
-                          style={{ cursor: 'pointer' }}
-                          onMouseEnter={() => {
-                            if (tooltipTimeout) clearTimeout(tooltipTimeout);
-                            setHoveredPoint({ 
-                              type: 'orange', 
-                              index, 
-                              value, 
-                              month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][index],
-                              x: index * 80 + 16,
-                              y: 200 - (value / 28000) * 200
-                            });
-                          }}
-                          onMouseLeave={() => {
-                            const timeout = setTimeout(() => setHoveredPoint(null), 100);
-                            setTooltipTimeout(timeout);
-                          }}
-                        />
-                        {/* Visible dot */}
-                        <circle
-                          cx={index * 80 + 16}
-                          cy={200 - (value / 28000) * 200}
-                          r="4"
-                          fill="white"
-                          stroke="#FF7043"
-                          strokeWidth="2"
-                        />
-                      </g>
-                    ))}
+                    {chartData?.datasets?.[0]?.data && (() => {
+                      const data = chartData.datasets[0].data;
+                      const maxValue = Math.max(...data);
+                      const minValue = Math.min(...data);
+                      const range = maxValue - minValue || 1;
+                      const chartHeight = 200;
+                      const chartWidth = 400;
+                      const pointSpacing = chartWidth / (data.length - 1);
+                      
+                      // Create path for the line
+                      const pathData = data.map((value, index) => {
+                        const x = index * pointSpacing + 16;
+                        const y = chartHeight - ((value - minValue) / range) * chartHeight;
+                        return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                      }).join(' ');
+
+                      return (
+                        <>
+                          {/* Revenue line */}
+                          <path
+                            d={pathData}
+                            fill="none"
+                            stroke="#4CAF50"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Data points */}
+                          {data.map((value, index) => {
+                            const x = index * pointSpacing + 16;
+                            const y = chartHeight - ((value - minValue) / range) * chartHeight;
+                            const date = chartData.labels?.[index] ? new Date(chartData.labels[index]) : null;
+                            const formattedDate = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : `Day ${index + 1}`;
+                            
+                            return (
+                              <g key={`point-${index}`}>
+                                {/* Invisible larger hover area */}
+                                <circle
+                                  cx={x}
+                                  cy={y}
+                                  r="12"
+                                  fill="transparent"
+                                  style={{ cursor: 'pointer' }}
+                                  onMouseEnter={() => {
+                                    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+                                    setHoveredPoint({ 
+                                      type: 'revenue', 
+                                      index, 
+                                      value, 
+                                      month: formattedDate,
+                                      x: x,
+                                      y: y
+                                    });
+                                  }}
+                                  onMouseLeave={() => {
+                                    const timeout = setTimeout(() => setHoveredPoint(null), 100);
+                                    setTooltipTimeout(timeout);
+                                  }}
+                                />
+                                {/* Visible dot */}
+                                <circle
+                                  cx={x}
+                                  cy={y}
+                                  r="4"
+                                  fill="white"
+                                  stroke="#4CAF50"
+                                  strokeWidth="2"
+                                />
+                              </g>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
                   </svg>
 
                   {/* X-axis labels */}
                   <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4">
-                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, index) => (
+                    {chartData?.labels?.slice(0, 6).map((label, index) => {
+                      const date = new Date(label);
+                      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      return (
+                        <span key={index} className="text-xs" style={{color: '#3B4A66'}}>
+                          {formattedDate}
+                        </span>
+                      );
+                    }) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, index) => (
                       <span key={index} className="text-xs" style={{color: '#3B4A66'}}>{month}</span>
                     ))}
                   </div>
@@ -503,21 +550,39 @@ export default function Subscriptions() {
 
                 {/* Y-axis labels */}
                 <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs" style={{color: '#3B4A66'}}>
-                  <span>600</span>
-                  <span>450</span>
-                  <span>300</span>
-                  <span>150</span>
-                  <span>0</span>
+                  {(() => {
+                    if (plansData?.plans) {
+                      const maxSubscribers = Math.max(...plansData.plans.map(plan => plan.total_subscribers));
+                      const step = maxSubscribers / 4;
+                      return [4, 3, 2, 1, 0].map(i => {
+                        const value = Math.round(step * i);
+                        return <span key={i}>{value}</span>;
+                      });
+                    }
+                    return [600, 450, 300, 150, 0].map((value, i) => (
+                      <span key={i}>{value}</span>
+                    ));
+                  })()}
                 </div>
                 
                 {/* Chart area */}
                 <div className="ml-8 h-full flex items-end justify-between px-4 pb-4 relative">
-                  {[
-                    { label: 'Solo', value: 440, height: (440/600) * 200 },
-                    { label: 'Team', value: 450, height: (450/600) * 200 },
-                    { label: 'Professional', value: 240, height: (240/600) * 200 },
-                    { label: 'Enterprise', value: 35, height: (35/600) * 200 }
-                  ].map((item, index) => (
+                  {(() => {
+                    if (plansData?.plans) {
+                      const maxSubscribers = Math.max(...plansData.plans.map(plan => plan.total_subscribers));
+                      return plansData.plans.map((plan, index) => ({
+                        label: plan.plan_display,
+                        value: plan.total_subscribers,
+                        height: (plan.total_subscribers / (maxSubscribers || 1)) * 200
+                      }));
+                    }
+                    return [
+                      { label: 'Solo', value: 440, height: (440/600) * 200 },
+                      { label: 'Team', value: 450, height: (450/600) * 200 },
+                      { label: 'Professional', value: 240, height: (240/600) * 200 },
+                      { label: 'Enterprise', value: 35, height: (35/600) * 200 }
+                    ];
+                  })().map((item, index) => (
                     <div key={index} className="flex flex-col items-center relative">
                       {/* Invisible larger hover area */}
                       <div 
