@@ -905,3 +905,19 @@ export const staffAPI = {
     return await apiRequest(`/taxpayer/appointments/staff/${staffId}/slots/?${params}`, 'GET');
   }
 };
+
+// Threads/Chats API functions
+export const threadsAPI = {
+  // Get all chat threads for the current taxpayer
+  getThreads: async () => {
+    return await apiRequest('/taxpayer/threads/', 'GET');
+  },
+  // Create a new chat thread
+  createThread: async (threadData) => {
+    return await apiRequest('/taxpayer/threads/create/', 'POST', threadData);
+  },
+  // Get thread details with messages
+  getThreadDetails: async (threadId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
+  }
+};

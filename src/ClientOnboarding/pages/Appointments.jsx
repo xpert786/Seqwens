@@ -219,6 +219,7 @@ export default function Appointments() {
         autoClose: 3000,
         className: "custom-toast-success",
         bodyClassName: "custom-toast-body",
+        icon: false,
       });
       return;
     }
@@ -300,6 +301,7 @@ export default function Appointments() {
         autoClose: 3000,
         className: "custom-toast-success",
         bodyClassName: "custom-toast-body",
+        icon: false,
       });
     } finally {
       setCreatingAppointment(false);
@@ -335,6 +337,7 @@ export default function Appointments() {
         autoClose: 3000,
         className: "custom-toast-success",
         bodyClassName: "custom-toast-body",
+        icon: false,
       });
     }
   };
@@ -401,6 +404,7 @@ export default function Appointments() {
         autoClose: 3000,
         className: "custom-toast-success",
         bodyClassName: "custom-toast-body",
+        icon: false,
       });
       return;
     }
@@ -449,6 +453,7 @@ export default function Appointments() {
         autoClose: 3000,
         className: "custom-toast-success",
         bodyClassName: "custom-toast-body",
+        icon: false,
       });
     } finally {
       setUpdatingAppointment(false);

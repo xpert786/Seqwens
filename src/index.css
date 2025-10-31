@@ -87,6 +87,10 @@ a {
   box-shadow: 0 4px 12px rgba(245, 109, 45, 0.3) !important;
 }
 
+.Toastify__toast--error .Toastify__toast-icon {
+  display: none !important;
+}
+
 .Toastify__toast--info {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
   color: white !important;

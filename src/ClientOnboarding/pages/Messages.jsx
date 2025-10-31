@@ -3,6 +3,7 @@ import { FaPaperPlane, FaSearch } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
 import { getAccessToken } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
+import { threadsAPI } from "../utils/apiUtils";
 
 export default function Messages() {
   const [conversations, setConversations] = useState([]);
@@ -15,6 +16,7 @@ export default function Messages() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeChatMessages, setActiveChatMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [superadminId, setSuperadminId] = useState("");
   const [creatingChat, setCreatingChat] = useState(false);
   const [superadmins, setSuperadmins] = useState([]);
@@ -74,52 +76,74 @@ export default function Messages() {
       try {
         setLoading(true);
         setError(null);
-        
-        const token = getAccessToken();
-        const apiUrl = `${API_BASE_URL}/user/chats/`;
-        
-        console.log('Fetching chats from:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch chats');
-        }
+        console.log('Fetching threads from API...');
 
-        const data = await response.json();
-        
-        console.log('API Response:', data);
-        
-        if (data.success && data.chats) {
+        const response = await threadsAPI.getThreads();
+
+        console.log('Threads API Response:', response);
+
+        if (response.success && response.data && response.data.threads) {
           // Transform API data to match component structure
-          const transformedChats = data.chats.map(chat => ({
-            id: chat.id,
-            name: chat.taxpayer_name || chat.superadmin_name || 'Unknown User',
-            lastMessage: chat.last_message_preview || 'No message',
-            time: chat.last_message_at_formatted || 'N/A',
-            status: chat.status,
-            unreadCount: chat.unread_count || 0,
-            createdAt: chat.created_at_formatted,
-            subject: chat.subject,
-            // Store additional data
-            superadminName: chat.superadmin_name,
-            taxpayerName: chat.taxpayer_name,
-            // Initialize messages array for each chat
-            messages: [],
-          }));
-          
+          const transformedChats = response.data.threads.map(thread => {
+            // Format the time - use last_message_at if available, otherwise created_at
+            let formattedTime = 'N/A';
+            if (thread.last_message_at) {
+              const date = new Date(thread.last_message_at);
+              formattedTime = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              });
+            } else if (thread.created_at) {
+              const date = new Date(thread.created_at);
+              formattedTime = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              });
+            }
+
+            // Get staff names as a string
+            const staffNames = thread.assigned_staff_names && thread.assigned_staff_names.length > 0
+              ? thread.assigned_staff_names.join(', ')
+              : 'Tax Professional';
+
+            // Get last message preview text
+            const lastMessageText = thread.last_message_preview
+              ? thread.last_message_preview.content || 'No message'
+              : 'No message';
+
+            return {
+              id: thread.id,
+              name: staffNames,
+              lastMessage: lastMessageText,
+              time: formattedTime,
+              status: thread.status,
+              unreadCount: thread.unread_count || 0,
+              createdAt: thread.created_at,
+              subject: thread.subject,
+              // Store additional data
+              assignedStaff: thread.assigned_staff,
+              assignedStaffNames: thread.assigned_staff_names,
+              clientName: thread.client_name,
+              firmName: thread.firm_name,
+              lastMessagePreview: thread.last_message_preview,
+              // Initialize messages array for each chat
+              messages: [],
+            };
+          });
+
           console.log('Transformed chats:', transformedChats);
           console.log('Number of conversations:', transformedChats.length);
-          
+
           setConversations(transformedChats);
           console.log('✅ Conversations state set');
-          
+
           // Set first chat as active if available
           if (transformedChats.length > 0) {
             console.log('Setting active conversation ID:', transformedChats[0].id);
@@ -127,11 +151,11 @@ export default function Messages() {
             setActiveConversationId(transformedChats[0].id);
           }
         } else {
-          console.log('No chats in response');
+          console.log('No threads in response');
           setConversations([]);
         }
       } catch (err) {
-        console.error('Error fetching chats:', err);
+        console.error('Error fetching threads:', err);
         setError(err.message || 'Failed to load chats');
       } finally {
         setLoading(false);
@@ -145,6 +169,92 @@ export default function Messages() {
     (c) => c.id === activeConversationId
   ) || null;
 
+  // Fetch messages for active conversation
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!activeConversationId) {
+        setActiveChatMessages([]);
+        setLoadingMessages(false);
+        return;
+      }
+
+      try {
+        setLoadingMessages(true);
+        console.log('Fetching messages for thread:', activeConversationId);
+        const response = await threadsAPI.getThreadDetails(activeConversationId);
+        console.log('Thread details response:', response);
+        console.log('Response type:', typeof response);
+        console.log('Response success:', response?.success);
+        console.log('Response data:', response?.data);
+        console.log('Messages array:', response?.data?.messages);
+        console.log('Messages array type:', Array.isArray(response?.data?.messages));
+
+        if (response && response.success === true && response.data) {
+          const messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
+          console.log('Messages array length:', messagesArray.length);
+
+          if (messagesArray.length > 0) {
+            // Transform messages to match component structure
+            const transformedMessages = messagesArray.map(msg => {
+              // Determine message type based on sender_role
+              let messageType = "user"; // Default for client messages
+              if (msg.sender_role === "Admin" || msg.sender_role === "Staff") {
+                messageType = "admin";
+              }
+
+              return {
+                id: msg.id,
+                type: messageType,
+                text: msg.content || '',
+                date: msg.created_at,
+                sender: msg.sender_name || '',
+                senderRole: msg.sender_role || '',
+                isRead: msg.is_read || false,
+                isEdited: msg.is_edited || false,
+                messageType: msg.message_type || 'text',
+                attachment: msg.attachment || null,
+                attachmentName: msg.attachment_name || null,
+                attachmentSize: msg.attachment_size_display || null,
+              };
+            });
+
+            console.log('Transformed messages:', transformedMessages);
+            console.log('Setting messages to state...');
+            setActiveChatMessages(transformedMessages);
+            console.log('Messages set to state');
+
+            // Update conversation's last message in the list
+            if (transformedMessages.length > 0) {
+              const lastMessage = transformedMessages[transformedMessages.length - 1];
+              setConversations(prevConvs =>
+                prevConvs.map(conv =>
+                  conv.id === activeConversationId
+                    ? { ...conv, lastMessage: lastMessage.text, messages: transformedMessages }
+                    : conv
+                )
+              );
+            }
+          } else {
+            console.log('No messages in response, setting empty array');
+            setActiveChatMessages([]);
+          }
+        } else {
+          console.log('Response not successful or no data:', response);
+          console.log('Response structure:', JSON.stringify(response, null, 2));
+          setActiveChatMessages([]);
+        }
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+        console.error('Error details:', err.message, err.stack);
+        setActiveChatMessages([]);
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+  }, [activeConversationId]);
+
 
   const handleSend = async () => {
     if (newMessage.trim() === "" || !activeConversationId) return;
@@ -154,7 +264,7 @@ export default function Messages() {
 
     try {
       const token = getAccessToken();
-      
+
       const payload = {
         chat: activeConversationId,
         content: messageText
@@ -196,7 +306,7 @@ export default function Messages() {
             : conv
         );
         setConversations(updatedConversations);
-        
+
         console.log('✅ Message sent successfully');
       } else {
         throw new Error(data.message || 'Failed to send message');
@@ -211,69 +321,102 @@ export default function Messages() {
 
 
   const handleCreateChat = async () => {
-    if (chatSubject.trim() === "" || !superadminId) {
-      alert('Please fill in subject and select a superadmin');
+    if (chatSubject.trim() === "") {
+      alert('Please fill in subject');
       return;
     }
 
     try {
       setCreatingChat(true);
-      const token = getAccessToken();
-      
+
       const payload = {
         subject: chatSubject,
-        superadmin_id: parseInt(superadminId),
-        initial_message: chatMessage.trim() || "Hello, I need assistance with my taxes."
+        message: chatMessage.trim() || "Hello, I need assistance with my taxes."
       };
 
-      console.log('Creating chat with payload:', payload);
+      console.log('Creating thread with payload:', payload);
 
-      const response = await fetch(`${API_BASE_URL}/user/chats/create/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await threadsAPI.createThread(payload);
+      console.log('Create thread response:', response);
 
-      const data = await response.json();
-      console.log('Create chat response:', data);
+      if (response.success && response.data) {
+        const thread = response.data;
 
-      if (response.ok && data.success) {
-        // Transform the created chat to match component structure
+        // Format the time
+        let formattedTime = 'N/A';
+        if (thread.last_message_at) {
+          const date = new Date(thread.last_message_at);
+          const now = new Date();
+          const diffMs = now - date;
+          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+          if (diffHours < 1) {
+            formattedTime = 'Just now';
+          } else if (diffHours < 24) {
+            formattedTime = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+          } else if (diffDays < 7) {
+            formattedTime = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+          } else {
+            formattedTime = date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric'
+            });
+          }
+        } else if (thread.created_at) {
+          const date = new Date(thread.created_at);
+          formattedTime = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+          });
+        }
+
+        // Get staff names as a string
+        const staffNames = thread.assigned_staff_names && thread.assigned_staff_names.length > 0
+          ? thread.assigned_staff_names.join(', ')
+          : 'Tax Professional';
+
+        // Get last message preview text
+        const lastMessageText = thread.last_message_preview
+          ? thread.last_message_preview.content || 'No message'
+          : 'No message';
+
+        // Transform the created thread to match component structure
         const newChat = {
-          id: data.chat.id,
-          name: data.chat.superadmin_name || 'Admin',
-          lastMessage: data.chat.last_message?.content || chatMessage || 'No message',
-          time: data.chat.last_message_at_formatted || 'N/A',
-          status: data.chat.status,
-          unreadCount: data.chat.unread_count || 0,
-          subject: data.chat.subject,
-          createdAt: data.chat.created_at_formatted,
-          superadminName: data.chat.superadmin_name,
-          taxpayerName: data.chat.taxpayer_name,
+          id: thread.id,
+          name: staffNames,
+          lastMessage: lastMessageText,
+          time: formattedTime,
+          status: thread.status,
+          unreadCount: thread.unread_count || 0,
+          createdAt: thread.created_at,
+          subject: thread.subject,
+          // Store additional data
+          assignedStaff: thread.assigned_staff,
+          assignedStaffNames: thread.assigned_staff_names,
+          clientName: thread.client_name,
+          firmName: thread.firm_name,
+          lastMessagePreview: thread.last_message_preview,
           messages: [],
         };
 
         // Add the new chat to the beginning of conversations list
         setConversations([newChat, ...conversations]);
         setActiveConversationId(newChat.id);
-        
+
         // Reset form
         setShowModal(false);
         setChatSubject("");
         setChatMessage("");
         setAttachedFiles([]);
-        setSuperadminId("");
-        
-        console.log('✅ Chat created successfully:', newChat);
+
+        console.log('✅ Thread created successfully:', newChat);
       } else {
-        throw new Error(data.message || 'Failed to create chat');
+        throw new Error(response.message || 'Failed to create thread');
       }
     } catch (err) {
-      console.error('Error creating chat:', err);
-      alert('Failed to create chat: ' + err.message);
+      console.error('Error creating thread:', err);
+      alert('Failed to create thread: ' + err.message);
     } finally {
       setCreatingChat(false);
     }
@@ -294,12 +437,12 @@ export default function Messages() {
       activeConversationId: activeConversationId,
       activeConversation: activeConversation
     });
-    
+
     if (conversations.length > 0) {
       console.log('📝 First conversation details:', conversations[0]);
     }
   }, [conversations, loading, error, activeConversationId, activeConversation]);
-  
+
   // Component render logging
   console.log('🎨 Messages Component Rendering:', {
     conversations: conversations,
@@ -367,12 +510,12 @@ export default function Messages() {
                 <p className="mt-2 text-muted small">Loading conversations...</p>
               </div>
             )}
-            
+
             {/* Error State */}
             {error && !loading && (
               <div className="text-center py-5">
                 <p className="text-danger small">{error}</p>
-                <button 
+                <button
                   className="btn btn-sm btn-outline-primary mt-2"
                   onClick={() => window.location.reload()}
                 >
@@ -380,16 +523,15 @@ export default function Messages() {
                 </button>
               </div>
             )}
-            
+
             {/* Empty State */}
             {!loading && !error && conversations.length === 0 && (
               <div className="text-center py-5">
-                <ConverIcon className="text-muted mb-3" size={48} />
                 <p className="text-muted small mb-0">No conversations yet</p>
                 <p className="text-muted small">Start a new message to begin</p>
               </div>
             )}
-            
+
             {/* Conversations List */}
             {!loading && !error && conversations.length > 0 && (
               <div style={{ width: "100%" }}>
@@ -397,58 +539,58 @@ export default function Messages() {
                 {conversations.map((conv, index) => {
                   console.log(`📦 Rendering conversation ${index + 1}:`, conv);
                   return (
-                  <div
-                    key={conv.id || `conv-${index}`}
-                    className="conversation-item p-3"
-                    style={{ 
-                      cursor: "pointer", 
-                      border: "2px solid #E8F0FF", 
-                      backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF", 
-                      borderRadius: "12px", 
-                      fontFamily: "BasisGrotesquePro", 
-                      color: "#3B4A66",
-                      marginBottom: index < conversations.length - 1 ? "12px" : "0",
-                      width: "100%",
-                      minHeight: "80px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center"
-                    }}
-                    onClick={() => {
-                      console.log('Clicked conversation:', conv.id);
-                      setActiveConversationId(conv.id);
-                    }}
-                  >
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <div className="d-flex align-items-center">
-                        <ConverIcon className="me-2 text-primary" />
-                        <div className="d-flex align-items-center gap-2">
-                          <div style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
-                          {conv.unreadCount > 0 && (
-                            <span className="badge bg-danger" style={{ fontSize: "10px" }}>
-                              {conv.unreadCount}
-                            </span>
-                          )}
+                    <div
+                      key={conv.id || `conv-${index}`}
+                      className="conversation-item p-3"
+                      style={{
+                        cursor: "pointer",
+                        border: "2px solid #E8F0FF",
+                        backgroundColor: conv.id === activeConversationId ? "#E8F0FF" : "#F3F7FF",
+                        borderRadius: "12px",
+                        fontFamily: "BasisGrotesquePro",
+                        color: "#3B4A66",
+                        marginBottom: index < conversations.length - 1 ? "12px" : "0",
+                        width: "100%",
+                        minHeight: "80px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center"
+                      }}
+                      onClick={() => {
+                        console.log('Clicked conversation:', conv.id);
+                        setActiveConversationId(conv.id);
+                      }}
+                    >
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <div className="d-flex align-items-center">
+                          <ConverIcon className="me-2 text-primary" />
+                          <div className="d-flex align-items-center gap-2">
+                            <div style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
+                            {conv.unreadCount > 0 && (
+                              <span className="badge bg-danger" style={{ fontSize: "10px" }}>
+                                {conv.unreadCount}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                        <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
                       </div>
-                      <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                      <small style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
+                      {conv.subject && (
+                        <div className="mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
+                          <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
+                          <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
+                        </div>
+                      )}
+                      {conv.task && (
+                        <div className="mt-2 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "12px" }}>
+                          <span style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Task:</span>
+                          <span className="px-2 py-1 rounded-pill text-dark small" style={{ backgroundColor: "#fff", border: "1px solid #ddd" }}>
+                            {conv.task.current}/{conv.task.total}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <small style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
-                    {conv.subject && (
-                      <div className="mt-1 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "11px" }}>
-                        <span style={{ color: "#F56D2D", fontSize: "11px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Subject:</span>
-                        <span style={{ color: "#3B4A66", fontSize: "11px", fontFamily: "BasisGrotesquePro" }}>{conv.subject}</span>
-                      </div>
-                    )}
-                    {conv.task && (
-                      <div className="mt-2 d-flex align-items-center gap-1" style={{ marginLeft: "35px", fontSize: "12px" }}>
-                        <span style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>Task:</span>
-                        <span className="px-2 py-1 rounded-pill text-dark small" style={{ backgroundColor: "#fff", border: "1px solid #ddd" }}>
-                          {conv.task.current}/{conv.task.total}
-                        </span>
-                      </div>
-                    )}
-                  </div>
                   );
                 })}
               </div>
@@ -470,67 +612,91 @@ export default function Messages() {
                 </div>
               </div>
 
-              <div className="flex-grow-1 overflow-auto mb-3">
-                {activeChatMessages.length > 0 ? (
+              <div className="flex-grow-1 overflow-auto mb-3" style={{ minHeight: "200px" }}>
+                {console.log('Rendering messages, count:', activeChatMessages.length, 'messages:', activeChatMessages, 'loading:', loadingMessages)}
+                {loadingMessages ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <p className="text-muted mt-2 small">Loading messages...</p>
+                  </div>
+                ) : activeChatMessages.length > 0 ? (
                   activeChatMessages.map((msg) => {
-              if (msg.type === "system") {
-                return (
-                  <div key={msg.id} className="d-flex mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>
-                    <JdIcon color="#f97316" className="me-2" />
-                    <div className="-subtle p-3 rounded" style={{ marginLeft: "10px", backgroundColor: "#FFF4E6" }}>
-                      <strong style={{ fontFamily: "BasisGrotesquePro" }}>{msg.title}</strong>
-                      <p style={{ fontFamily: "BasisGrotesquePro" }}>{msg.text}</p>
-                      {msg.options?.map((opt, idx) => (
-                        <div className="form-check small" key={idx}>
-                          <input className="form-check-input" type="checkbox" />
-                          <label className="form-check-labels">{opt}</label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              } else if (msg.type === "user") {
-                return (
-                  <div key={msg.id} className="d-flex mb-3">
-                    <JdIcon color="#f97316" className="me-2" />
-                    <div className="bg-light p-2 px-3 rounded " style={{ fontFamily: "BasisGrotesquePro", marginLeft: "10px" }}>{msg.text}</div>
-                  </div>
-                );
-              } else if (msg.type === "file") {
-                return (
-                  <div key={msg.id} className="d-flex flex-column align-items-end mb-3">
-                    <div className="p-3 rounded" style={{ backgroundColor: "#E8F0FF", maxWidth: "650px", minWidth: "450px" }}>
-                      {msg.files.map((file, idx) => (
-                        <div key={idx} className="d-flex align-items-center justify-content-between mb-3">
-                          <FileIcon className="me-3 text-primary fs-5" />
-                          <div className="p-2 bg-white rounded flex-grow-1 text-dark fw-medium" style={{ border: "1px solid #ddd", minWidth: "350px", marginLeft: "10px", fontFamily: "BasisGrotesquePro" }}>
-                            {file}
+                    // Admin/Staff messages appear on left
+                    if (msg.type === "admin") {
+                      return (
+                        <div key={msg.id} className="d-flex mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>
+                          <JdIcon color="#f97316" className="me-2" />
+                          <div className="bg-light p-2 px-3 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "70%" }}>
+                            <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
+                              {msg.sender}
+                            </div>
+                            <div>{msg.text}</div>
+                            {msg.attachment && (
+                              <div className="mt-2">
+                                <FileIcon className="me-2 text-primary" />
+                                <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
+                                  {msg.attachmentName || "Attachment"}
+                                </a>
+                                {msg.attachmentSize && (
+                                  <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                    ({msg.attachmentSize})
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
+                              {new Date(msg.date).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                              {msg.isEdited && (
+                                <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                              )}
+                            </div>
                           </div>
-                          <button
-                            className="btn btn-sm ms-4"
-                            style={{
-                              background: "white",
-                              border: "1px solid #ccc",
-                              color: "#3B4A66",
-                              borderRadius: "50%",
-                              width: "26px",
-                              height: "26px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              padding: 0,
-                            }}
-                            onClick={() => console.log(`Remove ${file}`)}
-                          >
-                            ✕
-                          </button>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              return null;
+                      );
+                    }
+                    // User/Client messages appear on right
+                    else if (msg.type === "user") {
+                      return (
+                        <div key={msg.id} className="d-flex mb-3 justify-content-end">
+                          <div className="bg-light p-2 px-3 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "10px", maxWidth: "70%", backgroundColor: "#E8F0FF" }}>
+                            <div>{msg.text}</div>
+                            {msg.attachment && (
+                              <div className="mt-2">
+                                <FileIcon className="me-2 text-primary" />
+                                <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
+                                  {msg.attachmentName || "Attachment"}
+                                </a>
+                                {msg.attachmentSize && (
+                                  <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                    ({msg.attachmentSize})
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
+                              {new Date(msg.date).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                              {msg.isEdited && (
+                                <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
+                              )}
+                            </div>
+                          </div>
+                          <JdIcon color="#f97316" className="ms-2" />
+                        </div>
+                      );
+                    }
+                    return null;
                   })
                 ) : (
                   <div className="text-center py-5">
@@ -559,7 +725,6 @@ export default function Messages() {
           ) : (
             <div className="d-flex align-items-center justify-content-center h-100">
               <div className="text-center">
-                <ConverIcon className="text-muted mb-3" size={64} />
                 <p className="text-muted mb-0">Select a conversation to view messages</p>
               </div>
             </div>
@@ -582,34 +747,6 @@ export default function Messages() {
               <label className="form-label" style={{ color: "#131323", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Message</label>
               <textarea className="form-control" rows="3" placeholder="Write your message here.. " style={{ fontFamily: "BasisGrotesquePro" }}
                 value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label" style={{ color: "#131323", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Select Superadmin *</label>
-              {loadingSuperadmins ? (
-                <div className="text-center py-3">
-                  <div className="spinner-border spinner-border-sm text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <small className="d-block mt-2 text-muted">Loading superadmins...</small>
-                </div>
-              ) : (
-                <select 
-                  className="form-select" 
-                  value={superadminId}
-                  onChange={(e) => setSuperadminId(e.target.value)}
-                  required
-                >
-                  <option value="">-- Select a Superadmin --</option>
-                  {superadmins.map((superadmin) => (
-                    <option key={superadmin.id} value={superadmin.id}>
-                      {superadmin.full_name} ({superadmin.role_display_name}) - {superadmin.email}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {superadmins.length === 0 && !loadingSuperadmins && (
-                <small className="text-danger">No superadmins available</small>
-              )}
             </div>
             <div className="mb-3 ms-1">
               <label
@@ -635,18 +772,18 @@ export default function Messages() {
               )}
             </div>
             <div className="text-end">
-              <button 
-                className="btn btn-outline-secondary me-2" 
+              <button
+                className="btn btn-outline-secondary me-2"
                 onClick={() => setShowModal(false)}
                 disabled={creatingChat}
               >
                 Cancel
               </button>
-              <button 
-                className="btn" 
-                style={{ background: "#F56D2D", color: "#fff", fontFamily: "BasisGrotesquePro" }} 
+              <button
+                className="btn"
+                style={{ background: "#F56D2D", color: "#fff", fontFamily: "BasisGrotesquePro" }}
                 onClick={handleCreateChat}
-                disabled={creatingChat || loadingSuperadmins || !superadminId}
+                disabled={creatingChat || !chatSubject.trim()}
               >
                 {creatingChat ? 'Creating...' : 'Create Chat'}
               </button>
