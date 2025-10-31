@@ -287,7 +287,7 @@
 /* Header */
 .popup-header {
   padding: 16px 20px;
-  border-bottom: 1px solid #E5E7EB;
+  /* border-bottom removed - now on subtitle only */
 }
 
 .popup-header-top {
@@ -393,45 +393,76 @@
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 4px;
+  padding: "8px 0";
 }
 
 .calendar-btn {
-  padding: 8px;
-  border-radius: 50%;
+  padding: 10px 8px;
+  border-radius: 6px;
   border: none;
   background: transparent;
   color: #374151;
   cursor: pointer;
+  font-size: 14px;
+  font-family: "BasisGrotesquePro", sans-serif;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-btn:hover {
+  background: #F9FAFB;
 }
 
 .calendar-btn.active {
   background: #FF6600;
   color: #fff;
+  font-weight: 500;
 }
 
 /* Time Slots */
 .time-list {
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 4px;
 }
 
 .time-btn {
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid #E5E7EB;
   background: #fff;
   color: #374151;
   cursor: pointer;
+  font-family: "BasisGrotesquePro", sans-serif;
+  font-size: 14px;
+  text-align: center;
+  transition: all 0.2s ease;
+  width: 100%;
 }
+
+/* Hover effect removed as requested */
+/* .time-btn:hover:not(.disabled) {
+  border-color: #FBD5B5;
+  background: #FFF9F0;
+} */
 
 .time-btn.active {
   background: #FF6600;
-  border: 2px solid #FF6600;
+  border: 1px solid #FF6600;
   color: #fff;
+  font-weight: 500;
+}
+
+.time-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 
@@ -446,10 +477,46 @@
   transition: all 0.3s ease;
 }
 
+.info:hover {
+  border-color: #FBD5B5;
+  background: #FFF9F0;
+}
+
 /* Active state (on click) */
 .info.active {
   border: 1px solid #FBD5B5;
   background: #FFF4E6;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    max-height: 1000px;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.option-box {
+  margin-bottom: 12px;
 }
 
 
@@ -472,5 +539,3 @@
   border: none !important;
   background: #fff;
 }
-
-
