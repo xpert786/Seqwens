@@ -38,6 +38,9 @@ export default function DataIntakeForm() {
   // Phone country codes state
   const [personalPhoneCountry, setPersonalPhoneCountry] = useState('us');
   const [spousePhoneCountry, setSpousePhoneCountry] = useState('us');
+  // Track if country has been explicitly selected
+  const [personalPhoneCountrySelected, setPersonalPhoneCountrySelected] = useState(false);
+  const [spousePhoneCountrySelected, setSpousePhoneCountrySelected] = useState(false);
 
   // Spouse Information State
   const [spouseInfo, setSpouseInfo] = useState({
@@ -138,6 +141,10 @@ export default function DataIntakeForm() {
               zip: data.zip || "",
               filingStatus: data.filling_status || "",
             });
+            // If phone exists, mark country as selected
+            if (data.phone_number) {
+              setPersonalPhoneCountrySelected(true);
+            }
 
             // Pre-fill spouse information
             if (data.spouse_info) {
@@ -150,6 +157,10 @@ export default function DataIntakeForm() {
                 email: data.spouse_info.spouse_email || "",
                 phone: data.spouse_info.spouse_phone_number || "",
               });
+              // If spouse phone exists, mark country as selected
+              if (data.spouse_info.spouse_phone_number) {
+                setSpousePhoneCountrySelected(true);
+              }
             }
 
             // Pre-fill bank information
@@ -246,14 +257,16 @@ export default function DataIntakeForm() {
     checkExistingData();
   }, []);
 
-  // Initialize phone fields with country code if empty (only on mount, before data loads)
+  // Initialize phone fields - keep empty initially, only show code when country selected
   useEffect(() => {
-    // Only initialize if no existing data is present
+    // Don't set any initial value - field should be empty
     if (!personalInfo.phone) {
-      handlePersonalInfoChange('phone', '+1');
+      handlePersonalInfoChange('phone', '');
+      setPersonalPhoneCountrySelected(false);
     }
     if (!spouseInfo.phone) {
-      handleSpouseInfoChange('phone', '+1');
+      handleSpouseInfoChange('phone', '');
+      setSpousePhoneCountrySelected(false);
     }
   }, []);
 
@@ -1074,22 +1087,22 @@ export default function DataIntakeForm() {
               Phone
             </label>
             <PhoneInput
-              country={personalPhoneCountry}
-              value={personalInfo.phone || ''}
+              country={spousePhoneCountry}
+              value={spouseInfo.phone || ''}
               onChange={(phone) => {
-                handlePersonalInfoChange('phone', phone);
+                // Always allow the change - let the library handle it
+                handleSpouseInfoChange('phone', phone);
               }}
               onCountryChange={(countryCode, countryData) => {
-                setPersonalPhoneCountry(countryCode.toLowerCase());
-                // Extract the number part (without country code)
-                const currentPhone = personalInfo.phone || '';
-                const numberPart = currentPhone.replace(/^\+\d{1,4}\s*/, '').trim();
-                // Update phone with new country code + existing number part
-                if (numberPart) {
-                  handlePersonalInfoChange('phone', `+${countryData.dialCode}${numberPart}`);
-                } else {
-                  // Always show the dial code when country changes
-                  handlePersonalInfoChange('phone', `+${countryData.dialCode}`);
+                setSpousePhoneCountry(countryCode.toLowerCase());
+                setSpousePhoneCountrySelected(true);
+                // When country is selected, insert the dial code
+                handleSpouseInfoChange('phone', `+${countryData.dialCode}`);
+              }}
+              onFocus={() => {
+                // If field is empty and country not selected, ensure we have a default
+                if (!spouseInfo.phone && !spousePhoneCountrySelected) {
+                  // Keep empty, user must select country first
                 }
               }}
               inputClass="form-control"
@@ -1100,29 +1113,17 @@ export default function DataIntakeForm() {
                 paddingRight: '12px',
                 paddingTop: '6px',
                 paddingBottom: '6px',
+                width: '100%',
                 fontSize: '1rem',
                 border: '1px solid #ced4da',
                 borderRadius: '0.375rem',
-                backgroundColor: '#fff',
-                width: '100%',
+                backgroundColor: '#fff'
               }}
               enableSearch={true}
               countryCodeEditable={false}
               disabled={false}
               specialLabel=""
-              containerProps={{
-                'data-field': 'personalInfo.phone'
-              }}
             />
-            {getFieldError('personalInfo.phone') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
-              }}>
-                {getFieldError('personalInfo.phone')}
-              </div>
-            )}
           </div>
           <div className="col-md-12">
             <label className="form-label" style={{
@@ -1426,19 +1427,19 @@ export default function DataIntakeForm() {
               country={spousePhoneCountry}
               value={spouseInfo.phone || ''}
               onChange={(phone) => {
+                // Always allow the change - let the library handle it
                 handleSpouseInfoChange('phone', phone);
               }}
               onCountryChange={(countryCode, countryData) => {
                 setSpousePhoneCountry(countryCode.toLowerCase());
-                // Extract the number part (without country code)
-                const currentPhone = spouseInfo.phone || '';
-                const numberPart = currentPhone.replace(/^\+\d{1,4}\s*/, '').trim();
-                // Update phone with new country code + existing number part
-                if (numberPart) {
-                  handleSpouseInfoChange('phone', `+${countryData.dialCode}${numberPart}`);
-                } else {
-                  // Always show the dial code when country changes
-                  handleSpouseInfoChange('phone', `+${countryData.dialCode}`);
+                setSpousePhoneCountrySelected(true);
+                // When country is selected, insert the dial code
+                handleSpouseInfoChange('phone', `+${countryData.dialCode}`);
+              }}
+              onFocus={() => {
+                // If field is empty and country not selected, ensure we have a default
+                if (!spouseInfo.phone && !spousePhoneCountrySelected) {
+                  // Keep empty, user must select country first
                 }
               }}
               inputClass="form-control"
