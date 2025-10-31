@@ -676,7 +676,8 @@ export default function SuperDashboardContent() {
             {quickActions.map((action, index) => (
               <button
                 key={index}
-                className="flex flex-col items-center p-6 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-[#E8F0FF]"
+                className="flex flex-col items-center p-6 border border-[#E8F0FF] transition-colors"
+                style={{ borderRadius: '1rem' }}
               >
                 <div className="mb-2 w-6 h-6 text-gray-600">{action.icon}</div>
                 <span className="text-xs font-medium text-gray-700 text-center">{action.name}</span>
