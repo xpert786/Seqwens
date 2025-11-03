@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PhoneInput from 'react-phone-input-2';
 import "../styles/CreateAccount.css";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validateEmail, validatePhoneNumber, handleAPIError } from "../utils/apiUtils";
@@ -11,10 +12,12 @@ const CreateAccount = () => {
     middleName: '',
     lastName: '',
     email: '',
-    phoneNumber: ''
+    phoneNumber: '+1'
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneCountry, setPhoneCountry] = useState('us');
+  const [phoneCountrySelected, setPhoneCountrySelected] = useState(true);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +25,7 @@ const CreateAccount = () => {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -61,18 +64,17 @@ const CreateAccount = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     // Store user data for the next step (password page)
     localStorage.setItem('userRegistrationData', JSON.stringify(formData));
-    
+
     // Navigate to personal info page
     navigate('/personal-info');
   };
-
   return (
     <FixedLayout>
       <div className="create-account-wrapper">
@@ -157,21 +159,82 @@ const CreateAccount = () => {
                 <label className="custom-label">
                   Phone Number <span className="required">*</span>
                 </label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  className={`form-control custom-input ${errors.phoneNumber ? 'is-invalid' : ''}`}
-                  placeholder="+01"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
+                <PhoneInput
+                  country={phoneCountry}
+                  value={formData.phoneNumber || ''}
+                  onChange={(phone) => {
+                    // Always allow the change - let the library handle it
+                    setFormData(prev => ({
+                      ...prev,
+                      phoneNumber: phone
+                    }));
+                    // Clear error when user starts typing
+                    if (errors.phoneNumber) {
+                      setErrors(prev => ({
+                        ...prev,
+                        phoneNumber: ''
+                      }));
+                    }
+                  }}
+                  onCountryChange={(countryCode, countryData) => {
+                    setPhoneCountry(countryCode.toLowerCase());
+                    setPhoneCountrySelected(true);
+                    // When country is selected, insert the dial code
+                    setFormData(prev => ({
+                      ...prev,
+                      phoneNumber: `+${countryData.dialCode}`
+                    }));
+                  }}
+                  onFocus={() => {
+                    // If field is empty and country not selected, ensure we have a default
+                    if (!formData.phoneNumber && !phoneCountrySelected) {
+                      // Keep empty, user must select country first
+                    }
+                  }}
+                  onBlur={() => {
+                    // Validate on blur if phone number is entered but invalid
+                    if (formData.phoneNumber && formData.phoneNumber.trim()) {
+                      const digitsOnly = formData.phoneNumber.replace(/\D/g, '');
+                      if (digitsOnly.length < 10) {
+                        setErrors(prev => ({
+                          ...prev,
+                          phoneNumber: 'Please enter a valid phone number (at least 10 digits)'
+                        }));
+                      }
+                    }
+                  }}
+                  inputClass={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                  containerClass="w-100 phone-input-container"
+                  inputStyle={{
+                    height: '45px',
+                    paddingLeft: '48px',
+                    paddingRight: '12px',
+                    paddingTop: '6px',
+                    paddingBottom: '6px',
+                    width: '100%',
+                    fontSize: '1rem',
+                    border: errors.phoneNumber ? '1px solid #dc3545' : '1px solid #ced4da',
+                    borderRadius: '0.375rem',
+                    backgroundColor: '#fff'
+                  }}
+                  enableSearch={true}
+                  countryCodeEditable={false}
+                  disabled={false}
+                  specialLabel=""
                 />
                 {errors.phoneNumber && (
-                  <div className="invalid-feedback">{errors.phoneNumber}</div>
+                  <div className="invalid-feedback d-block" style={{
+                    fontSize: "12px",
+                    color: "#dc3545",
+                    marginTop: "4px"
+                  }}>
+                    {errors.phoneNumber}
+                  </div>
                 )}
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn continue-btn"
                 disabled={isLoading}
               >
