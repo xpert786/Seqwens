@@ -17,6 +17,8 @@ import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
 import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
+import BillingManagement from './Pages/Billing/BillingManagement';
+import InvoiceDetails from './Pages/Billing/InvoiceDetails';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -72,6 +74,10 @@ export default function FirmRoutes() {
         <Route path="appointments" element={<Appointments />} />
         <Route path="documents" element={<DocumentManagement />} />
         <Route path="messages" element={<Messages />} />
+        
+        {/* Business Operations routes */}
+        <Route path="billing" element={<BillingManagement />} />
+        <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
         
         {/* System Administration routes */}
         <Route path="settings" element={<FirmSettings />} />
