@@ -346,7 +346,7 @@ export default function StaffManagement() {
       <DownloadModal />
       <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
       {/* Header and Action Buttons */}
-      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4">
+      <div className="flex flex-col 2xl:flex-row 2xl:justify-between 2xl:items-start mb-6 gap-4">
         {/* Header */}
         <div className="flex-1">
           <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Staff Management</h4>
@@ -354,21 +354,21 @@ export default function StaffManagement() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+        <div className="flex flex-wrap items-start gap-2 w-full 2xl:w-auto 2xl:items-center">
           {/* Top Row - 3 buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+            <button className="px-3 py-2 text-gray-700 bg-white ! border-gray-300 !rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
               <PowersIcon />
               Performance Report
             </button>
             <button 
               onClick={() => setIsBulkImportModalOpen(true)}
-              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+              className="px-3 py-2 text-gray-700 bg-white !border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
             >
               <UpperDownsIcon />
               Bulk Import
             </button>
-            <button className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+            <button className="px-3 py-2 text-white bg-orange-500 !border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -378,7 +378,7 @@ export default function StaffManagement() {
           
           {/* Bottom Row - 1 button */}
           <div className="flex items-center">
-            <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+            <button className="px-3 py-2 text-gray-700 bg-white !border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
               <DownsIcon />
               Export Report
             </button>
@@ -428,7 +428,7 @@ export default function StaffManagement() {
       {/* Team Members Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Team Members (5)</h2>
+          <h4 className="text-[18px] font-semibold text-gray-900 font-[BasisGrotesquePro]">Team Members (5)</h4>
           <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">Complete list of staff members with performance metrics</p>
         </div>
 

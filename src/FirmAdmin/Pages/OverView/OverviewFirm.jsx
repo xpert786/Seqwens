@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Icon, DownsIcon,SceheIcon,CrossesIcon} from "../../Components/icons";
+import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Icon, DownsIcon,SceheIcon,CrossesIcon,AletIcon,Alet2Icon } from "../../Components/icons";
 import {
   AreaChart,
   Area,
@@ -122,11 +122,11 @@ export default function FirmAdminDashboard() {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-32">
-        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[70vh] overflow-y-auto mt-[100px]">
+      <div className="fixed inset-0 bg-[#00000099] bg-opacity-50 flex items-start justify-center z-50 p-4 pt-32">
+        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[70vh] overflow-y-auto mt-[180px]">
           {/* Modal Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 font-[BasisGrotesquePro]">Customize</h2>
+            <h4 className="text-[18px] font-semibold text-gray-800 font-[BasisGrotesquePro]">Customize</h4>
             <button 
               onClick={() => setIsCustomizeModalOpen(false)}
               className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
@@ -287,7 +287,7 @@ export default function FirmAdminDashboard() {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
+        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mt-[180px]">
           {/* Modal Header */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-start">
@@ -367,7 +367,7 @@ export default function FirmAdminDashboard() {
       <ScheduleModal />
       <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-col 2xl:flex-row 2xl:justify-between 2xl:items-start gap-2 2xl:gap-0 mb-6">
         <div className="flex-1 min-w-0 pr-4 xl:pr-2">
           <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm Admin Dashboard</h4>
           <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base xl:whitespace-nowrap leading-tight">
@@ -375,8 +375,8 @@ export default function FirmAdminDashboard() {
             <span className="block xl:inline">Tax Practice Management</span>
           </p>
         </div>
-        <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
-          <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-start gap-2 2xl:gap-3 mt-2 2xl:mt-1 w-full 2xl:w-auto 2xl:justify-end">
+          <button className="px-3 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] !text-[15px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
             Admin View
             <svg className="w-2 h-2 xl:w-3 xl:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -384,17 +384,17 @@ export default function FirmAdminDashboard() {
           </button>
           <button 
             onClick={() => setIsCustomizeModalOpen(true)}
-            className="px-1 xl:px-4 py-1 xl:py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 whitespace-nowrap"
+            className="px-3 xl:px-4 py-1 xl:py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] !text-[15px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 whitespace-nowrap"
           >
             Customize
           </button>
-          <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+          <button className="px-3 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] !text-[15px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
             <DownsIcon />
             Export Report
           </button>
           <button 
             onClick={() => setIsScheduleModalOpen(true)}
-            className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
+            className="px-3 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] !text-[15px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
           >
             <SceheIcon />
             Schedule Reports
@@ -416,9 +416,7 @@ export default function FirmAdminDashboard() {
           <div className="flex items-center justify-between py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-3">
               <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+               <AletIcon/>
               </div>
               <div>
                 <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">EFIN Expiring Soon</h6>
@@ -442,9 +440,7 @@ export default function FirmAdminDashboard() {
           <div className="flex items-center justify-between py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-3">
               <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+              <Alet2Icon />
               </div>
               <div>
                 <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">Missing Compliance Docs</h6>
@@ -648,7 +644,7 @@ export default function FirmAdminDashboard() {
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Revenue Analytics</h2>
+              <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Revenue Analytics</h4>
               <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
             </div>
             <div className="flex items-center gap-3">
@@ -862,7 +858,7 @@ export default function FirmAdminDashboard() {
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Funnel</h2>
+            <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Funnel</h4>
             <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Lead conversion and client journey</p>
           </div>
           <div className="flex items-center gap-2">
@@ -916,7 +912,7 @@ export default function FirmAdminDashboard() {
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Staff Performance Leaderboard</h2>
+            <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[18px]">Staff Performance Leaderboard</h4>
             <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Top performer this month</p>
           </div>
           <div className="flex items-center gap-2">
@@ -963,7 +959,7 @@ export default function FirmAdminDashboard() {
       {/* Top Preparers Section */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Top Prepares (This Month)</h2>
+          <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Top Prepares (This Month)</h4>
         </div>
         
         <div className="space-y-3">
@@ -991,7 +987,7 @@ export default function FirmAdminDashboard() {
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Status</h2>
+            <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Status</h4>
             <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Current compliance metrics & alerts summary</p>
           </div>
           <div className="flex items-center gap-2">
@@ -1071,7 +1067,7 @@ export default function FirmAdminDashboard() {
       {/* Subscription Status Section */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-2">Subscription Status</h2>
+          <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-2">Subscription Status</h4>
           <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your current plan and usage details</p>
         </div>
         
