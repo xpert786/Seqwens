@@ -10,7 +10,7 @@ const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWN
 const getHeaders = () => {
   // Get token from appropriate storage
   const token = getAccessToken() || AUTH_TOKEN;
-  
+
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -23,7 +23,7 @@ const refreshAccessToken = async () => {
   if (!refreshToken) {
     throw new Error('No refresh token available');
   }
-  
+
   const response = await fetchWithCors(`${API_BASE_URL}/user/refresh-token/`, {
     method: 'POST',
     headers: {
@@ -37,15 +37,15 @@ const refreshAccessToken = async () => {
   }
 
   const data = await response.json();
-  
+
   // Update tokens in storage - preserve current rememberMe setting
   const sessionRememberMe = sessionStorage.getItem("rememberMe");
   const localRememberMe = localStorage.getItem("rememberMe");
-  const rememberMe = sessionRememberMe !== null ? 
-                     sessionRememberMe === "true" : 
-                     localRememberMe === "true";
+  const rememberMe = sessionRememberMe !== null ?
+    sessionRememberMe === "true" :
+    localRememberMe === "true";
   setTokens(data.access, data.refresh, rememberMe);
-  
+
   return data.access;
 };
 
@@ -64,12 +64,12 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
     }
 
     const response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
-    
+
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
-        
+
         // If there are specific field errors, show them
         if (errorData.errors) {
           const fieldErrors = Object.entries(errorData.errors)
@@ -89,11 +89,11 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
     return result;
   } catch (error) {
     console.error('Public API Request Error:', error);
-    
+
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
     }
-    
+
     throw error;
   }
 };
@@ -115,18 +115,18 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     console.log('API Request Data:', data);
 
     let response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
-    
+
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401 && endpoint !== '/user/refresh-token/') {
       console.log('Received 401, attempting to refresh token...');
-      
+
       try {
         await refreshAccessToken();
-        
+
         // Retry the original request with new token
         config.headers = getHeaders();
         response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
-        
+
         if (response.status === 401) {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
@@ -141,13 +141,13 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         throw new Error('Session expired. Please login again.');
       }
     }
-    
+
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
         console.error('API Error Response:', errorData);
-        
+
         // If there are specific field errors, show them
         if (errorData.errors) {
           console.error('Field Validation Errors:', errorData.errors);
@@ -168,12 +168,12 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     return result;
   } catch (error) {
     console.error('API Request Error:', error);
-    
+
     // Enhanced error handling for CORS and network issues
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
     }
-    
+
     throw error;
   }
 };
@@ -189,8 +189,8 @@ export const userAPI = {
       email: userData.email,
       phone_number: userData.phoneNumber,
     };
-    
-    
+
+
     // Try the API call and catch any errors for debugging
     try {
       const result = await apiRequest('/user/create/', 'POST', payload);
@@ -201,7 +201,7 @@ export const userAPI = {
         payload: payload,
         url: `${API_BASE_URL}/user/create/`
       });
-      
+
       // If the first attempt fails, try alternative endpoint format
       if (error.message.includes('400') || error.message.includes('404')) {
         console.log('Trying alternative endpoint format...');
@@ -213,7 +213,7 @@ export const userAPI = {
           throw error; // Throw the original error
         }
       }
-      
+
       throw error;
     }
   },
@@ -224,7 +224,7 @@ export const userAPI = {
       password: passwordData.password,
       password_confirm: passwordData.passwordConfirm,
     };
-    
+
     return await apiRequest(`/user/${userId}/complete-registration/`, 'POST', payload);
   },
 
@@ -239,8 +239,8 @@ export const userAPI = {
       password: userData.password,
       password_confirm: userData.passwordConfirm,
     };
-    
-    
+
+
     return await publicApiRequest('/user/create/', 'POST', payload);
   },
 
@@ -250,7 +250,7 @@ export const userAPI = {
       email: credentials.email,
       password: credentials.password,
     };
-    
+
     // For login, we don't need the Authorization header
     const config = {
       method: 'POST',
@@ -269,16 +269,16 @@ export const userAPI = {
     try {
       // Try with proxy first
       const response = await fetchWithCors(`${API_BASE_URL}/user/login/`, config);
-      
+
       console.log('Login Response Status:', response.status);
       console.log('Login Response Headers:', Object.fromEntries(response.headers.entries()));
       console.log('Login Response URL:', response.url);
-      
+
       // If we get a 500 error, let's see what the actual error is
       if (response.status === 500) {
         console.log('Server returned 500 error. This might be a backend issue.');
         console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
+
         // Try to get more details about the error
         try {
           const errorData = await response.json();
@@ -287,7 +287,7 @@ export const userAPI = {
           console.error('Could not parse 500 error response:', parseError);
         }
       }
-      
+
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
@@ -297,7 +297,7 @@ export const userAPI = {
           const rawResponse = await responseClone.text();
           console.error('Login Error Response:', errorData);
           console.error('Login Error Response Raw:', rawResponse);
-          
+
           if (errorData.errors) {
             console.error('Login Field Validation Errors:', errorData.errors);
             const fieldErrors = Object.entries(errorData.errors)
@@ -330,7 +330,7 @@ export const userAPI = {
     const payload = {
       email: email,
     };
-    
+
     return await publicApiRequest('/user/forgot-password/', 'POST', payload);
   },
 
@@ -342,7 +342,7 @@ export const userAPI = {
       password: password,
       confirm_password: confirmPassword,
     };
-    
+
     return await publicApiRequest('/user/verify-otp/', 'POST', payload);
   },
 
@@ -360,7 +360,7 @@ export const userAPI = {
     const payload = {
       otp: otp,
     };
-    
+
     return await apiRequest('/user/verify-email-otp/', 'POST', payload);
   }
 };
@@ -382,7 +382,7 @@ export const validatePassword = (password) => {
   const hasNumber = /\d/.test(password);
   const hasUpperLower = /(?=.*[a-z])(?=.*[A-Z])/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  
+
   return {
     isValid: minLength && hasNumber && hasUpperLower && hasSpecialChar,
     minLength,
@@ -397,19 +397,19 @@ export const handleAPIError = (error) => {
   if (error.message.includes('CORS')) {
     return 'Network error: Please check your internet connection and try again.';
   }
-  
+
   if (error.message.includes('401')) {
     return 'Authentication failed. Please try again.';
   }
-  
+
   if (error.message.includes('400')) {
     return 'Invalid data provided. Please check your information and try again.';
   }
-  
+
   if (error.message.includes('500')) {
     return 'Server error. Please try again later.';
   }
-  
+
   return error.message || 'An unexpected error occurred. Please try again.';
 };
 
@@ -420,7 +420,7 @@ export const dataIntakeAPI = {
     try {
       // For FormData, we need to handle it differently
       const token = getAccessToken() || AUTH_TOKEN;
-      
+
       const config = {
         method: 'POST',
         headers: {
@@ -434,20 +434,20 @@ export const dataIntakeAPI = {
       console.log('Data Intake API Request Config:', config);
 
       const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/data-intake/`, config);
-      
+
       // Handle 401 Unauthorized - try to refresh token
       if (response.status === 401) {
         console.log('Received 401, attempting to refresh token...');
-        
+
         try {
           await refreshAccessToken();
-          
+
           // Retry the original request with new token
           config.headers = {
             'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
           };
           const retryResponse = await fetchWithCors(`${API_BASE_URL}/taxpayer/data-intake/`, config);
-          
+
           if (retryResponse.status === 401) {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
@@ -455,11 +455,11 @@ export const dataIntakeAPI = {
             window.location.href = getLoginUrl();
             throw new Error('Session expired. Please login again.');
           }
-          
+
           if (!retryResponse.ok) {
             throw new Error(`HTTP error! status: ${retryResponse.status}`);
           }
-          
+
           return await retryResponse.json();
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -468,13 +468,13 @@ export const dataIntakeAPI = {
           throw new Error('Session expired. Please login again.');
         }
       }
-      
+
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
           console.error('Data Intake API Error Response:', errorData);
-          
+
           if (errorData.errors) {
             console.error('Data Intake Field Validation Errors:', errorData.errors);
             const fieldErrors = Object.entries(errorData.errors)
@@ -493,11 +493,11 @@ export const dataIntakeAPI = {
       return await response.json();
     } catch (error) {
       console.error('Data Intake API Request Error:', error);
-      
+
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
       }
-      
+
       throw error;
     }
   }
@@ -512,9 +512,9 @@ export const testUserCreation = async () => {
     email: 'test@example.com',
     phoneNumber: '+1234567890'
   };
-  
+
   console.log('Testing user creation with data:', testData);
-  
+
   try {
     const result = await userAPI.createUser(testData);
     console.log('Test successful:', result);
@@ -531,9 +531,9 @@ export const testLogin = async () => {
     email: 'naman@itinfonity.com',
     password: 'Naman@1234'
   };
-  
+
   console.log('Testing login with credentials:', testCredentials);
-  
+
   try {
     const result = await userAPI.login(testCredentials);
     console.log('Login test successful:', result);
@@ -541,7 +541,7 @@ export const testLogin = async () => {
   } catch (error) {
     console.error('Login test failed:', error);
     throw error;
-  }b
+  } b
 };
 
 // Test function to check if the backend is reachable
@@ -558,10 +558,10 @@ export const testBackendConnection = async () => {
         password: 'wrongpassword'
       })
     });
-    
+
     console.log('Backend connection test - Status:', response.status);
     console.log('Backend connection test - Headers:', Object.fromEntries(response.headers.entries()));
-    
+
     if (response.status === 400 || response.status === 401) {
       console.log('✅ Backend is reachable (got expected error response)');
       return { success: true, message: 'Backend is reachable' };
@@ -583,7 +583,7 @@ export const testProxyConnection = async () => {
   try {
     console.log('Testing proxy connection...');
     console.log('Current API_BASE_URL:', API_BASE_URL);
-    
+
     // Try a simple GET request first
     const response = await fetchWithCors(`${API_BASE_URL}/user/login/`, {
       method: 'GET',
@@ -591,11 +591,11 @@ export const testProxyConnection = async () => {
         'Content-Type': 'application/json',
       }
     });
-    
+
     console.log('Proxy test - Status:', response.status);
     console.log('Proxy test - Headers:', Object.fromEntries(response.headers.entries()));
     console.log('Proxy test - URL:', response.url);
-    
+
     return { success: true, message: `Proxy responded with status ${response.status}` };
   } catch (error) {
     console.error('❌ Proxy connection test failed:', error);
@@ -609,12 +609,12 @@ export const profileAPI = {
   getUserAccount: async () => {
     return await apiRequest('/user/account/', 'GET');
   },
-  
+
   // Get profile picture
   getProfilePicture: async () => {
     return await apiRequest('/user/profile-picture/', 'GET');
   },
-  
+
   // Update user account information
   updateUserAccount: async (userData) => {
     return await apiRequest('/user/account/', 'PATCH', userData);
@@ -623,10 +623,10 @@ export const profileAPI = {
   // Update profile picture
   updateProfilePicture: async (profilePictureFile) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    
+
     const formData = new FormData();
     formData.append('profile_picture', profilePictureFile);
-    
+
     // Log file details for debugging
     console.log('Uploading profile picture:', {
       name: profilePictureFile.name,
@@ -634,13 +634,13 @@ export const profileAPI = {
       size: profilePictureFile.size,
       lastModified: profilePictureFile.lastModified
     });
-    
+
     // Log FormData contents for debugging
     console.log('FormData entries:');
     for (let pair of formData.entries()) {
       console.log('  Key:', pair[0], 'Value:', pair[1]);
     }
-    
+
     const config = {
       method: 'PATCH',
       headers: {
@@ -654,20 +654,20 @@ export const profileAPI = {
     console.log('Request config:', { method: config.method, headers: config.headers });
 
     let response = await fetchWithCors(`${API_BASE_URL}/user/account/`, config);
-    
+
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401) {
       console.log('Received 401, attempting to refresh token...');
-      
+
       try {
         await refreshAccessToken();
-        
+
         // Retry the original request with new token
         config.headers = {
           'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
         };
         response = await fetchWithCors(`${API_BASE_URL}/user/account/`, config);
-        
+
         if (response.status === 401) {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
@@ -682,18 +682,18 @@ export const profileAPI = {
         throw new Error('Session expired. Please login again.');
       }
     }
-    
+
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
         console.error('Profile Picture Update Error Response:', errorData);
         console.error('Full error data:', JSON.stringify(errorData, null, 2));
-        
+
         if (errorData.profile_picture) {
           // Handle Django validation errors
-          const profileErrors = Array.isArray(errorData.profile_picture) 
-            ? errorData.profile_picture.join(', ') 
+          const profileErrors = Array.isArray(errorData.profile_picture)
+            ? errorData.profile_picture.join(', ')
             : errorData.profile_picture;
           errorMessage = `Profile picture: ${profileErrors}`;
         } else if (errorData.errors && errorData.errors.profile_picture) {
@@ -721,7 +721,7 @@ export const profileAPI = {
 
     return await response.json();
   },
-  
+
   testProfile: async () => {
     return await apiRequest('/user/profile/', 'GET');
   }
@@ -744,24 +744,24 @@ export const notificationAPI = {
   getNotificationPreferences: async () => {
     return await apiRequest('/user/notification-preferences/', 'GET');
   },
-  
+
   // Update notification preferences
   updateNotificationPreferences: async (preferences) => {
     return await apiRequest('/user/notification-preferences/', 'PATCH', preferences);
   }
 };
 
- export const securityAPI = {
+export const securityAPI = {
   // Get security preferences
   getSecurityPreferences: async () => {
     return await apiRequest('/user/security-settings/', 'GET');
   },
-  
+
   // Update security preferences
   updateSecurityPreferences: async (preferences) => {
     return await apiRequest('/user/security-settings/', 'PATCH', preferences);
   },
-  
+
   // Update password
   updatePassword: async (passwordData) => {
     return await apiRequest('/user/security-settings/', 'PATCH', passwordData);
@@ -782,17 +782,17 @@ export const supportTicketAPI = {
   createSupportTicket: async (ticketData) => {
     return await apiRequest('/taxpayer/support-tickets/', 'POST', ticketData);
   },
-  
+
   // Get support tickets
   getSupportTickets: async () => {
     return await apiRequest('/taxpayer/support-tickets/', 'GET');
   },
-  
+
   // Get support ticket by ID
   getSupportTicket: async (ticketId) => {
     return await apiRequest(`/taxpayer/support-tickets/${ticketId}/`, 'GET');
   },
-  
+
   // Update support ticket
   updateSupportTicket: async (ticketId, ticketData) => {
     return await apiRequest(`/taxpayer/support-tickets/${ticketId}/`, 'PATCH', ticketData);
@@ -804,22 +804,22 @@ export const billingAPI = {
   getBillingInformation: async () => {
     return await apiRequest('/taxpayer/billing-address/', 'GET');
   },
-  
+
   // Add billing information
   addBillingInformation: async (billingData) => {
     return await apiRequest('/taxpayer/billing-address/', 'POST', billingData);
   },
-  
+
   // Update billing information
   updateBillingInformation: async (billingData) => {
     return await apiRequest('/taxpayer/billing-address/', 'PATCH', billingData);
   },
-  
+
   // Get payment methods
   getPaymentMethods: async () => {
     return await apiRequest('/taxpayer/payment-methods/', 'GET');
   },
-  
+
   // Add payment method
   addPaymentMethod: async (paymentMethodData) => {
     return await apiRequest('/taxpayer/payment-methods/', 'POST', paymentMethodData);
@@ -840,22 +840,22 @@ export const appointmentsAPI = {
   getAllAppointments: async () => {
     return await apiRequest('/taxpayer/appointments/', 'GET');
   },
-  
+
   // Get a specific appointment by ID
   getAppointmentById: async (appointmentId) => {
     return await apiRequest(`/taxpayer/appointments/${appointmentId}/`, 'GET');
   },
-  
+
   // Create a new appointment
   createAppointment: async (appointmentData) => {
-    return await apiRequest('/taxpayer/appointments/', 'POST', appointmentData);
+    return await apiRequest('/taxpayer/appointments/create/', 'POST', appointmentData);
   },
-  
+
   // Update an existing appointment
   updateAppointment: async (appointmentId, appointmentData) => {
     return await apiRequest(`/taxpayer/appointments/${appointmentId}/`, 'PATCH', appointmentData);
   },
-  
+
   // Delete/Cancel an appointment
   deleteAppointment: async (appointmentId) => {
     return await apiRequest(`/taxpayer/appointments/${appointmentId}/`, 'DELETE');
@@ -891,6 +891,33 @@ export const timeSlotsAPI = {
 export const staffAPI = {
   // Get available staff members for appointments
   getAvailableStaff: async () => {
-    return await apiRequest('/seqwens/api/taxpayer/appointments/staff/', 'GET');
+    return await apiRequest('/taxpayer/appointments/staff/', 'GET');
+  },
+  // Get available dates for a specific staff member
+  getAvailableDates: async (staffId) => {
+    return await apiRequest(`/taxpayer/appointments/staff/${staffId}/dates/`, 'GET');
+  },
+  // Get available time slots for a specific staff member and date
+  getAvailableTimeSlots: async (staffId, date) => {
+    const params = new URLSearchParams({
+      date: date
+    });
+    return await apiRequest(`/taxpayer/appointments/staff/${staffId}/slots/?${params}`, 'GET');
+  }
+};
+
+// Threads/Chats API functions
+export const threadsAPI = {
+  // Get all chat threads for the current taxpayer
+  getThreads: async () => {
+    return await apiRequest('/taxpayer/threads/', 'GET');
+  },
+  // Create a new chat thread
+  createThread: async (threadData) => {
+    return await apiRequest('/taxpayer/threads/create/', 'POST', threadData);
+  },
+  // Get thread details with messages
+  getThreadDetails: async (threadId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
   }
 };

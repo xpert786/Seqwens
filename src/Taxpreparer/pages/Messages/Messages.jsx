@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import {  AddTask, Cliented, Clocking, Completed, Message3Icon,  Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
+import { AddTask, Cliented, Clocking, Completed, Message3Icon, Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
 import { FaSearch, FaChevronDown, FaPaperPlane } from "react-icons/fa";
 import taxheaderlogo from "../../../assets/logo.png";
+import { threadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
+
 export default function MessagePage() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("All Messages");
@@ -11,6 +13,8 @@ export default function MessagePage() {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [showTaskPopup, setShowTaskPopup] = useState(false);
+  const [loadingThreads, setLoadingThreads] = useState(true);
+  const [threadsError, setThreadsError] = useState(null);
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [composeForm, setComposeForm] = useState({
     recipients: ["@everyone", "@smithjohnson", "@everyone"],
@@ -26,7 +30,7 @@ export default function MessagePage() {
   ]);
   const [newTaskText, setNewTaskText] = useState("");
   const dropdownRef = useRef(null);
- 
+
   const filterOptions = [
     "All Messages",
     "Unread",
@@ -34,7 +38,7 @@ export default function MessagePage() {
     "Internal",
     "Archived"
   ];
-const handleSend = () => {
+  const handleSend = () => {
     if (newMessage.trim() === "") return;
     const updatedConversations = conversations.map((conv) =>
       conv.id === activeConversationId
@@ -59,8 +63,8 @@ const handleSend = () => {
   };
 
   const handleTaskToggle = (taskId) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId 
+    setTasks(tasks.map(task =>
+      task.id === taskId
         ? { ...task, completed: !task.completed }
         : task
     ));
@@ -86,7 +90,110 @@ const handleSend = () => {
   const handleTaskInputChange = (value) => {
     setNewTaskText(value);
   };
- 
+
+  // Fetch threads from API
+  useEffect(() => {
+    const fetchThreads = async () => {
+      try {
+        setLoadingThreads(true);
+        setThreadsError(null);
+
+        console.log('Fetching threads from API...');
+
+        const response = await threadsAPI.getThreads();
+
+        console.log('Threads API Response:', response);
+
+        if (response.success && response.data && response.data.threads) {
+          // Transform API data to match component structure
+          const transformedThreads = response.data.threads.map(thread => {
+            // Format the time - use last_message_at if available, otherwise created_at
+            let formattedTime = 'N/A';
+            if (thread.last_message_at) {
+              const date = new Date(thread.last_message_at);
+              const now = new Date();
+              const diffMs = now - date;
+              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+              if (diffHours < 1) {
+                formattedTime = 'Just now';
+              } else if (diffHours < 24) {
+                formattedTime = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+              } else if (diffDays < 7) {
+                formattedTime = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+              } else {
+                formattedTime = date.toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric'
+                });
+              }
+            } else if (thread.created_at) {
+              const date = new Date(thread.created_at);
+              formattedTime = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              });
+            }
+
+            // Get client name
+            const clientName = thread.client_name || 'Unknown Client';
+
+            // Get last message preview text
+            const lastMessageText = thread.last_message_preview
+              ? (thread.last_message_preview.content || 'No message')
+              : 'No message';
+
+            // Truncate message if too long
+            const truncatedMessage = lastMessageText.length > 50
+              ? lastMessageText.substring(0, 50) + '...'
+              : lastMessageText;
+
+            return {
+              id: thread.id,
+              name: clientName,
+              lastMessage: truncatedMessage,
+              time: formattedTime,
+              status: thread.status,
+              unreadCount: thread.unread_count || 0,
+              createdAt: thread.created_at,
+              subject: thread.subject,
+              // Store additional data
+              assignedStaff: thread.assigned_staff,
+              assignedStaffNames: thread.assigned_staff_names,
+              clientName: thread.client_name,
+              clientEmail: thread.client_email,
+              firmName: thread.firm_name,
+              lastMessagePreview: thread.last_message_preview,
+              // Initialize messages array for each chat
+              messages: [],
+            };
+          });
+
+          console.log('Transformed threads:', transformedThreads);
+
+          setConversations(transformedThreads);
+
+          // Set first thread as active if available
+          if (transformedThreads.length > 0 && !activeConversationId) {
+            setActiveConversationId(transformedThreads[0].id);
+          }
+        } else {
+          console.log('No threads in response');
+          setConversations([]);
+        }
+      } catch (err) {
+        console.error('Error fetching threads:', err);
+        setThreadsError(err.message || 'Failed to load conversations');
+      } finally {
+        setLoadingThreads(false);
+      }
+    };
+
+    fetchThreads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Handle click outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -94,13 +201,13 @@ const handleSend = () => {
         setShowFilterDropdown(false);
       }
     };
- 
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
- 
+
   const stats = [
     {
       label: "Total",
@@ -133,7 +240,7 @@ const handleSend = () => {
       color: "#EF4444"
     },
   ];
- 
+
   return (
     <div className="p-4">
       <style>
@@ -164,8 +271,8 @@ const handleSend = () => {
           New Messages
         </button>
       </div>
-     
- 
+
+
       {/* Stat cards row (Bootstrap grid) */}
       <div className="row g-3 mb-4">
         {stats.map((s, i) => (
@@ -207,10 +314,10 @@ const handleSend = () => {
           </div>
         ))}
       </div>
- 
+
       {/* Two Column Layout */}
       <div style={{ display: "flex", gap: "24px", marginTop: "24px" }}>
-       
+
         {/* Left Column - Conversations */}
         <div
           className="card"
@@ -235,7 +342,7 @@ const handleSend = () => {
           >
             Conversations
           </h2>
- 
+
           {/* Search Bar */}
           <div
             className="position-relative mb-4"
@@ -272,101 +379,164 @@ const handleSend = () => {
               }}
             />
           </div>
- 
-          {/* Message Entry */}
-          <div
-            style={{
-              backgroundColor: "#FFF5E6",
-              borderRadius: "12px",
-              padding: "16px",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.2s ease"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#FFEDCC";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#FFF5E6";
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-              {/* Avatar with Logo */}
-              <div
+
+          {/* Conversations List */}
+          {loadingThreads ? (
+            <div style={{ textAlign: "center", padding: "20px", color: "#718096" }}>
+              <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+              <p style={{ marginTop: "10px", fontSize: "14px" }}>Loading conversations...</p>
+            </div>
+          ) : threadsError ? (
+            <div style={{ textAlign: "center", padding: "20px", color: "#EF4444" }}>
+              <p style={{ fontSize: "14px" }}>{threadsError}</p>
+              <button
+                onClick={() => window.location.reload()}
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  overflow: "hidden"
+                  marginTop: "10px",
+                  padding: "8px 16px",
+                  backgroundColor: "#F56D2D",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "12px"
                 }}
               >
-                <img
-                  src={taxheaderlogo}
-                  alt="User Avatar"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    borderRadius: "50%"
-                  }}
-                />
-              </div>
- 
-              {/* Message Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-                  <h3
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      color: "#2D3748",
-                      margin: 0,
-                      lineHeight: "1.4"
-                    }}
-                  >
-                    John Doe
-                  </h3>
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#A0AEC0",
-                      fontWeight: "400"
-                    }}
-                  >
-                    2 hours ago
-                  </span>
-                </div>
- 
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#718096",
-                    margin: "0 0 4px 0",
-                    fontWeight: "500"
-                  }}
-                >
-                  Tax Document Review
-                </p>
-
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#718096",
-                    margin: 0,
-                    lineHeight: "1.4"
-                  }}
-                >
-                  Thank you for reviewing my documents. When can we...
-                </p>
-              </div>
+                Retry
+              </button>
             </div>
-          </div>
+          ) : conversations.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "20px", color: "#718096" }}>
+              <p style={{ fontSize: "14px", marginBottom: "8px" }}>No conversations yet</p>
+              <p style={{ fontSize: "12px", color: "#A0AEC0" }}>Start a new message to begin</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "330px", overflowY: "auto" }}>
+              {conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => setActiveConversationId(conv.id)}
+                  style={{
+                    backgroundColor: activeConversationId === conv.id ? "#FFEDCC" : "#FFF5E6",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    border: activeConversationId === conv.id ? "2px solid #F56D2D" : "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeConversationId !== conv.id) {
+                      e.currentTarget.style.backgroundColor = "#FFEDCC";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeConversationId !== conv.id) {
+                      e.currentTarget.style.backgroundColor = "#FFF5E6";
+                    }
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                    {/* Avatar with Logo */}
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        overflow: "hidden"
+                      }}
+                    >
+                      <img
+                        src={taxheaderlogo}
+                        alt="User Avatar"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "50%"
+                        }}
+                      />
+                    </div>
+
+                    {/* Message Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <h3
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              color: "#2D3748",
+                              margin: 0,
+                              lineHeight: "1.4"
+                            }}
+                          >
+                            {conv.name}
+                          </h3>
+                          {conv.unreadCount > 0 && (
+                            <span
+                              style={{
+                                backgroundColor: "#EF4444",
+                                color: "white",
+                                borderRadius: "50%",
+                                width: "18px",
+                                height: "18px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "10px",
+                                fontWeight: "600"
+                              }}
+                            >
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#A0AEC0",
+                            fontWeight: "400"
+                          }}
+                        >
+                          {conv.time}
+                        </span>
+                      </div>
+
+                      {conv.subject && (
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "#718096",
+                            margin: "0 0 4px 0",
+                            fontWeight: "500"
+                          }}
+                        >
+                          {conv.subject}
+                        </p>
+                      )}
+
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#718096",
+                          margin: 0,
+                          lineHeight: "1.4"
+                        }}
+                      >
+                        {conv.lastMessage}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
- 
+
         {/* Right Column - Chat Interface */}
         <div
           className="card"
@@ -391,40 +561,54 @@ const handleSend = () => {
             }}
           >
             {/* User Info */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  overflow: "hidden"
-                }}
-              >
-                <img
-                  src={taxheaderlogo}
-                  alt="User Avatar"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    borderRadius: "50%"
-                  }}
-                />
-              </div>
-              <div>
-                <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#2D3748", margin: 0 }}>
-                  John Doe
-                </h3>
-                <p style={{ fontSize: "14px", color: "#718096", margin: 0 }}>
-                  Tax Document Review
-                </p>
-              </div>
-            </div>
- 
+            {(() => {
+              const activeConversation = conversations.find(c => c.id === activeConversationId);
+              return activeConversation ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      overflow: "hidden"
+                    }}
+                  >
+                    <img
+                      src={taxheaderlogo}
+                      alt="User Avatar"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "50%"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#2D3748", margin: 0 }}>
+                      {activeConversation.name}
+                    </h3>
+                    <p style={{ fontSize: "14px", color: "#718096", margin: 0 }}>
+                      {activeConversation.subject || "No subject"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#2D3748", margin: 0 }}>
+                    Select a conversation
+                  </h3>
+                  <p style={{ fontSize: "14px", color: "#718096", margin: 0 }}>
+                    Choose a conversation to view messages
+                  </p>
+                </div>
+              );
+            })()}
+
             {/* Tabs */}
             <div style={{ display: "flex", gap: "8px" }}>
               <button
@@ -459,7 +643,7 @@ const handleSend = () => {
               </button>
             </div>
           </div>
- 
+
           {/* Chat Content and Input Area */}
           {activeTab === "Tasks" ? (
             /* Tasks Tab Content */
@@ -508,7 +692,7 @@ const handleSend = () => {
                       }}>
                         Review Tax Return Draft
                       </h3>
-                      
+
                       {/* Task Description */}
                       <p style={{
                         fontSize: "14px",
@@ -518,12 +702,12 @@ const handleSend = () => {
                       }}>
                         Please review your 2023 tax return draft and approve or request changes
                       </p>
-                      
+
                       {/* Task Checklist */}
                       <div style={{ marginBottom: "16px" }}>
                         {[
                           "Review all sections carefully",
-                          "Check personal information", 
+                          "Check personal information",
                           "Verify income amounts"
                         ].map((item, index) => (
                           <div key={index} style={{
@@ -549,10 +733,10 @@ const handleSend = () => {
                           </div>
                         ))}
                       </div>
-                      
-                
+
+
                     </div>
-                    
+
                     {/* User Avatar */}
                     <div style={{
                       position: "absolute",
@@ -583,7 +767,7 @@ const handleSend = () => {
               </div>
 
               {/* Bottom Input Section for Tasks Tab */}
-              <div style={{ 
+              <div style={{
                 padding: "20px 24px",
                 backgroundColor: "white"
               }}>
@@ -690,7 +874,7 @@ const handleSend = () => {
                     Select a conversation to start messaging
                   </div>
                 )}
-                
+
                 {/* Create New Task Popup - positioned in bottom left */}
                 {showTaskPopup && (
                   <div
@@ -727,7 +911,7 @@ const handleSend = () => {
                       <button
                         onClick={() => setShowTaskPopup(false)}
                       >
-                        <Cut2/> 
+                        <Cut2 />
                       </button>
                     </div>
 
@@ -809,7 +993,7 @@ const handleSend = () => {
                           {/* Delete Button */}
                           <button
                             onClick={() => handleDeleteTask(task.id)}
-                           
+
                           >
                             <DeleteIcon style={{ color: "#EF4444" }} />
                           </button>
@@ -837,150 +1021,150 @@ const handleSend = () => {
               </div>
 
               {/* Bottom Input Section */}
-              <div style={{ 
+              <div style={{
                 padding: "20px 24px",
                 backgroundColor: showTaskPopup ? "#00000099" : "white"
               }}>
                 {/* Show Add Task / Attach Files only when Messages tab is active and showOptions is true */}
-              {showOptions && !showTaskPopup && (
-              <div
-                style={{
-                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                  borderRadius: "8px",
-                  padding: "12px",
-                  marginBottom: "16px",
-                  backgroundColor: "white",
-                  display: "inline-block"
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {showOptions && !showTaskPopup && (
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      cursor: "pointer",
-                      padding: "8px",
-                      borderRadius: "6px",
-                      transition: "background-color 0.2s ease"
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--Palette2-Gold-200, #FFF4E6)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
+                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                      borderRadius: "8px",
+                      padding: "12px",
+                      marginBottom: "16px",
+                      backgroundColor: "white",
+                      display: "inline-block"
                     }}
                   >
-                    <span style={{ color: "#3B82F6", fontSize: "20px" }}><Linked /></span>
-                    <span 
-                      style={{ fontSize: "14px", color: "#374151", fontWeight: "400", cursor: "pointer" }}
-                      onClick={() => setShowTaskPopup(true)}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          cursor: "pointer",
+                          padding: "8px",
+                          borderRadius: "6px",
+                          transition: "background-color 0.2s ease"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--Palette2-Gold-200, #FFF4E6)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <span style={{ color: "#3B82F6", fontSize: "20px" }}><Linked /></span>
+                        <span
+                          style={{ fontSize: "14px", color: "#374151", fontWeight: "400", cursor: "pointer" }}
+                          onClick={() => setShowTaskPopup(true)}
+                        >
+                          Add Task
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          cursor: "pointer",
+                          padding: "8px",
+                          borderRadius: "6px",
+                          transition: "background-color 0.2s ease"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--Palette2-Gold-200, #FFF4E6)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <span style={{ color: "#3B82F6", fontSize: "16px" }}><Linked /></span>
+                        <span style={{ fontSize: "14px", color: "#374151", fontWeight: "400" }}>Attach Files</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div>
+
+                {/* Message Input */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  {/* Message Input with Crossing Icon inside */}
+                  <div style={{ flex: "1", position: "relative" }}>
+                    <input
+                      type="text"
+                      placeholder="Write your messages here..."
+                      value={newMessage}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                      style={{
+                        width: "100%",
+                        padding: "12px 50px 12px 50px",
+                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                        borderRadius: "8px",
+                        fontSize: "16px",
+                        backgroundColor: "#fff",
+                        outline: "none",
+                        fontFamily: "BasisGrotesquePro"
+                      }}
+                    />
+                    {/* Crossing Icon - Inside input field, left side */}
+                    <button
+                      onClick={() => {
+                        setShowOptions(!showOptions);
+                      }}
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "30%",
+                        border: "none",
+                        backgroundColor: "#F56D2D",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}
                     >
-                      Add Task
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      cursor: "pointer",
-                      padding: "8px",
-                      borderRadius: "6px",
-                      transition: "background-color 0.2s ease"
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--Palette2-Gold-200, #FFF4E6)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    <span style={{ color: "#3B82F6", fontSize: "16px" }}><Linked /></span>
-                    <span style={{ fontSize: "14px", color: "#374151", fontWeight: "400" }}>Attach Files</span>
+                      <Crossing style={{ color: "white", fontSize: "12px" }} />
+                    </button>
+
+                    {/* Sendingg Icon - Inside input field, right side */}
+                    <button
+                      onClick={handleSend}
+                      style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "30%",
+                        border: "none",
+                        backgroundColor: "#F56D2D",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}
+                    >
+                      <Sendingg style={{ color: "white", fontSize: "12px" }} />
+                    </button>
                   </div>
                 </div>
-              </div>
-            )}
-                </div>
-                <div>
- 
-            {/* Message Input */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {/* Message Input with Crossing Icon inside */}
-              <div style={{ flex: "1", position: "relative" }}>
-                <input
-                  type="text"
-                  placeholder="Write your messages here..."
-                  value={newMessage}
-                   onChange={(e) => {
-                     setNewMessage(e.target.value);
-                   }}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  style={{
-                    width: "100%",
-                    padding: "12px 50px 12px 50px",
-                    border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                    borderRadius: "8px",
-                    fontSize: "16px",
-                    backgroundColor: "#fff",
-                    outline: "none",
-                    fontFamily: "BasisGrotesquePro"
-                  }}
-                />
-                 {/* Crossing Icon - Inside input field, left side */}
-                 <button
-                   onClick={() => {
-                     setShowOptions(!showOptions);
-                   }}
-                  style={{
-                    position: "absolute",
-                    left: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "30%",
-                    border: "none",
-                    backgroundColor: "#F56D2D",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    fontWeight: "bold"
-                  }}
-                >
-                  <Crossing style={{ color: "white", fontSize: "12px" }} />
-                </button>
- 
-                {/* Sendingg Icon - Inside input field, right side */}
-                <button
-                  onClick={handleSend}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "30%",
-                    border: "none",
-                    backgroundColor: "#F56D2D",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    fontWeight: "bold"
-                  }}
-                >
-                  <Sendingg style={{ color: "white", fontSize: "12px" }} />
-                </button>
-              </div>
-              </div>
               </div>
             </>
           )}
@@ -1000,9 +1184,9 @@ const handleSend = () => {
           alignItems: "center",
           justifyContent: "center",
           zIndex: 9999,
-        
+
         }}
-        onClick={() => setShowComposeModal(false)}
+          onClick={() => setShowComposeModal(false)}
         >
           <div style={{
             backgroundColor: "white",
@@ -1015,7 +1199,7 @@ const handleSend = () => {
             boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
             position: "relative"
           }}
-          onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div style={{
@@ -1335,5 +1519,4 @@ const handleSend = () => {
     </div>
   );
 }
- 
- 
+

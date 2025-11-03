@@ -56,9 +56,10 @@ a {
 }
 
 .Toastify__toast--success {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: #F56D2D !important;
+  background-color: #F56D2D !important;
   color: white !important;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(245, 109, 45, 0.3) !important;
 }
 
 /* Custom Toast for Security Page */
@@ -80,9 +81,14 @@ a {
 }
 
 .Toastify__toast--error {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+  background: #F56D2D !important;
+  background-color: #F56D2D !important;
   color: white !important;
-  box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(245, 109, 45, 0.3) !important;
+}
+
+.Toastify__toast--error .Toastify__toast-icon {
+  display: none !important;
 }
 
 .Toastify__toast--info {
