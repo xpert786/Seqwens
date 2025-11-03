@@ -61,7 +61,7 @@ const InvoicePopupWithPDF = () => {
 
   return (
     <div className="bg-white p-3 rounded ">
-      <div className="align-items-center mb-3" style={{marginLeft:"10px"}}>
+      <div className="align-items-center mb-3" style={{ marginLeft: "10px" }}>
         <h5
           className="mb-0 me-3"
           style={{
@@ -93,7 +93,7 @@ const InvoicePopupWithPDF = () => {
             cursor: 'pointer',
             backgroundColor: selectedIndex === index ? '#FFF4E6' : '#ffffff',
             borderColor: selectedIndex === index ? '#f7c491' : '#dee2e6',
-            marginLeft:"10px"
+            marginLeft: "10px"
 
           }}
           onClick={() => setSelectedIndex(index)}
@@ -406,7 +406,7 @@ const InvoicePopupWithPDF = () => {
                     }}
                     onClick={() => window.print()}
                   >
-                   
+
                     <span className="print"><PrintIcon /></span>
                     Print
                   </button>

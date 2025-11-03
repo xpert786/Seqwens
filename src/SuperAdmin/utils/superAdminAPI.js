@@ -8,7 +8,7 @@ const API_BASE_URL = getApiBaseUrl();
 // Common headers for API requests
 const getHeaders = () => {
   const token = getAccessToken();
-  
+
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -21,7 +21,7 @@ const refreshAccessToken = async () => {
   if (!refreshToken) {
     throw new Error('No refresh token available');
   }
-  
+
   const response = await fetchWithCors(`${API_BASE_URL}/user/refresh-token/`, {
     method: 'POST',
     headers: {
@@ -35,15 +35,15 @@ const refreshAccessToken = async () => {
   }
 
   const data = await response.json();
-  
+
   // Update tokens in storage - preserve current rememberMe setting
   const sessionRememberMe = sessionStorage.getItem("rememberMe");
   const localRememberMe = localStorage.getItem("rememberMe");
-  const rememberMe = sessionRememberMe !== null ? 
-                     sessionRememberMe === "true" : 
-                     localRememberMe === "true";
+  const rememberMe = sessionRememberMe !== null ?
+    sessionRememberMe === "true" :
+    localRememberMe === "true";
   setTokens(data.access, data.refresh, rememberMe);
-  
+
   return data.access;
 };
 
@@ -64,18 +64,18 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     console.log('SuperAdmin API Request Data:', data);
 
     let response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
-    
+
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401 && endpoint !== '/user/refresh-token/') {
       console.log('Received 401, attempting to refresh token...');
-      
+
       try {
         await refreshAccessToken();
-        
+
         // Retry the original request with new token
         config.headers = getHeaders();
         response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
-        
+
         if (response.status === 401) {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
@@ -90,13 +90,13 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         throw new Error('Session expired. Please login again.');
       }
     }
-    
+
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
         console.error('SuperAdmin API Error Response:', errorData);
-        
+
         // If there are specific field errors, show them
         if (errorData.errors) {
           console.error('SuperAdmin Field Validation Errors:', errorData.errors);
@@ -117,12 +117,12 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     return result;
   } catch (error) {
     console.error('SuperAdmin API Request Error:', error);
-    
+
     // Enhanced error handling for CORS and network issues
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
     }
-    
+
     throw error;
   }
 };
@@ -132,19 +132,19 @@ export const handleAPIError = (error) => {
   if (error.message.includes('CORS')) {
     return 'Network error: Please check your internet connection and try again.';
   }
-  
+
   if (error.message.includes('401')) {
     return 'Authentication failed. Please try again.';
   }
-  
+
   if (error.message.includes('400')) {
     return 'Invalid data provided. Please check your information and try again.';
   }
-  
+
   if (error.message.includes('500')) {
     return 'Server error. Please try again later.';
   }
-  
+
   return error.message || 'An unexpected error occurred. Please try again.';
 };
 
@@ -161,10 +161,10 @@ export const superAdminAPI = {
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search) params.append('search', search);
     if (role) params.append('role', role);
-    
+
     return await apiRequest(`/seqwens/api/user/admin/users/?${params}`, 'GET');
   },
 
@@ -189,7 +189,7 @@ export const superAdminAPI = {
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     return await apiRequest(`/seqwens/api/user/admin/subscriptions/?${params}`, 'GET');
   },
 
@@ -204,7 +204,7 @@ export const superAdminAPI = {
       type: type,
       period: period.toString(),
     });
-    
+
     return await apiRequest(`/user/subscriptions/charts/?${params}`, 'GET');
   },
 
@@ -213,7 +213,7 @@ export const superAdminAPI = {
     const params = new URLSearchParams({
       period: period,
     });
-    
+
     return await apiRequest(`/seqwens/api/user/admin/analytics/?${params}`, 'GET');
   },
 
@@ -228,10 +228,10 @@ export const superAdminAPI = {
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (activityType) params.append('activity_type', activityType);
     if (userId) params.append('user_id', userId);
-    
+
     return await apiRequest(`/seqwens/api/user/admin/activity-logs/?${params}`, 'GET');
   },
 
@@ -241,11 +241,11 @@ export const superAdminAPI = {
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search) params.append('search', search);
     if (status) params.append('status', status);
     if (plan) params.append('subscription_plan', plan);
-    
+
     return await apiRequest(`/user/superadmin/firms/?${params}`, 'GET');
   },
 
@@ -285,6 +285,188 @@ export const superAdminAPI = {
       action: 'reactivate'
     };
     return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', reactivateData);
+  },
+
+  // FAQs API functions
+  // Get FAQs with pagination and search
+  getFAQs: async (page = 1, pageSize = 30, search = '', isActive = true) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      is_active: isActive.toString(),
+    });
+
+    if (search) params.append('search', search);
+
+    return await apiRequest(`/user/admin/faqs/?${params}`, 'GET');
+  },
+
+  // Create new FAQ
+  createFAQ: async (faqData) => {
+    return await apiRequest('/user/admin/faqs/', 'POST', faqData);
+  },
+
+  // Update FAQ
+  updateFAQ: async (faqId, faqData) => {
+    return await apiRequest(`/user/admin/faqs/${faqId}/`, 'PATCH', faqData);
+  },
+
+  // Delete FAQ
+  deleteFAQ: async (faqId) => {
+    return await apiRequest(`/user/admin/faqs/${faqId}/`, 'DELETE');
+  },
+
+  // Support Tickets API functions
+  // Get all support tickets for admin (with filters)
+  getSupportTickets: async (page = 1, pageSize = 30, search = '', status = '', priority = '', category = '') => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+
+    if (search) params.append('search', search);
+    if (status && status !== 'All Status') params.append('status', status);
+    if (priority && priority !== 'All Priority') params.append('priority', priority);
+    if (category && category !== 'all') params.append('category', category);
+
+    return await apiRequest(`/user/admin/support/tickets/?${params}`, 'GET');
+  },
+
+  // Get support ticket by ID
+  getSupportTicket: async (ticketId) => {
+    return await apiRequest(`/user/admin/support/tickets/${ticketId}/`, 'GET');
+  },
+
+  // Update support ticket
+  updateSupportTicket: async (ticketId, ticketData) => {
+    return await apiRequest(`/user/admin/support/tickets/${ticketId}/`, 'PATCH', ticketData);
+  },
+
+  // Assign support ticket
+  assignSupportTicket: async (ticketId, assigneeId) => {
+    return await apiRequest(`/user/admin/support/tickets/${ticketId}/assign/`, 'POST', { assignee_id: assigneeId });
+  },
+
+  // Close support ticket
+  closeSupportTicket: async (ticketId) => {
+    return await apiRequest(`/user/admin/support/tickets/${ticketId}/close/`, 'POST');
+  },
+
+  // Get support center overview/analytics
+  getSupportOverview: async () => {
+    return await apiRequest('/user/admin/support/overview/', 'GET');
+  },
+
+  // Resources API functions
+  // Get resources with pagination and filters
+  getResources: async (page = 1, pageSize = 30, type = '', search = '', isActive = true) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      is_active: isActive.toString(),
+    });
+
+    if (type) params.append('type', type);
+    if (search) params.append('search', search);
+
+    return await apiRequest(`/user/admin/resources/?${params}`, 'GET');
+  },
+
+  // Create new resource (supports both FormData for file uploads and JSON for video_url)
+  createResource: async (resourceData) => {
+    try {
+      const token = getAccessToken();
+
+      // If resourceData is FormData, handle file upload differently
+      if (resourceData instanceof FormData) {
+        const config = {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // Don't set Content-Type for FormData - let browser set it with boundary
+          },
+          body: resourceData
+        };
+
+        console.log('Create Resource API Request URL:', `${API_BASE_URL}/user/admin/resources/`);
+        console.log('Create Resource API Request Config:', config);
+
+        let response = await fetchWithCors(`${API_BASE_URL}/user/admin/resources/`, config);
+
+        // Handle 401 Unauthorized - try to refresh token
+        if (response.status === 401) {
+          console.log('Received 401, attempting to refresh token...');
+
+          try {
+            await refreshAccessToken();
+
+            // Retry the original request with new token
+            config.headers = {
+              'Authorization': `Bearer ${getAccessToken()}`,
+            };
+            response = await fetchWithCors(`${API_BASE_URL}/user/admin/resources/`, config);
+
+            if (response.status === 401) {
+              // Refresh failed, redirect to login
+              console.log('Token refresh failed, clearing user data and redirecting to login');
+              clearUserData();
+              window.location.href = getLoginUrl();
+              throw new Error('Session expired. Please login again.');
+            }
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+            clearUserData();
+            window.location.href = getLoginUrl();
+            throw new Error('Session expired. Please login again.');
+          }
+        }
+
+        if (!response.ok) {
+          let errorMessage = `HTTP error! status: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            console.error('Create Resource API Error Response:', errorData);
+
+            if (errorData.errors) {
+              console.error('Create Resource Field Validation Errors:', errorData.errors);
+              const fieldErrors = Object.entries(errorData.errors)
+                .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+                .join('; ');
+              errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+            } else {
+              errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+            }
+          } catch (parseError) {
+            console.error('Error parsing Create Resource response:', parseError);
+          }
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+        return result;
+      } else {
+        // Regular JSON request (for video_url)
+        return await apiRequest('/user/admin/resources/', 'POST', resourceData);
+      }
+    } catch (error) {
+      console.error('Create Resource API Request Error:', error);
+
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
+      }
+
+      throw error;
+    }
+  },
+
+  // Update resource
+  updateResource: async (resourceId, resourceData) => {
+    return await apiRequest(`/user/admin/resources/${resourceId}/`, 'PATCH', resourceData);
+  },
+
+  // Delete resource
+  deleteResource: async (resourceId) => {
+    return await apiRequest(`/user/admin/resources/${resourceId}/`, 'DELETE');
   }
 };
 

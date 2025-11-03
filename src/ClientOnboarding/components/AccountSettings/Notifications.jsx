@@ -27,7 +27,7 @@ const Notifications = () => {
       try {
         const response = await notificationAPI.getNotificationPreferences();
         console.log('Fetched notification preferences:', response);
-        
+
         // Map API response to component state
         if (response.success && response.data) {
           setPreferences({
@@ -43,7 +43,19 @@ const Notifications = () => {
         }
       } catch (err) {
         console.error('Error fetching notification preferences:', err);
-        setError(handleAPIError(err));
+        const errorMessage = handleAPIError(err);
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-error",
+          bodyClassName: "custom-toast-body",
+        });
       } finally {
         setLoading(false);
       }
@@ -59,7 +71,7 @@ const Notifications = () => {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
-    
+
     try {
       // Map component state to API format
       const apiData = {
@@ -74,9 +86,9 @@ const Notifications = () => {
       };
 
       console.log('Saving notification preferences:', apiData);
-      
+
       await notificationAPI.updateNotificationPreferences(apiData);
-      
+
       // Show success toast
       toast.success("Notification preferences updated successfully!", {
         position: "top-right",
@@ -93,7 +105,7 @@ const Notifications = () => {
       console.error('Error saving notification preferences:', err);
       const errorMessage = handleAPIError(err);
       setError(errorMessage);
-      
+
       // Show error toast
       toast.error(errorMessage || "Failed to update notification preferences", {
         position: "top-right",
@@ -123,36 +135,36 @@ const Notifications = () => {
   return (
     <div>
       {/* Header */}
-        <div className="align-items-center mb-3 ">
-      <h5
-        className="mb-0 me-3"
-        style={{
-          color: "#3B4A66",
-          fontSize: "20px",
-          fontWeight: "500",
-          fontFamily: "BasisGrotesquePro",
-        
-        }}
-      >
-        Notification Preferences
-      </h5>
-      <p
-        className="mb-0"
-        style={{
-          color: "#4B5563",
-          fontSize: "14px",
-          fontWeight: "400",
-          fontFamily: "BasisGrotesquePro",
-         
-        }}
-      >
-        Choose how you want to be notified
-      </p>
-       </div>
+      <div className="align-items-center mb-3 ">
+        <h5
+          className="mb-0 me-3"
+          style={{
+            color: "#3B4A66",
+            fontSize: "20px",
+            fontWeight: "500",
+            fontFamily: "BasisGrotesquePro",
+
+          }}
+        >
+          Notification Preferences
+        </h5>
+        <p
+          className="mb-0"
+          style={{
+            color: "#4B5563",
+            fontSize: "14px",
+            fontWeight: "400",
+            fontFamily: "BasisGrotesquePro",
+
+          }}
+        >
+          Choose how you want to be notified
+        </p>
+      </div>
 
 
       {/* Preferences List */}
-      <div  style={{ background: "#fff" }}>
+      <div style={{ background: "#fff" }}>
         {[
           {
             key: "email",
@@ -232,16 +244,10 @@ const Notifications = () => {
         ))}
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="alert alert-danger mt-3" role="alert">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
 
 
 
-    
+
 
       {/* Save Button */}
       <div className="mt-4">

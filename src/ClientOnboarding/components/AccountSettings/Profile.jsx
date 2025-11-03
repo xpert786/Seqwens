@@ -72,7 +72,19 @@ export default function Profile() {
                 persistUserData(updatedUserData);
             } catch (err) {
                 console.error('Error fetching user data:', err);
-                setError(err.message || 'Failed to fetch user data');
+                const errorMessage = err.message || 'Failed to fetch user data';
+                setError(errorMessage);
+                toast.error(errorMessage, {
+                  position: "top-right",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  icon: false,
+                  className: "custom-toast-error",
+                  bodyClassName: "custom-toast-body",
+                });
             } finally {
                 setLoading(false);
             }
@@ -442,12 +454,6 @@ export default function Profile() {
                 </p>
             </div>
 
-            {/* Error Message */}
-            {error && (
-                <div className="alert alert-danger mb-4" role="alert">
-                    <strong>Error:</strong> {error}
-                </div>
-            )}
 
             {/* Profile Image */}
             <div className="d-flex align-items-center mb-4 mt-6">

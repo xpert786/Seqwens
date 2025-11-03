@@ -4,6 +4,7 @@ import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "..
 import { getAccessToken } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
 import { threadsAPI } from "../utils/apiUtils";
+import { toast } from "react-toastify";
 
 export default function Messages() {
   const [conversations, setConversations] = useState([]);
@@ -315,14 +316,34 @@ export default function Messages() {
       console.error('Error sending message:', err);
       // Restore the message to input on error
       setNewMessage(messageText);
-      alert('Failed to send message: ' + err.message);
+      toast.error('Failed to send message: ' + err.message, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
     }
   };
 
 
   const handleCreateChat = async () => {
     if (chatSubject.trim() === "") {
-      alert('Please fill in subject');
+      toast.error('Please fill in subject', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
       return;
     }
 
@@ -416,7 +437,17 @@ export default function Messages() {
       }
     } catch (err) {
       console.error('Error creating thread:', err);
-      alert('Failed to create thread: ' + err.message);
+      toast.error('Failed to create thread: ' + err.message, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
     } finally {
       setCreatingChat(false);
     }

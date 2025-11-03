@@ -11,7 +11,7 @@ const Security = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Password update states
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -26,7 +26,7 @@ const Security = () => {
       try {
         const data = await securityAPI.getSecurityPreferences();
         console.log('Fetched security preferences:', data);
-        
+
         // Map API response to component state
         if (data) {
           // Handle nested response structure
@@ -34,7 +34,7 @@ const Security = () => {
           console.log('Security data structure:', securityData);
           console.log('Available fields:', Object.keys(securityData));
           console.log('Two factor value:', securityData.two_factor_authentication, securityData.two_factor_enabled);
-          
+
           setTwoFactor(securityData.two_factor_authentication || securityData.two_factor_enabled || false);
           setLoginAlerts(securityData.login_alerts || false);
           setSessionTimeout(securityData.session_timeout || 30);
@@ -52,7 +52,7 @@ const Security = () => {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
-    
+
     try {
       const apiData = {
         two_factor_authentication: twoFactor,
@@ -61,9 +61,9 @@ const Security = () => {
       };
 
       console.log('Saving security preferences:', apiData);
-      
+
       await securityAPI.updateSecurityPreferences(apiData);
-      
+
       // Show success toast
       toast.success("Security settings saved successfully!", {
         position: "top-right",
@@ -80,7 +80,7 @@ const Security = () => {
       console.error('Error saving security preferences:', err);
       const errorMessage = handleAPIError(err);
       setError(errorMessage);
-      
+
       // Show error toast
       toast.error(errorMessage || "Failed to save security settings", {
         position: "top-right",
@@ -98,20 +98,20 @@ const Security = () => {
   const handlePasswordUpdate = async () => {
     setPasswordSaving(true);
     setPasswordError(null);
-    
+
     // Validate passwords
     if (newPassword !== confirmPassword) {
       setPasswordError('New passwords do not match');
       setPasswordSaving(false);
       return;
     }
-    
+
     if (newPassword.length < 8) {
       setPasswordError('Password must be at least 8 characters long');
       setPasswordSaving(false);
       return;
     }
-    
+
     try {
       const passwordData = {
         current_password: currentPassword,
@@ -120,9 +120,9 @@ const Security = () => {
       };
 
       console.log('Updating password...');
-      
+
       await securityAPI.updatePassword(passwordData);
-      
+
       // Show success toast
       toast.success("Password updated successfully!", {
         position: "top-right",
@@ -135,7 +135,7 @@ const Security = () => {
         className: "custom-toast-success",
         bodyClassName: "custom-toast-body",
       });
-      
+
       // Clear form
       setCurrentPassword('');
       setNewPassword('');
@@ -144,7 +144,7 @@ const Security = () => {
       console.error('Error updating password:', err);
       const errorMessage = handleAPIError(err);
       setPasswordError(errorMessage);
-      
+
       // Show error toast
       toast.error(errorMessage || "Failed to update password", {
         position: "top-right",
@@ -173,34 +173,34 @@ const Security = () => {
 
   return (
     <div
-     
+
     >
       <div className="align-items-center mb-3 ">
-      <h5
-        className="mb-0 me-3"
-        style={{
-          color: "#3B4A66",
-          fontSize: "20px",
-          fontWeight: "500",
-          fontFamily: "BasisGrotesquePro",
-        }}
-      >
-        Security Settings
-      </h5>
-      <p
-        className="mb-0"
-        style={{
-          color: "#4B5563",
-          fontSize: "14px",
-          fontWeight: "400",
-          fontFamily: "BasisGrotesquePro",
-        }}
-      >
-        Manage your account security and privacy
-      </p>
-       </div>
-       
-       <div className="d-flex justify-content-between align-items-center mb-4">
+        <h5
+          className="mb-0 me-3"
+          style={{
+            color: "#3B4A66",
+            fontSize: "20px",
+            fontWeight: "500",
+            fontFamily: "BasisGrotesquePro",
+          }}
+        >
+          Security Settings
+        </h5>
+        <p
+          className="mb-0"
+          style={{
+            color: "#4B5563",
+            fontSize: "14px",
+            fontWeight: "400",
+            fontFamily: "BasisGrotesquePro",
+          }}
+        >
+          Manage your account security and privacy
+        </p>
+      </div>
+
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <strong style={{ color: "#3B4A66", fontSize: "15px", fontFamily: "BasisGrotesquePro", fontWeight: "500", }}>
             Two-Factor Authentication
@@ -246,12 +246,12 @@ const Security = () => {
           <option value={15}>15 minutes</option>
           <option value={30}>30 minutes</option>
           <option value={60}>60 minutes</option>
-        
+
         </select>
       </div>
 
 
-      <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      {/* <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <strong style={{ color: "#3B4A66", fontSize: "15px", fontFamily: "BasisGrotesquePro", }}>
             Login Alerts
@@ -276,7 +276,7 @@ const Security = () => {
           />
           <label htmlFor="loginAlerts"></label>
         </div>
-      </div>
+      </div> */}
 
 
       <h6
@@ -319,26 +319,20 @@ const Security = () => {
             style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}
           />
         </div>
-        
-        {/* Password Error Message */}
-        {passwordError && (
-          <div className="alert alert-danger mb-3" role="alert">
-            {passwordError}
-          </div>
-        )}
 
-     
-        
+
+
+
         <button
           type="button"
           className="btn mb-4"
           onClick={handlePasswordUpdate}
           disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
-          style={{ 
-            color: "#3B4A66", 
-            fontSize: "16px", 
-            fontWeight: "400", 
-            fontFamily: "BasisGrotesquePro", 
+          style={{
+            color: "#3B4A66",
+            fontSize: "16px",
+            fontWeight: "400",
+            fontFamily: "BasisGrotesquePro",
             background: "#E8F0FF",
             opacity: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? 0.6 : 1,
             cursor: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? "not-allowed" : "pointer",
@@ -349,12 +343,6 @@ const Security = () => {
         </button>
       </form>
 
-      {/* Error Message */}
-      {error && (
-        <div className="alert alert-danger mt-3" role="alert">
-          {error}
-        </div>
-      )}
 
 
       <button
