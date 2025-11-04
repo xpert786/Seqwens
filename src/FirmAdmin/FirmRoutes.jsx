@@ -8,6 +8,7 @@ import FirmDashboardLayout from './Components/FirmDashboardLayout';
 // Pages
 import OverviewFirm from './Pages/OverView/OverviewFirm';
 import StaffManagement from './Pages/Staff/StaffManagement';
+import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
 import Analytics from './Pages/Analytics';
 import Appointments from './Pages/Appointments';
@@ -66,6 +67,7 @@ export default function FirmRoutes() {
         
         {/* Firm Management routes */}
         <Route path="staff" element={<StaffManagement />} />
+        <Route path="staff/:id" element={<StaffDetails />} />
         <Route path="clients" element={<ClientManage />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="tasks" element={<TaskManagementMain />} />
