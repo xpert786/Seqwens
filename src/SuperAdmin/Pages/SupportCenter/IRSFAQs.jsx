@@ -1,41 +1,83 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
+import { toast } from "react-toastify";
 
 export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal }) {
-    const [expandedItems, setExpandedItems] = useState([0, 1, 2, 3, 4, 5]); // All items expanded by default
+    const [faqData, setFaqData] = useState([]);
+    const [expandedItems, setExpandedItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [newFAQ, setNewFAQ] = useState({ title: "", description: "" });
+    const [newFAQ, setNewFAQ] = useState({ title: "", description: "", answer: "" });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        page_size: 30,
+        total_count: 0,
+        total_pages: 1
+    });
+    const [saving, setSaving] = useState(false);
 
-    const faqData = [
-        {
-            question: "How do I upload my tax documents?",
-            answer: "You can upload documents by going to the 'My Documents' section and clicking the 'Upload Documents' button. Supported formats include PDF, JPG, PNG, and common document formats."
-        },
-        {
-            question: "When will my tax return be completed?",
-            answer: "Tax return completion times vary based on complexity. Simple returns typically take 3-5 business days, while more complex returns may take 7-10 business days. You'll receive notifications as your return progresses."
-        },
-        {
-            question: "How do I make a payment for my invoice?",
-            answer: "You can pay invoices online through the 'Invoices & Payments' section. We accept credit cards, debit cards, and bank transfers. All payments are processed securely."
-        },
-        {
-            question: "Can I schedule an appointment with my tax professional?",
-            answer: "Yes! Go to the 'Appointments' section to view available time slots and schedule meetings. You can choose between in-person, phone, or video consultations."
-        },
-        {
-            question: "How do I sign documents electronically?",
-            answer: "Electronic signatures are handled through the 'E-Signatures' section. You'll receive notifications when documents need your signature, and you can sign them directly in your browser."
-        },
-        {
-            question: "Is my personal information secure?",
-            answer: "Yes, we use bank-level encryption and security measures to protect your data. All information is stored securely and access is strictly controlled."
+    // Helper function to refetch FAQs
+    const fetchFAQs = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await superAdminAPI.getFAQs(
+                pagination.page,
+                pagination.page_size,
+                searchTerm,
+                true
+            );
+            
+                if (response.success && response.data) {
+                    setFaqData(response.data);
+                    if (response.pagination) {
+                        setPagination(response.pagination);
+                    }
+                    // Keep all items closed by default
+                    setExpandedItems([]);
+                } else {
+                    setFaqData([]);
+                }
+        } catch (err) {
+            console.error('Error fetching FAQs:', err);
+            const errorMessage = handleAPIError(err);
+            setError(errorMessage);
+            toast.error(errorMessage, {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
+            });
+            setFaqData([]);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
-    const filteredFAQs = faqData.filter(faq => 
-        faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Fetch FAQs from API on mount and when pagination changes
+    useEffect(() => {
+        fetchFAQs();
+    }, [pagination.page, pagination.page_size]);
+
+    // Debounce search to avoid too many API calls
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            // Reset to page 1 when searching
+            if (pagination.page !== 1) {
+                setPagination(prev => ({ ...prev, page: 1 }));
+            } else {
+                fetchFAQs();
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const toggleExpanded = (index) => {
         setExpandedItems(prev => 
@@ -48,20 +90,88 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal }) {
 
     const handleCloseModal = () => {
         onAddFAQModalToggle(false);
-        setNewFAQ({ title: "", description: "" });
+        setNewFAQ({ title: "", description: "", answer: "" });
     };
 
-    const handleSubmitFAQ = () => {
-        if (newFAQ.title.trim() && newFAQ.description.trim()) {
-            // Add new FAQ to the list
-            faqData.push({
-                question: newFAQ.title,
-                answer: newFAQ.description
+    const handleSubmitFAQ = async () => {
+        if (!newFAQ.title.trim() || !newFAQ.description.trim() || !newFAQ.answer.trim()) {
+            toast.error('Please fill in title, description, and answer', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
             });
-            onAddFAQModalToggle(false);
-            setNewFAQ({ title: "", description: "" });
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const faqPayload = {
+                title: newFAQ.title.trim(),
+                description: newFAQ.description.trim(),
+                answer: newFAQ.answer.trim(),
+                is_active: true
+            };
+
+            const response = await superAdminAPI.createFAQ(faqPayload);
+            
+            if (response.success) {
+                toast.success(response.message || 'FAQ created successfully!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    icon: false,
+                    className: "custom-toast-success",
+                    bodyClassName: "custom-toast-body",
+                });
+                
+                // Refresh FAQs list
+                const refreshedResponse = await superAdminAPI.getFAQs(
+                    pagination.page,
+                    pagination.page_size,
+                    searchTerm,
+                    true
+                );
+                
+                if (refreshedResponse.success && refreshedResponse.data) {
+                    setFaqData(refreshedResponse.data);
+                    if (refreshedResponse.pagination) {
+                        setPagination(refreshedResponse.pagination);
+                    }
+                    // Keep all items closed by default
+                    setExpandedItems([]);
+                }
+                
+                onAddFAQModalToggle(false);
+                setNewFAQ({ title: "", description: "", answer: "" });
+            }
+        } catch (err) {
+            console.error('Error creating FAQ:', err);
+            const errorMessage = handleAPIError(err);
+            toast.error(errorMessage, {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
+            });
+        } finally {
+            setSaving(false);
         }
     };
+
 
     return (
         <div className=" min-h-screen ">
@@ -99,43 +209,65 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal }) {
                         </div>
                     </div>
 
+                    {/* Loading State */}
+                    {loading && (
+                        <div className="p-8 text-center">
+                            <p className="text-gray-500">Loading FAQs...</p>
+                        </div>
+                    )}
+
+                    {/* Error State */}
+                    {error && !loading && (
+                        <div className="p-8 text-center">
+                            <p className="text-red-500">{error}</p>
+                        </div>
+                    )}
+
                     {/* FAQ Items */}
-                    <div>
-                        {filteredFAQs.map((faq, index) => (
-                            <div key={index} className="p-4 last:border-b-0">
-                                <div className=" border-2  border-[#E8F0FF] p-3 rounded-lg ">
-                                <div  
-                                    className="flex justify-between items-start cursor-pointer"
-                                    onClick={() => toggleExpanded(index)}
-                                >
-                                    <h5 className="text-xs font-semibold text-gray-800 ">
-                                        {faq.question}
-                                    </h5>
-                                    <div className="flex-shrink-0">
-                                        <svg 
-                                            className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${
-                                                expandedItems.includes(index) ? 'rotate-180' : ''
-                                            }`} 
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
+                    {!loading && !error && (
+                        <div>
+                            {faqData.length === 0 ? (
+                                <div className="p-8 text-center">
+                                    <p className="text-gray-500">No FAQs found</p>
                                 </div>
-                                
-                                {expandedItems.includes(index) && (
-                                    <div className="mt-4">
-                                        <p className="text-xs text-gray-600 leading-relaxed">
-                                            {faq.answer}
-                                        </p>
+                            ) : (
+                                faqData.map((faq, index) => (
+                                    <div key={faq.id || index} className="p-4 last:border-b-0">
+                                        <div className=" border-2  border-[#E8F0FF] p-3 rounded-lg ">
+                                            <div  
+                                                className="flex justify-between items-start cursor-pointer"
+                                                onClick={() => toggleExpanded(index)}
+                                            >
+                                                <h5 className="text-xs font-semibold text-gray-800 ">
+                                                    {faq.title || faq.question}
+                                                </h5>
+                                                <div className="flex-shrink-0">
+                                                    <svg 
+                                                        className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${
+                                                            expandedItems.includes(index) ? 'rotate-180' : ''
+                                                        }`} 
+                                                        fill="none" 
+                                                        stroke="currentColor" 
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            
+                                            {expandedItems.includes(index) && (
+                                                <div className="mt-4">
+                                                    <p className="text-xs text-gray-600 leading-relaxed">
+                                                        {faq.answer || faq.description}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            </div>
-                        ))}
-                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -186,7 +318,21 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal }) {
                                 <textarea
                                     value={newFAQ.description}
                                     onChange={(e) => setNewFAQ(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Enter description..."
+                                    placeholder="Enter description (brief guide/overview)..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                />
+                            </div>
+
+                            {/* Answer Field */}
+                            <div className="mt-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Answer
+                                </label>
+                                <textarea
+                                    value={newFAQ.answer}
+                                    onChange={(e) => setNewFAQ(prev => ({ ...prev, answer: e.target.value }))}
+                                    placeholder="Enter detailed answer..."
                                     rows={4}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                 />
@@ -204,10 +350,11 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal }) {
                             </button>
                             <button
                                 onClick={handleSubmitFAQ}
-                                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors" 
+                                disabled={saving}
+                                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
                                 style={{ borderRadius: '7px' }}
                             >
-                                Add
+                                {saving ? 'Adding...' : 'Add'}
                             </button>
                         </div>
                     </div>

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { dataIntakeAPI, handleAPIError } from "../utils/apiUtils";
 import { getAccessToken, getUserData } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
+import { toast } from "react-toastify";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState([]);
@@ -672,7 +673,17 @@ export default function DataIntakeForm() {
 
       // If no field errors found, show generic error
       const errorMessage = handleAPIError(err);
-      alert(`Submission failed: ${errorMessage}`);
+      toast.error(`Submission failed: ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
     }
   };
 

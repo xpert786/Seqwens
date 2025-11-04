@@ -23,7 +23,7 @@ const PersonalInfo = () => {
       navigate('/create-account');
       return;
     }
-    
+
     try {
       setUserData(JSON.parse(storedData));
     } catch (error) {
@@ -46,21 +46,21 @@ const PersonalInfo = () => {
         passwordConfirm: confirmPassword
       };
 
-      
+
       const response = await userAPI.registerUser(completeUserData);
 
       // Clear stored registration data
       localStorage.removeItem('userRegistrationData');
-      
+
       // Set login status and navigate
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userData", JSON.stringify(response));
-      
+
       navigate("/login");
     } catch (error) {
       console.error('Registration completion error:', error);
-      setErrors({ 
-        general: handleAPIError(error) 
+      setErrors({
+        general: handleAPIError(error)
       });
     } finally {
       setIsLoading(false);
@@ -151,9 +151,8 @@ const PersonalInfo = () => {
                     onClick={togglePasswordVisibility}
                   >
                     <i
-                      className={`bi ${
-                        showPassword ? "bi-eye-slash" : "bi-eye"
-                      }`}
+                      className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"
+                        }`}
                     ></i>
                   </button>
                 </div>
@@ -167,30 +166,26 @@ const PersonalInfo = () => {
                 <PasswordStrengthBar />
                 <div className="criteria">
                   <div
-                    className={`criteria-item ${
-                      validateLength ? "valid" : "invalid"
-                    }`}
+                    className={`criteria-item ${validateLength ? "valid" : "invalid"
+                      }`}
                   >
                     {validateLength ? "✔" : "✘"} At Least 8 Characters
                   </div>
                   <div
-                    className={`criteria-item ${
-                      validateNumber ? "valid" : "invalid"
-                    }`}
+                    className={`criteria-item ${validateNumber ? "valid" : "invalid"
+                      }`}
                   >
                     {validateNumber ? "✔" : "✘"} At least one number
                   </div>
                   <div
-                    className={`criteria-item ${
-                      validateUpperLower ? "valid" : "invalid"
-                    }`}
+                    className={`criteria-item ${validateUpperLower ? "valid" : "invalid"
+                      }`}
                   >
                     {validateUpperLower ? "✔" : "✘"} Uppercase/Lowercase letter
                   </div>
                   <div
-                    className={`criteria-item ${
-                      validateSpecialChar ? "valid" : "invalid"
-                    }`}
+                    className={`criteria-item ${validateSpecialChar ? "valid" : "invalid"
+                      }`}
                   >
                     {validateSpecialChar ? "✔" : "✘"} At least one special
                     character
@@ -234,8 +229,8 @@ const PersonalInfo = () => {
                 />
                 <label className="form-check-label txts" htmlFor="termsCheck">
                   I agree to the{" "}
-                  <span className="highlight">Terms of Use</span> &{" "}
-                  <span className="highlight">Privacy Policy</span>.
+                  <span className="highlight" style={{ color: '#F49C2D' }}>Terms of Use</span> &{" "}
+                  <span className="highlight" style={{ color: '#F49C2D' }}>Privacy Policy</span>.
                 </label>
                 {errors.terms && (
                   <div className="invalid-feedback">{errors.terms}</div>
@@ -248,10 +243,11 @@ const PersonalInfo = () => {
             type="button"
             className="create-account-btn"
             onClick={handleCreateAccount}
-            disabled={isLoading}
+            disabled={isLoading || !termsAccepted}
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
+
         </div>
       </div>
     </FixedLayout>

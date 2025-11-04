@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TwouserIcon, Mails2Icon, CallIcon,PowersIcon,DownsIcon,UpperDownsIcon} from "../../Components/icons";
+import BulkImportModal from './BulkImportModal';
+import DownloadModal from './DownloadModal';
+import AddStaffModal from './AddStaffModal';
 
 
 export default function StaffManagement() {
@@ -10,7 +13,7 @@ export default function StaffManagement() {
   const [showDropdown, setShowDropdown] = useState(null);
   const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
 
   const staffData = [
     {
@@ -116,234 +119,15 @@ export default function StaffManagement() {
     setShowDropdown(showDropdown === id ? null : id);
   };
 
-  // Bulk Import Modal Component
-  const BulkImportModal = () => {
-    if (!isBulkImportModalOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Modal Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Bulk Import Staff</h3>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">Upload multiple staff members at once using a CSV file</p>
-              </div>
-              <button 
-                onClick={() => setIsBulkImportModalOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            {/* Progress Steps */}
-            <div className="flex items-center justify-center mt-6 space-x-8">
-              {[1, 2, 3, 4].map((step) => (
-                <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step 
-                      ? 'bg-orange-500 text-white' 
-                      : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    {step}
-                  </div>
-                  <span className={`ml-2 text-sm font-medium ${
-                    currentStep >= step ? 'text-orange-500' : 'text-gray-500'
-                  }`}>
-                    {step === 1 && 'Upload File'}
-                    {step === 2 && 'Map Fields'}
-                    {step === 3 && 'Validate Data'}
-                    {step === 4 && 'Import'}
-                  </span>
-                  {step < 4 && (
-                    <div className={`w-8 h-0.5 ml-4 ${
-                      currentStep > step ? 'bg-orange-500' : 'bg-gray-200'
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Modal Content */}
-          <div className="p-6">
-            {currentStep === 1 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Upload Section */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4">Upload Staff Data</h4>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-500 transition-colors">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <p className="mt-2 text-sm text-gray-600 font-[BasisGrotesquePro]">Drop your file here or click to browse</p>
-                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">Supported formats: CSV, XLS, XLSX (upto 10MB)</p>
-                    <button className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro]">
-                      Browse Files
-                    </button>
-                  </div>
-                </div>
-
-                {/* Download Template Section */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4">Download Template</h4>
-                  <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">Use our template to ensure your data is formatted correctly.</p>
-                  <ul className="text-sm text-gray-600 font-[BasisGrotesquePro] space-y-2 mb-6">
-                    <li>• All required and optional fields</li>
-                    <li>• Sample data for reference</li>
-                    <li>• Proper formatting examples</li>
-                    <li>• Field validation rules</li>
-                  </ul>
-                  <button 
-                    onClick={() => setIsDownloadModalOpen(true)}
-                    className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-[BasisGrotesquePro] flex items-center justify-center gap-2"
-                  >
-                    <DownsIcon />
-                    Download CSV Template
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">Map CSV Columns to System Fields</h4>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">Match your CSV columns to the appropriate client fields. Required fields must be mapped.</p>
-                
-                <div className="space-y-4">
-                  {[
-                    { csv: 'first_name', sample: 'John', system: 'First Name', required: true },
-                    { csv: 'email', sample: 'john.doe@example.com', system: 'Email', required: true },
-                    { csv: 'phone', sample: '+91-9876543210', system: 'Phone Number', required: true },
-                    { csv: 'role', sample: 'Tax Preparer', system: 'Role', required: true },
-                    { csv: 'department', sample: 'Audit', system: 'Department', required: true },
-                    { csv: 'employee_id', sample: '03-567890', system: 'Employee ID', required: false },
-                    { csv: 'job_title', sample: 'Senior Tax Preparer', system: 'Job Title', required: false },
-                    { csv: 'status', sample: 'Active', system: 'Status', required: false },
-                    { csv: 'joining_date', sample: '01-01-2005', system: 'Joining Date', required: false },
-                    { csv: 'location', sample: 'New York', system: 'Location', required: false },
-                    { csv: 'manager', sample: 'Jane Smith', system: 'Manager', required: false },
-                    { csv: 'tags', sample: 'CPA Certified', system: 'Tags', required: false }
-                  ].map((field, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900 font-[BasisGrotesquePro]">{field.csv}</div>
-                        <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">Sample: {field.sample}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 font-[BasisGrotesquePro]">{field.system}</span>
-                          {field.required && (
-                            <span className="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full">Required</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h5 className="font-medium text-gray-900 font-[BasisGrotesquePro] mb-2">Mapped Required Fields</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {['First Name', 'Email', 'Phone Number', 'Role', 'Department'].map((field) => (
-                      <span key={field} className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {field}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Modal Footer */}
-          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-            <button
-              onClick={() => setIsBulkImportModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
-            >
-              Cancel
-            </button>
-            {currentStep < 4 ? (
-              <button
-                onClick={() => setCurrentStep(currentStep + 1)}
-                className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro]"
-              >
-                Continue to Validation →
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsBulkImportModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro]"
-              >
-                Import Staff
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Download Template Modal Component
-  const DownloadModal = () => {
-    if (!isDownloadModalOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4">Download CSV Template</h3>
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">Your CSV template is ready for download. This template includes all required and optional fields with sample data.</p>
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900 font-[BasisGrotesquePro]">staff_template.csv</div>
-                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">2.5 KB • CSV File</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-            <button
-              onClick={() => setIsDownloadModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => setIsDownloadModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro]"
-            >
-              Download
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <>
-      <BulkImportModal />
-      <DownloadModal />
+      <BulkImportModal 
+        isOpen={isBulkImportModalOpen} 
+        onClose={() => setIsBulkImportModalOpen(false)} 
+        onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
+      />
+      <DownloadModal isOpen={isDownloadModalOpen} onClose={() => setIsDownloadModalOpen(false)} />
+      <AddStaffModal isOpen={isAddStaffModalOpen} onClose={() => setIsAddStaffModalOpen(false)} />
       <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
       {/* Header and Action Buttons */}
       <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4">
@@ -368,7 +152,10 @@ export default function StaffManagement() {
               <UpperDownsIcon />
               Bulk Import
             </button>
-            <button className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+            <button 
+              onClick={() => setIsAddStaffModalOpen(true)}
+              className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -614,7 +401,10 @@ export default function StaffManagement() {
                     {showDropdown === staff.id && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                         <div className="py-1">
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]">
+                          <button 
+                            onClick={() => navigate(`/firmadmin/staff/${staff.id}`)}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                          >
                             View Details
                           </button>
                           <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]">

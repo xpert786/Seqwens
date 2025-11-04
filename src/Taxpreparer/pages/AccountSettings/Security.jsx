@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import "../../styles/icon.css";
 import { SaveIcon } from "../../component/icons";
 
@@ -80,10 +80,10 @@ const Security = () => {
         <div className="py-3 ">
           <label
             htmlFor="sessionTimeout"
-            style={{ 
-              color: "#3B4A66", 
-              fontSize: "16px", 
-              fontWeight: "500", 
+            style={{
+              color: "#3B4A66",
+              fontSize: "16px",
+              fontWeight: "500",
               fontFamily: "BasisGrotesquePro",
               marginBottom: "8px",
               display: "block"
@@ -94,9 +94,9 @@ const Security = () => {
           <select
             id="sessionTimeout"
             className="form-select"
-            style={{ 
-              maxWidth: "300px", 
-              borderRadius: "8px", 
+            style={{
+              maxWidth: "300px",
+              borderRadius: "8px",
               fontFamily: "BasisGrotesquePro",
               border: "1px solid #E8F0FF",
               padding: "8px 12px"
@@ -112,7 +112,7 @@ const Security = () => {
         {/* Login Alerts */}
         <div className="flex justify-between items-center py-3 border-b-2 border-[#4B5563]">
           <div className="flex-1">
-            <div
+            {/* <div
               style={{
                 color: "#3B4A66",
                 fontSize: "16px",
@@ -122,7 +122,7 @@ const Security = () => {
               }}
             >
               Login Alerts
-            </div>
+            </div> */}
             <p
               className="mb-0"
               style={{
@@ -150,24 +150,24 @@ const Security = () => {
         <div className="mt-6">
           <h6
             className="mb-3"
-            style={{ 
-              color: "#3B4A66", 
-              fontSize: "18px", 
-              fontWeight: "500", 
-              fontFamily: "BasisGrotesquePro" 
+            style={{
+              color: "#3B4A66",
+              fontSize: "18px",
+              fontWeight: "500",
+              fontFamily: "BasisGrotesquePro"
             }}
           >
             Password
           </h6>
           <form>
             <div className="mb-3">
-              <label 
-                className="form-label" 
-                style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  fontFamily: "BasisGrotesquePro" 
+              <label
+                className="form-label"
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  fontFamily: "BasisGrotesquePro"
                 }}
               >
                 Current Password
@@ -176,10 +176,10 @@ const Security = () => {
                 type="password"
                 className="form-control w-full"
                 placeholder="Enter current password"
-                style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "400", 
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "400",
                   fontFamily: "BasisGrotesquePro",
                   border: "1px solid #E8F0FF",
                   borderRadius: "8px",
@@ -188,13 +188,13 @@ const Security = () => {
               />
             </div>
             <div className="mb-3">
-              <label 
-                className="form-label" 
-                style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  fontFamily: "BasisGrotesquePro" 
+              <label
+                className="form-label"
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  fontFamily: "BasisGrotesquePro"
                 }}
               >
                 New Password
@@ -203,10 +203,10 @@ const Security = () => {
                 type="password"
                 className="form-control w-full"
                 placeholder="Enter new password"
-                style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "400", 
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "400",
                   fontFamily: "BasisGrotesquePro",
                   border: "1px solid #E8F0FF",
                   borderRadius: "8px",
@@ -215,13 +215,13 @@ const Security = () => {
               />
             </div>
             <div className="mb-3">
-              <label 
-                className="form-label" 
-                style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  fontFamily: "BasisGrotesquePro" 
+              <label
+                className="form-label"
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  fontFamily: "BasisGrotesquePro"
                 }}
               >
                 Confirm New Password
@@ -230,10 +230,10 @@ const Security = () => {
                 type="password"
                 className="form-control w-full"
                 placeholder="Confirm new password"
-                style={{ 
-                  color: "#3B4A66", 
-                  fontSize: "14px", 
-                  fontWeight: "400", 
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "14px",
+                  fontWeight: "400",
                   fontFamily: "BasisGrotesquePro",
                   border: "1px solid #E8F0FF",
                   borderRadius: "8px",
@@ -244,11 +244,11 @@ const Security = () => {
             <button
               type="button"
               className="btn  px-4 py-2 rounded-lg"
-              style={{ 
-                color: "#3B4A66", 
-                fontSize: "15px", 
-                fontWeight: "400", 
-                fontFamily: "BasisGrotesquePro", 
+              style={{
+                color: "#3B4A66",
+                fontSize: "15px",
+                fontWeight: "400",
+                fontFamily: "BasisGrotesquePro",
                 background: "#F3F7FF",
                 border: "1px solid #E8F0FF"
               }}

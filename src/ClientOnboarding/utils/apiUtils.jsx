@@ -921,3 +921,11 @@ export const threadsAPI = {
     return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
   }
 };
+
+// Invoices API functions
+export const invoicesAPI = {
+  // Get all invoices for the current taxpayer
+  getInvoices: async () => {
+    return await apiRequest('/taxpayer/invoices/', 'GET');
+  }
+};

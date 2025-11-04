@@ -4,6 +4,7 @@ import { FaRegFileAlt, FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { UploadsIcon, CrossIcon } from "../components/icons";
 import "../styles/Upload.css";
 import { FaFolder } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 
 export default function UploadModal({ show, handleClose }) {
@@ -45,9 +46,17 @@ export default function UploadModal({ show, handleClose }) {
         setValidationErrors(errors);
 
         if (errors.length === 0) {
-
-            alert("Upload successful!");
-
+            toast.success("Upload successful!", {
+              position: "top-right",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              icon: false,
+              className: "custom-toast-success",
+              bodyClassName: "custom-toast-body",
+            });
         }
     };
 
