@@ -7,7 +7,7 @@ import image from "../../assets/image.png";
 import { LogoIcon } from "../../ClientOnboarding/components/icons";
 import "../styles/FirmHeader.css";
 
-export default function FirmHeader() {
+export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const [showNotifications, setShowNotifications] = useState(false);
 
     return (
@@ -18,7 +18,16 @@ export default function FirmHeader() {
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img src={logo} alt="Logo" className="firm-topbar-logo" />
                         </Link>
-                        <LogoIcon />
+                        <div 
+                            onClick={onToggleSidebar}
+                            style={{ 
+                                cursor: 'pointer', 
+                                transition: 'transform 0.3s ease',
+                                transform: isSidebarOpen ? 'rotate(0deg)' : 'rotate(180deg)'
+                            }}
+                        >
+                            <LogoIcon />
+                        </div>
                         <div className="firm-topbar-search">
                             <i className="bi bi-search"></i>
                             <input type="text" className="form-control" placeholder="Search..." />

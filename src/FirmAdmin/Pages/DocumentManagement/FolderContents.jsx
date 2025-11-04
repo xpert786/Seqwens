@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { DocumentUpload, DocumentBrowseFolder, DocumentMoreIcon } from '../../Components/icons';
+import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { DocumentUpload, DocumentBrowseFolder, DocumentMoreIcon, DocumentPdfIcon } from '../../Components/icons';
 
 // Search icon
 const SearchIcon = () => (
@@ -27,9 +27,13 @@ const FileIcon = () => (
 export default function FolderContents() {
   const { folderId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
+
+  // Check if we're viewing a document (nested route)
+  const isViewingDocument = location.pathname.includes('/document/');
 
   // Folder names mapping
   const folderNames = {
@@ -129,59 +133,62 @@ export default function FolderContents() {
 
   return (
     <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
-      {/* Header Section */}
-      <div className="mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Document Management
-            </h1>
-            <p className="text-gray-600 text-base" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Manage all firm documents and client files
-            </p>
-            <p className="text-sm text-blue-600 mt-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Current Folder: {folderName} (ID: {folderId})
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              <DocumentBrowseFolder />
-              <span>Browse Folders</span>
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              <DocumentUpload />
-              <span>Upload Documents</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Conditionally render folder contents only when NOT viewing a document */}
+      {!isViewingDocument && (
+        <>
+          {/* Header Section */}
+          {/* <div className="mb-6">
+            <div className="flex justify-between items-start">
+            <div>
+                <h1 className="text-3xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                Document Management
+                </h1>
+                <p className="text-gray-600 text-base" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                Manage all firm documents and client files
+                </p>
+                <p className="text-sm text-blue-600 mt-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                Current Folder: {folderName} (ID: {folderId})
+                </p>
+            </div>
+            <div className="flex gap-3">
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                <DocumentBrowseFolder />
+                <span>Browse Folders</span>
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                <DocumentUpload />
+                <span>Upload Documents</span>
+                </button>
+            </div>
+            </div>
+        </div> */}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-5 shadow-sm">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-5 gap-4 mb-6">
+        <div className="bg-white rounded-lg p-5 ">
           <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
           <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>4</p>
         </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm">
+        <div className="bg-white rounded-lg p-5">
           <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
           <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>1</p>
         </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm">
+        <div className="bg-white rounded-lg p-5">
           <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
           <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>2</p>
         </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm">
+        <div className="bg-white rounded-lg p-5">
           <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
           <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>2</p>
         </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm">
+        <div className="bg-white rounded-lg p-5">
           <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
           <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>5.4 MB</p>
         </div>
       </div>
 
       {/* Document List Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg p-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
             All Documents (4)
@@ -193,14 +200,14 @@ export default function FolderContents() {
 
         {/* Search and Filter Bar */}
         <div className="flex gap-3 mb-6">
-          <div className="flex-1 relative">
+          <div className="flex relative bg-blue-50">
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
               <SearchIcon />
             </div>
             <input
               type="text"
               placeholder="Search documents by name, client, or uploader..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ fontFamily: 'BasisGrotesquePro' }}
             />
           </div>
@@ -245,9 +252,12 @@ export default function FolderContents() {
               {documents.map((doc, index) => (
                 <tr key={doc.id} className={`border-b border-gray-100 ${index < documents.length - 1 ? '' : ''}`}>
                   <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => navigate(`document/${doc.id}`)}
+                    >
                       <div className="flex-shrink-0">
-                        <FileIcon />
+                        <DocumentPdfIcon />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
@@ -288,7 +298,10 @@ export default function FolderContents() {
                       {openActionsMenu === doc.id && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10 py-1">
                           <button 
-                            onClick={() => setOpenActionsMenu(null)}
+                            onClick={() => {
+                              setOpenActionsMenu(null);
+                              navigate(`document/${doc.id}`);
+                            }}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" 
                             style={{ fontFamily: 'BasisGrotesquePro' }}
                           >
@@ -318,6 +331,11 @@ export default function FolderContents() {
           </table>
         </div>
       </div>
+        </>
+      )}
+
+      {/* Always render the Outlet so nested routes can render immediately */}
+      <Outlet />
     </div>
   );
 }

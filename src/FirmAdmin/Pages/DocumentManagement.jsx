@@ -18,10 +18,7 @@ export default function DocumentManagement() {
 
   // Check if we're in a nested route (folder contents)
   const isNestedRoute = location.pathname.includes('/folder/');
-  // If we're in a nested route, only render the outlet
-  if (isNestedRoute) {
-    return <Outlet />;
-  }
+  const isViewingDocument = location.pathname.includes('/document/');
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -111,84 +108,86 @@ export default function DocumentManagement() {
   return (
     <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
       {/* Header Section */}
+      {!isViewingDocument && (
       <div className="mb-6">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Document Center
+              Document {isNestedRoute ? 'Management' : 'Center'}
             </h1>
             <p className="text-gray-600 text-base" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Comprehensive document management with OCR, auto-tagging, AI-powered search, and compliance tracking
+             {isNestedRoute ? 'Manage all firm documents and client files' : 'Comprehensive document management with OCR, auto-tagging, AI-powered search, and compliance tracking'}
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg" style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px' }}>
               <DocumentBrowseFolder />
               <span>Browse Folders</span>
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px' }}>
               <DocumentUpload />
               <span>Upload Documents</span>
             </button>
           </div>
         </div>
       </div>
+      )}
+    
 
-      {/* Navigation Tabs */}
-      <div className="mb-6">
-        <div className="flex gap-1 bg-white rounded-lg p-1 w-fit border border-blue-50">
-          <button
-            onClick={() => setActiveTab('Folder')}
-            className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'Folder'
-                ? 'text-white bg-[#3AD6F2] rounded-lg'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px' }}
-          >
-            Folder
-           
-          </button>
-          <button
-            onClick={() => setActiveTab('Compliance')}
-            className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'Compliance'
-               ? 'text-white bg-[#3AD6F2] rounded-lg '
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px'  }}
-          >
-            Compliance
-          </button>
-          <button
-            onClick={() => setActiveTab('Security')}
-            className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'Security'
-                ? 'text-white bg-[#3AD6F2] rounded-lg'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px' }}
-          >
-            Security
-            
-          </button>
-          <button
-            onClick={() => setActiveTab('Audit Trail')}
-            className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'Audit Trail'
-               ? 'text-white bg-[#3AD6F2] rounded-lg'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px'  }}
-          >
-            Audit Trail
-           
-          </button>
+      {/* Navigation Tabs - Show tabs when NOT in nested route */}
+      {!isNestedRoute && (
+        <div className="mb-6">
+          <div className="flex gap-1 bg-white rounded-lg p-1 w-fit border border-blue-50">
+            <button
+              onClick={() => setActiveTab('Folder')}
+              className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+                activeTab === 'Folder'
+                  ? 'text-white bg-[#3AD6F2] rounded-lg'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px' }}
+            >
+              Folder
+            </button>
+            <button
+              onClick={() => setActiveTab('Compliance')}
+              className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+                activeTab === 'Compliance'
+                 ? 'text-white bg-[#3AD6F2] rounded-lg '
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px'  }}
+            >
+              Compliance
+            </button>
+            <button
+              onClick={() => setActiveTab('Security')}
+              className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+                activeTab === 'Security'
+                  ? 'text-white bg-[#3AD6F2] rounded-lg'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px' }}
+            >
+              Security
+            </button>
+            <button
+              onClick={() => setActiveTab('Audit Trail')}
+              className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+                activeTab === 'Audit Trail'
+                 ? 'text-white bg-[#3AD6F2] rounded-lg'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              style={{ fontFamily: 'BasisGrotesquePro',borderRadius: '10px'  }}
+            >
+              Audit Trail
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Document Folders Section */}
-      {activeTab === 'Folder' && (
+      {/* Document Folders Section - Only show if NOT in nested route */}
+      {!isNestedRoute && activeTab === 'Folder' && (
         <div className='bg-white rounded-lg p-5 border border-gray-100'>
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
@@ -299,7 +298,7 @@ export default function DocumentManagement() {
       )}
 
       {/* Other tabs content (Compliance, Security, Audit Trail) */}
-      {activeTab !== 'Folder' && (
+      {!isNestedRoute && activeTab !== 'Folder' && (
         <div className="bg-white rounded-lg shadow-sm p-6">
           <p className="text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
             {activeTab} content coming soon...
@@ -307,6 +306,8 @@ export default function DocumentManagement() {
         </div>
       )}
 
+      {/* Render nested routes - Always render Outlet, it will show FolderContents when route matches */}
+      <Outlet />
     </div>
   );
 }
