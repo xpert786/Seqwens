@@ -3,6 +3,7 @@ import OutstandingTab from './OutstandingTab';
 import PaymentHistoryTab from './PaymentHistoryTab';
 import { BalanceIcon, DateIcons } from "../icons";
 import { invoicesAPI, handleAPIError } from '../../utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const InvoicesMain = () => {
   const [activeTab, setActiveTab] = useState('outstanding');

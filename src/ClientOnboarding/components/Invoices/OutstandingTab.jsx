@@ -41,9 +41,14 @@ const OutstandingTab = ({ invoices = [] }) => {
     };
 
     // Filter and map invoices to display format
-    // Show invoices that are outstanding (pending status or have remaining amount)
+    // Show invoices that are outstanding (unpaid, partial status or have remaining amount)
     const outstandingInvoices = invoices
-        .filter(inv => inv.status === 'pending' || (inv.remaining_amount && parseFloat(inv.remaining_amount) > 0))
+        .filter(inv => {
+            const status = inv.status?.toLowerCase();
+            const remainingAmount = parseFloat(inv.remaining_amount || 0);
+            // Include unpaid, partial, or any invoice with remaining amount > 0
+            return (status === 'unpaid' || status === 'partial' || status === 'pending') || remainingAmount > 0;
+        })
         .map(inv => ({
             id: inv.id,
             invoice_number: inv.invoice_number || `INV-${inv.id}`,
