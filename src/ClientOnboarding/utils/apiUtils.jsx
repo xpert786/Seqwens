@@ -929,3 +929,67 @@ export const invoicesAPI = {
     return await apiRequest('/taxpayer/invoices/', 'GET');
   }
 };
+
+// Documents API functions
+export const documentsAPI = {
+  // Get all document requests for the current taxpayer
+  getDocumentRequests: async () => {
+    return await apiRequest('/taxpayer/document-requests/', 'GET');
+  },
+  
+  // Get all documents for the current taxpayer
+  getDocuments: async () => {
+    return await apiRequest('/taxpayer/documents/', 'GET');
+  },
+  
+  // Upload a document
+  uploadDocument: async (formData) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+    
+    let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
+    
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      try {
+        await refreshAccessToken();
+        config.headers = {
+          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+        };
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
+        
+        if (response.status === 401) {
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+    
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+    
+    return await response.json();
+  }
+};
