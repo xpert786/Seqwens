@@ -5,47 +5,47 @@ import html2canvas from "html2canvas";
 import { ViewIcon, DownloadIcon, PrintIcon, CrossIcon } from "../icons";
 import "../../styles/Login.css";
 
-const invoices = [
-  {
-    id: "INV-2024-001",
-    description: "2023 Tax Return Preparation",
-    paidDate: "Mar 15 2024",
-    method: "Credit Card",
-    amount: "$750.00",
-    quantity: 1,
-    rate: "$750.00",
-    subtotal: "$750.00",
-    tax: "$0.00",
-    total: "$750.00",
-    client: {
-      name: "Michael Boone",
-      address: "468 Client Avenue, Client City, State 67890",
-      email: "michaelboone@gmail.com",
-    },
-  },
-  {
-    id: "INV-2024-001",
-    description: "2023 Tax Return Preparation",
-    paidDate: "Mar 15 2024",
-    method: "Credit Card",
-    amount: "$750.00",
-    quantity: 1,
-    rate: "$750.00",
-    subtotal: "$750.00",
-    tax: "$0.00",
-    total: "$750.00",
-    client: {
-      name: "Michael Boone",
-      address: "468 Client Avenue, Client City, State 67890",
-      email: "michaelboone@gmail.com",
-    },
-  },
-];
-
-const InvoicePopupWithPDF = () => {
+const InvoicePopupWithPDF = ({ invoices = [] }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const invoiceRef = useRef(null);
+
+  // Filter and map invoices to display format - show only paid invoices
+  const paidInvoices = invoices
+    .filter(inv => {
+      const status = inv.status?.toLowerCase();
+      // Include fully paid invoices
+      return status === 'paid' || (parseFloat(inv.paid_amount || 0) > 0 && parseFloat(inv.remaining_amount || 0) === 0);
+    })
+    .map(inv => {
+      // Format the invoice data for display
+      const paidAmount = parseFloat(inv.paid_amount || inv.amount || 0);
+      const issueDate = new Date(inv.issue_date || inv.formatted_issue_date);
+      const formattedDate = issueDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      return {
+        id: inv.invoice_number || `INV-${inv.id}`,
+        description: inv.description || 'Invoice',
+        paidDate: formattedDate,
+        method: "Credit Card", // Default payment method - API doesn't provide this
+        amount: `$${paidAmount.toFixed(2)}`,
+        quantity: 1,
+        rate: `$${paidAmount.toFixed(2)}`,
+        subtotal: `$${paidAmount.toFixed(2)}`,
+        tax: "$0.00",
+        total: `$${paidAmount.toFixed(2)}`,
+        client: {
+          name: inv.client_name || 'Client',
+          address: "Address not provided",
+          email: "Email not provided",
+        },
+        originalInvoice: inv // Keep reference to original invoice data
+      };
+    });
 
   const handleDownload = async () => {
     const element = invoiceRef.current;
@@ -85,79 +85,86 @@ const InvoicePopupWithPDF = () => {
           Your payment history
         </p>
       </div>
-      {invoices.map((invoice, index) => (
-        <div
-          key={index}
-          className="border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center position-relative"
-          style={{
-            cursor: 'pointer',
-            backgroundColor: selectedIndex === index ? '#FFF4E6' : '#ffffff',
-            borderColor: selectedIndex === index ? '#f7c491' : '#dee2e6',
-            marginLeft: "10px"
-
-          }}
-          onClick={() => setSelectedIndex(index)}
-        >
-
-
-          {/* LEFT SIDE */}
-          <div>
-            <h6 className="mb-1 d-flex align-items-center" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-              {invoice.id}{' '}
-              <span
-                className="ms-2 px-2 py-1"
-                style={{
-                  backgroundColor: '#DCFCE7',
-                  color: '#166534',
-                  borderRadius: '50px',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  fontFamily: "BasisGrotesquePro"
-                }}
-              >
-                Paid
-              </span>
-            </h6>
-            <p className="mb-1" style={{ fontSize: "12px", fontWeight: "400", color: "#4B5563", fontFamily: "BasisGrotesquePro" }}>{invoice.description}</p>
-            <p className="mb-0" style={{ fontSize: "12px", fontWeight: "400", color: "#4B5563", fontFamily: "BasisGrotesquePro" }}>
-              Paid {invoice.paidDate} • {invoice.method}
-            </p>
-          </div>
-
-          {/* CENTER - Paid Invoice */}
-          <div className="position-absolute top-50 start-50 translate-middle text-center">
-            <div style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-              Paid Invoice: <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{invoice.amount}</span>
-            </div>
-          </div>
-
-          {/* RIGHT SIDE - Icon Buttons */}
-          <div className="d-flex align-items-end flex-column">
-            <div className="d-flex mt-auto">
-              <button
-                className="btn btn-sm me-2"
-                onClick={() => {
-                  setSelectedIndex(index);
-                  setShowPopup(true);
-                }}
-              >
-                <ViewIcon />
-              </button>
-              <button
-                className="btn  btn-sm"
-                onClick={async () => {
-                  setSelectedIndex(index);
-                  setShowPopup(true);
-                  setTimeout(await handleDownload, 300);
-                  setTimeout(() => setShowPopup(false), 500);
-                }}
-              >
-                <DownloadIcon />
-              </button>
-            </div>
-          </div>
+      {paidInvoices.length === 0 ? (
+        <div className="text-center py-4" style={{ marginLeft: "10px" }}>
+          <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+            No paid invoices found.
+          </p>
         </div>
-      ))}
+      ) : (
+        paidInvoices.map((invoice, index) => (
+          <div
+            key={index}
+            className="border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center position-relative"
+            style={{
+              cursor: 'pointer',
+              backgroundColor: selectedIndex === index ? '#FFF4E6' : '#ffffff',
+              borderColor: selectedIndex === index ? '#f7c491' : '#dee2e6',
+              marginLeft: "10px"
+
+            }}
+            onClick={() => setSelectedIndex(index)}
+          >
+
+
+            {/* LEFT SIDE */}
+            <div>
+              <h6 className="mb-1 d-flex align-items-center" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                {invoice.id}{' '}
+                <span
+                  className="ms-2 px-2 py-1"
+                  style={{
+                    backgroundColor: '#DCFCE7',
+                    color: '#166534',
+                    borderRadius: '50px',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    fontFamily: "BasisGrotesquePro"
+                  }}
+                >
+                  Paid
+                </span>
+              </h6>
+              <p className="mb-1" style={{ fontSize: "12px", fontWeight: "400", color: "#4B5563", fontFamily: "BasisGrotesquePro" }}>{invoice.description}</p>
+              <p className="mb-0" style={{ fontSize: "12px", fontWeight: "400", color: "#4B5563", fontFamily: "BasisGrotesquePro" }}>
+                Paid {invoice.paidDate} • {invoice.method}
+              </p>
+            </div>
+
+            {/* CENTER - Paid Invoice */}
+            <div className="position-absolute top-50 start-50 translate-middle text-center">
+              <div style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                Paid Invoice: <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{invoice.amount}</span>
+              </div>
+            </div>
+
+            {/* RIGHT SIDE - Icon Buttons */}
+            <div className="d-flex align-items-end flex-column">
+              <div className="d-flex mt-auto">
+                <button
+                  className="btn btn-sm me-2"
+                  onClick={() => {
+                    setSelectedIndex(index);
+                    setShowPopup(true);
+                  }}
+                >
+                  <ViewIcon />
+                </button>
+                <button
+                  className="btn  btn-sm"
+                  onClick={async () => {
+                    setSelectedIndex(index);
+                    setShowPopup(true);
+                    setTimeout(await handleDownload, 300);
+                    setTimeout(() => setShowPopup(false), 500);
+                  }}
+                >
+                  <DownloadIcon />
+                </button>
+              </div>
+            </div>
+          </div>
+        )))}
 
       {showPopup && selectedIndex !== null && (
         <div
