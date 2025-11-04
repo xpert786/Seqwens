@@ -7,7 +7,7 @@ export default function DocumentManagement() {
         <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
         <p className="text-gray-600">Manage client documents</p>
       </div>
-      
+
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
@@ -16,7 +16,7 @@ export default function DocumentManagement() {
               Upload Document
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="border rounded-lg p-4">
               <div className="flex items-center mb-2">

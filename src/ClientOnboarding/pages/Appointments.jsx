@@ -1094,6 +1094,54 @@ export default function Appointments() {
                       padding: "15px",
                       background: "#fff"
                     }}>
+                      {/* Staff Member Selection - Show dropdown if more than 1 staff member */}
+                      {staffMembers.length > 1 && (
+                        <div className="mb-3">
+                          <label style={{
+                            fontSize: "13px",
+                            fontWeight: "500",
+                            color: "#3B4A66",
+                            fontFamily: "BasisGrotesquePro",
+                            marginBottom: "6px",
+                            display: "block"
+                          }}>
+                            Select Tax Professional:
+                          </label>
+                          <select
+                            className="form-control"
+                            value={selectedAdminId || ''}
+                            onChange={(e) => {
+                              const newAdminId = parseInt(e.target.value);
+                              setSelectedAdminId(newAdminId);
+                              setFormData(prev => ({ ...prev, appointment_with: newAdminId }));
+                              // Reset selections when staff member changes
+                              setSelectedBox(null);
+                              setSelectedDate(null);
+                              setSelectedTime(null);
+                              setSelectedTimeSlot(null);
+                              setAvailableTimeSlots([]);
+                              setSelectedCalendarDate(null);
+                              setAvailableDates([]);
+                            }}
+                            style={{
+                              fontFamily: "BasisGrotesquePro",
+                              fontSize: "14px",
+                              padding: "8px 12px",
+                              border: "1px solid #E5E7EB",
+                              borderRadius: "8px",
+                              color: "#3B4A66",
+                              width: "100%"
+                            }}
+                          >
+                            {staffMembers.map((staff) => (
+                              <option key={staff.id} value={staff.id}>
+                                {staff.name} {staff.role_display ? `(${staff.role_display})` : ''} {staff.email ? `- ${staff.email}` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
                       <h6 style={{
                         fontSize: "14px",
                         fontWeight: "500",

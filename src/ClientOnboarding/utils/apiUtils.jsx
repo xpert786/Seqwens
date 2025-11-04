@@ -936,16 +936,15 @@ export const documentsAPI = {
   getDocumentRequests: async () => {
     return await apiRequest('/taxpayer/document-requests/', 'GET');
   },
-  
+
   // Get all documents for the current taxpayer
   getDocuments: async () => {
     return await apiRequest('/taxpayer/documents/', 'GET');
   },
-  
+
   // Upload a document
   uploadDocument: async (formData) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    
     const config = {
       method: 'POST',
       headers: {
@@ -954,9 +953,9 @@ export const documentsAPI = {
       },
       body: formData
     };
-    
+
     let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
-    
+
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401) {
       try {
@@ -965,7 +964,7 @@ export const documentsAPI = {
           'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
         };
         response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
-        
+
         if (response.status === 401) {
           clearUserData();
           window.location.href = getLoginUrl();
@@ -978,7 +977,7 @@ export const documentsAPI = {
         throw new Error('Session expired. Please login again.');
       }
     }
-    
+
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
@@ -989,7 +988,7 @@ export const documentsAPI = {
       }
       throw new Error(errorMessage);
     }
-    
+
     return await response.json();
   }
 };
