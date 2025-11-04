@@ -1,12 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FileIcon, BalanceIcon, Message3Icon, SignIcon, SignatureIcon, CrossIcon, MakeIcon, Cross2Icon } from "../../components/icons"
 import "../../styles/NotificationsPanel.css";
 
-export default function NotificationsPanel() {
+export default function NotificationsPanel({ onClose }) {
   const [selectedTab, setSelectedTab] = useState("all");
- const [visible, setVisible] = useState(true);
+  const panelRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
-  if (!visible) return null;
+  // Handle Esc key press
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === "Escape" && onClose) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, [onClose]);
+
+  // Lock body scroll when panel is open
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
+  // Focus management - focus close button when panel opens
+  useEffect(() => {
+    if (closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, []);
+
+  // Handle outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        // Check if click is not on the bell icon (parent will handle that)
+        const bellIcon = event.target.closest('.notification-bell');
+        if (!bellIcon && onClose) {
+          onClose();
+        }
+      }
+    };
+
+    // Add event listener after a short delay to avoid immediate trigger
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
+
+  if (!onClose) return null;
   const tabs = [
     { label: "All", key: "all" },
     { label: "Unread", key: "unread" },
@@ -76,14 +131,40 @@ export default function NotificationsPanel() {
 
 
   return (
-    <div className="notifications-panel shadow rounded-4">
+    <div 
+      className="notifications-panel shadow rounded-4"
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="notifications-title"
+    >
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-3 px-2">
-        <h5 className="mb-0 txts">Notifications</h5>
-        <CrossIcon
-          className="cursor-pointer"
-          onClick={() => setVisible(false)}
-        />
+        <h5 id="notifications-title" className="mb-0 txts">Notifications</h5>
+        <button
+          ref={closeButtonRef}
+          type="button"
+          className="btn btn-link p-0 border-0"
+          onClick={onClose}
+          aria-label="Close notifications"
+          style={{
+            outline: "none",
+            boxShadow: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+          onFocus={(e) => {
+            e.target.style.outline = "2px solid #00C0C6";
+            e.target.style.outlineOffset = "2px";
+          }}
+          onBlur={(e) => {
+            e.target.style.outline = "none";
+          }}
+        >
+          <CrossIcon />
+        </button>
       </div>
 
       {/* Tabs */}
