@@ -1,17 +1,75 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
+import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
+import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
+import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
+    const [settings, setSettings] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch settings from API
+    const fetchSettings = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const API_BASE_URL = getApiBaseUrl();
+            const token = getAccessToken();
+
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const config = {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            const apiUrl = `${API_BASE_URL}/user/settings`;
+            console.log('Fetching settings from:', apiUrl);
+
+            const response = await fetchWithCors(apiUrl, config);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Settings API response:', result);
+
+            if (result.success && result.data) {
+                setSettings(result.data);
+            } else {
+                throw new Error('Failed to fetch settings');
+            }
+        } catch (error) {
+            console.error('Error fetching settings:', error);
+            setError(handleAPIError(error));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch settings on component mount
+    useEffect(() => {
+        fetchSettings();
+    }, []);
 
     const tabs = [
         { id: "profile", label: "Profile" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
-       
+
     ];
 
     return (
@@ -38,7 +96,7 @@ export default function AccountSettings() {
                         fontFamily: "BasisGrotesquePro",
                     }}
                 >
-                   Manage your profile and preferences
+                    Manage your profile and preferences
                 </p>
             </div>
 
@@ -84,10 +142,28 @@ export default function AccountSettings() {
 
             {/* Content Section */}
             <div>
-                {activeTab === "profile" && <Profile />}
-                {activeTab === "notifications" && <Notifications />}
-                {activeTab === "security" && <Security />}
-                {activeTab === "billing" && <Billing />}
+                {loading ? (
+                    <div className="text-center py-5">
+                        <p style={{ fontFamily: "BasisGrotesquePro", color: "#6B7280" }}>Loading settings...</p>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-5">
+                        <p className="text-danger" style={{ fontFamily: "BasisGrotesquePro" }}>{error}</p>
+                        <button
+                            className="btn btn-primary mt-3"
+                            onClick={fetchSettings}
+                            style={{ backgroundColor: "#00C0C6", border: "none" }}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {activeTab === "profile" && <Profile profileData={settings?.profile} companyProfile={settings?.company_profile} onUpdate={fetchSettings} />}
+                        {activeTab === "notifications" && <Notifications notifications={settings?.notifications} onUpdate={fetchSettings} />}
+                        {activeTab === "security" && <Security security={settings?.security} onUpdate={fetchSettings} />}
+                    </>
+                )}
             </div>
         </div>
     );

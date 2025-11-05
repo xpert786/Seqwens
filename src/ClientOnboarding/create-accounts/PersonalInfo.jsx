@@ -213,6 +213,7 @@ const PersonalInfo = () => {
                 )}
               </div>
 
+
               {/* Terms */}
               <div className="form-check mb-3">
                 <input
@@ -229,8 +230,27 @@ const PersonalInfo = () => {
                 />
                 <label className="form-check-label txts" htmlFor="termsCheck">
                   I agree to the{" "}
-                  <span className="highlight" style={{ color: '#F49C2D' }}>Terms of Use</span> &{" "}
-                  <span className="highlight" style={{ color: '#F49C2D' }}>Privacy Policy</span>.
+                  <a
+                    href="https://seqwens.com/terms-of-service/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="highlight"
+                    style={{ color: '#F49C2D', cursor: 'pointer', textDecoration: 'none' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Terms of Use
+                  </a>{" "}
+                  &{" "}
+                  <a
+                    href="https://seqwens.com/privacy-policy/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="highlight"
+                    style={{ color: '#F49C2D', cursor: 'pointer', textDecoration: 'none' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Privacy Policy
+                  </a>.
                 </label>
                 {errors.terms && (
                   <div className="invalid-feedback">{errors.terms}</div>

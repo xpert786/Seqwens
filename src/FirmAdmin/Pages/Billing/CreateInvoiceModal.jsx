@@ -312,14 +312,14 @@ export default function CreateInvoiceModal({ onClose }) {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                Invoice Number (Optional)
+                Invoice Number
               </label>
               <input
                 type="text"
                 value={invoiceData.invoice_number}
                 onChange={(e) => handleInputChange('invoice_number', e.target.value)}
                 placeholder="123afasd"
-                className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
               />
             </div>
           </div>

@@ -14,6 +14,8 @@ import ClientDetails from './Pages/ClientManagement/ClientDetails';
 import Analytics from './Pages/Analytics';
 import Appointments from './Pages/Appointments';
 import DocumentManagement from './Pages/DocumentManagement';
+import FolderContents from './Pages/DocumentManagement/FolderContents';
+import PdfViewer from './Pages/DocumentManagement/PdfViewer';
 import Messages from './Pages/Messages';
 import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
@@ -76,7 +78,11 @@ export default function FirmRoutes() {
         
         {/* Client Management routes */}
         <Route path="appointments" element={<Appointments />} />
-        <Route path="documents" element={<DocumentManagement />} />
+        <Route path="documents" element={<DocumentManagement />}>
+          <Route path="folder/:folderId" element={<FolderContents />}>
+            <Route path="document/:documentId" element={<PdfViewer />} />
+          </Route>
+        </Route>
         <Route path="messages" element={<Messages />} />
         
         {/* Business Operations routes */}

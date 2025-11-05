@@ -5,6 +5,7 @@ import FirmSidebar from './FirmSidebar';
 
 export default function FirmDashboardLayout() {
   const [sidebarWidth, setSidebarWidth] = useState('320px');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     // Listen for sidebar width changes from FirmSidebar
@@ -16,15 +17,19 @@ export default function FirmDashboardLayout() {
     return () => window.removeEventListener('sidebarWidthChange', handleSidebarWidthChange);
   }, []);
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className="firm-dashboard-layout">
-      <FirmHeader />
-      <FirmSidebar />
+      <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+      <FirmSidebar isSidebarOpen={isSidebarOpen} />
       <main 
         className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto bg-[rgb(243,247,255)] p-2 transition-all duration-300"
         style={{ 
-          marginLeft: sidebarWidth, 
-          width: `calc(100% - ${sidebarWidth})` 
+          marginLeft: isSidebarOpen ? sidebarWidth : '0', 
+          width: isSidebarOpen ? `calc(100% - ${sidebarWidth})` : '100%' 
         }}
       >
         <Outlet />
