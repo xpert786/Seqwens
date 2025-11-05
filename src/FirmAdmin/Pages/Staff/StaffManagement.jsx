@@ -403,20 +403,20 @@ export default function StaffManagement() {
                         <div className="py-1">
                           <button 
                             onClick={() => navigate(`/firmadmin/staff/${staff.id}`)}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
                           >
                             View Details
                           </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]">
+                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
                             Edit Task
                           </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]">
+                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
                             Send Message
                           </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]">
+                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
                             Reassign Clients
                           </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 font-[BasisGrotesquePro]">
+                          <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
                             Remove Staff
                           </button>
                         </div>

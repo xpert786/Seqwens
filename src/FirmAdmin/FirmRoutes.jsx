@@ -10,6 +10,7 @@ import OverviewFirm from './Pages/OverView/OverviewFirm';
 import StaffManagement from './Pages/Staff/StaffManagement';
 import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
+import ClientDetails from './Pages/ClientManagement/ClientDetails';
 import Analytics from './Pages/Analytics';
 import Appointments from './Pages/Appointments';
 import DocumentManagement from './Pages/DocumentManagement';
@@ -69,6 +70,7 @@ export default function FirmRoutes() {
         <Route path="staff" element={<StaffManagement />} />
         <Route path="staff/:id" element={<StaffDetails />} />
         <Route path="clients" element={<ClientManage />} />
+        <Route path="clients/:id" element={<ClientDetails />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="tasks" element={<TaskManagementMain />} />
         

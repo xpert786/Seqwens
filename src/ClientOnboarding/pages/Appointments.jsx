@@ -33,7 +33,10 @@ export default function Appointments() {
     description: '',
     appointment_with: 1, // Default admin ID
     duration: '1 hour', // Default duration
-    timezone: 'eastern' // Default timezone
+    timezone: 'eastern', // Default timezone
+    meeting_type: 'zoom', // Default meeting type
+    phone_number: '', // Required for on_call meetings
+    meeting_location: '' // Required for in_person meetings
   });
 
   // Appointment editing state
@@ -224,6 +227,30 @@ export default function Appointments() {
       return;
     }
 
+    // Validate phone_number for on_call meetings
+    if (formData.meeting_type === 'on_call' && !formData.phone_number.trim()) {
+      toast.error('Phone number is required for phone call meetings', {
+        position: "top-right",
+        autoClose: 3000,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+        icon: false,
+      });
+      return;
+    }
+
+    // Validate meeting_location for in_person meetings
+    if (formData.meeting_type === 'in_person' && !formData.meeting_location.trim()) {
+      toast.error('Meeting location is required for in-person meetings', {
+        position: "top-right",
+        autoClose: 3000,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+        icon: false,
+      });
+      return;
+    }
+
     try {
       setCreatingAppointment(true);
 
@@ -262,9 +289,20 @@ export default function Appointments() {
         appointment_time: appointmentTime,
         appointment_duration: appointmentDuration,
         appointment_type: 'consultation', // Always consultation (Zoom call) since we only have one option
+        meeting_type: formData.meeting_type, // Add meeting type: zoom, google_meet, in_person, on_call
         subject: formData.subject,
         description: formData.description
       };
+
+      // Add phone_number if meeting_type is on_call
+      if (formData.meeting_type === 'on_call' && formData.phone_number.trim()) {
+        appointmentData.phone_number = formData.phone_number.trim();
+      }
+
+      // Add meeting_location if meeting_type is in_person
+      if (formData.meeting_type === 'in_person' && formData.meeting_location.trim()) {
+        appointmentData.meeting_location = formData.meeting_location.trim();
+      }
 
       const response = await appointmentsAPI.createAppointment(appointmentData);
 
@@ -277,7 +315,7 @@ export default function Appointments() {
         });
 
         // Reset form
-        setFormData({ subject: '', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern' });
+        setFormData({ subject: '', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern', meeting_type: 'zoom', phone_number: '', meeting_location: '' });
         setSelectedDate(null);
         setSelectedTime(null);
         setSelectedTimeSlot(null);
@@ -584,7 +622,7 @@ export default function Appointments() {
     setSelectedTime(null);
     setSelectedTimeSlot(null);
     setSelectedBox(null);
-    setFormData({ subject: '', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern' });
+    setFormData({ subject: '', description: '', appointment_with: 1, duration: '1 hour', timezone: 'eastern', meeting_type: 'zoom', phone_number: '', meeting_location: '' });
     setAvailableTimeSlots([]);
     setSelectedCalendarDate(null);
     setAvailableDates([]);
@@ -1049,6 +1087,96 @@ export default function Appointments() {
                 {/* Only show appointment options if there's no firm association error */}
                 {!(staffError && staffError.includes('associated with a firm')) && (
                   <>
+                    {/* Meeting Type Selection */}
+                    <div className="option-box mb-3" style={{
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "8px",
+                      padding: "15px",
+                      background: "#fff"
+                    }}>
+                      <h6 style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#3B4A66",
+                        fontFamily: "BasisGrotesquePro",
+                        marginBottom: "12px"
+                      }}>
+                        Schedule a free call with {staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}
+                      </h6>
+
+                      {/* Meeting Type Options */}
+                      <div className="d-flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'zoom' }))}
+                          style={{
+                            border: formData.meeting_type === 'zoom' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                            background: formData.meeting_type === 'zoom' ? "#F56D2D" : "#fff",
+                            color: formData.meeting_type === 'zoom' ? "#fff" : "#374151",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "13px",
+                            fontFamily: "BasisGrotesquePro",
+                            fontWeight: "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          Zoom
+                        </button>
+                        <button
+                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'google_meet' }))}
+                          style={{
+                            border: formData.meeting_type === 'google_meet' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                            background: formData.meeting_type === 'google_meet' ? "#F56D2D" : "#fff",
+                            color: formData.meeting_type === 'google_meet' ? "#fff" : "#374151",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "13px",
+                            fontFamily: "BasisGrotesquePro",
+                            fontWeight: "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          Google Meet
+                        </button>
+                        <button
+                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'in_person' }))}
+                          style={{
+                            border: formData.meeting_type === 'in_person' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                            background: formData.meeting_type === 'in_person' ? "#F56D2D" : "#fff",
+                            color: formData.meeting_type === 'in_person' ? "#fff" : "#374151",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "13px",
+                            fontFamily: "BasisGrotesquePro",
+                            fontWeight: "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          In Person
+                        </button>
+                        <button
+                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'on_call' }))}
+                          style={{
+                            border: formData.meeting_type === 'on_call' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                            background: formData.meeting_type === 'on_call' ? "#F56D2D" : "#fff",
+                            color: formData.meeting_type === 'on_call' ? "#fff" : "#374151",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "13px",
+                            fontFamily: "BasisGrotesquePro",
+                            fontWeight: "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          Phone Call
+                        </button>
+                      </div>
+                    </div>
+
                     {(selectedBox
                       ? [
                         {
@@ -1056,7 +1184,7 @@ export default function Appointments() {
                           ...{
                             id: 1,
                             icon: <span className="icon-custom"><ZoomIcon /></span>,
-                            title: `Schedule a free Zoom call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
+                            title: `Schedule a free ${formData.meeting_type === 'zoom' ? 'Zoom call' : formData.meeting_type === 'google_meet' ? 'Google Meet' : formData.meeting_type === 'in_person' ? 'in-person meeting' : 'phone call'} with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                             // desc: "Use this to schedule 1 hour long zoom meeting",
                           },
                         },
@@ -1065,7 +1193,7 @@ export default function Appointments() {
                         {
                           id: 1,
                           icon: <span className="icon-custom"><ZoomIcon /></span>,
-                          title: `Schedule a free Zoom call with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
+                          title: `Schedule a free ${formData.meeting_type === 'zoom' ? 'Zoom call' : formData.meeting_type === 'google_meet' ? 'Google Meet' : formData.meeting_type === 'in_person' ? 'in-person meeting' : 'phone call'} with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                           // desc: "Use this to schedule 1 hour long zoom meeting",
                         },
                       ]
@@ -1515,7 +1643,7 @@ export default function Appointments() {
                                   color: "#3B4A66",
                                 }}
                               >
-                                {selectedOpt.title}
+                                Schedule a free {formData.meeting_type === 'zoom' ? 'Zoom call' : formData.meeting_type === 'google_meet' ? 'Google Meet' : formData.meeting_type === 'in_person' ? 'in-person meeting' : 'phone call'} with {staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}
                               </h6>
                               <p
                                 style={{
@@ -1726,6 +1854,88 @@ export default function Appointments() {
                   ></textarea>
                 </div>
 
+                {/* Phone Number - Required for on_call meetings */}
+                {formData.meeting_type === 'on_call' && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "8px",
+                      padding: "15px",
+                      background: "#fff",
+                      fontFamily: "BasisGrotesquePro",
+                    }}
+                  >
+                    <h6
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#3B4A66",
+                        fontFamily: "BasisGrotesquePro",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      Phone Number <span style={{ color: "#EF4444" }}>*</span>
+                    </h6>
+                    <input
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={formData.phone_number}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                      style={{
+                        width: "100%",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "6px",
+                        padding: "8px",
+                        fontSize: "13px",
+                        fontFamily: "BasisGrotesquePro",
+                      }}
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Meeting Location - Required for in_person meetings */}
+                {formData.meeting_type === 'in_person' && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "8px",
+                      padding: "15px",
+                      background: "#fff",
+                      fontFamily: "BasisGrotesquePro",
+                    }}
+                  >
+                    <h6
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#3B4A66",
+                        fontFamily: "BasisGrotesquePro",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      Meeting Location <span style={{ color: "#EF4444" }}>*</span>
+                    </h6>
+                    <input
+                      type="text"
+                      placeholder="Enter meeting location or address"
+                      value={formData.meeting_location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, meeting_location: e.target.value }))}
+                      style={{
+                        width: "100%",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "6px",
+                        padding: "8px",
+                        fontSize: "13px",
+                        fontFamily: "BasisGrotesquePro",
+                      }}
+                      required
+                    />
+                  </div>
+                )}
+
                 <div
                   style={{
                     marginTop: "20px",
@@ -1748,7 +1958,14 @@ export default function Appointments() {
                   </button>
                   <button
                     onClick={createAppointment}
-                    disabled={creatingAppointment || !selectedDate || !selectedTime || !formData.subject.trim()}
+                    disabled={
+                      creatingAppointment ||
+                      !selectedDate ||
+                      !selectedTime ||
+                      !formData.subject.trim() ||
+                      (formData.meeting_type === 'on_call' && !formData.phone_number.trim()) ||
+                      (formData.meeting_type === 'in_person' && !formData.meeting_location.trim())
+                    }
                     style={{
                       background: creatingAppointment ? "#ccc" : "#F56D2D",
                       color: "#fff",
