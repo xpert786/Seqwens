@@ -14,6 +14,7 @@ import Appointments from './Pages/Appointments';
 import DocumentManagement from './Pages/DocumentManagement';
 import FolderContents from './Pages/DocumentManagement/FolderContents';
 import PdfViewer from './Pages/DocumentManagement/PdfViewer';
+import ESignatureManagement from './Pages/ESignatureManagement';
 import Messages from './Pages/Messages';
 import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
@@ -77,6 +78,7 @@ export default function FirmRoutes() {
             <Route path="document/:documentId" element={<PdfViewer />} />
           </Route>
         </Route>
+        <Route path="esignature" element={<ESignatureManagement />} />
         <Route path="messages" element={<Messages />} />
         
         {/* System Administration routes */}
