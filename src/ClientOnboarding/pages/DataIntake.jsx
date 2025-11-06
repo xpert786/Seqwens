@@ -132,7 +132,7 @@ export default function DataIntakeForm() {
               firstName: data.first_name || "",
               middleInitial: data.middle_name || "",
               lastName: data.last_name || "",
-              dateOfBirth: data.dateOfBirth || "",
+              dateOfBirth: formatDateToYYYYMMDD(data.dateOfBirth),
               ssn: data.ssn || "",
               email: data.email || "",
               phone: data.phone_number || "",
@@ -153,7 +153,7 @@ export default function DataIntakeForm() {
                 firstName: data.spouse_info.spouse_first_name || "",
                 middleInitial: "",
                 lastName: data.spouse_info.spouse_last_name || "",
-                dateOfBirth: data.spouse_info.spouse_dateOfBirth || "",
+                dateOfBirth: formatDateToYYYYMMDD(data.spouse_info.spouse_dateOfBirth),
                 ssn: data.spouse_info.spouse_ssn || "",
                 email: data.spouse_info.spouse_email || "",
                 phone: data.spouse_info.spouse_phone_number || "",
@@ -195,7 +195,18 @@ export default function DataIntakeForm() {
             }
 
             // Set dependents
-            if (data.no_of_dependents > 0) {
+            if (data.dependents && Array.isArray(data.dependents) && data.dependents.length > 0) {
+              setHasDependents(true);
+              // Map dependent data from API, formatting dates
+              const formattedDependents = data.dependents.map((dep) => ({
+                firstName: dep.dependent_first_name || '',
+                middleInitial: dep.dependent_middle_name || '',
+                lastName: dep.dependent_last_name || '',
+                dob: formatDateToYYYYMMDD(dep.dependent_dateOfBirth),
+                ssn: dep.dependent_ssn || ''
+              }));
+              setDependents(formattedDependents);
+            } else if (data.no_of_dependents > 0) {
               setHasDependents(true);
               // Create empty dependent objects for the count
               const emptyDependents = Array(data.no_of_dependents).fill().map(() => ({
@@ -271,6 +282,30 @@ export default function DataIntakeForm() {
     }
   }, []);
 
+  // Format date to YYYY-MM-DD format
+  const formatDateToYYYYMMDD = (dateValue) => {
+    if (!dateValue) return "";
+    
+    // If it's already in YYYY-MM-DD format, return as is
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "";
+    }
+  };
+
   // Map API field names to form field paths
   const mapApiFieldToFormField = (apiField, source) => {
     // Mapping from API field names to form field paths
@@ -317,16 +352,20 @@ export default function DataIntakeForm() {
       'tax_documents': 'uploadedFile',
     };
 
-    // Handle nested fields (e.g., personal_info.first_name, bank_info.routing_number)
+    // Handle nested fields (e.g., personal_info.first_name, personal_info.spouse_info.spouse_dateOfBirth, bank_info.routing_number)
     let fieldKey = apiField;
     if (apiField.includes('.')) {
       const parts = apiField.split('.');
       // Remove known prefixes (personal_info, spouse_info, bank_info)
+      // Extract the last part which is the actual field name
+      // For example: personal_info.spouse_info.spouse_dateOfBirth -> spouse_dateOfBirth
       const prefixes = ['personal_info', 'spouse_info', 'bank_info'];
-      if (prefixes.includes(parts[0])) {
-        fieldKey = parts.slice(1).join('.');
-      } else {
-        fieldKey = parts[parts.length - 1];
+      // Find the last part that's not a prefix
+      for (let i = parts.length - 1; i >= 0; i--) {
+        if (!prefixes.includes(parts[i])) {
+          fieldKey = parts[i];
+          break;
+        }
       }
     }
 
@@ -472,7 +511,7 @@ export default function DataIntakeForm() {
           first_name: personalInfo.firstName,
           middle_initial: personalInfo.middleInitial,
           last_name: personalInfo.lastName,
-          dateOfBirth: personalInfo.dateOfBirth,
+          dateOfBirth: personalInfo.dateOfBirth ? formatDateToYYYYMMDD(personalInfo.dateOfBirth) : "",
           ssn: personalInfo.ssn,
           email: personalInfo.email,
           phone: personalInfo.phone,
@@ -490,7 +529,7 @@ export default function DataIntakeForm() {
             spouse_first_name: spouseInfo.firstName,
             spouse_middle_name: spouseInfo.middleInitial,
             spouse_last_name: spouseInfo.lastName,
-            spouse_dateOfBirth: spouseInfo.dateOfBirth,
+            spouse_dateOfBirth: spouseInfo.dateOfBirth ? formatDateToYYYYMMDD(spouseInfo.dateOfBirth) : "",
             spouse_ssn: spouseInfo.ssn,
             spouse_email: spouseInfo.email,
             spouse_phone_number: spouseInfo.phone
@@ -499,7 +538,7 @@ export default function DataIntakeForm() {
             dependent_first_name: dep.firstName,
             dependent_middle_name: dep.middleInitial,
             dependent_last_name: dep.lastName,
-            dependent_dateOfBirth: dep.dob,
+            dependent_dateOfBirth: dep.dob ? formatDateToYYYYMMDD(dep.dob) : "",
             dependent_ssn: dep.ssn
           })) : []
         },
@@ -1003,8 +1042,9 @@ export default function DataIntakeForm() {
               Date of Birth
             </label>
             <input
-              type="date"
+              type="text"
               className={`form-control ${getFieldError('personalInfo.dateOfBirth') ? 'is-invalid' : ''}`}
+              placeholder="YYYY-MM-DD"
               value={personalInfo.dateOfBirth}
               onChange={(e) => handlePersonalInfoChange('dateOfBirth', e.target.value)}
               data-field="personalInfo.dateOfBirth"
@@ -1385,11 +1425,27 @@ export default function DataIntakeForm() {
               Date of Birth
             </label>
             <input
-              type="date"
-              className="form-control"
+              type="text"
+              className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
+              placeholder="YYYY-MM-DD"
               value={spouseInfo.dateOfBirth}
               onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
+              data-field="spouseInfo.dateOfBirth"
+              ref={(el) => {
+                if (!fieldRefs.current['spouseInfo.dateOfBirth']) {
+                  fieldRefs.current['spouseInfo.dateOfBirth'] = el;
+                }
+              }}
             />
+            {getFieldError('spouseInfo.dateOfBirth') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('spouseInfo.dateOfBirth')}
+              </div>
+            )}
           </div>
           <div className="col-md-6">
             <label className="form-label" style={{
@@ -1654,8 +1710,9 @@ export default function DataIntakeForm() {
                           Date of Birth
                         </label>
                         <input
-                          type="date"
+                          type="text"
                           className="form-control"
+                          placeholder="YYYY-MM-DD"
                           value={dep.dob}
                           onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
                         />
