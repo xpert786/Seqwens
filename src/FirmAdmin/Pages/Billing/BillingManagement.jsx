@@ -52,55 +52,55 @@ export default function BillingManagement() {
 
   const getStatusBadge = (status) => {
     const configs = {
-      paid: { 
-        color: "bg-[#22C55E]", 
+      paid: {
+        color: "bg-[#22C55E]",
         text: "Paid",
         iconColor: 'text-green-500',
-        icon:<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g clip-path="url(#clip0_2311_1979)">
-        <path d="M12.8334 6.46407V7.00073C12.8327 8.25865 12.4254 9.48263 11.6722 10.4901C10.919 11.4976 9.86033 12.2347 8.65404 12.5913C7.44775 12.948 6.15848 12.9052 4.97852 12.4692C3.79856 12.0333 2.79113 11.2276 2.10647 10.1724C1.42182 9.11709 1.09663 7.86877 1.17939 6.61358C1.26216 5.3584 1.74845 4.16359 2.56574 3.20736C3.38304 2.25113 4.48754 1.58471 5.71452 1.30749C6.94151 1.03027 8.22524 1.1571 9.37425 1.66907M5.25008 6.4174L7.00008 8.1674L12.8334 2.33407" stroke="#22C55E" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-        <defs>
-        <clipPath id="clip0_2311_1979">
-        <rect width="14" height="14" fill="white"/>
-        </clipPath>
-        </defs>
+        icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_2311_1979)">
+            <path d="M12.8334 6.46407V7.00073C12.8327 8.25865 12.4254 9.48263 11.6722 10.4901C10.919 11.4976 9.86033 12.2347 8.65404 12.5913C7.44775 12.948 6.15848 12.9052 4.97852 12.4692C3.79856 12.0333 2.79113 11.2276 2.10647 10.1724C1.42182 9.11709 1.09663 7.86877 1.17939 6.61358C1.26216 5.3584 1.74845 4.16359 2.56574 3.20736C3.38304 2.25113 4.48754 1.58471 5.71452 1.30749C6.94151 1.03027 8.22524 1.1571 9.37425 1.66907M5.25008 6.4174L7.00008 8.1674L12.8334 2.33407" stroke="#22C55E" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+          <defs>
+            <clipPath id="clip0_2311_1979">
+              <rect width="14" height="14" fill="white" />
+            </clipPath>
+          </defs>
         </svg>
-        
+
       },
-      sent: { 
-        color: "bg-[#1E40AF]", 
+      sent: {
+        color: "bg-[#1E40AF]",
         text: "Sent",
         iconColor: 'text-blue-500',
         icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12.8334 1.16797L9.16671 11.6443C9.01711 12.0717 8.42179 12.096 8.23787 11.6822L6.41675 7.58464M12.8334 1.16797L2.35711 4.83468C1.92969 4.98427 1.9054 5.57959 2.31922 5.76351L6.41675 7.58464M12.8334 1.16797L6.41675 7.58464" stroke="#1E40AF" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M12.8334 1.16797L9.16671 11.6443C9.01711 12.0717 8.42179 12.096 8.23787 11.6822L6.41675 7.58464M12.8334 1.16797L2.35711 4.83468C1.92969 4.98427 1.9054 5.57959 2.31922 5.76351L6.41675 7.58464M12.8334 1.16797L6.41675 7.58464" stroke="#1E40AF" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       },
-      overdue: { 
-        color: "bg-[#EF4444]", 
+      overdue: {
+        color: "bg-[#EF4444]",
         text: "Overdue",
         iconColor: 'text-red-500',
         icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g clipPath="url(#clip0_2312_2064)">
-            <path d="M7.00008 4.66797V7.0013M7.00008 9.33464H7.00592M12.8334 7.0013C12.8334 10.223 10.2217 12.8346 7.00008 12.8346C3.77842 12.8346 1.16675 10.223 1.16675 7.0013C1.16675 3.77964 3.77842 1.16797 7.00008 1.16797C10.2217 1.16797 12.8334 3.77964 12.8334 7.0013Z" stroke="#EF4444" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M7.00008 4.66797V7.0013M7.00008 9.33464H7.00592M12.8334 7.0013C12.8334 10.223 10.2217 12.8346 7.00008 12.8346C3.77842 12.8346 1.16675 10.223 1.16675 7.0013C1.16675 3.77964 3.77842 1.16797 7.00008 1.16797C10.2217 1.16797 12.8334 3.77964 12.8334 7.0013Z" stroke="#EF4444" strokeLinecap="round" strokeLinejoin="round" />
           </g>
           <defs>
             <clipPath id="clip0_2312_2064">
-              <rect width="14" height="14" fill="white"/>
+              <rect width="14" height="14" fill="white" />
             </clipPath>
           </defs>
         </svg>
       },
-      draft: { 
-        color: "bg-[#131323]", 
+      draft: {
+        color: "bg-[#131323]",
         text: "Draft",
         iconColor: 'text-gray-500',
         icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
       }
     };
-    
+
     const config = configs[status] || configs.draft;
-    
+
     return (
       <div className="flex items-center gap-2">
         <div className={config.iconColor}>
@@ -114,7 +114,7 @@ export default function BillingManagement() {
   };
 
   return (
-    <div className="p-6" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh' }}>
+    <div className="p-6" style={{ minHeight: '100vh' }}>
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
@@ -132,9 +132,9 @@ export default function BillingManagement() {
             </svg>
             Export Report
           </button>
-          <button 
+          <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-5 py-2 !rounded-lg flex items-center gap-2 text-white font-medium" 
+            className="px-5 py-2 !rounded-lg flex items-center gap-2 text-white font-medium"
             style={{ backgroundColor: '#F97316' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,14 +228,14 @@ export default function BillingManagement() {
                         className="p-2 hover:bg-gray-100 !rounded-lg transition"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                         </svg>
                       </button>
                       {openDropdown === invoice.id && (
                         <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border z-10" style={{ borderColor: '#E5E7EB' }}>
-                          <button 
+                          <button
                             onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition rounded-t-lg" 
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition rounded-t-lg"
                             style={{ color: '#3B82F6' }}
                           >
                             View Details
@@ -256,7 +256,7 @@ export default function BillingManagement() {
 
       {/* Create Invoice Modal */}
       {isCreateModalOpen && (
-        <CreateInvoiceModal 
+        <CreateInvoiceModal
           onClose={() => setIsCreateModalOpen(false)}
         />
       )}

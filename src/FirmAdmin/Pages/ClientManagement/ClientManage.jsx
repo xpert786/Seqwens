@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding } from 'react-icons/fa';
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
 import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action, CrossesIcon } from '../../Components/icons';
@@ -14,6 +15,7 @@ import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 const API_BASE_URL = getApiBaseUrl();
 
 export default function ClientManage() {
+  const navigate = useNavigate();
   const [selectedClients, setSelectedClients] = useState([]);
   const [showDropdown, setShowDropdown] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -326,9 +328,9 @@ export default function ClientManage() {
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Section Header */}
         <div className="p-6">
-          <h2 className="taxdashboardr-titler">
+          <h4 className="taxdashboardr-titler">
             All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
-          </h2>
+          </h4>
           <h5 className="taxdashboard-subtitle">Complete list of firm clients with status and assignment information</h5>
           {clientsError && (
             <div className="mt-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
@@ -600,6 +602,7 @@ export default function ClientManage() {
                               >
                                 <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
                                   <button
+                                    onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
                                     className="block w-full text-center py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     style={{
                                       backgroundColor: 'var(--Palette2-Gold-200, #FFF4E6)',

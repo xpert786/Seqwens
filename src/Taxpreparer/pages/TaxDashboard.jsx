@@ -366,21 +366,37 @@ export default function Dashboard() {
       <p className="section-subtitle m-0">Common tasks and shortcuts</p>
     </div>
     <div className="quick-action-container">
-      <div className="quick-action-card">
+      <div 
+        className="quick-action-card"
+        onClick={() => navigate('/taxdashboard/clients')}
+        style={{ cursor: 'pointer' }}
+      >
         <Client className="action-icon" />
         <span>View Client</span>
       </div>
-      <div className="quick-action-card">
+      <div 
+        className="quick-action-card"
+        onClick={() => navigate('/taxdashboard/documents')}
+        style={{ cursor: 'pointer' }}
+      >
         <FileIcon className="action-icon" />
         <span>Documents</span>
       </div>
-      <div className="quick-action-card">
+      <div 
+        className="quick-action-card"
+        onClick={() => navigate('/taxdashboard/calendar')}
+        style={{ cursor: 'pointer' }}
+      >
         <Schedule className="action-icon" />
         <span>Schedule</span>
       </div>
-      <div className="quick-action-card">
+      <div 
+        className="quick-action-card"
+        onClick={() => navigate('/taxdashboard/tasks')}
+        style={{ cursor: 'pointer' }}
+      >
         <Analytics className="action-icon" />
-        <span>Analytics</span>
+        <span>Tasks</span>
       </div>
     </div>
   </div>

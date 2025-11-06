@@ -919,44 +919,43 @@ export const threadsAPI = {
   // Get thread details with messages
   getThreadDetails: async (threadId) => {
     return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
-  }
-};
-
-// Invoices API functions
-export const invoicesAPI = {
-  // Get all invoices for the current taxpayer
-  getInvoices: async () => {
-    return await apiRequest('/taxpayer/invoices/', 'GET');
-  }
-};
-
-// Documents API functions
-export const documentsAPI = {
-  // Get all document requests for the current taxpayer
-  getDocumentRequests: async () => {
-    return await apiRequest('/taxpayer/document-requests/', 'GET');
   },
-  
-  // Get all documents for the current taxpayer
-  getDocuments: async () => {
-    return await apiRequest('/taxpayer/documents/', 'GET');
-  },
-  
-  // Upload a document
-  uploadDocument: async (formData) => {
+  // Send message in thread
+  sendMessage: async (threadId, messageData) => {
     const token = getAccessToken() || AUTH_TOKEN;
+    const formData = new FormData();
     
+    // Add text content
+    if (messageData.content) {
+      formData.append('content', messageData.content);
+    }
+    
+    // Add message type
+    if (messageData.message_type) {
+      formData.append('message_type', messageData.message_type);
+    }
+    
+    // Add internal flag (for staff)
+    if (messageData.is_internal !== undefined) {
+      formData.append('is_internal', messageData.is_internal);
+    }
+    
+    // Add file attachment if provided
+    if (messageData.attachment) {
+      formData.append('attachment', messageData.attachment);
+    }
+
     const config = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type for FormData - let browser set it with boundary
+        // Don't set Content-Type for FormData - let browser set it
       },
       body: formData
     };
-    
-    let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
-    
+
+    let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401) {
       try {
@@ -964,8 +963,8 @@ export const documentsAPI = {
         config.headers = {
           'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
         };
-        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
-        
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+
         if (response.status === 401) {
           clearUserData();
           window.location.href = getLoginUrl();
@@ -978,7 +977,7 @@ export const documentsAPI = {
         throw new Error('Session expired. Please login again.');
       }
     }
-    
+
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
@@ -989,7 +988,234 @@ export const documentsAPI = {
       }
       throw new Error(errorMessage);
     }
+
+    return await response.json();
+  },
+  // Get WebSocket configuration
+  getWebSocketConfig: async () => {
+    return await apiRequest('/taxpayer/threads/websocket-config/', 'GET');
+  },
+  // Close thread (staff only)
+  closeThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/close/`, 'POST');
+  }
+};
+
+// Invoices API functions
+export const invoicesAPI = {
+  // Get all invoices for the current taxpayer
+  getInvoices: async () => {
+    return await apiRequest('/taxpayer/invoices/', 'GET');
+  }
+};
+
+// Signature Requests API functions
+export const signatureRequestsAPI = {
+  // Get all signature requests for the current taxpayer
+  getSignatureRequests: async (options = {}) => {
+    const { status = null, activeOnly = false, expiredOnly = false } = options;
+    const params = new URLSearchParams();
     
+    if (status) {
+      params.append('status', status);
+    }
+    if (activeOnly) {
+      params.append('active_only', 'true');
+    }
+    if (expiredOnly) {
+      params.append('expired_only', 'true');
+    }
+    
+    const queryString = params.toString();
+    const endpoint = queryString 
+      ? `/taxpayer/signatures/requests/?${queryString}`
+      : '/taxpayer/signatures/requests/';
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get pending signature requests
+  getPendingSignatureRequests: async () => {
+    return await apiRequest('/taxpayer/signatures/requests/?status=pending', 'GET');
+  },
+
+  // Get sent signature requests
+  getSentSignatureRequests: async () => {
+    return await apiRequest('/taxpayer/signatures/requests/?status=sent', 'GET');
+  },
+
+  // Get active signature requests (pending, sent, viewed)
+  getActiveSignatureRequests: async () => {
+    return await apiRequest('/taxpayer/signatures/requests/?active_only=true', 'GET');
+  },
+
+  // Get expired signature requests
+  getExpiredSignatureRequests: async () => {
+    return await apiRequest('/taxpayer/signatures/requests/?expired_only=true', 'GET');
+  },
+
+  // Submit signature request
+  submitSignatureRequest: async (signatureData) => {
+    const { signature_request_id, signature_image, spouse_signature_image } = signatureData;
+    
+    const requestBody = {
+      signature_request_id: signature_request_id,
+      signature_image: signature_image
+    };
+
+    // Add spouse signature if provided
+    if (spouse_signature_image) {
+      requestBody.spouse_signature_image = spouse_signature_image;
+    }
+
+    return await apiRequest('/taxpayer/signatures/requests/submit/', 'POST', requestBody);
+  },
+};
+
+// Documents API functions
+export const documentsAPI = {
+  // Get all document requests for the current taxpayer
+  getDocumentRequests: async (options = {}) => {
+    const { 
+      status = null, 
+      search = null, 
+      priority = null,
+      page = null,
+      page_size = null,
+      sort_by = null
+    } = options;
+    
+    const params = new URLSearchParams();
+    
+    if (status) {
+      params.append('status', status);
+    }
+    if (search) {
+      params.append('search', search);
+    }
+    if (priority) {
+      params.append('priority', priority);
+    }
+    if (page) {
+      params.append('page', page.toString());
+    }
+    if (page_size) {
+      params.append('page_size', page_size.toString());
+    }
+    if (sort_by) {
+      params.append('sort_by', sort_by);
+    }
+    
+    const queryString = params.toString();
+    const endpoint = queryString 
+      ? `/taxpayer/document-requests/?${queryString}`
+      : '/taxpayer/document-requests/';
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get all documents for the current taxpayer
+  getDocuments: async () => {
+    return await apiRequest('/taxpayer/documents/', 'GET');
+  },
+
+  // Submit documents for a document request
+  submitDocumentRequest: async (requestId, formData) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const API_BASE_URL = getApiBaseUrl();
+    
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+
+    let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/document-requests/${requestId}/submit/`, config);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      try {
+        await refreshAccessToken();
+        config.headers = {
+          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+        };
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/document-requests/${requestId}/submit/`, config);
+
+        if (response.status === 401) {
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  },
+
+  // Upload a document
+  uploadDocument: async (formData) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+
+    let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      try {
+        await refreshAccessToken();
+        config.headers = {
+          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+        };
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
+
+        if (response.status === 401) {
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
     return await response.json();
   }
 };

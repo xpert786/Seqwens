@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Browse, CrossesIcon, Folder } from "../../Components/icons";
  
-export default function BulkImportModal({ isOpen, onClose }) {
+export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }) {
   const [currentStep, setCurrentStep] = useState(1);
   
   const csvColumns = [
@@ -78,7 +78,7 @@ export default function BulkImportModal({ isOpen, onClose }) {
             <h6 className="taxdashboardr-titler mb-2 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Upload Client Data</h6>
             <div 
               className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center"
-              style={{ borderColor: 'var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+              style={{ borderColor: 'var(--Palette2-Dark-blue-100, #E8F0FF)', backgroundColor: '#F3F7FF' }}
             >
               <div className="text-blue-500 text-2xl mb-2"><Folder /></div>
               <div className="text-xs mb-3" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)', fontSize: '10px' }}>
@@ -118,12 +118,14 @@ export default function BulkImportModal({ isOpen, onClose }) {
                 </div>
               </div>
             <button 
-                className="w-full px-4 py-2 text-black text-sm transition flex items-center gap-2"
-                style={{ 
-                  border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
-                  borderRadius: '8px'
-                }}
-              > <span className="text-lg"><Browse />  </span>
+              onClick={onOpenDownloadModal}
+              className="w-full px-4 py-2 text-black text-sm transition flex items-center gap-2"
+              style={{ 
+                border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
+                borderRadius: '8px'
+              }}
+            >
+              <span className="text-lg"><Browse /></span>
               <span>Download CSV Template</span>
             </button>
 
@@ -133,7 +135,7 @@ export default function BulkImportModal({ isOpen, onClose }) {
                 onClick={() => setCurrentStep(2)}
                 className="px-5 py-2 text-white text-sm transition flex items-center gap-2"
                 style={{ 
-                  backgroundColor: '#F97316',
+                  backgroundColor: '#F56D2D',
                   borderRadius: '8px',
                   fontWeight: '600'
                 }}
@@ -150,17 +152,20 @@ export default function BulkImportModal({ isOpen, onClose }) {
     if (currentStep === 2) {
       return (
         <div>
-          <h4 className="taxdashboardr-titler mb-2 text-base font-bold font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>
-            Map CSV Columns to System Fields
-          </h4>
-          <p className="text-sm mb-4 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>
-            Match your CSV columns to the appropriate client fields. Required fields must be mapped.
-          </p>
+          {/* Map CSV Columns to System Fields Text */}
+          <div className="mb-6">
+            <h6 className="taxdashboardr-titler mb-2 text-base text-[#3B4A66] font-[BasisGrotesquePro] text-gray-900">
+              Map CSV Columns to System Fields
+            </h6>
+            <p className="text-sm font-[BasisGrotesquePro] text-gray-600">
+              Match your CSV columns to the appropriate client fields. Required fields must be mapped.
+            </p>
+          </div>
 
           {/* Field Mapping Rows */}
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+          <div className="space-y-2 max-h-96 overflow-y-auto pr-2 mb-6">
             {csvColumns.map((csvCol) => (
-              <div key={csvCol.id} className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#F8F9FA', borderColor: '#E5E7EB' }}>
+              <div key={csvCol.id} className="flex items-center gap-3 p-3 rounded-lg !border border-[#E8F0FF]">
                 {/* CSV Column */}
                 <div className="flex-1">
                   <div className="text-sm font-medium mb-1" style={{ color: '#1F2937' }}>
@@ -199,29 +204,325 @@ export default function BulkImportModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Required Badge */}
-                {systemFields.find(f => f.id === fieldMappings[csvCol.id] && f.required === true) && (
-                  <span className="text-xs px-2 py-0.5 !rounded-lg bg-[#EF4444] text-white whitespace-nowrap font-medium">
-                    Required
-                  </span>
-                )}
+                <div className="min-w-[80px] flex justify-start">
+                  {systemFields.find(f => f.id === fieldMappings[csvCol.id] && f.required === true) && (
+                    <span className="text-xs px-2 py-0.5 !rounded-lg bg-[#EF4444] text-white whitespace-nowrap font-medium">
+                      Required
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Main Container Box */}
+          <div className="p-6 rounded-lg border bg-[#F3F7FF] !border border-[#E8F0FF]">
+            <h6 className="taxdashboardr-titler mb-2 text-base text-[#3B4A66] font-[BasisGrotesquePro] text-gray-900">
+              Map CSV Columns to System Fields
+            </h6>
+            <p className="text-sm mb-4 font-[BasisGrotesquePro] text-gray-600">
+              Match your CSV columns to the appropriate client fields. Required fields must be mapped.
+            </p>
+
+            {/* Mapped Fields Summary */}
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              {/* Mapped Required Fields */}
+              <div>
+                <h5 className="text-sm font-medium mb-3 !text-[#32B582]">Mapped Required Fields</h5>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {csvColumns.map((csvCol) => {
+                    const mappedField = systemFields.find(f => f.id === fieldMappings[csvCol.id]);
+                    if (mappedField && mappedField.required) {
+                      return (
+                        <div key={csvCol.id} className="flex items-center gap-2">
+                          <div className="flex items-center justify-center">
+                            <svg width="15" height="15" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <g clipPath="url(#clip0_3643_7681)">
+                                <path d="M7.33317 3.69264V3.9993C7.33276 4.71811 7.1 5.41753 6.66962 5.99324C6.23923 6.56896 5.63427 6.99013 4.94496 7.19394C4.25565 7.39774 3.51892 7.37327 2.84466 7.12416C2.1704 6.87506 1.59472 6.41467 1.20349 5.81166C0.812259 5.20865 0.626434 4.49532 0.67373 3.77807C0.721025 3.06082 0.998906 2.37808 1.46593 1.83166C1.93295 1.28524 2.5641 0.904431 3.26523 0.746019C3.96637 0.587607 4.69993 0.660083 5.35651 0.952637M2.99984 3.66597L3.99984 4.66597L7.33317 1.33264" stroke="#22C55E" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </g>
+                              <defs>
+                                <clipPath id="clip0_3643_7681">
+                                  <rect width="8" height="8" fill="white" />
+                                </clipPath>
+                              </defs>
+                            </svg>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">{mappedField.name.replace('*', '')}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+
+              {/* Optional Fields Mapped */}
+              <div>
+                <h5 className="text-sm font-medium mb-3 !text-[#32B582]">Optional Fields Mapped</h5>
+                <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+                  {csvColumns.map((csvCol) => {
+                    const mappedField = systemFields.find(f => f.id === fieldMappings[csvCol.id]);
+                    if (mappedField && !mappedField.required) {
+                      return (
+                        <div key={csvCol.id} className="flex items-center gap-2">
+                          <div className="flex items-center justify-center">
+                            <svg width="15" height="15" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <g clipPath="url(#clip0_3643_7681)">
+                                <path d="M7.33317 3.69264V3.9993C7.33276 4.71811 7.1 5.41753 6.66962 5.99324C6.23923 6.56896 5.63427 6.99013 4.94496 7.19394C4.25565 7.39774 3.51892 7.37327 2.84466 7.12416C2.1704 6.87506 1.59472 6.41467 1.20349 5.81166C0.812259 5.20865 0.626434 4.49532 0.67373 3.77807C0.721025 3.06082 0.998906 2.37808 1.46593 1.83166C1.93295 1.28524 2.5641 0.904431 3.26523 0.746019C3.96637 0.587607 4.69993 0.660083 5.35651 0.952637M2.99984 3.66597L3.99984 4.66597L7.33317 1.33264" stroke="#22C55E" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </g>
+                              <defs>
+                                <clipPath id="clip0_3643_7681">
+                                  <rect width="8" height="8" fill="white" />
+                                </clipPath>
+                              </defs>
+                            </svg>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900">{mappedField.name}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Continue Button */}
           <div className="flex justify-end mt-6">
             <button 
               onClick={() => setCurrentStep(3)}
-              className="px-5 py-2 text-white text-sm transition flex items-center gap-2"
-              style={{ 
-                backgroundColor: '#F97316',
-                borderRadius: '8px',
-                fontWeight: '600'
-              }}
+              className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] !border border-[#F56D2D]"
             >
               <span>Continue to Validation</span>
               <span>→</span>
             </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStep === 3) {
+      return (
+        <div>
+          {/* Data Validation Results */}
+          <div className="mb-6">
+            <h5 className="text-base font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Data Validation Results</h5>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+              Review the validation results and fix any errors before importing
+            </p>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">4</div>
+              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Valid Records</div>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">0</div>
+              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">0</div>
+              <div className="text-sm text-yellow-700 font-[BasisGrotesquePro]">Duplicates</div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">1</div>
+              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Warnings</div>
+            </div>
+          </div>
+
+          {/* Validation Table */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Row</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Company</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Phone</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Issues</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">1</td>
+                    <td className="px-4 py-3">
+                      <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clipPath="url(#clip0_3643_8784)">
+                          <path d="M9.16634 4.61775V5.00108C9.16583 5.89959 8.87488 6.77386 8.3369 7.49351C7.79891 8.21315 7.04271 8.73961 6.18107 8.99437C5.31944 9.24913 4.39853 9.21854 3.5557 8.90716C2.71287 8.59578 1.99328 8.02029 1.50424 7.26653C1.0152 6.51276 0.782921 5.62111 0.84204 4.72455C0.901159 3.82798 1.24851 2.97455 1.83229 2.29153C2.41607 1.60851 3.205 1.13249 4.08142 0.934477C4.95784 0.736462 5.87479 0.827057 6.69551 1.19275M3.74968 4.58442L4.99968 5.83442L9.16634 1.66775" stroke="#22C55E" strokeLinecap="round" strokeLinejoin="round" />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_3643_8784">
+                            <rect width="10" height="10" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">John Doe</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">john.doe@email.com</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">ABC Corp</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">1234567890</td>
+                    <td className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">-</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">2</td>
+                    <td className="px-4 py-3">
+                      <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.5" y="0.5" width="9" height="9" rx="4.5" stroke="#EF4444" />
+                        <path d="M6.69441 3.74858C6.72427 3.71976 6.74809 3.68529 6.76449 3.64717C6.78088 3.60905 6.78952 3.56805 6.7899 3.52656C6.79028 3.48507 6.7824 3.44391 6.7667 3.4055C6.75101 3.36709 6.72782 3.33219 6.69849 3.30283C6.66916 3.27348 6.63428 3.25026 6.59589 3.23452C6.55749 3.21879 6.51634 3.21087 6.47485 3.21121C6.43336 3.21155 6.39235 3.22015 6.35421 3.23651C6.31608 3.25287 6.28158 3.27666 6.25274 3.30649L5.00024 4.55858L3.74816 3.30649C3.71955 3.27579 3.68505 3.25116 3.64672 3.23408C3.60838 3.217 3.567 3.20782 3.52504 3.20708C3.48308 3.20634 3.44141 3.21406 3.40249 3.22978C3.36358 3.24549 3.32823 3.26889 3.29856 3.29856C3.26889 3.32823 3.24549 3.36358 3.22978 3.40249C3.21406 3.44141 3.20634 3.48308 3.20708 3.52504C3.20782 3.567 3.217 3.60838 3.23408 3.64672C3.25116 3.68505 3.27579 3.71955 3.30649 3.74816L4.55774 5.00066L3.30566 6.25274C3.25046 6.31198 3.22041 6.39034 3.22184 6.47129C3.22327 6.55225 3.25606 6.6295 3.31332 6.68675C3.37057 6.74401 3.44782 6.7768 3.52878 6.77823C3.60973 6.77966 3.68809 6.74961 3.74733 6.69441L5.00024 5.44233L6.25233 6.69483C6.31157 6.75003 6.38992 6.78008 6.47088 6.77865C6.55184 6.77722 6.62908 6.74442 6.68634 6.68717C6.74359 6.62991 6.77639 6.55267 6.77782 6.47171C6.77924 6.39075 6.74919 6.3124 6.69399 6.25316L5.44274 5.00066L6.69441 3.74858Z" fill="#EF4444" />
+                      </svg>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">Sarah Smith</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">sarah@email</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">XYZ Inc</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">-</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <g clipPath="url(#clip0_3643_8813)">
+                            <path d="M6.00021 4.49914V6.49914M6.00021 8.49914H6.00521M10.8652 8.99914L6.86521 1.99914C6.77799 1.84524 6.65151 1.71723 6.49867 1.62817C6.34583 1.53911 6.1721 1.49219 5.99521 1.49219C5.81831 1.49219 5.64459 1.53911 5.49175 1.62817C5.33891 1.71723 5.21243 1.84524 5.12521 1.99914L1.12521 8.99914C1.03705 9.15181 0.990823 9.32509 0.991213 9.50139C0.991604 9.67769 1.0386 9.85076 1.12743 10.003C1.21627 10.1553 1.34378 10.2814 1.49706 10.3685C1.65033 10.4557 1.82391 10.5007 2.00021 10.4991H10.0002C10.1757 10.499 10.348 10.4526 10.4998 10.3648C10.6517 10.2769 10.7778 10.1507 10.8655 9.99869C10.9531 9.8467 10.9992 9.67433 10.9992 9.49888C10.9991 9.32343 10.9529 9.15108 10.8652 8.99914Z" stroke="#991B1B" strokeLinecap="round" strokeLinejoin="round" />
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_3643_8813">
+                              <rect width="12" height="12" fill="white" />
+                            </clipPath>
+                          </defs>
+                        </svg>
+                        <span className="text-sm font-[BasisGrotesquePro]" style={{ color: '#991B1B' }}>Invalid email format</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">3</td>
+                    <td className="px-4 py-3">
+                      <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clipPath="url(#clip0_3643_8885)">
+                          <path d="M4.99954 1.25L9.25788 8.625H0.741211L4.99954 1.25Z" stroke="#FBBF24" strokeLinecap="square" />
+                          <path d="M5 4.375V5.83333M5 7.29167H5.00167V7.29333H5V7.29167Z" stroke="#FBBF24" strokeLinecap="square" />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_3643_8885">
+                            <rect width="10" height="10" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">Raj Kumar</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">raj@firm.com</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">Tech Solutions</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">900</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <g clipPath="url(#clip0_3643_8813)">
+                            <path d="M6.00021 4.49914V6.49914M6.00021 8.49914H6.00521M10.8652 8.99914L6.86521 1.99914C6.77799 1.84524 6.65151 1.71723 6.49867 1.62817C6.34583 1.53911 6.1721 1.49219 5.99521 1.49219C5.81831 1.49219 5.64459 1.53911 5.49175 1.62817C5.33891 1.71723 5.21243 1.84524 5.12521 1.99914L1.12521 8.99914C1.03705 9.15181 0.990823 9.32509 0.991213 9.50139C0.991604 9.67769 1.0386 9.85076 1.12743 10.003C1.21627 10.1553 1.34378 10.2814 1.49706 10.3685C1.65033 10.4557 1.82391 10.5007 2.00021 10.4991H10.0002C10.1757 10.499 10.348 10.4526 10.4998 10.3648C10.6517 10.2769 10.7778 10.1507 10.8655 9.99869C10.9531 9.8467 10.9992 9.67433 10.9992 9.49888C10.9991 9.32343 10.9529 9.15108 10.8652 8.99914Z" stroke="#991B1B" strokeLinecap="round" strokeLinejoin="round" />
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_3643_8813">
+                              <rect width="12" height="12" fill="white" />
+                            </clipPath>
+                          </defs>
+                        </svg>
+                        <span className="text-sm font-[BasisGrotesquePro]" style={{ color: '#991B1B' }}>Phone number format may fail</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">4</td>
+                    <td className="px-4 py-3">
+                      <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clipPath="url(#clip0_3643_8885)">
+                          <path d="M4.99954 1.25L9.25788 8.625H0.741211L4.99954 1.25Z" stroke="#FBBF24" strokeLinecap="square" />
+                          <path d="M5 4.375V5.83333M5 7.29167H5.00167V7.29333H5V7.29167Z" stroke="#FBBF24" strokeLinecap="square" />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_3643_8885">
+                            <rect width="10" height="10" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">John Doe</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">john.doe@email.com</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">ABC Corp</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">1234567890</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <g clipPath="url(#clip0_3643_8813)">
+                            <path d="M6.00021 4.49914V6.49914M6.00021 8.49914H6.00521M10.8652 8.99914L6.86521 1.99914C6.77799 1.84524 6.65151 1.71723 6.49867 1.62817C6.34583 1.53911 6.1721 1.49219 5.99521 1.49219C5.81831 1.49219 5.64459 1.53911 5.49175 1.62817C5.33891 1.71723 5.21243 1.84524 5.12521 1.99914L1.12521 8.99914C1.03705 9.15181 0.990823 9.32509 0.991213 9.50139C0.991604 9.67769 1.0386 9.85076 1.12743 10.003C1.21627 10.1553 1.34378 10.2814 1.49706 10.3685C1.65033 10.4557 1.82391 10.5007 2.00021 10.4991H10.0002C10.1757 10.499 10.348 10.4526 10.4998 10.3648C10.6517 10.2769 10.7778 10.1507 10.8655 9.99869C10.9531 9.8467 10.9992 9.67433 10.9992 9.49888C10.9991 9.32343 10.9529 9.15108 10.8652 8.99914Z" stroke="#991B1B" strokeLinecap="round" strokeLinejoin="round" />
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_3643_8813">
+                              <rect width="12" height="12" fill="white" />
+                            </clipPath>
+                          </defs>
+                        </svg>
+                        <span className="text-sm font-[BasisGrotesquePro]" style={{ color: '#991B1B' }}>Duplicate with Row 1</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Import Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setCurrentStep(4)}
+              className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] rounded-lg font-semibold font-[BasisGrotesquePro]"
+            >
+              <span>Import 4 valid records</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStep === 4) {
+      return (
+        <div>
+          {/* Import Progress */}
+          <div className="mb-6">
+            <h5 className="text-base font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Import Progress</h5>
+            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">Import Completed</p>
+          </div>
+
+          {/* Import Completed Content */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32.0827 16.1602V17.5018C32.0809 20.6466 31.0626 23.7066 29.1796 26.2253C27.2967 28.7441 24.65 30.5867 21.6342 31.4784C18.6185 32.37 15.3954 32.2629 12.4455 31.1731C9.49555 30.0833 6.97697 28.0691 5.26533 25.4309C3.5537 22.7927 2.74071 19.6719 2.94763 16.534C3.15454 13.396 4.37028 10.409 6.41351 8.0184C8.45674 5.62782 11.218 3.96177 14.2855 3.26872C17.3529 2.57566 20.5622 2.89274 23.4348 4.17267M13.1244 16.0435L17.4994 20.4185L32.0827 5.83517" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h4 className="text-2xl font-bold !text-[#32B582] mb-2 font-[BasisGrotesquePro]">Import Completed!</h4>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">The import has been completed successfully</p>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">4</div>
+              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Valid Records</div>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">0</div>
+              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">0</div>
+              <div className="text-sm text-yellow-700 font-[BasisGrotesquePro]">Duplicates</div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">1</div>
+              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Warnings</div>
+            </div>
           </div>
         </div>
       );
@@ -279,18 +580,15 @@ export default function BulkImportModal({ isOpen, onClose }) {
           ].map((s, i) => (
             <div key={s.step} className="flex items-center">
               <span
-                className={`text-sm font-medium ${
-                  s.step === currentStep ? "text-blue-600 font-bold" : ""
-                }`}
-                style={s.step !== currentStep ? { color: 'var(--Palette2-Dark-blue-900, #3B4A66)' } : {}}
+                className={`text-sm font-medium ${s.step <= currentStep ? "font-bold" : ""}`}
+                style={s.step <= currentStep ? { color: '#F56D2D' } : { color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}
               >
                 {s.step}. {s.label}
               </span>
               {i < 3 && (
-                <span 
-                  className={`mx-2 ${
-                    s.step <= currentStep ? "text-blue-600" : "text-gray-400"
-                  }`}
+                <span
+                  style={s.step <= currentStep ? { color: '#F56D2D' } : { color: '#9CA3AF' }}
+                  className="mx-2"
                 >
                   &raquo;
                 </span>
