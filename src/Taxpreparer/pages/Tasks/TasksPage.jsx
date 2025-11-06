@@ -681,10 +681,17 @@ export default function TasksPage() {
         files: Array.from(value)
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
+      setFormData(prev => {
+        const updated = {
+          ...prev,
+          [field]: value
+        };
+        // Debug log for spouse_signature_required changes
+        if (field === 'spouse_signature_required') {
+          console.log('Updated spouse_signature_required in formData:', value, 'type:', typeof value);
+        }
+        return updated;
+      });
     }
   };
 
@@ -738,8 +745,36 @@ export default function TasksPage() {
       }
 
       // Add spouse signature requirement for signature requests
+      // Always send this field for signature requests, even if false
       if (formData.task_type === 'signature_request') {
-        formDataToSend.append('spouse_signature_required', formData.spouse_signature_required ? 'true' : 'false');
+        // Get the raw value from formData
+        const rawValue = formData.spouse_signature_required;
+        console.log('Raw spouse_signature_required value before processing:', rawValue, 'type:', typeof rawValue);
+        
+        // Convert to boolean - check multiple possible truthy values
+        const spouseSignValue = !!(rawValue === true || 
+                                   rawValue === 'true' || 
+                                   rawValue === 'True' ||
+                                   rawValue === 1 ||
+                                   rawValue === '1');
+        
+        console.log('Processed spouse_signature_required value:', spouseSignValue);
+        
+        // The API expects 'spouse_sign' field name (based on API response)
+        // Django FormData boolean fields often expect "1"/"0" or "True"/"False"
+        // Try "1"/"0" first as it's more commonly accepted
+        const spouseSignString = spouseSignValue ? '1' : '0';
+        formDataToSend.append('spouse_sign', spouseSignString);
+        // Also send the alternative field name for compatibility
+        formDataToSend.append('spouse_signature_required', spouseSignString);
+        
+        console.log('Sending spouse_sign as:', spouseSignString, '(1 = true, 0 = false)');
+        console.log('FormData entries for spouse fields:');
+        for (let pair of formDataToSend.entries()) {
+          if (pair[0].includes('spouse')) {
+            console.log('  ', pair[0] + ':', pair[1]);
+          }
+        }
       }
 
       // Append files (can be multiple files)
@@ -759,6 +794,7 @@ export default function TasksPage() {
       console.log('priority:', formData.priority);
       console.log('estimated_hours:', formData.estimated_hours);
       console.log('description:', formData.description);
+      console.log('spouse_signature_required:', formData.spouse_signature_required);
       console.log('files count:', formData.files.length);
 
       // Log FormData entries
@@ -1584,8 +1620,11 @@ export default function TasksPage() {
                       <div style={{ position: 'relative', display: 'inline-block' }}>
                         <input
                           type="checkbox"
-                          checked={formData.spouse_signature_required}
-                          onChange={(e) => handleInputChange('spouse_signature_required', e.target.checked)}
+                          checked={formData.spouse_signature_required || false}
+                          onChange={(e) => {
+                            console.log('Checkbox changed:', e.target.checked);
+                            handleInputChange('spouse_signature_required', e.target.checked);
+                          }}
                           style={{
                             width: '44px',
                             height: '24px',

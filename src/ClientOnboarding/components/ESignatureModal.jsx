@@ -37,31 +37,70 @@ const ESignatureModal = ({ show, onClose, pages, requestId, signatureRequest, on
   // Check if spouse signature is required from signature request
   useEffect(() => {
     if (signatureRequest) {
-      // Check if spouse signature is required - this could come from task_info or the request itself
+      // Check if spouse signature is required - check multiple possible field names
       const requiresSpouse = signatureRequest.task_info?.spouse_signature_required || 
-                           signatureRequest.spouse_sign_required || 
+                           signatureRequest.task_info?.spouse_sign ||
+                           signatureRequest.spouse_signature_required || 
+                           signatureRequest.spouse_sign_required ||
+                           signatureRequest.spouse_sign ||
                            false;
-      setIsSpouseRequired(requiresSpouse);
+      
+      console.log('Checking spouse requirement:', {
+        signatureRequest,
+        task_info: signatureRequest.task_info,
+        requiresSpouse,
+        spouse_sign: signatureRequest.spouse_sign,
+        spouse_signature_required: signatureRequest.spouse_signature_required,
+        task_info_spouse_sign: signatureRequest.task_info?.spouse_sign,
+        task_info_spouse_signature_required: signatureRequest.task_info?.spouse_signature_required
+      });
+      
+      setIsSpouseRequired(!!requiresSpouse);
+    } else {
+      // If no signature request, default to false
+      setIsSpouseRequired(false);
     }
   }, [signatureRequest]);
 
-  // Initialize canvas when component mounts or tab changes to draw
+  // Initialize canvas when component mounts or tab changes to draw or signer changes
   useEffect(() => {
-    const canvas = activeSigner === "primary" ? canvasRef.current : spouseCanvasRef.current;
-    if (show && canvas && activeTab === "draw") {
-      const ctx = canvas.getContext("2d");
-      
-      // Set canvas background to grey
-      ctx.fillStyle = "#F3F4F6";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Set drawing properties
-      ctx.strokeStyle = "#000000";
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-    }
-  }, [show, activeTab, activeSigner]);
+    // Small delay to ensure canvas is rendered
+    const timer = setTimeout(() => {
+      if (show && activeTab === "draw") {
+        // Initialize primary canvas
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext("2d");
+          if (!signatureImage) {
+            // Set canvas background to grey
+            ctx.fillStyle = "#F3F4F6";
+            ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          }
+          // Set drawing properties
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+        }
+        
+        // Initialize spouse canvas
+        if (spouseCanvasRef.current) {
+          const ctx = spouseCanvasRef.current.getContext("2d");
+          if (!spouseSignatureImage) {
+            // Set canvas background to grey
+            ctx.fillStyle = "#F3F4F6";
+            ctx.fillRect(0, 0, spouseCanvasRef.current.width, spouseCanvasRef.current.height);
+          }
+          // Set drawing properties
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [show, activeTab, activeSigner, signatureImage, spouseSignatureImage]);
 
   if (!show) return null;
 
@@ -379,6 +418,25 @@ const ESignatureModal = ({ show, onClose, pages, requestId, signatureRequest, on
         const errors = error.response.data.errors;
         if (errors.spouse_signature_image) {
           toast.error(errors.spouse_signature_image[0] || 'Spouse signature is required');
+          // If spouse signature is required but not detected, set it now
+          if (!isSpouseRequired) {
+            setIsSpouseRequired(true);
+          }
+          // Switch to spouse signer if spouse signature is required
+          setActiveSigner("spouse");
+          setStep(1); // Go back to step 1 to complete spouse signature
+          // Initialize spouse canvas if on draw tab
+          if (activeTab === "draw" && spouseCanvasRef.current && !spouseSignatureImage) {
+            setTimeout(() => {
+              const ctx = spouseCanvasRef.current.getContext("2d");
+              ctx.fillStyle = "#F3F4F6";
+              ctx.fillRect(0, 0, spouseCanvasRef.current.width, spouseCanvasRef.current.height);
+              ctx.strokeStyle = "#000000";
+              ctx.lineWidth = 2;
+              ctx.lineCap = "round";
+              ctx.lineJoin = "round";
+            }, 100);
+          }
         } else {
           toast.error(errorMessage);
         }
@@ -414,33 +472,81 @@ const ESignatureModal = ({ show, onClose, pages, requestId, signatureRequest, on
 
         {step === 1 && (
           <div className="signer-section">
-
-            <div className={`signer-box ${step === 2 ? "complete" : "primary"}`}>
+            <div 
+              className={`signer-box ${activeSigner === "primary" ? "primary active" : ""} ${primarySignatureComplete ? "complete" : ""}`}
+              onClick={() => {
+                setActiveSigner("primary");
+                // Initialize canvas for primary if on draw tab
+                if (activeTab === "draw") {
+                  setTimeout(() => {
+                    if (canvasRef.current && !signatureImage) {
+                      const ctx = canvasRef.current.getContext("2d");
+                      ctx.fillStyle = "#F3F4F6";
+                      ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                      ctx.strokeStyle = "#000000";
+                      ctx.lineWidth = 2;
+                      ctx.lineCap = "round";
+                      ctx.lineJoin = "round";
+                    }
+                  }, 50);
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="taxpayer-container">
-                <span className="icon-background">
+                <span className={activeSigner === "primary" ? "icon-background" : "icon-background-gray"}>
                   <UsersIcon />
                 </span>
                 <div>
                   <div className="fw-bold">Primary Taxpayer</div>
-                  <small>Signer: Michael Brown</small>
+                  <small>Signer: {signatureRequest?.client_name || "Michael Brown"}</small>
                 </div>
               </div>
 
-              <span className="badge">{step === 2 ? "Complete" : "Pending"}</span>
+              <span className="badge">
+                {primarySignatureComplete ? "Complete" : activeSigner === "primary" ? "Active" : "Pending"}
+              </span>
             </div>
-            <div className="signer-box secondary">
-              <div className="taxpayer-container">
-                <span className="icon-background-gray">
-                  <UsersIcon />
+            {/* Always show spouse box if spouse is required, or if we've detected it's needed */}
+            {(isSpouseRequired || signatureRequest?.task_info?.spouse_sign === true || signatureRequest?.spouse_sign === true) && (
+              <div 
+                className={`signer-box ${activeSigner === "spouse" ? "primary active" : "secondary"} ${spouseSignatureComplete ? "complete" : ""}`}
+                onClick={() => {
+                  setActiveSigner("spouse");
+                  // Ensure we're on the draw tab to show the canvas
+                  if (activeTab !== "draw") {
+                    setActiveTab("draw");
+                  }
+                  // Initialize canvas for spouse if on draw tab
+                  setTimeout(() => {
+                    if (spouseCanvasRef.current && !spouseSignatureImage) {
+                      const ctx = spouseCanvasRef.current.getContext("2d");
+                      ctx.fillStyle = "#F3F4F6";
+                      ctx.fillRect(0, 0, spouseCanvasRef.current.width, spouseCanvasRef.current.height);
+                      ctx.strokeStyle = "#000000";
+                      ctx.lineWidth = 2;
+                      ctx.lineCap = "round";
+                      ctx.lineJoin = "round";
+                    }
+                  }, 100);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="taxpayer-container">
+                  <span className={activeSigner === "spouse" ? "icon-background" : "icon-background-gray"}>
+                    <UsersIcon />
+                  </span>
+                  <div>
+                    <div className="fw-bold">Spouse</div>
+                    <small>Signer: {signatureRequest?.spouse_name || signatureRequest?.task_info?.spouse_name || "Jennifer Brown"}</small>
+                  </div>
+                </div>
+
+                <span className="badge">
+                  {spouseSignatureComplete ? "Complete" : activeSigner === "spouse" ? "Active" : "Pending"}
                 </span>
-                <div>
-                  <div className="fw-bold">Spouse</div>
-                  <small>Signer: Jennifer Brown</small>
-                </div>
               </div>
-
-              <span className="badge">Pending</span>
-            </div>
+            )}
           </div>
         )}
         <div className="top-headings">
@@ -524,15 +630,57 @@ const ESignatureModal = ({ show, onClose, pages, requestId, signatureRequest, on
                   {/* Draw */}
                   {activeTab === "draw" && (
                     <>
+                      {/* Primary Taxpayer Canvas */}
                       <div style={{ 
                         position: 'relative', 
                         border: '1px solid #E5E7EB', 
                         borderRadius: '8px',
                         backgroundColor: '#F3F4F6',
-                        padding: '8px'
+                        padding: '8px',
+                        display: activeSigner === "primary" ? 'block' : 'none'
                       }}>
                         <canvas
-                          ref={activeSigner === "primary" ? canvasRef : spouseCanvasRef}
+                          ref={canvasRef}
+                          width={300}
+                          height={120}
+                          className="signature-canvas"
+                          style={{
+                            display: 'block',
+                            cursor: 'crosshair',
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: '4px',
+                            width: '100%',
+                            height: '120px'
+                          }}
+                          onMouseDown={startDrawing}
+                          onMouseMove={draw}
+                          onMouseUp={stopDrawing}
+                          onMouseLeave={stopDrawing}
+                          onTouchStart={handleTouchStart}
+                          onTouchMove={handleTouchMove}
+                          onTouchEnd={handleTouchEnd}
+                        />
+                        <small style={{ 
+                          display: 'block', 
+                          textAlign: 'center', 
+                          color: '#6B7280', 
+                          marginTop: '4px',
+                          fontSize: '11px'
+                        }}>
+                          Draw your signature in the grey area above
+                        </small>
+                      </div>
+                      {/* Spouse Canvas */}
+                      <div style={{ 
+                        position: 'relative', 
+                        border: '1px solid #E5E7EB', 
+                        borderRadius: '8px',
+                        backgroundColor: '#F3F4F6',
+                        padding: '8px',
+                        display: activeSigner === "spouse" ? 'block' : 'none'
+                      }}>
+                        <canvas
+                          ref={spouseCanvasRef}
                           width={300}
                           height={120}
                           className="signature-canvas"
