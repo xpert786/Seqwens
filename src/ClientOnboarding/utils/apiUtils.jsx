@@ -912,57 +912,155 @@ export const threadsAPI = {
   getThreads: async () => {
     return await apiRequest('/taxpayer/threads/', 'GET');
   },
-  // Create a new chat thread
+  // Create a new chat thread (Taxpayer)
+  // Supports both text-only (JSON) and with file attachment (FormData)
   createThread: async (threadData) => {
-    return await apiRequest('/taxpayer/threads/create/', 'POST', threadData);
+    const token = getAccessToken() || AUTH_TOKEN;
+    const hasFile = threadData.document || threadData.file;
+
+    if (hasFile) {
+      // Use FormData for file uploads
+      const formData = new FormData();
+      formData.append('subject', threadData.subject || '');
+      formData.append('message', threadData.message || '');
+
+      if (threadData.document) {
+        formData.append('document', threadData.document);
+      } else if (threadData.file) {
+        formData.append('document', threadData.file);
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - let browser set it
+        },
+        body: formData
+      };
+
+      let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/create/`, config);
+
+      // Handle 401 Unauthorized - try to refresh token
+      if (response.status === 401) {
+        try {
+          await refreshAccessToken();
+          config.headers = {
+            'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+          };
+          response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/create/`, config);
+
+          if (response.status === 401) {
+            clearUserData();
+            window.location.href = getLoginUrl();
+            throw new Error('Session expired. Please login again.');
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      }
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for text-only messages
+      return await apiRequest('/taxpayer/threads/create/', 'POST', {
+        subject: threadData.subject,
+        message: threadData.message
+      });
+    }
   },
   // Get thread details with messages
   getThreadDetails: async (threadId) => {
     return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
   },
   // Send message in thread
+  // Supports both text-only (JSON) and with file attachment (FormData)
   sendMessage: async (threadId, messageData) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    const formData = new FormData();
-    
-    // Add text content
-    if (messageData.content) {
-      formData.append('content', messageData.content);
-    }
-    
-    // Add message type
-    if (messageData.message_type) {
-      formData.append('message_type', messageData.message_type);
-    }
-    
-    // Add internal flag (for staff)
-    if (messageData.is_internal !== undefined) {
-      formData.append('is_internal', messageData.is_internal);
-    }
-    
-    // Add file attachment if provided
-    if (messageData.attachment) {
-      formData.append('attachment', messageData.attachment);
+    const hasAttachment = messageData.attachment || messageData.file;
+
+    let config;
+    let response;
+
+    if (hasAttachment) {
+      // Use FormData for file attachments
+      const formData = new FormData();
+
+      if (messageData.content) {
+        formData.append('content', messageData.content);
+      }
+
+      if (messageData.message_type) {
+        formData.append('message_type', messageData.message_type);
+      }
+
+      if (messageData.is_internal !== undefined) {
+        formData.append('is_internal', messageData.is_internal);
+      }
+
+      if (messageData.attachment) {
+        formData.append('attachment', messageData.attachment);
+      } else if (messageData.file) {
+        formData.append('attachment', messageData.file);
+      }
+
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - let browser set it
+        },
+        body: formData
+      };
+    } else {
+      // Use JSON for text-only messages
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: messageData.content || '',
+          message_type: messageData.message_type || 'text',
+          is_internal: messageData.is_internal || false
+        })
+      };
     }
 
-    const config = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type for FormData - let browser set it
-      },
-      body: formData
-    };
-
-    let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+    response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
 
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401) {
       try {
         await refreshAccessToken();
-        config.headers = {
-          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
-        };
+        const newToken = getAccessToken() || AUTH_TOKEN;
+
+        if (hasAttachment) {
+          config.headers = {
+            'Authorization': `Bearer ${newToken}`,
+          };
+        } else {
+          config.headers = {
+            'Authorization': `Bearer ${newToken}`,
+            'Content-Type': 'application/json',
+          };
+        }
+
         response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
 
         if (response.status === 401) {
@@ -996,8 +1094,215 @@ export const threadsAPI = {
     return await apiRequest('/taxpayer/threads/websocket-config/', 'GET');
   },
   // Close thread (staff only)
+  // Note: This endpoint is typically used by tax preparers/staff
   closeThread: async (threadId) => {
     return await apiRequest(`/taxpayer/threads/${threadId}/close/`, 'POST');
+  },
+  // Mark messages as read
+  markAsRead: async (threadId, messageIds) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/mark_read/`, 'POST', { message_ids: messageIds });
+  },
+  // Archive thread
+  archiveThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/archive/`, 'POST');
+  },
+  // Unarchive thread
+  unarchiveThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/unarchive/`, 'POST');
+  },
+  // Delete message
+  deleteMessage: async (threadId, messageId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/messages/${messageId}/delete/`, 'DELETE');
+  },
+  // Edit message
+  editMessage: async (threadId, messageId, content) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/messages/${messageId}/edit/`, 'PATCH', { content });
+  }
+};
+
+// Tax Preparer Threads API (for tax preparer/staff users)
+export const taxPreparerThreadsAPI = {
+  // Get all chat threads for the current tax preparer
+  // Uses same endpoint as taxpayer but with query parameters for filtering
+  getThreads: async (options = {}) => {
+    const { status = null, search = null, client_id = null, unread_only = false } = options;
+    const params = new URLSearchParams();
+
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    if (client_id) params.append('client_id', client_id);
+    if (unread_only) params.append('unread_only', 'true');
+
+    const queryString = params.toString();
+    // Use the same endpoint as taxpayer with query params (as per documentation)
+    const endpoint = queryString
+      ? `/taxpayer/threads/?${queryString}`
+      : '/taxpayer/threads/';
+    return await apiRequest(endpoint, 'GET');
+  },
+  // Create a new chat thread (Tax Preparer to client)
+  // Uses JSON format with client_id, subject, assigned_staff_ids, and message
+  createThread: async (threadData) => {
+    // Use the same endpoint as taxpayer (as per documentation)
+    return await apiRequest('/taxpayer/threads/create/', 'POST', {
+      client_id: threadData.client_id,
+      subject: threadData.subject,
+      assigned_staff_ids: threadData.assigned_staff_ids || [],
+      message: threadData.message || ''
+    });
+  },
+  // Get thread details with messages
+  getThreadDetails: async (threadId) => {
+    // Use the same endpoint as taxpayer (as per documentation)
+    return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
+  },
+  // Send message in thread
+  // Supports both text-only (JSON) and with file attachment (FormData)
+  sendMessage: async (threadId, messageData) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const hasAttachment = messageData.attachment || messageData.file;
+
+    let config;
+    let response;
+
+    if (hasAttachment) {
+      // Use FormData for file attachments
+      const formData = new FormData();
+
+      if (messageData.content) {
+        formData.append('content', messageData.content);
+      }
+
+      if (messageData.message_type) {
+        formData.append('message_type', messageData.message_type);
+      }
+
+      if (messageData.is_internal !== undefined) {
+        formData.append('is_internal', messageData.is_internal);
+      }
+
+      if (messageData.attachment) {
+        formData.append('attachment', messageData.attachment);
+      } else if (messageData.file) {
+        formData.append('attachment', messageData.file);
+      }
+
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - let browser set it
+        },
+        body: formData
+      };
+    } else {
+      // Use JSON for text-only messages
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: messageData.content || '',
+          message_type: messageData.message_type || 'text',
+          is_internal: messageData.is_internal || false
+        })
+      };
+    }
+
+    // Use the same endpoint as taxpayer (as per documentation)
+    response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      try {
+        await refreshAccessToken();
+        const newToken = getAccessToken() || AUTH_TOKEN;
+
+        if (hasAttachment) {
+          config.headers = {
+            'Authorization': `Bearer ${newToken}`,
+          };
+        } else {
+          config.headers = {
+            'Authorization': `Bearer ${newToken}`,
+            'Content-Type': 'application/json',
+          };
+        }
+
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+
+        if (response.status === 401) {
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  },
+  // Get WebSocket configuration
+  getWebSocketConfig: async () => {
+    return await apiRequest('/taxpayer/tax-preparer/threads/websocket-config/', 'GET');
+  },
+  // Close thread (staff only)
+  // Uses the same endpoint as taxpayer (as per documentation)
+  closeThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/threads/${threadId}/close/`, 'POST');
+  },
+  // Reopen thread
+  reopenThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/reopen/`, 'POST');
+  },
+  // Mark messages as read
+  markAsRead: async (threadId, messageIds) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/mark_read/`, 'POST', { message_ids: messageIds });
+  },
+  // Mark all messages as read in thread
+  markAllAsRead: async (threadId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/mark_all_read/`, 'POST');
+  },
+  // Archive thread
+  archiveThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/archive/`, 'POST');
+  },
+  // Unarchive thread
+  unarchiveThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/unarchive/`, 'POST');
+  },
+  // Delete message
+  deleteMessage: async (threadId, messageId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/messages/${messageId}/delete/`, 'DELETE');
+  },
+  // Edit message
+  editMessage: async (threadId, messageId, content) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/messages/${messageId}/edit/`, 'PATCH', { content });
+  },
+  // Assign thread to staff member
+  assignThread: async (threadId, staffIds) => {
+    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/assign/`, 'POST', { staff_ids: staffIds });
+  },
+  // Get thread statistics
+  getThreadStats: async () => {
+    return await apiRequest('/taxpayer/tax-preparer/threads/stats/', 'GET');
   }
 };
 
@@ -1015,7 +1320,7 @@ export const signatureRequestsAPI = {
   getSignatureRequests: async (options = {}) => {
     const { status = null, activeOnly = false, expiredOnly = false } = options;
     const params = new URLSearchParams();
-    
+
     if (status) {
       params.append('status', status);
     }
@@ -1025,9 +1330,9 @@ export const signatureRequestsAPI = {
     if (expiredOnly) {
       params.append('expired_only', 'true');
     }
-    
+
     const queryString = params.toString();
-    const endpoint = queryString 
+    const endpoint = queryString
       ? `/taxpayer/signatures/requests/?${queryString}`
       : '/taxpayer/signatures/requests/';
     return await apiRequest(endpoint, 'GET');
@@ -1056,7 +1361,7 @@ export const signatureRequestsAPI = {
   // Submit signature request
   submitSignatureRequest: async (signatureData) => {
     const { signature_request_id, signature_image, spouse_signature_image } = signatureData;
-    
+
     const requestBody = {
       signature_request_id: signature_request_id,
       signature_image: signature_image
@@ -1075,17 +1380,17 @@ export const signatureRequestsAPI = {
 export const documentsAPI = {
   // Get all document requests for the current taxpayer
   getDocumentRequests: async (options = {}) => {
-    const { 
-      status = null, 
-      search = null, 
+    const {
+      status = null,
+      search = null,
       priority = null,
       page = null,
       page_size = null,
       sort_by = null
     } = options;
-    
+
     const params = new URLSearchParams();
-    
+
     if (status) {
       params.append('status', status);
     }
@@ -1104,9 +1409,9 @@ export const documentsAPI = {
     if (sort_by) {
       params.append('sort_by', sort_by);
     }
-    
+
     const queryString = params.toString();
-    const endpoint = queryString 
+    const endpoint = queryString
       ? `/taxpayer/document-requests/?${queryString}`
       : '/taxpayer/document-requests/';
     return await apiRequest(endpoint, 'GET');
@@ -1121,7 +1426,7 @@ export const documentsAPI = {
   submitDocumentRequest: async (requestId, formData) => {
     const token = getAccessToken() || AUTH_TOKEN;
     const API_BASE_URL = getApiBaseUrl();
-    
+
     const config = {
       method: 'POST',
       headers: {

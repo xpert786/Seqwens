@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { AddTask, Cliented, Clocking, Completed, Message3Icon, Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
 import { FaSearch, FaChevronDown, FaPaperPlane } from "react-icons/fa";
 import taxheaderlogo from "../../../assets/logo.png";
-import { threadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerThreadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { useThreadWebSocket } from "../../../ClientOnboarding/utils/useThreadWebSocket";
 import { toast } from "react-toastify";
 
@@ -45,6 +45,7 @@ export default function MessagePage() {
     sendMessage: wsSendMessage,
     sendTyping: wsSendTyping,
     markAsRead: wsMarkAsRead,
+    markAllAsRead: wsMarkAllAsRead,
   } = useThreadWebSocket(activeConversationId, true);
 
   const filterOptions = [
@@ -66,7 +67,7 @@ export default function MessagePage() {
 
       try {
         setLoadingMessages(true);
-        const response = await threadsAPI.getThreadDetails(activeConversationId);
+        const response = await taxPreparerThreadsAPI.getThreadDetails(activeConversationId);
 
         if (response && response.success === true && response.data) {
           const messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
@@ -178,7 +179,7 @@ export default function MessagePage() {
       }
 
       // Fallback to REST API
-      const response = await threadsAPI.sendMessage(activeConversationId, {
+      const response = await taxPreparerThreadsAPI.sendMessage(activeConversationId, {
         content: messageText,
         message_type: 'text',
         is_internal: false
@@ -219,11 +220,11 @@ export default function MessagePage() {
     // Send typing indicator via WebSocket
     if (wsConnected && value.trim().length > 0) {
       wsSendTyping(true);
-      
+
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      
+
       typingTimeoutRef.current = setTimeout(() => {
         wsSendTyping(false);
       }, 2000);
@@ -268,7 +269,7 @@ export default function MessagePage() {
 
         console.log('Fetching threads from API...');
 
-        const response = await threadsAPI.getThreads();
+        const response = await taxPreparerThreadsAPI.getThreads();
 
         console.log('Threads API Response:', response);
 
@@ -516,28 +517,38 @@ export default function MessagePage() {
             className="position-relative mb-4"
             style={{ marginBottom: "16px" }}
           >
-            <FaSearch
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
               style={{
                 position: "absolute",
                 left: "16px",
                 top: "50%",
                 transform: "translateY(-50%)",
-                color: "#718096",
-                fontSize: "16px"
+                zIndex: 1,
+                pointerEvents: "none"
               }}
-            />
+            >
+              <path d="M12.25 12.25L9.74167 9.74167M11.0833 6.41667C11.0833 8.99399 8.99399 11.0833 6.41667 11.0833C3.83934 11.0833 1.75 8.99399 1.75 6.41667C1.75 3.83934 3.83934 1.75 6.41667 1.75C8.99399 1.75 11.0833 3.83934 11.0833 6.41667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search documents by name, client, or uploader..."
               style={{
                 width: "100%",
-                padding: "12px 16px 12px 48px",
+                padding: "10px 16px 10px 40px",
                 border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
                 borderRadius: "8px",
-                fontSize: "16px",
+                fontSize: "14px",
                 backgroundColor: "#fff",
                 outline: "none",
-                transition: "border-color 0.2s ease"
+                transition: "border-color 0.2s ease",
+                height: "38px",
+                lineHeight: "1.5"
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = "#4A90E2";
@@ -1655,10 +1666,84 @@ export default function MessagePage() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // Handle send message logic here
-                  console.log("Sending message:", composeForm);
-                  setShowComposeModal(false);
+                onClick={async () => {
+                  try {
+                    if (!composeForm.subject || !composeForm.message) {
+                      toast.error('Please fill in subject and message', {
+                        position: "top-right",
+                        autoClose: 3000,
+                      });
+                      return;
+                    }
+
+                    // Extract client_id from recipients (assuming format like "client:26" or just the ID)
+                    // For now, we'll need to get client_id from the selected recipient
+                    // This is a placeholder - you may need to adjust based on your recipient selection logic
+                    const clientId = composeForm.recipients.length > 0
+                      ? parseInt(composeForm.recipients[0].replace('client:', ''))
+                      : null;
+
+                    if (!clientId) {
+                      toast.error('Please select a client recipient', {
+                        position: "top-right",
+                        autoClose: 3000,
+                      });
+                      return;
+                    }
+
+                    // Extract assigned_staff_ids from recipients (staff members)
+                    const assignedStaffIds = composeForm.recipients
+                      .filter(r => r.startsWith('@') || r.includes('staff'))
+                      .map(r => {
+                        // Extract ID from recipient string
+                        const match = r.match(/\d+/);
+                        return match ? parseInt(match[0]) : null;
+                      })
+                      .filter(id => id !== null);
+
+                    const payload = {
+                      client_id: clientId,
+                      subject: composeForm.subject,
+                      assigned_staff_ids: assignedStaffIds.length > 0 ? assignedStaffIds : [],
+                      message: composeForm.message
+                    };
+
+                    console.log('Creating thread with payload:', payload);
+
+                    const response = await taxPreparerThreadsAPI.createThread(payload);
+
+                    if (response.success && response.data) {
+                      toast.success('Thread created successfully', {
+                        position: "top-right",
+                        autoClose: 3000,
+                      });
+
+                      // Refresh threads list
+                      const threadsResponse = await taxPreparerThreadsAPI.getThreads();
+                      if (threadsResponse.success && threadsResponse.data && threadsResponse.data.threads) {
+                        // Transform and update threads (similar to existing fetchThreads logic)
+                        // You may want to refactor this into a separate function
+                      }
+
+                      setShowComposeModal(false);
+                      // Reset form
+                      setComposeForm({
+                        recipients: [],
+                        subject: "",
+                        category: "Client",
+                        priority: "Medium",
+                        message: ""
+                      });
+                    } else {
+                      throw new Error(response.message || 'Failed to create thread');
+                    }
+                  } catch (err) {
+                    console.error('Error creating thread:', err);
+                    toast.error('Failed to create thread: ' + err.message, {
+                      position: "top-right",
+                      autoClose: 3000,
+                    });
+                  }
                 }}
                 style={{
                   padding: "16px 32px",

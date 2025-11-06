@@ -12,6 +12,9 @@ import {
   Schedule,
   Analytics,
 } from "../component/icons";
+import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
+import { getAccessToken } from "../../ClientOnboarding/utils/userUtils";
+import { handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/taxpopup.css";
 import "../styles/taxdashboard.css";
 
@@ -250,6 +253,10 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
 export default function Dashboard() {
   const navigate = useNavigate();
   const [selectedTask, setSelectedTask] = useState(null);
+  const [myTasks, setMyTasks] = useState([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const isFirstTime = localStorage.getItem("firstTimeUser");
@@ -258,7 +265,71 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const API_BASE_URL = getApiBaseUrl();
+        const token = getAccessToken();
+
+        if (!token) {
+          console.error('No authentication token found');
+          setLoading(false);
+          return;
+        }
+
+        const config = {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        };
+
+        const url = `${API_BASE_URL}/taxpayer/tax-preparer/dashboard/`;
+        const response = await fetchWithCors(url, config);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Dashboard API response:', result);
+
+        if (result.success && result.data) {
+          setMyTasks(result.data.my_tasks || []);
+          setUpcomingDeadlines(result.data.upcoming_deadlines || []);
+          setRecentMessages(result.data.recent_messages || []);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        handleAPIError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   const handleSelect = (taskTitle) => setSelectedTask(taskTitle);
+
+  // Helper function to get priority color
+  const getPriorityColor = (priority) => {
+    const priorityLower = (priority || '').toLowerCase();
+    if (priorityLower === 'high') return "#DC2626";
+    if (priorityLower === 'medium') return "var(--color-yellow-400, #FBBF24)";
+    if (priorityLower === 'low') return "var(--color-green-500, #22C55E)";
+    return "#6B7280";
+  };
+
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower === 'pending') return "#854D0E";
+    if (statusLower === 'in progress' || statusLower === 'in_progress') return "var(--color-green-500, #22C55E)";
+    return "#6B7280";
+  };
 
   return (
     <div className="container-fluid px-2 px-md-2">
@@ -276,14 +347,32 @@ export default function Dashboard() {
               <button className="view-all-btn">View All</button>
             </div>
             <div className="d-flex flex-column gap-3">
-              {whatsDueTasks.map((task, i) => (
-                <TaskCard
-                  key={i}
-                  {...task}
-                  selected={selectedTask === task.title}
-                  onClick={() => handleSelect(task.title)}
-                />
-              ))}
+              {loading ? (
+                <div className="text-center py-3">Loading tasks...</div>
+              ) : myTasks.length === 0 ? (
+                <div className="text-center py-3">No tasks assigned</div>
+              ) : (
+                myTasks.map((task, i) => {
+                  const taskTitle = task.task_title || task.title || 'Untitled Task';
+                  return (
+                    <TaskCard
+                      key={task.id || i}
+                      title={taskTitle}
+                      due={task.due_date_formatted || `Due: ${task.due_date || 'N/A'}`}
+                      status={[task.priority_display || task.priority || 'medium', task.status_display || task.status || 'pending']}
+                      user={(
+                        <span className="db-user">
+                          <span className="db-user-icon-wrapper"><Contacted /></span>
+                          {task.client?.name || 'Unknown Client'}
+                        </span>
+                      )}
+                      icon={<span className="icon-circle"><FileIcon /></span>}
+                      selected={selectedTask === taskTitle}
+                      onClick={() => handleSelect(taskTitle)}
+                    />
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -296,17 +385,35 @@ export default function Dashboard() {
     <p className="section-subtitle m-0">Important dates to remember</p>
   </div>
   <div className="upcoming-deadlines-container">
-    {recentActivityTasks.map((task, i) => (
-      <TaskCard
-        key={i}
-        {...task}
-        singleStatus
-        value={task.value}
-        selected={selectedTask === task.title}
-        onClick={() => handleSelect(task.title)}
-        className="upcoming-deadline-task"
-      />
-    ))}
+    {loading ? (
+      <div className="text-center py-3">Loading deadlines...</div>
+    ) : upcomingDeadlines.length === 0 ? (
+      <div className="text-center py-3">No upcoming deadlines</div>
+    ) : (
+      upcomingDeadlines.map((deadline, i) => {
+        const deadlineTitle = deadline.title || 'Untitled';
+        return (
+          <TaskCard
+            key={deadline.id || i}
+            title={deadlineTitle}
+            due={deadline.due_date_formatted || `Due: ${deadline.due_date || 'N/A'}`}
+            status={[deadline.priority_display || deadline.priority || 'medium']}
+            value={deadline.time_left || deadline.days_left !== undefined ? `${deadline.days_left} days left` : ''}
+            user={(
+              <span className="db-user">
+                <span className="db-user-icon-wrapper"><Contacted /></span>
+                {deadline.client?.name || 'Unknown Client'}
+              </span>
+            )}
+            icon={<span className="icon-circle"><FileIcon /></span>}
+            singleStatus
+            selected={selectedTask === deadlineTitle}
+            onClick={() => handleSelect(deadlineTitle)}
+            className="upcoming-deadline-task"
+          />
+        );
+      })
+    )}
   </div>
 </div>
 
@@ -328,32 +435,44 @@ export default function Dashboard() {
               <button className="view-all-btn">View All</button>
             </div>
             <div className="d-flex flex-column gap-2">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`rounded-3 p-3 car recent-msg-card ${msg.type === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: msg.type === "client" ? "#FFF4E6" : "#fff",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <div className="msg-icon-wrapper">{msg.icon}</div>
-                    <div>
-                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-  <span className="msg-role"style={{ fontWeight: 500 }}>{msg.name}</span>
-  <span className="name-role-circle"></span> {/* small circle between name and role */}
-  <span className="role-badge">{msg.role}</span>
-</div>
-
-                      <div className="msg-content" style={{ fontSize: "0.875rem", color: "#4B5563" }}>{msg.content}</div>
+              {loading ? (
+                <div className="text-center py-3">Loading messages...</div>
+              ) : recentMessages.length === 0 ? (
+                <div className="text-center py-3">No recent messages</div>
+              ) : (
+                recentMessages.map((msg, i) => {
+                  const msgType = msg.sender?.role === 'client' ? 'client' : 'internal';
+                  return (
+                    <div
+                      key={msg.id || i}
+                      className={`rounded-3 p-3 car recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        backgroundColor: msgType === "client" ? "#FFF4E6" : "#fff",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <div className="msg-icon-wrapper"><Msg /></div>
+                        <div>
+                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span className="msg-role" style={{ fontWeight: 500 }}>{msg.sender?.name || 'Unknown'}</span>
+                            <span className="name-role-circle"></span>
+                            <span className="role-badge">{msg.sender?.role === 'client' ? 'Client' : 'Internal'}</span>
+                          </div>
+                          <div className="msg-content" style={{ fontSize: "0.875rem", color: "#4B5563" }}>
+                            {msg.message_preview || msg.content || 'No message content'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "black" }}>
+                        <Clocking/>{msg.time_ago || 'Just now'}
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "black" }}><Clocking/>{msg.time}</div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
