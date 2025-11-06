@@ -60,7 +60,7 @@ export default function Folders({ onFolderSelect }) {
 
             const result = await response.json();
             console.log('Folders API response:', result);
-
+            
             if (result.success && result.data) {
                 // Update current folder
                 if (result.data.current_folder) {

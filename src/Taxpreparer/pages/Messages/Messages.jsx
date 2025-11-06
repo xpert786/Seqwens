@@ -3,6 +3,8 @@ import { AddTask, Cliented, Clocking, Completed, Message3Icon, Overdue, Progress
 import { FaSearch, FaChevronDown, FaPaperPlane } from "react-icons/fa";
 import taxheaderlogo from "../../../assets/logo.png";
 import { threadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { useThreadWebSocket } from "../../../ClientOnboarding/utils/useThreadWebSocket";
+import { toast } from "react-toastify";
 
 export default function MessagePage() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -29,7 +31,21 @@ export default function MessagePage() {
     { id: 3, text: "", completed: false, isInput: true }
   ]);
   const [newTaskText, setNewTaskText] = useState("");
+  const [activeChatMessages, setActiveChatMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const typingTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
+
+  // WebSocket hook for real-time messaging
+  const {
+    isConnected: wsConnected,
+    messages: wsMessages,
+    typingUsers,
+    error: wsError,
+    sendMessage: wsSendMessage,
+    sendTyping: wsSendTyping,
+    markAsRead: wsMarkAsRead,
+  } = useThreadWebSocket(activeConversationId, true);
 
   const filterOptions = [
     "All Messages",
@@ -38,28 +54,180 @@ export default function MessagePage() {
     "Internal",
     "Archived"
   ];
-  const handleSend = () => {
-    if (newMessage.trim() === "") return;
-    const updatedConversations = conversations.map((conv) =>
-      conv.id === activeConversationId
-        ? {
-          ...conv,
-          messages: [
-            ...conv.messages,
-            {
-              id: Date.now(),
-              type: "user",
-              text: newMessage,
-              date: new Date().toLocaleString(),
-            },
-          ],
-          lastMessage: newMessage,
-          time: "Just now",
+
+  // Fetch messages for active conversation (initial load)
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!activeConversationId) {
+        setActiveChatMessages([]);
+        setLoadingMessages(false);
+        return;
+      }
+
+      try {
+        setLoadingMessages(true);
+        const response = await threadsAPI.getThreadDetails(activeConversationId);
+
+        if (response && response.success === true && response.data) {
+          const messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
+
+          if (messagesArray.length > 0) {
+            const transformedMessages = messagesArray.map(msg => {
+              // Staff messages appear on left, client messages on right
+              let messageType = msg.sender_role === "Client" ? "user" : "admin";
+
+              return {
+                id: msg.id,
+                type: messageType,
+                text: msg.content || '',
+                date: msg.created_at,
+                sender: msg.sender_name || '',
+                senderRole: msg.sender_role || '',
+                isRead: msg.is_read || false,
+                isEdited: msg.is_edited || false,
+                messageType: msg.message_type || 'text',
+                isInternal: msg.is_internal || false,
+                attachment: msg.attachment || null,
+                attachmentName: msg.attachment_name || null,
+                attachmentSize: msg.attachment_size_display || null,
+              };
+            });
+
+            setActiveChatMessages(transformedMessages);
+
+            // Mark messages as read via WebSocket
+            transformedMessages.forEach(msg => {
+              if (!msg.isRead && msg.type === "user") {
+                wsMarkAsRead(msg.id);
+              }
+            });
+          } else {
+            setActiveChatMessages([]);
+          }
         }
-        : conv
-    );
-    setConversations(updatedConversations);
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+        setActiveChatMessages([]);
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+  }, [activeConversationId, wsMarkAsRead]);
+
+  // Sync WebSocket messages with local state
+  useEffect(() => {
+    if (wsMessages && wsMessages.length > 0) {
+      const transformedMessages = wsMessages.map(msg => {
+        let messageType = msg.sender_role === "Client" ? "user" : "admin";
+
+        return {
+          id: msg.id,
+          type: messageType,
+          text: msg.content || '',
+          date: msg.created_at,
+          sender: msg.sender_name || '',
+          senderRole: msg.sender_role || '',
+          isRead: msg.is_read || false,
+          isEdited: msg.is_edited || false,
+          messageType: msg.message_type || 'text',
+          isInternal: msg.is_internal || false,
+          attachment: msg.attachment || null,
+          attachmentName: msg.attachment_name || null,
+          attachmentSize: msg.attachment_size_display || null,
+        };
+      });
+
+      // Merge with existing messages, avoiding duplicates
+      setActiveChatMessages(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+        const merged = [...prev, ...newMessages].sort((a, b) => {
+          return new Date(a.date) - new Date(b.date);
+        });
+        return merged;
+      });
+
+      // Mark new messages as read
+      transformedMessages.forEach(msg => {
+        if (!msg.isRead && msg.type === "user") {
+          wsMarkAsRead(msg.id);
+        }
+      });
+    }
+  }, [wsMessages, wsMarkAsRead]);
+
+  const handleSend = async () => {
+    if (newMessage.trim() === "" || !activeConversationId) return;
+
+    const messageText = newMessage.trim();
     setNewMessage("");
+
+    // Stop typing indicator
+    wsSendTyping(false);
+
+    try {
+      // Try WebSocket first if connected
+      if (wsConnected) {
+        const sent = wsSendMessage(messageText, false); // false = not internal
+        if (sent) {
+          console.log('✅ Message sent via WebSocket');
+          return;
+        }
+      }
+
+      // Fallback to REST API
+      const response = await threadsAPI.sendMessage(activeConversationId, {
+        content: messageText,
+        message_type: 'text',
+        is_internal: false
+      });
+
+      if (response.success) {
+        const newMsg = {
+          id: response.data?.id || Date.now(),
+          type: "admin",
+          text: messageText,
+          date: response.data?.created_at || new Date().toISOString(),
+          sender: response.data?.sender_name || 'You',
+          senderRole: response.data?.sender_role || '',
+          isRead: false,
+          isEdited: false,
+          messageType: 'text',
+        };
+
+        setActiveChatMessages(prev => [...prev, newMsg]);
+      } else {
+        throw new Error(response.message || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setNewMessage(messageText);
+      toast.error('Failed to send message: ' + err.message, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  // Handle typing indicator
+  const handleTyping = (e) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    // Send typing indicator via WebSocket
+    if (wsConnected && value.trim().length > 0) {
+      wsSendTyping(true);
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        wsSendTyping(false);
+      }, 2000);
+    }
   };
 
   const handleTaskToggle = (taskId) => {

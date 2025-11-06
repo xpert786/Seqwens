@@ -11,7 +11,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     last_name: '',
     email: '',
     phone_number: '',
-    assigned_to_staff: ''
+    assigned_to_staff: '',
+    notes: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -121,6 +122,11 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         payload.phone_number = formData.phone_number.trim();
       }
 
+      // Add notes only if provided
+      if (formData.notes.trim()) {
+        payload.notes = formData.notes.trim();
+      }
+
       console.log('Creating client with payload:', payload);
 
       const token = getAccessToken();
@@ -149,7 +155,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         last_name: '',
         email: '',
         phone_number: '',
-        assigned_to_staff: ''
+        assigned_to_staff: '',
+        notes: ''
       });
 
       // Close modal after a brief delay
@@ -183,24 +190,24 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       style={{ zIndex: 9999 }}
     >
       <div
-        className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-5 relative"
+        className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
       >
         {/* Header */}
-        <div className="flex justify-between items-start mb-4 sticky top-0 bg-white pb-3 border-b" style={{ borderColor: '#E5E7EB', zIndex: 10 }}>
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">Add New Client</h2>
-            <p className="text-xs text-gray-500">
+            <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Add New Client</h5>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
               Create a new client profile and assign to staff member
             </p>
           </div>
           <button
             onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center !rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 transition-colors"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-              <path d="M16.067 8.99502C16.1386 8.92587 16.1958 8.84314 16.2352 8.75165C16.2745 8.66017 16.2952 8.56176 16.2962 8.46218C16.2971 8.3626 16.2781 8.26383 16.2405 8.17164C16.2028 8.07945 16.1472 7.99568 16.0768 7.92523C16.0064 7.85478 15.9227 7.79905 15.8305 7.7613C15.7384 7.72354 15.6396 7.70452 15.54 7.70534C15.4404 7.70616 15.342 7.7268 15.2505 7.76606C15.159 7.80532 15.0762 7.86242 15.007 7.93402L12.001 10.939L8.99597 7.93402C8.92731 7.86033 8.84451 7.80123 8.75251 7.76024C8.66051 7.71925 8.5612 7.69721 8.4605 7.69543C8.35979 7.69365 8.25976 7.71218 8.16638 7.7499C8.07299 7.78762 7.98815 7.84376 7.91694 7.91498C7.84572 7.9862 7.78957 8.07103 7.75185 8.16442C7.71413 8.25781 7.69561 8.35784 7.69738 8.45854C7.69916 8.55925 7.7212 8.65856 7.76219 8.75056C7.80319 8.84256 7.86229 8.92536 7.93597 8.99402L10.939 12L7.93397 15.005C7.80149 15.1472 7.72937 15.3352 7.7328 15.5295C7.73623 15.7238 7.81494 15.9092 7.95235 16.0466C8.08977 16.1841 8.27515 16.2628 8.46945 16.2662C8.66375 16.2696 8.8518 16.1975 8.99397 16.065L12.001 13.06L15.006 16.066C15.1481 16.1985 15.3362 16.2706 15.5305 16.2672C15.7248 16.2638 15.9102 16.1851 16.0476 16.0476C16.185 15.9102 16.2637 15.7248 16.2671 15.5305C16.2706 15.3362 16.1985 15.1482 16.066 15.006L13.063 12L16.067 8.99502Z" fill="#3B4A66" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
@@ -218,11 +225,11 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* First and Last Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -230,12 +237,12 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                 value={formData.first_name}
                 onChange={(e) => handleInputChange('first_name', e.target.value)}
                 placeholder="Enter first name"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400"
+                className="w-full !border border-gray-300 !rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -243,7 +250,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                 value={formData.last_name}
                 onChange={(e) => handleInputChange('last_name', e.target.value)}
                 placeholder="Enter last name"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
                 required
               />
             </div>
@@ -251,7 +258,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
               Email <span className="text-red-500">*</span>
             </label>
             <input
@@ -259,73 +266,92 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="abc@gmail.com"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5  text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
               required
             />
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone (Optional)
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+              Phone
             </label>
             <input
               type="tel"
               value={formData.phone_number}
               onChange={(e) => handleInputChange('phone_number', e.target.value)}
-              placeholder="Phone Number"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400"
+              placeholder="(555) 123-4567"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
             />
           </div>
 
           {/* Assign to Staff */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
               Assign to Staff <span className="text-red-500">*</span>
             </label>
             {staffLoading ? (
-              <div className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-500 text-sm">
+              <div className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-500 text-sm font-[BasisGrotesquePro]">
                 Loading staff members...
               </div>
             ) : staffError ? (
-              <div className="w-full border border-red-200 rounded-md px-3 py-2 bg-red-50 text-red-600 text-sm">
+              <div className="w-full border border-red-200 rounded-lg px-3 py-2.5 bg-red-50 text-red-600 text-sm font-[BasisGrotesquePro]">
                 {staffError}
               </div>
             ) : (
-              <select
-                value={formData.assigned_to_staff}
-                onChange={(e) => handleInputChange('assigned_to_staff', e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 bg-white"
-                required
-              >
-                <option value="">Select staff member</option>
-                {staffMembers.map((staff) => (
-                  <option key={staff.id} value={staff.id}>
-                    {staff.name} {staff.email ? `(${staff.email})` : ''} - {staff.role_display}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.assigned_to_staff}
+                  onChange={(e) => handleInputChange('assigned_to_staff', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm appearance-none"
+                  required
+                >
+                  <option value="">Select staff member</option>
+                  {staffMembers.map((staff) => (
+                    <option key={staff.id} value={staff.id}>
+                      {staff.name} {staff.email ? `(${staff.email})` : ''} - {staff.role_display}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             )}
             {staffMembers.length === 0 && !staffLoading && !staffError && (
-              <p className="text-xs text-gray-500 mt-1">No staff members available</p>
+              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">No staff members available</p>
             )}
           </div>
 
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+              Notes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              placeholder="Additional notes about the client.."
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm resize-none"
+            />
+          </div>
+
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-4 pt-3">
+          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
-              style={{ borderRadius: "10px" }}
+              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ borderRadius: "10px" }}
+              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
             >
               {loading ? 'Creating...' : 'Add Client'}
             </button>

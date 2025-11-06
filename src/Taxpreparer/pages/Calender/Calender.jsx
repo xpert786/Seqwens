@@ -21,6 +21,8 @@ export default function CalendarPage() {
     this_week: 0,
     confirmed: 0
   });
+  const [showPendingMeetingsModal, setShowPendingMeetingsModal] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState({});
 
   // Fetch calendar data from API
   const fetchCalendarData = async () => {
@@ -207,6 +209,105 @@ export default function CalendarPage() {
       return [];
     }
     return calendarData.upcoming_events.map(convertAppointmentToEvent);
+  };
+
+  // Get pending meetings
+  const getPendingMeetings = () => {
+    const allAppointments = appointments || [];
+    return allAppointments
+      .filter(appointment => appointment.appointment_status === 'pending')
+      .map(convertAppointmentToEvent)
+      .sort((a, b) => a.date - b.date); // Sort by date
+  };
+
+  // Update appointment status using action API
+  const updateAppointmentStatus = async (appointmentId, action, reason = null) => {
+    try {
+      setUpdatingStatus(prev => ({ ...prev, [appointmentId]: true }));
+      
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const requestBody = {
+        action: action
+      };
+
+      // Add reason if canceling
+      if (action === 'cancel' && reason) {
+        requestBody.reason = reason;
+      }
+
+      const config = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      };
+
+      const apiUrl = `${API_BASE_URL}/taxpayer/staff/appointments/${appointmentId}/action/`;
+      console.log('Appointment action API URL:', apiUrl);
+      console.log('Appointment action request body:', requestBody);
+
+      const response = await fetchWithCors(apiUrl, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message ||
+          errorData.detail ||
+          `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        const actionText = action === 'approve' ? 'approved' : 'cancelled';
+        toast.success(`Appointment ${actionText} successfully`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        
+        // Refresh calendar data
+        await fetchCalendarData();
+      } else {
+        throw new Error(result.message || `Failed to ${action} appointment`);
+      }
+    } catch (error) {
+      console.error("Error updating appointment status:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [appointmentId]: false }));
+    }
+  };
+
+  // Handle approve appointment
+  const handleApproveAppointment = async (event) => {
+    if (window.confirm(`Are you sure you want to approve "${event.title}"?`)) {
+      await updateAppointmentStatus(event.id, 'approve');
+    }
+  };
+
+  // Handle cancel appointment
+  const handleCancelAppointment = async (event) => {
+    const reason = window.prompt(
+      `Are you sure you want to cancel "${event.title}"?\n\nPlease provide a reason (optional):`
+    );
+    
+    if (reason !== null) {
+      // User clicked OK (even if they didn't enter a reason)
+      await updateAppointmentStatus(event.id, 'cancel', reason || null);
+    }
+    // If user clicked Cancel, do nothing
   };
 
   const isToday = (date) => {
@@ -438,6 +539,59 @@ export default function CalendarPage() {
             )}
           </div>
 
+          {/* Pending Meetings */}
+          {getPendingMeetings().length > 0 && (
+            <div className="bg-white rounded-lg border border-[#E8F0FF] p-4">
+              <div className="flex justify-between items-center mb-2">
+                <h6 className="font-semibold text-gray-900">Pending Meetings</h6>
+                <button
+                  onClick={() => setShowPendingMeetingsModal(true)}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View All ({getPendingMeetings().length})
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">Meetings awaiting approval</p>
+              <div className="space-y-2">
+                {getPendingMeetings().slice(0, 3).map(event => (
+                  <div key={event.id} className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-gray-900">{event.title}</div>
+                      <div className="text-xs text-gray-500">{event.time}</div>
+                      <div className="text-xs text-gray-400">{event.date.toLocaleDateString()}</div>
+                      {event.user && (
+                        <div className="text-xs text-gray-400 mt-1">With: {event.user}</div>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApproveAppointment(event);
+                          }}
+                          disabled={updatingStatus[event.id]}
+                          className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {updatingStatus[event.id] ? 'Processing...' : 'Approve'}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelAppointment(event);
+                          }}
+                          disabled={updatingStatus[event.id]}
+                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {updatingStatus[event.id] ? 'Processing...' : 'Cancel'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Upcoming Events */}
           <div className="bg-white rounded-lg  border border-[#E8F0FF] p-4">
             <h6 className="font-semibold text-gray-900 mb-2">Upcoming Events</h6>
@@ -463,7 +617,31 @@ export default function CalendarPage() {
                           </span>
                         </div>
                       )}
-                      {event.appointment?.meeting_link && (
+                      {event.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApproveAppointment(event);
+                            }}
+                            disabled={updatingStatus[event.id]}
+                            className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {updatingStatus[event.id] ? 'Processing...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelAppointment(event);
+                            }}
+                            disabled={updatingStatus[event.id]}
+                            className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {updatingStatus[event.id] ? 'Processing...' : 'Cancel'}
+                          </button>
+                        </div>
+                      )}
+                      {event.appointment?.meeting_link && event.status === 'confirmed' && (
                         <button
                           onClick={() => handleLaunchMeeting(event.appointment)}
                           className="mt-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -486,6 +664,111 @@ export default function CalendarPage() {
         onClose={handleCloseCreateEventModal}
         onSubmit={handleCreateEvent}
       />
+
+      {/* Pending Meetings Modal */}
+      {showPendingMeetingsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Pending Meetings</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {getPendingMeetings().length} meeting(s) awaiting approval
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowPendingMeetingsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {getPendingMeetings().length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No pending meetings</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {getPendingMeetings().map(event => (
+                    <div
+                      key={event.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold text-gray-900">{event.title}</h4>
+                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">
+                              Pending
+                            </span>
+                          </div>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Date:</span>
+                              <span>{event.date.toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Time:</span>
+                              <span>{event.time}</span>
+                            </div>
+                            {event.user && (
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">With:</span>
+                                <span>{event.user}</span>
+                                {event.userEmail && (
+                                  <span className="text-gray-400">({event.userEmail})</span>
+                                )}
+                              </div>
+                            )}
+                            {event.meetingType && (
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">Type:</span>
+                                <span>{event.meetingType}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 ml-4">
+                          <button
+                            onClick={() => handleApproveAppointment(event)}
+                            disabled={updatingStatus[event.id]}
+                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+                          >
+                            {updatingStatus[event.id] ? 'Processing...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleCancelAppointment(event)}
+                            disabled={updatingStatus[event.id]}
+                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+                          >
+                            {updatingStatus[event.id] ? 'Processing...' : 'Cancel'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setShowPendingMeetingsModal(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

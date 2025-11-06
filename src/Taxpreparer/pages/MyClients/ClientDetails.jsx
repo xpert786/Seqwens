@@ -1,7 +1,9 @@
-import React from "react";
-import { useLocation, useParams, useNavigate,Outlet } from "react-router-dom";
-import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon,MiniClock, WhiteEdit } from "../../component/icons";
-
+import React, { useState, useEffect } from "react";
+import { useLocation, useParams, useNavigate, Outlet } from "react-router-dom";
+import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon, MiniClock, WhiteEdit } from "../../component/icons";
+import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
+import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
+import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 export default function ClientDetails() {
   const { clientId } = useParams();
@@ -16,58 +18,165 @@ export default function ClientDetails() {
   const isSchedule = isSchedulePath || isScheduleViaQuery;
   const isInvoicesActive = isInvoices && !isScheduleViaQuery;
 
-const navigate = useNavigate();
-  const defaultClient = {
-    id: clientId,
-    name: "John Doe",
-    email: "john.doe@email.com",
-    phone: "(555) 123-4567",
-    ssn: "123-45-6789",
-    status: "active",
-    filingStatus: "Married ",
-    gender: "Male",
-    dob: "August 27th, 1999",
-    address: {
-      line: "No 35 Jimmy Ebi Street",
-      city: "Yenagoa",
-      state: "Bayelsa",
-      zip: "654133",
-    },
-    spouse: {
-      name: "Xavier Woods",
-      gender: "Male",
-      dob: "March 27th, 1999",
-      ssn: "515424561LN23",
-      filingStatus: "Married Filing Jointly",
-    },
+  const navigate = useNavigate();
+
+  // API state
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch client details from API
+  const fetchClientDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/taxpayer/tax-preparer/clients/${clientId}/`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      console.log('Fetching client details from:', url);
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('You do not have permission to view this client');
+        } else if (response.status === 404) {
+          throw new Error('Client not found');
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Client details API response:', result);
+
+      if (result.success && result.data) {
+        // Map API response to component structure
+        const apiData = result.data;
+        const mappedClient = {
+          id: apiData.id,
+          name: apiData.full_name || `${apiData.first_name} ${apiData.last_name}`,
+          email: apiData.email || apiData.contact_details?.email || '',
+          phone: apiData.phone_number_formatted || apiData.phone_number || apiData.contact_details?.phone || '',
+          ssn: apiData.personal_information?.ssn || '',
+          status: apiData.status || 'active',
+          priority: apiData.priority || 'medium',
+          filingStatus: apiData.filing_status || apiData.personal_information?.filing_status || '',
+          dob: apiData.personal_information?.date_of_birth || '',
+          address: {
+            line: apiData.address?.address_line || '',
+            city: apiData.address?.city || '',
+            state: apiData.address?.state || '',
+            zip: apiData.address?.zip_code || '',
+          },
+          spouse: {
+            name: apiData.spouse_information?.name || '',
+            ssn: apiData.spouse_information?.ssn || '',
+            phone: apiData.spouse_contact_details?.phone || '',
+            email: apiData.spouse_contact_details?.email || '',
+          },
+          statistics: apiData.statistics || {
+            tasks: { total: 0, pending: 0, completed: 0, high_priority: 0 },
+            documents: { total: 0, archived: 0 },
+            invoices: { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 },
+            appointments: { total: 0, upcoming: 0 }
+          },
+          date_joined: apiData.date_joined || '',
+          initials: apiData.initials || `${apiData.first_name?.[0] || ''}${apiData.last_name?.[0] || ''}`.toUpperCase(),
+          client_tags: apiData.client_tags || []
+        };
+        setClient(mappedClient);
+      } else {
+        throw new Error(result.message || 'Failed to fetch client details');
+      }
+    } catch (error) {
+      console.error('Error fetching client details:', error);
+      setError(handleAPIError(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const incoming = location.state?.client || {};
-  const client = {
-    ...defaultClient,
-    ...incoming,
-    address: { ...defaultClient.address, ...(incoming.address || {}) },
-    spouse: { ...defaultClient.spouse, ...(incoming.spouse || {}) },
-  };
+  // Fetch client details on component mount
+  useEffect(() => {
+    if (clientId) {
+      fetchClientDetails();
+    }
+  }, [clientId]);
 
-  const initials = (client.name || "")
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="p-4 font-['BasisGrotesquePro']">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading client details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-4 font-['BasisGrotesquePro']">
+        <div className="alert alert-danger" role="alert">
+          <strong>Error:</strong> {error}
+          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchClientDetails}>
+            Retry
+          </button>
+          <button className="btn btn-sm btn-outline-secondary ms-2" onClick={() => navigate('/taxdashboard/clients')}>
+            Back to Clients
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show nothing if client data is not loaded
+  if (!client) {
+    return null;
+  }
+
+  const initials = client.initials || (client.name || "")
     .split(" ")
     .map((n) => n[0])
     .join("");
 
   // Build statuses to render in the header badges
   const statusesForHeader = (() => {
-    const base = Array.isArray(client.statuses) && client.statuses.length
-      ? client.statuses
-      : (client.status ? [client.status] : []);
-    if (isDocuments) {
-      const lower = (s) => (s || '').toLowerCase();
-      const out = [...base];
-      if (!out.some((s) => lower(s).includes('active'))) out.push('active');
-      if (!out.some((s) => lower(s).includes('high'))) out.push('high priority');
-      return out;
+    const statuses = [];
+    if (client.status) {
+      statuses.push(client.status.charAt(0).toUpperCase() + client.status.slice(1));
     }
-    return base;
+    if (client.priority) {
+      const priorityLabel = client.priority === 'high' ? 'High Priority' : 
+                           client.priority === 'medium' ? 'Medium' : 
+                           client.priority;
+      statuses.push(priorityLabel);
+    }
+    // Add client tags
+    if (client.client_tags && Array.isArray(client.client_tags)) {
+      statuses.push(...client.client_tags);
+    }
+    return statuses;
   })();
 
   return (
@@ -75,7 +184,7 @@ const navigate = useNavigate();
        <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="font-semibold font-grotesque">Client Details</h3>
-          <small className="text-gray-500">Detailed information about John Doe</small>
+          <small className="text-gray-500">Detailed information about {client.name}</small>
         </div>
       </div>
      <div className="bg-white rounded-xl p-6 ">
@@ -144,11 +253,11 @@ const navigate = useNavigate();
               </div>
               <div className="flex flex-col">
                 <span className="text-gray-400 text-xs mb-1">Filing Status</span>
-                <span className="text-gray-700 text-sm font-medium">{client.filingStatus}</span>
+                <span className="text-gray-700 text-sm font-medium">{client.filingStatus || "N/A"}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-gray-400 text-xs mb-1">SSN</span>
-                <span className="text-gray-700 text-sm font-medium">{client.ssn || "123-45-6789"}</span>
+                <span className="text-gray-700 text-sm font-medium">{client.ssn || "N/A"}</span>
               </div>
             </div>
           </div>
@@ -373,21 +482,14 @@ const navigate = useNavigate();
               <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
               <div className="font-medium "style={{
     color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.ssn}</div>
+  }}>{client.ssn || "N/A"}</div>
             </div>
             <div className="flex justify-between">
               <div>
-                <div className="text-xs "
-                 style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>Gender</div>
-                <div className="font-medium "style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.gender}</div>
                 <div className="text-xs text-gray-500 mt-3">Filing Status</div>
                 <div className="font-medium "style={{
     color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.filingStatus}</div>
+  }}>{client.filingStatus || "N/A"}</div>
               </div>
               <div className="text-right">
                 <div className="text-xs " style={{
@@ -395,7 +497,7 @@ const navigate = useNavigate();
   }}>Date of Birth</div>
                 <div className="font-medium "style={{
     color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.dob}</div>
+  }}>{client.dob || "N/A"}</div>
               </div>
             </div>
           </div>
@@ -419,16 +521,16 @@ const navigate = useNavigate();
                 {/* Values Row */}
                 <div className="grid grid-cols-4 gap-6 mt-1">
                   <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.line}
+                    {client.address.line || "N/A"}
                   </div>
                   <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.city}
+                    {client.address.city || "N/A"}
                   </div>
                   <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.state}
+                    {client.address.state || "N/A"}
                   </div>
                   <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.zip}
+                    {client.address.zip || "N/A"}
                   </div>
                 </div>
               </div>
@@ -485,54 +587,59 @@ const navigate = useNavigate();
               Edit
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <div className="text-xs text-gray-500">Name</div>
-              <div className="font-medium text-gray-900">{client.spouse.name}</div>
-              <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
-              <div className="font-medium text-gray-900">{client.spouse.ssn}</div>
-            </div>
-            <div className="flex justify-between">
+          {client.spouse.name ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
-                <div className="text-xs text-gray-500">Gender</div>
-                <div className="font-medium text-gray-900">{client.spouse.gender}</div>
-                <div className="text-xs text-gray-500 mt-3">Filing Status</div>
-                <div className="font-medium text-gray-900">{client.spouse.filingStatus}</div>
+                <div className="text-xs text-gray-500">Name</div>
+                <div className="font-medium text-gray-900">{client.spouse.name}</div>
+                <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
+                <div className="font-medium text-gray-900">{client.spouse.ssn || "N/A"}</div>
               </div>
-              <div className="text-right">
-                <div className="text-xs text-gray-500">Date of Birth</div>
-                <div className="font-medium text-gray-900">{client.spouse.dob}</div>
+              <div className="flex justify-between">
+                <div>
+                  <div className="text-xs text-gray-500 mt-3">Filing Status</div>
+                  <div className="font-medium text-gray-900">{client.filingStatus || "N/A"}</div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="mt-4 text-center text-gray-500">
+              <p>No spouse information available</p>
+            </div>
+          )}
         </div>
 
-         <div className="bg-white rounded-xl p-6 ">
+         {client.spouse.name && (client.spouse.phone || client.spouse.email) && (
+          <div className="bg-white rounded-xl p-6 ">
             <div className="font-semibold " style={{
     color: "var(--Palette2-Dark-blue-100, #4B5563)",
-  }}>Contact Details</div>
+  }}>Spouse Contact Details</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-              <div>
-                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
-                  <BlackPhone />
-                  <span>Phone</span>
-
+              {client.spouse.phone && (
+                <div>
+                  <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
+                    <BlackPhone />
+                    <span>Phone</span>
+                  </div>
+                  <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                    {client.spouse.phone}
+                  </div>
                 </div>
-                <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                  {client.phone}
+              )}
+              {client.spouse.email && (
+                <div>
+                  <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
+                    <BlackEmail />
+                    <span>Email</span>
+                  </div>
+                  <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                    {client.spouse.email}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
-                  <BlackEmail />
-                  <span>Email</span>
-                </div>
-                <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                  {client.email}
-                </div>
-              </div>
+              )}
             </div>
           </div>
+         )}
       </div>
       )}
     </div>

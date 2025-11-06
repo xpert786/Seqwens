@@ -14,6 +14,7 @@ export default function MyDocumentsContent() {
     const [error, setError] = useState(null);
     const [selectedDocument, setSelectedDocument] = useState(null);
     const [showPdfModal, setShowPdfModal] = useState(false);
+    const [selectedFilter, setSelectedFilter] = useState(null); // null = all, "pending", "completed", "overdue", "uploaded"
     const [stats, setStats] = useState({
         pending: 0,
         completed: 0,
@@ -167,6 +168,41 @@ export default function MyDocumentsContent() {
         return 'bg-darkblue text-white';
     };
 
+    // Filter documents based on selected filter
+    const getFilteredDocuments = () => {
+        if (!selectedFilter) {
+            return documents;
+        }
+
+        const filterLower = selectedFilter.toLowerCase();
+
+        if (filterLower === 'pending') {
+            return documents.filter(d => {
+                const status = (d.status || '').toLowerCase();
+                return status === 'pending_sign' || status === 'pending' || status === 'waiting signature';
+            });
+        } else if (filterLower === 'completed') {
+            return documents.filter(d => {
+                const status = (d.status || '').toLowerCase();
+                return status === 'processed' || status === 'completed';
+            });
+        } else if (filterLower === 'overdue') {
+            return documents.filter(d => {
+                if (d.due_date || d.dueDate) {
+                    const due = new Date(d.due_date || d.dueDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return due < today && (d.status === 'pending_sign' || d.status === 'pending' || (d.status || '').toLowerCase() === 'pending');
+                }
+                return false;
+            });
+        } else if (filterLower === 'uploaded') {
+            return documents; // All documents are uploaded
+        }
+
+        return documents;
+    };
+
     if (loading) {
         return (
             <div>
@@ -201,12 +237,39 @@ export default function MyDocumentsContent() {
                     }[label];
 
                     const count = stats[label.toLowerCase()] || 0;
+                    const isSelected = selectedFilter === label.toLowerCase();
+                    const filterKey = label.toLowerCase();
 
                     return (
                         <div className="col-sm-6 col-md-3" key={index}>
                             <div
                                 className="bg-white p-3 d-flex flex-column justify-content-between"
-                                style={{ borderRadius: "12px", height: "130px" }}
+                                style={{ 
+                                    borderRadius: "12px", 
+                                    height: "130px",
+                                    cursor: "pointer",
+                                    border: isSelected ? "2px solid #00C0C6" : "1px solid #E8F0FF",
+                                    backgroundColor: isSelected ? "#F0FDFF" : "#FFFFFF",
+                                    transition: "all 0.2s ease",
+                                    boxShadow: isSelected ? "0 2px 8px rgba(0, 192, 198, 0.15)" : "none"
+                                }}
+                                onClick={() => {
+                                    // Toggle filter: if same filter is clicked, deselect it
+                                    setSelectedFilter(isSelected ? null : filterKey);
+                                    setSelectedIndex(null); // Reset selected document when filter changes
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isSelected) {
+                                        e.currentTarget.style.borderColor = "#00C0C6";
+                                        e.currentTarget.style.backgroundColor = "#F0FDFF";
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isSelected) {
+                                        e.currentTarget.style.borderColor = "#E8F0FF";
+                                        e.currentTarget.style.backgroundColor = "#FFFFFF";
+                                    }
+                                }}
                             >
                                 <div className="d-flex justify-content-between align-items-start">
                                     <div
@@ -218,12 +281,15 @@ export default function MyDocumentsContent() {
                                     >
                                         {/* Icons hidden for now */}
                                     </div>
-                                    <span className="fw-semibold text-dark">{count}</span>
+                                    <span className="fw-semibold" style={{ color: isSelected ? "#00C0C6" : "#3B4A66", fontSize: "24px" }}>{count}</span>
                                 </div>
 
                                 {/* Bottom label */}
                                 <div className="mt-2">
-                                    <p className="mb-0 text-muted small fw-semibold" style={{ fontFamily: "BasisGrotesquePro", }}>{label}</p>
+                                    <p className="mb-0 small fw-semibold" style={{ 
+                                        fontFamily: "BasisGrotesquePro",
+                                        color: isSelected ? "#00C0C6" : "#6B7280"
+                                    }}>{label}</p>
                                 </div>
                             </div>
                         </div>
@@ -298,9 +364,9 @@ export default function MyDocumentsContent() {
                 {/* Documents Section */}
                 <div className="align-items-center mb-3">
                     <h5 className="mb-0 me-3" style={{ fontSize: "20px", fontWeight: "500", color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                        All Documents {documents.length > 0 && `(${documents.length})`}
+                        {selectedFilter ? `${selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)} Documents` : 'All Documents'} {getFilteredDocuments().length > 0 && `(${getFilteredDocuments().length})`}
                     </h5>
-                    {documents.length > 0 && (
+                    {getFilteredDocuments().length > 0 && (
                         <p
                             className="mb-0"
                             style={{
@@ -310,12 +376,12 @@ export default function MyDocumentsContent() {
                                 fontFamily: "BasisGrotesquePro",
                             }}
                         >
-                            View and manage all your uploaded documents
+                            {selectedFilter ? `Showing ${selectedFilter} documents` : 'View and manage all your uploaded documents'}
                         </p>
                     )}
                 </div>
 
-                {documents.length === 0 && (
+                {getFilteredDocuments().length === 0 && documents.length === 0 && (
                     <div className="pt-4 pb-4 text-center">
                         <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
                             No Documents Yet
@@ -325,10 +391,20 @@ export default function MyDocumentsContent() {
                         </p>
                     </div>
                 )}
-                {documents.length > 0 && (
+                {getFilteredDocuments().length === 0 && documents.length > 0 && (
+                    <div className="pt-4 pb-4 text-center">
+                        <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+                            No {selectedFilter ? selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1) : ''} Documents
+                        </h6>
+                        <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
+                            {selectedFilter ? `No documents match the ${selectedFilter} filter.` : 'No documents found.'}
+                        </p>
+                    </div>
+                )}
+                {getFilteredDocuments().length > 0 && (
                     <div className="pt-2 pb-2">
                         <div className="row g-3">
-                            {documents.map((doc, index) => {
+                            {getFilteredDocuments().map((doc, index) => {
                                 const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
                                 const docSize = doc.file_size_formatted || (doc.file_size_bytes ? formatFileSize(doc.file_size_bytes) : (doc.file_size ? formatFileSize(doc.file_size) : '0 KB'));
                                 const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';

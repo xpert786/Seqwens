@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaPaperPlane, FaSearch } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
 import { getAccessToken } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
 import { threadsAPI } from "../utils/apiUtils";
+import { useThreadWebSocket } from "../utils/useThreadWebSocket";
 import { toast } from "react-toastify";
 
 export default function Messages() {
@@ -22,8 +23,20 @@ export default function Messages() {
   const [creatingChat, setCreatingChat] = useState(false);
   const [superadmins, setSuperadmins] = useState([]);
   const [loadingSuperadmins, setLoadingSuperadmins] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   const API_BASE_URL = getApiBaseUrl();
+
+  // WebSocket hook for real-time messaging
+  const {
+    isConnected: wsConnected,
+    messages: wsMessages,
+    typingUsers,
+    error: wsError,
+    sendMessage: wsSendMessage,
+    sendTyping: wsSendTyping,
+    markAsRead: wsMarkAsRead,
+  } = useThreadWebSocket(activeConversationId, true);
 
   // Fetch superadmins from API
   const fetchSuperadmins = async () => {
@@ -170,7 +183,7 @@ export default function Messages() {
     (c) => c.id === activeConversationId
   ) || null;
 
-  // Fetch messages for active conversation
+  // Fetch messages for active conversation (initial load)
   useEffect(() => {
     const fetchMessages = async () => {
       if (!activeConversationId) {
@@ -184,11 +197,6 @@ export default function Messages() {
         console.log('Fetching messages for thread:', activeConversationId);
         const response = await threadsAPI.getThreadDetails(activeConversationId);
         console.log('Thread details response:', response);
-        console.log('Response type:', typeof response);
-        console.log('Response success:', response?.success);
-        console.log('Response data:', response?.data);
-        console.log('Messages array:', response?.data?.messages);
-        console.log('Messages array type:', Array.isArray(response?.data?.messages));
 
         if (response && response.success === true && response.data) {
           const messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
@@ -199,7 +207,7 @@ export default function Messages() {
             const transformedMessages = messagesArray.map(msg => {
               // Determine message type based on sender_role
               let messageType = "user"; // Default for client messages
-              if (msg.sender_role === "Admin" || msg.sender_role === "Staff") {
+              if (msg.sender_role === "Admin" || msg.sender_role === "Staff" || msg.sender_role === "Accountant" || msg.sender_role === "Bookkeeper" || msg.sender_role === "Assistant") {
                 messageType = "admin";
               }
 
@@ -220,9 +228,7 @@ export default function Messages() {
             });
 
             console.log('Transformed messages:', transformedMessages);
-            console.log('Setting messages to state...');
             setActiveChatMessages(transformedMessages);
-            console.log('Messages set to state');
 
             // Update conversation's last message in the list
             if (transformedMessages.length > 0) {
@@ -235,18 +241,21 @@ export default function Messages() {
                 )
               );
             }
+
+            // Mark messages as read via WebSocket
+            transformedMessages.forEach(msg => {
+              if (!msg.isRead && msg.type === "admin") {
+                wsMarkAsRead(msg.id);
+              }
+            });
           } else {
-            console.log('No messages in response, setting empty array');
             setActiveChatMessages([]);
           }
         } else {
-          console.log('Response not successful or no data:', response);
-          console.log('Response structure:', JSON.stringify(response, null, 2));
           setActiveChatMessages([]);
         }
       } catch (err) {
         console.error('Error fetching messages:', err);
-        console.error('Error details:', err.message, err.stack);
         setActiveChatMessages([]);
       } finally {
         setLoadingMessages(false);
@@ -254,7 +263,64 @@ export default function Messages() {
     };
 
     fetchMessages();
-  }, [activeConversationId]);
+  }, [activeConversationId, wsMarkAsRead]);
+
+  // Sync WebSocket messages with local state
+  useEffect(() => {
+    if (wsMessages && wsMessages.length > 0) {
+      const transformedMessages = wsMessages.map(msg => {
+        // Determine message type based on sender_role
+        let messageType = "user"; // Default for client messages
+        if (msg.sender_role === "Admin" || msg.sender_role === "Staff" || msg.sender_role === "Accountant" || msg.sender_role === "Bookkeeper" || msg.sender_role === "Assistant") {
+          messageType = "admin";
+        }
+
+        return {
+          id: msg.id,
+          type: messageType,
+          text: msg.content || '',
+          date: msg.created_at,
+          sender: msg.sender_name || '',
+          senderRole: msg.sender_role || '',
+          isRead: msg.is_read || false,
+          isEdited: msg.is_edited || false,
+          messageType: msg.message_type || 'text',
+          attachment: msg.attachment || null,
+          attachmentName: msg.attachment_name || null,
+          attachmentSize: msg.attachment_size_display || null,
+        };
+      });
+
+      // Merge with existing messages, avoiding duplicates
+      setActiveChatMessages(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+        const merged = [...prev, ...newMessages].sort((a, b) => {
+          return new Date(a.date) - new Date(b.date);
+        });
+        return merged;
+      });
+
+      // Update conversation's last message
+      if (transformedMessages.length > 0) {
+        const lastMessage = transformedMessages[transformedMessages.length - 1];
+        setConversations(prevConvs =>
+          prevConvs.map(conv =>
+            conv.id === activeConversationId
+              ? { ...conv, lastMessage: lastMessage.text }
+              : conv
+          )
+        );
+      }
+
+      // Mark new messages as read
+      transformedMessages.forEach(msg => {
+        if (!msg.isRead && msg.type === "admin") {
+          wsMarkAsRead(msg.id);
+        }
+      });
+    }
+  }, [wsMessages, activeConversationId, wsMarkAsRead]);
 
 
   const handleSend = async () => {
@@ -263,54 +329,52 @@ export default function Messages() {
     const messageText = newMessage.trim();
     setNewMessage(""); // Clear input immediately for better UX
 
+    // Stop typing indicator
+    wsSendTyping(false);
+
     try {
-      const token = getAccessToken();
+      // Try WebSocket first if connected
+      if (wsConnected) {
+        const sent = wsSendMessage(messageText, false);
+        if (sent) {
+          console.log('✅ Message sent via WebSocket');
+          return;
+        }
+      }
 
-      const payload = {
-        chat: activeConversationId,
-        content: messageText
-      };
-
-      console.log('Sending message with payload:', payload);
-
-      const response = await fetch(`${API_BASE_URL}/user/messages/send/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      // Fallback to REST API
+      console.log('Sending message via REST API');
+      const response = await threadsAPI.sendMessage(activeConversationId, {
+        content: messageText,
+        message_type: 'text',
+        is_internal: false
       });
 
-      const data = await response.json();
-      console.log('Send message response:', data);
+      if (response.success) {
+        console.log('✅ Message sent successfully via REST API');
+        // Message will be added via WebSocket or we can add it manually
+        const newMsg = {
+          id: response.data?.id || Date.now(),
+          type: "user",
+          text: messageText,
+          date: response.data?.created_at || new Date().toISOString(),
+          sender: response.data?.sender_name || 'You',
+          senderRole: response.data?.sender_role || '',
+          isRead: false,
+          isEdited: false,
+          messageType: 'text',
+        };
 
-      if (response.ok && data.success) {
-        // Update conversations with the new message
-        const updatedConversations = conversations.map((conv) =>
-          conv.id === activeConversationId
-            ? {
-              ...conv,
-              messages: [
-                ...conv.messages,
-                {
-                  id: data.message_data.id,
-                  type: "user",
-                  text: data.message_data.content,
-                  date: data.message_data.created_at_formatted,
-                  sender: data.message_data.sender_name,
-                },
-              ],
-              lastMessage: data.message_data.content,
-              time: data.message_data.created_at_formatted,
-            }
-            : conv
+        setActiveChatMessages(prev => [...prev, newMsg]);
+        setConversations(prevConvs =>
+          prevConvs.map(conv =>
+            conv.id === activeConversationId
+              ? { ...conv, lastMessage: messageText }
+              : conv
+          )
         );
-        setConversations(updatedConversations);
-
-        console.log('✅ Message sent successfully');
       } else {
-        throw new Error(data.message || 'Failed to send message');
+        throw new Error(response.message || 'Failed to send message');
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -327,6 +391,27 @@ export default function Messages() {
         className: "custom-toast-error",
         bodyClassName: "custom-toast-body",
       });
+    }
+  };
+
+  // Handle typing indicator
+  const handleTyping = (e) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    // Send typing indicator via WebSocket
+    if (wsConnected && value.trim().length > 0) {
+      wsSendTyping(true);
+      
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Stop typing after 2 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        wsSendTyping(false);
+      }, 2000);
     }
   };
 
@@ -738,16 +823,33 @@ export default function Messages() {
 
               <div className="border-top pt-2">
                 <div className="d-flex align-items-center">
+                  {/* WebSocket connection indicator */}
+                  {wsConnected && (
+                    <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
+                    </div>
+                  )}
+                  {!wsConnected && wsError && (
+                    <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
+                    </div>
+                  )}
+                  {/* Typing indicator */}
+                  {typingUsers.length > 0 && (
+                    <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
+                      {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                    </div>
+                  )}
                   <input
                     type="text"
                     className="form-control me-2"
                     placeholder="Write a message..."
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleTyping}
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     style={{ fontFamily: "BasisGrotesquePro" }}
                   />
-                  <button className="btn" style={{ background: "#F56D2D", color: "#fff" }} onClick={handleSend}>
+                  <button className="btn" style={{ background: "#F56D2D", color: "#fff" }} onClick={handleSend} disabled={!wsConnected && wsError}>
                     <FaPaperPlane />
                   </button>
                 </div>
