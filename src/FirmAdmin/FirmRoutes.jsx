@@ -20,6 +20,8 @@ import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
 import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
+import Offices from './Pages/Offices';
+import OfficeOverview from './Pages/Offices/OfficeOverview';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -85,6 +87,8 @@ export default function FirmRoutes() {
         <Route path="settings" element={<FirmSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="account-settings" element={<AccountSettings />} />
+        <Route path="offices" element={<Offices />} />
+        <Route path="offices/:officeId" element={<OfficeOverview />} />
         
         {/* Add more routes here as needed */}
         

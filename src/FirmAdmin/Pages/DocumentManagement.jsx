@@ -172,8 +172,8 @@ export default function DocumentManagement() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative ${activeTab === tab
-                    ? 'text-white bg-[#3AD6F2]'
-                    : 'text-gray-600 hover:text-gray-900'
+                  ? 'text-white bg-[#3AD6F2]'
+                  : 'text-gray-600 hover:text-gray-900'
                   }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
@@ -240,8 +240,8 @@ export default function DocumentManagement() {
                           <span
                             key={idx}
                             className={`px-2 py-0.5 text-xs font-medium rounded-full ${idx === 0
-                                ? 'bg-[#f49c2d] text-white'
-                                : 'bg-white text-gray-800 border border-gray-300'
+                              ? 'bg-[#f49c2d] text-white'
+                              : 'bg-white text-gray-800 border border-gray-300'
                               }`}
                             style={{ fontFamily: 'BasisGrotesquePro' }}
                           >
@@ -325,7 +325,7 @@ export default function DocumentManagement() {
                   Monitor IRS requirements, document expiration, and security compliance
                 </p>
               </div>
-              {/* Global Filter Dropdown */}
+              {/* Global Fi lter Dropdown */}
               <div className="relative">
                 <select className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
                   <option>Next 30 Days</option>
@@ -336,48 +336,25 @@ export default function DocumentManagement() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex gap-1 bg-white rounded-lg p-1 w-fit border border-blue-50">
-              <button
-                onClick={() => setComplianceSubTab('Overview')}
-                className={`px-6 py-3 text-sm font-medium transition-colors rounded-lg ${complianceSubTab === 'Overview'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setComplianceSubTab('IRS Tracking')}
-                className={`px-6 py-3 text-sm font-medium transition-colors rounded-lg ${complianceSubTab === 'IRS Tracking'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                IRS Tracking
-              </button>
-              <button
-                onClick={() => setComplianceSubTab('Security')}
-                className={`px-6 py-3 text-sm font-medium transition-colors rounded-lg ${complianceSubTab === 'Security'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                Security
-              </button>
-              <button
-                onClick={() => setComplianceSubTab('Alerts')}
-                className={`px-6 py-3 text-sm font-medium transition-colors rounded-lg ${complianceSubTab === 'Alerts'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                Alerts
-              </button>
-            </div>
+            <div className="mb-6 w-fit">
+  <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
+    {['Overview', 'IRS Tracking', 'Security', 'Alerts'].map((tab) => (
+      <button
+        key={tab}
+        onClick={() => setComplianceSubTab(tab)}
+        className={`px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium transition-colors relative ${complianceSubTab === tab
+          ? 'text-white bg-[#3AD6F2]'
+          : 'text-gray-600 hover:text-gray-900'
+          }`}
+        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+      >
+        {tab}
+      </button>
+    ))}
+  </div>
+</div>
+
+
           </div>
 
           {/* Overview Tab Content */}
