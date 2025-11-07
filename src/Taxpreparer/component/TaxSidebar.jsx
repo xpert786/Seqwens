@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import "../styles/TaxSidebar.css";
 import { DashIconed, FileIconed, MesIconed, MonthIconed, AccountIcon, LogOutIcon } from "./icons";
 import { Clients, Task } from "./icons";
- 
+
 export default function TaxSidebar() {
   const location = useLocation();
 
@@ -75,14 +75,7 @@ export default function TaxSidebar() {
             </Link>
           </li>
 
-          <li className="mb-2">
-            <Link to="/taxdashboard/settings" className={linkClass("/taxdashboard/settings")}>
-              <span className={iconWrapperClass("/taxdashboard/settings")}>
-                <AccountIcon />
-              </span>
-              System Settings
-            </Link>
-          </li>
+
         </ul>
       </div>
 
@@ -105,4 +98,3 @@ export default function TaxSidebar() {
     </div>
   );
 }
- 

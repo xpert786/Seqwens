@@ -1,4 +1,4 @@
-import React, { useState,useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import { AwaitingIcon, CompletedIcon, Dot, DoubleUserIcon, FaildIcon, FiltIcon, Phone } from "../../component/icons";
@@ -8,26 +8,26 @@ import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import "../../styles/MyClients.css";
 
 export default function MyClients() {
-     const [openDropdown, setOpenDropdown] = useState(null);
-     const dropdownRefs = useRef({});
-     const navigate = useNavigate();
-     
-     // API state
-     const [clients, setClients] = useState([]);
-     const [overview, setOverview] = useState({
-       total_clients: 0,
-       active: 0,
-       pending: 0,
-       high_priority: 0
-     });
-     const [loading, setLoading] = useState(true);
-     const [error, setError] = useState(null);
-     
-     // Search and filter state
-     const [searchQuery, setSearchQuery] = useState("");
-     const [statusFilter, setStatusFilter] = useState(null); // null = all, "active", "pending"
-     const [priorityFilter, setPriorityFilter] = useState(null); // null = all, "high", "medium", "low"
-     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRefs = useRef({});
+  const navigate = useNavigate();
+
+  // API state
+  const [clients, setClients] = useState([]);
+  const [overview, setOverview] = useState({
+    total_clients: 0,
+    active: 0,
+    pending: 0,
+    high_priority: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null); // null = all, "active", "pending"
+  const [priorityFilter, setPriorityFilter] = useState(null); // null = all, "high", "medium", "low"
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Fetch clients from API
   const fetchClients = async () => {
@@ -141,9 +141,9 @@ export default function MyClients() {
       statuses.push(client.status.charAt(0).toUpperCase() + client.status.slice(1));
     }
     if (client.priority) {
-      const priorityLabel = client.priority === 'high' ? 'High Priority' : 
-                           client.priority === 'medium' ? 'Medium' : 
-                           client.priority;
+      const priorityLabel = client.priority === 'high' ? 'High Priority' :
+        client.priority === 'medium' ? 'Medium' :
+          client.priority;
       statuses.push(priorityLabel);
     }
     // Add client tags
@@ -264,31 +264,67 @@ export default function MyClients() {
       </div>
 
       {/* Search & Filter */}
-      <div className="d-flex align-items-center gap-2 mb-3 mt-3">
-        <div className="position-relative search-box flex-grow-1">
-          <FaSearch className="search-icon" />
-          <input 
-            type="text" 
-            className="form-control ps-5 rounded mt-2" 
-            placeholder="Search by name, email, or phone..." 
+      <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+        <div className="position-relative " style={{ width: '260px', flexShrink: 0 }}>
+          <input
+            type="text"
+            className="form-control rounded"
+            placeholder="Search..."
             value={searchQuery}
             onChange={handleSearchChange}
             style={{
               border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-            }} 
+              paddingLeft: "38px",
+              paddingRight: "12px",
+              paddingTop: "10px",
+              paddingBottom: "8px",
+              width: "100%",
+              height: "38px",
+              fontSize: "14px",
+              lineHeight: "22px"
+            }}
           />
-        </div>
-     
-        <div className="position-relative filter-dropdown-container">
-          <button 
-            className="btn btn-filter d-flex align-items-center rounded px-4" 
-            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 12 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="search-icon"
             style={{
-              border: "none",
+              position: 'absolute',
+              left: '14px',
+              top: '12px',
+              zIndex: 10,
+              pointerEvents: 'none'
             }}
           >
-            <FiltIcon className="me-3 text-muted" />
-            <span className="ms-1">Filter</span>
+            <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <div className="position-relative filter-dropdown-container" style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            className="btn btn-filter d-flex align-items-center justify-content-center rounded px-3"
+            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            style={{
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              background: "#fff",
+              height: "38px",
+              paddingLeft: "38px",
+              paddingRight: "12px",
+              paddingTop: "10px",
+              paddingBottom: "8px",
+              fontSize: "14px",
+              lineHeight: "22px",
+              marginTop: "-9px",
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <FiltIcon className="me-2 text-muted" style={{ fontSize: "14px" }} />
+            <span>Filter</span>
             {(statusFilter || priorityFilter) && (
               <span className="badge bg-danger ms-2" style={{ fontSize: "10px" }}>
                 {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0)}
@@ -296,8 +332,8 @@ export default function MyClients() {
             )}
           </button>
           {showFilterDropdown && (
-            <div 
-              className="card shadow-sm" 
+            <div
+              className="card shadow-sm"
               style={{
                 position: "absolute",
                 top: "100%",
@@ -311,19 +347,19 @@ export default function MyClients() {
               <div className="mb-2">
                 <label className="form-label small fw-semibold">Status</label>
                 <div className="d-flex flex-column gap-1">
-                  <button 
+                  <button
                     className={`btn btn-sm ${statusFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handleStatusFilter(null)}
                   >
                     All
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${statusFilter === 'active' ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handleStatusFilter('active')}
                   >
                     Active
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${statusFilter === 'pending' ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handleStatusFilter('pending')}
                   >
@@ -334,25 +370,25 @@ export default function MyClients() {
               <div className="mb-2">
                 <label className="form-label small fw-semibold">Priority</label>
                 <div className="d-flex flex-column gap-1">
-                  <button 
+                  <button
                     className={`btn btn-sm ${priorityFilter === null ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handlePriorityFilter(null)}
                   >
                     All
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${priorityFilter === 'high' ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handlePriorityFilter('high')}
                   >
                     High
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${priorityFilter === 'medium' ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handlePriorityFilter('medium')}
                   >
                     Medium
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${priorityFilter === 'low' ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => handlePriorityFilter('low')}
                   >
@@ -361,7 +397,7 @@ export default function MyClients() {
                 </div>
               </div>
               {(statusFilter || priorityFilter || searchQuery) && (
-                <button 
+                <button
                   className="btn btn-sm btn-outline-danger w-100 mt-2"
                   onClick={clearFilters}
                 >
@@ -379,7 +415,7 @@ export default function MyClients() {
       }}>
         <h6 className="fw-semibold mb-3">Client List</h6>
         <div className="mb-3">All clients assigned to you</div>
-        
+
         {processedClients.length === 0 ? (
           <div className="text-center py-5">
             <p className="text-muted">No clients found</p>
@@ -393,8 +429,8 @@ export default function MyClients() {
           <div className="row g-3">
             {processedClients.map((client) => (
               <div key={client.id} className="col-md-6 col-12">
-                <div 
-                  className="card client-card" 
+                <div
+                  className="card client-card"
                   style={{
                     border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)"
                   }}
@@ -417,40 +453,34 @@ export default function MyClients() {
                             </small>
                           )}
                         </div>
-                        <div className="mt-1 d-flex flex-wrap gap-2">
-                          {client.statuses.map((status, i) => (
-                            <span key={i} className={`badge ${getBadgeStyle(status)}`}>
-                              {status}
-                            </span>
-                          ))}
+                        <div className="info-left">
+                          <span className="info-item">{client.tasks} pending tasks</span>
+                          <span className="info-item">{client.documents} documents</span>
+                          {client.due && (
+                            <span className="info-item">Due: {client.due}</span>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Right Info + Dot Dropdown */}
-                    <div className="info-row">
-                      <div className="info-left">
-                        <span className="info-item">{client.tasks} pending tasks</span>
-                        <span className="info-item">{client.documents} documents</span>
-                        {client.due && (
-                          <span className="info-item">Due: {client.due}</span>
-                        )}
-                      </div>
-                      <div className="info-right">
+                    <div className="info-row" style={{ position: 'relative', alignSelf: 'flex-start' }}>
+                      <div className="info-right" style={{ position: 'relative' }}>
                         <div
                           className="dot-container"
                           ref={el => dropdownRefs.current[client.id] = el}
                           onClick={() =>
                             setOpenDropdown(openDropdown === client.id ? null : client.id)
                           }
+                          style={{ position: 'relative' }}
                         >
                           <Dot />
                           {openDropdown === client.id && (
-                            <ul className="dot-dropdown">
-                              <li onMouseDown={(e) => { 
-                                e.preventDefault(); 
-                                e.stopPropagation(); 
-                                navigate(`/taxdashboard/clients/${client.id}`, { state: { client } }); 
+                            <ul className="dot-dropdown" style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px' }}>
+                              <li onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                navigate(`/taxdashboard/clients/${client.id}`, { state: { client } });
                               }}>
                                 View Details
                               </li>

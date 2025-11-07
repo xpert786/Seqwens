@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { File,UpIcon,Doc,FaildIcon,FiltIcon,CompletedIcon ,AwaitingIcon, Received, Uploaded, FileIcon} from "../../component/icons";
-import { FaSearch, FaFolder } from "react-icons/fa";
+import { File, UpIcon, Doc, FaildIcon, FiltIcon, CompletedIcon, AwaitingIcon, Received, Uploaded, FileIcon } from "../../component/icons";
+import { FaFolder } from "react-icons/fa";
 import TaxUploadModal from "../../upload/TaxUploadModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -87,7 +87,7 @@ export default function DocumentsPage() {
     { label: "Pending", icon: <AwaitingIcon />, count: clients.filter(c => c.statuses.includes("Active")).length, color: "#4caf50" },
     { label: "Reviewed", icon: <Received />, count: clients.filter(c => c.statuses.includes("Pending")).length, color: "#3f51b5" },
     { label: "Needs Revision", icon: <FaildIcon />, count: clients.filter(c => c.statuses.includes("High Priority")).length, color: "#EF4444" },
-     { label: "My Uploads", icon: <Uploaded />, count: clients.filter(c => c.statuses.includes("My Uploads")).length, color: "#EF4444" },
+    { label: "My Uploads", icon: <Uploaded />, count: clients.filter(c => c.statuses.includes("My Uploads")).length, color: "#EF4444" },
   ];
 
   // File Manager State
@@ -306,24 +306,7 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Search & Filter (hide when nested under client) */}
-      {!isNestedUnderClient && (
-        <div className="d-flex align-items-center gap-2 mb-3 mt-3">
-          <div className="position-relative search-box">
-            <FaSearch className="search-icon" />
-            <input
-              type="text"
-              className="form-control ps-5 rounded mt-2"
-              placeholder="Search.."
-              style={{ border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)" }}
-            />
-          </div>
-          <button className="btn btn-filter d-flex align-items-center rounded px-4" style={{ border: "none" }}>
-            <FiltIcon className="me-3 text-muted" />
-            <span className="ms-1">Filter</span>
-          </button>
-        </div>
-      )}
+
 
       {/* File Manager Section (only show when not nested under client) */}
       {!isNestedUnderClient && (
@@ -392,10 +375,10 @@ export default function DocumentsPage() {
           {fileManagerCreatingFolder && (
             <div className="mb-4 p-3 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
               <div className="mb-2">
-                <label className="form-label small fw-semibold">Folder Name <span className="text-danger">*</span></label>
+                <label className="form-label small fw-semibold text-black ">Folder Name <span className="text-danger">*</span></label>
                 <input
                   type="text"
-                  className="form-control form-control-sm"
+                  className="form-control form-control-sm text-black"
                   placeholder="Enter folder name"
                   value={fileManagerNewFolderName}
                   onChange={(e) => setFileManagerNewFolderName(e.target.value)}
@@ -403,7 +386,7 @@ export default function DocumentsPage() {
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label small fw-semibold">Description (Optional)</label>
+                <label className="form-label small fw-semibold text-black">Description (Optional)</label>
                 <textarea
                   className="form-control form-control-sm"
                   placeholder="Enter folder description"
@@ -438,79 +421,46 @@ export default function DocumentsPage() {
           )}
 
           {/* Search and Filter */}
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <div className="position-relative flex-grow-1">
-              <FaSearch className="position-absolute" style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6B7280" }} />
+          <div className="d-flex align-items-center gap-2 mb-4" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+            <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
               <input
                 type="text"
-                className="form-control ps-5"
-                placeholder="Search documents and folders..."
+                className="form-control rounded"
+                placeholder="Search..."
                 value={fileManagerSearchQuery}
                 onChange={(e) => setFileManagerSearchQuery(e.target.value)}
-                style={{ border: "1px solid #E8F0FF" }}
+                style={{
+                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  paddingLeft: "38px",
+                  paddingRight: "12px",
+                  paddingTop: "10px",
+                  paddingBottom: "8px",
+                  width: "100%",
+                  height: "38px",
+                  fontSize: "14px",
+                  lineHeight: "22px"
+                }}
               />
-            </div>
-            <div className="form-check d-flex align-items-center">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="showArchived"
-                checked={fileManagerShowArchived}
-                onChange={(e) => setFileManagerShowArchived(e.target.checked)}
-              />
-              <label className="form-check-label ms-2 small" htmlFor="showArchived">
-                Show Archived
-              </label>
-            </div>
-            <div className="btn-group" role="group">
-              <button
-                type="button"
-                className={`btn btn-sm ${fileManagerView === "grid" ? "btn-primary" : "btn-outline-secondary"}`}
-                onClick={() => setFileManagerView("grid")}
-                style={fileManagerView === "grid" ? { backgroundColor: "#00C0C6", border: "none" } : {}}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '12px',
+                  zIndex: 10,
+                  pointerEvents: 'none'
+                }}
               >
-                <i className="bi bi-grid"></i>
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm ${fileManagerView === "list" ? "btn-primary" : "btn-outline-secondary"}`}
-                onClick={() => setFileManagerView("list")}
-                style={fileManagerView === "list" ? { backgroundColor: "#00C0C6", border: "none" } : {}}
-              >
-                <i className="bi bi-list"></i>
-              </button>
+                <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
-          </div>
 
-          {/* Statistics */}
-          {fileManagerStatistics && (
-            <div className="row g-3 mb-4">
-              <div className="col-md-4">
-                <div className="bg-light rounded p-3">
-                  <div className="text-muted small mb-1">Total Folders</div>
-                  <div className="fw-semibold" style={{ fontSize: "20px", color: "#3B4A66" }}>
-                    {fileManagerStatistics.total_folders || 0}
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="bg-light rounded p-3">
-                  <div className="text-muted small mb-1">Total Documents</div>
-                  <div className="fw-semibold" style={{ fontSize: "20px", color: "#3B4A66" }}>
-                    {fileManagerStatistics.total_documents || 0}
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="bg-light rounded p-3">
-                  <div className="text-muted small mb-1">Archived Documents</div>
-                  <div className="fw-semibold" style={{ fontSize: "20px", color: "#3B4A66" }}>
-                    {fileManagerStatistics.archived_documents || 0}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+
+          </div>
 
           {/* Loading State */}
           {fileManagerLoading && (
@@ -557,7 +507,7 @@ export default function DocumentsPage() {
                             e.currentTarget.style.borderColor = "#E8F0FF";
                           }}
                         >
-                          <FaFolder style={{ color: "#F59E0B", fontSize: fileManagerView === "grid" ? "32px" : "24px" }} />
+                          {/* <FaFolder style={{ color: "#F59E0B", fontSize: fileManagerView === "grid" ? "32px" : "24px" }} /> */}
                           <div className={fileManagerView === "grid" ? "mt-2" : "flex-grow-1"}>
                             <div className="fw-semibold small" style={{ color: "#3B4A66" }}>{folder.title}</div>
                             {fileManagerView === "grid" && (
@@ -628,7 +578,7 @@ export default function DocumentsPage() {
               {/* Empty State */}
               {fileManagerFolders.length === 0 && fileManagerDocuments.length === 0 && (
                 <div className="text-center py-5">
-                  <FaFolder style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "16px" }} />
+                  {/* <FaFolder style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "16px" }} /> */}
                   <p className="text-muted mb-0">
                     {fileManagerSearchQuery ? 'No documents or folders found matching your search' : 'No folders or documents in this location'}
                   </p>
@@ -650,48 +600,48 @@ export default function DocumentsPage() {
 
       {/* Client Folders Section (only show when nested under client) */}
       {isNestedUnderClient && (
-      <div className="bg-white rounded-xl p-4">
-        <div className="header d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h3 className="fw-semibold">Client Folders</h3>
-            <small className="text-muted">Organized document folders by client</small>
+        <div className="bg-white rounded-xl p-4">
+          <div className="header d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h3 className="fw-semibold">Client Folders</h3>
+              <small className="text-muted">Organized document folders by client</small>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {documents.map((doc, idx) => (
+              <div
+                key={doc.id}
+                className="document-card p-4 flex flex-col justify-between"
+                style={{
+                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  // Navigate to the all documents page when any document card is clicked
+                  navigate("/taxdashboard/documents/all");
+                }}
+              >
+                {/* Header row: icon left, badge right */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-orange-500"><File /></div>
+                  <span className="text-xs text-white px-2 py-0.5 rounded-full" style={{ background: "var(--Palette2-Gold-800, #F49C2D)" }}>
+                    Client Folder
+                  </span>
+                </div>
+                <div className="font-medium text-gray-800">{doc.title}</div>
+                <div className="text-gray-500 text-xs">{doc.owner}</div>
+                {/* Footer row: documents count left, date right */}
+                <div className="flex items-center justify-between text-gray-400 text-xs mt-2">
+                  <div>{doc.docsCount} documents</div>
+                  <div>{doc.date}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {documents.map((doc, idx) => (
-            <div
-              key={doc.id}
-              className="document-card p-4 flex flex-col justify-between"
-              style={{
-                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                borderRadius: "12px",
-                cursor: "pointer",
-              }}
-              onClick={() => {
-                // Navigate to the all documents page when any document card is clicked
-                navigate("/taxdashboard/documents/all");
-              }}
-            >
-              {/* Header row: icon left, badge right */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-orange-500"><File /></div>
-                <span className="text-xs text-white px-2 py-0.5 rounded-full" style={{ background: "var(--Palette2-Gold-800, #F49C2D)" }}>
-                  Client Folder
-                </span>
-              </div>
-              <div className="font-medium text-gray-800">{doc.title}</div>
-              <div className="text-gray-500 text-xs">{doc.owner}</div>
-              {/* Footer row: documents count left, date right */}
-              <div className="flex items-center justify-between text-gray-400 text-xs mt-2">
-                <div>{doc.docsCount} documents</div>
-                <div>{doc.date}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
       )}
-      
+
       {/* Render nested routes */}
       <div className="mt-4">
         <Outlet />
