@@ -1,58 +1,134 @@
 import React, { useState, useEffect } from "react";
 import "../../styles/icon.css";
 import { SaveIcon } from "../../component/icons";
-import { taxPreparerNotificationAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+import { taxPreparerNotificationAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 const Notifications = ({ notifications, onUpdate }) => {
   const [preferences, setPreferences] = useState({
-    email_notifications: notifications?.email_notifications ?? true,
-    sms_notifications: notifications?.sms_notifications ?? false,
-    document_upload_confirmation: notifications?.document_upload_confirmation ?? true,
-    appointment_reminders: notifications?.appointment_reminders ?? true,
-    invoice_alerts: notifications?.invoice_alerts ?? true,
-    message_notifications: notifications?.message_notifications ?? true,
-    marketing_emails: notifications?.marketing_emails ?? false,
-    login_alerts: notifications?.login_alerts ?? true,
+    email_notifications: true,
+    sms_notifications: false,
+    document_upload_confirmation: true,
+    appointment_reminders: true,
+    invoice_alerts: true,
+    message_notifications: true,
+    marketing_emails: false,
+    login_alerts: true,
   });
-
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [domainName, setDomainName] = useState("seqwens.com");
 
-  // Update preferences when notifications prop changes
+  // Fetch notification preferences on component mount
   useEffect(() => {
-    if (notifications) {
-      setPreferences({
-        email_notifications: notifications.email_notifications ?? true,
-        sms_notifications: notifications.sms_notifications ?? false,
-        document_upload_confirmation: notifications.document_upload_confirmation ?? true,
-        appointment_reminders: notifications.appointment_reminders ?? true,
-        invoice_alerts: notifications.invoice_alerts ?? true,
-        message_notifications: notifications.message_notifications ?? true,
-        marketing_emails: notifications.marketing_emails ?? false,
-        login_alerts: notifications.login_alerts ?? true,
-      });
-    }
-  }, [notifications]);
+    const fetchPreferences = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await taxPreparerNotificationAPI.getNotificationPreferences();
+        console.log('Fetched notification preferences:', response);
+
+        // Map API response to component state
+        if (response.success && response.data) {
+          setPreferences({
+            email_notifications: response.data.email_notifications ?? true,
+            sms_notifications: response.data.sms_notifications ?? false,
+            document_upload_confirmation: response.data.document_upload_confirmation ?? true,
+            appointment_reminders: response.data.appointment_reminders ?? true,
+            invoice_alerts: response.data.invoice_alerts ?? true,
+            message_notifications: response.data.message_notifications ?? true,
+            marketing_emails: response.data.marketing_emails ?? false,
+            login_alerts: response.data.login_alerts ?? true,
+          });
+        } else if (notifications) {
+          // Fallback to props if API doesn't return data
+          setPreferences({
+            email_notifications: notifications.email_notifications ?? true,
+            sms_notifications: notifications.sms_notifications ?? false,
+            document_upload_confirmation: notifications.document_upload_confirmation ?? true,
+            appointment_reminders: notifications.appointment_reminders ?? true,
+            invoice_alerts: notifications.invoice_alerts ?? true,
+            message_notifications: notifications.message_notifications ?? true,
+            marketing_emails: notifications.marketing_emails ?? false,
+            login_alerts: notifications.login_alerts ?? true,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching notification preferences:', err);
+        const errorMessage = handleAPIError(err);
+        setError(errorMessage);
+        // If API fails, use props as fallback
+        if (notifications) {
+          setPreferences({
+            email_notifications: notifications.email_notifications ?? true,
+            sms_notifications: notifications.sms_notifications ?? false,
+            document_upload_confirmation: notifications.document_upload_confirmation ?? true,
+            appointment_reminders: notifications.appointment_reminders ?? true,
+            invoice_alerts: notifications.invoice_alerts ?? true,
+            message_notifications: notifications.message_notifications ?? true,
+            marketing_emails: notifications.marketing_emails ?? false,
+            login_alerts: notifications.login_alerts ?? true,
+          });
+        }
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, []);
 
   const togglePreference = (key) => {
     setPreferences({ ...preferences, [key]: !preferences[key] });
   };
 
   const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+
     try {
-      const response = await taxPreparerNotificationAPI.updateTaxPreparerNotificationPreferences(preferences);
-      
-      if (response.success || response) {
-        toast.success('Notification preferences updated successfully!');
-        if (onUpdate) {
-          onUpdate();
-        }
-      } else {
-        toast.error('Failed to update notification preferences');
+      console.log('Saving notification preferences:', preferences);
+
+      await taxPreparerNotificationAPI.updateNotificationPreferences(preferences);
+
+      // Show success toast
+      toast.success("Notification preferences updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      if (onUpdate) {
+        onUpdate();
       }
-    } catch (error) {
-      console.error('Error updating notification preferences:', error);
-      toast.error(error.message || 'Failed to update notification preferences');
+    } catch (err) {
+      console.error('Error saving notification preferences:', err);
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+
+      // Show error toast
+      toast.error(errorMessage || "Failed to update notification preferences", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -223,17 +299,31 @@ const Notifications = ({ notifications, onUpdate }) => {
           <button
             className="btn d-flex align-items-center gap-2 px-6 py-2 rounded-lg"
             onClick={handleSave}
+            disabled={saving || loading}
             style={{
               backgroundColor: "#F56D2D",
+              opacity: (saving || loading) ? 0.7 : 1,
               color: "#fff",
               fontWeight: "400",
               fontSize: "15px",
               fontFamily: "BasisGrotesquePro",
-              border: "none"
+              border: "none",
+              cursor: (saving || loading) ? "not-allowed" : "pointer",
             }}
           >
-            <SaveIcon />
-            Save Changes
+            {saving ? (
+              <>
+                <div className="spinner-border spinner-border-sm" role="status">
+                  <span className="visually-hidden">Saving...</span>
+                </div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <SaveIcon />
+                Save Preferences
+              </>
+            )}
           </button>
         </div>
       </div>

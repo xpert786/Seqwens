@@ -198,7 +198,7 @@ export default function Dashboard() {
         <div className="col-12 col-md-6 ">
           <div className="card custom-card p-3 p-md-4 rounded-3">
             <div className="mb-3">
-              <h1 className="section-title mb-1">What's Due</h1>
+              <h1 className="section-title mb-1">Tasks</h1>
               <p className="section-subtitle m-0">Your latest interactions</p>
             </div>
             {loading ? (

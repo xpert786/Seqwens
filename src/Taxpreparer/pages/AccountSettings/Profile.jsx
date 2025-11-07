@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { SaveIcon } from "../../component/icons";
-import { taxPreparerProfileAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 
 export default function Profile({ profileData, companyProfile, onUpdate }) {
+    const fileInputRef = useRef(null);
     const [formData, setFormData] = useState({
-        first_name: profileData?.first_name || '',
-        middle_name: profileData?.middle_name || '',
-        last_name: profileData?.last_name || '',
+        name: profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || '',
         email: profileData?.email || '',
         phone_number: profileData?.phone_number || '',
         availability: profileData?.availability || 'full_time',
@@ -16,14 +15,14 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         ptin: companyProfile?.ptin || '',
         efin: companyProfile?.efin || ''
     });
+    const [saving, setSaving] = useState(false);
+    const [uploadingPicture, setUploadingPicture] = useState(false);
 
     // Update form data when props change
     useEffect(() => {
         if (profileData || companyProfile) {
             setFormData({
-                first_name: profileData?.first_name || '',
-                middle_name: profileData?.middle_name || '',
-                last_name: profileData?.last_name || '',
+                name: profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || '',
                 email: profileData?.email || '',
                 phone_number: profileData?.phone_number || '',
                 availability: profileData?.availability || 'full_time',
@@ -45,30 +44,86 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Prepare data for API - separate personal and company info
-            const personalData = {
-                first_name: formData.first_name,
-                middle_name: formData.middle_name || '',
-                last_name: formData.last_name,
+            setSaving(true);
+
+            // Parse name into first_name and last_name
+            const nameParts = formData.name.trim().split(/\s+/);
+            const first_name = nameParts[0] || '';
+            const last_name = nameParts.slice(1).join(' ') || '';
+
+            // Prepare update data - only include fields that API accepts
+            const updateData = {
+                first_name: first_name,
+                last_name: last_name,
                 email: formData.email,
                 phone_number: formData.phone_number,
-                availability: formData.availability
+                availability: formData.availability,
+                ptin: formData.ptin || '',
+                efin: formData.efin || ''
             };
 
-            // Update personal information
-            const response = await taxPreparerProfileAPI.updateTaxPreparerAccount(personalData);
-            
-            if (response.success || response) {
-                toast.success('Profile updated successfully!');
+            const result = await taxPreparerSettingsAPI.updateSettings(updateData);
+
+            if (result.success) {
+                toast.success('Settings updated successfully');
                 if (onUpdate) {
                     onUpdate();
                 }
             } else {
-                toast.error('Failed to update profile');
+                throw new Error(result.message || 'Failed to update settings');
             }
         } catch (error) {
-            console.error('Error updating profile:', error);
-            toast.error(error.message || 'Failed to update profile');
+            console.error('Error updating settings:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : 'Failed to update settings. Please try again.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleAvatarChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select a valid image file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image size should be less than 5MB');
+            return;
+        }
+
+        uploadProfilePicture(file);
+    };
+
+    const uploadProfilePicture = async (file) => {
+        try {
+            setUploadingPicture(true);
+
+            const result = await taxPreparerSettingsAPI.updateProfilePicture(file);
+
+            if (result.success) {
+                toast.success('Profile picture updated successfully');
+                if (onUpdate) {
+                    onUpdate();
+                }
+            } else {
+                throw new Error(result.message || 'Failed to update profile picture');
+            }
+        } catch (error) {
+            console.error('Error uploading profile picture:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : 'Failed to update profile picture. Please try again.');
+        } finally {
+            setUploadingPicture(false);
+            // Reset file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
     };
 
@@ -120,8 +175,21 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                         style={{ objectFit: 'cover' }}
                     />
                     <div>
-                        <button className="btn border border-[#E8F0FF] text-black btn-sm mb-2" style={{ fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
-                            Change Avatar
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={handleAvatarChange}
+                        />
+                        <button
+                            type="button"
+                            className="btn border border-[#E8F0FF] text-black btn-sm mb-2"
+                            style={{ fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingPicture}
+                        >
+                            {uploadingPicture ? 'Uploading...' : 'Change Avatar'}
                         </button>
                     </div>
                 </div>
@@ -129,46 +197,20 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 {/* Form */}
                 <form onSubmit={handleSubmit}>
                     <div className="row g-3 mb-4">
-                        <div className="col-md-6">
+                        <div className="col-12">
                             <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                First Name
+                                Name
                             </label>
                             <input
                                 type="text"
-                                name="first_name"
+                                name="name"
                                 className="form-control w-full"
-                                value={formData.first_name}
+                                value={formData.name}
                                 onChange={handleChange}
                                 style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                             />
                         </div>
-                        <div className="col-md-6">
-                            <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                Middle Name
-                            </label>
-                            <input
-                                type="text"
-                                name="middle_name"
-                                className="form-control w-full"
-                                value={formData.middle_name || ''}
-                                onChange={handleChange}
-                                style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            />
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                Last Name
-                            </label>
-                            <input
-                                type="text"
-                                name="last_name"
-                                className="form-control w-full"
-                                value={formData.last_name}
-                                onChange={handleChange}
-                                style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            />
-                        </div>
-                        <div className="col-md-6">
+                        <div className="col-12">
                             <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                 Email
                             </label>
@@ -181,7 +223,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                 style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                             />
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-12">
                             <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                 Phone Number
                             </label>
@@ -194,7 +236,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                 style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                             />
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-12">
                             <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                 Availability
                             </label>
@@ -222,16 +264,17 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             type="submit"
                             className="btn d-flex align-items-center gap-2"
                             style={{ backgroundColor: "#F56D2D", color: "#ffffff", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                            disabled={saving}
                         >
                             <SaveIcon />
-                            Save Changes
+                            {saving ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
                 </form>
             </div>
 
             {/* Company Profile Section */}
-            <div className="grid grid-cols-1 gap-4 border border-[#E8F0FF] p-4 rounded-lg bg-white">
+            <div className="flex flex-col gap-4 border border-[#E8F0FF] p-4 rounded-lg bg-white">
                 <div className="align-items-center mb-3">
                     <h5
                         className="mb-0 me-3"
@@ -242,7 +285,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             fontFamily: "BasisGrotesquePro",
                         }}
                     >
-                        Company Information
+                        Company Profile
                     </h5>
                     <p
                         className="mb-0"
@@ -258,7 +301,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 </div>
 
                 <div className="row g-3">
-                    <div className="col-md-4">
+                    <div className="col-12">
                         <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                             Company Name
                         </label>
@@ -271,7 +314,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                         />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-12">
                         <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                             PTIN
                         </label>
@@ -284,7 +327,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                         />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-12">
                         <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                             EFIN
                         </label>
@@ -305,9 +348,10 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                         onClick={handleSubmit}
                         className="btn d-flex align-items-center gap-2"
                         style={{ backgroundColor: "#F56D2D", color: "#ffffff", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                        disabled={saving}
                     >
                         <SaveIcon />
-                        Save Changes
+                        {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </div>

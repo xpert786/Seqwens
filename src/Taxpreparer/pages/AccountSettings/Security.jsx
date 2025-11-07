@@ -1,35 +1,193 @@
 import { useState, useEffect } from "react";
 import "../../styles/icon.css";
 import { SaveIcon } from "../../component/icons";
+import { toast } from "react-toastify";
+import { taxPreparerSecurityAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 const Security = ({ security, onUpdate }) => {
-  const [twoFactor, setTwoFactor] = useState(security?.two_factor_authentication ?? false);
-  const [sessionTimeout, setSessionTimeout] = useState(security?.session_timeout ?? 30);
-  const [isEmailVerified, setIsEmailVerified] = useState(security?.is_email_verified ?? false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(security?.is_phone_verified ?? false);
+  const [twoFactor, setTwoFactor] = useState(false);
+  const [sessionTimeout, setSessionTimeout] = useState(30);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Update state when security prop changes
+  // Password update states
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState(null);
+
   useEffect(() => {
-    if (security) {
-      setTwoFactor(security.two_factor_authentication ?? false);
-      setSessionTimeout(security.session_timeout ?? 30);
-      setIsEmailVerified(security.is_email_verified ?? false);
-      setIsPhoneVerified(security.is_phone_verified ?? false);
-    }
-  }, [security]);
+    const fetchSecurityPreferences = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await taxPreparerSecurityAPI.getSecurityPreferences();
+        console.log('Fetched security preferences:', data);
 
-  const handleSave = () => {
-    // TODO: Implement save functionality with API call
-    console.log('Security settings:', {
-      two_factor_authentication: twoFactor,
-      session_timeout: sessionTimeout,
-      is_email_verified: isEmailVerified,
-      is_phone_verified: isPhoneVerified
-    });
-    if (onUpdate) {
-      onUpdate();
+        // Map API response to component state
+        if (data) {
+          // Handle nested response structure
+          const securityData = data.data || data;
+          console.log('Security data structure:', securityData);
+
+          setTwoFactor(securityData.two_factor_authentication || securityData.two_factor_enabled || false);
+          setSessionTimeout(securityData.session_timeout || 30);
+          setIsEmailVerified(securityData.is_email_verified || false);
+          setIsPhoneVerified(securityData.is_phone_verified || false);
+        } else if (security) {
+          // Fallback to props if API doesn't return data
+          setTwoFactor(security.two_factor_authentication ?? false);
+          setSessionTimeout(security.session_timeout ?? 30);
+          setIsEmailVerified(security.is_email_verified ?? false);
+          setIsPhoneVerified(security.is_phone_verified ?? false);
+        }
+      } catch (err) {
+        console.error('Error fetching security preferences:', err);
+        setError(handleAPIError(err));
+        // If API fails, use props as fallback
+        if (security) {
+          setTwoFactor(security.two_factor_authentication ?? false);
+          setSessionTimeout(security.session_timeout ?? 30);
+          setIsEmailVerified(security.is_email_verified ?? false);
+          setIsPhoneVerified(security.is_phone_verified ?? false);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSecurityPreferences();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+
+    try {
+      const apiData = {
+        two_factor_authentication: twoFactor,
+        session_timeout: sessionTimeout,
+      };
+
+      console.log('Saving security preferences:', apiData);
+
+      await taxPreparerSecurityAPI.updateSecurityPreferences(apiData);
+
+      // Show success toast
+      toast.success("Security settings saved successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (err) {
+      console.error('Error saving security preferences:', err);
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+
+      // Show error toast
+      toast.error(errorMessage || "Failed to save security settings", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setSaving(false);
     }
   };
+
+  const handlePasswordUpdate = async () => {
+    setPasswordSaving(true);
+    setPasswordError(null);
+
+    // Validate passwords
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      setPasswordSaving(false);
+      toast.error('New passwords do not match', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
+      setPasswordSaving(false);
+      toast.error('Password must be at least 8 characters long', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    try {
+      const passwordData = {
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      };
+
+      console.log('Updating password...');
+
+      await taxPreparerSecurityAPI.updatePassword(passwordData);
+
+      // Show success toast
+      toast.success("Password updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Clear form
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error('Error updating password:', err);
+      const errorMessage = handleAPIError(err);
+      setPasswordError(errorMessage);
+
+      // Show error toast
+      toast.error(errorMessage || "Failed to update password", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  // Show loading state while fetching preferences
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "200px" }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <span className="ms-2">Loading security settings...</span>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -226,6 +384,8 @@ const Security = ({ security, onUpdate }) => {
                 type="password"
                 className="form-control w-full"
                 placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 style={{
                   color: "#3B4A66",
                   fontSize: "14px",
@@ -253,6 +413,8 @@ const Security = ({ security, onUpdate }) => {
                 type="password"
                 className="form-control w-full"
                 placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 style={{
                   color: "#3B4A66",
                   fontSize: "14px",
@@ -280,6 +442,8 @@ const Security = ({ security, onUpdate }) => {
                 type="password"
                 className="form-control w-full"
                 placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 style={{
                   color: "#3B4A66",
                   fontSize: "14px",
@@ -291,19 +455,28 @@ const Security = ({ security, onUpdate }) => {
                 }}
               />
             </div>
+            {passwordError && (
+              <div className="alert alert-danger" role="alert" style={{ fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+                {passwordError}
+              </div>
+            )}
             <button
               type="button"
-              className="btn  px-4 py-2 rounded-lg"
+              className="btn px-4 py-2 rounded-lg"
+              onClick={handlePasswordUpdate}
+              disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
               style={{
                 color: "#3B4A66",
                 fontSize: "15px",
                 fontWeight: "400",
                 fontFamily: "BasisGrotesquePro",
                 background: "#F3F7FF",
-                border: "1px solid #E8F0FF"
+                border: "1px solid #E8F0FF",
+                opacity: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? 0.6 : 1,
+                cursor: (passwordSaving || !currentPassword || !newPassword || !confirmPassword) ? "not-allowed" : "pointer",
               }}
             >
-              Update Password
+              {passwordSaving ? 'Updating...' : 'Update Password'}
             </button>
           </form>
         </div>
@@ -313,17 +486,31 @@ const Security = ({ security, onUpdate }) => {
           <button
             className="btn d-flex align-items-center gap-2 px-6 py-2 rounded-lg"
             onClick={handleSave}
+            disabled={saving || loading}
             style={{
               backgroundColor: "#F56D2D",
+              opacity: (saving || loading) ? 0.7 : 1,
               color: "#fff",
               fontWeight: "400",
               fontSize: "15px",
               fontFamily: "BasisGrotesquePro",
-              border: "none"
+              border: "none",
+              cursor: (saving || loading) ? "not-allowed" : "pointer",
             }}
           >
-            <SaveIcon />
-            Save Changes
+            {saving ? (
+              <>
+                <div className="spinner-border spinner-border-sm" role="status">
+                  <span className="visually-hidden">Saving...</span>
+                </div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <SaveIcon />
+                Save Security Settings
+              </>
+            )}
           </button>
         </div>
       </div>

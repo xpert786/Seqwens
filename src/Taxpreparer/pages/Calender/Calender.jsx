@@ -106,6 +106,30 @@ export default function CalendarPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
+  // Convert 24-hour time to 12-hour AM/PM format
+  const convertTo12HourFormat = (timeStr) => {
+    if (!timeStr) return '';
+    
+    // If already in 12-hour format (contains AM/PM), return as is
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      return timeStr;
+    }
+    
+    // Extract hours and minutes from 24-hour format (HH:MM:SS or HH:MM)
+    const timeParts = timeStr.split(':');
+    if (timeParts.length < 2) return timeStr;
+    
+    let hours = parseInt(timeParts[0], 10);
+    const minutes = timeParts[1];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    
+    const formattedMinutes = minutes.padStart(2, '0');
+    return `${hours}:${formattedMinutes} ${ampm}`;
+  };
+
   // Convert API appointment to event format
   const convertAppointmentToEvent = (appointment) => {
     const appointmentDate = new Date(appointment.appointment_date);
@@ -113,11 +137,33 @@ export default function CalendarPage() {
     const [hours, minutes] = timeStr.split(':').map(Number);
     appointmentDate.setHours(hours, minutes, 0);
 
+    // Convert start time to AM/PM format
+    const startTime = convertTo12HourFormat(appointment.appointment_time || '00:00:00');
+    
+    // Use end_time from API if available (check if already in AM/PM format)
+    let endTime;
+    if (appointment.end_time) {
+      // If end_time already contains AM/PM, use it directly; otherwise convert
+      endTime = appointment.end_time.includes('AM') || appointment.end_time.includes('PM') 
+        ? appointment.end_time 
+        : convertTo12HourFormat(appointment.end_time);
+    } else {
+      // Calculate end time based on duration
+      const durationMinutes = appointment.appointment_duration || 30;
+      const totalMinutes = hours * 60 + minutes + durationMinutes;
+      const endHours = Math.floor(totalMinutes / 60) % 24;
+      const endMins = totalMinutes % 60;
+      endTime = convertTo12HourFormat(`${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`);
+    }
+    
+    const timeDisplay = `${startTime} - ${endTime}`;
+
     return {
       id: appointment.id,
       title: appointment.subject || `${appointment.type_display || 'Appointment'}`,
       date: appointmentDate,
-      time: `${appointment.appointment_time || '00:00'}`.substring(0, 5) + (appointment.end_time ? ` - ${appointment.end_time}` : ''),
+      time: timeDisplay,
+      timeSort: hours * 60 + minutes, // For sorting purposes
       type: appointment.appointment_type,
       confirmed: appointment.appointment_status === 'confirmed',
       status: appointment.appointment_status,
@@ -194,21 +240,31 @@ export default function CalendarPage() {
   const getAppointmentsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
     const dateApps = appointmentsByDate[dateStr] || [];
-    return dateApps.map(convertAppointmentToEvent);
+    const events = dateApps.map(convertAppointmentToEvent);
+    // Sort appointments by time (earliest first)
+    return events.sort((a, b) => (a.timeSort || 0) - (b.timeSort || 0));
   };
 
   const getTodayEvents = () => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     const todayApps = appointmentsByDate[todayStr] || [];
-    return todayApps.map(convertAppointmentToEvent);
+    const events = todayApps.map(convertAppointmentToEvent);
+    // Sort appointments by time (earliest first)
+    return events.sort((a, b) => (a.timeSort || 0) - (b.timeSort || 0));
   };
 
   const getUpcomingEvents = () => {
     if (!calendarData?.upcoming_events) {
       return [];
     }
-    return calendarData.upcoming_events.map(convertAppointmentToEvent);
+    const events = calendarData.upcoming_events.map(convertAppointmentToEvent);
+    // Sort by date and time (earliest first)
+    return events.sort((a, b) => {
+      const dateCompare = a.date - b.date;
+      if (dateCompare !== 0) return dateCompare;
+      return (a.timeSort || 0) - (b.timeSort || 0);
+    });
   };
 
   // Get pending meetings

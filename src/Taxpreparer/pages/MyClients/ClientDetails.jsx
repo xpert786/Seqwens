@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useParams, useNavigate, Outlet } from "react-router-dom";
-import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon, MiniClock, WhiteEdit } from "../../component/icons";
+import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon, MiniClock, WhiteEdit, Cut } from "../../component/icons";
+import { FaChevronDown, FaChevronRight, FaFolder } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { toast } from "react-toastify";
 
 export default function ClientDetails() {
   const { clientId } = useParams();
@@ -24,6 +26,32 @@ export default function ClientDetails() {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Create Task Modal state
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [loadingTask, setLoadingTask] = useState(false);
+  const [folderTree, setFolderTree] = useState([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [showFolderDropdown, setShowFolderDropdown] = useState(false);
+  const folderDropdownRef = useRef(null);
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const [selectedFolderPath, setSelectedFolderPath] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
+  const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
+  const [formData, setFormData] = useState({
+    task_type: 'signature_request',
+    task_title: '',
+    client_ids: [],
+    folder_id: '',
+    due_date: '',
+    priority: '',
+    estimated_hours: '',
+    description: '',
+    files: [],
+    spouse_signature_required: false
+  });
 
   // Fetch client details from API
   const fetchClientDetails = async () => {
@@ -119,6 +147,476 @@ export default function ClientDetails() {
     }
   }, [clientId]);
 
+  // Click outside handler for folder dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFolderDropdown && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
+        setShowFolderDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFolderDropdown]);
+
+  // Fetch folders when modal opens
+  useEffect(() => {
+    if (showAddTaskModal) {
+      fetchRootFolders();
+    }
+  }, [showAddTaskModal]);
+
+  // Fetch root folders from API
+  const fetchRootFolders = async () => {
+    if (!showAddTaskModal) return;
+
+    try {
+      setLoadingFolders(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/`, config);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        let rootFolders = [];
+
+        if (result.data.folders && Array.isArray(result.data.folders)) {
+          rootFolders = result.data.folders;
+        }
+
+        const foldersTree = rootFolders.map(folder => ({
+          id: folder.id,
+          name: folder.title || folder.name,
+          title: folder.title || folder.name,
+          description: folder.description || '',
+          children: [],
+          expanded: false,
+          loaded: false,
+        }));
+        setFolderTree(foldersTree);
+      } else {
+        setFolderTree([]);
+      }
+    } catch (error) {
+      console.error('Error fetching root folders:', error);
+      setFolderTree([]);
+    } finally {
+      setLoadingFolders(false);
+    }
+  };
+
+  // Fetch subfolders for a specific folder
+  const fetchSubfolders = async (folderId) => {
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        return [];
+      }
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/?folder_id=${folderId}`, config);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.folders) {
+        return result.data.folders.map(folder => ({
+          id: folder.id,
+          name: folder.title || folder.name,
+          title: folder.title || folder.name,
+          description: folder.description || '',
+          children: [],
+          expanded: false,
+          loaded: false,
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching subfolders:', error);
+      return [];
+    }
+  };
+
+  // Update folder tree with subfolders
+  const updateFolderWithSubfolders = (tree, targetFolderId, subfolders) => {
+    return tree.map(folder => {
+      if (folder.id === targetFolderId) {
+        return {
+          ...folder,
+          children: subfolders,
+          loaded: true,
+        };
+      }
+      if (folder.children && folder.children.length > 0) {
+        return {
+          ...folder,
+          children: updateFolderWithSubfolders(folder.children, targetFolderId, subfolders),
+        };
+      }
+      return folder;
+    });
+  };
+
+  const toggleExpand = async (folder, path = []) => {
+    const isCurrentlyExpanded = expandedFolders.has(folder.id);
+
+    const newExpandedFolders = new Set(expandedFolders);
+    if (isCurrentlyExpanded) {
+      newExpandedFolders.delete(folder.id);
+    } else {
+      newExpandedFolders.add(folder.id);
+    }
+    setExpandedFolders(newExpandedFolders);
+
+    // If expanding and subfolders haven't been loaded, fetch them
+    if (!isCurrentlyExpanded && !folder.loaded && folder.id) {
+      const subfolders = await fetchSubfolders(folder.id);
+      setFolderTree(prevTree => updateFolderWithSubfolders(prevTree, folder.id, subfolders));
+    }
+  };
+
+  const handleFolderSelect = (path, folderId) => {
+    setSelectedFolderPath(path);
+    handleInputChange('folder_id', folderId || '');
+    setShowFolderDropdown(false);
+  };
+
+  // Helper function to find folder by ID
+  const findFolderById = (tree, folderId) => {
+    for (const folder of tree) {
+      if (folder.id === folderId) {
+        return folder;
+      }
+      if (folder.children && folder.children.length > 0) {
+        const found = findFolderById(folder.children, folderId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // Create new folder
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+
+    setCreatingFolderLoading(true);
+
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        toast.error('No authentication token found. Please login again.');
+        return;
+      }
+
+      const folderData = {
+        title: newFolderName.trim(),
+        description: `Documents folder: ${newFolderName.trim()}`
+      };
+
+      if (parentFolderForNewFolder) {
+        folderData.parent_id = parentFolderForNewFolder;
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(folderData)
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/folders/create/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing create folder response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      let folderInfo = result;
+      if (result.data) {
+        folderInfo = result.data;
+      }
+
+      const newFolderObj = {
+        name: folderInfo.title || folderInfo.name || newFolderName.trim(),
+        id: folderInfo.id,
+        title: folderInfo.title || folderInfo.name || newFolderName.trim(),
+        description: folderInfo.description || '',
+        children: [],
+        expanded: false,
+        loaded: false
+      };
+
+      let updatedTree;
+      if (parentFolderForNewFolder) {
+        updatedTree = updateFolderWithSubfolders(folderTree, parentFolderForNewFolder, [
+          ...(findFolderById(folderTree, parentFolderForNewFolder)?.children || []),
+          newFolderObj
+        ]);
+      } else {
+        updatedTree = [...folderTree, newFolderObj];
+      }
+
+      setFolderTree(updatedTree);
+      setNewFolderName("");
+      setCreatingFolder(false);
+      setParentFolderForNewFolder(null);
+
+      toast.success('Folder created successfully!');
+
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      toast.error(handleAPIError(error));
+    } finally {
+      setCreatingFolderLoading(false);
+    }
+  };
+
+  // Render folder tree
+  const renderFolderTree = (folders, path = []) =>
+    folders.map((folder, idx) => {
+      const fullPath = [...path, folder.name].join(" > ");
+      const hasChildren = folder.children && folder.children.length > 0;
+      const isExpanded = expandedFolders.has(folder.id);
+      const showExpandIcon = hasChildren || (!folder.loaded && folder.id);
+
+      return (
+        <div key={folder.id || idx} style={{ paddingLeft: '8px', marginBottom: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {showExpandIcon ? (
+              <span
+                onClick={() => toggleExpand(folder, path)}
+                style={{ cursor: 'pointer', width: '12px', display: 'inline-block' }}
+              >
+                {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+              </span>
+            ) : <span style={{ width: '12px' }} />}
+            <div
+              onClick={() => handleFolderSelect(fullPath, folder.id)}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '2px 0' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <FaFolder style={{ color: '#F59E0B' }} />
+              <span style={{ fontSize: '14px' }}>{folder.name}</span>
+            </div>
+          </div>
+          {hasChildren && isExpanded && (
+            <div style={{ paddingLeft: '12px' }}>
+              {renderFolderTree(folder.children, [...path, folder.name])}
+            </div>
+          )}
+        </div>
+      );
+    });
+
+  // Handle form input changes
+  const handleInputChange = (field, value) => {
+    if (field === 'client_ids') {
+      setFormData(prev => ({
+        ...prev,
+        client_ids: Array.isArray(value) ? value : [value]
+      }));
+    } else if (field === 'files') {
+      setFormData(prev => ({
+        ...prev,
+        files: Array.from(value)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  // Handle spouse signature toggle with validation
+  const handleSpouseSignatureToggle = async (checked) => {
+    // If unchecking, allow it
+    if (!checked) {
+      handleInputChange('spouse_signature_required', false);
+      return;
+    }
+
+    // If checking, validate that client has a spouse
+    if (!clientId) {
+      toast.error('Client ID is missing. Cannot check spouse information.');
+      return;
+    }
+
+    try {
+      const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
+
+      if (response.success && response.data) {
+        if (response.data.has_spouse) {
+          // Client has spouse, allow toggle
+          handleInputChange('spouse_signature_required', true);
+        } else {
+          // Client doesn't have spouse, show error and don't allow toggle
+          toast.error('This client does not have a partner/spouse. Spouse signature cannot be required.');
+        }
+      } else {
+        toast.error('Failed to check spouse information. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error checking spouse:', error);
+      toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
+    }
+  };
+
+  // Create task API call
+  const createTask = async (e) => {
+    if (e) e.preventDefault();
+
+    if (!formData.task_title || !formData.client_ids || formData.client_ids.length === 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoadingTask(true);
+
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('task_type', formData.task_type || 'signature_request');
+      formDataToSend.append('task_title', formData.task_title);
+      formDataToSend.append('client_ids', JSON.stringify(formData.client_ids));
+
+      if (formData.due_date) {
+        formDataToSend.append('due_date', formData.due_date);
+      }
+
+      if (formData.priority) {
+        formDataToSend.append('priority', formData.priority);
+      }
+
+      if (formData.folder_id) {
+        formDataToSend.append('folder_id', formData.folder_id);
+      }
+
+      if (formData.estimated_hours) {
+        formDataToSend.append('estimated_hours', formData.estimated_hours.toString());
+      }
+
+      if (formData.description) {
+        formDataToSend.append('description', formData.description);
+      }
+
+      if (formData.task_type === 'signature_request') {
+        const spouseSignValue = !!(formData.spouse_signature_required === true ||
+          formData.spouse_signature_required === 'true' ||
+          formData.spouse_signature_required === 'True' ||
+          formData.spouse_signature_required === 1 ||
+          formData.spouse_signature_required === '1');
+        const spouseSignString = spouseSignValue ? '1' : '0';
+        formDataToSend.append('spouse_sign', spouseSignString);
+        formDataToSend.append('spouse_signature_required', spouseSignString);
+      }
+
+      if (formData.files && formData.files.length > 0) {
+        formData.files.forEach((file) => {
+          formDataToSend.append('files', file);
+        });
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend
+      };
+
+      const apiUrl = `${API_BASE_URL}/taxpayer/tax-preparer/tasks/create/`;
+      const response = await fetchWithCors(apiUrl, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Task created successfully:', result);
+
+      // Reset form and close modal
+      setFormData({
+        task_type: 'signature_request',
+        task_title: '',
+        client_ids: [],
+        folder_id: '',
+        due_date: '',
+        priority: '',
+        estimated_hours: '',
+        description: '',
+        files: [],
+        spouse_signature_required: false
+      });
+      setSelectedFolderPath('');
+      setCreatingFolder(false);
+      setNewFolderName('');
+      setParentFolderForNewFolder(null);
+      setShowAddTaskModal(false);
+
+      toast.success('Task created successfully!');
+      // Refresh client details to update task count
+      fetchClientDetails();
+
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error(handleAPIError(error));
+    } finally {
+      setLoadingTask(false);
+    }
+  };
+
   // Show loading state
   if (loading) {
     return (
@@ -167,9 +665,9 @@ export default function ClientDetails() {
       statuses.push(client.status.charAt(0).toUpperCase() + client.status.slice(1));
     }
     if (client.priority) {
-      const priorityLabel = client.priority === 'high' ? 'High Priority' : 
-                           client.priority === 'medium' ? 'Medium' : 
-                           client.priority;
+      const priorityLabel = client.priority === 'high' ? 'High Priority' :
+        client.priority === 'medium' ? 'Medium' :
+          client.priority;
       statuses.push(priorityLabel);
     }
     // Add client tags
@@ -181,280 +679,300 @@ export default function ClientDetails() {
 
   return (
     <div className="p-4 font-['BasisGrotesquePro']">
-       <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="font-semibold font-grotesque">Client Details</h3>
           <small className="text-gray-500">Detailed information about {client.name}</small>
         </div>
       </div>
-     <div className="bg-white rounded-xl p-6 ">
-  <div className="flex items-center justify-between">
-    <div className="flex items-start gap-4">
+      <div className="bg-white rounded-xl p-6 ">
+        <div className="flex items-center justify-between">
+          <div className="flex items-start gap-4">
+            <div
+              className="w-16 aspect-square rounded-full flex items-center justify-center text-xl font-bold"
+              style={{
+                backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
+                color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+              }}
+            >
+              {initials}
+            </div>
+
+            <div>
+              {/* Name + Status badges */}
+              <div
+                className="text-lg font-semibold flex items-center gap-2"
+                style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}
+              >
+                {client.name}
+              </div>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {statusesForHeader.map((s, i) => (
+                  <span key={i} className={
+                    (s || '').toLowerCase().includes('high')
+                      ? 'px-2 py-1 rounded-full bg-red-100 text-red-600 text-xs capitalize'
+                      : (s || '').toLowerCase().includes('active')
+                        ? 'px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-xs capitalize'
+                        : 'px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs capitalize'
+                  }>{s}</span>
+                ))}
+              </div>
+
+              {(isDocuments || isInvoices || isSchedule) ? (
+                <div className="mt-3">
+                  <div className="text-xs mb-2" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>Contact Information</div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="flex items-center gap-1 text-gray-700 text-sm">
+                      <BlackEmail />
+                      <span className="font-medium">{client.email}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-700 text-sm">
+                      <BlackPhone />
+                      <span className="font-medium">{client.phone}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <div className="flex items-start gap-8">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-xs mb-1">Email</span>
+                      <div className="flex items-center gap-2">
+                        <MailMiniIcon />
+                        <span className="text-gray-700 text-sm font-medium">{client.email}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-xs mb-1"> Phone</span>
+                      <div className="flex items-center gap-2">
+                        <PhoneMiniIcon />
+                        <span className="text-gray-700 text-sm font-medium">{client.phone}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-xs mb-1">Filing Status</span>
+                      <span className="text-gray-700 text-sm font-medium">{client.filingStatus || "N/A"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-xs mb-1">SSN</span>
+                      <span className="text-gray-700 text-sm font-medium">{client.ssn || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Buttons: visible only on client page */}
+          {!isDocuments && (
+            <div className="flex gap-3">
+              {/* Add Task Button */}
+              {/* Send Message Button */}
+              <button
+                className="rounded-md text-sm"
+                style={{
+                  fontSize: "15px",
+                  width: "131px",
+                  gap: "6px",
+                  borderRadius: "6px",
+                  border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                  backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                  color: "#fff",
+                  padding: "5px 12px",
+                  opacity: 1,
+                  cursor: "pointer"
+                }}
+                onClick={() => {
+                  // Navigate to messages page with clientId parameter
+                  if (clientId) {
+                    navigate(`/taxdashboard/messages?clientId=${clientId}`);
+                  } else {
+                    navigate('/taxdashboard/messages');
+                  }
+                }}
+              >
+                Send Message
+              </button>
+              <button
+                className="rounded-md text-sm"
+                style={{
+                  fontSize: "15px",
+                  width: "131px",
+                  gap: "6px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                  backgroundColor: "#fff",
+                  color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+                  padding: "5px 12px",
+                  opacity: 1,
+                  cursor: "pointer"
+                }}
+                onClick={() => {
+                  // Pre-fill client ID when opening modal
+                  if (clientId) {
+                    setFormData(prev => ({
+                      ...prev,
+                      client_ids: [clientId.toString()]
+                    }));
+                  }
+                  setShowAddTaskModal(true);
+                }}
+              >
+                Add Task
+              </button>
+
+
+            </div>
+          )}
+
+        </div>
+      </div>
       <div
-        className="w-16 aspect-square rounded-full flex items-center justify-center text-xl font-bold"
+        className="inline-block bg-white rounded-xl mt-10 p-4"
         style={{
-          backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
-          color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
         }}
       >
-        {initials}
-      </div>
+        <div className="flex gap-3">
+          {/* Info (active-like) */}
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              display: "inline-flex",
+              width: "auto",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              backgroundColor: currentPath === `/taxdashboard/clients/${clientId}`
+                ? "var(--Palette2-TealBlue-900, #00C0C6)"
+                : "#fff",
+              color: currentPath === `/taxdashboard/clients/${clientId}`
+                ? "black"
+                : "var(--Palette2-Dark-blue-900, #3B4A66)",
+              borderRadius: "7px",
+            }}
+            onClick={() => {
+              if (currentPath !== `/taxdashboard/clients/${clientId}`) {
+                navigate(`/taxdashboard/clients/${clientId}`);
+              }
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--Palette2-TealBlue-900, #00C0C6)";
+              e.currentTarget.style.color = "#000000";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor =
+                currentPath === `/taxdashboard/clients/${clientId}`
+                  ? "var(--Palette2-TealBlue-900, #00C0C6)"
+                  : "#fff";
+              e.currentTarget.style.color = currentPath === `/taxdashboard/clients/${clientId}` ? "#000000" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+            }}
+          >
+            Info
+          </button>
 
-      <div>
-        {/* Name + Status badges */}
-        <div
-          className="text-lg font-semibold flex items-center gap-2"
-          style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}
-        >
-          {client.name}
+          {/* Documents */}
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              display: "inline-flex",
+              width: "auto",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              backgroundColor: isDocuments ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
+              color: isDocuments ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
+              borderRadius: "7px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "var(--Palette2-TealBlue-900, #00C0C6)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isDocuments
+                ? "var(--Palette2-TealBlue-900, #00C0C6)"
+                : "#fff";
+              e.currentTarget.style.color = isDocuments ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+            }}
+            onClick={() => navigate(`/taxdashboard/clients/${clientId}/documents`)}
+
+          >
+            Documents
+          </button>
+
+          {/* Invoices */}
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              display: "inline-flex",
+              width: "auto",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              backgroundColor: isInvoicesActive ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
+              color: isInvoicesActive ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
+              borderRadius: "7px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "var(--Palette2-TealBlue-900, #00C0C6)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isInvoicesActive
+                ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff";
+              e.currentTarget.style.color = isInvoicesActive ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+            }}
+            onClick={() => navigate(`/taxdashboard/clients/${clientId}/invoices`)}
+          >
+            Invoices
+          </button>
+
+          {/* Schedules */}
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              display: "inline-flex",
+              width: "auto",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              backgroundColor: isSchedule ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
+              color: isSchedule ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
+              borderRadius: "7px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "var(--Palette2-TealBlue-900, #00C0C6)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isSchedule
+                ? "var(--Palette2-TealBlue-900, #00C0C6)"
+                : "#fff";
+              e.currentTarget.style.color = isSchedule ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+            }}
+            onClick={() => navigate(`/taxdashboard/clients/${clientId}/schedule`)}
+          >
+            Schedules
+          </button>
         </div>
-        <div className="mt-1 flex flex-wrap gap-2">
-          {statusesForHeader.map((s, i) => (
-            <span key={i} className={
-              (s || '').toLowerCase().includes('high')
-                ? 'px-2 py-1 rounded-full bg-red-100 text-red-600 text-xs capitalize'
-                : (s || '').toLowerCase().includes('active')
-                ? 'px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-xs capitalize'
-                : 'px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs capitalize'
-            }>{s}</span>
-          ))}
-        </div>
-
-        {(isDocuments || isInvoices || isSchedule) ? (
-          <div className="mt-3">
-            <div className="text-xs mb-2" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>Contact Information</div>
-            <div className="grid grid-cols-1 gap-2">
-              <div className="flex items-center gap-1 text-gray-700 text-sm">
-                <BlackEmail />
-                <span className="font-medium">{client.email}</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-700 text-sm">
-                <BlackPhone />
-                <span className="font-medium">{client.phone}</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-2">
-            <div className="flex items-start gap-8">
-              <div className="flex flex-col">
-                <span className="text-gray-400 text-xs mb-1">Email</span>
-                <div className="flex items-center gap-2">
-                  <MailMiniIcon />
-                  <span className="text-gray-700 text-sm font-medium">{client.email}</span>
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-400 text-xs mb-1"> Phone</span>
-                <div className="flex items-center gap-2">
-                  <PhoneMiniIcon />
-                  <span className="text-gray-700 text-sm font-medium">{client.phone}</span>
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-400 text-xs mb-1">Filing Status</span>
-                <span className="text-gray-700 text-sm font-medium">{client.filingStatus || "N/A"}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-400 text-xs mb-1">SSN</span>
-                <span className="text-gray-700 text-sm font-medium">{client.ssn || "N/A"}</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
-
-    {/* Buttons: visible only on client page */}
-    {!isDocuments && (
-    <div className="flex gap-3">
-  {/* Add Task Button */}
-  {/* Send Message Button */}
-  <button
-    className="rounded-md text-sm"
-    style={{
-      fontSize:"15px",
-      width:"131px",
-      gap: "6px",
-      borderRadius: "6px",
-      border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-      backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-      color: "#fff",
-      padding: "5px 12px",
-      opacity: 1,
-    }}
-  >
-    Send Message
-  </button>
-  <button
-    className="rounded-md text-sm"
-    style={{
-      fontSize:"15px",
-      width:"131px",
-      gap: "6px",
-      borderRadius: "6px",
-      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-      backgroundColor: "#fff",
-      color: "var(--Palette2-Dark-blue-900, #3B4A66)",
-      padding: "5px 12px",
-      opacity: 1,
-    }}
-  >
-    Add Task
-  </button>
-
-  
-</div>
-    )}
-
-  </div>
-</div>
-  <div
-    className="inline-block bg-white rounded-xl mt-10 p-4"
-    style={{
-      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-    }}
-  >
-    <div className="flex gap-3">
-    {/* Info (active-like) */}
-    <button
-  className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
-  style={{
-    display: "inline-flex",
-    width: "auto",
-    whiteSpace: "nowrap",
-    padding: "5px 12px",
-    border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-    backgroundColor: currentPath === `/taxdashboard/clients/${clientId}`
-      ? "var(--Palette2-TealBlue-900, #00C0C6)"
-      : "#fff",
-    color: currentPath === `/taxdashboard/clients/${clientId}`
-      ? "#ffffff"
-      : "var(--Palette2-Dark-blue-900, #3B4A66)",
-    borderRadius: "7px",
-  }}
-  onClick={() => {
-    if (currentPath !== `/taxdashboard/clients/${clientId}`) {
-      navigate(`/taxdashboard/clients/${clientId}`);
-    }
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = "var(--Palette2-TealBlue-900, #00C0C6)";
-    e.currentTarget.style.color = "#ffffff";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor =
-      currentPath === `/taxdashboard/clients/${clientId}`
-        ? "var(--Palette2-TealBlue-900, #00C0C6)"
-        : "#fff";
-    e.currentTarget.style.color = currentPath === `/taxdashboard/client/${id}` ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
-  }}
->
-  Info
-</button>
-
-    {/* Documents */}
-    <button
-      className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
-      style={{
-        display: "inline-flex",
-        width: "auto",
-        whiteSpace: "nowrap",
-        padding: "5px 12px",
-        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-        backgroundColor: isDocuments ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
-        color: isDocuments ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
-        borderRadius: "7px",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor =
-          "var(--Palette2-TealBlue-900, #00C0C6)";
-        e.currentTarget.style.color = "#ffffff";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = isDocuments
-          ? "var(--Palette2-TealBlue-900, #00C0C6)"
-          : "#fff";
-        e.currentTarget.style.color = isDocuments ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
-      }}
-       onClick={() => navigate(`/taxdashboard/clients/${clientId}/documents`)}
-
-    >
-      Documents
-    </button>
-
-    {/* Invoices */}
-    <button
-      className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
-      style={{
-        display: "inline-flex",
-        width: "auto",
-        whiteSpace: "nowrap",
-        padding: "5px 12px",
-        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-        backgroundColor: isInvoicesActive ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
-        color: isInvoicesActive ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
-        borderRadius: "7px",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor =
-          "var(--Palette2-TealBlue-900, #00C0C6)";
-        e.currentTarget.style.color = "#ffffff";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = isInvoicesActive
-          ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff";
-        e.currentTarget.style.color = isInvoicesActive ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
-      }}
-      onClick={() => navigate(`/taxdashboard/clients/${clientId}/invoices`)}
-    >
-      Invoices
-    </button>
-
-    {/* Schedules */}
-    <button
-      className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
-      style={{
-        display: "inline-flex",
-        width: "auto",
-        whiteSpace: "nowrap",
-        padding: "5px 12px",
-        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-        backgroundColor: isSchedule ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
-        color: isSchedule ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
-        borderRadius: "7px",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor =
-          "var(--Palette2-TealBlue-900, #00C0C6)";
-        e.currentTarget.style.color = "#ffffff";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = isSchedule
-          ? "var(--Palette2-TealBlue-900, #00C0C6)"
-          : "#fff";
-        e.currentTarget.style.color = isSchedule ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
-      }}
-      onClick={() => navigate(`/taxdashboard/clients/${clientId}/schedule`)}
-    >
-      Schedules
-    </button>
-  </div>
-</div>
-  <Outlet />
+      <Outlet />
 
       {!(isDocuments || isInvoices || isSchedule) && (
-      <div className="flex flex-col gap-6 mt-6">
-        {/* Personal Information */}
-        <div className="bg-white rounded-xl p-6 ">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                Personal Information
+        <div className="flex flex-col gap-6 mt-6">
+          {/* Personal Information */}
+          <div className="bg-white rounded-xl p-6 ">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                  Personal Information
+                </div>
+                <div className="text-gray-500 text-xs mt-1">Your basic personal and contact information</div>
               </div>
-              <div className="text-gray-500 text-xs mt-1">Your basic personal and contact information</div>
-            </div>
-            <button
+              {/* <button
               className="flex items-center gap-2 rounded-md text-sm"
               style={{
                 fontSize: "15px",
@@ -468,44 +986,44 @@ export default function ClientDetails() {
             >
               <WhiteEdit />
               Edit
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <div className="text-xs "
-               style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>Name</div>
-              <div className="font-medium"style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.name}</div>
-              <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
-              <div className="font-medium "style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.ssn || "N/A"}</div>
+            </button> */}
             </div>
-            <div className="flex justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
-                <div className="text-xs text-gray-500 mt-3">Filing Status</div>
-                <div className="font-medium "style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.filingStatus || "N/A"}</div>
+                <div className="text-xs "
+                  style={{
+                    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                  }}>Name</div>
+                <div className="font-medium" style={{
+                  color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                }}>{client.name}</div>
+                <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
+                <div className="font-medium " style={{
+                  color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                }}>{client.ssn || "N/A"}</div>
               </div>
-              <div className="text-right">
-                <div className="text-xs " style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>Date of Birth</div>
-                <div className="font-medium "style={{
-    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-  }}>{client.dob || "N/A"}</div>
+              <div className="flex justify-between">
+                <div>
+                  <div className="text-xs text-gray-500 mt-3">Filing Status</div>
+                  <div className="font-medium " style={{
+                    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                  }}>{client.filingStatus || "N/A"}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs " style={{
+                    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                  }}>Date of Birth</div>
+                  <div className="font-medium " style={{
+                    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                  }}>{client.dob || "N/A"}</div>
+                </div>
               </div>
             </div>
+            {/* <button className="absolute top-3 right-3 border border-gray-200 rounded-lg px-4 py-2 text-sm">Edit</button> */}
           </div>
-          {/* <button className="absolute top-3 right-3 border border-gray-200 rounded-lg px-4 py-2 text-sm">Edit</button> */}
-        </div>
 
-        {/* Address and Contact Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Address and Contact Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white rounded-xl p-6 ">
               <div className="font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
                 Address
@@ -536,111 +1054,813 @@ export default function ClientDetails() {
               </div>
             </div>
 
-          <div className="bg-white rounded-xl p-6 ">
-            <div className="font-semibold " style={{
-    color: "var(--Palette2-Dark-blue-100, #4B5563)",
-  }}>Contact Details</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-              <div>
-                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
-                  <BlackPhone />
-                  <span>Phone</span>
-
-                </div>
-                <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                  {client.phone}
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
-                  <BlackEmail />
-                  <span>Email</span>
-                </div>
-                <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                  {client.email}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Spouse Information */}
-        <div className="bg-white rounded-xl p-6 ">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="font-semibold text-gray-900">Spouse Information</div>
-              <div className="text-gray-500 text-xs">Your spouse's information for joint filing</div>
-            </div>
-            <button
-              className="flex items-center gap-2 rounded-md text-sm"
-              style={{
-                fontSize: "15px",
-                borderRadius: "6px",
-                border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                color: "#fff",
-                padding: "5px 12px",
-                opacity: 1,
-              }}
-            >
-              <WhiteEdit />
-              Edit
-            </button>
-          </div>
-          {client.spouse.name ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <div className="text-xs text-gray-500">Name</div>
-                <div className="font-medium text-gray-900">{client.spouse.name}</div>
-                <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
-                <div className="font-medium text-gray-900">{client.spouse.ssn || "N/A"}</div>
-              </div>
-              <div className="flex justify-between">
-                <div>
-                  <div className="text-xs text-gray-500 mt-3">Filing Status</div>
-                  <div className="font-medium text-gray-900">{client.filingStatus || "N/A"}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4 text-center text-gray-500">
-              <p>No spouse information available</p>
-            </div>
-          )}
-        </div>
-
-         {client.spouse.name && (client.spouse.phone || client.spouse.email) && (
-          <div className="bg-white rounded-xl p-6 ">
-            <div className="font-semibold " style={{
-    color: "var(--Palette2-Dark-blue-100, #4B5563)",
-  }}>Spouse Contact Details</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-              {client.spouse.phone && (
+            <div className="bg-white rounded-xl p-6 ">
+              <div className="font-semibold " style={{
+                color: "var(--Palette2-Dark-blue-100, #4B5563)",
+              }}>Contact Details</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
                 <div>
                   <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
                     <BlackPhone />
                     <span>Phone</span>
+
                   </div>
                   <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.spouse.phone}
+                    {client.phone}
                   </div>
                 </div>
-              )}
-              {client.spouse.email && (
                 <div>
                   <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
                     <BlackEmail />
                     <span>Email</span>
                   </div>
                   <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.spouse.email}
+                    {client.email}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
-         )}
-      </div>
+
+          {/* Spouse Information */}
+          <div className="bg-white rounded-xl p-6 ">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-semibold text-gray-900">Spouse Information</div>
+                <div className="text-gray-500 text-xs">Your spouse's information for joint filing</div>
+              </div>
+              {/* <button
+                className="flex items-center gap-2 rounded-md text-sm"
+                style={{
+                  fontSize: "15px",
+                  borderRadius: "6px",
+                  border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                  backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                  color: "#fff",
+                  padding: "5px 12px",
+                  opacity: 1,
+                }}
+              >
+                <WhiteEdit />
+                Edit
+              </button> */}
+            </div>
+            {client.spouse.name ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <div className="text-xs text-gray-500">Name</div>
+                  <div className="font-medium text-gray-900">{client.spouse.name}</div>
+                  <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
+                  <div className="font-medium text-gray-900">{client.spouse.ssn || "N/A"}</div>
+                </div>
+                <div className="flex justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500 mt-3">Filing Status</div>
+                    <div className="font-medium text-gray-900">{client.filingStatus || "N/A"}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 text-center text-gray-500">
+                <p>No spouse information available</p>
+              </div>
+            )}
+          </div>
+
+          {client.spouse.name && (client.spouse.phone || client.spouse.email) && (
+            <div className="bg-white rounded-xl p-6 ">
+              <div className="font-semibold " style={{
+                color: "var(--Palette2-Dark-blue-100, #4B5563)",
+              }}>Spouse Contact Details</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                {client.spouse.phone && (
+                  <div>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
+                      <BlackPhone />
+                      <span>Phone</span>
+                    </div>
+                    <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                      {client.spouse.phone}
+                    </div>
+                  </div>
+                )}
+                {client.spouse.email && (
+                  <div>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
+                      <BlackEmail />
+                      <span>Email</span>
+                    </div>
+                    <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                      {client.spouse.email}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+
+        </div>
+      )}
+
+      {/* Add Task Modal */}
+      {showAddTaskModal && (
+        <div className="modal" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1050,
+          padding: '1rem'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '500px',
+            background: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '20px 24px',
+              borderBottom: '1px solid #E8F0FF',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'sticky',
+              top: 0,
+              backgroundColor: 'white',
+              zIndex: 10,
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px'
+            }}>
+              <div>
+                <h5 style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#3B4A66',
+                  lineHeight: '24px'
+                }}>Create New Task</h5>
+                <p style={{
+                  margin: '4px 0 0',
+                  fontSize: '12px',
+                  color: '#6B7280',
+                  lineHeight: '16px'
+                }}>Add a new task to your workflow</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddTaskModal(false);
+                  setFormData({
+                    task_type: 'signature_request',
+                    task_title: '',
+                    client_ids: [],
+                    folder_id: '',
+                    due_date: '',
+                    priority: '',
+                    estimated_hours: '',
+                    description: '',
+                    files: [],
+                    spouse_signature_required: false
+                  });
+                  setSelectedFolderPath('');
+                  setCreatingFolder(false);
+                  setNewFolderName('');
+                  setParentFolderForNewFolder(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#6B7280',
+                  fontSize: '20px',
+                  padding: '4px'
+                }}
+              >
+                <Cut />
+              </button>
+            </div>
+
+            {/* Form */}
+            <div style={{ padding: '24px' }}>
+              <form onSubmit={createTask}>
+                {/* Task Type */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#4B5563'
+                  }}>
+                    Task Type <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    value={formData.task_type}
+                    onChange={(e) => handleInputChange('task_type', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#111827',
+                      backgroundColor: 'white',
+                      appearance: 'none',
+                      backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239CA3AF\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: '36px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  >
+                    <option value="signature_request">Signature Request</option>
+                    <option value="review_request">Review Request</option>
+                    <option value="document_request">Document Request</option>
+                  </select>
+                </div>
+
+                {/* Spouse Signature Required Toggle */}
+                {formData.task_type === 'signature_request' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.spouse_signature_required || false}
+                          onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
+                          style={{
+                            width: '44px',
+                            height: '24px',
+                            appearance: 'none',
+                            backgroundColor: formData.spouse_signature_required ? '#00C0C6' : '#D1D5DB',
+                            borderRadius: '12px',
+                            position: 'relative',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            outline: 'none'
+                          }}
+                        />
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            left: formData.spouse_signature_required ? '22px' : '2px',
+                            width: '20px',
+                            height: '20px',
+                            backgroundColor: 'white',
+                            borderRadius: '50%',
+                            transition: 'left 0.2s',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        />
+                      </div>
+                      <span>Spouse's signature required</span>
+                    </label>
+                  </div>
+                )}
+
+                {/* Task Title */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#4B5563'
+                  }}>
+                    Task Title <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.task_title}
+                    onChange={(e) => handleInputChange('task_title', e.target.value)}
+                    placeholder="Enter task title"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  />
+                </div>
+
+                {/* Description */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#4B5563'
+                  }}>
+                    Description
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Enter Description"
+                    rows="4"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#111827',
+                      resize: 'vertical',
+                      minHeight: '100px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      fontFamily: 'inherit',
+                      lineHeight: '1.5'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  ></textarea>
+                </div>
+
+                {/* Client - Disabled and Pre-filled */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#4B5563'
+                  }}>
+                    Client <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <div style={{
+                    width: '100%',
+                    minHeight: '44px',
+                    padding: '8px 12px',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    backgroundColor: '#F3F4F6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'not-allowed',
+                    opacity: 0.7
+                  }}>
+                    <span style={{ color: '#6B7280', fontSize: '14px' }}>
+                      {client ? client.name : 'Loading...'}
+                    </span>
+                  </div>
+                  <small style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    Client is pre-filled and cannot be changed
+                  </small>
+                </div>
+
+                {/* Folder Selection */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Folder (Optional)
+                    </label>
+                    {!creatingFolder ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCreatingFolder(true);
+                          setParentFolderForNewFolder(formData.folder_id || null);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#3B82F6',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          padding: '4px 8px',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Create New Folder
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Enter folder name"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          disabled={creatingFolderLoading}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newFolderName.trim() && !creatingFolderLoading) {
+                              handleCreateFolder();
+                            }
+                            if (e.key === 'Escape') {
+                              setCreatingFolder(false);
+                              setNewFolderName('');
+                              setParentFolderForNewFolder(null);
+                            }
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            width: '120px',
+                            outline: 'none'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateFolder();
+                          }}
+                          disabled={creatingFolderLoading || !newFolderName.trim()}
+                          style={{
+                            padding: '4px 12px',
+                            backgroundColor: creatingFolderLoading || !newFolderName.trim() ? '#9CA3AF' : '#3B82F6',
+                            border: 'none',
+                            borderRadius: '6px',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: creatingFolderLoading || !newFolderName.trim() ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {creatingFolderLoading ? 'Creating...' : 'Add'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCreatingFolder(false);
+                            setNewFolderName("");
+                            setParentFolderForNewFolder(null);
+                          }}
+                          disabled={creatingFolderLoading}
+                          style={{
+                            padding: '4px 12px',
+                            backgroundColor: 'white',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '6px',
+                            color: '#4B5563',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div ref={folderDropdownRef} style={{ position: 'relative' }}>
+                    <div
+                      style={{
+                        width: '100%',
+                        minHeight: '44px',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        backgroundColor: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.2s',
+                      }}
+                      onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
+                    >
+                      <span style={{ color: selectedFolderPath ? '#111827' : '#9CA3AF', fontSize: '14px' }}>
+                        {selectedFolderPath || 'Select a folder (optional)'}
+                      </span>
+                      {selectedFolderPath && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFolderPath('');
+                            handleInputChange('folder_id', '');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#6B7280',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            fontSize: '16px',
+                            marginLeft: '8px'
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                      <FaChevronDown
+                        size={12}
+                        style={{
+                          color: '#9CA3AF',
+                          marginLeft: '8px',
+                          transform: showFolderDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s'
+                        }}
+                      />
+                    </div>
+
+                    {/* Folder dropdown menu */}
+                    {showFolderDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '4px',
+                        backgroundColor: 'white',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        maxHeight: '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        padding: '8px'
+                      }}>
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#6B7280',
+                          marginBottom: '8px',
+                          fontWeight: '500',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Folders
+                        </div>
+                        {loadingFolders ? (
+                          <div style={{ padding: '12px', color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
+                            Loading folders...
+                          </div>
+                        ) : folderTree.length === 0 ? (
+                          <div style={{ padding: '12px', color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
+                            No folders available
+                          </div>
+                        ) : (
+                          renderFolderTree(folderTree)
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Priority, Due Date, and Estimated Hours */}
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                  {/* Priority */}
+                  <div style={{ flex: 1 }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Priority
+                    </label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => handleInputChange('priority', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        color: '#111827',
+                        backgroundColor: 'white',
+                        appearance: 'none',
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239CA3AF\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 12px center',
+                        paddingRight: '36px',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.2s',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    >
+                      <option value="">Select Priority</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+
+                  {/* Due Date */}
+                  <div style={{ flex: 1 }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => handleInputChange('due_date', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        color: '#111827',
+                        backgroundColor: 'white',
+                        outline: 'none',
+                        transition: 'border-color 0.2s',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+
+                  {/* Estimated Hours */}
+                  <div style={{ flex: 1 }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Est. Hours
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={formData.estimated_hours}
+                      onChange={(e) => handleInputChange('estimated_hours', e.target.value)}
+                      placeholder="0.0"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        color: '#111827',
+                        outline: 'none',
+                        transition: 'border-color 0.2s',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+                </div>
+
+                {/* File Upload - Hidden for document_request */}
+                {formData.task_type !== 'document_request' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Files
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => handleInputChange('files', e.target.files)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'border-color 0.2s',
+                        cursor: 'pointer',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                    {formData.files.length > 0 && (
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>
+                        {formData.files.length} file(s) selected
+                      </div>
+                    )}
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '16px 24px',
+              borderTop: '1px solid #E8F0FF',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+              position: 'sticky',
+              bottom: 0,
+              backgroundColor: 'white',
+              borderBottomLeftRadius: '16px',
+              borderBottomRightRadius: '16px'
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddTaskModal(false);
+                  setFormData({
+                    task_type: 'signature_request',
+                    task_title: '',
+                    client_ids: [],
+                    folder_id: '',
+                    due_date: '',
+                    priority: '',
+                    estimated_hours: '',
+                    description: '',
+                    files: [],
+                    spouse_signature_required: false
+                  });
+                  setSelectedFolderPath('');
+                  setCreatingFolder(false);
+                  setNewFolderName('');
+                  setParentFolderForNewFolder(null);
+                }}
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: 'white',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '8px',
+                  color: '#4B5563',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                onClick={createTask}
+                disabled={loadingTask}
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: loadingTask ? '#9CA3AF' : '#FF7A2F',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: loadingTask ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.2s, transform 0.1s',
+                  opacity: loadingTask ? 0.7 : 1,
+                }}
+              >
+                {loadingTask ? 'Creating...' : 'Create Task'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

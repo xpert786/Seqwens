@@ -90,12 +90,12 @@ export default function TaxDashboardMain() {
 
   return (
     <div className="p-4">
-      
+
       <div
         className="p-4 rounded mb-4 position-relative"
         style={{ backgroundColor: "#FFF3E1", border: "1px solid #FFD6A5" }}
       >
-       
+
         <div
           className="position-absolute top-0 end-0 m-3 text-end"
           style={{ lineHeight: 1.1 }}
@@ -202,7 +202,7 @@ export default function TaxDashboardMain() {
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
-                </li>
+              </li>
             );
           })}
         </ul>

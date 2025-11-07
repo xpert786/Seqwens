@@ -888,37 +888,6 @@ export const taxPreparerProfileAPI = {
   }
 };
 
-// Tax Preparer Notification Preferences API functions
-export const taxPreparerNotificationAPI = {
-  // Get tax preparer notification preferences
-  getTaxPreparerNotificationPreferences: async () => {
-    return await apiRequest('/tax-preparer/notification-preferences/', 'GET');
-  },
-
-  // Update tax preparer notification preferences
-  updateTaxPreparerNotificationPreferences: async (preferences) => {
-    return await apiRequest('/tax-preparer/notification-preferences/', 'PATCH', preferences);
-  }
-};
-
-// Tax Preparer Security Settings API functions
-export const taxPreparerSecurityAPI = {
-  // Get tax preparer security preferences
-  getTaxPreparerSecurityPreferences: async () => {
-    return await apiRequest('/tax-preparer/security-settings/', 'GET');
-  },
-
-  // Update tax preparer security preferences
-  updateTaxPreparerSecurityPreferences: async (preferences) => {
-    return await apiRequest('/tax-preparer/security-settings/', 'PATCH', preferences);
-  },
-
-  // Update tax preparer password
-  updateTaxPreparerPassword: async (passwordData) => {
-    return await apiRequest('/tax-preparer/security-settings/', 'PATCH', passwordData);
-  }
-};
-
 // Dashboard API functions
 export const dashboardAPI = {
   // Get initial dashboard data
@@ -1297,7 +1266,84 @@ export const threadsAPI = {
   }
 };
 
-// Tax Preparer Threads API (for tax preparer/staff users)
+// Tax Preparer Settings API functions
+export const taxPreparerSettingsAPI = {
+  // Get tax preparer settings
+  getSettings: async () => {
+    return await apiRequest('/taxpayer/tax-preparer/settings/', 'GET');
+  },
+
+  // Update tax preparer settings
+  updateSettings: async (settingsData) => {
+    return await apiRequest('/taxpayer/tax-preparer/settings/', 'PATCH', settingsData);
+  },
+
+  // Update profile picture
+  updateProfilePicture: async (profilePictureFile) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+
+    const formData = new FormData();
+    formData.append('profile_picture', profilePictureFile);
+
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+
+    const API_BASE_URL = getApiBaseUrl();
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/settings/`, config);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || result.detail || 'Failed to update profile picture');
+    }
+
+    return result;
+  }
+};
+
+// Tax Preparer Notification Preferences API functions
+export const taxPreparerNotificationAPI = {
+  // Get notification preferences
+  getNotificationPreferences: async () => {
+    return await apiRequest('/user/notification-preferences/', 'GET');
+  },
+
+  // Update notification preferences
+  updateNotificationPreferences: async (preferences) => {
+    return await apiRequest('/user/notification-preferences/', 'PATCH', preferences);
+  }
+};
+
+// Tax Preparer Security API functions
+export const taxPreparerSecurityAPI = {
+  // Get security preferences
+  getSecurityPreferences: async () => {
+    return await apiRequest('/user/security-settings/', 'GET');
+  },
+
+  // Update security preferences
+  updateSecurityPreferences: async (preferences) => {
+    return await apiRequest('/user/security-settings/', 'PATCH', preferences);
+  },
+
+  // Update password
+  updatePassword: async (passwordData) => {
+    return await apiRequest('/user/security-settings/', 'PATCH', passwordData);
+  }
+};
+
+export const taxPreparerClientAPI = {
+  // Check if client has a spouse
+  checkClientSpouse: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/spouse/check/`, 'GET');
+  }
+};
+
 export const taxPreparerThreadsAPI = {
   // Get all chat threads for the current tax preparer
   // Uses same endpoint as taxpayer but with query parameters for filtering

@@ -46,22 +46,25 @@ export default function Dashboard() {
 
   return (
     <div>
-     
+
       <div className="taxdashboard-header px-4">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
             <h2 className="taxdashboard-title">Dashboard</h2>
             <h5 className="taxdashboard-subtitle">
-              Welcome back, {taxPreparerInfo 
-                ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim() 
-                : loading 
-                  ? 'Loading...' 
+              Welcome back, {taxPreparerInfo
+                ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim()
+                : loading
+                  ? 'Loading...'
                   : 'Tax Preparer'}
             </h5>
           </div>
 
           <div className="d-flex flex-wrap gap-3 mt-2 mt-md-0">
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2">
+            <button
+              className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
+              onClick={() => navigate('/taxdashboard/calendar')}
+            >
               <Calender />
               View Calender
             </button>
@@ -76,7 +79,7 @@ export default function Dashboard() {
               onClick={() => setShowUploadModal(true)}
             >
               <Uploading />
-               My Tasks
+              My Tasks
             </button>
 
           </div>
@@ -87,28 +90,28 @@ export default function Dashboard() {
       <div className="row g-3">
         {[
           {
-            label:"Assigned Clients",
+            label: "Assigned Clients",
             icon: <Client size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.assigned_clients?.count || 0,
             content: loading ? "Loading..." : summaryCards.assigned_clients?.status || "",
             onClick: () => navigate('/taxdashboard/clients'),
           },
           {
-             label:"Pending Tasks",
+            label: "Pending Tasks",
             icon: <Clock size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.pending_tasks?.count || 0,
             content: loading ? "Loading..." : summaryCards.pending_tasks?.status || "",
             onClick: () => navigate('/taxdashboard/tasks'),
           },
           {
-             label:"Completed Today",
+            label: "Completed Today",
             icon: <Check size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.completed_today?.count || 0,
             content: loading ? "Loading..." : summaryCards.completed_today?.status || "",
             onClick: () => navigate('/taxdashboard/tasks'),
           },
           {
-           label:"New Messages",
+            label: "New Messages",
             icon: <Msg size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.new_messages?.count || 0,
             content: loading ? "Loading..." : summaryCards.new_messages?.status || "",
@@ -116,17 +119,17 @@ export default function Dashboard() {
           },
         ].map((card, index) => (
           <div className="col-sm-6 col-md-3 px-4" key={index}>
-            <div 
+            <div
               className="carded dashboard-carded"
               onClick={card.onClick}
               style={{ cursor: card.onClick ? 'pointer' : 'default' }}
             >
               <div className="d-flex justify-content-between align-items-start">
-              <div className="dashboarded-carded-labeled">{card.label}</div>
-                  {card.icon}
-               
+                <div className="dashboarded-carded-labeled">{card.label}</div>
+                {card.icon}
+
               </div>
-               <h5 className="dashboarded-carded-valued">{card.value}</h5>
+              <h5 className="dashboarded-carded-valued">{card.value}</h5>
               <div>
 
                 <p className="card-contented">{card.content}</p>

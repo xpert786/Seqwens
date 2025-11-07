@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
-import { taxPreparerProfileAPI, taxPreparerNotificationAPI, taxPreparerSecurityAPI } from "../../../ClientOnboarding/utils/apiUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 
 export default function AccountSettings() {
@@ -18,28 +17,20 @@ export default function AccountSettings() {
             setLoading(true);
             setError(null);
 
-            // Fetch all settings in parallel
-            const [profileResponse, notificationsResponse, securityResponse] = await Promise.all([
-                taxPreparerProfileAPI.getTaxPreparerAccount().catch(() => ({ success: false, data: null })),
-                taxPreparerNotificationAPI.getTaxPreparerNotificationPreferences().catch(() => ({ success: false, data: null })),
-                taxPreparerSecurityAPI.getTaxPreparerSecurityPreferences().catch(() => ({ success: false, data: null }))
-            ]);
+            const result = await taxPreparerSettingsAPI.getSettings();
+            console.log('Settings API response:', result);
 
-            console.log('Tax Preparer Settings API responses:', {
-                profile: profileResponse,
-                notifications: notificationsResponse,
-                security: securityResponse
-            });
-
-            // Combine all settings
-            const combinedSettings = {
-                profile: profileResponse.data || profileResponse,
-                notifications: notificationsResponse.data || notificationsResponse,
-                security: securityResponse.data || securityResponse,
-                company_profile: profileResponse.company_profile || profileResponse.data?.company_profile || null
-            };
-
-            setSettings(combinedSettings);
+            if (result.success && result.data) {
+                // Map API response structure to component state
+                setSettings({
+                    profile: result.data.profile_information,
+                    company_profile: result.data.company_profile,
+                    notifications: result.data.notifications,
+                    security: result.data.security
+                });
+            } else {
+                throw new Error('Failed to fetch settings');
+            }
         } catch (error) {
             console.error('Error fetching tax preparer settings:', error);
             setError(handleAPIError(error));

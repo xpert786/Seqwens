@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useParams } from "react-router-dom";
 import { AiOutlineCalendar, AiOutlineClockCircle, AiOutlinePhone, AiOutlineUser, AiOutlineFileText } from "react-icons/ai";
-import { Clocking,MiniClock, Docs, DownloadIcon,Calender, Paid,PhoneMiniIcon,MiniDocument, Paiding, EyeSquareIcon, FiltIcon, Clock, MiniContact } from "../../component/icons";
-import { FaSearch } from "react-icons/fa";
+import { Clocking, MiniClock, Docs, DownloadIcon, Calender, Paid, PhoneMiniIcon, MiniDocument, Paiding, EyeSquareIcon, FiltIcon, Clock, MiniContact } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
@@ -11,7 +10,7 @@ export default function InvoicesPage() {
   const [searchParams] = useSearchParams();
   const { clientId } = useParams();
   const isScheduleView = searchParams.get("view") === "schedule";
-  
+
   // API state
   const [paidInvoices, setPaidInvoices] = useState([]);
   const [summary, setSummary] = useState({
@@ -167,16 +166,16 @@ export default function InvoicesPage() {
   ];
 
   // Filter invoices based on search query
-  const filteredInvoices = clientId 
+  const filteredInvoices = clientId
     ? paidInvoices.filter(invoice => {
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-          invoice.invoice_number?.toLowerCase().includes(query) ||
-          invoice.description?.toLowerCase().includes(query) ||
-          invoice.payment_method?.toLowerCase().includes(query)
-        );
-      })
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        invoice.invoice_number?.toLowerCase().includes(query) ||
+        invoice.description?.toLowerCase().includes(query) ||
+        invoice.payment_method?.toLowerCase().includes(query)
+      );
+    })
     : [];
 
   return (
@@ -189,7 +188,7 @@ export default function InvoicesPage() {
             className="bg-white rounded-xl p-4 h-28"
             style={{
               border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-              
+
             }}
           >
             <div className="h-full flex flex-col justify-between">
@@ -218,44 +217,84 @@ export default function InvoicesPage() {
       </div>
 
       {/* Search / Filter */}
-      <div className="d-flex align-items-center gap-2 mb-3 mt-3" >
-             <div className="position-relative search-box flex-grow-1" >
-               <FaSearch className="search-icon" />
-               <input 
-                 type="text" 
-                 className="form-control ps-5 rounded mt-2" 
-                 placeholder="Search invoices..." 
-                 value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
-                 style={{
-                   border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                 }} 
-               />
-             </div>
-     
-             <button className="btn btn-filter d-flex align-items-center rounded px-4" style={{
-              border: "none",
-              
-            }}>
-               <FiltIcon className="me-3 text-muted" />
-               <span className="ms-1">Filter</span>
-             </button>
-           </div>
+      <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+        <div className="position-relative" style={{ width: '260px', flexShrink: 0 }}>
+          <input
+            type="text"
+            className="form-control rounded"
+            placeholder="Search invoices..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              paddingLeft: "38px",
+              paddingRight: "12px",
+              paddingTop: "10px",
+              paddingBottom: "8px",
+              width: "100%",
+              height: "38px",
+              fontSize: "14px",
+              lineHeight: "22px"
+            }}
+          />
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 12 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              position: 'absolute',
+              left: '14px',
+              top: '12px',
+              zIndex: 10,
+              pointerEvents: 'none'
+            }}
+          >
+            <path d="M11 11L8.49167 8.49167M9.83333 5.16667C9.83333 7.74399 7.74399 9.83333 5.16667 9.83333C2.58934 9.83333 0.5 7.74399 0.5 5.16667C0.5 2.58934 2.58934 0.5 5.16667 0.5C7.74399 0.5 9.83333 2.58934 9.83333 5.16667Z" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <div className="position-relative filter-dropdown-container" style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            className="btn btn-filter d-flex align-items-center justify-content-center rounded px-3"
+            style={{
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              background: "#fff",
+              height: "38px",
+              paddingLeft: "12px",
+              paddingRight: "12px",
+              paddingTop: "10px",
+              paddingBottom: "8px",
+              fontSize: "14px",
+              lineHeight: "22px",
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              marginTop: "-9px",
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <FiltIcon className="me-2 text-muted" />
+            <span>Filter</span>
+          </button>
+        </div>
+      </div>
       {/* Bottom content switches by query param: ?view=schedule */}
       <div className="bg-white rounded-xl mt-6 p-4">
         <div className="flex items-start justify-between">
           <div>
             <div className="font-semibold" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
-              {isScheduleView 
-                ? "Upcoming Appointments" 
-                : clientId 
+              {isScheduleView
+                ? "Upcoming Appointments"
+                : clientId
                   ? (clientInfo?.name ? `${clientInfo.name}'s Paid Invoices` : "Paid Invoices")
                   : "Paid Invoices"}
             </div>
             <div className="text-xs text-gray-500">
-              {isScheduleView 
-                ? "Your scheduled meetings" 
-                : clientId 
+              {isScheduleView
+                ? "Your scheduled meetings"
+                : clientId
                   ? `${filteredInvoices.length} ${filteredInvoices.length === 1 ? 'invoice' : 'invoices'} found`
                   : "Your payment history"}
             </div>
@@ -395,8 +434,8 @@ export default function InvoicesPage() {
                   {searchQuery ? 'No invoices found matching your search' : 'No paid invoices found'}
                 </p>
                 {searchQuery && (
-                  <button 
-                    className="btn btn-sm btn-outline-primary mt-2" 
+                  <button
+                    className="btn btn-sm btn-outline-primary mt-2"
                     onClick={() => setSearchQuery("")}
                   >
                     Clear Search
