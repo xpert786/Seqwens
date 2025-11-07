@@ -447,11 +447,7 @@ export default function ESignature() {
                       {request.requested_by_name && ` · Requested by ${request.requested_by_name}`}
                       {request.expires_at && ` · Expires ${formatDate(request.expires_at)}`}
                     </div>
-                    {request.total_fields !== undefined && (
-                      <div className="small text-muted mt-1">
-                        {request.completed_fields || 0} of {request.total_fields} fields completed
-                      </div>
-                    )}
+                    
                     <div className="d-flex align-items-center gap-2 mt-2">
                       <span
                         className="d-inline-block px-3 py-1 rounded-pill"
@@ -729,8 +725,8 @@ export default function ESignature() {
 
             <div className="esign-preview-footer">
               <button className="btn-cancel" onClick={() => setShowPreviewModal(false)}>Cancel</button>
-              <button className="btn-preview">Preview</button>
-              <button className="btn-complete">Complete Signature</button>
+              {/* <button className="btn-preview">Preview</button> */}
+              {/* <button className="btn-complete">Complete Signature</button> */}
             </div>
           </div>
         </div>

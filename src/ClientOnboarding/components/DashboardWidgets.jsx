@@ -27,8 +27,8 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       label: "Pending Documents",
       button: dashboardData?.summary_cards?.pending_documents?.action || "Upload Now",
       onClick: () => {
-        // Navigate to My Documents with Document Requests tab
-        navigate("/my-documents?tab=requests");
+        // Navigate to My Documents
+        navigate("/dashboard/documents");
       },
     },
     {
@@ -39,8 +39,8 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       label: "Outstanding Balance",
       button: dashboardData?.summary_cards?.outstanding_balance?.action || "Pay Now",
       onClick: () => {
-        // Navigate to billing/payment page if available
-        // navigate("/billing");
+        // Navigate to Invoices & Payments
+        navigate("/dashboard/invoices");
       },
     },
     {
@@ -51,8 +51,8 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       label: "Next Appointment",
       button: dashboardData?.summary_cards?.next_appointment ? "Reschedule" : "Schedule",
       onClick: () => {
-        // Navigate to appointments page if available
-        // navigate("/appointments");
+        // Navigate to Appointments
+        navigate("/dashboard/appointments");
       },
     },
     {
@@ -63,8 +63,8 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       label: "New Messages",
       button: dashboardData?.summary_cards?.new_messages?.action || "View All",
       onClick: () => {
-        // Navigate to messages page
-        navigate("/messages");
+        // Navigate to Messages
+        navigate("/dashboard/messages");
       },
     },
   ];

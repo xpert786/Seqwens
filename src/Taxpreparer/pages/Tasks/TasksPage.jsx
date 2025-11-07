@@ -774,7 +774,7 @@ export default function TasksPage() {
           if (pair[0].includes('spouse')) {
             console.log('  ', pair[0] + ':', pair[1]);
           }
-        }
+        }   
       }
 
       // Append files (can be multiple files)

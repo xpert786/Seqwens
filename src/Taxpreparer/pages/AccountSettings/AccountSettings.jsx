@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
-import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
-import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
+import { taxPreparerProfileAPI, taxPreparerNotificationAPI, taxPreparerSecurityAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 
@@ -19,41 +18,30 @@ export default function AccountSettings() {
             setLoading(true);
             setError(null);
 
-            const API_BASE_URL = getApiBaseUrl();
-            const token = getAccessToken();
+            // Fetch all settings in parallel
+            const [profileResponse, notificationsResponse, securityResponse] = await Promise.all([
+                taxPreparerProfileAPI.getTaxPreparerAccount().catch(() => ({ success: false, data: null })),
+                taxPreparerNotificationAPI.getTaxPreparerNotificationPreferences().catch(() => ({ success: false, data: null })),
+                taxPreparerSecurityAPI.getTaxPreparerSecurityPreferences().catch(() => ({ success: false, data: null }))
+            ]);
 
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
+            console.log('Tax Preparer Settings API responses:', {
+                profile: profileResponse,
+                notifications: notificationsResponse,
+                security: securityResponse
+            });
 
-            const config = {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+            // Combine all settings
+            const combinedSettings = {
+                profile: profileResponse.data || profileResponse,
+                notifications: notificationsResponse.data || notificationsResponse,
+                security: securityResponse.data || securityResponse,
+                company_profile: profileResponse.company_profile || profileResponse.data?.company_profile || null
             };
 
-            const apiUrl = `${API_BASE_URL}/user/settings`;
-            console.log('Fetching settings from:', apiUrl);
-
-            const response = await fetchWithCors(apiUrl, config);
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            console.log('Settings API response:', result);
-
-            if (result.success && result.data) {
-                setSettings(result.data);
-            } else {
-                throw new Error('Failed to fetch settings');
-            }
+            setSettings(combinedSettings);
         } catch (error) {
-            console.error('Error fetching settings:', error);
+            console.error('Error fetching tax preparer settings:', error);
             setError(handleAPIError(error));
         } finally {
             setLoading(false);

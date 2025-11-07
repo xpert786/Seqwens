@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { SaveIcon } from "../../component/icons"
+import { SaveIcon } from "../../component/icons";
+import { taxPreparerProfileAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { toast } from "react-toastify";
 
 
 export default function Profile({ profileData, companyProfile, onUpdate }) {
@@ -40,12 +42,33 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Implement save functionality with API call
-        console.log('Form data:', formData);
-        if (onUpdate) {
-            onUpdate();
+        try {
+            // Prepare data for API - separate personal and company info
+            const personalData = {
+                first_name: formData.first_name,
+                middle_name: formData.middle_name || '',
+                last_name: formData.last_name,
+                email: formData.email,
+                phone_number: formData.phone_number,
+                availability: formData.availability
+            };
+
+            // Update personal information
+            const response = await taxPreparerProfileAPI.updateTaxPreparerAccount(personalData);
+            
+            if (response.success || response) {
+                toast.success('Profile updated successfully!');
+                if (onUpdate) {
+                    onUpdate();
+                }
+            } else {
+                toast.error('Failed to update profile');
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            toast.error(error.message || 'Failed to update profile');
         }
     };
 

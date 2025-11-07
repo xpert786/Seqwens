@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "../../styles/icon.css";
-import { SaveIcon } from "../../component/icons"
+import { SaveIcon } from "../../component/icons";
+import { taxPreparerNotificationAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { toast } from "react-toastify";
 
 const Notifications = ({ notifications, onUpdate }) => {
   const [preferences, setPreferences] = useState({
@@ -36,11 +38,21 @@ const Notifications = ({ notifications, onUpdate }) => {
     setPreferences({ ...preferences, [key]: !preferences[key] });
   };
 
-  const handleSave = () => {
-    // TODO: Implement save functionality with API call
-    console.log('Notification preferences:', preferences);
-    if (onUpdate) {
-      onUpdate();
+  const handleSave = async () => {
+    try {
+      const response = await taxPreparerNotificationAPI.updateTaxPreparerNotificationPreferences(preferences);
+      
+      if (response.success || response) {
+        toast.success('Notification preferences updated successfully!');
+        if (onUpdate) {
+          onUpdate();
+        }
+      } else {
+        toast.error('Failed to update notification preferences');
+      }
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      toast.error(error.message || 'Failed to update notification preferences');
     }
   };
 

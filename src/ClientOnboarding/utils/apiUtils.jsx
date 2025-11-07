@@ -768,6 +768,157 @@ export const securityAPI = {
   }
 };
 
+// Tax Preparer Account Settings API functions
+export const taxPreparerProfileAPI = {
+  // Get tax preparer account information
+  getTaxPreparerAccount: async () => {
+    return await apiRequest('/tax-preparer/account/', 'GET');
+  },
+
+  // Get tax preparer profile picture
+  getTaxPreparerProfilePicture: async () => {
+    return await apiRequest('/tax-preparer/profile-picture/', 'GET');
+  },
+
+  // Update tax preparer account information
+  updateTaxPreparerAccount: async (userData) => {
+    return await apiRequest('/tax-preparer/account/', 'PATCH', userData);
+  },
+
+  // Update tax preparer profile picture
+  updateTaxPreparerProfilePicture: async (profilePictureFile) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+
+    const formData = new FormData();
+    formData.append('profile_picture', profilePictureFile);
+
+    // Log file details for debugging
+    console.log('Uploading tax preparer profile picture:', {
+      name: profilePictureFile.name,
+      type: profilePictureFile.type,
+      size: profilePictureFile.size,
+      lastModified: profilePictureFile.lastModified
+    });
+
+    // Log FormData contents for debugging
+    console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+      console.log('  Key:', pair[0], 'Value:', pair[1]);
+    }
+
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      },
+      body: formData
+    };
+
+    console.log('Tax Preparer Profile Picture Update URL:', `${API_BASE_URL}/tax-preparer/account/`);
+    console.log('Request config:', { method: config.method, headers: config.headers });
+
+    let response = await fetchWithCors(`${API_BASE_URL}/tax-preparer/account/`, config);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      console.log('Received 401, attempting to refresh token...');
+
+      try {
+        await refreshAccessToken();
+
+        // Retry the original request with new token
+        config.headers = {
+          'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+        };
+        response = await fetchWithCors(`${API_BASE_URL}/tax-preparer/account/`, config);
+
+        if (response.status === 401) {
+          // Refresh failed, redirect to login
+          console.log('Token refresh failed, clearing user data and redirecting to login');
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        console.error('Tax Preparer Profile Picture Update Error Response:', errorData);
+        console.error('Full error data:', JSON.stringify(errorData, null, 2));
+
+        if (errorData.profile_picture) {
+          // Handle Django validation errors
+          const profileErrors = Array.isArray(errorData.profile_picture)
+            ? errorData.profile_picture.join(', ')
+            : errorData.profile_picture;
+          errorMessage = `Profile picture: ${profileErrors}`;
+        } else if (errorData.errors && errorData.errors.profile_picture) {
+          // Handle nested errors structure
+          const errors = errorData.errors.profile_picture;
+          errorMessage = `Profile picture: ${Array.isArray(errors) ? errors.join(', ') : errors}`;
+        } else if (errorData.errors) {
+          console.error('Tax Preparer Profile Picture Update Field Validation Errors:', errorData.errors);
+          const fieldErrors = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (parseError) {
+        console.error('Error parsing tax preparer profile picture update response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  }
+};
+
+// Tax Preparer Notification Preferences API functions
+export const taxPreparerNotificationAPI = {
+  // Get tax preparer notification preferences
+  getTaxPreparerNotificationPreferences: async () => {
+    return await apiRequest('/tax-preparer/notification-preferences/', 'GET');
+  },
+
+  // Update tax preparer notification preferences
+  updateTaxPreparerNotificationPreferences: async (preferences) => {
+    return await apiRequest('/tax-preparer/notification-preferences/', 'PATCH', preferences);
+  }
+};
+
+// Tax Preparer Security Settings API functions
+export const taxPreparerSecurityAPI = {
+  // Get tax preparer security preferences
+  getTaxPreparerSecurityPreferences: async () => {
+    return await apiRequest('/tax-preparer/security-settings/', 'GET');
+  },
+
+  // Update tax preparer security preferences
+  updateTaxPreparerSecurityPreferences: async (preferences) => {
+    return await apiRequest('/tax-preparer/security-settings/', 'PATCH', preferences);
+  },
+
+  // Update tax preparer password
+  updateTaxPreparerPassword: async (passwordData) => {
+    return await apiRequest('/tax-preparer/security-settings/', 'PATCH', passwordData);
+  }
+};
+
 // Dashboard API functions
 export const dashboardAPI = {
   // Get initial dashboard data
@@ -1386,15 +1537,29 @@ export const signatureRequestsAPI = {
 
   // Submit signature request
   submitSignatureRequest: async (signatureData) => {
-    const { signature_request_id, signature_image, spouse_signature_image } = signatureData;
+    const { 
+      signature_request_id, 
+      signature_image, 
+      typed_text,
+      spouse_signature_image, 
+      spouse_typed_text 
+    } = signatureData;
 
     const requestBody = {
-      signature_request_id: signature_request_id,
-      signature_image: signature_image
+      signature_request_id: signature_request_id
     };
 
-    // Add spouse signature if provided
-    if (spouse_signature_image) {
+    // Add primary signature - typed_text takes precedence over signature_image
+    if (typed_text) {
+      requestBody.typed_text = typed_text;
+    } else if (signature_image) {
+      requestBody.signature_image = signature_image;
+    }
+
+    // Add spouse signature - typed_text takes precedence over signature_image
+    if (spouse_typed_text) {
+      requestBody.spouse_typed_text = spouse_typed_text;
+    } else if (spouse_signature_image) {
       requestBody.spouse_signature_image = spouse_signature_image;
     }
 
