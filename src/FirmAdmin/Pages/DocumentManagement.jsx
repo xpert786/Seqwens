@@ -113,6 +113,7 @@ export default function DocumentManagement() {
         <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
         <p className="text-gray-600">Manage client documents</p>
       </div>
+      )}
 
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6">
@@ -142,7 +143,6 @@ export default function DocumentManagement() {
           </div>
         </div>
       </div>
-      )}
 
 
       {/* Navigation Tabs - Show tabs when NOT in nested route */}
