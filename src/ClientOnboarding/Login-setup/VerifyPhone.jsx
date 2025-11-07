@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "../styles/VerifyPhone.css";
 import FixedLayout from "../components/FixedLayout";
 import { useNavigate } from "react-router-dom";
+import { getUserData, setUserData } from "../utils/userUtils";
 
 export default function VerifyPhone() {
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -40,6 +41,19 @@ export default function VerifyPhone() {
   const handleVerify = () => {
     const enteredOtp = otp.join("");
     console.log("Verifying OTP:", enteredOtp);
+    
+    // Update userData in both localStorage and sessionStorage with verification status
+    const currentUserData = getUserData();
+    if (currentUserData) {
+      const updatedUserData = { ...currentUserData, is_phone_verified: true };
+      
+      // Update both storages to be safe
+      setUserData(updatedUserData);
+      sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
+      
+      console.log('Updated userData with phone verification status:', updatedUserData);
+    }
+    
     setShowPopup(true);
   };
 

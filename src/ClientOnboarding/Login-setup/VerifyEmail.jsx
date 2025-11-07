@@ -3,6 +3,7 @@ import "../styles/VerifyPhone.css";
 import FixedLayout from "../components/FixedLayout";
 import { useNavigate } from "react-router-dom";
 import { userAPI, handleAPIError } from "../utils/apiUtils";
+import { getUserData, setUserData } from "../utils/userUtils";
 
 export default function VerifyEmail() {
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -88,6 +89,21 @@ export default function VerifyEmail() {
     
     try {
       const response = await userAPI.verifyEmailOtp(enteredOtp);
+      
+      // Update userData in both localStorage and sessionStorage with verification status
+      const currentUserData = getUserData();
+      if (currentUserData) {
+        // Update with response user data if available, otherwise just update verification status
+        const updatedUserData = response.user 
+          ? { ...currentUserData, ...response.user, is_email_verified: true }
+          : { ...currentUserData, is_email_verified: true };
+        
+        // Update both storages to be safe
+        setUserData(updatedUserData);
+        sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
+        
+        console.log('Updated userData with email verification status:', updatedUserData);
+      }
       
       // Show success popup
       setShowPopup(true);

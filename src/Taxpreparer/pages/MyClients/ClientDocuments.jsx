@@ -9,7 +9,7 @@ import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 export default function ClientDocuments() {
   const { clientId } = useParams();
   const navigate = useNavigate();
-  
+
   const [view, setView] = useState("grid");
   const [folders, setFolders] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -161,15 +161,18 @@ export default function ClientDocuments() {
 
   // Get status badge class
   const getStatusBadgeClass = (status) => {
+    if (!status) return 'bg-secondary text-white';
     const statusLower = (status || '').toLowerCase();
-    if (statusLower.includes('processed') || statusLower.includes('completed')) {
+    if (statusLower.includes('processed') || statusLower.includes('completed') || statusLower.includes('active')) {
       return 'bg-darkgreen text-white';
-    } else if (statusLower.includes('signature') || statusLower.includes('waiting')) {
+    } else if (statusLower.includes('signature') || statusLower.includes('pending sign') || statusLower.includes('waiting')) {
       return 'bg-darkblue text-white';
     } else if (statusLower.includes('review')) {
       return 'bg-darkbroun text-white';
     } else if (statusLower.includes('clarification')) {
       return 'bg-darkcolour text-white';
+    } else if (statusLower.includes('pending')) {
+      return 'bg-darkblue text-white';
     }
     return 'bg-darkblue text-white';
   };
@@ -275,55 +278,13 @@ export default function ClientDocuments() {
           </div>
         )}
 
-        {/* Search and Filter */}
-        <div className="d-flex align-items-center gap-2 mb-4">
-          <div className="position-relative search-box flex-grow-1">
-            <FaSearch className="search-icon" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: 1 }} />
-            <input
-              type="text"
-              className="form-control ps-5"
-              placeholder="Search folders and documents..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              style={{
-                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-              }}
-            />
-          </div>
-          <button className="btn d-flex align-items-center gap-2 rounded" style={{ backgroundColor: "white", border: "1px solid #E8F0FF" }}>
-            <FaFilter />
-            Filter
-          </button>
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-sm"
-              onClick={() => setView("grid")}
-              style={{
-                backgroundColor: view === "grid" ? "#00C0C6" : "white",
-                color: view === "grid" ? "white" : "#3B4A66",
-                border: "1px solid #E8F0FF"
-              }}
-            >
-              <i className="bi bi-grid-3x3-gap"></i>
-            </button>
-            <button
-              className="btn btn-sm"
-              onClick={() => setView("list")}
-              style={{
-                backgroundColor: view === "list" ? "#00C0C6" : "white",
-                color: view === "list" ? "white" : "#3B4A66",
-                border: "1px solid #E8F0FF"
-              }}
-            >
-              <i className="bi bi-list"></i>
-            </button>
-          </div>
-        </div>
+
 
         {/* Statistics */}
         {statistics && (
           <div className="d-flex gap-3 mb-4">
             <div className="bg-light rounded p-2">
+
               <small className="text-muted">Folders: {statistics.total_folders}</small>
             </div>
             <div className="bg-light rounded p-2">
@@ -340,9 +301,9 @@ export default function ClientDocuments() {
         {/* Folders */}
         {folders.length > 0 && (
           <div className="mb-4">
-            <h6 className="mb-3" style={{ fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "500" }}>
+            {/* <h6 className="mb-3" style={{ fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "500" }}>
               Folders ({folders.length})
-            </h6>
+            </h6> */}
             <div className={view === "grid" ? "row g-3" : "d-flex flex-column gap-2"}>
               {folders.map((folder) => (
                 <div
@@ -352,6 +313,7 @@ export default function ClientDocuments() {
                   style={{ cursor: "pointer" }}
                 >
                   {view === "grid" ? (
+
                     <div
                       className="border rounded p-3 bg-white"
                       style={{
@@ -373,8 +335,10 @@ export default function ClientDocuments() {
                       }}
                     >
                       <div className="d-flex flex-column align-items-center text-center">
-                        <div className="mb-3" style={{ fontSize: "48px", color: "#F49C2D" }}>
-                          <i className="bi bi-folder-fill"></i>
+                        <div className="mb-3" style={{ fontSize: "48px", color: "#F49C2D", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="48" height="48" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.334 13.3333C13.6876 13.3333 14.0267 13.1929 14.2768 12.9428C14.5268 12.6928 14.6673 12.3536 14.6673 12V5.33333C14.6673 4.97971 14.5268 4.64057 14.2768 4.39052C14.0267 4.14048 13.6876 4 13.334 4H8.06732C7.84433 4.00219 7.62435 3.94841 7.42752 3.84359C7.23069 3.73877 7.06329 3.58625 6.94065 3.4L6.40065 2.6C6.27924 2.41565 6.11397 2.26432 5.91965 2.1596C5.72533 2.05488 5.50806 2.00004 5.28732 2H2.66732C2.3137 2 1.97456 2.14048 1.72451 2.39052C1.47446 2.64057 1.33398 2.97971 1.33398 3.33333V12C1.33398 12.3536 1.47446 12.6928 1.72451 12.9428C1.97456 13.1929 2.3137 13.3333 2.66732 13.3333H13.334Z" stroke="#F49C2D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </div>
                         <div className="fw-medium mb-1 text-truncate w-100" style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#3B4A66" }}>
                           {folder.title}
@@ -399,8 +363,10 @@ export default function ClientDocuments() {
                         e.currentTarget.style.borderColor = "#E8F0FF";
                       }}
                     >
-                      <div style={{ fontSize: "40px", color: "#F49C2D" }}>
-                        <i className="bi bi-folder-fill"></i>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13.334 13.3333C13.6876 13.3333 14.0267 13.1929 14.2768 12.9428C14.5268 12.6928 14.6673 12.3536 14.6673 12V5.33333C14.6673 4.97971 14.5268 4.64057 14.2768 4.39052C14.0267 4.14048 13.6876 4 13.334 4H8.06732C7.84433 4.00219 7.62435 3.94841 7.42752 3.84359C7.23069 3.73877 7.06329 3.58625 6.94065 3.4L6.40065 2.6C6.27924 2.41565 6.11397 2.26432 5.91965 2.1596C5.72533 2.05488 5.50806 2.00004 5.28732 2H2.66732C2.3137 2 1.97456 2.14048 1.72451 2.39052C1.47446 2.64057 1.33398 2.97971 1.33398 3.33333V12C1.33398 12.3536 1.47446 12.6928 1.72451 12.9428C1.97456 13.1929 2.3137 13.3333 2.66732 13.3333H13.334Z" stroke="#F49C2D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
                       <div className="flex-grow-1">
                         <div className="fw-medium mb-1" style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#3B4A66" }}>
@@ -427,61 +393,124 @@ export default function ClientDocuments() {
             <h6 className="mb-3" style={{ fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "500" }}>
               Documents ({documents.length})
             </h6>
-            <div className="row g-3">
-              {documents.map((doc, index) => {
-                const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
-                const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
-                const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
-                const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
-                const docStatus = doc.status || doc.status_display || 'Pending';
-                const fileUrl = doc.file_url || doc.tax_documents || '';
+            {view === "list" ? (
+              // Table view for list mode
+              <div className="table-responsive">
+                <table className="table table-hover" style={{ marginBottom: 0 }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#F9FAFB", borderBottom: "2px solid #E5E7EB" }}>
+                      <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#6B7280", padding: "12px" }}>Name</th>
+                      <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#6B7280", padding: "12px" }}>Type</th>
+                      <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#6B7280", padding: "12px" }}>Size</th>
+                      <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#6B7280", padding: "12px" }}>Updated</th>
+                      <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#6B7280", padding: "12px" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.map((doc, index) => {
+                      // Use file_name first, then fallback options - ensure we don't show "Untitled" if data exists
+                      const docName = doc.file_name || doc.name || doc.document_name || doc.filename || doc.title || 'Untitled Document';
+                      // Use file_size_bytes for accurate size calculation
+                      const docSize = doc.file_size_bytes || (doc.file_size && typeof doc.file_size === 'number' ? doc.file_size * 1024 * 1024 : doc.file_size) || doc.size || '0';
+                      // Use file_type or file_extension
+                      const docType = doc.file_type || (doc.file_extension ? doc.file_extension.toUpperCase() : null) || doc.type || doc.document_type || 'PDF';
+                      // Use updated_at_formatted first, then updated_at, then created_at_formatted, then created_at
+                      const docDate = doc.updated_at_formatted || doc.updated_at || doc.created_at_formatted || doc.created_at || doc.date || doc.uploaded_at;
+                      // Use status_display first as per API response, then status
+                      const docStatus = doc.status_display || doc.status || 'Pending';
+                      const fileUrl = doc.file_url || doc.tax_documents || '';
 
-                return (
-                  <div className="col-12" key={doc.id || doc.document_id || index}>
-                    <div
-                      className="p-3 border rounded-4"
-                      style={{
-                        backgroundColor: "#FFFFFF",
-                        cursor: "pointer",
-                        transition: "background-color 0.3s ease",
-                      }}
-                    >
-                      <div className="d-flex justify-content-between align-items-start flex-wrap">
-                        <div className="d-flex gap-3 align-items-start" style={{ flex: 1, minWidth: 0 }}>
-                          <div className="d-flex align-items-center justify-content-center" style={{ width: 40, height: 40, flexShrink: 0 }}>
-                            <span className="mydocs-icon-wrapper">
+                      return (
+                        <tr
+                          key={doc.id || doc.document_id || index}
+                          style={{ cursor: "pointer", borderBottom: "1px solid #E5E7EB" }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#F9FAFB"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                          onClick={() => {
+                            if (fileUrl) {
+                              window.open(fileUrl, '_blank');
+                            }
+                          }}
+                        >
+                          <td style={{ padding: "12px", fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#3B4A66" }}>
+                            <div className="d-flex align-items-center gap-2">
                               <FileIcon />
+                              <span className="fw-medium">{docName}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: "12px", fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#6B7280" }}>{docType}</td>
+                          <td style={{ padding: "12px", fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#6B7280" }}>{formatFileSize(docSize)}</td>
+                          <td style={{ padding: "12px", fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#6B7280" }}>{formatDate(docDate)}</td>
+                          <td style={{ padding: "12px" }}>
+                            <span
+                              className={`badge ${getStatusBadgeClass(docStatus)} px-3 py-1`}
+                              style={{
+                                borderRadius: "20px",
+                                fontSize: "0.75rem",
+                                fontWeight: "500",
+                                fontFamily: "BasisGrotesquePro",
+                                color: "#FFFFFF"
+                              }}
+                            >
+                              {docStatus}
                             </span>
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="fw-medium mb-1" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px", color: "#3B4A66" }}>
-                              {docName}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              // Card/Grid view
+              <div className="row g-3">
+                {documents.map((doc, index) => {
+                  // Use file_name first, then fallback options - ensure we don't show "Untitled" if data exists
+                  const docName = doc.file_name || doc.name || doc.document_name || doc.filename || doc.title || 'Untitled Document';
+                  // Use file_size_bytes for accurate size calculation
+                  const docSize = doc.file_size_bytes || (doc.file_size && typeof doc.file_size === 'number' ? doc.file_size * 1024 * 1024 : doc.file_size) || doc.size || '0';
+                  // Use file_type or file_extension
+                  const docType = doc.file_type || (doc.file_extension ? doc.file_extension.toUpperCase() : null) || doc.type || doc.document_type || 'PDF';
+                  // Use updated_at_formatted first, then updated_at, then created_at_formatted, then created_at
+                  const docDate = doc.updated_at_formatted || doc.updated_at || doc.created_at_formatted || doc.created_at || doc.date || doc.uploaded_at;
+                  // Use status_display first as per API response, then status
+                  const docStatus = doc.status_display || doc.status || 'Pending';
+                  const fileUrl = doc.file_url || doc.tax_documents || '';
+
+                  return (
+                    <div className="col-12" key={doc.id || doc.document_id || index}>
+                      <div
+                        className="p-3 border rounded-4"
+                        style={{
+                          backgroundColor: "#FFFFFF",
+                          cursor: "pointer",
+                          transition: "background-color 0.3s ease",
+                        }}
+                      >
+                        <div className="d-flex justify-content-between align-items-start flex-wrap">
+                          <div className="d-flex gap-3 align-items-start" style={{ flex: 1, minWidth: 0 }}>
+                            <div className="d-flex align-items-center justify-content-center" style={{ width: 40, height: 40, flexShrink: 0 }}>
+                              <span className="mydocs-icon-wrapper">
+                                <FileIcon />
+                              </span>
                             </div>
-                            <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
-                              Type: {docType} • Size: {formatFileSize(docSize)} • Updated: {formatDate(docDate)}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div className="fw-medium mb-1" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px", color: "#3B4A66" }}>
+                                {docName}
+                              </div>
+                              <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
+                                Type: {docType} • Size: {formatFileSize(docSize)} • Updated: {formatDate(docDate)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
-                          <span
-                            className={`badge ${getStatusBadgeClass(docStatus)} px-3 py-2`}
-                            style={{
-                              borderRadius: "20px",
-                              fontSize: "0.75rem",
-                              fontWeight: "500",
-                              fontFamily: "BasisGrotesquePro",
-                              color: "#FFFFFF"
-                            }}
-                          >
-                            {docStatus}
-                          </span>
+                         
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

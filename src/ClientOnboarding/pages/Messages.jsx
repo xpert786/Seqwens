@@ -36,6 +36,7 @@ export default function Messages() {
     sendMessage: wsSendMessage,
     sendTyping: wsSendTyping,
     markAsRead: wsMarkAsRead,
+    markAllAsRead: wsMarkAllAsRead,
   } = useThreadWebSocket(activeConversationId, true);
 
   // Fetch superadmins from API

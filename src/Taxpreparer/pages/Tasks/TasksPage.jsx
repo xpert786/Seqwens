@@ -4,7 +4,8 @@ import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendi
 import { FaChevronDown, FaChevronRight, FaFolder, FaSearch } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { toast } from "react-toastify";
 
 // Custom checkbox styles
 const checkboxStyle = `
@@ -89,7 +90,7 @@ export default function TasksPage() {
     completed: [],
     overdue: []
   });
-  
+
   // Tasks API state
   const [tasksLoading, setTasksLoading] = useState(false);
   const [tasksError, setTasksError] = useState(null);
@@ -109,7 +110,7 @@ export default function TasksPage() {
     has_next: false,
     has_previous: false
   });
-  
+
   // Tasks filters
   const [tasksSearchQuery, setTasksSearchQuery] = useState("");
   const [tasksStatusFilter, setTasksStatusFilter] = useState("");
@@ -269,7 +270,7 @@ export default function TasksPage() {
 
       if (result.success && result.data) {
         const apiTasks = result.data.tasks || [];
-        
+
         // Organize tasks by status
         const organizedTasks = {
           pending: [],
@@ -279,15 +280,15 @@ export default function TasksPage() {
         };
 
         const now = new Date();
-        
+
         apiTasks.forEach(task => {
           const taskObj = {
             id: task.id,
             title: task.task_title || 'Untitled Task',
-            client: task.clients_info && task.clients_info.length > 0 
+            client: task.clients_info && task.clients_info.length > 0
               ? task.clients_info.map(c => c.name).join(', ')
               : `${task.client_count || 0} client(s)`,
-            due: task.due_date 
+            due: task.due_date
               ? new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               : 'No due date',
             priority: task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Medium',
@@ -328,11 +329,11 @@ export default function TasksPage() {
         });
 
         setTasks(organizedTasks);
-        
+
         if (result.data.statistics) {
           setTasksStatistics(result.data.statistics);
         }
-        
+
         if (result.data.pagination) {
           setTasksPagination(result.data.pagination);
         }
@@ -366,7 +367,7 @@ export default function TasksPage() {
   useEffect(() => {
     const fetchRootFolders = async () => {
       if (!showAddTaskModal) return; // Only fetch when modal is open
-      
+
       try {
         setLoadingFolders(true);
         const API_BASE_URL = getApiBaseUrl();
@@ -396,7 +397,7 @@ export default function TasksPage() {
         if (result.success && result.data) {
           // New API structure: result.data.folders
           let rootFolders = [];
-          
+
           if (result.data.folders && Array.isArray(result.data.folders)) {
             rootFolders = result.data.folders;
           }
@@ -538,7 +539,7 @@ export default function TasksPage() {
       const token = getAccessToken();
 
       if (!token) {
-        alert('No authentication token found. Please login again.');
+        toast.error('No authentication token found. Please login again.', { position: "top-right", autoClose: 3000 });
         return;
       }
 
@@ -617,11 +618,12 @@ export default function TasksPage() {
       setCreatingFolder(false);
       setParentFolderForNewFolder(null);
 
-      alert('Folder created successfully!');
+      toast.success('Folder created successfully!', { position: "top-right", autoClose: 3000 });
 
     } catch (error) {
       console.error('Error creating folder:', error);
-      alert(handleAPIError(error));
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to create folder. Please try again.'), { position: "top-right", autoClose: 3000 });
     } finally {
       setCreatingFolderLoading(false);
     }
@@ -640,15 +642,15 @@ export default function TasksPage() {
         <div key={folder.id || idx} style={{ paddingLeft: '8px', marginBottom: '2px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {showExpandIcon ? (
-              <span 
-                onClick={() => toggleExpand(folder, path)} 
+              <span
+                onClick={() => toggleExpand(folder, path)}
                 style={{ cursor: 'pointer', width: '12px', display: 'inline-block' }}
               >
                 {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
               </span>
             ) : <span style={{ width: '12px' }} />}
-            <div 
-              onClick={() => handleFolderSelect(fullPath, folder.id)} 
+            <div
+              onClick={() => handleFolderSelect(fullPath, folder.id)}
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '2px 0' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -681,10 +683,80 @@ export default function TasksPage() {
         files: Array.from(value)
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
+      setFormData(prev => {
+        const updated = {
+          ...prev,
+          [field]: value
+        };
+        // Debug log for spouse_signature_required changes
+        if (field === 'spouse_signature_required') {
+          console.log('Updated spouse_signature_required in formData:', value, 'type:', typeof value);
+        }
+        return updated;
+      });
+    }
+  };
+
+  // Handle spouse signature toggle with validation
+  const handleSpouseSignatureToggle = async (checked) => {
+    // If unchecking, allow it
+    if (!checked) {
+      handleInputChange('spouse_signature_required', false);
+      return;
+    }
+
+    // If checking, validate that all selected clients have spouses
+    if (!formData.client_ids || formData.client_ids.length === 0) {
+      toast.error('Please select at least one client first.');
+      return;
+    }
+
+    try {
+      // Check spouse for all selected clients
+      const spouseChecks = await Promise.all(
+        formData.client_ids.map(async (clientId) => {
+          try {
+            const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
+            if (response.success && response.data) {
+              return {
+                clientId,
+                hasSpouse: response.data.has_spouse,
+                clientName: response.data.client_name || `Client ${clientId}`
+              };
+            }
+            return {
+              clientId,
+              hasSpouse: false,
+              clientName: `Client ${clientId}`,
+              error: 'Failed to check spouse information'
+            };
+          } catch (error) {
+            console.error(`Error checking spouse for client ${clientId}:`, error);
+            return {
+              clientId,
+              hasSpouse: false,
+              clientName: `Client ${clientId}`,
+              error: handleAPIError(error)
+            };
+          }
+        })
+      );
+
+      // Check if all clients have spouses
+      const clientsWithoutSpouse = spouseChecks.filter(check => !check.hasSpouse);
+
+      if (clientsWithoutSpouse.length > 0) {
+        // Some clients don't have spouses
+        const clientNames = clientsWithoutSpouse.map(c => c.clientName).join(', ');
+        toast.error(`The following client(s) do not have a partner/spouse: ${clientNames}. Spouse signature cannot be required.`);
+        return;
+      }
+
+      // All clients have spouses, allow toggle
+      handleInputChange('spouse_signature_required', true);
+    } catch (error) {
+      console.error('Error checking spouse:', error);
+      toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
     }
   };
 
@@ -693,7 +765,7 @@ export default function TasksPage() {
     e.preventDefault();
 
     if (!formData.task_title || !formData.client_ids || formData.client_ids.length === 0) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields', { position: "top-right", autoClose: 3000 });
       return;
     }
 
@@ -738,8 +810,36 @@ export default function TasksPage() {
       }
 
       // Add spouse signature requirement for signature requests
+      // Always send this field for signature requests, even if false
       if (formData.task_type === 'signature_request') {
-        formDataToSend.append('spouse_signature_required', formData.spouse_signature_required ? 'true' : 'false');
+        // Get the raw value from formData
+        const rawValue = formData.spouse_signature_required;
+        console.log('Raw spouse_signature_required value before processing:', rawValue, 'type:', typeof rawValue);
+
+        // Convert to boolean - check multiple possible truthy values
+        const spouseSignValue = !!(rawValue === true ||
+          rawValue === 'true' ||
+          rawValue === 'True' ||
+          rawValue === 1 ||
+          rawValue === '1');
+
+        console.log('Processed spouse_signature_required value:', spouseSignValue);
+
+        // The API expects 'spouse_sign' field name (based on API response)
+        // Django FormData boolean fields often expect "1"/"0" or "True"/"False"
+        // Try "1"/"0" first as it's more commonly accepted
+        const spouseSignString = spouseSignValue ? '1' : '0';
+        formDataToSend.append('spouse_sign', spouseSignString);
+        // Also send the alternative field name for compatibility
+        formDataToSend.append('spouse_signature_required', spouseSignString);
+
+        console.log('Sending spouse_sign as:', spouseSignString, '(1 = true, 0 = false)');
+        console.log('FormData entries for spouse fields:');
+        for (let pair of formDataToSend.entries()) {
+          if (pair[0].includes('spouse')) {
+            console.log('  ', pair[0] + ':', pair[1]);
+          }
+        }   
       }
 
       // Append files (can be multiple files)
@@ -759,6 +859,7 @@ export default function TasksPage() {
       console.log('priority:', formData.priority);
       console.log('estimated_hours:', formData.estimated_hours);
       console.log('description:', formData.description);
+      console.log('spouse_signature_required:', formData.spouse_signature_required);
       console.log('files count:', formData.files.length);
 
       // Log FormData entries
@@ -809,14 +910,15 @@ export default function TasksPage() {
       setShowAddTaskModal(false);
 
       // Show success message
-      alert('Task created successfully!');
+      toast.success('Task created successfully!', { position: "top-right", autoClose: 3000 });
 
       // Optionally refresh tasks list here
       // fetchTasks();
 
     } catch (error) {
       console.error('Error creating task:', error);
-      alert(handleAPIError(error));
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to create task. Please try again.'), { position: "top-right", autoClose: 3000 });
     } finally {
       setLoading(false);
     }
@@ -1094,142 +1196,6 @@ export default function TasksPage() {
       {/* Kanban / Calendar sections */}
       {active === "kanban" && (
         <div className="mt-4">
-          {/* Search and Filters */}
-          <div className="bg-white rounded-xl p-4 mb-4" style={{ border: "1px solid #E8F0FF" }}>
-            <div className="row g-3">
-              <div className="col-md-4">
-                <div className="position-relative">
-                  <FaSearch className="position-absolute" style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6B7280" }} />
-                  <input
-                    type="text"
-                    className="form-control ps-5"
-                    placeholder="Search tasks..."
-                    value={tasksSearchQuery}
-                    onChange={(e) => {
-                      setTasksSearchQuery(e.target.value);
-                      setTasksPagination(prev => ({ ...prev, page: 1 }));
-                    }}
-                    style={{ border: "1px solid #E8F0FF" }}
-                  />
-                </div>
-              </div>
-              <div className="col-md-2">
-                <select
-                  className="form-select"
-                  value={tasksStatusFilter}
-                  onChange={(e) => {
-                    setTasksStatusFilter(e.target.value);
-                    setTasksPagination(prev => ({ ...prev, page: 1 }));
-                  }}
-                  style={{ border: "1px solid #E8F0FF" }}
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-              <div className="col-md-2">
-                <select
-                  className="form-select"
-                  value={tasksPriorityFilter}
-                  onChange={(e) => {
-                    setTasksPriorityFilter(e.target.value);
-                    setTasksPagination(prev => ({ ...prev, page: 1 }));
-                  }}
-                  style={{ border: "1px solid #E8F0FF" }}
-                >
-                  <option value="">All Priority</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div className="col-md-2">
-                <select
-                  className="form-select"
-                  value={tasksTypeFilter}
-                  onChange={(e) => {
-                    setTasksTypeFilter(e.target.value);
-                    setTasksPagination(prev => ({ ...prev, page: 1 }));
-                  }}
-                  style={{ border: "1px solid #E8F0FF" }}
-                >
-                  <option value="">All Types</option>
-                  <option value="signature_request">Signature Request</option>
-                  <option value="document_request">Document Request</option>
-                  <option value="review_request">Review Request</option>
-                </select>
-              </div>
-              <div className="col-md-2">
-                <select
-                  className="form-select"
-                  value={tasksSortBy}
-                  onChange={(e) => {
-                    setTasksSortBy(e.target.value);
-                    setTasksPagination(prev => ({ ...prev, page: 1 }));
-                  }}
-                  style={{ border: "1px solid #E8F0FF" }}
-                >
-                  <option value="-created_at">Newest First</option>
-                  <option value="created_at">Oldest First</option>
-                  <option value="-due_date">Due Date (Latest)</option>
-                  <option value="due_date">Due Date (Earliest)</option>
-                  <option value="-priority">Priority (High to Low)</option>
-                  <option value="priority">Priority (Low to High)</option>
-                  <option value="task_title">Title (A-Z)</option>
-                  <option value="-task_title">Title (Z-A)</option>
-                </select>
-              </div>
-            </div>
-            <div className="row g-3 mt-2">
-              <div className="col-md-3">
-                <input
-                  type="date"
-                  className="form-control"
-                  placeholder="Start Date"
-                  value={tasksStartDate}
-                  onChange={(e) => {
-                    setTasksStartDate(e.target.value);
-                    setTasksPagination(prev => ({ ...prev, page: 1 }));
-                  }}
-                  style={{ border: "1px solid #E8F0FF" }}
-                />
-              </div>
-              <div className="col-md-3">
-                <input
-                  type="date"
-                  className="form-control"
-                  placeholder="End Date"
-                  value={tasksEndDate}
-                  onChange={(e) => {
-                    setTasksEndDate(e.target.value);
-                    setTasksPagination(prev => ({ ...prev, page: 1 }));
-                  }}
-                  style={{ border: "1px solid #E8F0FF" }}
-                />
-              </div>
-              <div className="col-md-6 d-flex align-items-center gap-2">
-                {(tasksSearchQuery || tasksStatusFilter || tasksPriorityFilter || tasksTypeFilter || tasksStartDate || tasksEndDate) && (
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={() => {
-                      setTasksSearchQuery("");
-                      setTasksStatusFilter("");
-                      setTasksPriorityFilter("");
-                      setTasksTypeFilter("");
-                      setTasksStartDate("");
-                      setTasksEndDate("");
-                      setTasksPagination(prev => ({ ...prev, page: 1 }));
-                    }}
-                  >
-                    Clear Filters
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
 
           {/* Loading State */}
           {tasksLoading && (
@@ -1243,9 +1209,11 @@ export default function TasksPage() {
 
           {/* Error State */}
           {tasksError && !tasksLoading && (
-            <div className="alert alert-danger" role="alert">
-              <strong>Error:</strong> {tasksError}
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchReceivedTasks}>
+            <div className="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style={{ backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5" }}>
+              <div>
+                <strong style={{ color: "#DC2626" }}>Error:</strong> <span style={{ color: "#991B1B" }}>{tasksError}</span>
+              </div>
+              <button className="btn btn-sm" onClick={fetchReceivedTasks} style={{ backgroundColor: "#DC2626", color: "#fff", border: "none" }}>
                 Retry
               </button>
             </div>
@@ -1254,67 +1222,73 @@ export default function TasksPage() {
           {/* Kanban Board */}
           {!tasksLoading && !tasksError && (
             <div className="d-flex justify-content-center">
-              <div className="d-flex flex-wrap gap-3 mt-3" style={{ maxWidth: 'fit-content' }}>
+              <div className="mt-3" style={{
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '12px',
+                maxWidth: '1400px'
+              }}>
                 {order.map((k) => (
-                  <div key={k} className="col-auto">
-                    <div className="card" style={{ background: bgForCol(k), borderRadius: 18, border: "1px solid #E8F0FF", width: 'fit-content', minWidth: 280 }}>
+                  <div key={k} style={{ display: 'flex' }}>
+                    <div className="card" style={{ background: bgForCol(k), borderRadius: 18, border: "1px solid #E8F0FF", width: '100%' }}>
                       <div className="card-body">
                         <h6 className="fw-semibold d-flex align-items-center mb-3" style={{ color: "#3B4A66", gap: 8 }}>
                           {iconFor(k)} {titleFor(k)} ({tasks[k].length})
                         </h6>
                         {tasks[k].length > 0 ? (
                           tasks[k].map((t) => (
-                      <div
-                        key={t.id}
-                        className="card mb-3 task-item"
-                        style={{ border: "1px solid #E8F0FF", borderRadius: 14 }}
-                        onClick={() => setSelectedTask(t)}
-                      >
-                        <div className="card-body position-relative p-3">
-                          <div className="position-absolute" style={{ top: 10, right: 10, zIndex: 1 }}>
-                            <span
-                              className="badge text-white"
-                              style={{
-                                background: t.priority.toLowerCase() === 'high' ? '#EF4444' :
-                                  t.priority.toLowerCase() === 'medium' ? '#F59E0B' :
-                                    t.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
-                                color: '#FFFFFF !important',
-                                borderRadius: '20px',
-                                padding: '3px 9px',
-                                fontSize: '10px',
-                                fontWeight: 700,
-                                lineHeight: '14px',
-                                whiteSpace: 'nowrap',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                height: '20px',
-                                border: 'none',
-                                textTransform: 'uppercase',
-                                WebkitFontSmoothing: 'antialiased',
-                                // MozOsxFontSmoothing: 'grayscale'
-                              }}
+                            <div
+                              key={t.id}
+                              className="card mb-3 task-item"
+                              style={{ border: "1px solid #E8F0FF", borderRadius: 14 }}
+                              onClick={() => setSelectedTask(t)}
                             >
-                              {t.priority}
-                            </span>
-                          </div>
-                          <div className="d-flex align-items-start">
-                            <span className="icon-circle" style={{ width: 28, height: 28, borderRadius: 8, background: "#EAF7FF", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#00C0C6" }}><Doc /></span>
-                            <div style={{ minWidth: 0, flex: 1, marginLeft: 10 }}>
-                              <div className="fw-semibold" style={{ color: "#3B4A66", whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', fontSize: 14, lineHeight: '20px', paddingRight: 60 }}>{t.title}</div>
-                              <div className="text-muted small d-flex align-items-center justify-content-between w-100 flex-wrap" style={{ gap: 12, marginTop: 6, marginBottom: 4 }}>
-                                <span className="d-inline-flex align-items-center" style={{ gap: 6 }}>
-                                  <MiniContact /> {t.client}
-                                  <span className="ms-3">{t.due}</span>
-                                </span>
-                                <button className="btn btn-sm btn-light" style={{ backgroundColor: '#fff', borderRadius: 8, border: '1px solid #E8F0FF' }} aria-label="More options">
-                                  <Dot />
-                                </button>
+                              <div className="card-body position-relative p-3">
+                                <div className="position-absolute" style={{ top: 10, right: 10, zIndex: 1 }}>
+                                  <span
+                                    className="badge text-white"
+                                    style={{
+                                      background: t.priority.toLowerCase() === 'high' ? '#EF4444' :
+                                        t.priority.toLowerCase() === 'medium' ? '#F59E0B' :
+                                          t.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
+                                      color: '#FFFFFF !important',
+                                      borderRadius: '20px',
+                                      padding: '3px 9px',
+                                      fontSize: '10px',
+                                      fontWeight: 700,
+                                      lineHeight: '14px',
+                                      whiteSpace: 'nowrap',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      height: '20px',
+                                      border: 'none',
+                                      textTransform: 'uppercase',
+                                      WebkitFontSmoothing: 'antialiased',
+                                      // MozOsxFontSmoothing: 'grayscale'
+                                    }}
+                                  >
+                                    {t.priority}
+                                  </span>
+                                </div>
+                                <div className="d-flex align-items-start">
+                                  <span className="icon-circle" style={{ width: 28, height: 28, borderRadius: 8, background: "#EAF7FF", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#00C0C6" }}><Doc /></span>
+                                  <div style={{ minWidth: 0, flex: 1, marginLeft: 10 }}>
+                                    <div className="fw-semibold" style={{ color: "#3B4A66", whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', fontSize: 14, lineHeight: '20px', paddingRight: 60 }}>{t.title}</div>
+                                    <div className="text-muted small d-flex align-items-center justify-content-between w-100 flex-wrap" style={{ gap: 12, marginTop: 6, marginBottom: 4 }}>
+                                      <span className="d-inline-flex align-items-center" style={{ gap: 6 }}>
+                                        <MiniContact /> {t.client}
+                                        <span className="ms-3">{t.due}</span>
+                                      </span>
+                                      <button className="btn btn-sm btn-light" style={{ backgroundColor: '#fff', borderRadius: 8, border: '1px solid #E8F0FF' }} aria-label="More options">
+                                        <Dot />
+                                      </button>
+                                    </div>
+                                    <div className="text-muted small" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{t.note}</div>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-muted small" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{t.note}</div>
                             </div>
-                          </div>
-                        </div>
-                      </div>
                           ))
                         ) : (
                           <div className="text-center py-4 text-muted small">
@@ -1584,8 +1558,8 @@ export default function TasksPage() {
                       <div style={{ position: 'relative', display: 'inline-block' }}>
                         <input
                           type="checkbox"
-                          checked={formData.spouse_signature_required}
-                          onChange={(e) => handleInputChange('spouse_signature_required', e.target.checked)}
+                          checked={formData.spouse_signature_required || false}
+                          onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
                           style={{
                             width: '44px',
                             height: '24px',
@@ -2019,14 +1993,14 @@ export default function TasksPage() {
                           ×
                         </button>
                       )}
-                      <FaChevronDown 
-                        size={12} 
-                        style={{ 
-                          color: '#9CA3AF', 
+                      <FaChevronDown
+                        size={12}
+                        style={{
+                          color: '#9CA3AF',
                           marginLeft: '8px',
                           transform: showFolderDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
                           transition: 'transform 0.2s'
-                        }} 
+                        }}
                       />
                     </div>
 
@@ -2047,9 +2021,9 @@ export default function TasksPage() {
                         zIndex: 1000,
                         padding: '8px'
                       }}>
-                        <div style={{ 
-                          fontSize: '12px', 
-                          color: '#6B7280', 
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#6B7280',
                           marginBottom: '8px',
                           fontWeight: '500',
                           textTransform: 'uppercase',
@@ -2238,7 +2212,7 @@ export default function TasksPage() {
               borderBottomLeftRadius: '16px',
               borderBottomRightRadius: '16px'
             }}>
-                <button
+              <button
                 type="button"
                 onClick={() => {
                   setShowAddTaskModal(false);
