@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaFilter, FaFolder } from "react-icons/fa";
+import { FaSearch, FaFilter, FaFolder, FaTrash, FaUndo } from "react-icons/fa";
 import { BiGridAlt, BiListUl } from "react-icons/bi";
 import { FileIcon } from "../icons";
-import { handleAPIError } from "../../utils/apiUtils";
+import { handleAPIError, folderTrashAPI } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
+import { toast } from "react-toastify";
 import "../../styles/Folders.css";
 
 export default function Folders({ onFolderSelect }) {
@@ -24,6 +25,9 @@ export default function Folders({ onFolderSelect }) {
         total_documents: 0,
         archived_documents: 0
     });
+    const [trashedFolders, setTrashedFolders] = useState([]);
+    const [trashingFolder, setTrashingFolder] = useState(null);
+    const [recoveringFolder, setRecoveringFolder] = useState(null);
 
     // Fetch folders from API
     const fetchFolders = async (folderId = null) => {
@@ -60,7 +64,7 @@ export default function Folders({ onFolderSelect }) {
 
             const result = await response.json();
             console.log('Folders API response:', result);
-            
+
             if (result.success && result.data) {
                 // Update current folder
                 if (result.data.current_folder) {
@@ -132,8 +136,105 @@ export default function Folders({ onFolderSelect }) {
 
     // Fetch folders on component mount
     useEffect(() => {
-        fetchFolders(null);
-    }, []);
+        if (activeButton === "folder") {
+            fetchFolders(null);
+        } else if (activeButton === "trash") {
+            fetchTrashedFolders();
+        }
+    }, [activeButton]);
+
+    // Fetch trashed folders
+    const fetchTrashedFolders = async (search = '', sortBy = '-trashed_at', page = 1, pageSize = 20) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const result = await folderTrashAPI.getTrashedFolders(search, sortBy, page, pageSize);
+
+            if (result.success && result.data) {
+                setTrashedFolders(result.data.folders || []);
+                if (result.data.statistics) {
+                    setStatistics({
+                        total_folders: result.data.statistics.total_trashed_folders || 0,
+                        total_documents: result.data.statistics.total_trashed_documents || 0,
+                        archived_documents: 0
+                    });
+                }
+            } else {
+                setTrashedFolders([]);
+            }
+        } catch (error) {
+            console.error('Error fetching trashed folders:', error);
+            setError(handleAPIError(error).message || 'Failed to load trashed folders');
+            setTrashedFolders([]);
+            toast.error(handleAPIError(error).message || 'Failed to load trashed folders', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle trash folder action
+    const handleTrashFolder = async (folderId, folderTitle) => {
+        if (!window.confirm(`Are you sure you want to move "${folderTitle}" to trash? This will also move all documents and subfolders inside it to trash.`)) {
+            return;
+        }
+
+        try {
+            setTrashingFolder(folderId);
+            const result = await folderTrashAPI.trashFolder(folderId);
+
+            if (result.success) {
+                toast.success(result.message || `Folder "${folderTitle}" moved to trash successfully`, {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                // Refresh folders list
+                fetchFolders(null);
+            } else {
+                throw new Error(result.message || 'Failed to trash folder');
+            }
+        } catch (error) {
+            console.error('Error trashing folder:', error);
+            const errorMessage = handleAPIError(error).message || 'Failed to move folder to trash';
+            toast.error(errorMessage, {
+                position: "top-right",
+                autoClose: 5000,
+            });
+        } finally {
+            setTrashingFolder(null);
+        }
+    };
+
+    // Handle recover folder action
+    const handleRecoverFolder = async (folderId, folderTitle) => {
+        try {
+            setRecoveringFolder(folderId);
+            const result = await folderTrashAPI.recoverFolder(folderId);
+
+            if (result.success) {
+                toast.success(result.message || `Folder "${folderTitle}" recovered from trash successfully`, {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                // Refresh trashed folders list
+                fetchTrashedFolders();
+            } else {
+                throw new Error(result.message || 'Failed to recover folder');
+            }
+        } catch (error) {
+            console.error('Error recovering folder:', error);
+            const errorMessage = handleAPIError(error).message || 'Failed to recover folder from trash';
+            toast.error(errorMessage, {
+                position: "top-right",
+                autoClose: 5000,
+            });
+        } finally {
+            setRecoveringFolder(null);
+        }
+    };
 
     // Format file size helper
     const formatFileSize = (bytes) => {
@@ -552,6 +653,31 @@ export default function Folders({ onFolderSelect }) {
 
                                                         {/* Right Side: Status + Menu */}
                                                         <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
+                                                            {/* Show Preview button for pending_sign status, otherwise show status badge */}
+                                                            {/* {(docStatus.toLowerCase() === 'pending_sign' || docStatus.toLowerCase() === 'pending sign') ? (
+                                                                <button
+                                                                    className="btn px-3 py-2"
+                                                                    style={{
+                                                                        borderRadius: "20px",
+                                                                        fontSize: "0.75rem",
+                                                                        fontWeight: "500",
+                                                                        fontFamily: "BasisGrotesquePro",
+                                                                        backgroundColor: "#3AD6F2",
+                                                                        color: "#FFFFFF",
+                                                                        border: "none",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
+                                                                        if (isPdf && fileUrl) {
+                                                                            // Handle PDF preview
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Preview
+                                                                </button>
+                                                            ) : ( */}
                                                             <span
                                                                 className={`badge ${getStatusBadgeClass(docStatus)} px-3 py-2`}
                                                                 style={{
@@ -564,6 +690,7 @@ export default function Folders({ onFolderSelect }) {
                                                             >
                                                                 {docStatus}
                                                             </span>
+                                                            {/* )} */}
 
                                                             <button
                                                                 className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
@@ -650,8 +777,8 @@ export default function Folders({ onFolderSelect }) {
                 </div>
             </div>
 
-            {/* Breadcrumb Navigation */}
-            {(folderPath.length > 0 || currentFolder) && (
+            {/* Breadcrumb Navigation - Hide when viewing trash */}
+            {(activeButton === "folder" && (folderPath.length > 0 || currentFolder)) && (
                 <div className="mb-3 px-2">
                     <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "white", padding: "12px 16px", borderRadius: "8px" }}>
                         <button
@@ -693,12 +820,18 @@ export default function Folders({ onFolderSelect }) {
                     <div className="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h5 className="folders-title mb-0">
-                                {currentFolder ? currentFolder.title : 'Document Folders'}
+                                {activeButton === "trash"
+                                    ? 'Trashed Folders'
+                                    : currentFolder
+                                        ? currentFolder.title
+                                        : 'Document Folders'}
                             </h5>
                             <p className="folders-subtitle mb-0 mt-1">
-                                {currentFolder
-                                    ? `Organize your documents in ${currentFolder.title}`
-                                    : 'Organize your documents by category and tax year'}
+                                {activeButton === "trash"
+                                    ? 'Folders that have been moved to trash. You can recover them to restore all contents.'
+                                    : currentFolder
+                                        ? `Organize your documents in ${currentFolder.title}`
+                                        : 'Organize your documents by category and tax year'}
                             </p>
                         </div>
                         <div
@@ -758,106 +891,345 @@ export default function Folders({ onFolderSelect }) {
                         <div className="text-center py-5">
                             <p className="text-danger">{error}</p>
                         </div>
-                    ) : folders.length === 0 ? (
+                    ) : (activeButton === "trash" ? trashedFolders.length === 0 : folders.length === 0) ? (
                         <div className="pt-4 pb-4 text-center">
                             <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
-                                {currentFolder ? 'No Subfolders in This Folder' : 'No Folders Yet'}
+                                {activeButton === "trash"
+                                    ? 'No Trashed Folders'
+                                    : currentFolder
+                                        ? 'No Subfolders in This Folder'
+                                        : 'No Folders Yet'}
                             </h6>
                             <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
-                                {currentFolder
-                                    ? 'This folder doesn\'t contain any subfolders yet.'
-                                    : 'You haven\'t created any folders yet.'}
+                                {activeButton === "trash"
+                                    ? 'You don\'t have any folders in trash.'
+                                    : currentFolder
+                                        ? 'This folder doesn\'t contain any subfolders yet.'
+                                        : 'You haven\'t created any folders yet.'}
                             </p>
                         </div>
                     ) : view === "grid" ? (
-                        <div className="row g-4">
-                            {folders.map((folder, idx) => (
-                                <div className="col-12 col-md-6" key={folder.id || idx}>
+                        activeButton === "trash" ? (
+                            // Trashed folders grid view
+                            <div className="row g-4">
+                                {trashedFolders.map((folder, idx) => (
+                                    <div className="col-12 col-md-6" key={folder.id || idx}>
+                                        <div
+                                            className="folder-card border rounded-3"
+                                            style={{
+                                                cursor: "default",
+                                                transition: "all 0.2s ease",
+                                                padding: "18px 24px",
+                                                width: "100%",
+                                                height: "100%",
+                                                backgroundColor: "transparent",
+                                                opacity: 0.8
+                                            }}
+                                        >
+                                            <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                                <div className="d-flex align-items-center gap-2" style={{ flex: 1 }}>
+                                                    <FaFolder size={24} className="folder-icon" style={{ minWidth: "24px", flexShrink: 0, color: "#9CA3AF" }} />
+                                                    <div className="fw-semibold folder-name" style={{ fontSize: "15px", flex: 1, minWidth: 0, lineHeight: "1.3" }}>
+                                                        {folder.title}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRecoverFolder(folder.id, folder.title);
+                                                    }}
+                                                    disabled={recoveringFolder === folder.id}
+                                                    style={{
+                                                        backgroundColor: "#10B981",
+                                                        color: "white",
+                                                        border: "none",
+                                                        padding: "4px 12px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "4px"
+                                                    }}
+                                                    title="Recover Folder"
+                                                >
+                                                    {recoveringFolder === folder.id ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                            Recovering...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FaUndo size={12} />
+                                                            Recover
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <div style={{ marginLeft: "32px" }}>
+                                                {folder.description && (
+                                                    <div className="text-muted small mt-1 folder-desc" style={{ fontSize: "13px", lineHeight: "1.4", marginBottom: "8px", wordBreak: "break-word" }}>
+                                                        {folder.description}
+                                                    </div>
+                                                )}
+                                                <div className="d-flex justify-content-between align-items-center text-muted small folder-info" style={{ fontSize: "12px", gap: "8px" }}>
+                                                    <span>{folder.document_count || folder.statistics?.documents_count || 0} {((folder.document_count || folder.statistics?.documents_count || 0) === 1) ? 'File' : 'Files'}</span>
+                                                    {((folder.subfolder_count || folder.statistics?.subfolders_count || 0) > 0) && (
+                                                        <span>{folder.subfolder_count || folder.statistics?.subfolders_count || 0} {(folder.subfolder_count || folder.statistics?.subfolders_count || 0) === 1 ? 'Folder' : 'Folders'}</span>
+                                                    )}
+                                                </div>
+                                                {folder.trashed_at && (
+                                                    <div className="text-muted small mt-1" style={{ fontSize: "11px" }}>
+                                                        Trashed: {formatDate(folder.trashed_at)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="row g-4">
+                                {folders.map((folder, idx) => (
+                                    <div className="col-12 col-md-6" key={folder.id || idx}>
+                                        <div
+                                            className={`folder-card border rounded-3 ${selectedIndex === idx ? "active" : ""}`}
+                                            onClick={() => handleFolderClick(folder, idx)}
+                                            style={{
+                                                cursor: "pointer",
+                                                transition: "all 0.2s ease",
+                                                padding: "18px 24px",
+                                                width: "100%",
+                                                height: "100%",
+                                                backgroundColor: selectedIndex === idx ? "#00C0C6" : "transparent",
+                                                position: "relative"
+                                            }}
+                                        >
+                                            <div className="d-flex align-items-center justify-content-start gap-2 mb-2">
+                                                <FaFolder size={24} className="folder-icon" style={{ minWidth: "24px", flexShrink: 0 }} />
+                                                <div className="fw-semibold folder-name" style={{ fontSize: "15px", flex: 1, minWidth: 0, lineHeight: "1.3" }}>
+                                                    {folder.title}
+                                                </div>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleTrashFolder(folder.id, folder.title);
+                                                    }}
+                                                    disabled={trashingFolder === folder.id}
+                                                    style={{
+                                                        backgroundColor: "#EF4444",
+                                                        color: "white",
+                                                        border: "none",
+                                                        padding: "4px 12px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "4px",
+                                                        zIndex: 10
+                                                    }}
+                                                    title="Move to Trash"
+                                                >
+                                                    {trashingFolder === folder.id ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                            Trashing...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FaTrash size={12} />
+                                                            Trash
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <div style={{ marginLeft: "32px" }}>
+                                                {folder.description && (
+                                                    <div className="text-muted small mt-1 folder-desc" style={{ fontSize: "13px", lineHeight: "1.4", marginBottom: "8px", wordBreak: "break-word" }}>
+                                                        {folder.description}
+                                                    </div>
+                                                )}
+                                                <div className="d-flex justify-content-between align-items-center text-muted small folder-info" style={{ fontSize: "12px", gap: "8px" }}>
+                                                    <span>{folder.document_count || folder.files_count || 0} {folder.document_count === 1 || folder.files_count === 1 ? 'File' : 'Files'}</span>
+                                                    {folder.subfolder_count > 0 && (
+                                                        <span>{folder.subfolder_count} {folder.subfolder_count === 1 ? 'Folder' : 'Folders'}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    ) : (
+                        activeButton === "trash" ? (
+                            // Trashed folders list view
+                            <div className="d-flex flex-column gap-3">
+                                {trashedFolders.map((folder, idx) => (
                                     <div
+                                        key={folder.id || idx}
+                                        className="folder-card border rounded-3"
+                                        style={{
+                                            cursor: "default",
+                                            transition: "all 0.2s ease",
+                                            padding: "16px 20px",
+                                            width: "100%",
+                                            backgroundColor: "transparent",
+                                            opacity: 0.8
+                                        }}
+                                    >
+                                        <div className="d-flex align-items-center justify-content-between gap-3">
+                                            <div className="d-flex align-items-center gap-3" style={{ flex: 1 }}>
+                                                <FaFolder size={28} className="folder-icon" style={{ minWidth: "28px", flexShrink: 0, color: "#9CA3AF" }} />
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <div className="fw-semibold folder-name" style={{ fontSize: "16px", lineHeight: "1.3" }}>
+                                                            {folder.title}
+                                                        </div>
+                                                        {folder.is_template && (
+                                                            <span className="badge bg-white text-muted border rounded-pill template-badge" style={{ fontSize: "10px", whiteSpace: "nowrap", flexShrink: 0 }}>
+                                                                Template
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {folder.description && (
+                                                        <div className="text-muted small folder-desc" style={{ fontSize: "13px", lineHeight: "1.4", marginBottom: "4px", wordBreak: "break-word" }}>
+                                                            {folder.description}
+                                                        </div>
+                                                    )}
+                                                    <div className="d-flex align-items-center gap-3 text-muted small folder-info" style={{ fontSize: "12px" }}>
+                                                        <span>{folder.document_count || folder.statistics?.documents_count || 0} {(folder.document_count || folder.statistics?.documents_count || 0) === 1 ? 'File' : 'Files'}</span>
+                                                        {((folder.subfolder_count || folder.statistics?.subfolders_count || 0) > 0) && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span>{folder.subfolder_count || folder.statistics?.subfolders_count || 0} {(folder.subfolder_count || folder.statistics?.subfolders_count || 0) === 1 ? 'Folder' : 'Folders'}</span>
+                                                            </>
+                                                        )}
+                                                        {folder.trashed_at && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span>Trashed: {formatDate(folder.trashed_at)}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                className="btn btn-sm"
+                                                onClick={() => handleRecoverFolder(folder.id, folder.title)}
+                                                disabled={recoveringFolder === folder.id}
+                                                style={{
+                                                    backgroundColor: "#10B981",
+                                                    color: "white",
+                                                    border: "none",
+                                                    padding: "6px 16px",
+                                                    borderRadius: "6px",
+                                                    fontSize: "12px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "6px"
+                                                }}
+                                                title="Recover Folder"
+                                            >
+                                                {recoveringFolder === folder.id ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                        Recovering...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaUndo size={12} />
+                                                        Recover
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            // Regular folders list view
+                            <div className="d-flex flex-column gap-3">
+                                {folders.map((folder, idx) => (
+                                    <div
+                                        key={folder.id || idx}
                                         className={`folder-card border rounded-3 ${selectedIndex === idx ? "active" : ""}`}
                                         onClick={() => handleFolderClick(folder, idx)}
                                         style={{
                                             cursor: "pointer",
                                             transition: "all 0.2s ease",
-                                            padding: "18px 24px",
+                                            padding: "16px 20px",
                                             width: "100%",
-                                            height: "100%",
                                             backgroundColor: selectedIndex === idx ? "#00C0C6" : "transparent"
                                         }}
                                     >
-                                        <div className="d-flex align-items-center justify-content-start gap-2 mb-2">
-                                            <FaFolder size={24} className="folder-icon" style={{ minWidth: "24px", flexShrink: 0 }} />
-                                            <div className="fw-semibold folder-name" style={{ fontSize: "15px", flex: 1, minWidth: 0, lineHeight: "1.3" }}>
-                                                {folder.title}
-                                            </div>
-                                        </div>
-                                        <div style={{ marginLeft: "32px" }}>
-                                            {folder.description && (
-                                                <div className="text-muted small mt-1 folder-desc" style={{ fontSize: "13px", lineHeight: "1.4", marginBottom: "8px", wordBreak: "break-word" }}>
-                                                    {folder.description}
-                                                </div>
-                                            )}
-                                            <div className="d-flex justify-content-between align-items-center text-muted small folder-info" style={{ fontSize: "12px", gap: "8px" }}>
-                                                <span>{folder.document_count || folder.files_count || 0} {folder.document_count === 1 || folder.files_count === 1 ? 'File' : 'Files'}</span>
-                                                {folder.subfolder_count > 0 && (
-                                                    <span>{folder.subfolder_count} {folder.subfolder_count === 1 ? 'Folder' : 'Folders'}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="d-flex flex-column gap-3">
-                            {folders.map((folder, idx) => (
-                                <div
-                                    key={folder.id || idx}
-                                    className={`folder-card border rounded-3 ${selectedIndex === idx ? "active" : ""}`}
-                                    onClick={() => handleFolderClick(folder, idx)}
-                                    style={{
-                                        cursor: "pointer",
-                                        transition: "all 0.2s ease",
-                                        padding: "16px 20px",
-                                        width: "100%",
-                                        backgroundColor: selectedIndex === idx ? "#00C0C6" : "transparent"
-                                    }}
-                                >
-                                    <div className="d-flex align-items-center justify-content-between gap-3">
-                                        <div className="d-flex align-items-center gap-3" style={{ flex: 1 }}>
-                                            <FaFolder size={28} className="folder-icon" style={{ minWidth: "28px", flexShrink: 0 }} />
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div className="d-flex align-items-center gap-2 mb-1">
-                                                    <div className="fw-semibold folder-name" style={{ fontSize: "16px", lineHeight: "1.3" }}>
-                                                        {folder.title}
+                                        <div className="d-flex align-items-center justify-content-between gap-3">
+                                            <div className="d-flex align-items-center gap-3" style={{ flex: 1 }}>
+                                                <FaFolder size={28} className="folder-icon" style={{ minWidth: "28px", flexShrink: 0 }} />
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <div className="fw-semibold folder-name" style={{ fontSize: "16px", lineHeight: "1.3" }}>
+                                                            {folder.title}
+                                                        </div>
+                                                        {folder.is_template && (
+                                                            <span className="badge bg-white text-muted border rounded-pill template-badge" style={{ fontSize: "10px", whiteSpace: "nowrap", flexShrink: 0 }}>
+                                                                Template
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    {folder.is_template && (
-                                                        <span className="badge bg-white text-muted border rounded-pill template-badge" style={{ fontSize: "10px", whiteSpace: "nowrap", flexShrink: 0 }}>
-                                                            Template
-                                                        </span>
+                                                    {folder.description && (
+                                                        <div className="text-muted small folder-desc" style={{ fontSize: "13px", lineHeight: "1.4", marginBottom: "4px", wordBreak: "break-word" }}>
+                                                            {folder.description}
+                                                        </div>
                                                     )}
-                                                </div>
-                                                {folder.description && (
-                                                    <div className="text-muted small folder-desc" style={{ fontSize: "13px", lineHeight: "1.4", marginBottom: "4px", wordBreak: "break-word" }}>
-                                                        {folder.description}
+                                                    <div className="d-flex align-items-center gap-3 text-muted small folder-info" style={{ fontSize: "12px" }}>
+                                                        <span>{folder.document_count || folder.files_count || 0} {folder.document_count === 1 || folder.files_count === 1 ? 'File' : 'Files'}</span>
+                                                        {folder.subfolder_count > 0 && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span>{folder.subfolder_count} {folder.subfolder_count === 1 ? 'Folder' : 'Folders'}</span>
+                                                            </>
+                                                        )}
                                                     </div>
-                                                )}
-                                                <div className="d-flex align-items-center gap-3 text-muted small folder-info" style={{ fontSize: "12px" }}>
-                                                    <span>{folder.document_count || folder.files_count || 0} {folder.document_count === 1 || folder.files_count === 1 ? 'File' : 'Files'}</span>
-                                                    {folder.subfolder_count > 0 && (
+                                                </div>
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <button
+                                                    className="btn btn-sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleTrashFolder(folder.id, folder.title);
+                                                    }}
+                                                    disabled={trashingFolder === folder.id}
+                                                    style={{
+                                                        backgroundColor: "#EF4444",
+                                                        color: "white",
+                                                        border: "none",
+                                                        padding: "4px 12px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "4px"
+                                                    }}
+                                                    title="Move to Trash"
+                                                >
+                                                    {trashingFolder === folder.id ? (
                                                         <>
-                                                            <span>•</span>
-                                                            <span>{folder.subfolder_count} {folder.subfolder_count === 1 ? 'Folder' : 'Folders'}</span>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                                         </>
+                                                    ) : (
+                                                        <FaTrash size={12} />
                                                     )}
-                                                </div>
+                                                </button>
+                                                <i className="bi bi-chevron-right text-muted"></i>
                                             </div>
                                         </div>
-                                        <i className="bi bi-chevron-right text-muted"></i>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )
                     )}
 
                     {/* Show documents if any - display after folders */}
@@ -950,7 +1322,33 @@ export default function Folders({ onFolderSelect }) {
 
                                                     {/* Right Side: Status + Menu */}
                                                     <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
-                                                        <span
+                                                        {/* Show Preview button for pending_sign status, otherwise show status badge */}
+                                                        {/* {(docStatus.toLowerCase() === 'pending_sign' || docStatus.toLowerCase() === 'pending sign') ? (
+                                                            <button
+                                                                className="btn px-3 py-2"
+                                                                style={{
+                                                                    borderRadius: "20px",
+                                                                    fontSize: "0.75rem",
+                                                                    fontWeight: "500",
+                                                                    fontFamily: "BasisGrotesquePro",
+                                                                    backgroundColor: "#3AD6F2",
+                                                                    color: "#FFFFFF",
+                                                                    border: "none",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
+                                                                    if (isPdf && fileUrl) {
+                                                                        // Handle PDF preview
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Preview
+                                                                
+                                                            </button>
+                                                        ) : ( */}
+                                                        {/* <span
                                                             className={`badge ${getStatusBadgeClass(docStatus)} px-3 py-2`}
                                                             style={{
                                                                 borderRadius: "20px",
@@ -961,7 +1359,8 @@ export default function Folders({ onFolderSelect }) {
                                                             }}
                                                         >
                                                             {docStatus}
-                                                        </span>
+                                                        </span> */}
+                                                        {/* )} */}
 
                                                         <button
                                                             className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"

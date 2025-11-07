@@ -12,9 +12,7 @@ import {
   Schedule,
   Analytics,
 } from "../component/icons";
-import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
-import { getAccessToken } from "../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, dashboardAPI } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/taxpopup.css";
 import "../styles/taxdashboard.css";
 
@@ -269,32 +267,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const API_BASE_URL = getApiBaseUrl();
-        const token = getAccessToken();
-
-        if (!token) {
-          console.error('No authentication token found');
-          setLoading(false);
-          return;
-        }
-
-        const config = {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        };
-
-        const url = `${API_BASE_URL}/taxpayer/tax-preparer/dashboard/`;
-        const response = await fetchWithCors(url, config);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Dashboard API response:', result);
+        const result = await dashboardAPI.getTaxPreparerDashboard();
 
         if (result.success && result.data) {
           setMyTasks(result.data.my_tasks || []);
@@ -344,7 +317,12 @@ export default function Dashboard() {
                 <h1 className="section-title mb-1">My Tasks</h1>
                 <p className="section-subtitle m-0">Tasks assigned to you</p>
               </div>
-              <button className="view-all-btn">View All</button>
+              <button 
+                className="view-all-btn"
+                onClick={() => navigate('/taxdashboard/tasks')}
+              >
+                View All
+              </button>
             </div>
             <div className="d-flex flex-column gap-3">
               {loading ? (
@@ -432,7 +410,12 @@ export default function Dashboard() {
                 <h1 className="section-title mb-1">Recent Messages</h1>
                 <p className="section-subtitle m-0">Latest client communications</p>
               </div>
-              <button className="view-all-btn">View All</button>
+              <button 
+                className="view-all-btn"
+                onClick={() => navigate('/taxdashboard/messages')}
+              >
+                View All
+              </button>
             </div>
             <div className="d-flex flex-column gap-2">
               {loading ? (
@@ -441,7 +424,8 @@ export default function Dashboard() {
                 <div className="text-center py-3">No recent messages</div>
               ) : (
                 recentMessages.map((msg, i) => {
-                  const msgType = msg.sender?.role === 'client' ? 'client' : 'internal';
+                  const msgType = msg.sender?.role === 'client' || msg.sender_type === 'Client' ? 'client' : 'internal';
+                  const senderName = msg.sender?.name || msg.sender_name || 'Unknown';
                   return (
                     <div
                       key={msg.id || i}
@@ -451,22 +435,24 @@ export default function Dashboard() {
                         alignItems: "center",
                         justifyContent: "space-between",
                         backgroundColor: msgType === "client" ? "#FFF4E6" : "#fff",
+                        cursor: "pointer",
                       }}
+                      onClick={() => navigate(`/taxdashboard/messages?thread=${msg.thread_id}`)}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
                         <div className="msg-icon-wrapper"><Msg /></div>
-                        <div>
-                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span className="msg-role" style={{ fontWeight: 500 }}>{msg.sender?.name || 'Unknown'}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                            <span className="msg-role" style={{ fontWeight: 500 }}>{senderName}</span>
                             <span className="name-role-circle"></span>
-                            <span className="role-badge">{msg.sender?.role === 'client' ? 'Client' : 'Internal'}</span>
+                            <span className="role-badge">{msg.sender_type || (msg.sender?.role === 'client' ? 'Client' : 'Internal')}</span>
                           </div>
                           <div className="msg-content" style={{ fontSize: "0.875rem", color: "#4B5563" }}>
-                            {msg.message_preview || msg.content || 'No message content'}
+                            {msg.message_preview || msg.message_snippet || msg.content || 'No message content'}
                           </div>
                         </div>
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "black" }}>
+                      <div style={{ fontSize: "0.75rem", color: "black", display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
                         <Clocking/>{msg.time_ago || 'Just now'}
                       </div>
                     </div>

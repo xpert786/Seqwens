@@ -94,8 +94,40 @@ export default function DocumentRequests() {
 
   // Handle file selection
   const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    setUploadFiles(prev => [...prev, ...files]);
+    const selectedFiles = Array.from(e.target.files);
+    
+    // Filter only PDF files
+    const pdfFiles = selectedFiles.filter(file => {
+      const fileName = file.name.toLowerCase();
+      const fileType = file.type.toLowerCase();
+      return fileName.endsWith('.pdf') || fileType === 'application/pdf';
+    });
+
+    // Show error for non-PDF files
+    const nonPdfFiles = selectedFiles.filter(file => {
+      const fileName = file.name.toLowerCase();
+      const fileType = file.type.toLowerCase();
+      return !fileName.endsWith('.pdf') && fileType !== 'application/pdf';
+    });
+
+    if (nonPdfFiles.length > 0) {
+      toast.error(`Only PDF files are allowed. ${nonPdfFiles.length} non-PDF file(s) were ignored.`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+
+    // Only add PDF files
+    if (pdfFiles.length > 0) {
+      setUploadFiles(prev => [...prev, ...pdfFiles]);
+    }
+    
+    // Reset file input so same file can be selected again if needed
+    e.target.value = '';
   };
 
   // Remove file
@@ -512,6 +544,7 @@ export default function DocumentRequests() {
                 <input
                   type="file"
                   multiple
+                  accept=".pdf,application/pdf"
                   onChange={handleFileSelect}
                   style={{
                     width: '100%',
@@ -522,6 +555,14 @@ export default function DocumentRequests() {
                     cursor: 'pointer'
                   }}
                 />
+                <small style={{ 
+                  display: 'block', 
+                  marginTop: '6px', 
+                  color: '#6B7280', 
+                  fontSize: '12px' 
+                }}>
+                  Only PDF files are allowed
+                </small>
                 {uploadFiles.length > 0 && (
                   <div style={{ marginTop: '12px' }}>
                     {uploadFiles.map((file, index) => (

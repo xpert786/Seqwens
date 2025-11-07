@@ -773,6 +773,14 @@ export const dashboardAPI = {
   // Get initial dashboard data
   getInitialDashboard: async () => {
     return await apiRequest('/taxpayer/initial-dashboard/', 'GET');
+  },
+  // Get taxpayer dashboard data
+  getDashboard: async () => {
+    return await apiRequest('/taxpayer/dashboard/', 'GET');
+  },
+  // Get tax preparer dashboard data
+  getTaxPreparerDashboard: async () => {
+    return await apiRequest('/taxpayer/tax-preparer/dashboard/', 'GET');
   }
 };
 
@@ -903,6 +911,24 @@ export const staffAPI = {
       date: date
     });
     return await apiRequest(`/taxpayer/appointments/staff/${staffId}/slots/?${params}`, 'GET');
+  },
+  // Get client folder subfolders
+  getClientFolderSubfolders: async (clientId, folderId = null, folderName = null) => {
+    const params = new URLSearchParams({ client_id: clientId });
+    if (folderId) params.append('folder_id', folderId);
+    if (folderName) params.append('folder_name', folderName);
+    return await apiRequest(`/firm/staff/folders/subfolders/?${params}`, 'GET');
+  },
+  // Browse client folders
+  browseClientFolders: async (clientId, options = {}) => {
+    const params = new URLSearchParams({ client_id: clientId });
+    if (options.folder_id) params.append('folder_id', options.folder_id);
+    if (options.path) params.append('path', options.path);
+    if (options.show_archived !== undefined) params.append('show_archived', options.show_archived);
+    if (options.search) params.append('search', options.search);
+    if (options.category_id) params.append('category_id', options.category_id);
+    if (options.sort_by) params.append('sort_by', options.sort_by);
+    return await apiRequest(`/firm/staff/folders/browse/?${params}`, 'GET');
   }
 };
 
@@ -1522,5 +1548,125 @@ export const documentsAPI = {
     }
 
     return await response.json();
+  }
+};
+
+// Folder Trash API functions
+export const folderTrashAPI = {
+  // Trash a folder (moves folder and all contents to trash)
+  trashFolder: async (folderId) => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/folders/${folderId}/trash/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error trashing folder:', error);
+      throw error;
+    }
+  },
+
+  // Recover a folder from trash
+  recoverFolder: async (folderId) => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/folders/${folderId}/recover/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error recovering folder:', error);
+      throw error;
+    }
+  },
+
+  // Get all trashed folders
+  getTrashedFolders: async (search = '', sortBy = '-trashed_at', page = 1, pageSize = 20) => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (sortBy) params.append('sort_by', sortBy);
+      if (page) params.append('page', page.toString());
+      if (pageSize) params.append('page_size', pageSize.toString());
+
+      const queryString = params.toString();
+      const url = `${API_BASE_URL}/taxpayer/folders/trashed/${queryString ? `?${queryString}` : ''}`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching trashed folders:', error);
+      throw error;
+    }
   }
 };

@@ -150,6 +150,36 @@ export default function MessagePage() {
         return merged;
       });
 
+      // Update conversation's last message in conversations list
+      if (transformedMessages.length > 0 && activeConversationId) {
+        const lastMessage = transformedMessages[transformedMessages.length - 1];
+        const truncatedMessage = lastMessage.text.length > 50
+          ? lastMessage.text.substring(0, 50) + '...'
+          : lastMessage.text;
+
+        setConversations(prevConvs => {
+          const updated = prevConvs.map(conv => {
+            if (conv.id === activeConversationId) {
+              return {
+                ...conv,
+                lastMessage: truncatedMessage,
+                time: 'Just now',
+                unreadCount: lastMessage.type === "user" && !lastMessage.isRead
+                  ? (conv.unreadCount || 0) + 1
+                  : conv.unreadCount || 0
+              };
+            }
+            return conv;
+          });
+          // Sort conversations by last message time (most recent first)
+          return updated.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB - dateA;
+          });
+        });
+      }
+
       // Mark new messages as read
       transformedMessages.forEach(msg => {
         if (!msg.isRead && msg.type === "user") {
@@ -157,7 +187,7 @@ export default function MessagePage() {
         }
       });
     }
-  }, [wsMessages, wsMarkAsRead]);
+  }, [wsMessages, activeConversationId, wsMarkAsRead]);
 
   const handleSend = async () => {
     if (newMessage.trim() === "" || !activeConversationId) return;
@@ -199,6 +229,30 @@ export default function MessagePage() {
         };
 
         setActiveChatMessages(prev => [...prev, newMsg]);
+
+        // Update conversation's last message in conversations list
+        const truncatedMessage = messageText.length > 50
+          ? messageText.substring(0, 50) + '...'
+          : messageText;
+
+        setConversations(prevConvs => {
+          const updated = prevConvs.map(conv => {
+            if (conv.id === activeConversationId) {
+              return {
+                ...conv,
+                lastMessage: truncatedMessage,
+                time: 'Just now'
+              };
+            }
+            return conv;
+          });
+          // Sort conversations by last message time (most recent first)
+          return updated.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB - dateA;
+          });
+        });
       } else {
         throw new Error(response.message || 'Failed to send message');
       }
@@ -341,11 +395,18 @@ export default function MessagePage() {
 
           console.log('Transformed threads:', transformedThreads);
 
-          setConversations(transformedThreads);
+          // Sort threads by last_message_at (most recent first)
+          const sortedThreads = transformedThreads.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB - dateA;
+          });
 
-          // Set first thread as active if available
-          if (transformedThreads.length > 0 && !activeConversationId) {
-            setActiveConversationId(transformedThreads[0].id);
+          setConversations(sortedThreads);
+
+          // Set first thread as active if available and no active conversation
+          if (sortedThreads.length > 0 && !activeConversationId) {
+            setActiveConversationId(sortedThreads[0].id);
           }
         } else {
           console.log('No threads in response');
@@ -1713,17 +1774,51 @@ export default function MessagePage() {
                     const response = await taxPreparerThreadsAPI.createThread(payload);
 
                     if (response.success && response.data) {
+                      const thread = response.data;
+
+                      // Format the time
+                      let formattedTime = 'Just now';
+
+                      // Get client name
+                      const clientName = thread.client_name || 'Unknown Client';
+
+                      // Get last message preview text
+                      const lastMessageText = thread.last_message_preview
+                        ? (thread.last_message_preview.content || composeForm.message || 'No message')
+                        : (composeForm.message || 'No message');
+
+                      // Truncate message if too long
+                      const truncatedMessage = lastMessageText.length > 50
+                        ? lastMessageText.substring(0, 50) + '...'
+                        : lastMessageText;
+
+                      // Transform the created thread to match component structure
+                      const newThread = {
+                        id: thread.id,
+                        name: clientName,
+                        lastMessage: truncatedMessage,
+                        time: formattedTime,
+                        status: thread.status,
+                        unreadCount: thread.unread_count || 0,
+                        createdAt: thread.created_at || thread.last_message_at || new Date().toISOString(),
+                        subject: thread.subject,
+                        assignedStaff: thread.assigned_staff,
+                        assignedStaffNames: thread.assigned_staff_names,
+                        clientName: thread.client_name,
+                        clientEmail: thread.client_email,
+                        firmName: thread.firm_name,
+                        lastMessagePreview: thread.last_message_preview,
+                        messages: [],
+                      };
+
+                      // Add the new thread to the beginning of conversations list
+                      setConversations(prev => [newThread, ...prev]);
+                      setActiveConversationId(newThread.id);
+
                       toast.success('Thread created successfully', {
                         position: "top-right",
                         autoClose: 3000,
                       });
-
-                      // Refresh threads list
-                      const threadsResponse = await taxPreparerThreadsAPI.getThreads();
-                      if (threadsResponse.success && threadsResponse.data && threadsResponse.data.threads) {
-                        // Transform and update threads (similar to existing fetchThreads logic)
-                        // You may want to refactor this into a separate function
-                      }
 
                       setShowComposeModal(false);
                       // Reset form
