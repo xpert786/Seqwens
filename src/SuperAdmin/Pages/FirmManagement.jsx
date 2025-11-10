@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 
 export default function FirmManagement() {
@@ -14,6 +15,8 @@ export default function FirmManagement() {
         phone: "",
         plan: ""
     });
+
+     
                                                                     
     // API state management
     const [firms, setFirms] = useState([]);
@@ -30,11 +33,8 @@ export default function FirmManagement() {
     const [createSuccess, setCreateSuccess] = useState(false);
     
     // Firm details modal state
-    const [showFirmDetailsModal, setShowFirmDetailsModal] = useState(false);
-    const [selectedFirm, setSelectedFirm] = useState(null);
-    const [loadingFirmDetails, setLoadingFirmDetails] = useState(false);
-    const [firmDetailsError, setFirmDetailsError] = useState(null);
-    
+    const navigate = useNavigate();
+
     // Suspend modal state
     const [showSuspendModal, setShowSuspendModal] = useState(false);
     const [firmToSuspend, setFirmToSuspend] = useState(null);
@@ -118,28 +118,6 @@ export default function FirmManagement() {
         setActiveDropdown(activeDropdown === firmId ? null : firmId);
     };
 
-    // Fetch firm details
-    const fetchFirmDetails = async (firmId) => {
-        try {
-            setLoadingFirmDetails(true);
-            setFirmDetailsError(null);
-            
-            const response = await superAdminAPI.getFirmById(firmId);
-            
-            if (response.success && response.data) {
-                setSelectedFirm(response.data);
-                setShowFirmDetailsModal(true);
-            } else {
-                throw new Error(response.message || 'Failed to fetch firm details');
-            }
-        } catch (err) {
-            console.error('Error fetching firm details:', err);
-            setFirmDetailsError(handleAPIError(err));
-        } finally {
-            setLoadingFirmDetails(false);
-        }
-    };
-
     // Suspend firm function
     const suspendFirm = async () => {
         if (!suspendReason.trim()) {
@@ -180,7 +158,7 @@ export default function FirmManagement() {
         setActiveDropdown(null);
         
         if (action === 'View Details') {
-            fetchFirmDetails(firmId);
+            navigate(`/superadmin/firms/${firmId}`);
         } else if (action === 'Edit User') {
             // TODO: Implement edit functionality
             console.log('Edit firm:', firmId);
@@ -277,51 +255,51 @@ export default function FirmManagement() {
     }, [activeDropdown]);
 
     return (
-        <div className="min-h-screen  p-6">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
+            <div className="mx-auto flex w-full flex-col gap-6">
                 {/* Header Section with Action Buttons */}
-                <div className="flex justify-between items-start mb-8">
-                    <div>
-                        <h3 className="text-3xl font-bold text-gray-800 mb-2">
-                            Firm Management
-                        </h3>
-                        <p className="text-gray-500 text-md ">
-                            Manage all firms on the platform
-                        </p>
+                <div className="flex flex-col items-start justify-between gap-3 rounded-2xl  px-6 py-5 sm:flex-row sm:items-center">
+                    <div className="space-y-1">
+                        <h3 className="text-3xl font-bold text-gray-900">Firm Management</h3>
+                        <p className="text-sm text-gray-500">Manage all firms registered on the platform</p>
                     </div>
-                    
+
                     {/* Action Buttons */}
-                    <div className="flex space-x-3 gap-2">
-                    <button className="px-2 py-1 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" style={{borderRadius: '7px'}}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12.75 6.5L9 2.75M9 2.75L5.25 6.5M9 2.75V11.75" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/> 
-                    </svg>
-
-                        Import Report
-                    </button>
-                    <button className="px-2 py-1 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" style={{borderRadius: '7px'}}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-
-                        Export Report
-                    </button>
-                    <button 
-                        onClick={handleAddFirm}
-                        className="px-2 py-1 text-xs bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center" 
-                        style={{borderRadius: '7px'}}
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                         Add Firm
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            style={{borderRadius: '8px'}}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12.75 6.5L9 2.75M9 2.75L5.25 6.5M9 2.75V11.75" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Import Report
+                        </button>
+                        <button
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            style={{borderRadius: '8px'}}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Export Report
+                        </button>
+                        <button
+                            onClick={handleAddFirm}
+                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Firm
+                        </button>
                     </div>
                 </div>
 
-                {/* Search and Filter Section */}
-                <div className=" rounded-lg mb-6  ">
+                 {/* Search and Filter Section */}
+                 <div className=" rounded-lg mb-6  ">
                     <div className="flex flex-col lg:flex-row gap-2">
                         {/* Search Bar */}
                         <div className=" relative  w-[300px]">

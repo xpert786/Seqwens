@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaCog, FaEdit } from 'react-icons/fa';
 import {
@@ -139,6 +139,163 @@ const sampleOffices = {
     }
 };
 
+const schedulingOfficeOptions = ['All Offices', 'New York', 'London', 'Mumbai'];
+
+const schedulingResources = [
+    {
+        id: 'conf-room-a',
+        name: 'Conf Room A',
+        office: 'New York',
+        location: 'New York',
+        type: 'Conference Room',
+        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+        color: '#3AD6F2'
+    },
+    {
+        id: 'zoom-license-1',
+        name: 'Zoom License #1',
+        office: 'Remote',
+        location: 'Virtual',
+        type: 'License',
+        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+        color: '#10B981'
+    },
+    {
+        id: 'printer-3',
+        name: 'Printer 3',
+        office: 'New York',
+        location: 'Operations',
+        type: 'Equipment',
+        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+        color: '#F59E0B'
+    }
+];
+
+const initialSchedulingEvents = [
+    {
+        id: 'evt-1',
+        title: 'NY - Team Sync',
+        date: '2025-07-22',
+        startTime: '13:00',
+        endTime: '14:00',
+        resourceId: 'conf-room-a',
+        office: 'New York',
+        location: 'New York',
+        status: 'Confirmed',
+        badge: '+2 New'
+    },
+    {
+        id: 'evt-2',
+        title: 'NY - Interview',
+        date: '2025-07-24',
+        startTime: '10:00',
+        endTime: '11:00',
+        resourceId: 'conf-room-a',
+        office: 'New York',
+        location: 'New York',
+        status: 'Pending',
+        badge: 'Internal'
+    }
+];
+
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const toISODate = (date) => date.toISOString().split('T')[0];
+
+const isSameDay = (dateA, dateB) =>
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate();
+
+const normaliseTime = (time = '00:00') => {
+    const [hours = '00', minutes = '00'] = time.split(':');
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const formatTimeLabel = (time = '00:00') => {
+    const [hours, minutes] = normaliseTime(time).split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
+const addMinutesToTime = (time = '00:00', minutesToAdd = 30) => {
+    const [hours, minutes] = normaliseTime(time).split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes + minutesToAdd);
+    return normaliseTime(`${date.getHours()}:${date.getMinutes()}`);
+};
+
+const generateMonthlyCalendar = (referenceDate, events = []) => {
+    const year = referenceDate.getFullYear();
+    const month = referenceDate.getMonth();
+
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = endOfMonth.getDate();
+    const startDayOfWeek = startOfMonth.getDay();
+    const previousMonthDays = new Date(year, month, 0).getDate();
+
+    const today = new Date();
+    const calendarDays = [];
+
+    for (let i = startDayOfWeek; i > 0; i -= 1) {
+        const date = new Date(year, month - 1, previousMonthDays - i + 1);
+        const iso = toISODate(date);
+        calendarDays.push({
+            date,
+            iso,
+            isCurrentMonth: false,
+            isToday: isSameDay(date, today),
+            events: events.filter((event) => event.date === iso)
+        });
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = new Date(year, month, day);
+        const iso = toISODate(date);
+        calendarDays.push({
+            date,
+            iso,
+            isCurrentMonth: true,
+            isToday: isSameDay(date, today),
+            events: events.filter((event) => event.date === iso)
+        });
+    }
+
+    let nextMonthDay = 1;
+    while (calendarDays.length < 42) {
+        const date = new Date(year, month + 1, nextMonthDay);
+        const iso = toISODate(date);
+        calendarDays.push({
+            date,
+            iso,
+            isCurrentMonth: false,
+            isToday: isSameDay(date, today),
+            events: events.filter((event) => event.date === iso)
+        });
+        nextMonthDay += 1;
+    }
+
+    return calendarDays;
+};
+
+const formatSlotLabel = (slot) => {
+    if (!slot?.date) {
+        return 'No slot selected';
+    }
+
+    const date = new Date(slot.date);
+    const dateLabel = date.toLocaleDateString(undefined, {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric'
+    });
+
+    return `${dateLabel}${slot.time ? `, ${formatTimeLabel(slot.time)}` : ''}`;
+};
+
 // Helper function to get initials from name
 const getInitials = (name) => {
     return name
@@ -153,6 +310,18 @@ export default function OfficeOverview() {
     const { officeId } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('Overview');
+    const [calendarView, setCalendarView] = useState('Monthly');
+    const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date(2025, 6, 1));
+    const [events, setEvents] = useState(initialSchedulingEvents);
+    const [selectedOfficeFilter, setSelectedOfficeFilter] = useState('All Offices');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [bookingForm, setBookingForm] = useState({
+        title: '',
+        office: 'All Offices',
+        resource: ''
+    });
 
     // Get office data - in real app, fetch from API based on officeId
     const office = sampleOffices[officeId] || sampleOffices['1'];
@@ -175,8 +344,144 @@ export default function OfficeOverview() {
         { id: 'Settings', label: 'Settings' }
     ];
 
+    const resourceLookup = useMemo(() => {
+        return schedulingResources.reduce((accumulator, resource) => {
+            accumulator[resource.id] = resource;
+            return accumulator;
+        }, {});
+    }, []);
+
+    const filteredEvents = useMemo(() => {
+        return events.filter((event) => {
+            const matchOffice =
+                selectedOfficeFilter === 'All Offices' || event.office === selectedOfficeFilter;
+            const matchSearch =
+                !searchTerm ||
+                event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (resourceLookup[event.resourceId]?.name || '')
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase());
+
+            return matchOffice && matchSearch;
+        });
+    }, [events, selectedOfficeFilter, searchTerm, resourceLookup]);
+
+    const calendarDays = useMemo(
+        () => generateMonthlyCalendar(currentCalendarDate, filteredEvents),
+        [currentCalendarDate, filteredEvents]
+    );
+
+    const monthLabel = useMemo(
+        () =>
+            currentCalendarDate.toLocaleDateString(undefined, {
+                month: 'long',
+                year: 'numeric'
+            }),
+        [currentCalendarDate]
+    );
+
+    const conflictSummary = useMemo(() => {
+        return [...filteredEvents]
+            .sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.startTime || '00:00'}`);
+                const dateB = new Date(`${b.date}T${b.startTime || '00:00'}`);
+                return dateA - dateB;
+            })
+            .slice(0, 5);
+    }, [filteredEvents]);
+
+    const viewOptions = ['Day', 'Week', 'Monthly', 'Years', 'Agenda'];
+
+    const handleCalendarNavigation = (direction) => {
+        setCurrentCalendarDate((previousDate) => {
+            return new Date(previousDate.getFullYear(), previousDate.getMonth() + direction, 1);
+        });
+    };
+
+    const handleResetFilters = () => {
+        setSelectedOfficeFilter('All Offices');
+        setSearchTerm('');
+    };
+
+    const handleDaySelect = (day) => {
+        const defaultResource = bookingForm.resource || '';
+        setSelectedSlot({
+            date: day.iso,
+            time: '12:00',
+            resourceId: defaultResource
+        });
+        setBookingForm((previous) => ({
+            ...previous,
+            office:
+                selectedOfficeFilter !== 'All Offices'
+                    ? selectedOfficeFilter
+                    : previous.office,
+            resource: defaultResource
+        }));
+        setIsBookingModalOpen(true);
+    };
+
+    const handleQuickSlotSelect = (resourceId, time) => {
+        const normalisedTime = normaliseTime(time);
+        const resource = resourceLookup[resourceId];
+        setSelectedSlot({
+            date: toISODate(new Date()),
+            time: normalisedTime,
+            resourceId
+        });
+        setBookingForm((previous) => ({
+            ...previous,
+            office:
+                selectedOfficeFilter !== 'All Offices'
+                    ? selectedOfficeFilter
+                    : resource?.office || previous.office,
+            resource: resourceId
+        }));
+        setIsBookingModalOpen(true);
+    };
+
+    const closeBookingModal = () => {
+        setIsBookingModalOpen(false);
+        setSelectedSlot(null);
+        setBookingForm({
+            title: '',
+            office: 'All Offices',
+            resource: ''
+        });
+    };
+
+    const handleCreateBooking = () => {
+        if (!bookingForm.title.trim() || !selectedSlot?.date) {
+            return;
+        }
+
+        const resourceId =
+            bookingForm.resource || selectedSlot.resourceId || schedulingResources[0]?.id;
+        const normalisedStart = normaliseTime(selectedSlot.time || '09:00');
+        const derivedOffice =
+            bookingForm.office !== 'All Offices'
+                ? bookingForm.office
+                : resourceLookup[resourceId]?.office || 'All Offices';
+        const newEvent = {
+            id: `evt-${Date.now()}`,
+            title: bookingForm.title.trim(),
+            date: selectedSlot.date,
+            startTime: normalisedStart,
+            endTime: addMinutesToTime(normalisedStart, 60),
+            resourceId,
+            office: derivedOffice,
+            location: resourceLookup[resourceId]?.location || 'New York',
+            status: 'Scheduled',
+            badge: 'New'
+        };
+
+        setEvents((previousEvents) => [...previousEvents, newEvent]);
+        closeBookingModal();
+    };
+
     return (
-        <div className="p-6 bg-[rgb(243,247,255)] min-h-full">
+        <>
+            <div className="p-6 bg-[rgb(243,247,255)] min-h-full">
             {/* Top Header Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex items-center gap-4">
@@ -772,6 +1077,253 @@ export default function OfficeOverview() {
                 </div>
             )}
 
+            {/* Scheduling & Coordination Tab Content */}
+            {activeTab === 'Scheduling & Coordination' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1fr] gap-6">
+                        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {viewOptions.map((view) => (
+                                            <button
+                                                key={view}
+                                                type="button"
+                                                onClick={() => setCalendarView(view)}
+                                                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                                    calendarView === view
+                                                        ? 'bg-[#3AD6F2] text-white shadow-sm'
+                                                        : 'bg-white text-gray-600 border border-gray-200 hover:border-[#3AD6F2] hover:text-gray-900'
+                                                }`}
+                                            >
+                                                {view}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCalendarNavigation(-1)}
+                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-[#3AD6F2] transition-colors flex items-center justify-center"
+                                            aria-label="Previous period"
+                                        >
+                                            <span className="text-lg leading-none">&lt;</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCurrentCalendarDate(new Date())}
+                                            className="px-4 py-2 text-xs font-medium bg-white  rounded-lg hover:bg-[#25c2df] transition-colors"
+                                        >
+                                            Today
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCalendarNavigation(1)}
+                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-[#3AD6F2] transition-colors flex items-center justify-center"
+                                            aria-label="Next period"
+                                        >
+                                            <span className="text-lg leading-none">&gt;</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-xl font-semibold text-gray-900 leading-none">
+                                            {monthLabel}
+                                        </p>
+                                        {calendarView !== 'Monthly' && (
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Monthly view currently shown while additional views
+                                                are under development.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-7 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                    {DAYS_OF_WEEK.map((day) => (
+                                        <div key={day} className="text-center">
+                                            {day}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="grid grid-cols-7 gap-2 md:gap-3">
+                                    {calendarDays.map((day) => {
+                                        const isSelected = selectedSlot?.date === day.iso;
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={day.iso + day.isCurrentMonth}
+                                                onClick={() => handleDaySelect(day)}
+                                                className={`relative h-24 md:h-28 w-full rounded-2xl border p-3 text-left transition-all ${
+                                                    day.isCurrentMonth
+                                                        ? 'bg-white text-gray-800'
+                                                        : 'bg-gray-50 text-gray-400'
+                                                } ${day.isToday ? 'border-[#3AD6F2]' : 'border-gray-100'} ${
+                                                    isSelected ? 'ring-2 ring-[#3AD6F2]' : ''
+                                                } hover:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]`}
+                                            >
+                                                <span
+                                                    className={`text-sm font-semibold ${
+                                                        day.isCurrentMonth
+                                                            ? 'text-gray-900'
+                                                            : 'text-gray-400'
+                                                    }`}
+                                                >
+                                                    {day.date.getDate()}
+                                                </span>
+                                                <div className="mt-2 space-y-2">
+                                                    {day.events.slice(0, 2).map((event) => (
+                                                        <div
+                                                            key={event.id}
+                                                            className="rounded-lg border border-[#E8F0FF] bg-[#F5F9FF] px-2 py-1"
+                                                        >
+                                                            <p className="text-xs font-semibold text-gray-800 truncate">
+                                                                {event.title}
+                                                            </p>
+                                                            <div className="flex items-center justify-between text-[11px] text-gray-500">
+                                                                <span className="truncate">
+                                                                    {resourceLookup[event.resourceId]?.name ||
+                                                                        'Resource'}
+                                                                </span>
+                                                                <span>{formatTimeLabel(event.startTime)}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {day.events.length > 2 && (
+                                                        <p className="text-[11px] font-medium text-[#3AD6F2]">
+                                                            +{day.events.length - 2} more
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                                <div className="flex items-start justify-between gap-2 mb-4">
+                                    <div>
+                                        <p className="text-base font-semibold text-gray-900">
+                                            Scheduling Controls
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Manage filters and search across office bookings.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleResetFilters}
+                                        className="rounded-lg bg-[#F56D2D] px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Office
+                                        </label>
+                                        <select
+                                            value={selectedOfficeFilter}
+                                            onChange={(event) => setSelectedOfficeFilter(event.target.value)}
+                                            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                        >
+                                            {schedulingOfficeOptions.map((option) => (
+                                                <option key={option} value={option}>
+                                                    {option}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Search events
+                                        </label>
+                                        <input
+                                            value={searchTerm}
+                                            onChange={(event) => setSearchTerm(event.target.value)}
+                                            placeholder="Search events..."
+                                            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                                <div className="mb-4">
+                                    <p className="text-base font-semibold text-gray-900">
+                                        Resource Quick Timeline
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Quick book 30min slots for today
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    {schedulingResources.map((resource) => (
+                                        <div key={resource.id} className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-semibold text-gray-800">
+                                                    {resource.name}
+                                                </p>
+                                                <span className="text-[11px] text-gray-500">
+                                                    {resource.location}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {resource.slots.map((slot) => (
+                                                    <button
+                                                        type="button"
+                                                        key={`${resource.id}-${slot}`}
+                                                        onClick={() => handleQuickSlotSelect(resource.id, slot)}
+                                                        className="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-[#3AD6F2] hover:text-white transition-colors"
+                                                    >
+                                                        {slot}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                                <p className="text-base font-semibold text-gray-900 mb-4">Conflict Summary</p>
+                                <div className="space-y-3">
+                                    {conflictSummary.length > 0 ? (
+                                        conflictSummary.map((event) => (
+                                            <div key={event.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                                                <p className="text-sm font-semibold text-gray-800">
+                                                    {event.title} (
+                                                    {resourceLookup[event.resourceId]?.name || 'Resource'})
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    {new Date(event.date).toLocaleDateString(undefined, {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                    {' • '}
+                                                    {event.location}
+                                                </p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-gray-500">No conflicts detected for the selected filters.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Resource Management Tab Content */}
             {activeTab === 'Resource Management' && (
                 <div className="space-y-6">
@@ -802,7 +1354,7 @@ export default function OfficeOverview() {
                                             labelLine={true}
                                             label={({ value }) => `${value}`}
                                             outerRadius={100}
-                                            fill="#8884d8"
+                                            fill="#F56D2D"
                                             dataKey="value"
                                         >
                                             {office.resourceManagement?.monthlyPerformance.map((entry, index) => (
@@ -941,7 +1493,103 @@ export default function OfficeOverview() {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+            {isBookingModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-lg font-semibold text-gray-900">Create Booking</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Selected slot: <span className="font-medium text-gray-700">{formatSlotLabel(selectedSlot)}</span>
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeBookingModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Close booking modal"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Title</label>
+                                <input
+                                    value={bookingForm.title}
+                                    onChange={(event) =>
+                                        setBookingForm((previous) => ({
+                                            ...previous,
+                                            title: event.target.value
+                                        }))
+                                    }
+                                    placeholder="Meeting title"
+                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Office</label>
+                                <select
+                                    value={bookingForm.office}
+                                    onChange={(event) =>
+                                        setBookingForm((previous) => ({
+                                            ...previous,
+                                            office: event.target.value
+                                        }))
+                                    }
+                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                >
+                                    {schedulingOfficeOptions.map((option) => (
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Resource</label>
+                                <select
+                                    value={bookingForm.resource}
+                                    onChange={(event) =>
+                                        setBookingForm((previous) => ({
+                                            ...previous,
+                                            resource: event.target.value
+                                        }))
+                                    }
+                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                >
+                                    <option value="">Select resource</option>
+                                    {schedulingResources.map((resource) => (
+                                        <option key={resource.id} value={resource.id}>
+                                            {resource.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={closeBookingModal}
+                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCreateBooking}
+                                className="rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                            >
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 
