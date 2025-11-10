@@ -669,7 +669,7 @@ export default function FirmDetails() {
                                         </button>
                                         <button
                                             type="button"
-                                            className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                                            className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white bg-[#F56D2D] transition-colors hover:bg-orange-600"
                                             style={{ borderRadius: '8px' }} 
                                         >
                                             Create Firm
