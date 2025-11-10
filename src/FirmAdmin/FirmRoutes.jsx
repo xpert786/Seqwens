@@ -16,6 +16,8 @@ import DocumentManagement from './Pages/DocumentManagement';
 import FolderContents from './Pages/DocumentManagement/FolderContents';
 import PdfViewer from './Pages/DocumentManagement/PdfViewer';
 import Messages from './Pages/messages/Message';
+import ESignatureManagement from './Pages/ESignatureManagement';
+import Messages from './Pages/Messages';
 import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
@@ -27,6 +29,8 @@ import SchedulingCalendar from './Pages/Scheduling & calendar/SchedulingCalendar
 import Appointments from './Pages/Scheduling & calendar/Appointments';
 import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
+import Offices from './Pages/Offices';
+import OfficeOverview from './Pages/Offices/OfficeOverview';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -89,6 +93,7 @@ export default function FirmRoutes() {
             <Route path="document/:documentId" element={<PdfViewer />} />
           </Route>
         </Route>
+        <Route path="esignature" element={<ESignatureManagement />} />
         <Route path="messages" element={<Messages />} />
         
         {/* Business Operations routes */}
@@ -101,6 +106,8 @@ export default function FirmRoutes() {
         <Route path="settings" element={<FirmSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="account-settings" element={<AccountSettings />} />
+        <Route path="offices" element={<Offices />} />
+        <Route path="offices/:officeId" element={<OfficeOverview />} />
         
         {/* Add more routes here as needed */}
         
