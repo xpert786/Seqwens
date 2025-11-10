@@ -34,9 +34,9 @@ function AdminProtectedRoute({ children }) {
   
   console.log('Admin Protected Route - User type:', userType);
   
-  // Only allow admin and super_admin access
-  if (userType !== 'admin' && userType !== 'super_admin') {
-    console.warn('Unauthorized access attempt to Admin Dashboard');
+  // Only allow admin, super_admin, and tax_preparer access
+  if (userType !== 'admin' && userType !== 'super_admin' && userType !== 'tax_preparer') {
+    console.warn('Unauthorized access attempt to Tax Dashboard');
     // Redirect based on user type
     if (userType === 'client' || !userType) {
       return <Navigate to="/dashboard" replace />;

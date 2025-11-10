@@ -193,6 +193,52 @@
   border: 1px solid #E8F0FF;
 }
 
+/* Icon circle styling for dashboard task cards - consistent size for all */
+.icon-circle {
+  flex-shrink: 0;
+  overflow: visible;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-circle svg {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  flex-shrink: 0;
+}
+
+.icon-circle > div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-circle > div > svg {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  flex-shrink: 0;
+}
+
+/* Special handling for MessageIcon which has wide aspect ratio */
+.icon-circle svg[width="236"],
+.icon-circle > div > svg[width="236"] {
+  width: 28px !important;
+  height: auto !important;
+  max-height: 28px !important;
+  min-width: 28px !important;
+}
+
 .dashboard-card-btn{
 border: 1px solid #E8F0FF !important;
 background-color: #FFFFFF;

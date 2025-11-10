@@ -12,12 +12,18 @@ import {
 import { AiOutlineCalendar } from "react-icons/ai";
 import "../styles/Dashfirst.css";
 import { dashboardAPI, handleAPIError } from "../utils/apiUtils";
+import { toast } from "react-toastify";
 
 export default function DashboardFirst() {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [startedTasks, setStartedTasks] = useState(() => {
+    // Load started tasks from localStorage
+    const saved = localStorage.getItem('dashboardStartedTasks');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -37,6 +43,70 @@ export default function DashboardFirst() {
 
     fetchDashboardData();
   }, []);
+
+  // Save started tasks to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('dashboardStartedTasks', JSON.stringify(startedTasks));
+  }, [startedTasks]);
+
+  // Get navigation route for each task
+  const getTaskRoute = (title) => {
+    switch (title) {
+      case "Complete Profile Setup":
+        return "/dashboard/accounts";
+      case "Complete Data Intake Form":
+        return "/dashboard/dataintake";
+      case "Upload Tax Documents":
+        return "/dashboard/documents";
+      case "Schedule a Consultation":
+        return "/dashboard/appointments";
+      case "Set Up Payment Method":
+        return "/dashboard/invoices";
+      default:
+        return "#";
+    }
+  };
+
+  // Handle task click - navigate to relevant flow
+  const handleTaskClick = (task) => {
+    const route = getTaskRoute(task.title);
+    // Mark task as started if not already started
+    if (!startedTasks[task.title] && task.status !== "complete") {
+      setStartedTasks(prev => ({
+        ...prev,
+        [task.title]: true
+      }));
+    }
+    navigate(route);
+  };
+
+  // Handle button click - same as task click
+  const handleButtonClick = (e, task) => {
+    e.stopPropagation(); // Prevent double navigation
+    handleTaskClick(task);
+  };
+
+  // Get button text based on task status
+  const getButtonText = (task) => {
+    if (task.status === "complete") {
+      return "Completed";
+    } else if (startedTasks[task.title]) {
+      return "Incomplete";
+    } else {
+      return "Start";
+    }
+  };
+
+  // Get button class based on status
+  const getButtonClass = (task) => {
+    if (task.status === "complete") {
+      return "btn btn-success btn-sm";
+    } else if (startedTasks[task.title]) {
+      return "btn btn-warning btn-sm";
+    } else {
+      return "btn btn-primary btn-sm";
+    }
+  };
 
   const getTaskIcon = (title) => {
     switch (title) {
@@ -95,7 +165,7 @@ export default function DashboardFirst() {
     // Map API response to setup tasks using the actual API structure
     const apiData = dashboardData.data || dashboardData;
     const steps = apiData.steps || {};
-    
+
     return [
       {
         title: "Complete Profile Setup",
@@ -132,26 +202,30 @@ export default function DashboardFirst() {
       icon: <FileIcon size={28} />,
       title: "Upload Documents",
       button: "Upload Now",
+      route: "/dashboard/documents",
     },
     {
       icon: <BalanceIcon size={28} />,
       title: "Outstanding Balance",
       button: "Pay Now",
+      route: "/dashboard/invoices",
     },
     {
       icon: <AiOutlineCalendar size={28} />,
       title: "Next Appointment",
       button: "Reschedule",
+      route: "/dashboard/appointments",
     },
     {
       icon: <MessageIcon size={28} />,
       title: "New Messages",
       button: "View All",
+      route: "/dashboard/messages",
     },
   ];
 
   const completedCount = setupTasks.filter((task) => task.status === "complete").length;
-  const completionPercentage = dashboardData?.data?.profile_completion?.percentage 
+  const completionPercentage = dashboardData?.data?.profile_completion?.percentage
     ? Math.round(dashboardData.data.profile_completion.percentage)
     : Math.round((completedCount / setupTasks.length) * 100);
 
@@ -174,8 +248,8 @@ export default function DashboardFirst() {
         <div className="alert alert-danger" role="alert">
           <h5>Error Loading Dashboard</h5>
           <p>{error}</p>
-          <button 
-            className="btn btn-outline-danger" 
+          <button
+            className="btn btn-outline-danger"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -187,12 +261,12 @@ export default function DashboardFirst() {
 
   return (
     <div className="p-4">
-      
+
       <div
         className="p-4 rounded mb-4 position-relative"
         style={{ backgroundColor: "#FFF3E1", border: "1px solid #FFD6A5" }}
       >
-       
+
         <div
           className="position-absolute top-0 end-0 m-3 text-end"
           style={{ lineHeight: 1.1 }}
@@ -275,31 +349,51 @@ export default function DashboardFirst() {
         <ul className="list-group">
           {setupTasks.map((task, idx) => {
             const status = task.status;
+            const buttonText = getButtonText(task);
+            const buttonClass = getButtonClass(task);
             return (
               <li
                 key={idx}
                 className="list-group-item border-0 px-0 py-3 d-flex align-items-start justify-content-between"
+                style={{
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (status !== "complete") {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onClick={() => handleTaskClick(task)}
               >
-                <div className="d-flex gap-3">
+                <div
+                  className="d-flex gap-3 flex-grow-1"
+                  style={{ cursor: 'pointer' }}
+                >
                   {getTaskIcon(task.title)}
-                  <div>
+                  <div className="flex-grow-1">
                     <h6 className="mb-1" style={{ color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
                       {task.title}
                     </h6>
                     <small className="text-muted" style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66" }}>{task.description}</small>
                   </div>
                 </div>
-                <span
-                  className={`badge ${status === "complete"
-                    ? "badge bg-success text-white"
-                    : status === "incomplete"
-                      ? "badge-incomplete"
-                      : ""
-                    }`}
+                <button
+                  className={buttonClass}
+                  onClick={(e) => handleButtonClick(e, task)}
+                  style={{
+                    minWidth: '100px',
+                    fontWeight: 500,
+                    fontFamily: "BasisGrotesquePro"
+                  }}
+                  disabled={status === "complete"}
                 >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </span>
-                </li>
+                  {buttonText}
+                </button>
+              </li>
             );
           })}
         </ul>
@@ -328,7 +422,10 @@ export default function DashboardFirst() {
                   <h6 className="quick-card-title">{action.title}</h6>
                 </div>
 
-                <button className="btn btn-sm w-100 quick-card-btn">
+                <button 
+                  className="btn btn-sm w-100 quick-card-btn"
+                  onClick={() => navigate(action.route)}
+                >
                   {action.button}
                 </button>
               </div>

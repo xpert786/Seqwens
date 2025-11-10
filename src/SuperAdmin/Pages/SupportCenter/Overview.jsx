@@ -12,6 +12,8 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar, Pie } from 'react-chartjs-2';
+import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
+import { toast } from "react-toastify";
 
 ChartJS.register(
     CategoryScale,
@@ -31,149 +33,219 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
     const [priorityFilter, setPriorityFilter] = useState("All Priority");
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [selectedTicketId, setSelectedTicketId] = useState(null);
+    const [allTickets, setAllTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const kpiData = [
-        { label: "Total Tickets", value: "247" },
-        { label: "Open", value: "23" },
-        { label: "In Progress", value: "15" },
-        { label: "Closed Today", value: "8" },
-        { label: "Avg Response", value: "2.4 hours" },
-        { label: "Satisfaction", value: "543" }
-    ];
+    // Overview/analytics data from API
+    const [overviewData, setOverviewData] = useState({
+        counters: {
+            total_tickets: 0,
+            open: 0,
+            in_progress: 0,
+            closed_today: 0,
+            avg_response_hours: 0
+        },
+        category_distribution: [],
+        avg_resolution_by_month: []
+    });
+    const [overviewLoading, setOverviewLoading] = useState(true);
 
-    const allTickets = [
-        // Compliance Tickets
-        {
-            id: "TICK-001",
-            subject: "Unable to process payments",
-            category: "Compliance",
-            firm: "Johnson & Associates",
-            contact: "Michael Johnson",
-            priority: "High",
-            status: "Open",
-            assignee: "Sarah Wilson",
-            updated: "2024-01-15",
-            time: "14:20"
-        },
-        {
-            id: "TICK-002",
-            subject: "Document upload not working",
-            category: "Compliance",
-            firm: "Metro Tax Services",
-            contact: "Sarah Martinez",
-            priority: "Medium",
-            status: "In Progress",
-            assignee: "John Davis",
-            updated: "2024-01-15",
-            time: "10:15"
-        },
-        {
-            id: "TICK-003",
-            subject: "Tax form validation error",
-            category: "Compliance",
-            firm: "ABC Tax Group",
-            contact: "Robert Smith",
-            priority: "High",
-            status: "Open",
-            assignee: "Sarah Wilson",
-            updated: "2024-01-14",
-            time: "16:30"
-        },
-        {
-            id: "TICK-004",
-            subject: "Audit trail missing",
-            category: "Compliance",
-            firm: "Tax Solutions Inc",
-            contact: "Emily Brown",
-            priority: "Low",
-            status: "Closed",
-            assignee: "John Davis",
-            updated: "2024-01-13",
-            time: "09:45"
-        },
-        // Billing Tickets
-        {
-            id: "TICK-005",
-            subject: "Invoice generation failed",
-            category: "Billing",
-            firm: "Premium Tax Services",
-            contact: "David Lee",
-            priority: "High",
-            status: "Open",
-            assignee: "Mike Johnson",
-            updated: "2024-01-15",
-            time: "13:20"
-        },
-        {
-            id: "TICK-006",
-            subject: "Payment processing delay",
-            category: "Billing",
-            firm: "Elite Accounting",
-            contact: "Lisa Wang",
-            priority: "Medium",
-            status: "In Progress",
-            assignee: "Mike Johnson",
-            updated: "2024-01-14",
-            time: "11:30"
-        },
-        // Technical Tickets
-        {
-            id: "TICK-007",
-            subject: "System login issues",
-            category: "Technical",
-            firm: "Quick Tax Pro",
-            contact: "James Wilson",
-            priority: "High",
-            status: "Open",
-            assignee: "Alex Chen",
-            updated: "2024-01-15",
-            time: "15:45"
-        },
-        {
-            id: "TICK-008",
-            subject: "Database connection timeout",
-            category: "Technical",
-            firm: "Tax Masters",
-            contact: "Jennifer Taylor",
-            priority: "Medium",
-            status: "In Progress",
-            assignee: "Alex Chen",
-            updated: "2024-01-14",
-            time: "12:15"
-        },
-        {
-            id: "TICK-009",
-            subject: "API integration error",
-            category: "Technical",
-            firm: "Smart Tax Solutions",
-            contact: "Mark Anderson",
-            priority: "Low",
-            status: "Closed",
-            assignee: "Alex Chen",
-            updated: "2024-01-13",
-            time: "14:20"
-        }
-    ];
+    // Fetch overview/analytics data from API
+    useEffect(() => {
+        const fetchOverview = async () => {
+            try {
+                console.log('🔄 Fetching support overview data...');
+                setOverviewLoading(true);
 
-    // Filter tickets based on selected category
-    const tickets = allTickets.filter(ticket => 
-        ticket.category.toLowerCase() === selectedCategory
-    );
+                const response = await superAdminAPI.getSupportOverview();
+                console.log('📋 Support overview API response:', response);
+
+                if (response.success && response.data) {
+                    console.log('✅ Support overview fetched successfully:', response.data);
+                    setOverviewData(response.data);
+                } else {
+                    console.log('❌ Failed to fetch support overview:', response.message);
+                }
+            } catch (err) {
+                console.error('💥 Error fetching support overview:', err);
+                // Don't show error toast for overview, just log it
+            } finally {
+                setOverviewLoading(false);
+                console.log('🏁 Finished fetching support overview');
+            }
+        };
+
+        fetchOverview();
+    }, []);
+
+    // Fetch support tickets from API - Same pattern as MyTickets.jsx
+    useEffect(() => {
+        const fetchTickets = async () => {
+            try {
+                console.log('🔄 Fetching support tickets...');
+                setLoading(true);
+                setError(null);
+
+                const categoryMapForAPI = {
+                    "compliance": "Compliance",
+                    "account": "Account",
+                    "billing": "Billing",
+                    "technical": "Technical"
+                };
+
+                const categoryFilter = categoryMapForAPI[selectedCategory] || selectedCategory || '';
+
+                const response = await superAdminAPI.getSupportTickets(
+                    1,
+                    100, // Get a large number of tickets
+                    searchTerm,
+                    statusFilter !== "All Status" ? statusFilter : '',
+                    priorityFilter !== "All Priority" ? priorityFilter : '',
+                    categoryFilter
+                );
+
+                console.log('📋 Support tickets API response:', response);
+
+                if (response.success && response.data) {
+                    console.log('✅ Support tickets fetched successfully:', response.data);
+
+                    // Use the same data structure as MyTickets.jsx
+                    // Map API response to component format
+                    const mappedTickets = response.data.map(ticket => ({
+                        id: ticket.id,
+                        ticket_number: ticket.ticket_number || ticket.id?.toString(),
+                        subject: ticket.subject || 'No Subject',
+                        category: ticket.category || 'Other',
+                        firm: ticket.firm_name || ticket.firm || 'N/A',
+                        contact: ticket.contact_name || ticket.user_name || ticket.contact || 'N/A',
+                        priority: ticket.priority || 'Medium',
+                        status: ticket.status || 'Open',
+                        assignee: ticket.assigned_to_name || ticket.assignee || 'Unassigned',
+                        updated: ticket.updated_at ? new Date(ticket.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) : new Date().toLocaleDateString(),
+                        time: ticket.updated_at ? new Date(ticket.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString(),
+                        created_at: ticket.created_at,
+                        updated_at: ticket.updated_at,
+                        description: ticket.description,
+                        user_name: ticket.user_name || ticket.contact_name || 'N/A',
+                        rawData: ticket // Keep raw data for details
+                    }));
+
+                    setAllTickets(mappedTickets);
+                } else {
+                    console.log('❌ Failed to fetch support tickets:', response.message);
+                    setError(response.message || 'Failed to fetch support tickets');
+                    setAllTickets([]);
+                }
+            } catch (err) {
+                console.error('💥 Error fetching support tickets:', err);
+                const errorMessage = handleAPIError(err);
+                setError(errorMessage);
+                toast.error(errorMessage, {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    icon: false,
+                    className: "custom-toast-error",
+                    bodyClassName: "custom-toast-body",
+                });
+                setAllTickets([]);
+            } finally {
+                setLoading(false);
+                console.log('🏁 Finished fetching support tickets');
+            }
+        };
+
+        fetchTickets();
+    }, [selectedCategory, statusFilter, priorityFilter, searchTerm]);
+
+    // Filter tickets based on selected category (already filtered by API, but keep for client-side filtering if needed)
+    const tickets = allTickets.filter(ticket => {
+        const categoryMapForFilter = {
+            "compliance": "Compliance",
+            "account": "Account",
+            "billing": "Billing",
+            "technical": "Technical"
+        };
+        const categoryLower = ticket.category?.toLowerCase() || '';
+        const selectedCategoryValue = categoryMapForFilter[selectedCategory]?.toLowerCase() || selectedCategory?.toLowerCase() || '';
+        return categoryLower === selectedCategoryValue || categoryLower === selectedCategory?.toLowerCase();
+    });
+
+    // Categories from API category_distribution
+    const categoryMap = {
+        "compliance": "Compliance",
+        "account": "Account",
+        "billing": "Billing",
+        "technical": "Technical"
+    };
+
+    // Get category counts from API overview data
+    const getCategoryCount = (categoryName) => {
+        const categoryItem = overviewData.category_distribution?.find(
+            item => item.category.toLowerCase() === categoryName.toLowerCase()
+        );
+        return categoryItem ? categoryItem.count : 0;
+    };
 
     const categories = [
-        { id: "compliance", label: "Compliance", count: allTickets.filter(t => t.category === "Compliance").length, active: true },
-        { id: "billing", label: "Billing", count: allTickets.filter(t => t.category === "Billing").length, active: false },
-        { id: "technical", label: "Technical", count: allTickets.filter(t => t.category === "Technical").length, active: false }
-    ];
+        {
+            id: "compliance",
+            label: "Compliance",
+            count: getCategoryCount("compliance"),
+            active: selectedCategory === "compliance"
+        },
+        {
+            id: "account",
+            label: "Account",
+            count: getCategoryCount("account"),
+            active: selectedCategory === "account"
+        },
+        {
+            id: "billing",
+            label: "Billing",
+            count: getCategoryCount("billing"),
+            active: selectedCategory === "billing"
+        },
+        {
+            id: "technical",
+            label: "Technical",
+            count: getCategoryCount("technical"),
+            active: selectedCategory === "technical"
+        }
+    ].filter(cat => cat.count > 0 || selectedCategory === cat.id); // Show categories with count > 0 or currently selected
 
-    // Update KPI data based on filtered tickets
-    const filteredKpiData = [
-        { label: "Total Tickets", value: tickets.length.toString() },
-        { label: "Open", value: tickets.filter(t => t.status === "Open").length.toString() },
-        { label: "In Progress", value: tickets.filter(t => t.status === "In Progress").length.toString() },
-        { label: "Closed Today", value: tickets.filter(t => t.status === "Closed").length.toString() },
-        { label: "Avg Response", value: "2.4 hours" },
-        { label: "Satisfaction", value: "543" }
+    // KPI data from API overview
+    const kpiData = [
+        {
+            label: "Total Tickets",
+            value: overviewData.counters?.total_tickets?.toString() || "0"
+        },
+        {
+            label: "Open",
+            value: overviewData.counters?.open?.toString() || "0"
+        },
+        {
+            label: "In Progress",
+            value: overviewData.counters?.in_progress?.toString() || "0"
+        },
+        {
+            label: "Closed Today",
+            value: overviewData.counters?.closed_today?.toString() || "0"
+        },
+        {
+            label: "Avg Response",
+            value: overviewData.counters?.avg_response_hours
+                ? `${overviewData.counters.avg_response_hours.toFixed(1)} hours`
+                : "0 hours"
+        },
+        {
+            label: "Satisfaction",
+            value: "N/A" // Not in API response
+        }
     ];
 
     const getPriorityColor = (priority) => {
@@ -194,33 +266,77 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         }
     };
 
-    // Chart data for Average Resolution Time
-    const resolutionTimeData = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-        datasets: [
-            {
-                label: 'Compliance',
-                data: [9, 10, 9.5, 12.5, 11],
-                backgroundColor: '#3B82F6',
-                borderColor: '#3B82F6',
-                borderWidth: 0,
-            },
-            {
-                label: 'Technical',
-                data: [5, 5, 5, 6, 5.5],
-                backgroundColor: '#EF4444',
-                borderColor: '#EF4444',
-                borderWidth: 0,
-            },
-            {
-                label: 'Billing',
-                data: [4, 4.5, 4.5, 5.5, 5],
-                backgroundColor: '#10B981',
-                borderColor: '#10B981',
-                borderWidth: 0,
-            },
-        ],
+    // Chart data for Average Resolution Time - from API (fallback to default if no data)
+    const getResolutionTimeData = () => {
+        const avgResolutionByMonth = overviewData.avg_resolution_by_month || [];
+
+        if (avgResolutionByMonth.length === 0) {
+            // Fallback to default data
+            return {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                datasets: [
+                    {
+                        label: 'Compliance',
+                        data: [9, 10, 9.5, 12.5, 11],
+                        backgroundColor: '#3B82F6',
+                        borderColor: '#3B82F6',
+                        borderWidth: 0,
+                    },
+                    {
+                        label: 'Technical',
+                        data: [5, 5, 5, 6, 5.5],
+                        backgroundColor: '#EF4444',
+                        borderColor: '#EF4444',
+                        borderWidth: 0,
+                    },
+                    {
+                        label: 'Billing',
+                        data: [4, 4.5, 4.5, 5.5, 5],
+                        backgroundColor: '#10B981',
+                        borderColor: '#10B981',
+                        borderWidth: 0,
+                    },
+                ],
+            };
+        }
+
+        // Process API data for resolution time chart
+        // Assuming avg_resolution_by_month has format like:
+        // [{ month: 'Jan', compliance: 9, technical: 5, billing: 4 }, ...]
+        const labels = avgResolutionByMonth.map(item => item.month || item.period);
+        const complianceData = avgResolutionByMonth.map(item => item.compliance || 0);
+        const technicalData = avgResolutionByMonth.map(item => item.technical || 0);
+        const billingData = avgResolutionByMonth.map(item => item.billing || 0);
+
+        return {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Compliance',
+                    data: complianceData,
+                    backgroundColor: '#3B82F6',
+                    borderColor: '#3B82F6',
+                    borderWidth: 0,
+                },
+                {
+                    label: 'Technical',
+                    data: technicalData,
+                    backgroundColor: '#EF4444',
+                    borderColor: '#EF4444',
+                    borderWidth: 0,
+                },
+                {
+                    label: 'Billing',
+                    data: billingData,
+                    backgroundColor: '#10B981',
+                    borderColor: '#10B981',
+                    borderWidth: 0,
+                },
+            ],
+        };
     };
+
+    const resolutionTimeData = getResolutionTimeData();
 
     const resolutionTimeOptions = {
         responsive: true,
@@ -240,10 +356,10 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 mode: 'index',
                 intersect: false,
                 callbacks: {
-                    title: function(context) {
+                    title: function (context) {
                         return context[0].label;
                     },
-                    label: function(context) {
+                    label: function (context) {
                         const datasetLabel = context.dataset.label;
                         const value = context.parsed.y;
                         return `${datasetLabel}: ${value} Hrs`;
@@ -257,7 +373,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 max: 16,
                 ticks: {
                     stepSize: 4,
-                    callback: function(value) {
+                    callback: function (value) {
                         return value + ' Hrs';
                     }
                 },
@@ -276,18 +392,54 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         },
     };
 
-    // Chart data for Top Issue Category
-    const issueCategoryData = {
-        labels: ['Compliance', 'Billing', 'Technical'],
-        datasets: [
-            {
-                data: [60, 25, 15],
-                backgroundColor: ['#10B981', '#3B82F6', '#F97316'],
-                borderColor: ['#10B981', '#3B82F6', '#F97316'],
+    // Chart data for Top Issue Category - from API
+    const getCategoryChartData = () => {
+        const distribution = overviewData.category_distribution || [];
+        if (distribution.length === 0) {
+            // Fallback to default data
+            return {
+                labels: ['Compliance', 'Billing', 'Technical'],
+                datasets: [{
+                    data: [60, 25, 15],
+                    backgroundColor: ['#10B981', '#3B82F6', '#F97316'],
+                    borderColor: ['#10B981', '#3B82F6', '#F97316'],
+                    borderWidth: 0,
+                }]
+            };
+        }
+
+        // Calculate percentages
+        const total = distribution.reduce((sum, item) => sum + item.count, 0);
+        const labels = distribution.map(item => {
+            const catName = item.category.charAt(0).toUpperCase() + item.category.slice(1);
+            return categoryMap[item.category.toLowerCase()] || catName;
+        });
+        const data = distribution.map(item => total > 0 ? Math.round((item.count / total) * 100) : 0);
+
+        // Color mapping
+        const colorMap = {
+            'compliance': '#10B981',
+            'account': '#8B5CF6',
+            'billing': '#3B82F6',
+            'technical': '#F97316'
+        };
+
+        const backgroundColor = distribution.map(item =>
+            colorMap[item.category.toLowerCase()] || '#6B7280'
+        );
+
+        return {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColor,
+                borderColor: backgroundColor,
                 borderWidth: 0,
-            },
-        ],
+            }],
+        };
     };
+
+    const issueCategoryData = getCategoryChartData();
 
     const issueCategoryOptions = {
         responsive: true,
@@ -319,10 +471,10 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 cornerRadius: 8,
                 displayColors: true,
                 callbacks: {
-                    title: function(context) {
+                    title: function (context) {
                         return context[0].label;
                     },
-                    label: function(context) {
+                    label: function (context) {
                         const value = context.parsed;
                         return `${context.label}: ${value}%`;
                     }
@@ -336,9 +488,9 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         }
     };
 
-    // Action handlers
-    const handleViewDetails = (ticketId) => {
-        console.log('View Details for ticket:', ticketId);
+    // Action handlers - Same pattern as MyTickets.jsx
+    const handleViewDetails = async (ticketId) => {
+        console.log('🔄 View Details for ticket:', ticketId);
         setSelectedTicketId(ticketId);
         setActiveDropdown(null);
         if (onTicketDetailToggle) {
@@ -380,7 +532,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [activeDropdown]);  
+    }, [activeDropdown]);
 
     // If a ticket is selected, show the ticket detail within the same layout
     if (selectedTicketId) {
@@ -395,7 +547,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         <div className="space-y-4">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                {filteredKpiData.map((kpi, index) => (
+                {kpiData.map((kpi, index) => (
                     <div key={index} className="bg-white border border-[#E8F0FF] rounded-lg p-3">
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
                             {kpi.label}
@@ -419,12 +571,12 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                             Resolution speed you can measure
                         </p>
                     </div>
-                    
+
                     {/* Chart */}
                     <div className="h-64">
                         <Bar data={resolutionTimeData} options={resolutionTimeOptions} />
                     </div>
-                    
+
                     {/* Legend */}
                     <div className="flex justify-center space-x-4 mt-4">
                         <div className="flex items-center">
@@ -452,32 +604,63 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                             Where most tickets begin.
                         </p>
                     </div>
-                    
+
                     {/* Chart */}
                     <div className="h-64">
                         <Pie data={issueCategoryData} options={issueCategoryOptions} />
                     </div>
-                    
-                    {/* Legend */}
+
+                    {/* Legend - Dynamic from API */}
                     <div className="space-y-2 mt-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
-                                <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Compliance: 60%</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                                <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Billing: 25%</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-orange-500 rounded mr-2"></div>
-                                <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Technical: 15%</span>
-                            </div>
-                        </div>
+                        {overviewData.category_distribution && overviewData.category_distribution.length > 0 ? (
+                            (() => {
+                                const total = overviewData.category_distribution.reduce((sum, item) => sum + item.count, 0);
+                                const colorMap = {
+                                    'compliance': 'bg-green-500',
+                                    'account': 'bg-purple-500',
+                                    'billing': 'bg-blue-500',
+                                    'technical': 'bg-orange-500'
+                                };
+                                return overviewData.category_distribution.map((item, index) => {
+                                    const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                                    const categoryName = categoryMap[item.category.toLowerCase()] ||
+                                        (item.category.charAt(0).toUpperCase() + item.category.slice(1));
+                                    const colorClass = colorMap[item.category.toLowerCase()] || 'bg-gray-500';
+                                    return (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                                <div className={`w-3 h-3 ${colorClass} rounded mr-2`}></div>
+                                                <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">
+                                                    {categoryName}: {percentage}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()
+                        ) : (
+                            // Fallback legend
+                            <>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
+                                        <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Compliance: 60%</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                                        <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Billing: 25%</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <div className="w-3 h-3 bg-orange-500 rounded mr-2"></div>
+                                        <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Technical: 15%</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -500,13 +683,12 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                         <button
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
-                            className={`px-3 py-1 rounded-lg text-sm font-medium font-[BasisGrotesquePro] transition-colors ${
-                                selectedCategory === category.id
-                                    ? "bg-[#3B4A66] text-white"
-                                    : "bg-transparent text-[#3B4A66] hover:bg-[#F3F7FF]"
-                            }`} style={{
-                                borderRadius: "8px",
-                            }}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium font-[BasisGrotesquePro] transition-colors ${selectedCategory === category.id
+                                ? "bg-[#3B4A66] text-white"
+                                : "bg-transparent text-[#3B4A66] hover:bg-[#F3F7FF]"
+                                }`} style={{
+                                    borderRadius: "8px",
+                                }}
                         >
                             {category.label} ({category.count})
                         </button>
@@ -557,123 +739,146 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     </div>
                 </div>
 
-                {/* Tickets Table */}
-                <div className="space-y-3">
-                    {/* Header Row */}
-                    <div className="grid grid-cols-8 gap-4 py-3 px-4 bg-gray-50 rounded-lg">
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Ticket ID</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Subject</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Priority</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Status</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Assignee</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Updated</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Actions</div>
+                {/* Loading State */}
+                {loading && (
+                    <div className="text-center py-8">
+                        <p className="text-gray-500 font-[BasisGrotesquePro]">Loading tickets...</p>
                     </div>
+                )}
 
-                    {/* Ticket Rows */}
-                    {tickets.map((ticket) => (
-                        <div key={ticket.id} className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50">
-                            {/* Ticket ID */}
-                            <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                                {ticket.id}
-                            </div>
-                            
-                            {/* Subject */}
-                            <div className="col-span-1">
-                                <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                                    {ticket.subject}
-                                </div>
-                                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
-                                    {ticket.category}
-                                </div>
-                            </div>
-                            
-                            {/* Firm */}
-                            <div className="col-span-1">
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                    {ticket.firm}
-                                </div>
-                                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
-                                    {ticket.contact}
-                                </div>
-                            </div>
-                            
-                            {/* Priority */}
-                            <div>
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                                    {ticket.priority}
-                                </span>
-                            </div>
-                            
-                            {/* Status */}
-                            <div>
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                                    {ticket.status}
-                                </span>
-                            </div>
-                            
-                            {/* Assignee */}
-                            <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                {ticket.assignee}
-                            </div>
-                            
-                            {/* Updated */}
-                            <div>
-                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
-                                    {ticket.updated}
-                                </div>
-                                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
-                                    {ticket.time}
-                                </div>
-                            </div>
-                            
-                            {/* Actions */}
-                            <div className="relative dropdown-container">
-                                <button 
-                                    className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
-                                    onClick={() => setActiveDropdown(activeDropdown === ticket.id ? null : ticket.id)}
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                    </svg>
-                                </button>
-                                
-                                {/* Dropdown Menu */}
-                                {activeDropdown === ticket.id && (
-                                    <div className="absolute right-0 top-8 bg-white border border-[#E8F0FF] rounded-lg z-10 min-w-[160px]">
-                                        <div className="py-1">
-                                            <button
-                                                onClick={() => handleViewDetails(ticket.id)}
-                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
-                                            >
-                                                View Details
-                                            </button>
-                                            <button
-                                                onClick={() => handleAssign(ticket.id)}
-                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
-                                            >
-                                                Assign
-                                            </button>
-                                            <button
-                                                onClick={() => handleReply(ticket.id)}
-                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
-                                            >
-                                                Reply
-                                            </button>
-                                            <button
-                                                onClick={() => handleCloseTicket(ticket.id)}
-                                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-[BasisGrotesquePro]"
-                                            >
-                                                Close Ticket
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                {/* Error State */}
+                {error && !loading && (
+                    <div className="text-center py-8">
+                        <p className="text-red-500 font-[BasisGrotesquePro]">{error}</p>
+                    </div>
+                )}
+
+                {/* Tickets Table */}
+                {!loading && !error && (
+                    <div className="space-y-3">
+                        {/* Header Row */}
+                        <div className="grid grid-cols-8 gap-4 py-3 px-4 bg-gray-50 rounded-lg">
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Ticket ID</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Subject</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Priority</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Status</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Assignee</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Updated</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Actions</div>
                         </div>
-                    ))}
-                </div>
+
+                        {/* Empty State */}
+                        {tickets.length === 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500 font-[BasisGrotesquePro]">No tickets found</p>
+                            </div>
+                        )}
+
+                        {/* Ticket Rows */}
+                        {tickets.map((ticket) => (
+                            <div key={ticket.id} className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50">
+                                {/* Ticket ID */}
+                                <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    {ticket.ticket_number || ticket.id}
+                                </div>
+
+                                {/* Subject */}
+                                <div className="col-span-1">
+                                    <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        {ticket.subject}
+                                    </div>
+                                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
+                                        {ticket.category}
+                                    </div>
+                                </div>
+
+                                {/* Firm */}
+                                <div className="col-span-1">
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        {ticket.firm}
+                                    </div>
+                                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
+                                        {ticket.contact}
+                                    </div>
+                                </div>
+
+                                {/* Priority */}
+                                <div>
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                                        {ticket.priority}
+                                    </span>
+                                </div>
+
+                                {/* Status */}
+                                <div>
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                                        {ticket.status}
+                                    </span>
+                                </div>
+
+                                {/* Assignee */}
+                                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    {ticket.assignee}
+                                </div>
+
+                                {/* Updated */}
+                                <div>
+                                    <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        {ticket.updated}
+                                    </div>
+                                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
+                                        {ticket.time}
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="relative dropdown-container">
+                                    <button
+                                        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+                                        onClick={() => setActiveDropdown(activeDropdown === ticket.id ? null : ticket.id)}
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        </svg>
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    {activeDropdown === ticket.id && (
+                                        <div className="absolute right-0 top-8 bg-white border border-[#E8F0FF] rounded-lg z-10 min-w-[160px]">
+                                            <div className="py-1">
+                                                <button
+                                                    onClick={() => handleViewDetails(ticket.id || ticket.ticket_number)}
+                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                                                >
+                                                    View Details
+                                                </button>
+                                                <button
+                                                    onClick={() => handleAssign(ticket.id)}
+                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                                                >
+                                                    Assign
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReply(ticket.id)}
+                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                                                >
+                                                    Reply
+                                                </button>
+                                                <button
+                                                    onClick={() => handleCloseTicket(ticket.id)}
+                                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-[BasisGrotesquePro]"
+                                                >
+                                                    Close Ticket
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -12,6 +12,7 @@ import {
   Schedule,
   Analytics,
 } from "../component/icons";
+import { handleAPIError, dashboardAPI } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/taxpopup.css";
 import "../styles/taxdashboard.css";
 
@@ -159,48 +160,48 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
       }}
     >
       <div>
-        
-        
-            <div className="d-flex justify-content-between align-items-start" style={{ gap: "1rem" }}>
-      
-        <div className="d-flex align-items-start gap-2" style={{ flex: 1 }}>
-          {icon}
-          
-            <div className="task-title">{title}</div>
-            
-         
-        </div>
-        <div
-          className="d-flex align-items-center"
-          style={{
-            gap: "0.5rem",
-            flexShrink: 0,
-            whiteSpace: "nowrap",
-            alignSelf: "flex-start",
-          }}
-        >
-          {displayStatus?.map((s, i) => (
-            <span
-              key={i}
-              className="badge rounded-pill text-capitalize task-badge"
-              style={{
-                backgroundColor: statusColors[s] || "#6B7280",
-                color: "#fff",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {s}
-            </span>
-          ))}
 
-          {value && <h5 className="dashboard-card-value m-0">{value}</h5>}
+
+        <div className="d-flex justify-content-between align-items-start" style={{ gap: "1rem" }}>
+
+          <div className="d-flex align-items-start gap-2" style={{ flex: 1 }}>
+            {icon}
+
+            <div className="task-title">{title}</div>
+
+
+          </div>
+          <div
+            className="d-flex align-items-center"
+            style={{
+              gap: "0.5rem",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "flex-start",
+            }}
+          >
+            {displayStatus?.map((s, i) => (
+              <span
+                key={i}
+                className="badge rounded-pill text-capitalize task-badge"
+                style={{
+                  backgroundColor: statusColors[s] || "#6B7280",
+                  color: "#fff",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {s}
+              </span>
+            ))}
+
+            {value && <h5 className="dashboard-card-value m-0">{value}</h5>}
+          </div>
+
         </div>
-       
-      </div>
-       <div className="bother">
-              <div className="task-due">{due}</div>
-              <div className="task-usered">{user}</div>
-            </div>
+        <div className="bother">
+          <div className="task-due">{due}</div>
+          <div className="task-usered">{user}</div>
+        </div>
       </div>
       {/* <div className="d-flex justify-content-between align-items-start" style={{ gap: "1rem" }}>
       
@@ -239,9 +240,9 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
        
       </div> */}
 
-      
+
     </div>
-    
+
   );
 };
 
@@ -250,6 +251,10 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
 export default function Dashboard() {
   const navigate = useNavigate();
   const [selectedTask, setSelectedTask] = useState(null);
+  const [myTasks, setMyTasks] = useState([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const isFirstTime = localStorage.getItem("firstTimeUser");
@@ -258,7 +263,46 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const result = await dashboardAPI.getTaxPreparerDashboard();
+
+        if (result.success && result.data) {
+          setMyTasks(result.data.my_tasks || []);
+          setUpcomingDeadlines(result.data.upcoming_deadlines || []);
+          setRecentMessages(result.data.recent_messages || []);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        handleAPIError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   const handleSelect = (taskTitle) => setSelectedTask(taskTitle);
+
+  // Helper function to get priority color
+  const getPriorityColor = (priority) => {
+    const priorityLower = (priority || '').toLowerCase();
+    if (priorityLower === 'high') return "#DC2626";
+    if (priorityLower === 'medium') return "var(--color-yellow-400, #FBBF24)";
+    if (priorityLower === 'low') return "var(--color-green-500, #22C55E)";
+    return "#6B7280";
+  };
+
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower === 'pending') return "#854D0E";
+    if (statusLower === 'in progress' || statusLower === 'in_progress') return "var(--color-green-500, #22C55E)";
+    return "#6B7280";
+  };
 
   return (
     <div className="container-fluid px-2 px-md-2">
@@ -273,17 +317,40 @@ export default function Dashboard() {
                 <h1 className="section-title mb-1">My Tasks</h1>
                 <p className="section-subtitle m-0">Tasks assigned to you</p>
               </div>
-              <button className="view-all-btn">View All</button>
+              <button
+                className="view-all-btn"
+                onClick={() => navigate('/taxdashboard/tasks')}
+              >
+                View All
+              </button>
             </div>
             <div className="d-flex flex-column gap-3">
-              {whatsDueTasks.map((task, i) => (
-                <TaskCard
-                  key={i}
-                  {...task}
-                  selected={selectedTask === task.title}
-                  onClick={() => handleSelect(task.title)}
-                />
-              ))}
+              {loading ? (
+                <div className="text-center py-3">Loading tasks...</div>
+              ) : myTasks.length === 0 ? (
+                <div className="text-center py-3">No tasks assigned</div>
+              ) : (
+                myTasks.map((task, i) => {
+                  const taskTitle = task.task_title || task.title || 'Untitled Task';
+                  return (
+                    <TaskCard
+                      key={task.id || i}
+                      title={taskTitle}
+                      due={task.due_date_formatted || `Due: ${task.due_date || 'N/A'}`}
+                      status={[task.priority_display || task.priority || 'medium', task.status_display || task.status || 'pending']}
+                      user={(
+                        <span className="db-user">
+                          <span className="db-user-icon-wrapper"><Contacted /></span>
+                          {task.client?.name || 'Unknown Client'}
+                        </span>
+                      )}
+                      icon={<span className="icon-circle"><FileIcon /></span>}
+                      selected={selectedTask === taskTitle}
+                      onClick={() => handleSelect(taskTitle)}
+                    />
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -291,33 +358,51 @@ export default function Dashboard() {
         {/* Upcoming Deadlines */}
         <div className="col-12 col-md-6">
           <div className="card custom-card upcoming-deadlines-card">
-  <div className="mb-3">
-    <h1 className="section-title mb-1">Upcoming Deadlines</h1>
-    <p className="section-subtitle m-0">Important dates to remember</p>
-  </div>
-  <div className="upcoming-deadlines-container">
-    {recentActivityTasks.map((task, i) => (
-      <TaskCard
-        key={i}
-        {...task}
-        singleStatus
-        value={task.value}
-        selected={selectedTask === task.title}
-        onClick={() => handleSelect(task.title)}
-        className="upcoming-deadline-task"
-      />
-    ))}
-  </div>
-</div>
+            <div className="mb-3">
+              <h1 className="section-title mb-1">Upcoming Deadlines</h1>
+              <p className="section-subtitle m-0">Important dates to remember</p>
+            </div>
+            <div className="upcoming-deadlines-container">
+              {loading ? (
+                <div className="text-center py-3">Loading deadlines...</div>
+              ) : upcomingDeadlines.length === 0 ? (
+                <div className="text-center py-3">No upcoming deadlines</div>
+              ) : (
+                upcomingDeadlines.map((deadline, i) => {
+                  const deadlineTitle = deadline.title || 'Untitled';
+                  return (
+                    <TaskCard
+                      key={deadline.id || i}
+                      title={deadlineTitle}
+                      due={deadline.due_date_formatted || `Due: ${deadline.due_date || 'N/A'}`}
+                      status={[deadline.priority_display || deadline.priority || 'medium']}
+                      value={deadline.time_left || deadline.days_left !== undefined ? `${deadline.days_left} days left` : ''}
+                      user={(
+                        <span className="db-user">
+                          <span className="db-user-icon-wrapper"><Contacted /></span>
+                          {deadline.client?.name || 'Unknown Client'}
+                        </span>
+                      )}
+                      icon={<span className="icon-circle"><FileIcon /></span>}
+                      singleStatus
+                      selected={selectedTask === deadlineTitle}
+                      onClick={() => handleSelect(deadlineTitle)}
+                      className="upcoming-deadline-task"
+                    />
+                  );
+                })
+              )}
+            </div>
+          </div>
 
         </div>
       </div>
 
       {/* Bottom Section */}
-      
+
       <div className="row mt-1 g-3 px-4">
         {/* Recent Messages */}
-        
+
         <div className="col-12 col-md-6">
           <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -325,66 +410,102 @@ export default function Dashboard() {
                 <h1 className="section-title mb-1">Recent Messages</h1>
                 <p className="section-subtitle m-0">Latest client communications</p>
               </div>
-              <button className="view-all-btn">View All</button>
+              <button
+                className="view-all-btn"
+                onClick={() => navigate('/taxdashboard/messages')}
+              >
+                View All
+              </button>
             </div>
             <div className="d-flex flex-column gap-2">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`rounded-3 p-3 car recent-msg-card ${msg.type === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: msg.type === "client" ? "#FFF4E6" : "#fff",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <div className="msg-icon-wrapper">{msg.icon}</div>
-                    <div>
-                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-  <span className="msg-role"style={{ fontWeight: 500 }}>{msg.name}</span>
-  <span className="name-role-circle"></span> {/* small circle between name and role */}
-  <span className="role-badge">{msg.role}</span>
-</div>
-
-                      <div className="msg-content" style={{ fontSize: "0.875rem", color: "#4B5563" }}>{msg.content}</div>
+              {loading ? (
+                <div className="text-center py-3">Loading messages...</div>
+              ) : recentMessages.length === 0 ? (
+                <div className="text-center py-3">No recent messages</div>
+              ) : (
+                recentMessages.map((msg, i) => {
+                  const msgType = msg.sender?.role === 'client' || msg.sender_type === 'Client' ? 'client' : 'internal';
+                  const senderName = msg.sender?.name || msg.sender_name || 'Unknown';
+                  return (
+                    <div
+                      key={msg.id || i}
+                      className={`rounded-3 p-3 car recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        backgroundColor: msgType === "client" ? "#FFF4E6" : "#fff",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => navigate(`/taxdashboard/messages?thread=${msg.thread_id}`)}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
+                        <div className="msg-icon-wrapper"><Msg /></div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                            <span className="msg-role" style={{ fontWeight: 500 }}>{senderName}</span>
+                            <span className="name-role-circle"></span>
+                            <span className="role-badge">{msg.sender_type || (msg.sender?.role === 'client' ? 'Client' : 'Internal')}</span>
+                          </div>
+                          <div className="msg-content" style={{ fontSize: "0.875rem", color: "#4B5563" }}>
+                            {msg.message_preview || msg.message_snippet || msg.content || 'No message content'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "black", display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                        <Clocking />{msg.time_ago || 'Just now'}
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "black" }}><Clocking/>{msg.time}</div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
 
         {/* Recent Activity */}
-     <div className="col-12 col-md-6">
-  <div className="card custom-card p-3 p-md-4 rounded-4">
-    <div className="mb-3">
-      <h1 className="section-title mb-1">Quick Actions</h1>
-      <p className="section-subtitle m-0">Common tasks and shortcuts</p>
-    </div>
-    <div className="quick-action-container">
-      <div className="quick-action-card">
-        <Client className="action-icon" />
-        <span>View Client</span>
-      </div>
-      <div className="quick-action-card">
-        <FileIcon className="action-icon" />
-        <span>Documents</span>
-      </div>
-      <div className="quick-action-card">
-        <Schedule className="action-icon" />
-        <span>Schedule</span>
-      </div>
-      <div className="quick-action-card">
-        <Analytics className="action-icon" />
-        <span>Analytics</span>
-      </div>
-    </div>
-  </div>
-</div>
+        <div className="col-12 col-md-6">
+          <div className="card custom-card p-3 p-md-4 rounded-4">
+            <div className="mb-3">
+              <h1 className="section-title mb-1">Quick Actions</h1>
+              <p className="section-subtitle m-0">Common tasks and shortcuts</p>
+            </div>
+            <div className="quick-action-container">
+              <div
+                className="quick-action-card"
+                onClick={() => navigate('/taxdashboard/clients')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Client className="action-icon" />
+                <span>View Client</span>
+              </div>
+              <div
+                className="quick-action-card"
+                onClick={() => navigate('/taxdashboard/documents')}
+                style={{ cursor: 'pointer' }}
+              >
+                <FileIcon className="action-icon" />
+                <span>Documents</span>
+              </div>
+              <div
+                className="quick-action-card"
+                onClick={() => navigate('/taxdashboard/calendar')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Schedule className="action-icon" />
+                <span>Schedule</span>
+              </div>
+              <div
+                className="quick-action-card"
+                onClick={() => navigate('/taxdashboard/tasks')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Analytics className="action-icon" />
+                <span>Tasks</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>

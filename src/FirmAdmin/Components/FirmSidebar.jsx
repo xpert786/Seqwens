@@ -27,7 +27,7 @@ import {
 
 import { UserManage, ClientIcon, DashIcon, MesIcon, AppointmentIcon, DocumentIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon, AnalyticsIcon } from "./icons";
 
-export default function FirmSidebar() {
+export default function FirmSidebar({ isSidebarOpen = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -81,22 +81,37 @@ export default function FirmSidebar() {
     }
   };
 
+  const isActive = (path) => {
+    const currentPath = location.pathname;
+    // For exact matches (like dashboard)
+    if (path === "/firmadmin") {
+      return currentPath === path || currentPath === "/firmadmin/";
+    }
+    // For nested routes, check if current path starts with the route path
+    return currentPath === path || currentPath.startsWith(path + "/");
+  };
+
   const linkClass = (path) =>
     `flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${
-      location.pathname === path 
+      isActive(path)
         ? "bg-white text-black rounded-lg" 
         : "text-white hover:bg-white/10 hover:text-white rounded-lg"
     }`;
 
   const iconWrapperClass = (path) =>
     `inline-flex items-center justify-center mr-3 w-5 h-5 ${
-      location.pathname === path ? "bg-orange-500 p-1 rounded [&>svg]:!text-white" : "[&>svg]:!text-white"
+      isActive(path) ? "bg-orange-500 p-1 rounded [&>svg]:!text-white" : "[&>svg]:!text-white"
     }`;
 
   return (
     <div 
       className="h-[calc(100vh-70px)] fixed top-[70px] left-0 z-[1000] transition-all duration-300"
-      style={{ backgroundColor: '#32B582', width: sidebarWidth }}
+      style={{ 
+        backgroundColor: '#32B582', 
+        width: sidebarWidth,
+        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        visibility: isSidebarOpen ? 'visible' : 'hidden'
+      }}
     >
         <div 
           className="h-full overflow-y-auto" 

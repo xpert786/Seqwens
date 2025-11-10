@@ -14,7 +14,6 @@ export default function SupportCenter() {
         { id: "irsFAQs", label: "IRS FAQs" },
         { id: "seqwensTraining", label: "Seqwens Training" }
     ];
-
     const handleTicketDetailToggle = (isShowing) => {
         setShowTicketDetail(isShowing);
     };
@@ -57,11 +56,10 @@ export default function SupportCenter() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] transition-colors ${
-                                    activeTab === tab.id
-                                        ? "bg-[#3B4A66] text-white"
-                                        : "bg-transparent text-[#3B4A66]"
-                                }` }
+                                className={`px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] transition-colors ${activeTab === tab.id
+                                    ? "bg-[#3B4A66] text-white"
+                                    : "bg-transparent text-[#3B4A66]"
+                                    }`}
                                 style={{
                                     borderRadius: '7px'
                                 }}
@@ -70,7 +68,7 @@ export default function SupportCenter() {
                             </button>
                         ))}
                     </div>
-                    
+
                     {/* Add New Button - only show for IRS FAQs and Training tabs */}
                     {(activeTab === "irsFAQs" || activeTab === "seqwensTraining") && (
                         <button

@@ -10,7 +10,8 @@ export default function TwoFactorAuth() {
 
   useEffect(() => {
     // Check if user is already verified and redirect accordingly
-    const userData = localStorage.getItem('userData');
+    // Check both localStorage and sessionStorage
+    let userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
     if (userData) {
       try {
         const user = JSON.parse(userData);

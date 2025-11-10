@@ -1,17 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
+import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
+    const [settings, setSettings] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch settings from API
+    const fetchSettings = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const result = await taxPreparerSettingsAPI.getSettings();
+            console.log('Settings API response:', result);
+
+            if (result.success && result.data) {
+                // Map API response structure to component state
+                setSettings({
+                    profile: result.data.profile_information,
+                    company_profile: result.data.company_profile,
+                    notifications: result.data.notifications,
+                    security: result.data.security
+                });
+            } else {
+                throw new Error('Failed to fetch settings');
+            }
+        } catch (error) {
+            console.error('Error fetching tax preparer settings:', error);
+            setError(handleAPIError(error));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch settings on component mount
+    useEffect(() => {
+        fetchSettings();
+    }, []);
 
     const tabs = [
         { id: "profile", label: "Profile" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
-       
+
     ];
 
     return (
@@ -38,7 +75,7 @@ export default function AccountSettings() {
                         fontFamily: "BasisGrotesquePro",
                     }}
                 >
-                   Manage your profile and preferences
+                    Manage your profile and preferences
                 </p>
             </div>
 
@@ -84,10 +121,28 @@ export default function AccountSettings() {
 
             {/* Content Section */}
             <div>
-                {activeTab === "profile" && <Profile />}
-                {activeTab === "notifications" && <Notifications />}
-                {activeTab === "security" && <Security />}
-                {activeTab === "billing" && <Billing />}
+                {loading ? (
+                    <div className="text-center py-5">
+                        <p style={{ fontFamily: "BasisGrotesquePro", color: "#6B7280" }}>Loading settings...</p>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-5">
+                        <p className="text-danger" style={{ fontFamily: "BasisGrotesquePro" }}>{error}</p>
+                        <button
+                            className="btn btn-primary mt-3"
+                            onClick={fetchSettings}
+                            style={{ backgroundColor: "#00C0C6", border: "none" }}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {activeTab === "profile" && <Profile profileData={settings?.profile} companyProfile={settings?.company_profile} onUpdate={fetchSettings} />}
+                        {activeTab === "notifications" && <Notifications notifications={settings?.notifications} onUpdate={fetchSettings} />}
+                        {activeTab === "security" && <Security security={settings?.security} onUpdate={fetchSettings} />}
+                    </>
+                )}
             </div>
         </div>
     );

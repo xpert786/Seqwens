@@ -25,6 +25,8 @@ export default function RootAuthCheck() {
         navigate("/superadmin", { replace: true });
       } else if (userType === 'admin') {
         navigate("/firmadmin", { replace: true });
+      } else if (userType === 'tax_preparer') {
+        navigate("/taxdashboard", { replace: true });
       } else if (userType === 'client' || !userType) {
         // Check if client is verified
         const isEmailVerified = userData.is_email_verified;

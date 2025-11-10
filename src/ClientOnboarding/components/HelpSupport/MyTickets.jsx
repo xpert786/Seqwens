@@ -3,6 +3,7 @@ import { FaPaperPlane } from "react-icons/fa";
 import { CrossIcon, ConversIcon } from "../icons";
 import { supportTicketAPI, handleAPIError } from "../../utils/apiUtils";
 import "../../styles/MyTickets.css";
+import { toast } from "react-toastify";
 
 const MyTickets = () => {
   const [selectedTicketBox, setSelectedTicketBox] = useState(null);
@@ -21,10 +22,10 @@ const MyTickets = () => {
         console.log('🔄 Fetching support tickets...');
         setLoading(true);
         setError(null);
-        
+
         const response = await supportTicketAPI.getSupportTickets();
         console.log('📋 Support tickets API response:', response);
-        
+
         if (response.success && response.data) {
           console.log('✅ Support tickets fetched successfully:', response.data);
           setTickets(response.data);
@@ -50,7 +51,7 @@ const MyTickets = () => {
     try {
       console.log('🔄 Refreshing support tickets...');
       const response = await supportTicketAPI.getSupportTickets();
-      
+
       if (response.success && response.data) {
         console.log('✅ Support tickets refreshed:', response.data);
         setTickets(response.data);
@@ -73,10 +74,10 @@ const MyTickets = () => {
     try {
       console.log('🔄 Fetching ticket details for ID:', ticketId);
       setLoadingTicketDetails(true);
-      
+
       const response = await supportTicketAPI.getSupportTicket(ticketId);
       console.log('📋 Ticket details API response:', response);
-      
+
       if (response.success && response.data) {
         console.log('✅ Ticket details fetched successfully:', response.data);
         setSelectedTicketDetails(response.data);
@@ -106,14 +107,24 @@ const MyTickets = () => {
 
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
-    
+
     // For now, just clear the input since we don't have a send message API
     // In a real implementation, you would call an API to send the message
     console.log('Sending message:', messageInput);
     setMessageInput("");
-    
+
     // Show a message that this feature is not implemented yet
-    alert('Message sending feature will be implemented soon!');
+    toast.info('Message sending feature will be implemented soon!', {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      icon: false,
+      className: "custom-toast-info",
+      bodyClassName: "custom-toast-body",
+    });
   };
 
   const getStatusBadge = (status) => {
@@ -328,7 +339,7 @@ const MyTickets = () => {
               </div>
             )}
 
-         
+
             <div className="ticket-actions">
               <span>Quick Actions:</span>
               <button>Mark as Resolved</button>
@@ -339,55 +350,55 @@ const MyTickets = () => {
               Conversation
             </h6>
 
-          
+
             <div className="ticket-conversation">
               {/* Check if messages exist and handle the case where they don't */}
               {selectedTicketDetails?.messages && selectedTicketDetails.messages.length > 0 ? (
                 selectedTicketDetails.messages.map((msg, idx) => (
-                <div key={idx} className="mb-4">
-             
-                  <div
-                    className={`d-flex ${msg.role === "agent" ? "justify-content-start" : "justify-content-end"
-                      }`}
-                  >
-                    {msg.role === "agent" && (
-                      <div className="msg-icon agent-icon">
-                        <ConversIcon className="msg-icon-inner" />
-                      </div>
-                    )}
+                  <div key={idx} className="mb-4">
 
                     <div
-                      className="p-3 rounded-3 msg-bubble"
-                      style={{
-                        backgroundColor: msg.role === "agent" ? "#FFF4E6" : "#F3F7FF",
-                        border:
-                          msg.role === "agent"
-                            ? "1px solid #F49C2D"
-                            : "1px solid #E8F0FF",
-                      }}
+                      className={`d-flex ${msg.role === "agent" ? "justify-content-start" : "justify-content-end"
+                        }`}
                     >
-                      <p className="ticket-message">{msg.text}</p>
+                      {msg.role === "agent" && (
+                        <div className="msg-icon agent-icon">
+                          <ConversIcon className="msg-icon-inner" />
+                        </div>
+                      )}
+
+                      <div
+                        className="p-3 rounded-3 msg-bubble"
+                        style={{
+                          backgroundColor: msg.role === "agent" ? "#FFF4E6" : "#F3F7FF",
+                          border:
+                            msg.role === "agent"
+                              ? "1px solid #F49C2D"
+                              : "1px solid #E8F0FF",
+                        }}
+                      >
+                        <p className="ticket-message">{msg.text}</p>
+                      </div>
+
+                      {msg.role !== "agent" && (
+                        <div className="msg-icon user-icon">
+                          <ConversIcon className="msg-icon-inner" />
+                        </div>
+                      )}
                     </div>
 
-                    {msg.role !== "agent" && (
-                      <div className="msg-icon user-icon">
-                        <ConversIcon className="msg-icon-inner" />
-                      </div>
-                    )}
-                  </div>
 
-                
-                  <div
-                    className="ticket-message-date"
-                    style={{
-                      justifyContent: msg.role === "agent" ? "flex-start" : "flex-end",
-                      display: "flex",
-                    }}
-                  >
-                    {msg.date} {msg.time}
+                    <div
+                      className="ticket-message-date"
+                      style={{
+                        justifyContent: msg.role === "agent" ? "flex-start" : "flex-end",
+                        display: "flex",
+                      }}
+                    >
+                      {msg.date} {msg.time}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))
               ) : (
                 <div className="text-center py-4">
                   <p className="text-muted">No conversation messages available yet.</p>
@@ -396,7 +407,7 @@ const MyTickets = () => {
               )}
             </div>
 
-     
+
             <div className="d-flex align-items-center">
               <input
                 type="text"

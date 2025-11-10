@@ -318,18 +318,14 @@ export default function SuperDashboardContent() {
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Platform Overview</h1>
+          <h1 className="taxdashboardr-titler font-bold text-gray-900">Platform Overview</h1>
           <p className="text-gray-600 mt-1">Monitor and manage the entire tax practice platform</p>
-          {lastRefresh && (
-            <p className="text-xs text-gray-500 mt-1">
-              Last updated: {lastRefresh.toLocaleTimeString()}
-            </p>
-          )}
+       
         </div>
         <button 
           onClick={handleRefresh}
           disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 text-black bg-white rounded-3xl transition-colors disabled:opacity-50" 
+          className="taxdashboardr-titler flex items-center gap-2 px-6 py-3 text-black bg-white rounded-3xl transition-colors disabled:opacity-50" 
           style={{borderRadius: '7px'}}
         >
             <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />  
@@ -418,8 +414,8 @@ export default function SuperDashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* User Registration Trend */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="text-base font-medium text-gray-900 mb-1">User Registration Trend</h3>
-          <p className="text-sm text-gray-600 mb-4">Daily user registrations and activity</p>
+          <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
+          <p className="text-sm text-gray-600 mb-4">Monthly recurring revenue and user growth</p>
           
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -477,8 +473,8 @@ export default function SuperDashboardContent() {
 
         {/* User Role Distribution */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="text-base font-medium text-gray-900 mb-1">User Role Distribution</h3>
-          <p className="text-sm text-gray-600 mb-4">Breakdown of users by role type</p>
+          <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
+          <p className="text-sm text-gray-600 mb-4">Revenue breakdown by plan typee</p>
           
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -521,8 +517,8 @@ export default function SuperDashboardContent() {
         <div className="space-y-6">
           {/* Real-Time Activity */}
           <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 h-100 flex flex-col">
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Real-Time Activity</h4>
-            <p className="text-sm text-gray-600 mb-4">Active users throughout the day</p>
+            <h4 className="text-base font-semibold text-gray-900 mb-1">Recent Firm Registrations</h4>
+            <p className="text-sm text-gray-600 mb-4">Latest firms that joined the platform</p>
             
             <div className="flex-1 h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -655,7 +651,7 @@ export default function SuperDashboardContent() {
           <p className="text-sm text-gray-500 mb-3">Latest users that joined the platform</p>  
           <div className="flex-1 space-y-2 overflow-y-auto">
             {recentUsers.length > 0 ? recentUsers.map((user, index) => (
-              <div key={index} className="flex items-center justify-between p-1 bg-gray-50 rounded-lg">
+              <div key={index} className="border border-[#E8F0FF] flex items-center justify-between p-1 rounded-lg">
                 <div className="flex-1">
                   <h6 className="font-medium text-gray-900">{user.name}</h6>
                   <p className="text-xs text-gray-600">Joined: {user.lastActive} • Role: {user.plan}</p>
@@ -680,7 +676,8 @@ export default function SuperDashboardContent() {
             {quickActions.map((action, index) => (
               <button
                 key={index}
-                className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex flex-col items-center p-6 border border-[#E8F0FF] transition-colors"
+                style={{ borderRadius: '1rem' }}
               >
                 <div className="mb-2 w-6 h-6 text-gray-600">{action.icon}</div>
                 <span className="text-xs font-medium text-gray-700 text-center">{action.name}</span>

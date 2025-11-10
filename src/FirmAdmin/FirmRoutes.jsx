@@ -8,15 +8,21 @@ import FirmDashboardLayout from './Components/FirmDashboardLayout';
 // Pages
 import OverviewFirm from './Pages/OverView/OverviewFirm';
 import StaffManagement from './Pages/Staff/StaffManagement';
+import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
+import ClientDetails from './Pages/ClientManagement/ClientDetails';
 import Analytics from './Pages/Analytics';
 import Appointments from './Pages/Appointments';
 import DocumentManagement from './Pages/DocumentManagement';
+import FolderContents from './Pages/DocumentManagement/FolderContents';
+import PdfViewer from './Pages/DocumentManagement/PdfViewer';
 import Messages from './Pages/Messages';
 import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
 import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
+import BillingManagement from './Pages/Billing/BillingManagement';
+import InvoiceDetails from './Pages/Billing/InvoiceDetails';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -64,14 +70,24 @@ export default function FirmRoutes() {
         
         {/* Firm Management routes */}
         <Route path="staff" element={<StaffManagement />} />
+        <Route path="staff/:id" element={<StaffDetails />} />
         <Route path="clients" element={<ClientManage />} />
+        <Route path="clients/:id" element={<ClientDetails />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="tasks" element={<TaskManagementMain />} />
         
         {/* Client Management routes */}
         <Route path="appointments" element={<Appointments />} />
-        <Route path="documents" element={<DocumentManagement />} />
+        <Route path="documents" element={<DocumentManagement />}>
+          <Route path="folder/:folderId" element={<FolderContents />}>
+            <Route path="document/:documentId" element={<PdfViewer />} />
+          </Route>
+        </Route>
         <Route path="messages" element={<Messages />} />
+        
+        {/* Business Operations routes */}
+        <Route path="billing" element={<BillingManagement />} />
+        <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
         
         {/* System Administration routes */}
         <Route path="settings" element={<FirmSettings />} />

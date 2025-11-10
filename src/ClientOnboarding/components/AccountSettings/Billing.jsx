@@ -18,18 +18,18 @@ const Billing = () => {
       try {
         const response = await billingAPI.getPaymentMethods();
         console.log('Payment methods API response:', response);
-        
+
         // Handle the API response structure
         if (response.success && response.data && response.data.payment_methods) {
           const methods = response.data.payment_methods.map(method => ({
             id: method.id,
             last4: method.card_number.slice(-4),
-            brand: method.card_number.startsWith('4') ? 'VISA' : 
-                   method.card_number.startsWith('5') ? 'MASTERCARD' : 
-                   method.card_number.startsWith('3') ? 'AMEX' : 'UNKNOWN',
-            expiry: method.expiry_date ? new Date(method.expiry_date).toLocaleDateString('en-US', { 
-              month: 'numeric', 
-              year: 'numeric' 
+            brand: method.card_number.startsWith('4') ? 'VISA' :
+              method.card_number.startsWith('5') ? 'MASTERCARD' :
+                method.card_number.startsWith('3') ? 'AMEX' : 'UNKNOWN',
+            expiry: method.expiry_date ? new Date(method.expiry_date).toLocaleDateString('en-US', {
+              month: 'numeric',
+              year: 'numeric'
             }) : 'N/A',
             isPrimary: method.is_primary,
             cardholder_name: method.cardholder_name,
@@ -43,7 +43,19 @@ const Billing = () => {
         }
       } catch (err) {
         console.error('Error fetching payment methods:', err);
-        setError(handleAPIError(err));
+        const errorMessage = handleAPIError(err);
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-error",
+          bodyClassName: "custom-toast-body",
+        });
         setPaymentMethods([]);
       } finally {
         setLoading(false);
@@ -54,7 +66,7 @@ const Billing = () => {
       try {
         const response = await billingAPI.getBillingInformation();
         console.log('Billing address API response:', response);
-        
+
         if (response.success && response.data) {
           setBillingAddress({
             id: response.data.id,
@@ -102,7 +114,7 @@ const Billing = () => {
 
   const [selectedId, setSelectedId] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  
+
   // Form state for adding payment method
   const [newPaymentMethod, setNewPaymentMethod] = useState({
     cardNumber: '',
@@ -111,7 +123,7 @@ const Billing = () => {
     cvv: '',
     isDefault: false
   });
-  
+
   // Form validation errors
   const [formErrors, setFormErrors] = useState({
     cardNumber: '',
@@ -137,21 +149,21 @@ const Billing = () => {
     if (!regex.test(expiryDate)) {
       return 'Invalid date format. Use MM/YY format (e.g., 12/25)';
     }
-    
+
     // Check if the date is not in the past
     const [month, year] = expiryDate.split('/');
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear() % 100;
     const currentMonth = currentDate.getMonth() + 1;
-    
+
     const expiryYear = parseInt(year) + 2000;
     const expiryMonth = parseInt(month);
-    
-    if (expiryYear < currentDate.getFullYear() || 
-        (expiryYear === currentDate.getFullYear() && expiryMonth < currentMonth)) {
+
+    if (expiryYear < currentDate.getFullYear() ||
+      (expiryYear === currentDate.getFullYear() && expiryMonth < currentMonth)) {
       return 'Card has expired';
     }
-    
+
     return '';
   };
 
@@ -175,7 +187,7 @@ const Billing = () => {
       expiryDate: validateExpiryDate(newPaymentMethod.expiryDate),
       cvv: validateCVV(newPaymentMethod.cvv)
     };
-    
+
     setFormErrors(errors);
     return Object.values(errors).every(error => error === '');
   };
@@ -188,14 +200,14 @@ const Billing = () => {
       if (methodToUpdate) {
         // Update the payment method to be primary
         await billingAPI.updatePaymentMethod(id, { is_primary: true });
-        
+
         // Update local state
         const updatedMethods = paymentMethods.map((method) => ({
           ...method,
           isPrimary: method.id === id,
         }));
         setPaymentMethods(updatedMethods);
-        
+
         // Show success toast
         toast.success('Payment method set as primary successfully!', {
           position: "top-right",
@@ -239,13 +251,13 @@ const Billing = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       // Validate form before submitting
       if (!validateForm()) {
         setSaving(false);
         return;
       }
-      
+
       // Prepare the payment method data for the API (matching your API structure)
       const paymentMethodData = {
         card_number: formData.cardNumber,
@@ -253,27 +265,27 @@ const Billing = () => {
         expiry_date: formData.expiryDate, // Format: MM/YY
         cvv: formData.cvv
       };
-      
+
       console.log('Sending payment method data:', paymentMethodData);
       const response = await billingAPI.addPaymentMethod(paymentMethodData);
       console.log('Add payment method response:', response);
-      
+
       // Handle the response structure from your API
       if (response.success && response.data) {
         // Refresh the payment methods list
         const updatedResponse = await billingAPI.getPaymentMethods();
         console.log('Updated payment methods response:', updatedResponse);
-        
+
         if (updatedResponse.success && updatedResponse.data && updatedResponse.data.payment_methods) {
           const methods = updatedResponse.data.payment_methods.map(method => ({
             id: method.id,
             last4: method.card_number.slice(-4),
-            brand: method.card_number.startsWith('4') ? 'VISA' : 
-                   method.card_number.startsWith('5') ? 'MASTERCARD' : 
-                   method.card_number.startsWith('3') ? 'AMEX' : 'UNKNOWN',
-            expiry: method.expiry_date ? new Date(method.expiry_date).toLocaleDateString('en-US', { 
-              month: 'numeric', 
-              year: 'numeric' 
+            brand: method.card_number.startsWith('4') ? 'VISA' :
+              method.card_number.startsWith('5') ? 'MASTERCARD' :
+                method.card_number.startsWith('3') ? 'AMEX' : 'UNKNOWN',
+            expiry: method.expiry_date ? new Date(method.expiry_date).toLocaleDateString('en-US', {
+              month: 'numeric',
+              year: 'numeric'
             }) : 'N/A',
             isPrimary: method.is_primary,
             cardholder_name: method.cardholder_name,
@@ -282,7 +294,7 @@ const Billing = () => {
           }));
           setPaymentMethods(methods);
         }
-        
+
         // Reset form
         setNewPaymentMethod({
           cardNumber: '',
@@ -291,9 +303,9 @@ const Billing = () => {
           cvv: '',
           isDefault: false
         });
-        
+
         setShowModal(false);
-        
+
         // Show success toast
         toast.success('Payment method added successfully!', {
           position: "top-right",
@@ -321,21 +333,21 @@ const Billing = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       console.log('Deleting payment method with ID:', paymentMethodId);
       const response = await billingAPI.deletePaymentMethod(paymentMethodId);
       console.log('Delete payment method response:', response);
-      
+
       // Handle the response structure from your API
       if (response.success) {
         // Remove the deleted payment method from local state
         const updatedMethods = paymentMethods.filter(method => method.id !== paymentMethodId);
         setPaymentMethods(updatedMethods);
-        
+
         // Close the edit modal
         setShowEditModal(false);
         setEditCard(null);
-        
+
         // Show success toast
         toast.success('Payment method deleted successfully!', {
           position: "top-right",
@@ -363,19 +375,19 @@ const Billing = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       // Prepare the payment method data for the API (matching your API structure)
       const paymentMethodData = {
         expiry_month: parseInt(editMonth),
         expiry_year: parseInt(editYear),
         set_as_primary: editDefault
       };
-      
+
       console.log('Updating payment method with ID:', editCard?.id);
       console.log('Update payment method data:', paymentMethodData);
       const response = await billingAPI.updatePaymentMethod(editCard?.id, paymentMethodData);
       console.log('Update payment method response:', response);
-      
+
       // Handle the response structure from your API
       if (response.success) {
         // Update local state
@@ -391,11 +403,11 @@ const Billing = () => {
           return editDefault ? { ...method, isPrimary: false } : method;
         });
         setPaymentMethods(updatedMethods);
-        
+
         // Close the edit modal
         setShowEditModal(false);
         setEditCard(null);
-        
+
         // Show success toast
         toast.success('Payment method updated successfully!', {
           position: "top-right",
@@ -449,7 +461,7 @@ const Billing = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       // Prepare the billing address data for the API
       const addressData = {
         name: editAddress.name,
@@ -459,9 +471,9 @@ const Billing = () => {
         zip_code: editAddress.zip_code,
         country: editAddress.country,
       };
-      
+
       console.log('Saving billing address:', addressData);
-      
+
       let response;
       if (billingAddress) {
         // Update existing address
@@ -472,7 +484,7 @@ const Billing = () => {
         response = await billingAPI.addBillingInformation(addressData);
         console.log('Add billing address response:', response);
       }
-      
+
       if (response.success) {
         setBillingAddress({
           id: response.data.id,
@@ -525,12 +537,6 @@ const Billing = () => {
         </p>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="alert alert-danger mb-4" role="alert">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
 
 
 
@@ -553,86 +559,86 @@ const Billing = () => {
       {/* Payment Methods List */}
       {!loading && paymentMethods.length > 0 && (
         paymentMethods.map((method) => (
-        <div
-          key={method.id}
-          className="mb-3 rounded p-3"
-          style={{
-            border: "1px solid #F49C2D",
-            backgroundColor: selectedId === method.id ? "#FFF4E6" : "#FFFFFF",
-            cursor: "pointer",
-          }}
-          onClick={() => handleCardClick(method.id)}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-1">
-            <div className="d-flex align-items-center gap-2">
-              <span className="bill">
-                <BillIcon />
-              </span>
-              <div className="d-flex flex-column">
-                <div>
-                  <span className="fw-bold">•••• •••• •••• {method.last4}</span>
-                  {method.isPrimary && (
-                    <span
-                      className="ms-2"
-                      style={{
-                        backgroundColor: "#22C55E",
-                        borderRadius: "1rem",
-                        padding: "0.35em 0.65em",
-                        fontSize: "0.75rem",
-                        fontWeight: "500",
-                        lineHeight: "1",
-                        color: "white",
-                        fontFamily: "BasisGrotesquePro",
-                      }}
-                    >
-                      Primary
-                    </span>
-                  )}
+          <div
+            key={method.id}
+            className="mb-3 rounded p-3"
+            style={{
+              border: "1px solid #F49C2D",
+              backgroundColor: selectedId === method.id ? "#FFF4E6" : "#FFFFFF",
+              cursor: "pointer",
+            }}
+            onClick={() => handleCardClick(method.id)}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <div className="d-flex align-items-center gap-2">
+                <span className="bill">
+                  <BillIcon />
+                </span>
+                <div className="d-flex flex-column">
+                  <div>
+                    <span className="fw-bold">•••• •••• •••• {method.last4}</span>
+                    {method.isPrimary && (
+                      <span
+                        className="ms-2"
+                        style={{
+                          backgroundColor: "#22C55E",
+                          borderRadius: "1rem",
+                          padding: "0.35em 0.65em",
+                          fontSize: "0.75rem",
+                          fontWeight: "500",
+                          lineHeight: "1",
+                          color: "white",
+                          fontFamily: "BasisGrotesquePro",
+                        }}
+                      >
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                  <small className="text-muted mt-2" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontWeight: "400", fontSize: "12px" }}>
+                    {method.brand} - Expires {method.expiry}
+                  </small>
                 </div>
-                <small className="text-muted mt-2" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontWeight: "400", fontSize: "12px" }}>
-                  {method.brand} - Expires {method.expiry}
-                </small>
               </div>
-            </div>
-            <div className="d-flex gap-2">
-              {!method.isPrimary && (
+              <div className="d-flex gap-2">
+                {!method.isPrimary && (
+                  <button
+                    className="btn btn-sm"
+                    style={{ backgroundColor: "#FFFFFF", border: "1px solid #22C55E", color: "#22C55E", fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "400" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAsPrimary(method.id);
+                    }}
+                  >
+                    Set as Primary
+                  </button>
+                )}
                 <button
                   className="btn btn-sm"
-                  style={{ backgroundColor: "#FFFFFF", border: "1px solid #22C55E", color: "#22C55E", fontFamily: "BasisGrotesquePro", fontSize: "16px", fontWeight: "400" }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setAsPrimary(method.id);
+                    setEditCard(method);
+                    const [month, year] = method.expiry.split("/");
+                    setEditMonth(month);
+                    setEditYear(year);
+                    setEditDefault(method.isPrimary);
+                    setShowEditModal(true);
+                  }}
+                  style={{
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid #E8F0FF",
+                    color: "#3B4A66",
+                    fontFamily: "BasisGrotesquePro",
+                    fontSize: "16px",
+                    fontWeight: "400"
                   }}
                 >
-                  Set as Primary
+                  Edit
                 </button>
-              )}
-              <button
-                className="btn btn-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditCard(method);
-                  const [month, year] = method.expiry.split("/");
-                  setEditMonth(month);
-                  setEditYear(year);
-                  setEditDefault(method.isPrimary);
-                  setShowEditModal(true);
-                }}
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #E8F0FF",
-                  color: "#3B4A66",
-                  fontFamily: "BasisGrotesquePro",
-                  fontSize: "16px",
-                  fontWeight: "400"
-                }}
-              >
-                Edit
-              </button>
 
+              </div>
             </div>
           </div>
-        </div>
         ))
       )}
 
@@ -654,7 +660,7 @@ const Billing = () => {
       </button>
 
       <h5 className="mb-3" style={{ color: "#3B4A66", fontFamily: "BasisGrotesquePro", fontSize: "18px", fontWeight: "500" }}>Billing Address</h5>
-      
+
       {!isEditingAddress ? (
         billingAddress ? (
           <div className="border rounded p-3 mb-3" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8F0FF' }}>
@@ -676,11 +682,11 @@ const Billing = () => {
             <Form.Control
               type="text"
               value={editAddress.name}
-              onChange={(e) => setEditAddress({...editAddress, name: e.target.value})}
-              style={{ 
-                color: "#3B4A66", 
-                fontFamily: "BasisGrotesquePro", 
-                fontSize: "14px", 
+              onChange={(e) => setEditAddress({ ...editAddress, name: e.target.value })}
+              style={{
+                color: "#3B4A66",
+                fontFamily: "BasisGrotesquePro",
+                fontSize: "14px",
                 fontWeight: "400",
                 border: "1px solid #E8F0FF",
                 borderRadius: "6px"
@@ -692,11 +698,11 @@ const Billing = () => {
             <Form.Control
               type="text"
               value={editAddress.street_address}
-              onChange={(e) => setEditAddress({...editAddress, street_address: e.target.value})}
-              style={{ 
-                color: "#3B4A66", 
-                fontFamily: "BasisGrotesquePro", 
-                fontSize: "14px", 
+              onChange={(e) => setEditAddress({ ...editAddress, street_address: e.target.value })}
+              style={{
+                color: "#3B4A66",
+                fontFamily: "BasisGrotesquePro",
+                fontSize: "14px",
                 fontWeight: "400",
                 border: "1px solid #E8F0FF",
                 borderRadius: "6px"
@@ -709,11 +715,11 @@ const Billing = () => {
               <Form.Control
                 type="text"
                 value={editAddress.city}
-                onChange={(e) => setEditAddress({...editAddress, city: e.target.value})}
-                style={{ 
-                  color: "#3B4A66", 
-                  fontFamily: "BasisGrotesquePro", 
-                  fontSize: "14px", 
+                onChange={(e) => setEditAddress({ ...editAddress, city: e.target.value })}
+                style={{
+                  color: "#3B4A66",
+                  fontFamily: "BasisGrotesquePro",
+                  fontSize: "14px",
                   fontWeight: "400",
                   border: "1px solid #E8F0FF",
                   borderRadius: "6px"
@@ -725,11 +731,11 @@ const Billing = () => {
               <Form.Control
                 type="text"
                 value={editAddress.state}
-                onChange={(e) => setEditAddress({...editAddress, state: e.target.value})}
-                style={{ 
-                  color: "#3B4A66", 
-                  fontFamily: "BasisGrotesquePro", 
-                  fontSize: "14px", 
+                onChange={(e) => setEditAddress({ ...editAddress, state: e.target.value })}
+                style={{
+                  color: "#3B4A66",
+                  fontFamily: "BasisGrotesquePro",
+                  fontSize: "14px",
                   fontWeight: "400",
                   border: "1px solid #E8F0FF",
                   borderRadius: "6px"
@@ -741,11 +747,11 @@ const Billing = () => {
               <Form.Control
                 type="text"
                 value={editAddress.zip_code}
-                onChange={(e) => setEditAddress({...editAddress, zip_code: e.target.value})}
-                style={{ 
-                  color: "#3B4A66", 
-                  fontFamily: "BasisGrotesquePro", 
-                  fontSize: "14px", 
+                onChange={(e) => setEditAddress({ ...editAddress, zip_code: e.target.value })}
+                style={{
+                  color: "#3B4A66",
+                  fontFamily: "BasisGrotesquePro",
+                  fontSize: "14px",
                   fontWeight: "400",
                   border: "1px solid #E8F0FF",
                   borderRadius: "6px"
@@ -758,11 +764,11 @@ const Billing = () => {
             <Form.Control
               type="text"
               value={editAddress.country}
-              onChange={(e) => setEditAddress({...editAddress, country: e.target.value})}
-              style={{ 
-                color: "#3B4A66", 
-                fontFamily: "BasisGrotesquePro", 
-                fontSize: "14px", 
+              onChange={(e) => setEditAddress({ ...editAddress, country: e.target.value })}
+              style={{
+                color: "#3B4A66",
+                fontFamily: "BasisGrotesquePro",
+                fontSize: "14px",
                 fontWeight: "400",
                 border: "1px solid #E8F0FF",
                 borderRadius: "6px"
@@ -776,16 +782,16 @@ const Billing = () => {
       <div className="d-flex gap-2">
         {!isEditingAddress ? (
           billingAddress ? (
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               style={{ backgroundColor: "#F3F7FF", border: "1px solid #E8F0FF", color: "#3B4A66", fontSize: "17px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
               onClick={handleEditAddress}
             >
               Edit Billing Address
             </button>
           ) : (
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               style={{ backgroundColor: "#F56D2D", border: "1px solid #F56D2D", color: "#FFFFFF", fontSize: "17px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
               onClick={handleAddAddress}
             >
@@ -794,16 +800,16 @@ const Billing = () => {
           )
         ) : (
           <>
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               style={{ backgroundColor: "#F56D2D", border: "1px solid #F56D2D", color: "#FFFFFF", fontSize: "17px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
               onClick={handleSaveAddress}
               disabled={saving}
             >
               {saving ? 'Saving...' : (billingAddress ? 'Update Address' : 'Add Address')}
             </button>
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               style={{ backgroundColor: "#F3F7FF", border: "1px solid #E8F0FF", color: "#3B4A66", fontSize: "17px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
               onClick={handleCancelEditAddress}
             >
@@ -990,7 +996,7 @@ const Billing = () => {
                   fontFamily: "BasisGrotesquePro",
                   fontSize: "14px",
                   fontWeight: "400",
-                 
+
                   marginLeft: "8px",
                   marginBottom: "0",
                 }}
@@ -1024,17 +1030,17 @@ const Billing = () => {
           <Form>
             <Form.Group className="mb-3">
               <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>Card Number</Form.Label>
-              <Form.Control 
-                type="text" 
-                placeholder="1234 5678 9012 3456" 
+              <Form.Control
+                type="text"
+                placeholder="1234 5678 9012 3456"
                 value={newPaymentMethod.cardNumber}
                 onChange={(e) => {
                   let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
                   value = value.replace(/(.{4})/g, '$1 ').trim(); // Add spaces every 4 digits
-                  setNewPaymentMethod({...newPaymentMethod, cardNumber: value});
+                  setNewPaymentMethod({ ...newPaymentMethod, cardNumber: value });
                   // Clear error when user starts typing
                   if (formErrors.cardNumber) {
-                    setFormErrors({...formErrors, cardNumber: ''});
+                    setFormErrors({ ...formErrors, cardNumber: '' });
                   }
                 }}
                 isInvalid={!!formErrors.cardNumber}
@@ -1048,15 +1054,15 @@ const Billing = () => {
 
             <Form.Group className="mb-3">
               <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>Cardholder Name</Form.Label>
-              <Form.Control 
-                type="text" 
-                placeholder="John Doe" 
+              <Form.Control
+                type="text"
+                placeholder="John Doe"
                 value={newPaymentMethod.cardholderName}
                 onChange={(e) => {
-                  setNewPaymentMethod({...newPaymentMethod, cardholderName: e.target.value});
+                  setNewPaymentMethod({ ...newPaymentMethod, cardholderName: e.target.value });
                   // Clear error when user starts typing
                   if (formErrors.cardholderName) {
-                    setFormErrors({...formErrors, cardholderName: ''});
+                    setFormErrors({ ...formErrors, cardholderName: '' });
                   }
                 }}
                 isInvalid={!!formErrors.cardholderName}
@@ -1071,19 +1077,19 @@ const Billing = () => {
             <div className="d-flex gap-2">
               <Form.Group className="mb-3 w-50">
                 <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>Expiry Date</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  placeholder="MM/YY" 
+                <Form.Control
+                  type="text"
+                  placeholder="MM/YY"
                   value={newPaymentMethod.expiryDate}
                   onChange={(e) => {
                     let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
                     if (value.length >= 2) {
                       value = value.substring(0, 2) + '/' + value.substring(2, 4);
                     }
-                    setNewPaymentMethod({...newPaymentMethod, expiryDate: value});
+                    setNewPaymentMethod({ ...newPaymentMethod, expiryDate: value });
                     // Clear error when user starts typing
                     if (formErrors.expiryDate) {
-                      setFormErrors({...formErrors, expiryDate: ''});
+                      setFormErrors({ ...formErrors, expiryDate: '' });
                     }
                   }}
                   isInvalid={!!formErrors.expiryDate}
@@ -1097,17 +1103,17 @@ const Billing = () => {
 
               <Form.Group className="mb-3 w-50">
                 <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>CVV</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  placeholder="123" 
+                <Form.Control
+                  type="text"
+                  placeholder="123"
                   value={newPaymentMethod.cvv}
                   onChange={(e) => {
                     let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
                     value = value.substring(0, 4); // Limit to 4 digits
-                    setNewPaymentMethod({...newPaymentMethod, cvv: value});
+                    setNewPaymentMethod({ ...newPaymentMethod, cvv: value });
                     // Clear error when user starts typing
                     if (formErrors.cvv) {
-                      setFormErrors({...formErrors, cvv: ''});
+                      setFormErrors({ ...formErrors, cvv: '' });
                     }
                   }}
                   isInvalid={!!formErrors.cvv}
@@ -1125,7 +1131,7 @@ const Billing = () => {
               id="set-default"
               label="Set as default payment method"
               checked={newPaymentMethod.isDefault}
-              onChange={(e) => setNewPaymentMethod({...newPaymentMethod, isDefault: e.target.checked})}
+              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, isDefault: e.target.checked })}
               style={{
                 color: "#3B4A66",
                 fontSize: "12px",

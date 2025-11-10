@@ -115,7 +115,7 @@ export default function AnalyticsMain() {
 
   return (
     <div className="min-h-screen p-2 sm:p-4 lg:p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="px-4 py-4 mx-auto">
         {/* Fixed Header Section */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 lg:mb-8 space-y-4 lg:space-y-0">
           <div className="flex-1">
