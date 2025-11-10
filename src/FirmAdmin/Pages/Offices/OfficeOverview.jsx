@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaCog, FaEdit } from 'react-icons/fa';
 import {
@@ -69,6 +69,21 @@ const sampleOffices = {
                 { id: 4, item: 'Software Licenses', stock: 45, reorderAlert: 15, status: 'Okay' }
             ]
         },
+        efinStatus: {
+            active: 8,
+            pending: 2,
+            revoked: 1
+        },
+        bankPartners: [
+            { id: 'partner-1', name: 'Chase Bank', status: 'Active' },
+            { id: 'partner-2', name: 'Wells Fargo', status: 'Pending' },
+            { id: 'partner-3', name: 'Bank of America', status: 'Rejected' }
+        ],
+        auditTrail: [
+            { id: 'log-1', user: 'John D.', office: 'NYC', action: 'Filed Return', ip: '192.168.1.12', timestamp: '2025-07-21 14:32' },
+            { id: 'log-2', user: 'Maria P.', office: 'LA', action: 'Bank Enrollment', ip: '192.168.2.45', timestamp: '2025-07-21 13:10' },
+            { id: 'log-3', user: 'Alex K.', office: 'Chicago', action: 'Filed Return', ip: '10.0.0.22', timestamp: '2025-07-20 18:55' }
+        ],
         staffMembers: [
             {
                 id: 1,
@@ -322,6 +337,15 @@ export default function OfficeOverview() {
         office: 'All Offices',
         resource: ''
     });
+    const [taxPrepUrl, setTaxPrepUrl] = useState('https://www.grammarly.com/');
+    const [whiteLabelEnabled, setWhiteLabelEnabled] = useState(false);
+    const [branding, setBranding] = useState({
+        loginUrl: 'https://www.logo.com/',
+        faviconUrl: 'https://www.favicon.com/',
+        primaryColor: '#3AD6F2',
+        secondaryColor: '#F56D2D',
+        customDomain: 'sub.myfirm.com'
+    });
 
     // Get office data - in real app, fetch from API based on officeId
     const office = sampleOffices[officeId] || sampleOffices['1'];
@@ -343,6 +367,67 @@ export default function OfficeOverview() {
         { id: 'Compliance & Audit', label: 'Compliance & Audit' },
         { id: 'Settings', label: 'Settings' }
     ];
+
+    const efinStatusData = useMemo(() => {
+        const status = office.efinStatus || { active: 0, pending: 0, revoked: 0 };
+        const definitions = [
+            { key: 'active', label: 'Active', color: '#10B981' },
+            { key: 'pending', label: 'Pending', color: '#FACC15' },
+            { key: 'revoked', label: 'Revoked', color: '#EF4444' }
+        ];
+
+        return definitions.map((definition) => ({
+            ...definition,
+            value: status[definition.key] ?? 0
+        }));
+    }, [office]);
+
+    const totalEfin = useMemo(
+        () => efinStatusData.reduce((total, status) => total + status.value, 0),
+        [efinStatusData]
+    );
+
+    const bankPartners = useMemo(() => {
+        return office.bankPartners || [
+            { id: 'default-1', name: 'Chase Bank', status: 'Active' },
+            { id: 'default-2', name: 'Wells Fargo', status: 'Pending' },
+            { id: 'default-3', name: 'Bank of America', status: 'Rejected' }
+        ];
+    }, [office]);
+
+    const auditTrail = useMemo(() => {
+        return office.auditTrail || [
+            { id: 'default-log-1', user: 'John D.', office: 'NYC', action: 'Filed Return', ip: '192.168.1.12', timestamp: '2025-07-21 14:32' },
+            { id: 'default-log-2', user: 'Maria P.', office: 'LA', action: 'Bank Enrollment', ip: '192.168.2.45', timestamp: '2025-07-21 13:10' },
+            { id: 'default-log-3', user: 'Alex K.', office: 'Chicago', action: 'Filed Return', ip: '10.0.0.22', timestamp: '2025-07-20 18:55' }
+        ];
+    }, [office]);
+
+    const partnerStatusStyles = {
+        Active: 'bg-[#22C55E] text-[#FFFFFF]',
+        Pending: 'bg-[#FBBF24] text-[#FFFFFF]',
+        Rejected: 'bg-[#EF4444] text-[#FFFFFF]'
+    };
+
+    const timezone = office.timezone || 'America/New_York';
+    const officeManager = office.officeManager || office.staffMembers?.[0]?.name || 'Sarah Martinez';
+
+    const defaultBranding = useMemo(
+        () => ({
+            loginUrl: office.branding?.loginUrl || 'https://www.logo.com/',
+            faviconUrl: office.branding?.faviconUrl || 'https://www.favicon.com/',
+            primaryColor: office.branding?.primaryColor || '#3AD6F2',
+            secondaryColor: office.branding?.secondaryColor || '#F56D2D',
+            customDomain: office.branding?.customDomain || 'sub.myfirm.com'
+        }),
+        [office]
+    );
+
+    useEffect(() => {
+        setBranding(defaultBranding);
+        setWhiteLabelEnabled(Boolean(office.branding?.whiteLabelEnabled));
+        setTaxPrepUrl(office.taxPrepUrl || 'https://www.grammarly.com/');
+    }, [defaultBranding, office]);
 
     const resourceLookup = useMemo(() => {
         return schedulingResources.reduce((accumulator, resource) => {
@@ -479,9 +564,40 @@ export default function OfficeOverview() {
         closeBookingModal();
     };
 
+    const handleBrandingChange = (field) => (event) => {
+        const value = event.target.value;
+        setBranding((previous) => ({
+            ...previous,
+            [field]: value
+        }));
+    };
+
+    const handleToggleWhiteLabel = () => {
+        setWhiteLabelEnabled((previous) => !previous);
+    };
+
+    const handleResetBranding = () => {
+        setBranding(defaultBranding);
+        setWhiteLabelEnabled(Boolean(office.branding?.whiteLabelEnabled));
+    };
+
+    const handleSaveBranding = () => {
+        console.log('Branding settings saved', { branding, whiteLabelEnabled });
+    };
+
+    const handleSaveTaxPrep = () => {
+        console.log('Tax prep URL saved', taxPrepUrl);
+    };
+
+    const handleTestTaxPrep = () => {
+        if (taxPrepUrl) {
+            window.open(taxPrepUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     return (
         <>
-            <div className="p-6 bg-[rgb(243,247,255)] min-h-full">
+            <div className="p-6 bg-[rgb(243,247,255)]">
             {/* Top Header Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex items-center gap-4">
@@ -1090,11 +1206,12 @@ export default function OfficeOverview() {
                                                 key={view}
                                                 type="button"
                                                 onClick={() => setCalendarView(view)}
-                                                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                                className={`px-4 py-2 text-xs font-medium  rounded-lg transition-colors ${
                                                     calendarView === view
                                                         ? 'bg-[#3AD6F2] text-white shadow-sm'
-                                                        : 'bg-white text-gray-600 border border-gray-200 hover:border-[#3AD6F2] hover:text-gray-900'
+                                                        : 'bg-white text-gray-500 border border-gray-200 hover:border-[#3AD6F2] hover:text-gray-900'
                                                 }`}
+                                                style={{ borderRadius: '8px' }}
                                             >
                                                 {view}
                                             </button>
@@ -1112,7 +1229,7 @@ export default function OfficeOverview() {
                                         <button
                                             type="button"
                                             onClick={() => setCurrentCalendarDate(new Date())}
-                                            className="px-4 py-2 text-xs font-medium bg-white  rounded-lg hover:bg-[#25c2df] transition-colors"
+                                            className="px-4 py-2 text-xs font-medium bg-white text-gray-500  rounded-lg hover:bg-[#25c2df] transition-colors"
                                         >
                                             Today
                                         </button>
@@ -1129,7 +1246,7 @@ export default function OfficeOverview() {
 
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xl font-semibold text-gray-900 leading-none">
+                                        <p className="text-xl font-medium text-gray-600 leading-none">
                                             {monthLabel}
                                         </p>
                                         {calendarView !== 'Monthly' && (
@@ -1159,7 +1276,7 @@ export default function OfficeOverview() {
                                                 onClick={() => handleDaySelect(day)}
                                                 className={`relative h-24 md:h-28 w-full rounded-2xl border p-3 text-left transition-all ${
                                                     day.isCurrentMonth
-                                                        ? 'bg-white text-gray-800'
+                                                        ? 'bg-white text-gray-600'
                                                         : 'bg-gray-50 text-gray-400'
                                                 } ${day.isToday ? 'border-[#3AD6F2]' : 'border-gray-100'} ${
                                                     isSelected ? 'ring-2 ring-[#3AD6F2]' : ''
@@ -1168,7 +1285,7 @@ export default function OfficeOverview() {
                                                 <span
                                                     className={`text-sm font-semibold ${
                                                         day.isCurrentMonth
-                                                            ? 'text-gray-900'
+                                                            ? 'text-gray-600'
                                                             : 'text-gray-400'
                                                     }`}
                                                 >
@@ -1180,7 +1297,7 @@ export default function OfficeOverview() {
                                                             key={event.id}
                                                             className="rounded-lg border border-[#E8F0FF] bg-[#F5F9FF] px-2 py-1"
                                                         >
-                                                            <p className="text-xs font-semibold text-gray-800 truncate">
+                                                            <p className="text-xs font-semibold text-gray-600 truncate">
                                                                 {event.title}
                                                             </p>
                                                             <div className="flex items-center justify-between text-[11px] text-gray-500">
@@ -1206,10 +1323,10 @@ export default function OfficeOverview() {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                            <div className="bg-white rounded-lg p-4 md:p-6">
                                 <div className="flex items-start justify-between gap-2 mb-4">
                                     <div>
-                                        <p className="text-base font-semibold text-gray-900">
+                                        <p className="text-base font-semibold text-gray-600">
                                             Scheduling Controls
                                         </p>
                                         <p className="text-xs text-gray-500 mt-1">
@@ -1256,9 +1373,9 @@ export default function OfficeOverview() {
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                            <div className="bg-white rounded-lg p-3 md:p-6 shadow-sm">
                                 <div className="mb-4">
-                                    <p className="text-base font-semibold text-gray-900">
+                                    <p className="text-base font-semibold text-gray-600">
                                         Resource Quick Timeline
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
@@ -1269,7 +1386,7 @@ export default function OfficeOverview() {
                                     {schedulingResources.map((resource) => (
                                         <div key={resource.id} className="space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <p className="text-sm font-semibold text-gray-800">
+                                                <p className="text-sm font-semibold text-gray-600">
                                                     {resource.name}
                                                 </p>
                                                 <span className="text-[11px] text-gray-500">
@@ -1282,7 +1399,8 @@ export default function OfficeOverview() {
                                                         type="button"
                                                         key={`${resource.id}-${slot}`}
                                                         onClick={() => handleQuickSlotSelect(resource.id, slot)}
-                                                        className="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-[#3AD6F2] hover:text-white transition-colors"
+                                                        className="rounded-full border border-gray-200 px-3 py-1 font-medium text-gray-600 hover:bg-[#3AD6F2] hover:text-white transition-colors"
+                                                        style={{ borderRadius: '8px',fontSize: '12px' }}
                                                     >
                                                         {slot}
                                                     </button>
@@ -1293,13 +1411,13 @@ export default function OfficeOverview() {
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-                                <p className="text-base font-semibold text-gray-900 mb-4">Conflict Summary</p>
+                            <div className="bg-white rounded-lg p-4 md:p-6">
+                                <p className="text-base font-semibold text-gray-600 mb-4">Conflict Summary</p>
                                 <div className="space-y-3">
                                     {conflictSummary.length > 0 ? (
                                         conflictSummary.map((event) => (
-                                            <div key={event.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                                                <p className="text-sm font-semibold text-gray-800">
+                                            <div key={event.id} className="rounded-lg bg-gray-50">
+                                                <p className="text-sm font-semibold text-gray-600">
                                                     {event.title} (
                                                     {resourceLookup[event.resourceId]?.name || 'Resource'})
                                                 </p>
@@ -1326,11 +1444,11 @@ export default function OfficeOverview() {
 
             {/* Resource Management Tab Content */}
             {activeTab === 'Resource Management' && (
-                <div className="space-y-6">
-                    {/* Top Section - Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Monthly Performance - Pie Chart */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
+            <div className="space-y-6">
+                {/* Top Section - Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Monthly Performance - Pie Chart */}
+                    <div className="bg-white rounded-lg p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <p className="text-lg font-medium text-gray-600">Monthly Performance</p>
                                 <div className="relative">
@@ -1493,6 +1611,121 @@ export default function OfficeOverview() {
                     </div>
                 </div>
             )}
+
+            {/* Compliance & Audit Tab Content */}
+            {activeTab === 'Compliance & Audit' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                        <div className="rounded-xl bg-white p-6 lg:col-span-6">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <h5 className="text-lg font-semibold text-gray-600">EFIN Status Overview</h5>
+                                    <p className="text-sm text-[#64748B]">
+                                        Track the current standing of your Electronic Filing Identification Numbers.
+                                    </p>
+                                </div>
+                                <span className="rounded-full bg-[#F1F5FF] px-3 py-1 text-xs font-semibold text-[#1E3A8A]">
+                                    Total EFINs: {totalEfin}
+                                </span>
+                            </div>
+                            <div className="relative mt-6 h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={office.resourceManagement?.monthlyPerformance}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={true}
+                                            label={({ value }) => `${value}`}
+                                            outerRadius={100}
+                                            fill="#F56D2D"
+                                            dataKey="value"
+                                        >
+                                            {office.resourceManagement?.monthlyPerformance.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                
+                            </div>
+                           
+                        </div>
+
+                        <div className="rounded-xl bg-white p-6 lg:col-span-6">
+                            <h5 className="text-lg font-semibold text-gray-600">Bank Partner Enrollment</h5>
+                            <p className="mt-1 text-sm text-[#64748B]">
+                                Monitor the status of your banking partners and take action when needed.
+                            </p>
+                            <div className="mt-6 space-y-4">
+                                {bankPartners.map((partner) => (
+                                    <div
+                                        key={partner.id}
+                                        className="flex items-center justify-between rounded-xl px-4 py-3"
+                                    >
+                                        <span className="text-sm font-medium text-gray-600">
+                                            {partner.name}
+                                        </span>
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                                                partnerStatusStyles[partner.status] ||
+                                                'bg-[#E2E8F0] text-[#475569]'
+                                            }`}
+                                        >
+                                            {partner.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl bg-white p-6 ">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Office-Level Audit Trail</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    Detailed activity logs across your offices for transparency and compliance.
+                                </p>
+                            </div>
+                            
+                        </div>
+
+                        <div className="mt-6 overflow-hidden rounded-xl">
+                            <div className="hidden bg-[#F9FBFF] px-6 py-3 text-xs font-semibold tracking-wide text-[#64748B] sm:grid sm:grid-cols-12">
+                                <span className="col-span-3">User</span>
+                                <span className="col-span-3">Office</span>
+                                <span className="col-span-4">Action</span>
+                                <span className="col-span-2 text-right">IP Address</span>
+                            </div>
+                            <div className="divide-y divide-[#EFF4FF]">
+                                {auditTrail.map((entry) => (
+                                    <div
+                                        key={entry.id}
+                                        className="grid grid-cols-1 gap-4 px-4 py-4 sm:grid-cols-12 sm:items-center sm:px-6"
+                                    >
+                                        <div className="sm:col-span-3">
+                                            <p className="text-sm font-medium text-gray-600">{entry.user}</p>
+                                            <p className="text-xs text-[#94A3B8] sm:hidden">{entry.ip}</p>
+                                        </div>
+                                        <div className="sm:col-span-3">
+                                            <p className="text-sm font-medium text-gray-600">{entry.office}</p>
+                                            <p className="text-xs text-[#94A3B8] sm:hidden">{entry.timestamp}</p>
+                                        </div>
+                                        <div className="sm:col-span-4">
+                                            <p className="text-sm font-medium text-gray-600">{entry.action}</p>
+                                        </div>
+                                        <div className="hidden text-right text-sm font-medium text-[#1F2937] sm:col-span-2 sm:block">
+                                            {entry.ip}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             </div>
             {isBookingModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
@@ -1575,6 +1808,7 @@ export default function OfficeOverview() {
                                 type="button"
                                 onClick={closeBookingModal}
                                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                style={{ borderRadius: '8px' }}
                             >
                                 Cancel
                             </button>
@@ -1582,8 +1816,246 @@ export default function OfficeOverview() {
                                 type="button"
                                 onClick={handleCreateBooking}
                                 className="rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                                style={{ borderRadius: '8px' }}
                             >
                                 Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {activeTab === 'Settings' && (
+                <div className="space-y-6 p-6">
+                    <div className="rounded-xl bg-white p-6">
+                        <div className="gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Office Analytics</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    View this office in the multi-office dashboard context.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                               
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            View In Dashboard
+                                        </button>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Compare with Others
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <div className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Office Settings</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    Configure office-specific settings and preferences.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Operating Hours
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-[#1F2937]">
+                                        {office.hours || 'Mon–Fri 9:00 AM – 6:00 PM'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Timezone
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-[#1F2937]">{timezone}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Office Manager
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-[#1F2937]">{officeManager}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Status
+                                    </p>
+                                    <span className="mt-1 inline-flex items-center rounded-full bg-[#DCFCE7] px-3 py-1 text-xs font-semibold text-[#166534]">
+                                        {office.status || 'Active'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Tax Prep Software</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    Configure a one-click login link for this office.
+                                </p>
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Login URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={taxPrepUrl}
+                                    onChange={(event) => setTaxPrepUrl(event.target.value)}
+                                    placeholder="https://example.com"
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                                <p className="text-xs text-[#94A3B8]">
+                                    This link will be available to Firm Admins and Tax Preparers assigned to this office.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <button
+                                    type="button"
+                                    onClick={handleTestTaxPrep}
+                                    className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+                                >
+                                    Test Open
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveTaxPrep}
+                                    className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
+                        <div>
+                            <h5 className="text-lg font-semibold text-gray-600">Office Branding</h5>
+                            <p className="text-sm text-[#64748B]">
+                                Override firm branding for this office.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Login URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={branding.loginUrl}
+                                    onChange={handleBrandingChange('loginUrl')}
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Favicon URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={branding.faviconUrl}
+                                    onChange={handleBrandingChange('faviconUrl')}
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    <input
+                                        type="color"
+                                        value={branding.primaryColor}
+                                        onChange={handleBrandingChange('primaryColor')}
+                                        className="h-10 w-10 cursor-pointer rounded-lg border border-[#E4ECFF] bg-white p-1"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Primary Color
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={branding.primaryColor}
+                                        onChange={handleBrandingChange('primaryColor')}
+                                        className="mt-2 w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    <input
+                                        type="color"
+                                        value={branding.secondaryColor}
+                                        onChange={handleBrandingChange('secondaryColor')}
+                                        className="h-10 w-10 cursor-pointer rounded-lg border border-[#E4ECFF] bg-white p-1"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Secondary Color
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={branding.secondaryColor}
+                                        onChange={handleBrandingChange('secondaryColor')}
+                                        className="mt-2 w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Custom Domain
+                                </label>
+                                <input
+                                    type="text"
+                                    value={branding.customDomain}
+                                    onChange={handleBrandingChange('customDomain')}
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-[#475569]">Enable white-label for this office</span>
+                                <button
+                                    type="button"
+                                    onClick={handleToggleWhiteLabel}
+                                    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
+                                        whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                                            whiteLabelEnabled ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <button
+                                type="button"
+                                onClick={handleResetBranding}
+                                className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+                            >
+                                Reset
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveBranding}
+                                className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                            >
+                                Save Branding
                             </button>
                         </div>
                     </div>
