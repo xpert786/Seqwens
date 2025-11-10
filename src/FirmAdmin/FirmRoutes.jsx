@@ -12,17 +12,21 @@ import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
 import ClientDetails from './Pages/ClientManagement/ClientDetails';
 import Analytics from './Pages/Analytics';
-import Appointments from './Pages/Appointments';
 import DocumentManagement from './Pages/DocumentManagement';
 import FolderContents from './Pages/DocumentManagement/FolderContents';
 import PdfViewer from './Pages/DocumentManagement/PdfViewer';
-import Messages from './Pages/Messages';
+import Messages from './Pages/messages/Message';
 import FirmSettings from './Pages/FirmSettings';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
 import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
+import TaskDetails from './Pages/TaskManagement/TaskDetails';
 import BillingManagement from './Pages/Billing/BillingManagement';
 import InvoiceDetails from './Pages/Billing/InvoiceDetails';
+import SchedulingCalendar from './Pages/Scheduling & calendar/SchedulingCalendar';
+import Appointments from './Pages/Scheduling & calendar/Appointments';
+import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
+import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -75,9 +79,11 @@ export default function FirmRoutes() {
         <Route path="clients/:id" element={<ClientDetails />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="tasks" element={<TaskManagementMain />} />
+        <Route path="tasks/:id" element={<TaskDetails />} />
         
         {/* Client Management routes */}
-        <Route path="appointments" element={<Appointments />} />
+        <Route path="calendar" element={<SchedulingCalendar />} />
+        <Route path="calendar/appointments" element={<Appointments />} />
         <Route path="documents" element={<DocumentManagement />}>
           <Route path="folder/:folderId" element={<FolderContents />}>
             <Route path="document/:documentId" element={<PdfViewer />} />
@@ -88,6 +94,8 @@ export default function FirmRoutes() {
         {/* Business Operations routes */}
         <Route path="billing" element={<BillingManagement />} />
         <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
+        <Route path="workflow" element={<WorkflowTemp />} />
+        <Route path="subscription" element={<SubscriptionManagement />} />
         
         {/* System Administration routes */}
         <Route path="settings" element={<FirmSettings />} />
