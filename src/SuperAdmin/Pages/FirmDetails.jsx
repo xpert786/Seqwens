@@ -359,7 +359,7 @@ export default function FirmDetails() {
                                     {statCards.map(({ id, label, value, subtitle, icon }) => (
                                         <div
                                             key={id}
-                                            className="flex flex-col gap-2 rounded-2xl border border-[#E8F0FF] bg-white p-4 shadow-sm"
+                                            className="flex flex-col gap-2 rounded-xl bg-white p-4"
                                         >
                                             <div className="flex items-center justify-between">
                                                 <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
@@ -528,16 +528,12 @@ export default function FirmDetails() {
                                         <button
                                             type="button"
                                             className="inline-flex items-center gap-2 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-                                            style={{ borderRadius: '8px' }} 
+                                            style={{ borderRadius: '8px' }}
                                         >
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M2.66699 10.6666V13.3333H5.33366" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M13.333 5.33334V2.66667H10.6663" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M2.66699 13.3333L6.66699 9.33334" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M9.33301 6.66667L13.333 2.66667" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M6.66699 6.66666L5.33366 5.33333" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M10.6667 10.6667L9.33337 9.33337" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M0.75 9.378V10.125C0.75 10.7217 0.987053 11.294 1.40901 11.716C1.83097 12.1379 2.40326 12.375 3 12.375H10.5C11.0967 12.375 11.669 12.1379 12.091 11.716C12.5129 11.294 12.75 10.7217 12.75 10.125V9.375M6.75 0.75V9M6.75 9L9.375 6.375M6.75 9L4.125 6.375" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
+
                                             Export All Invoices
                                         </button>
                                     </div>
@@ -663,14 +659,14 @@ export default function FirmDetails() {
                                         <button
                                             type="button"
                                             className="inline-flex items-center justify-center rounded-lg bg-white px-5 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
-                                            style={{ borderRadius: '8px' }} 
+                                            style={{ borderRadius: '8px' }}
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="button"
                                             className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white bg-[#F56D2D] transition-colors hover:bg-orange-600"
-                                            style={{ borderRadius: '8px' }} 
+                                            style={{ borderRadius: '8px' }}
                                         >
                                             Create Firm
                                         </button>
