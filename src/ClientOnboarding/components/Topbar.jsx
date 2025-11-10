@@ -10,32 +10,73 @@ import { profileAPI, userAPI } from "../utils/apiUtils";
 import { clearUserData } from "../utils/userUtils";
 import "../styles/Topbar.css";
 
+const CLIENT_AVATAR_KEY = "clientProfileImageUrl";
+
 export default function Topbar() {
     const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-    const [profilePicture, setProfilePicture] = useState(null);
+    const [profilePicture, setProfilePicture] = useState(() => localStorage.getItem(CLIENT_AVATAR_KEY));
     const [userInfo, setUserInfo] = useState(null);
+    const [profileInitials, setProfileInitials] = useState("CL");
     const [loading, setLoading] = useState(true);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const navigate = useNavigate();
 
+    const setClientAvatar = (value) => {
+        if (value) {
+            localStorage.setItem(CLIENT_AVATAR_KEY, value);
+            setProfilePicture(value);
+        } else {
+            localStorage.removeItem(CLIENT_AVATAR_KEY);
+            setProfilePicture(null);
+        }
+    };
+
+    const deriveInitials = (data) => {
+        if (!data) return "CL";
+
+        const nameSources = [
+            data.full_name,
+            data.display_name,
+            data.name,
+            `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+        ].filter(Boolean);
+
+        const base = nameSources.find((value) => value && value.length > 0) || data.email || "CL";
+        const initials = base
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+
+        return initials || "CL";
+    };
+
     // Function to refresh profile picture (can be called from other components)
     const refreshProfilePicture = async () => {
         try {
-            console.log('🔄 Refreshing topbar profile picture...');
+            const stored = localStorage.getItem(CLIENT_AVATAR_KEY);
+            if (stored) {
+                setProfilePicture(stored);
+                return;
+            }
+
             const response = await profileAPI.getProfilePicture();
-            console.log('📋 Topbar refresh profile picture API response:', response);
             
-            if (response.success && response.data) {
-                if (response.data.has_profile_picture && response.data.profile_picture_url) {
-                    console.log('🖼️ Topbar profile picture refreshed:', response.data.profile_picture_url);
-                    setProfilePicture(response.data.profile_picture_url);
-                } else {
-                    console.log('❌ No profile picture found in topbar after refresh');
-                    setProfilePicture(null);
-                }
+            if (response.success && response.data && response.data.has_profile_picture && response.data.profile_picture_url) {
+                setClientAvatar(response.data.profile_picture_url);
+            } else {
+                setClientAvatar(null);
+            }
+
+            const accountResponse = await profileAPI.getUserAccount();
+            if (accountResponse?.success && accountResponse?.data) {
+                setProfileInitials(deriveInitials(accountResponse.data));
             }
         } catch (err) {
             console.error('💥 Error refreshing topbar profile picture:', err);
@@ -44,9 +85,9 @@ export default function Topbar() {
 
     // Expose refresh function to window for global access
     useEffect(() => {
-        window.refreshTopbarProfilePicture = refreshProfilePicture;
+        window.refreshClientTopbarAvatar = refreshProfilePicture;
         return () => {
-            delete window.refreshTopbarProfilePicture;
+            delete window.refreshClientTopbarAvatar;
         };
     }, []);
 
@@ -54,35 +95,32 @@ export default function Topbar() {
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
-                console.log('🔄 Starting to fetch topbar profile data...');
-                
-                // Fetch profile picture
+                const storedAvatar = localStorage.getItem(CLIENT_AVATAR_KEY);
+                if (storedAvatar) {
+                    setProfilePicture(storedAvatar);
+                }
+
                 const profileResponse = await profileAPI.getProfilePicture();
-                console.log('📋 Topbar profile picture API response:', profileResponse);
                 
-                if (profileResponse.success && profileResponse.data) {
+                if (!storedAvatar && profileResponse.success && profileResponse.data) {
                     if (profileResponse.data.has_profile_picture && profileResponse.data.profile_picture_url) {
-                        console.log('🖼️ Topbar profile picture found:', profileResponse.data.profile_picture_url);
-                        setProfilePicture(profileResponse.data.profile_picture_url);
+                        setClientAvatar(profileResponse.data.profile_picture_url);
                     } else {
-                        console.log('❌ No profile picture found in topbar response');
-                        setProfilePicture(null);
+                        setClientAvatar(null);
                     }
                 }
 
                 // Fetch user account info for name display
                 const userResponse = await profileAPI.getUserAccount();
-                console.log('📋 Topbar user account API response:', userResponse);
                 
                 if (userResponse.success && userResponse.data) {
-                    console.log('✅ Topbar user info set');
                     setUserInfo(userResponse.data);
+                    setProfileInitials(deriveInitials(userResponse.data));
                 }
             } catch (err) {
                 console.error('💥 Error fetching topbar profile data:', err);
             } finally {
                 setLoading(false);
-                console.log('🏁 Finished fetching topbar profile data');
             }
         };
 
@@ -203,6 +241,9 @@ export default function Topbar() {
                             }}
                         >
                             <FaBell size={14} color="white" />
+                            {unreadNotifications > 0 && (
+                                <span className="notification-badge">{Math.min(unreadNotifications, 99)}</span>
+                            )}
                         </button>
 
                         <div 
@@ -237,34 +278,18 @@ export default function Topbar() {
                                 }}
                             >
                                 {profilePicture ? (
-                                    <>
-                                        {console.log('🖼️ Rendering topbar profile picture:', profilePicture)}
-                                        <img 
-                                            src={profilePicture} 
-                                            alt="User" 
-                                            className="rounded-circle"
-                                            style={{ width: "32px", height: "32px", objectFit: "cover" }}
-                                            onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}
-                                            onError={() => console.log('❌ Topbar profile picture failed to load')}
-                                        />
-                                    </>
+                                    <img 
+                                        src={profilePicture} 
+                                        alt="User" 
+                                        className="rounded-circle"
+                                        style={{ width: "32px", height: "32px", objectFit: "cover" }}
+                                        onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}
+                                        onError={() => console.log('❌ Topbar profile picture failed to load')}
+                                    />
                                 ) : (
-                                    <>
-                                        {console.log('👤 Rendering topbar default avatar - no profile picture')}
-                                        <div 
-                                            className="rounded-circle d-flex align-items-center justify-content-center"
-                                            style={{ 
-                                                width: "32px", 
-                                                height: "32px", 
-                                                backgroundColor: "#F56D2D",
-                                                color: "white",
-                                                fontSize: "14px",
-                                                fontWeight: "600"
-                                            }}
-                                        >
-                                            <i className="bi bi-person-fill"></i>
-                                        </div>
-                                    </>
+                                    <div className="topbar-user-initials">
+                                        {profileInitials}
+                                    </div>
                                 )}
                                 <FiChevronDown 
                                     size={18} 
@@ -397,7 +422,10 @@ export default function Topbar() {
 
             {/* Notification Panel */}
             {showNotifications && (
-                <NotificationPanel onClose={() => setShowNotifications(false)} />
+                <NotificationPanel
+                    onClose={() => setShowNotifications(false)}
+                    onChange={({ unreadCount }) => setUnreadNotifications(unreadCount)}
+                />
             )}
         </>
     );

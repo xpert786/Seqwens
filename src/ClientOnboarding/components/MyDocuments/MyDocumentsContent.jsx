@@ -629,7 +629,8 @@ export default function MyDocumentsContent() {
                     <div
                         style={{
                             width: '100%',
-                            maxWidth: '90vw',
+                            maxWidth: 'min(880px, 70vw)',
+                            minHeight: '70vh',
                             maxHeight: '90vh',
                             backgroundColor: 'white',
                             borderRadius: '12px',
@@ -782,13 +783,17 @@ export default function MyDocumentsContent() {
                             flex: 1,
                             overflow: 'hidden',
                             position: 'relative',
-                            backgroundColor: '#F9FAFB'
+                            backgroundColor: '#F9FAFB',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            padding: '24px 16px'
                         }}>
                             <iframe
                                 src={`${selectedDocument.file_url || selectedDocument.tax_documents}#toolbar=1`}
                                 title={selectedDocument.file_name || 'PDF Viewer'}
                                 style={{
                                     width: '100%',
+                                    maxWidth: '700px',
                                     height: '100%',
                                     border: 'none',
                                     minHeight: '500px'

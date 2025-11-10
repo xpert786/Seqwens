@@ -28,6 +28,9 @@ export default function AccountSettings() {
                     notifications: result.data.notifications,
                     security: result.data.security
                 });
+                if (typeof window !== "undefined" && typeof window.setTaxHeaderProfile === "function") {
+                    window.setTaxHeaderProfile(result.data.profile_information);
+                }
             } else {
                 throw new Error('Failed to fetch settings');
             }

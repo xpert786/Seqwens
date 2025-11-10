@@ -64,17 +64,24 @@ button.btn.btn-filter.d-flex.align-items-center.rounded.px-4 {
 /* Individual Client Card */
 .client-card {
   border: 0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF);
-  padding: 16px;
-  min-height: 180px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transition: background 0.3s;
+  gap: 12px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border-radius: 12px;
 }
 
 .client-card:hover,
 .client-card:active {
   background: var(--Palette2-Gold-200, #FFF4E6);
+  box-shadow: 0 6px 18px rgba(19, 19, 35, 0.1);
+}
+
+.client-card:focus-visible {
+  outline: 2px solid #00C0C6;
+  outline-offset: 2px;
 }
 
 .document-card:hover,
@@ -99,6 +106,33 @@ button.btn.btn-filter.d-flex.align-items-center.rounded.px-4 {
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.client-initials:hover,
+.client-initials:focus {
+  background: var(--Palette2-Dark-blue-50, #F6FAFF);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.client-name-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  color: #131323;
+  cursor: pointer;
+  text-align: left;
+}
+
+.client-name-button:hover,
+.client-name-button:focus {
+  text-decoration: underline;
+  outline: none;
 }
 
 /* Badges */
@@ -172,14 +206,14 @@ button.btn.btn-filter.d-flex.align-items-center.rounded.px-4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  /* larger click target */
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--Palette2-Dark-blue-100, #E8F0FF);
   border-radius: 8px;
-  padding: 4px;
+  padding: 6px;
   background: #fff;
   cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 /* Ensure the dot icon is visible */
@@ -190,6 +224,7 @@ button.btn.btn-filter.d-flex.align-items-center.rounded.px-4 {
 
 .info-right:hover {
   background: var(--Palette2-Dark-blue-50, #F6FAFF);
+  border-color: #cddffc;
 }
 
 span.info-item {
@@ -226,6 +261,12 @@ span.info-item {
 .dot-container {
   cursor: pointer;
   position: relative;
+}
+
+.dot-container:focus-visible {
+  outline: 2px solid #00C0C6;
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
 .dot-dropdown {

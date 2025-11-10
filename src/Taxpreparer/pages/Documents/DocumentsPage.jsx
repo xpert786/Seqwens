@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { File, UpIcon, Doc, FaildIcon, FiltIcon, CompletedIcon, AwaitingIcon, Received, Uploaded, FileIcon } from "../../component/icons";
 import { FaFolder } from "react-icons/fa";
@@ -7,11 +7,142 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+import { Modal } from "react-bootstrap";
+
+const SUPPORTED_PREVIEW_TYPES = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
+
+const formatFileSizeDisplay = (value) => {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  if (typeof value === "number") {
+    let bytes = value;
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let unitIndex = 0;
+    while (bytes >= 1024 && unitIndex < units.length - 1) {
+      bytes /= 1024;
+      unitIndex += 1;
+    }
+    const precision = bytes >= 10 || unitIndex === 0 ? 0 : 1;
+    return `${bytes.toFixed(precision)} ${units[unitIndex]}`;
+  }
+
+  // Attempt to parse formatted values like "2 MB"
+  const numericPart = parseFloat(String(value).replace(/[^\d.]/g, ""));
+  if (Number.isNaN(numericPart)) {
+    return value;
+  }
+
+  const lowerValue = String(value).toLowerCase();
+  if (lowerValue.includes("kb")) {
+    return formatFileSizeDisplay(numericPart * 1024);
+  }
+  if (lowerValue.includes("mb")) {
+    return formatFileSizeDisplay(numericPart * 1024 * 1024);
+  }
+  if (lowerValue.includes("gb")) {
+    return formatFileSizeDisplay(numericPart * 1024 * 1024 * 1024);
+  }
+
+  return `${numericPart.toFixed(0)} B`;
+};
+
+const formatDateDisplay = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+};
+
+const getDocumentName = (doc = {}) =>
+  doc.file_name ||
+  doc.name ||
+  doc.document_name ||
+  doc.filename ||
+  doc.title ||
+  "Untitled Document";
+
+const getDocumentUrl = (doc = {}) =>
+  doc.file_url ||
+  doc.download_url ||
+  doc.document_url ||
+  doc.tax_documents ||
+  doc.url ||
+  doc.file ||
+  "";
+
+const getDocumentExtension = (doc = {}) => {
+  const explicit =
+    doc.file_type ||
+    doc.file_extension ||
+    doc.document_type ||
+    doc.mime_type;
+
+  if (explicit) {
+    const lower = explicit.toString().toLowerCase();
+    if (lower.includes("/")) {
+      return lower.split("/").pop();
+    }
+    if (lower.startsWith(".")) {
+      return lower.slice(1);
+    }
+    return lower;
+  }
+
+  const name = getDocumentName(doc).toLowerCase();
+  const segments = name.split(".");
+  return segments.length > 1 ? segments.pop() : "";
+};
+
+const getDocumentTypeLabel = (doc = {}) => {
+  const extension = getDocumentExtension(doc);
+  if (extension) {
+    return extension.toUpperCase();
+  }
+  const fallback = doc.file_type || doc.document_type || "—";
+  return fallback.toString().toUpperCase();
+};
+
+const getDocumentSizeValue = (doc = {}) =>
+  doc.file_size_bytes ??
+  doc.size_bytes ??
+  (typeof doc.file_size === "number" ? doc.file_size : undefined) ??
+  (typeof doc.size === "number" ? doc.size : undefined) ??
+  doc.file_size ??
+  doc.size ??
+  null;
+
+const getDocumentUpdatedAt = (doc = {}) =>
+  doc.updated_at_formatted ||
+  doc.updated_at ||
+  doc.created_at_formatted ||
+  doc.created_at ||
+  doc.date ||
+  doc.uploaded_at ||
+  null;
+
+const getDocumentStatus = (doc = {}) =>
+  doc.status_display || doc.status || (doc.is_archived ? "Archived" : "Active");
+
+const getStatusBadgeClass = (status) => {
+  const normalized = status?.toString().toLowerCase();
+  if (!normalized) return "bg-secondary";
+  if (normalized.includes("archived") || normalized.includes("inactive")) return "bg-secondary";
+  if (normalized.includes("pending") || normalized.includes("review")) return "bg-warning text-dark";
+  if (normalized.includes("error") || normalized.includes("fail") || normalized.includes("reject")) return "bg-danger";
+  return "bg-success";
+};
 export default function DocumentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isNestedUnderClient = location.pathname.includes("/taxdashboard/client/");
   const [showUpload, setShowUpload] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const previewTriggerRef = useRef(null);
   const documents = [
     {
       id: 1,
@@ -89,6 +220,53 @@ export default function DocumentsPage() {
     { label: "Needs Revision", icon: <FaildIcon />, count: clients.filter(c => c.statuses.includes("High Priority")).length, color: "#EF4444" },
     { label: "My Uploads", icon: <Uploaded />, count: clients.filter(c => c.statuses.includes("My Uploads")).length, color: "#EF4444" },
   ];
+
+  const getDocumentMeta = (doc) => {
+    const extension = getDocumentExtension(doc);
+    const url = getDocumentUrl(doc);
+    return {
+      name: getDocumentName(doc),
+      url,
+      extension,
+      canPreview: Boolean(url) && SUPPORTED_PREVIEW_TYPES.has(extension),
+    };
+  };
+
+  const openPreviewModal = (doc, triggerElement) => {
+    const meta = getDocumentMeta(doc);
+    if (!meta.url || !meta.canPreview) {
+      toast.error("Preview is not available for this file type.");
+      return;
+    }
+    if (triggerElement) {
+      previewTriggerRef.current = triggerElement;
+    }
+    setPreviewDoc(meta);
+    setShowPreview(true);
+  };
+
+  const closePreviewModal = () => {
+    setShowPreview(false);
+    setPreviewDoc(null);
+    if (previewTriggerRef.current) {
+      previewTriggerRef.current.focus();
+    }
+  };
+
+  const handleDownload = (doc) => {
+    const url = getDocumentUrl(doc);
+    if (!url) {
+      toast.error("Download link unavailable for this document.");
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = getDocumentName(doc);
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // File Manager State
   const [fileManagerView, setFileManagerView] = useState("grid");
@@ -267,7 +445,11 @@ export default function DocumentsPage() {
   return (
     <div className={wrapperClass}>
       {/* Upload Modal */}
-      <TaxUploadModal show={showUpload} handleClose={() => setShowUpload(false)} />
+      <TaxUploadModal
+        show={showUpload}
+        handleClose={() => setShowUpload(false)}
+        onUploadSuccess={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, fileManagerSearchQuery)}
+      />
       {/* Header (hide when nested under client) */}
       {!isNestedUnderClient && (
         <div className="header d-flex justify-content-between align-items-center mb-4">
@@ -544,31 +726,78 @@ export default function DocumentsPage() {
                           <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Size</th>
                           <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Updated</th>
                           <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
+                          <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {fileManagerDocuments.map((doc) => (
-                          <tr key={doc.id} style={{ cursor: "pointer" }}>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-                              <div className="d-flex align-items-center gap-2">
-                                <FileIcon />
-                                {doc.name || doc.title || 'Untitled'}
-                              </div>
-                            </td>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{doc.file_type || 'N/A'}</td>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-                              {doc.file_size ? (typeof doc.file_size === 'string' ? doc.file_size : `${(doc.file_size / 1024).toFixed(1)} KB`) : 'N/A'}
-                            </td>
-                            <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-                              {doc.updated_at ? new Date(doc.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
-                            </td>
-                            <td>
-                              <span className={`badge ${doc.is_archived ? 'bg-secondary' : 'bg-success'} text-white px-2 py-1`} style={{ borderRadius: "12px", fontSize: "12px" }}>
-                                {doc.is_archived ? 'Archived' : 'Active'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
+                        {fileManagerDocuments.map((doc) => {
+                          const meta = getDocumentMeta(doc);
+                          const docStatus = getDocumentStatus(doc);
+                          const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
+                          const sizeLabel = formatFileSizeDisplay(getDocumentSizeValue(doc));
+                          const typeLabel = getDocumentTypeLabel(doc);
+
+                          return (
+                            <tr
+                              key={doc.id || doc.document_id || meta.name}
+                              style={{ cursor: meta.url ? "pointer" : "default" }}
+                              onClick={() => {
+                                if (meta.url) {
+                                  window.open(meta.url, "_blank", "noopener,noreferrer");
+                                }
+                              }}
+                            >
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                                <div className="d-flex align-items-center gap-2">
+                                  <FileIcon />
+                                  <span>{meta.name}</span>
+                                </div>
+                              </td>
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{typeLabel}</td>
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{sizeLabel}</td>
+                              <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{updatedAt}</td>
+                              <td>
+                                <span
+                                  className={`badge ${getStatusBadgeClass(docStatus)} px-2 py-1`}
+                                  style={{ borderRadius: "12px", fontSize: "12px" }}
+                                >
+                                  {docStatus}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="d-flex gap-2 flex-wrap">
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    disabled={!meta.canPreview}
+                                    title={meta.canPreview ? "Preview" : "Preview not available for this file type"}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      if (meta.canPreview) {
+                                        openPreviewModal(doc, event.currentTarget);
+                                      }
+                                    }}
+                                  >
+                                    <i className="bi bi-eye me-1" />
+                                    Preview
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm"
+                                    disabled={!meta.url}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      handleDownload(doc);
+                                    }}
+                                  >
+                                    <i className="bi bi-download me-1" />
+                                    Download
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -646,6 +875,33 @@ export default function DocumentsPage() {
       <div className="mt-4">
         <Outlet />
       </div>
+
+      <Modal show={showPreview} onHide={closePreviewModal} size="xl" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{previewDoc?.name || "Document Preview"}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {previewDoc?.url ? (
+            previewDoc.extension === "pdf" ? (
+              <iframe
+                title={previewDoc.name}
+                src={`${previewDoc.url}#toolbar=0`}
+                width="100%"
+                height="600px"
+                style={{ border: "none" }}
+              />
+            ) : (
+              <img
+                src={previewDoc.url}
+                alt={previewDoc.name}
+                style={{ maxWidth: "100%", maxHeight: "80vh", display: "block", margin: "0 auto" }}
+              />
+            )
+          ) : (
+            <p className="text-muted mb-0">Unable to load document preview.</p>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

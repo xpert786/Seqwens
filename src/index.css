@@ -62,6 +62,14 @@ a {
   box-shadow: 0 4px 12px rgba(245, 109, 45, 0.3) !important;
 }
 
+.Toastify__toast--success .Toastify__toast-icon svg path:first-child {
+  fill: #16a34a !important;
+}
+
+.Toastify__toast--success .Toastify__toast-icon svg path:last-child {
+  fill: #ffffff !important;
+}
+
 /* Custom Toast for Security Page */
 .custom-toast-success {
   background: #F56D2D !important;
