@@ -11,6 +11,7 @@ import Analytics from './Pages/Analytics';
 import AccountSettings from './Pages/AccountSettings/AccountSettings';
 import SupportCenter from './Pages/SupportCenter/SupportCenter';
 import FirmManagement from './Pages/FirmManagement';
+import FirmDetails from './Pages/FirmDetails';
 
 // Protected Route Component for Super Admin
 function SuperAdminProtectedRoute({ children }) {
@@ -60,6 +61,7 @@ export default function SuperRoutes() {
         <Route path="settings" element={<AccountSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="firms" element={<FirmManagement />} />
+        <Route path="firms/:firmId" element={<FirmDetails />} />
         
         {/* Add more routes here as needed */}
         {/* <Route path="reports" element={<ReportsPage />} /> */}

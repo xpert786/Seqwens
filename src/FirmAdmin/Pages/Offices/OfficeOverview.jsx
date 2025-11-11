@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaCog, FaEdit } from 'react-icons/fa';
 import {
@@ -69,6 +69,21 @@ const sampleOffices = {
                 { id: 4, item: 'Software Licenses', stock: 45, reorderAlert: 15, status: 'Okay' }
             ]
         },
+        efinStatus: {
+            active: 8,
+            pending: 2,
+            revoked: 1
+        },
+        bankPartners: [
+            { id: 'partner-1', name: 'Chase Bank', status: 'Active' },
+            { id: 'partner-2', name: 'Wells Fargo', status: 'Pending' },
+            { id: 'partner-3', name: 'Bank of America', status: 'Rejected' }
+        ],
+        auditTrail: [
+            { id: 'log-1', user: 'John D.', office: 'NYC', action: 'Filed Return', ip: '192.168.1.12', timestamp: '2025-07-21 14:32' },
+            { id: 'log-2', user: 'Maria P.', office: 'LA', action: 'Bank Enrollment', ip: '192.168.2.45', timestamp: '2025-07-21 13:10' },
+            { id: 'log-3', user: 'Alex K.', office: 'Chicago', action: 'Filed Return', ip: '10.0.0.22', timestamp: '2025-07-20 18:55' }
+        ],
         staffMembers: [
             {
                 id: 1,
@@ -139,6 +154,163 @@ const sampleOffices = {
     }
 };
 
+const schedulingOfficeOptions = ['All Offices', 'New York', 'London', 'Mumbai'];
+
+const schedulingResources = [
+    {
+        id: 'conf-room-a',
+        name: 'Conf Room A',
+        office: 'New York',
+        location: 'New York',
+        type: 'Conference Room',
+        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+        color: '#3AD6F2'
+    },
+    {
+        id: 'zoom-license-1',
+        name: 'Zoom License #1',
+        office: 'Remote',
+        location: 'Virtual',
+        type: 'License',
+        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+        color: '#10B981'
+    },
+    {
+        id: 'printer-3',
+        name: 'Printer 3',
+        office: 'New York',
+        location: 'Operations',
+        type: 'Equipment',
+        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+        color: '#F59E0B'
+    }
+];
+
+const initialSchedulingEvents = [
+    {
+        id: 'evt-1',
+        title: 'NY - Team Sync',
+        date: '2025-07-22',
+        startTime: '13:00',
+        endTime: '14:00',
+        resourceId: 'conf-room-a',
+        office: 'New York',
+        location: 'New York',
+        status: 'Confirmed',
+        badge: '+2 New'
+    },
+    {
+        id: 'evt-2',
+        title: 'NY - Interview',
+        date: '2025-07-24',
+        startTime: '10:00',
+        endTime: '11:00',
+        resourceId: 'conf-room-a',
+        office: 'New York',
+        location: 'New York',
+        status: 'Pending',
+        badge: 'Internal'
+    }
+];
+
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const toISODate = (date) => date.toISOString().split('T')[0];
+
+const isSameDay = (dateA, dateB) =>
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate();
+
+const normaliseTime = (time = '00:00') => {
+    const [hours = '00', minutes = '00'] = time.split(':');
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const formatTimeLabel = (time = '00:00') => {
+    const [hours, minutes] = normaliseTime(time).split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
+const addMinutesToTime = (time = '00:00', minutesToAdd = 30) => {
+    const [hours, minutes] = normaliseTime(time).split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes + minutesToAdd);
+    return normaliseTime(`${date.getHours()}:${date.getMinutes()}`);
+};
+
+const generateMonthlyCalendar = (referenceDate, events = []) => {
+    const year = referenceDate.getFullYear();
+    const month = referenceDate.getMonth();
+
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = endOfMonth.getDate();
+    const startDayOfWeek = startOfMonth.getDay();
+    const previousMonthDays = new Date(year, month, 0).getDate();
+
+    const today = new Date();
+    const calendarDays = [];
+
+    for (let i = startDayOfWeek; i > 0; i -= 1) {
+        const date = new Date(year, month - 1, previousMonthDays - i + 1);
+        const iso = toISODate(date);
+        calendarDays.push({
+            date,
+            iso,
+            isCurrentMonth: false,
+            isToday: isSameDay(date, today),
+            events: events.filter((event) => event.date === iso)
+        });
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = new Date(year, month, day);
+        const iso = toISODate(date);
+        calendarDays.push({
+            date,
+            iso,
+            isCurrentMonth: true,
+            isToday: isSameDay(date, today),
+            events: events.filter((event) => event.date === iso)
+        });
+    }
+
+    let nextMonthDay = 1;
+    while (calendarDays.length < 42) {
+        const date = new Date(year, month + 1, nextMonthDay);
+        const iso = toISODate(date);
+        calendarDays.push({
+            date,
+            iso,
+            isCurrentMonth: false,
+            isToday: isSameDay(date, today),
+            events: events.filter((event) => event.date === iso)
+        });
+        nextMonthDay += 1;
+    }
+
+    return calendarDays;
+};
+
+const formatSlotLabel = (slot) => {
+    if (!slot?.date) {
+        return 'No slot selected';
+    }
+
+    const date = new Date(slot.date);
+    const dateLabel = date.toLocaleDateString(undefined, {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric'
+    });
+
+    return `${dateLabel}${slot.time ? `, ${formatTimeLabel(slot.time)}` : ''}`;
+};
+
 // Helper function to get initials from name
 const getInitials = (name) => {
     return name
@@ -153,6 +325,27 @@ export default function OfficeOverview() {
     const { officeId } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('Overview');
+    const [calendarView, setCalendarView] = useState('Monthly');
+    const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date(2025, 6, 1));
+    const [events, setEvents] = useState(initialSchedulingEvents);
+    const [selectedOfficeFilter, setSelectedOfficeFilter] = useState('All Offices');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [bookingForm, setBookingForm] = useState({
+        title: '',
+        office: 'All Offices',
+        resource: ''
+    });
+    const [taxPrepUrl, setTaxPrepUrl] = useState('https://www.grammarly.com/');
+    const [whiteLabelEnabled, setWhiteLabelEnabled] = useState(false);
+    const [branding, setBranding] = useState({
+        loginUrl: 'https://www.logo.com/',
+        faviconUrl: 'https://www.favicon.com/',
+        primaryColor: '#3AD6F2',
+        secondaryColor: '#F56D2D',
+        customDomain: 'sub.myfirm.com'
+    });
 
     // Get office data - in real app, fetch from API based on officeId
     const office = sampleOffices[officeId] || sampleOffices['1'];
@@ -175,8 +368,236 @@ export default function OfficeOverview() {
         { id: 'Settings', label: 'Settings' }
     ];
 
+    const efinStatusData = useMemo(() => {
+        const status = office.efinStatus || { active: 0, pending: 0, revoked: 0 };
+        const definitions = [
+            { key: 'active', label: 'Active', color: '#10B981' },
+            { key: 'pending', label: 'Pending', color: '#FACC15' },
+            { key: 'revoked', label: 'Revoked', color: '#EF4444' }
+        ];
+
+        return definitions.map((definition) => ({
+            ...definition,
+            value: status[definition.key] ?? 0
+        }));
+    }, [office]);
+
+    const totalEfin = useMemo(
+        () => efinStatusData.reduce((total, status) => total + status.value, 0),
+        [efinStatusData]
+    );
+
+    const bankPartners = useMemo(() => {
+        return office.bankPartners || [
+            { id: 'default-1', name: 'Chase Bank', status: 'Active' },
+            { id: 'default-2', name: 'Wells Fargo', status: 'Pending' },
+            { id: 'default-3', name: 'Bank of America', status: 'Rejected' }
+        ];
+    }, [office]);
+
+    const auditTrail = useMemo(() => {
+        return office.auditTrail || [
+            { id: 'default-log-1', user: 'John D.', office: 'NYC', action: 'Filed Return', ip: '192.168.1.12', timestamp: '2025-07-21 14:32' },
+            { id: 'default-log-2', user: 'Maria P.', office: 'LA', action: 'Bank Enrollment', ip: '192.168.2.45', timestamp: '2025-07-21 13:10' },
+            { id: 'default-log-3', user: 'Alex K.', office: 'Chicago', action: 'Filed Return', ip: '10.0.0.22', timestamp: '2025-07-20 18:55' }
+        ];
+    }, [office]);
+
+    const partnerStatusStyles = {
+        Active: 'bg-[#22C55E] text-[#FFFFFF]',
+        Pending: 'bg-[#FBBF24] text-[#FFFFFF]',
+        Rejected: 'bg-[#EF4444] text-[#FFFFFF]'
+    };
+
+    const timezone = office.timezone || 'America/New_York';
+    const officeManager = office.officeManager || office.staffMembers?.[0]?.name || 'Sarah Martinez';
+
+    const defaultBranding = useMemo(
+        () => ({
+            loginUrl: office.branding?.loginUrl || 'https://www.logo.com/',
+            faviconUrl: office.branding?.faviconUrl || 'https://www.favicon.com/',
+            primaryColor: office.branding?.primaryColor || '#3AD6F2',
+            secondaryColor: office.branding?.secondaryColor || '#F56D2D',
+            customDomain: office.branding?.customDomain || 'sub.myfirm.com'
+        }),
+        [office]
+    );
+
+    useEffect(() => {
+        setBranding(defaultBranding);
+        setWhiteLabelEnabled(Boolean(office.branding?.whiteLabelEnabled));
+        setTaxPrepUrl(office.taxPrepUrl || 'https://www.grammarly.com/');
+    }, [defaultBranding, office]);
+
+    const resourceLookup = useMemo(() => {
+        return schedulingResources.reduce((accumulator, resource) => {
+            accumulator[resource.id] = resource;
+            return accumulator;
+        }, {});
+    }, []);
+
+    const filteredEvents = useMemo(() => {
+        return events.filter((event) => {
+            const matchOffice =
+                selectedOfficeFilter === 'All Offices' || event.office === selectedOfficeFilter;
+            const matchSearch =
+                !searchTerm ||
+                event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (resourceLookup[event.resourceId]?.name || '')
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase());
+
+            return matchOffice && matchSearch;
+        });
+    }, [events, selectedOfficeFilter, searchTerm, resourceLookup]);
+
+    const calendarDays = useMemo(
+        () => generateMonthlyCalendar(currentCalendarDate, filteredEvents),
+        [currentCalendarDate, filteredEvents]
+    );
+
+    const monthLabel = useMemo(
+        () =>
+            currentCalendarDate.toLocaleDateString(undefined, {
+                month: 'long',
+                year: 'numeric'
+            }),
+        [currentCalendarDate]
+    );
+
+    const conflictSummary = useMemo(() => {
+        return [...filteredEvents]
+            .sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.startTime || '00:00'}`);
+                const dateB = new Date(`${b.date}T${b.startTime || '00:00'}`);
+                return dateA - dateB;
+            })
+            .slice(0, 5);
+    }, [filteredEvents]);
+
+    const viewOptions = ['Day', 'Week', 'Monthly', 'Years', 'Agenda'];
+
+    const handleCalendarNavigation = (direction) => {
+        setCurrentCalendarDate((previousDate) => {
+            return new Date(previousDate.getFullYear(), previousDate.getMonth() + direction, 1);
+        });
+    };
+
+    const handleResetFilters = () => {
+        setSelectedOfficeFilter('All Offices');
+        setSearchTerm('');
+    };
+
+    const handleDaySelect = (day) => {
+        const defaultResource = bookingForm.resource || '';
+        setSelectedSlot({
+            date: day.iso,
+            time: '12:00',
+            resourceId: defaultResource
+        });
+        setBookingForm((previous) => ({
+            ...previous,
+            office:
+                selectedOfficeFilter !== 'All Offices'
+                    ? selectedOfficeFilter
+                    : previous.office,
+            resource: defaultResource
+        }));
+        setIsBookingModalOpen(true);
+    };
+
+    const handleQuickSlotSelect = (resourceId, time) => {
+        const normalisedTime = normaliseTime(time);
+        const resource = resourceLookup[resourceId];
+        setSelectedSlot({
+            date: toISODate(new Date()),
+            time: normalisedTime,
+            resourceId
+        });
+        setBookingForm((previous) => ({
+            ...previous,
+            office:
+                selectedOfficeFilter !== 'All Offices'
+                    ? selectedOfficeFilter
+                    : resource?.office || previous.office,
+            resource: resourceId
+        }));
+        setIsBookingModalOpen(true);
+    };
+
+    const closeBookingModal = () => {
+        setIsBookingModalOpen(false);
+        setSelectedSlot(null);
+        setBookingForm({
+            title: '',
+            office: 'All Offices',
+            resource: ''
+        });
+    };
+
+    const handleCreateBooking = () => {
+        if (!bookingForm.title.trim() || !selectedSlot?.date) {
+            return;
+        }
+
+        const resourceId =
+            bookingForm.resource || selectedSlot.resourceId || schedulingResources[0]?.id;
+        const normalisedStart = normaliseTime(selectedSlot.time || '09:00');
+        const derivedOffice =
+            bookingForm.office !== 'All Offices'
+                ? bookingForm.office
+                : resourceLookup[resourceId]?.office || 'All Offices';
+        const newEvent = {
+            id: `evt-${Date.now()}`,
+            title: bookingForm.title.trim(),
+            date: selectedSlot.date,
+            startTime: normalisedStart,
+            endTime: addMinutesToTime(normalisedStart, 60),
+            resourceId,
+            office: derivedOffice,
+            location: resourceLookup[resourceId]?.location || 'New York',
+            status: 'Scheduled',
+            badge: 'New'
+        };
+
+        setEvents((previousEvents) => [...previousEvents, newEvent]);
+        closeBookingModal();
+    };
+
+    const handleBrandingChange = (field) => (event) => {
+        const value = event.target.value;
+        setBranding((previous) => ({
+            ...previous,
+            [field]: value
+        }));
+    };
+
+    const handleToggleWhiteLabel = () => {
+        setWhiteLabelEnabled((previous) => !previous);
+    };
+
+    const handleResetBranding = () => {
+        setBranding(defaultBranding);
+        setWhiteLabelEnabled(Boolean(office.branding?.whiteLabelEnabled));
+    };
+
+    const handleSaveBranding = () => {
+        console.log('Branding settings saved', { branding, whiteLabelEnabled });
+    };
+
+    const handleSaveTaxPrep = () => {
+        console.log('Tax prep URL saved', taxPrepUrl);
+    };
+
+    const handleTestTaxPrep = () => {
+        if (taxPrepUrl) {
+            window.open(taxPrepUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     return (
-        <div className="p-6 bg-[rgb(243,247,255)] min-h-full">
+        <>
+            <div className="p-6 bg-[rgb(243,247,255)]">
             {/* Top Header Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex items-center gap-4">
@@ -772,13 +1193,262 @@ export default function OfficeOverview() {
                 </div>
             )}
 
+            {/* Scheduling & Coordination Tab Content */}
+            {activeTab === 'Scheduling & Coordination' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1fr] gap-6">
+                        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {viewOptions.map((view) => (
+                                            <button
+                                                key={view}
+                                                type="button"
+                                                onClick={() => setCalendarView(view)}
+                                                className={`px-4 py-2 text-xs font-medium  rounded-lg transition-colors ${
+                                                    calendarView === view
+                                                        ? 'bg-[#3AD6F2] text-white shadow-sm'
+                                                        : 'bg-white text-gray-500 border border-gray-200 hover:border-[#3AD6F2] hover:text-gray-900'
+                                                }`}
+                                                style={{ borderRadius: '8px' }}
+                                            >
+                                                {view}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCalendarNavigation(-1)}
+                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-[#3AD6F2] transition-colors flex items-center justify-center"
+                                            aria-label="Previous period"
+                                        >
+                                            <span className="text-lg leading-none">&lt;</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCurrentCalendarDate(new Date())}
+                                            className="px-4 py-2 text-xs font-medium bg-white text-gray-500  rounded-lg hover:bg-[#25c2df] transition-colors"
+                                        >
+                                            Today
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCalendarNavigation(1)}
+                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-[#3AD6F2] transition-colors flex items-center justify-center"
+                                            aria-label="Next period"
+                                        >
+                                            <span className="text-lg leading-none">&gt;</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-xl font-medium text-gray-600 leading-none">
+                                            {monthLabel}
+                                        </p>
+                                        {calendarView !== 'Monthly' && (
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Monthly view currently shown while additional views
+                                                are under development.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-7 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                    {DAYS_OF_WEEK.map((day) => (
+                                        <div key={day} className="text-center">
+                                            {day}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="grid grid-cols-7 gap-2 md:gap-3">
+                                    {calendarDays.map((day) => {
+                                        const isSelected = selectedSlot?.date === day.iso;
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={day.iso + day.isCurrentMonth}
+                                                onClick={() => handleDaySelect(day)}
+                                                className={`relative h-24 md:h-28 w-full rounded-2xl border p-3 text-left transition-all ${
+                                                    day.isCurrentMonth
+                                                        ? 'bg-white text-gray-600'
+                                                        : 'bg-gray-50 text-gray-400'
+                                                } ${day.isToday ? 'border-[#3AD6F2]' : 'border-gray-100'} ${
+                                                    isSelected ? 'ring-2 ring-[#3AD6F2]' : ''
+                                                } hover:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]`}
+                                            >
+                                                <span
+                                                    className={`text-sm font-semibold ${
+                                                        day.isCurrentMonth
+                                                            ? 'text-gray-600'
+                                                            : 'text-gray-400'
+                                                    }`}
+                                                >
+                                                    {day.date.getDate()}
+                                                </span>
+                                                <div className="mt-2 space-y-2">
+                                                    {day.events.slice(0, 2).map((event) => (
+                                                        <div
+                                                            key={event.id}
+                                                            className="rounded-lg border border-[#E8F0FF] bg-[#F5F9FF] px-2 py-1"
+                                                        >
+                                                            <p className="text-xs font-semibold text-gray-600 truncate">
+                                                                {event.title}
+                                                            </p>
+                                                            <div className="flex items-center justify-between text-[11px] text-gray-500">
+                                                                <span className="truncate">
+                                                                    {resourceLookup[event.resourceId]?.name ||
+                                                                        'Resource'}
+                                                                </span>
+                                                                <span>{formatTimeLabel(event.startTime)}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {day.events.length > 2 && (
+                                                        <p className="text-[11px] font-medium text-[#3AD6F2]">
+                                                            +{day.events.length - 2} more
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-white rounded-lg p-4 md:p-6">
+                                <div className="flex items-start justify-between gap-2 mb-4">
+                                    <div>
+                                        <p className="text-base font-semibold text-gray-600">
+                                            Scheduling Controls
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Manage filters and search across office bookings.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleResetFilters}
+                                        className="rounded-lg bg-[#F56D2D] px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Office
+                                        </label>
+                                        <select
+                                            value={selectedOfficeFilter}
+                                            onChange={(event) => setSelectedOfficeFilter(event.target.value)}
+                                            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                        >
+                                            {schedulingOfficeOptions.map((option) => (
+                                                <option key={option} value={option}>
+                                                    {option}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Search events
+                                        </label>
+                                        <input
+                                            value={searchTerm}
+                                            onChange={(event) => setSearchTerm(event.target.value)}
+                                            placeholder="Search events..."
+                                            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg p-3 md:p-6 shadow-sm">
+                                <div className="mb-4">
+                                    <p className="text-base font-semibold text-gray-600">
+                                        Resource Quick Timeline
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Quick book 30min slots for today
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    {schedulingResources.map((resource) => (
+                                        <div key={resource.id} className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-semibold text-gray-600">
+                                                    {resource.name}
+                                                </p>
+                                                <span className="text-[11px] text-gray-500">
+                                                    {resource.location}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {resource.slots.map((slot) => (
+                                                    <button
+                                                        type="button"
+                                                        key={`${resource.id}-${slot}`}
+                                                        onClick={() => handleQuickSlotSelect(resource.id, slot)}
+                                                        className="rounded-full border border-gray-200 px-3 py-1 font-medium text-gray-600 hover:bg-[#3AD6F2] hover:text-white transition-colors"
+                                                        style={{ borderRadius: '8px',fontSize: '12px' }}
+                                                    >
+                                                        {slot}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg p-4 md:p-6">
+                                <p className="text-base font-semibold text-gray-600 mb-4">Conflict Summary</p>
+                                <div className="space-y-3">
+                                    {conflictSummary.length > 0 ? (
+                                        conflictSummary.map((event) => (
+                                            <div key={event.id} className="rounded-lg bg-gray-50">
+                                                <p className="text-sm font-semibold text-gray-600">
+                                                    {event.title} (
+                                                    {resourceLookup[event.resourceId]?.name || 'Resource'})
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    {new Date(event.date).toLocaleDateString(undefined, {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                    {' • '}
+                                                    {event.location}
+                                                </p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-gray-500">No conflicts detected for the selected filters.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Resource Management Tab Content */}
             {activeTab === 'Resource Management' && (
-                <div className="space-y-6">
-                    {/* Top Section - Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Monthly Performance - Pie Chart */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
+            <div className="space-y-6">
+                {/* Top Section - Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Monthly Performance - Pie Chart */}
+                    <div className="bg-white rounded-lg p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <p className="text-lg font-medium text-gray-600">Monthly Performance</p>
                                 <div className="relative">
@@ -802,7 +1472,7 @@ export default function OfficeOverview() {
                                             labelLine={true}
                                             label={({ value }) => `${value}`}
                                             outerRadius={100}
-                                            fill="#8884d8"
+                                            fill="#F56D2D"
                                             dataKey="value"
                                         >
                                             {office.resourceManagement?.monthlyPerformance.map((entry, index) => (
@@ -941,7 +1611,457 @@ export default function OfficeOverview() {
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* Compliance & Audit Tab Content */}
+            {activeTab === 'Compliance & Audit' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                        <div className="rounded-xl bg-white p-6 lg:col-span-6">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <h5 className="text-lg font-semibold text-gray-600">EFIN Status Overview</h5>
+                                    <p className="text-sm text-[#64748B]">
+                                        Track the current standing of your Electronic Filing Identification Numbers.
+                                    </p>
+                                </div>
+                                <span className="rounded-full bg-[#F1F5FF] px-3 py-1 text-xs font-semibold text-[#1E3A8A]">
+                                    Total EFINs: {totalEfin}
+                                </span>
+                            </div>
+                            <div className="relative mt-6 h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={office.resourceManagement?.monthlyPerformance}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={true}
+                                            label={({ value }) => `${value}`}
+                                            outerRadius={100}
+                                            fill="#F56D2D"
+                                            dataKey="value"
+                                        >
+                                            {office.resourceManagement?.monthlyPerformance.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                
+                            </div>
+                           
+                        </div>
+
+                        <div className="rounded-xl bg-white p-6 lg:col-span-6">
+                            <h5 className="text-lg font-semibold text-gray-600">Bank Partner Enrollment</h5>
+                            <p className="mt-1 text-sm text-[#64748B]">
+                                Monitor the status of your banking partners and take action when needed.
+                            </p>
+                            <div className="mt-6 space-y-4">
+                                {bankPartners.map((partner) => (
+                                    <div
+                                        key={partner.id}
+                                        className="flex items-center justify-between rounded-xl px-4 py-3"
+                                    >
+                                        <span className="text-sm font-medium text-gray-600">
+                                            {partner.name}
+                                        </span>
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                                                partnerStatusStyles[partner.status] ||
+                                                'bg-[#E2E8F0] text-[#475569]'
+                                            }`}
+                                        >
+                                            {partner.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl bg-white p-6 ">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Office-Level Audit Trail</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    Detailed activity logs across your offices for transparency and compliance.
+                                </p>
+                            </div>
+                            
+                        </div>
+
+                        <div className="mt-6 overflow-hidden rounded-xl">
+                            <div className="hidden bg-[#F9FBFF] px-6 py-3 text-xs font-semibold tracking-wide text-[#64748B] sm:grid sm:grid-cols-12">
+                                <span className="col-span-3">User</span>
+                                <span className="col-span-3">Office</span>
+                                <span className="col-span-4">Action</span>
+                                <span className="col-span-2 text-right">IP Address</span>
+                            </div>
+                            <div className="divide-y divide-[#EFF4FF]">
+                                {auditTrail.map((entry) => (
+                                    <div
+                                        key={entry.id}
+                                        className="grid grid-cols-1 gap-4 px-4 py-4 sm:grid-cols-12 sm:items-center sm:px-6"
+                                    >
+                                        <div className="sm:col-span-3">
+                                            <p className="text-sm font-medium text-gray-600">{entry.user}</p>
+                                            <p className="text-xs text-[#94A3B8] sm:hidden">{entry.ip}</p>
+                                        </div>
+                                        <div className="sm:col-span-3">
+                                            <p className="text-sm font-medium text-gray-600">{entry.office}</p>
+                                            <p className="text-xs text-[#94A3B8] sm:hidden">{entry.timestamp}</p>
+                                        </div>
+                                        <div className="sm:col-span-4">
+                                            <p className="text-sm font-medium text-gray-600">{entry.action}</p>
+                                        </div>
+                                        <div className="hidden text-right text-sm font-medium text-[#1F2937] sm:col-span-2 sm:block">
+                                            {entry.ip}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            </div>
+            {isBookingModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-lg font-semibold text-gray-900">Create Booking</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Selected slot: <span className="font-medium text-gray-700">{formatSlotLabel(selectedSlot)}</span>
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeBookingModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Close booking modal"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Title</label>
+                                <input
+                                    value={bookingForm.title}
+                                    onChange={(event) =>
+                                        setBookingForm((previous) => ({
+                                            ...previous,
+                                            title: event.target.value
+                                        }))
+                                    }
+                                    placeholder="Meeting title"
+                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Office</label>
+                                <select
+                                    value={bookingForm.office}
+                                    onChange={(event) =>
+                                        setBookingForm((previous) => ({
+                                            ...previous,
+                                            office: event.target.value
+                                        }))
+                                    }
+                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                >
+                                    {schedulingOfficeOptions.map((option) => (
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Resource</label>
+                                <select
+                                    value={bookingForm.resource}
+                                    onChange={(event) =>
+                                        setBookingForm((previous) => ({
+                                            ...previous,
+                                            resource: event.target.value
+                                        }))
+                                    }
+                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
+                                >
+                                    <option value="">Select resource</option>
+                                    {schedulingResources.map((resource) => (
+                                        <option key={resource.id} value={resource.id}>
+                                            {resource.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={closeBookingModal}
+                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCreateBooking}
+                                className="rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {activeTab === 'Settings' && (
+                <div className="space-y-6 p-6">
+                    <div className="rounded-xl bg-white p-6">
+                        <div className="gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Office Analytics</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    View this office in the multi-office dashboard context.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                               
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            View In Dashboard
+                                        </button>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Compare with Others
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <div className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Office Settings</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    Configure office-specific settings and preferences.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Operating Hours
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-[#1F2937]">
+                                        {office.hours || 'Mon–Fri 9:00 AM – 6:00 PM'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Timezone
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-[#1F2937]">{timezone}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Office Manager
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-[#1F2937]">{officeManager}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Status
+                                    </p>
+                                    <span className="mt-1 inline-flex items-center rounded-full bg-[#DCFCE7] px-3 py-1 text-xs font-semibold text-[#166534]">
+                                        {office.status || 'Active'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
+                            <div>
+                                <h5 className="text-lg font-semibold text-gray-600">Tax Prep Software</h5>
+                                <p className="text-sm text-[#64748B]">
+                                    Configure a one-click login link for this office.
+                                </p>
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Login URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={taxPrepUrl}
+                                    onChange={(event) => setTaxPrepUrl(event.target.value)}
+                                    placeholder="https://example.com"
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                                <p className="text-xs text-[#94A3B8]">
+                                    This link will be available to Firm Admins and Tax Preparers assigned to this office.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <button
+                                    type="button"
+                                    onClick={handleTestTaxPrep}
+                                    className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+                                >
+                                    Test Open
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveTaxPrep}
+                                    className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
+                        <div>
+                            <h5 className="text-lg font-semibold text-gray-600">Office Branding</h5>
+                            <p className="text-sm text-[#64748B]">
+                                Override firm branding for this office.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Login URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={branding.loginUrl}
+                                    onChange={handleBrandingChange('loginUrl')}
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Favicon URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={branding.faviconUrl}
+                                    onChange={handleBrandingChange('faviconUrl')}
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    <input
+                                        type="color"
+                                        value={branding.primaryColor}
+                                        onChange={handleBrandingChange('primaryColor')}
+                                        className="h-10 w-10 cursor-pointer rounded-lg border border-[#E4ECFF] bg-white p-1"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Primary Color
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={branding.primaryColor}
+                                        onChange={handleBrandingChange('primaryColor')}
+                                        className="mt-2 w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    <input
+                                        type="color"
+                                        value={branding.secondaryColor}
+                                        onChange={handleBrandingChange('secondaryColor')}
+                                        className="h-10 w-10 cursor-pointer rounded-lg border border-[#E4ECFF] bg-white p-1"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                        Secondary Color
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={branding.secondaryColor}
+                                        onChange={handleBrandingChange('secondaryColor')}
+                                        className="mt-2 w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                                    Custom Domain
+                                </label>
+                                <input
+                                    type="text"
+                                    value={branding.customDomain}
+                                    onChange={handleBrandingChange('customDomain')}
+                                    className="w-full rounded-lg border border-[#E4ECFF] px-4 py-2 text-sm text-[#1F2937] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-[#475569]">Enable white-label for this office</span>
+                                <button
+                                    type="button"
+                                    onClick={handleToggleWhiteLabel}
+                                    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
+                                        whiteLabelEnabled ? 'bg-[#3AD6F2]' : 'bg-gray-200'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                                            whiteLabelEnabled ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <button
+                                type="button"
+                                onClick={handleResetBranding}
+                                className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+                            >
+                                Reset
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveBranding}
+                                className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                            >
+                                Save Branding
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 
