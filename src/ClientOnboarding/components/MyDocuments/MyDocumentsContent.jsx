@@ -14,12 +14,14 @@ export default function MyDocumentsContent() {
     const [error, setError] = useState(null);
     const [selectedDocument, setSelectedDocument] = useState(null);
     const [showPdfModal, setShowPdfModal] = useState(false);
+    const [selectedFilter, setSelectedFilter] = useState(null); // null = all, "pending", "completed", "overdue", "uploaded"
     const [stats, setStats] = useState({
         pending: 0,
         completed: 0,
         overdue: 0,
         uploaded: 0
     });
+    const [archivingDocumentId, setArchivingDocumentId] = useState(null);
 
     // Fetch all documents from the documents API
     const fetchAllDocuments = async () => {
@@ -152,6 +154,65 @@ export default function MyDocumentsContent() {
         }
     };
 
+    // Handle archive/unarchive document
+    const handleArchiveDocument = async (documentId, isArchived) => {
+        try {
+            setArchivingDocumentId(documentId);
+            const API_BASE_URL = getApiBaseUrl();
+            const token = getAccessToken();
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const action = isArchived ? 'unarchive' : 'archive';
+            const url = `${API_BASE_URL}/taxpayer/documents/${documentId}/archive/`;
+
+            const config = {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action }),
+            };
+
+            const response = await fetchWithCors(url, config);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                // Update the document in the documents array
+                setDocuments(prevDocuments =>
+                    prevDocuments.map(doc =>
+                        doc.id === documentId || doc.document_id === documentId
+                            ? { ...doc, ...result.data }
+                            : doc
+                    )
+                );
+
+                // Update selectedDocument if it's the same document
+                if (selectedDocument && (selectedDocument.id === documentId || selectedDocument.document_id === documentId)) {
+                    setSelectedDocument({ ...selectedDocument, ...result.data });
+                }
+
+                console.log(`Document ${action}d successfully:`, result.data);
+            } else {
+                throw new Error(result.message || 'Failed to archive/unarchive document');
+            }
+        } catch (error) {
+            console.error('Error archiving/unarchiving document:', error);
+            alert(handleAPIError(error));
+        } finally {
+            setArchivingDocumentId(null);
+        }
+    };
+
     // Get status badge class
     const getStatusBadgeClass = (status) => {
         const statusLower = (status || '').toLowerCase();
@@ -165,6 +226,41 @@ export default function MyDocumentsContent() {
             return 'bg-darkcolour text-white';
         }
         return 'bg-darkblue text-white';
+    };
+
+    // Filter documents based on selected filter
+    const getFilteredDocuments = () => {
+        if (!selectedFilter) {
+            return documents;
+        }
+
+        const filterLower = selectedFilter.toLowerCase();
+
+        if (filterLower === 'pending') {
+            return documents.filter(d => {
+                const status = (d.status || '').toLowerCase();
+                return status === 'pending_sign' || status === 'pending' || status === 'waiting signature';
+            });
+        } else if (filterLower === 'completed') {
+            return documents.filter(d => {
+                const status = (d.status || '').toLowerCase();
+                return status === 'processed' || status === 'completed';
+            });
+        } else if (filterLower === 'overdue') {
+            return documents.filter(d => {
+                if (d.due_date || d.dueDate) {
+                    const due = new Date(d.due_date || d.dueDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return due < today && (d.status === 'pending_sign' || d.status === 'pending' || (d.status || '').toLowerCase() === 'pending');
+                }
+                return false;
+            });
+        } else if (filterLower === 'uploaded') {
+            return documents; // All documents are uploaded
+        }
+
+        return documents;
     };
 
     if (loading) {
@@ -201,12 +297,39 @@ export default function MyDocumentsContent() {
                     }[label];
 
                     const count = stats[label.toLowerCase()] || 0;
+                    const isSelected = selectedFilter === label.toLowerCase();
+                    const filterKey = label.toLowerCase();
 
                     return (
                         <div className="col-sm-6 col-md-3" key={index}>
                             <div
                                 className="bg-white p-3 d-flex flex-column justify-content-between"
-                                style={{ borderRadius: "12px", height: "130px" }}
+                                style={{
+                                    borderRadius: "12px",
+                                    height: "130px",
+                                    cursor: "pointer",
+                                    border: isSelected ? "2px solid #00C0C6" : "1px solid #E8F0FF",
+                                    backgroundColor: isSelected ? "#F0FDFF" : "#FFFFFF",
+                                    transition: "all 0.2s ease",
+                                    boxShadow: isSelected ? "0 2px 8px rgba(0, 192, 198, 0.15)" : "none"
+                                }}
+                                onClick={() => {
+                                    // Toggle filter: if same filter is clicked, deselect it
+                                    setSelectedFilter(isSelected ? null : filterKey);
+                                    setSelectedIndex(null); // Reset selected document when filter changes
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isSelected) {
+                                        e.currentTarget.style.borderColor = "#00C0C6";
+                                        e.currentTarget.style.backgroundColor = "#F0FDFF";
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isSelected) {
+                                        e.currentTarget.style.borderColor = "#E8F0FF";
+                                        e.currentTarget.style.backgroundColor = "#FFFFFF";
+                                    }
+                                }}
                             >
                                 <div className="d-flex justify-content-between align-items-start">
                                     <div
@@ -218,12 +341,15 @@ export default function MyDocumentsContent() {
                                     >
                                         {/* Icons hidden for now */}
                                     </div>
-                                    <span className="fw-semibold text-dark">{count}</span>
+                                    <span className="fw-semibold" style={{ color: isSelected ? "#00C0C6" : "#3B4A66", fontSize: "24px" }}>{count}</span>
                                 </div>
 
                                 {/* Bottom label */}
                                 <div className="mt-2">
-                                    <p className="mb-0 text-muted small fw-semibold" style={{ fontFamily: "BasisGrotesquePro", }}>{label}</p>
+                                    <p className="mb-0 small fw-semibold" style={{
+                                        fontFamily: "BasisGrotesquePro",
+                                        color: isSelected ? "#00C0C6" : "#6B7280"
+                                    }}>{label}</p>
                                 </div>
                             </div>
                         </div>
@@ -248,12 +374,6 @@ export default function MyDocumentsContent() {
 
 
                 <div className="d-flex align-items-center gap-2 flex-wrap">
-                    <select className="form-select" style={{ width: "140px" }}>
-                        <option>All Status</option>
-                        <option>Processed</option>
-                        <option>Pending</option>
-                    </select>
-
                     <select className="form-select" style={{ width: "120px" }}>
                         <option>Date</option>
                         <option>Name</option>
@@ -298,9 +418,9 @@ export default function MyDocumentsContent() {
                 {/* Documents Section */}
                 <div className="align-items-center mb-3">
                     <h5 className="mb-0 me-3" style={{ fontSize: "20px", fontWeight: "500", color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                        All Documents {documents.length > 0 && `(${documents.length})`}
+                        {selectedFilter ? `${selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)} Documents` : 'All Documents'} {getFilteredDocuments().length > 0 && `(${getFilteredDocuments().length})`}
                     </h5>
-                    {documents.length > 0 && (
+                    {getFilteredDocuments().length > 0 && (
                         <p
                             className="mb-0"
                             style={{
@@ -310,12 +430,12 @@ export default function MyDocumentsContent() {
                                 fontFamily: "BasisGrotesquePro",
                             }}
                         >
-                            View and manage all your uploaded documents
+                            {selectedFilter ? `Showing ${selectedFilter} documents` : 'View and manage all your uploaded documents'}
                         </p>
                     )}
                 </div>
 
-                {documents.length === 0 && (
+                {getFilteredDocuments().length === 0 && documents.length === 0 && (
                     <div className="pt-4 pb-4 text-center">
                         <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
                             No Documents Yet
@@ -325,10 +445,20 @@ export default function MyDocumentsContent() {
                         </p>
                     </div>
                 )}
-                {documents.length > 0 && (
+                {getFilteredDocuments().length === 0 && documents.length > 0 && (
+                    <div className="pt-4 pb-4 text-center">
+                        <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+                            No {selectedFilter ? selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1) : ''} Documents
+                        </h6>
+                        <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
+                            {selectedFilter ? `No documents match the ${selectedFilter} filter.` : 'No documents found.'}
+                        </p>
+                    </div>
+                )}
+                {getFilteredDocuments().length > 0 && (
                     <div className="pt-2 pb-2">
                         <div className="row g-3">
-                            {documents.map((doc, index) => {
+                            {getFilteredDocuments().map((doc, index) => {
                                 const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
                                 const docSize = doc.file_size_formatted || (doc.file_size_bytes ? formatFileSize(doc.file_size_bytes) : (doc.file_size ? formatFileSize(doc.file_size) : '0 KB'));
                                 const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
@@ -374,20 +504,21 @@ export default function MyDocumentsContent() {
                                                     <div style={{ flex: 1, minWidth: 0 }}>
                                                         <div className="fw-medium mb-1 d-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro", fontSize: "15px", color: "#3B4A66" }}>
                                                             {docName}
-                                                            {(docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && (
+                                                            {/* {(docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && (
                                                                 <span style={{ fontSize: '12px', color: '#EF4444', fontFamily: 'BasisGrotesquePro' }}>
                                                                     <i className="bi bi-file-pdf me-1"></i>
                                                                     PDF
                                                                 </span>
-                                                            )}
+                                                            )} */}
                                                         </div>
                                                         <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
-                                                            Type: {docType} • Size: {docSize} • Updated: {docDate}
-                                                            {docFolder && docFolder !== 'General' && ` • Folder: ${docFolder}`}
-                                                            {docCategory && ` • Category: ${docCategory}`}
+                                                            {/* Type: {docType} • Size: {docSize} • Updated: {docDate} */}
+                                                            {/* {docFolder && docFolder !== 'General' && docFolder !== 'Uncategorized' && ` • Folder: ${docFolder}`} */}
+                                                            {/* {docCategory && docCategory !== 'General' && docCategory !== 'Task Documents' && ` • Category: ${docCategory}`} */}
+                                                            Size: {docSize} • Updated: {docDate}
                                                         </div>
 
-                                                        {(docCategory || doc.folder) && (
+                                                        {/* {docCategory && docCategory !== 'General' && docCategory !== 'Task Documents' && (
                                                             <div className="mt-2 d-flex flex-wrap gap-2">
                                                                 {docCategory && (
                                                                     <span
@@ -397,34 +528,52 @@ export default function MyDocumentsContent() {
                                                                         {docCategory}
                                                                     </span>
                                                                 )}
-                                                                {doc.folder?.title && (
-                                                                    <span
-                                                                        className="badge rounded-pill bg-white text-dark border"
-                                                                        style={{ fontSize: "0.75rem", fontFamily: "BasisGrotesquePro", padding: "4px 8px" }}
-                                                                    >
-                                                                        <i className="bi bi-folder me-1"></i>
-                                                                        {doc.folder.title}
-                                                                    </span>
-                                                                )}
                                                             </div>
-                                                        )}
+                                                        )} */}
                                                     </div>
                                                 </div>
 
                                                 {/* Right Side: Status + Menu */}
                                                 <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
-                                                    <span
-                                                        className={`badge ${getStatusBadgeClass(docStatusValue)} px-3 py-2`}
-                                                        style={{
-                                                            borderRadius: "20px",
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: "500",
-                                                            fontFamily: "BasisGrotesquePro",
-                                                            color: "#FFFFFF"
-                                                        }}
-                                                    >
-                                                        {docStatus}
-                                                    </span>
+                                                    {/* Show Preview button for pending_sign status, otherwise show status badge */}
+                                                    {(docStatusValue.toLowerCase() === 'pending_sign' || docStatusValue.toLowerCase() === 'pending sign') ? (
+                                                        <button
+                                                            className="btn px-3 py-2"
+                                                            style={{
+                                                                borderRadius: "20px",
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: "500",
+                                                                fontFamily: "BasisGrotesquePro",
+                                                                backgroundColor: "#3AD6F2",
+                                                                color: "#FFFFFF",
+                                                                border: "none",
+                                                                cursor: "pointer"
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
+                                                                if (isPdf && fileUrl) {
+                                                                    setSelectedDocument(doc);
+                                                                    setShowPdfModal(true);
+                                                                }
+                                                            }}
+                                                        >
+                                                            Preview
+                                                        </button>
+                                                    ) : (
+                                                        <span
+                                                            className={`badge ${getStatusBadgeClass(docStatusValue)} px-3 py-2`}
+                                                            style={{
+                                                                borderRadius: "20px",
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: "500",
+                                                                fontFamily: "BasisGrotesquePro",
+                                                                color: "#FFFFFF"
+                                                            }}
+                                                        >
+                                                            {docStatus}
+                                                        </span>
+                                                    )}
 
                                                     <button
                                                         className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
@@ -550,6 +699,51 @@ export default function MyDocumentsContent() {
                                     <i className="bi bi-download"></i>
                                     Download
                                 </a>
+                                {/* Archive/Unarchive button */}
+                                {selectedDocument && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const docId = selectedDocument.id || selectedDocument.document_id;
+                                            const isArchived = selectedDocument.is_archived || false;
+                                            if (docId) {
+                                                handleArchiveDocument(docId, isArchived);
+                                            }
+                                        }}
+                                        disabled={archivingDocumentId === (selectedDocument.id || selectedDocument.document_id)}
+                                        style={{
+                                            padding: '8px 12px',
+                                            backgroundColor: selectedDocument.is_archived ? '#10B981' : '#F3F4F6',
+                                            border: '1px solid #E5E7EB',
+                                            borderRadius: '6px',
+                                            color: selectedDocument.is_archived ? '#FFFFFF' : '#3B4A66',
+                                            fontSize: '14px',
+                                            fontFamily: 'BasisGrotesquePro',
+                                            cursor: archivingDocumentId === (selectedDocument.id || selectedDocument.document_id) ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            transition: 'background-color 0.2s',
+                                            opacity: archivingDocumentId === (selectedDocument.id || selectedDocument.document_id) ? 0.6 : 1
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (archivingDocumentId !== (selectedDocument.id || selectedDocument.document_id)) {
+                                                e.target.style.backgroundColor = selectedDocument.is_archived ? '#059669' : '#E5E7EB';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (archivingDocumentId !== (selectedDocument.id || selectedDocument.document_id)) {
+                                                e.target.style.backgroundColor = selectedDocument.is_archived ? '#10B981' : '#F3F4F6';
+                                            }
+                                        }}
+                                    >
+                                        <i className="bi bi-archive"></i>
+                                        {archivingDocumentId === (selectedDocument.id || selectedDocument.document_id)
+                                            ? 'Processing...'
+                                            : (selectedDocument.is_archived ? 'Archived' : 'Archive')
+                                        }
+                                    </button>
+                                )}
                                 {/* Close button */}
                                 <button
                                     onClick={() => {

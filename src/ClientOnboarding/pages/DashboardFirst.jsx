@@ -202,21 +202,25 @@ export default function DashboardFirst() {
       icon: <FileIcon size={28} />,
       title: "Upload Documents",
       button: "Upload Now",
+      route: "/dashboard/documents",
     },
     {
       icon: <BalanceIcon size={28} />,
       title: "Outstanding Balance",
       button: "Pay Now",
+      route: "/dashboard/invoices",
     },
     {
       icon: <AiOutlineCalendar size={28} />,
       title: "Next Appointment",
       button: "Reschedule",
+      route: "/dashboard/appointments",
     },
     {
       icon: <MessageIcon size={28} />,
       title: "New Messages",
       button: "View All",
+      route: "/dashboard/messages",
     },
   ];
 
@@ -418,7 +422,10 @@ export default function DashboardFirst() {
                   <h6 className="quick-card-title">{action.title}</h6>
                 </div>
 
-                <button className="btn btn-sm w-100 quick-card-btn">
+                <button 
+                  className="btn btn-sm w-100 quick-card-btn"
+                  onClick={() => navigate(action.route)}
+                >
                   {action.button}
                 </button>
               </div>

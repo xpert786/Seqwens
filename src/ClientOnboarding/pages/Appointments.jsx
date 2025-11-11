@@ -4,6 +4,8 @@ import { BsCameraVideo } from "react-icons/bs";
 import { toast } from "react-toastify";
 import { DateIcon, AwaitingIcon, MobileIcon, PersonIcon, DiscusIcon, EditIcon, DeleteIcon, AppoinIcon, MonthIcon, ZoomIcon, EsternTimeIcon, CrossIcon } from "../components/icons";
 import { appointmentsAPI, adminAvailabilityAPI, timeSlotsAPI, staffAPI, handleAPIError } from "../utils/apiUtils";
+import { getApiBaseUrl, fetchWithCors } from "../utils/corsConfig";
+import { getAccessToken } from "../utils/userUtils";
 import "../styles/Icon.css"
 import "../styles/fonts.css"
 export default function Appointments() {
@@ -47,8 +49,12 @@ export default function Appointments() {
     subject: '',
     appointment_date: '',
     appointment_time: '',
-    appointment_type: 'consultation'
+    meeting_type: 'zoom'
   });
+  
+  // Edit modal time slots state
+  const [editModalTimeSlots, setEditModalTimeSlots] = useState([]);
+  const [loadingEditTimeSlots, setLoadingEditTimeSlots] = useState(false);
 
   // Time slots and availability state
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
@@ -96,6 +102,27 @@ export default function Appointments() {
       startTime.setHours(parseInt(hours), parseInt(minutes));
       const endTime = new Date(startTime.getTime() + duration * 60000);
 
+      // Get meeting link (check multiple possible fields)
+      const meetingLink = appointment.zoom_meeting_link || appointment.zoom_link || 
+                         appointment.google_meet_link || appointment.meeting_link;
+      
+      // Determine if appointment is upcoming (considering date and time)
+      const isUpcoming = startTime >= now;
+      
+      // Determine meeting type display
+      let meetingTypeDisplay = 'Phone Call';
+      if (appointment.meeting_type === 'zoom') {
+        meetingTypeDisplay = 'Zoom Meeting';
+      } else if (appointment.meeting_type === 'google_meet') {
+        meetingTypeDisplay = 'Google Meet';
+      } else if (appointment.meeting_type === 'in_person') {
+        meetingTypeDisplay = 'In Person';
+      } else if (appointment.meeting_type === 'on_call') {
+        meetingTypeDisplay = 'Phone Call';
+      } else if (appointment.appointment_type === 'consultation') {
+        meetingTypeDisplay = 'Zoom Meeting';
+      }
+
       const formattedAppointment = {
         id: appointment.id,
         title: appointment.subject || 'Appointment',
@@ -118,27 +145,34 @@ export default function Appointments() {
         })}`,
         person: appointment.admin_name || 'Tax Professional',
         description: appointment.subject || 'Tax consultation',
-        type: appointment.appointment_type === 'consultation' ? 'Zoom Meeting' : 'Phone Call',
-        joinable: appointment.appointment_status === 'scheduled' && appointment.zoom_link,
-        zoom_link: appointment.zoom_link,
+        type: meetingTypeDisplay,
+        meeting_link: meetingLink,
+        zoom_link: appointment.zoom_link || appointment.zoom_meeting_link,
+        google_meet_link: appointment.google_meet_link,
+        meeting_type: appointment.meeting_type,
         admin_email: appointment.admin_email,
         client_name: appointment.client_name,
         client_email: appointment.client_email,
         created_at: appointment.created_at,
-        updated_at: appointment.updated_at
+        updated_at: appointment.updated_at,
+        appointment_date_time: startTime // Store full datetime for comparison
       };
 
-      if (appointmentDate >= now) {
+      // For upcoming appointments, mark as joinable if they have a meeting link
+      // For past appointments, only mark as joinable if status is scheduled and has link
+      if (isUpcoming) {
+        formattedAppointment.joinable = !!meetingLink;
         upcoming.push(formattedAppointment);
       } else {
+        formattedAppointment.joinable = appointment.appointment_status === 'scheduled' && !!meetingLink;
         past.push(formattedAppointment);
       }
     });
 
-    // Sort upcoming by date (earliest first)
-    upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-    // Sort past by date (most recent first)
-    past.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Sort upcoming by datetime (earliest first)
+    upcoming.sort((a, b) => a.appointment_date_time - b.appointment_date_time);
+    // Sort past by datetime (most recent first)
+    past.sort((a, b) => b.appointment_date_time - a.appointment_date_time);
 
     return { upcoming, past };
   };
@@ -422,16 +456,109 @@ export default function Appointments() {
     }
   };
 
+  // Fetch available time slots for edit modal
+  const fetchEditModalTimeSlots = async (date) => {
+    if (!date) {
+      setEditModalTimeSlots([]);
+      return;
+    }
+
+    try {
+      setLoadingEditTimeSlots(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/taxpayer/tax-preparer/availability/slots/?date=${date}`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.available_slots) {
+        setEditModalTimeSlots(result.data.available_slots);
+      } else {
+        setEditModalTimeSlots([]);
+      }
+    } catch (error) {
+      console.error('Error fetching edit modal time slots:', error);
+      setEditModalTimeSlots([]);
+      toast.error('Failed to load available time slots', {
+        position: "top-right",
+        autoClose: 3000,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+        icon: false,
+      });
+    } finally {
+      setLoadingEditTimeSlots(false);
+    }
+  };
+
   // Function to open edit modal
   const openEditModal = (appointment) => {
     setEditingAppointment(appointment);
+    // Convert date to YYYY-MM-DD format for date input
+    let appointmentDate = '';
+    if (appointment.date) {
+      try {
+        // If date is in format like "Mar 6, 2024", convert it
+        const dateObj = new Date(appointment.date);
+        if (!isNaN(dateObj.getTime())) {
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          appointmentDate = `${year}-${month}-${day}`;
+        } else {
+          // If already in YYYY-MM-DD format, use as is
+          appointmentDate = appointment.date;
+        }
+      } catch (error) {
+        appointmentDate = appointment.date;
+      }
+    }
+    
+    // Map appointment type to meeting_type
+    let meetingType = 'zoom'; // default
+    if (appointment.type === 'Zoom Meeting') {
+      meetingType = 'zoom';
+    } else if (appointment.type === 'Google Meet') {
+      meetingType = 'google_meet';
+    } else if (appointment.type === 'Phone Call') {
+      meetingType = 'on_call';
+    } else if (appointment.type === 'In Person') {
+      meetingType = 'in_person';
+    }
+    
     setEditFormData({
       subject: appointment.title || '',
-      appointment_date: appointment.date || '',
+      appointment_date: appointmentDate,
       appointment_time: appointment.time ? appointment.time.split(' - ')[0] : '',
-      appointment_type: appointment.type === 'Zoom Meeting' ? 'consultation' : 'phone_call'
+      meeting_type: meetingType
     });
+    setEditModalTimeSlots([]);
     setShowEditModal(true);
+    
+    // Fetch time slots if date exists
+    if (appointmentDate) {
+      fetchEditModalTimeSlots(appointmentDate);
+    }
   };
 
   // Function to update appointment
@@ -452,7 +579,7 @@ export default function Appointments() {
 
       const updateData = {
         subject: editFormData.subject,
-        appointment_type: editFormData.appointment_type
+        meeting_type: editFormData.meeting_type
       };
 
       // Add date and time if they were changed
@@ -887,15 +1014,23 @@ export default function Appointments() {
                   <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
                 </div>
 
-                {/* Join button if available */}
-                {appt.joinable && (
+                {/* Join button for upcoming meetings with meeting link */}
+                {appt.joinable && appt.meeting_link && (
                   <button
                     className="btn w-100 mt-3"
                     style={{ background: "#F56D2D", color: "#fff" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (appt.zoom_link) {
-                        window.open(appt.zoom_link, '_blank');
+                      if (appt.meeting_link) {
+                        window.open(appt.meeting_link, '_blank');
+                      } else {
+                        toast.error('Meeting link not available', {
+                          position: "top-right",
+                          autoClose: 3000,
+                          className: "custom-toast-success",
+                          bodyClassName: "custom-toast-body",
+                          icon: false,
+                        });
                       }
                     }}
                   >
@@ -2078,18 +2213,18 @@ export default function Appointments() {
 
                 <div className="mb-3">
                   <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
-                    Appointment Type
+                    Meeting Type
                   </label>
                   <select
                     className="form-select"
-                    value={editFormData.appointment_type}
-                    onChange={(e) => setEditFormData({ ...editFormData, appointment_type: e.target.value })}
+                    value={editFormData.meeting_type}
+                    onChange={(e) => setEditFormData({ ...editFormData, meeting_type: e.target.value })}
                     style={{ fontFamily: "BasisGrotesquePro" }}
                   >
-                    <option value="consultation">Consultation</option>
-                    <option value="phone_call">Phone Call</option>
-                    <option value="review">Review</option>
-                    <option value="meeting">Meeting</option>
+                    <option value="zoom">Zoom Meeting</option>
+                    <option value="google_meet">Google Meet</option>
+                    <option value="on_call">Phone Call</option>
+                    <option value="in_person">In Person</option>
                   </select>
                 </div>
 
@@ -2101,7 +2236,12 @@ export default function Appointments() {
                     type="date"
                     className="form-control"
                     value={editFormData.appointment_date}
-                    onChange={(e) => setEditFormData({ ...editFormData, appointment_date: e.target.value })}
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setEditFormData({ ...editFormData, appointment_date: newDate, appointment_time: '' });
+                      // Fetch time slots when date changes
+                      fetchEditModalTimeSlots(newDate);
+                    }}
                     style={{ fontFamily: "BasisGrotesquePro" }}
                   />
                 </div>
@@ -2110,13 +2250,41 @@ export default function Appointments() {
                   <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
                     Time (Optional)
                   </label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={editFormData.appointment_time}
-                    onChange={(e) => setEditFormData({ ...editFormData, appointment_time: e.target.value })}
-                    style={{ fontFamily: "BasisGrotesquePro" }}
-                  />
+                  {loadingEditTimeSlots ? (
+                    <div className="form-control" style={{ fontFamily: "BasisGrotesquePro", color: "#6B7280" }}>
+                      Loading available time slots...
+                    </div>
+                  ) : editModalTimeSlots.length > 0 ? (
+                    <select
+                      className="form-select"
+                      value={editFormData.appointment_time}
+                      onChange={(e) => setEditFormData({ ...editFormData, appointment_time: e.target.value })}
+                      style={{ fontFamily: "BasisGrotesquePro" }}
+                    >
+                      <option value="">Select a time slot</option>
+                      {editModalTimeSlots
+                        .filter(slot => slot.is_available)
+                        .map((slot, index) => (
+                          <option key={index} value={slot.start_time}>
+                            {slot.formatted_time || `${slot.start_time_formatted} - ${slot.end_time_formatted}`}
+                          </option>
+                        ))}
+                    </select>
+                  ) : editFormData.appointment_date ? (
+                    <div className="form-control" style={{ fontFamily: "BasisGrotesquePro", color: "#6B7280", backgroundColor: "#F9FAFB" }}>
+                      No available time slots for this date
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editFormData.appointment_time}
+                      onChange={(e) => setEditFormData({ ...editFormData, appointment_time: e.target.value })}
+                      placeholder="Select a date first"
+                      style={{ fontFamily: "BasisGrotesquePro", backgroundColor: "#F9FAFB" }}
+                      disabled
+                    />
+                  )}
                 </div>
 
                 <div className="d-flex justify-content-between">

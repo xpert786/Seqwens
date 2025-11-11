@@ -61,7 +61,10 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
             onClick={onClose}
             className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors -sm"
           >
-            &times;
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            
           </button>
         </div>
 

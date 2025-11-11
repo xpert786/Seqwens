@@ -12,6 +12,7 @@ import { handleAPIError } from "../utils/apiUtils";
 
 export default function UploadModal({ show, handleClose }) {
     const fileInputRef = useRef();
+    const folderDropdownRef = useRef(null);
     const [files, setFiles] = useState([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [step, setStep] = useState(1);
@@ -20,17 +21,32 @@ export default function UploadModal({ show, handleClose }) {
     const [newFolderName, setNewFolderName] = useState("");
     const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
     const [selectedFolder, setSelectedFolder] = useState("");
+    const [selectedFolderId, setSelectedFolderId] = useState(null);
     const [validationErrors, setValidationErrors] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
+    const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
+
+    // Handle click outside folder dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (folderDropdownOpen && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
+                setFolderDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [folderDropdownOpen]);
 
     // Fetch root folders from API
     useEffect(() => {
         const fetchRootFolders = async () => {
             if (!show) return; // Only fetch when modal is open
-            
+
             try {
                 setLoadingFolders(true);
                 const API_BASE_URL = getApiBaseUrl();
@@ -66,7 +82,7 @@ export default function UploadModal({ show, handleClose }) {
                     // - Data object with subfolders
                     // - Current folder with subfolders (for root, current_folder might be null)
                     let rootFolders = [];
-                    
+
                     if (result.subfolders && Array.isArray(result.subfolders)) {
                         rootFolders = result.subfolders;
                     } else if (result.data && Array.isArray(result.data)) {
@@ -85,6 +101,7 @@ export default function UploadModal({ show, handleClose }) {
                         loaded: false, // Track if subfolders have been loaded
                     }));
                     setFolderTree(foldersTree);
+                    setExpandedFolders(new Set());
                 } else {
                     console.error('Unexpected folders response structure:', result);
                     setFolderTree([]);
@@ -108,7 +125,7 @@ export default function UploadModal({ show, handleClose }) {
     useEffect(() => {
         const fetchCategories = async () => {
             if (!show) return; // Only fetch when modal is open
-            
+
             try {
                 setLoadingCategories(true);
                 const API_BASE_URL = getApiBaseUrl();
@@ -313,7 +330,39 @@ export default function UploadModal({ show, handleClose }) {
     const handleFileSelect = () => fileInputRef.current.click();
 
     const handleFileChange = (e) => {
-        const newFiles = Array.from(e.target.files).map((file) => ({
+        const selectedFiles = Array.from(e.target.files);
+
+        // Filter only PDF files
+        const pdfFiles = selectedFiles.filter(file => {
+            const fileName = file.name.toLowerCase();
+            const fileType = file.type.toLowerCase();
+            return fileName.endsWith('.pdf') || fileType === 'application/pdf';
+        });
+
+        // Show error for non-PDF files
+        const nonPdfFiles = selectedFiles.filter(file => {
+            const fileName = file.name.toLowerCase();
+            const fileType = file.type.toLowerCase();
+            return !fileName.endsWith('.pdf') && fileType !== 'application/pdf';
+        });
+
+        if (nonPdfFiles.length > 0) {
+            toast.error(`Only PDF files are allowed. ${nonPdfFiles.length} non-PDF file(s) were ignored.`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+        }
+
+        // Only process PDF files
+        if (pdfFiles.length === 0) {
+            return;
+        }
+
+        const newFiles = pdfFiles.map((file) => ({
             name: file.name,
             size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
             category: "",
@@ -326,6 +375,11 @@ export default function UploadModal({ show, handleClose }) {
         }));
         setFiles([...files, ...newFiles]);
         setSelectedIndex(0);
+
+        // Reset file input so same file can be selected again if needed
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const removeFile = (index) => {
@@ -345,9 +399,10 @@ export default function UploadModal({ show, handleClose }) {
     const handleFolderSelect = (path, folderId) => {
         const updated = [...files];
         updated[selectedIndex].folderPath = path;
-        updated[selectedIndex].folderId = folderId || findFolderIdByPath(path);
+        updated[selectedIndex].folderId = folderId;
         setFiles(updated);
         setSelectedFolder(path);
+        setSelectedFolderId(folderId);
         setFolderDropdownOpen(false);
     };
 
@@ -564,18 +619,11 @@ export default function UploadModal({ show, handleClose }) {
 
             // Add folder to tree
             let updatedTree;
-            if (selectedFolder) {
-                // Find parent folder by ID and add as child
-                const parentFolderId = files[selectedIndex]?.folderId;
-                if (parentFolderId) {
-                    updatedTree = updateFolderWithSubfolders(folderTree, parentFolderId, [
-                        ...findFolderById(folderTree, parentFolderId)?.children || [],
-                        newFolderObj
-                    ]);
-                } else {
-                    // Fallback to path-based search
-                    updatedTree = addFolderToParent(folderTree, selectedFolder, newFolderObj);
-                }
+            if (parentFolderForNewFolder) {
+                updatedTree = updateFolderWithSubfolders(folderTree, parentFolderForNewFolder, [
+                    ...(findFolderById(folderTree, parentFolderForNewFolder)?.children || []),
+                    newFolderObj
+                ]);
             } else {
                 // Add as root level folder
                 updatedTree = [...folderTree, newFolderObj];
@@ -584,6 +632,7 @@ export default function UploadModal({ show, handleClose }) {
             setFolderTree(updatedTree);
             setNewFolderName("");
             setCreatingFolder(false);
+            setParentFolderForNewFolder(null);
 
             toast.success("Folder created successfully!", {
                 position: "top-right",
@@ -613,30 +662,39 @@ export default function UploadModal({ show, handleClose }) {
 
 
 
-    const renderTree = (folders, path = []) =>
+    // Render folder tree
+    const renderFolderTree = (folders, path = []) =>
         folders.map((folder, idx) => {
             const fullPath = [...path, folder.name].join(" > ");
             const hasChildren = folder.children && folder.children.length > 0;
             const isExpanded = expandedFolders.has(folder.id);
+            // Show expand icon if folder has children or might have children (not loaded yet)
+            const showExpandIcon = hasChildren || (!folder.loaded && folder.id);
 
             return (
-                <div key={folder.id || idx} className="ps-2">
-                    <div className="d-flex align-items-center gap-1 folder-tree-item">
-                        {hasChildren ? (
-                            <span onClick={() => toggleExpand(folder, path)} className="cursor-pointer">
+                <div key={folder.id || idx} style={{ paddingLeft: '8px', marginBottom: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {showExpandIcon ? (
+                            <span
+                                onClick={() => toggleExpand(folder, path)}
+                                style={{ cursor: 'pointer', width: '12px', display: 'inline-block' }}
+                            >
                                 {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
                             </span>
-                        ) : <span style={{ width: "12px" }} />}
-                        <div onClick={() => handleFolderSelect(fullPath, folder.id)} className="cursor-pointer">
-                            <span className="d-flex align-items-center gap-2">
-                                <FaFolder className="text-warning" />
-                                {folder.name}
-                            </span>
+                        ) : <span style={{ width: '12px' }} />}
+                        <div
+                            onClick={() => handleFolderSelect(fullPath, folder.id)}
+                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '2px 0' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                            <FaFolder style={{ color: '#F59E0B' }} />
+                            <span style={{ fontSize: '14px' }}>{folder.name}</span>
                         </div>
                     </div>
                     {hasChildren && isExpanded && (
-                        <div className="ps-3">
-                            {renderTree(folder.children, [...path, folder.name])}
+                        <div style={{ paddingLeft: '12px' }}>
+                            {renderFolderTree(folder.children, [...path, folder.name])}
                         </div>
                     )}
                 </div>
@@ -663,7 +721,7 @@ export default function UploadModal({ show, handleClose }) {
                         <strong className="texts">Drop files here or click to browse</strong>
                     </p>
                     <p className="upload-hint">
-                        Supported formats: All file types (AVIF, JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, etc.) - Max 50MB per file
+                        Supported formats: PDF only - Max 50MB per file
                     </p>
                     <input
                         type="file"
@@ -671,7 +729,7 @@ export default function UploadModal({ show, handleClose }) {
                         hidden
                         ref={fileInputRef}
                         onChange={handleFileChange}
-                        accept="*/*"
+                        accept=".pdf,application/pdf"
                     />
                 </div>
 
@@ -731,48 +789,13 @@ export default function UploadModal({ show, handleClose }) {
                                                             ))}
                                                         </div>
                                                     )}
-
-
-                                                    {selectedIndex === idx && (
-                                                        <div className="doc-action-btns mt-2">
-                                                            <Button
-                                                                size="sm"
-                                                                className="doc-btn save-btn"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    console.log("Save clicked", file);
-                                                                }}
-                                                            >
-                                                                Save
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                className="doc-btn replace-btn"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    console.log("Replace clicked", file);
-                                                                }}
-                                                            >
-                                                                Replace
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                className="doc-btn keep-btn"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    console.log("Keep Both clicked", file);
-                                                                }}
-                                                            >
-                                                                Keep Both
-                                                            </Button>
-                                                        </div>
-                                                    )}
+                                                    {/*  */}
                                                 </div>
                                             </div>
 
                                             {/* RIGHT */}
                                             <div className="d-flex gap-2 align-items-center">
-                                                <span className="custom-badge">{file.status}</span>
+                                                {/* <span className="custom-badge">{file.status}</span> */}
                                                 <span className="remove-icon"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -835,12 +858,11 @@ export default function UploadModal({ show, handleClose }) {
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setCreatingFolder(true);
+                                                                setParentFolderForNewFolder(selectedFolderId || null);
                                                             }}
                                                         >
-
                                                             Create New Folder
                                                         </Button>
-
                                                     ) : (
                                                         <div className="d-flex align-items-center gap-2">
                                                             <Form.Control
@@ -851,6 +873,16 @@ export default function UploadModal({ show, handleClose }) {
                                                                 onChange={(e) => setNewFolderName(e.target.value)}
                                                                 disabled={creatingFolderLoading}
                                                                 autoFocus
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' && newFolderName.trim() && !creatingFolderLoading) {
+                                                                        handleCreateFolder();
+                                                                    }
+                                                                    if (e.key === 'Escape') {
+                                                                        setCreatingFolder(false);
+                                                                        setNewFolderName('');
+                                                                        setParentFolderForNewFolder(null);
+                                                                    }
+                                                                }}
                                                             />
                                                             <Button
                                                                 variant="primary"
@@ -870,6 +902,7 @@ export default function UploadModal({ show, handleClose }) {
                                                                     e.stopPropagation();
                                                                     setCreatingFolder(false);
                                                                     setNewFolderName("");
+                                                                    setParentFolderForNewFolder(null);
                                                                 }}
                                                                 disabled={creatingFolderLoading}
                                                             >
@@ -879,69 +912,96 @@ export default function UploadModal({ show, handleClose }) {
                                                     )}
                                                 </div>
 
-                                                <div
-                                                    className="d-flex flex-column folder-dropdown-toggle border rounded px-2 py-2 bg-white cursor-pointer"
-                                                    onClick={() => {
-                                                        if (!selectedFolder) {
-                                                            setFolderDropdownOpen(!folderDropdownOpen);
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className="d-flex justify-content-between align-items-center mb-1">
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            {!selectedFolder ? (
-                                                                <>
-
+                                                <div ref={folderDropdownRef} style={{ position: 'relative' }}>
+                                                    <div
+                                                        className="d-flex flex-column folder-dropdown-toggle border rounded px-2 py-2 bg-white cursor-pointer"
+                                                        onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
+                                                    >
+                                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                {!selectedFolder ? (
                                                                     <span className="custom-select">Select a Folder</span>
-                                                                </>
-                                                            ) : (
-                                                                <span>{selectedFolder}</span>
+                                                                ) : (
+                                                                    <span>{selectedFolder}</span>
+                                                                )}
+                                                            </div>
+                                                            {selectedFolder && (
+                                                                <Button
+                                                                    variant="light"
+                                                                    size="sm"
+                                                                    className="change-btns-t"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedFolder("");
+                                                                        setSelectedFolderId(null);
+                                                                        const updated = [...files];
+                                                                        updated[selectedIndex].folderPath = "";
+                                                                        updated[selectedIndex].folderId = null;
+                                                                        setFiles(updated);
+                                                                    }}
+                                                                >
+                                                                    ×
+                                                                </Button>
                                                             )}
+                                                            <FaChevronDown
+                                                                size={12}
+                                                                style={{
+                                                                    color: '#9CA3AF',
+                                                                    marginLeft: '8px',
+                                                                    transform: folderDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                    transition: 'transform 0.2s'
+                                                                }}
+                                                            />
                                                         </div>
 
-                                                        {!selectedFolder ? (
-                                                            <FaChevronDown />
-                                                        ) : (
-                                                            <Button
-                                                                variant="light"
-                                                                size="sm"
-                                                                className="change-btns-t"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setFolderDropdownOpen(true);
-                                                                }}
-                                                            >
-                                                                Change
-                                                            </Button>
-
-                                                        )}
+                                                        <div className="small text-muted">
+                                                            {files[selectedIndex]?.name || "N/A"} &gt;{" "}
+                                                            {files[selectedIndex]?.folderPath || "No folder selected"} &gt;{" "}
+                                                            {files[selectedIndex]?.category || "No category selected"}
+                                                        </div>
                                                     </div>
 
-                                                    <div className="small text-muted">
-                                                        {files[selectedIndex]?.name || "N/A"} &gt;{" "}
-                                                        {files[selectedIndex]?.folderPath || "No folder selected"} &gt;{" "}
-                                                        {files[selectedIndex]?.category || "No category selected"}
-                                                    </div>
+                                                    {/* Folder dropdown content */}
+                                                    {folderDropdownOpen && (
+                                                        <div className="folder-dropdown-content" style={{
+                                                            position: 'absolute',
+                                                            top: '100%',
+                                                            left: 0,
+                                                            right: 0,
+                                                            marginTop: '4px',
+                                                            backgroundColor: 'white',
+                                                            border: '1px solid #E5E7EB',
+                                                            borderRadius: '8px',
+                                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                                            maxHeight: '300px',
+                                                            overflowY: 'auto',
+                                                            zIndex: 1000,
+                                                            padding: '8px'
+                                                        }}>
+                                                            <div style={{
+                                                                fontSize: '12px',
+                                                                color: '#6B7280',
+                                                                marginBottom: '8px',
+                                                                fontWeight: '500',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.5px'
+                                                            }}>
+                                                                FOLDERS
+                                                            </div>
+                                                            {loadingFolders ? (
+                                                                <div className="text-center p-3">
+                                                                    <small className="text-muted">Loading folders...</small>
+                                                                </div>
+                                                            ) : folderTree.length === 0 ? (
+                                                                <div className="text-center p-3">
+                                                                    <small className="text-muted">No folders available</small>
+                                                                </div>
+                                                            ) : (
+                                                                renderFolderTree(folderTree)
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
-
-
-                                                {/* Folder dropdown content */}
-                                                {folderDropdownOpen && (
-                                                    <div className="folder-dropdown-content">
-                                                        <div className="small text-muted mb-1">FOLDERS</div>
-                                                        {loadingFolders ? (
-                                                            <div className="text-center p-3">
-                                                                <small className="text-muted">Loading folders...</small>
-                                                            </div>
-                                                        ) : folderTree.length === 0 ? (
-                                                            <div className="text-center p-3">
-                                                                <small className="text-muted">No folders available</small>
-                                                            </div>
-                                                        ) : (
-                                                            renderTree(folderTree)
-                                                        )}
-                                                    </div>
-                                                )}
                                             </Form.Group>
 
                                         </div>
@@ -958,8 +1018,8 @@ export default function UploadModal({ show, handleClose }) {
                                         Cancel
                                     </Button>
 
-                                    <Button 
-                                        className="btn-upload-custom" 
+                                    <Button
+                                        className="btn-upload-custom"
                                         onClick={handleFinalUpload}
                                         disabled={uploading}
                                     >
