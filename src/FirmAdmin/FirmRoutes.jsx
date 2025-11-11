@@ -22,6 +22,8 @@ import AccountSettings from './Pages/AccountSettings';
 import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
 import Offices from './Pages/Offices';
 import OfficeOverview from './Pages/Offices/OfficeOverview';
+import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
+import OfficeComparison from './Pages/Offices/OfficeComparison';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -89,6 +91,8 @@ export default function FirmRoutes() {
         <Route path="account-settings" element={<AccountSettings />} />
         <Route path="offices" element={<Offices />} />
         <Route path="offices/:officeId" element={<OfficeOverview />} />
+        <Route path="offices/:officeId/dashboard-view" element={<OfficeDashboardView />} />
+        <Route path="offices/:officeId/compare" element={<OfficeComparison />} />
         
         {/* Add more routes here as needed */}
         
