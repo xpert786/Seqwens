@@ -1,10 +1,43 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import SuperSidebar from '../Components/SuperSidebar'
 import SuperHeader from '../Components/SuperHeader'
 import { Outlet } from 'react-router-dom'
 import { ModalProvider, useModal } from '../Context/ModalContext'
 
 function SuperDashboardContent() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+
+  const getSidebarWidth = useCallback(() => {
+    if (typeof document === 'undefined') return 0;
+    const sidebarElement = document.querySelector('.super-sidebar-container');
+    return sidebarElement ? sidebarElement.offsetWidth : 0;
+  }, []);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setSidebarWidth(getSidebarWidth());
+    } else {
+      setSidebarWidth(0);
+    }
+  }, [isSidebarOpen, getSidebarWidth]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (isSidebarOpen) {
+        setSidebarWidth(getSidebarWidth());
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen, getSidebarWidth]);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
+
   const {
     showRoleModal,
     roleName,
@@ -23,9 +56,15 @@ function SuperDashboardContent() {
   return (
     <>
       <div className="flex">
-        <SuperHeader />
-        <SuperSidebar />
-        <main className="ml-[280px] mt-[70px] h-[calc(100vh-70px)] overflow-y-auto bg-[rgb(243,247,255)] p-2 w-[calc(100%-280px)] xl:ml-[280px] xl:w-[calc(100%-280px)] lg:ml-60 lg:w-[calc(100%-240px)] md:ml-60 md:w-[calc(100%-240px)]">
+        <SuperHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+        <SuperSidebar isSidebarOpen={isSidebarOpen} />
+        <main
+          className="mt-[70px] h-[calc(100vh-70px)] overflow-y-auto bg-[rgb(243,247,255)] p-2 transition-all duration-300"
+          style={{
+            marginLeft: isSidebarOpen ? `${sidebarWidth}px` : '0',
+            width: isSidebarOpen ? `calc(100% - ${sidebarWidth}px)` : '100%'
+          }}
+        >
           <Outlet />
         </main>
       </div>

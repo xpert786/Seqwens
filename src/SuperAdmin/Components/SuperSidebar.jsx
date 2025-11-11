@@ -6,7 +6,7 @@ import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 
 import { UserManage, SubscriptionIcon, DashIcon, MesIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon } from "./icons";
 
-export default function SuperSidebar() {
+export default function SuperSidebar({ isSidebarOpen = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -44,16 +44,23 @@ export default function SuperSidebar() {
     }
   };
 
-  const linkClass = (path) =>
+  const isActivePath = (path, matchChildren = false) => {
+    if (matchChildren) {
+      return location.pathname === path || location.pathname.startsWith(`${path}/`);
+    }
+    return location.pathname === path;
+  };
+
+  const linkClass = (path, matchChildren = false) =>
     `flex items-center justify-start px-0.5 py-1.5 rounded-lg my-0 text-xs font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${
-      location.pathname === path 
-        ? "bg-[#F6F7FF] !text-[#3B4A66]" 
+      isActivePath(path, matchChildren)
+        ? "bg-[#F6F7FF] !text-[#3B4A66]"
         : "!text-[#3B4A66] hover:bg-slate-50 hover:!text-[#3B4A66]"
     }`;
 
-  const iconWrapperClass = (path) =>
+  const iconWrapperClass = (path, matchChildren = false) =>
     `inline-flex items-center justify-center mr-3 w-6 h-6 rounded-full ${
-      location.pathname === path ? "bg-[#3AD6F2] p-1 [&>svg]:!text-white [&>svg]:!fill-[#3AD6F2]" : ""
+      isActivePath(path, matchChildren) ? "bg-[#3AD6F2] p-1 [&>svg]:!text-white [&>svg]:!fill-[#3AD6F2]" : ""
     }`;
 
   const bottomLinkClass = (path) =>
@@ -62,7 +69,10 @@ export default function SuperSidebar() {
     }`;
 
   return (
-    <div className="super-sidebar-container w-[265px] h-[calc(100vh-70px)] fixed top-[70px] left-0 bg-white border-r border-gray-200 z-[1000] font-['BasisGrotesquePro'] flex flex-col justify-between overflow-hidden xl:w-[285px] lg:w-60 md:w-60">
+    <div
+      className={`super-sidebar-container w-[265px] h-[calc(100vh-70px)] fixed top-[70px] left-0 bg-white border-r border-gray-200 z-[1000] font-['BasisGrotesquePro'] flex flex-col justify-between overflow-hidden xl:w-[285px] lg:w-60 md:w-60 transition-transform duration-300`}
+      style={{ transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)' }}
+    >
       <div className="flex-1 pt-1 pb-1 overflow-y-auto overflow-x-hidden mr-1 ml-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-#3B4A66/10 [&::-webkit-scrollbar-thumb]:rounded">
         <ul className="flex flex-col">
           {/* Platform Management Section */}
@@ -111,8 +121,8 @@ export default function SuperSidebar() {
                   </Link>
                 </li>
                 <li className="mb-2">
-                  <Link to="/superadmin/firms" className={linkClass("/superadmin/firms")}>
-                    <span className={iconWrapperClass("/superadmin/firms")}>
+                  <Link to="/superadmin/firms" className={linkClass("/superadmin/firms", true)}>
+                    <span className={iconWrapperClass("/superadmin/firms", true)}>
                       <UserManage />
                     </span>
                     Firm Management

@@ -24,6 +24,7 @@ import Offices from './Pages/Offices';
 import OfficeOverview from './Pages/Offices/OfficeOverview';
 import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
 import OfficeComparison from './Pages/Offices/OfficeComparison';
+import SecurityCompliance from './Pages/SecurityCompliance';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -86,6 +87,7 @@ export default function FirmRoutes() {
         <Route path="messages" element={<Messages />} />
         
         {/* System Administration routes */}
+        <Route path="security" element={<SecurityCompliance />} />
         <Route path="settings" element={<FirmSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="account-settings" element={<AccountSettings />} />
