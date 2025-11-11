@@ -423,13 +423,13 @@ export default function UserManagement() {
       )}
 
       {showAddAdminModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-6 py-8">
           <div
             className="absolute inset-0"
-            style={{ background: 'var(--Color-overlay, #00000099)' }}
+            style={{ backgroundColor: 'var(--Color-overlay, #00000099)' }}
             onClick={closeAddAdminModal}
           ></div>
-          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-auto">
             <div className="flex justify-between items-start p-6 border-b border-[#E8F0FF]">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Add Super Admin User</h3>
@@ -539,8 +539,7 @@ export default function UserManagement() {
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={closeAddAdminModal}
-                      style={{ borderRadius: '7px' }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700  border border-[#E8F0FF] rounded-md hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-colors"
                       disabled={creatingAdmin}
                     >
                       Cancel
@@ -548,8 +547,7 @@ export default function UserManagement() {
                     <button
                       onClick={handleCreateSuperAdmin}
                       disabled={creatingAdmin}
-                      style={{ borderRadius: '7px' }}
-                      className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#e45622] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-xl hover:bg-[#e45622] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {creatingAdmin ? 'Creating...' : 'Create User'}
                     </button>

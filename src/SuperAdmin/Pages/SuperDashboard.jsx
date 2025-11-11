@@ -5,6 +5,11 @@ import { Outlet } from 'react-router-dom'
 import { ModalProvider, useModal } from '../Context/ModalContext'
 
 function SuperDashboardContent() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => !prev);
+  };
+
   const {
     showRoleModal,
     roleName,
@@ -23,9 +28,15 @@ function SuperDashboardContent() {
   return (
     <>
       <div className="flex">
-        <SuperHeader />
-        <SuperSidebar />
-        <main className="ml-[280px] mt-[70px] h-[calc(100vh-70px)] overflow-y-auto bg-[rgb(243,247,255)] p-2 w-[calc(100%-280px)] xl:ml-[280px] xl:w-[calc(100%-280px)] lg:ml-60 lg:w-[calc(100%-240px)] md:ml-60 md:w-[calc(100%-240px)]">
+        <SuperHeader onToggleSidebar={handleToggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
+        <SuperSidebar collapsed={isSidebarCollapsed} />
+        <main
+          className={`mt-[70px] h-[calc(100vh-70px)] overflow-y-auto bg-[rgb(243,247,255)] p-2 transition-all duration-300 ease-in-out ${
+            isSidebarCollapsed
+              ? 'ml-0 w-full'
+              : 'ml-[280px] w-[calc(100%-280px)] xl:ml-[280px] xl:w-[calc(100%-280px)] lg:ml-60 lg:w-[calc(100%-240px)] md:ml-60 md:w-[calc(100%-240px)]'
+          }`}
+        >
           <Outlet />
         </main>
       </div>

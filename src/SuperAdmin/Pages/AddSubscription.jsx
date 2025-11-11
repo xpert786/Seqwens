@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
-import { FaTimes } from 'react-icons/fa';
-import { XIcon } from '../Components/icons';
+import React, { useState, useEffect } from 'react';
 import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl } from '../../ClientOnboarding/utils/corsConfig';
 
 export default function AddSubscription({ planType, onClose }) {
-  const [activeTab, setActiveTab] = useState('Solo');
+  const plans = ['Solo', 'Team', 'Professional', 'Enterprise'];
+
+  const normalizePlanType = (value) => {
+    if (!value) {
+      return 'Solo';
+    }
+    const lowerValue = value.toLowerCase();
+    const matchedPlan = plans.find((plan) => plan.toLowerCase() === lowerValue);
+    if (matchedPlan) {
+      return matchedPlan;
+    }
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  };
+
+  const [activeTab, setActiveTab] = useState(normalizePlanType(planType));
   const [pricing, setPricing] = useState({
     monthly: '',
     yearly: '',
@@ -29,7 +41,9 @@ export default function AddSubscription({ planType, onClose }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const plans = ['Solo', 'Team', 'Professional', 'Enterprise'];
+  useEffect(() => {
+    setActiveTab(normalizePlanType(planType));
+  }, [planType]);
 
   const getFeatures = (plan) => {
     const features = {
@@ -73,17 +87,18 @@ export default function AddSubscription({ planType, onClose }) {
     <div className="w-full h-full p-3 ">
       <div className="rounded-lg  w-full max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-6">
-          <div>
+        <div className="p-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 text-sm text-[#3B4A66] hover:underline focus:outline-none"
+          >
+            ← Back to Subscription Plans
+          </button>
+          <div className="mt-4">
             <h2 className="text-2xl font-bold" style={{ color: '#3B4A66' }}>Add New Subscription Plan</h2>
             <p className="text-sm mt-1" style={{ color: '#3B4A66' }}>Create a new subscription plan with custom pricing, features, and limits</p>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 "
-          >
-            <XIcon size={24} />
-          </button>
         </div>
 
         {/* Plan Tabs */}

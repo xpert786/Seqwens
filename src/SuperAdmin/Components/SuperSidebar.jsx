@@ -6,7 +6,7 @@ import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 
 import { UserManage, SubscriptionIcon, DashIcon, MesIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon } from "./icons";
 
-export default function SuperSidebar() {
+export default function SuperSidebar({ collapsed = false }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -74,7 +74,10 @@ export default function SuperSidebar() {
     }`;
 
   return (
-    <div className="super-sidebar-container w-[265px] h-[calc(100vh-70px)] fixed top-[70px] left-0 bg-white border-r border-gray-200 z-[1000] font-['BasisGrotesquePro'] flex flex-col justify-between overflow-hidden xl:w-[285px] lg:w-60 md:w-60">
+    <div
+      className={`super-sidebar-container w-[265px] h-[calc(100vh-70px)] fixed top-[70px] left-0 bg-white border-r border-gray-200 z-[1000] font-['BasisGrotesquePro'] flex flex-col justify-between overflow-hidden xl:w-[285px] lg:w-60 md:w-60 transition-transform duration-300 ease-in-out ${collapsed ? '-translate-x-full pointer-events-none' : 'translate-x-0 pointer-events-auto'}`}
+      aria-hidden={collapsed}
+    >
       <div className="flex-1 pt-1 pb-1 overflow-y-auto overflow-x-hidden mr-1 ml-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-#3B4A66/10 [&::-webkit-scrollbar-thumb]:rounded">
         <ul className="flex flex-col">
           {/* Platform Management Section */}
