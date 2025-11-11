@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AreaChart,
   Area,
@@ -14,97 +15,68 @@ import {
   Tooltip
 } from 'recharts';
 
-import { RefreshIcon, UserManage, SubscriptionIcon, MesIcon, SystemSettingsIcon, HelpsIcon, TotalFirmsIcon, ActiveUsersIcon, MonthlyRevenueIcon, SystemHealthIcon, SecurityGreenIcon, SecurityBlueIcon, SecurityYellowIcon, DashIcon   } from '../Components/icons';
+import {
+  RefreshIcon,
+  UserManage,
+  SubscriptionIcon,
+  MesIcon,
+  SystemSettingsIcon,
+  HelpsIcon,
+  TotalFirmsIcon,
+  ActiveUsersIcon,
+  MonthlyRevenueIcon,
+  SystemHealthIcon,
+  SecurityGreenIcon,
+  SecurityYellowIcon
+} from '../Components/icons';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
-// Mock data for charts
-const revenueData = [
-  { month: 'Jan', revenue: 180000, users: 6500 },
-  { month: 'Feb', revenue: 200000, users: 7200 },
-  { month: 'Mar', revenue: 220000, users: 7800 },
-  { month: 'Apr', revenue: 240000, users: 8200 },
-  { month: 'May', revenue: 265000, users: 8500 },
-  { month: 'Jun', revenue: 290000, users: 8432 }
-];
 
-const subscriptionData = [
-  { name: 'Solo', value: 650, color: '#10B981' },
-  { name: 'Solo', value: 456, color: '#3B82F6' },
-  { name: 'Team', value: 270, color: '#F59E0B' },
-  { name: 'Team', value: 90, color: '#06B6D4' }
-];
+const SUBSCRIPTION_COLOR_MAP = {
+  solo: '#10B981',
+  team: '#3B82F6',
+  business: '#F59E0B',
+  enterprise: '#06B6D4',
+  professional: '#8B5CF6'
+};
 
-const activityData = [
-  { time: '00:00', users: 1400 },
-  { time: '04:00', users: 800 },
-  { time: '08:00', users: 3200 },
-  { time: '12:00', users: 4800 },
-  { time: '16:00', users: 5200 },
-  { time: '20:00', users: 3800 }
-];
-
-const performanceData = [
-  { metric: 'API Response', current: 24, target: 300, unit: 'ms' },
-  { metric: 'Database Query', current: 88, target: 100, unit: 'ms' },
-  { metric: 'Page Load', current: 1.2, target: 3, unit: 's' },
-  { metric: 'Error Rate', current: 0.01, target: 0.01, unit: '%' }
-];
-
-const recentFirms = [
-  {
-    name: 'Johnson & Associates',
-    users: 18,
-    cost: 2999,
-    lastActive: '2 hours ago',
-    plan: 'Professional',
-    planColor: 'bg-blue-100 text-blue-800'
-  },
-  {
-    name: 'Metro Tax Services',
-    users: 8,
-    cost: 1499,
-    lastActive: '1 day ago',
-    plan: 'Team',
-    planColor: 'bg-orange-100 text-orange-800'
-  },
-  {
-    name: 'Elite CPA Group',
-    users: 45,
-    cost: 0,
-    lastActive: '3 hours ago',
-    plan: 'Enterprise',
-    planColor: 'bg-green-100 text-green-800'
-  },
-  {
-    name: 'Coastal Accounting',
-    users: 1,
-    cost: 499,
-    lastActive: '5 hours ago',
-    plan: 'Solo',
-    planColor: 'bg-blue-100 text-blue-800'
-  }
-];
-
-const securityStatus = [
-  { name: 'SSL Certificates', status: 'Valid', color: 'green' },
-  { name: 'Firewall', status: 'Active', color: 'green' },
-  { name: 'Backup', status: 'Scheduled', color: 'yellow' },
-  { name: 'Updates', status: 'Optimized', color: 'blue' }
-];
-
-const quickActions = [
-  { name: 'User Management', icon: <UserManage /> },
-  { name: 'Subscriptions', icon: <SubscriptionIcon /> },
-  { name: 'Analytics', icon: <MesIcon /> },
-  { name: 'System Settings', icon: <SystemSettingsIcon /> },
-  { name: 'Support Center', icon: <HelpsIcon /> }
-];
+const FALLBACK_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#06B6D4', '#8B5CF6', '#EF4444', '#F97316'];
 
 export default function SuperDashboardContent() {
   // State management
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  const formatCurrency = (value) => {
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) {
+      return '$0.00';
+    }
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(numericValue);
+  };
+
+  const formatNumber = (value) => {
+    if (value === null || value === undefined) return '0';
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return String(value);
+    return numericValue.toLocaleString();
+  };
+
+  const getQuickActionIcon = (label = '') => {
+    const normalized = label.toLowerCase();
+    if (normalized.includes('user')) return <UserManage />;
+    if (normalized.includes('subscription')) return <SubscriptionIcon />;
+    if (normalized.includes('analytic')) return <MesIcon />;
+    if (normalized.includes('system')) return <SystemSettingsIcon />;
+    if (normalized.includes('support')) return <HelpsIcon />;
+    return <UserManage />;
+  };
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
@@ -139,106 +111,129 @@ export default function SuperDashboardContent() {
 
   // Process data for charts
   const processChartData = () => {
-    if (!dashboardData) return { revenueData: [], subscriptionData: [], activityData: [] };
+    if (!dashboardData) {
+      return {
+        revenueData: [],
+        subscriptionData: [],
+        activityData: []
+      };
+    }
 
-    // Process trends data for revenue chart
-    const revenueData = dashboardData.trends?.daily_registrations?.map(item => ({
-      month: new Date(item.date).toLocaleDateString('en-US', { month: 'short' }),
-      revenue: item.count * 1000, // Mock revenue calculation
-      users: item.count
-    })) || [];
+    const labels = dashboardData.revenue_growth?.labels || [];
+    const revenueValues = dashboardData.revenue_growth?.revenue || [];
+    const subscriberValues = dashboardData.revenue_growth?.subscribers || [];
 
-    // Process user statistics for subscription chart
-    const subscriptionData = dashboardData.user_statistics?.users_by_role?.map(role => ({
-      name: role.role.charAt(0).toUpperCase() + role.role.slice(1),
-      value: role.count,
-      color: getRoleColor(role.role)
-    })) || [];
+    const revenueData = labels.map((label, index) => ({
+      month: label,
+      revenue: revenueValues[index] ?? 0,
+      subscribers: subscriberValues[index] ?? 0
+    }));
 
-    // Process activity data
-    const activityData = dashboardData.trends?.daily_activities?.map(item => ({
-      time: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      users: item.count
-    })) || [];
+    const subscriptionData = (dashboardData.subscription_distribution || []).map((item, index) => {
+      const planKey = item.plan?.toLowerCase?.() || `plan-${index}`;
+      return {
+        name: item.label || item.plan || `Plan ${index + 1}`,
+        value: item.count ?? 0,
+        color: SUBSCRIPTION_COLOR_MAP[planKey] || FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+      };
+    });
+
+    const activityData = (dashboardData.activity?.timeline || []).map(item => ({
+      hour: item.hour,
+      count: item.count
+    }));
 
     return { revenueData, subscriptionData, activityData };
-  };
-
-  // Get color for role
-  const getRoleColor = (role) => {
-    const colors = {
-      'admin': '#10B981',
-      'client': '#3B82F6',
-      'staff': '#F59E0B',
-      'support_admin': '#06B6D4',
-      'super_admin': '#8B5CF6',
-      'billing_admin': '#EF4444'
-    };
-    return colors[role] || '#6B7280';
   };
 
   // Process performance data
   const processPerformanceData = () => {
     if (!dashboardData) return [];
 
+    const thresholds = {
+      api_response_ms: 500,
+      db_query_ms: 500,
+      page_load_seconds: 5,
+      error_rate_percent: 5
+    };
+
     return [
       { 
         metric: 'API Response', 
-        current: 24, 
-        target: 300, 
+        current: dashboardData.performance?.api_response_ms ?? 0, 
+        target: thresholds.api_response_ms,
         unit: 'ms' 
       },
       { 
         metric: 'Database Query', 
-        current: 88, 
-        target: 100, 
+        current: dashboardData.performance?.db_query_ms ?? 0, 
+        target: thresholds.db_query_ms,
         unit: 'ms' 
       },
       { 
         metric: 'Page Load', 
-        current: 1.2, 
-        target: 3, 
+        current: dashboardData.performance?.page_load_seconds ?? 0, 
+        target: thresholds.page_load_seconds,
         unit: 's' 
       },
       { 
         metric: 'Error Rate', 
-        current: 0.01, 
-        target: 0.01, 
+        current: dashboardData.performance?.error_rate_percent ?? 0, 
+        target: thresholds.error_rate_percent,
         unit: '%' 
       }
     ];
   };
 
-  // Process recent users data
-  const processRecentUsers = () => {
-    if (!dashboardData?.user_statistics?.recent_users) return [];
-
-    return dashboardData.user_statistics.recent_users.map(user => ({
-      name: `${user.first_name} ${user.last_name}`,
-      users: 1,
-      cost: 0,
-      lastActive: new Date(user.date_joined).toLocaleDateString(),
-      plan: user.role.charAt(0).toUpperCase() + user.role.slice(1),
-      planColor: getRoleColor(user.role) === '#10B981' ? 'bg-green-100 text-green-800' : 
-                 getRoleColor(user.role) === '#3B82F6' ? 'bg-blue-100 text-blue-800' :
-                 getRoleColor(user.role) === '#F59E0B' ? 'bg-orange-100 text-orange-800' :
-                 'bg-gray-100 text-gray-800'
-    }));
-  };
-
   const { revenueData, subscriptionData, activityData } = processChartData();
   const performanceData = processPerformanceData();
-  const recentUsers = processRecentUsers();
+  const recentFirms = dashboardData?.recent_firms || [];
+  const securityStatus = dashboardData?.security || {};
+  const quickActions = dashboardData?.quick_actions || [];
+  const maxRevenueValue = revenueData.reduce((max, item) => Math.max(max, item.revenue || 0), 0);
+  const maxSubscriberValue = revenueData.reduce((max, item) => Math.max(max, item.subscribers || 0), 0);
+  const revenueUpperBound = maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.2) : 1;
+  const subscriberUpperBound = maxSubscriberValue > 0 ? Math.ceil(maxSubscriberValue * 1.2) : 1;
+
+  const maxActivityValue = activityData.reduce((max, item) => Math.max(max, item.count || 0), 0);
+  const activityUpperBound = maxActivityValue > 0 ? Math.ceil(maxActivityValue * 1.2) : 1;
+  const securityItems = [
+    {
+      name: 'Admin 2FA',
+      enabled: securityStatus.admin_2fa_required
+    },
+    {
+      name: 'Password Complexity',
+      enabled: securityStatus.password_complexity_enabled
+    },
+    {
+      name: 'IP Whitelisting',
+      enabled: securityStatus.ip_whitelisting_enabled
+    },
+    {
+      name: 'Audit Logging',
+      enabled: securityStatus.audit_logging_enabled
+    }
+  ];
 
   // Custom tooltip for area chart
   const RevenueTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const revenueEntry = payload.find(item => item.dataKey === 'revenue');
+      const subscribersEntry = payload.find(item => item.dataKey === 'subscribers');
       return (
         <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
           <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
-          <div className="text-sm" style={{color: '#374151'}}>
-            Users: {payload[0].value.toLocaleString()}
-          </div>
+          {revenueEntry && (
+            <div className="text-sm" style={{color: '#10B981'}}>
+              Revenue: {formatCurrency(revenueEntry.value || 0)}
+            </div>
+          )}
+          {subscribersEntry && (
+            <div className="text-sm mt-1" style={{color: '#374151'}}>
+              Subscribers: {formatNumber(subscribersEntry.value || 0)}
+            </div>
+          )}
         </div>
       );
     }
@@ -268,7 +263,7 @@ export default function SuperDashboardContent() {
         <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
           <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
           <div className="text-sm" style={{color: '#374151'}}>
-            Active : <span style={{color: '#10B981'}}>{payload[0].value}</span>
+            Activity: <span style={{color: '#10B981'}}>{formatNumber(payload[0].value)}</span>
           </div>
         </div>
       );
@@ -314,13 +309,13 @@ export default function SuperDashboardContent() {
   }
 
   return (
-    <div className="w-full px-3 py-4 bg-[#F6F7FF] min-h-screen">
+    <div className="w-full px-3 py-4 bg-[#F6F7FF]">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
           <h1 className="taxdashboardr-titler font-bold text-gray-900">Platform Overview</h1>
           <p className="text-gray-600 mt-1">Monitor and manage the entire tax practice platform</p>
-       
+          <p className="text-xs text-gray-500 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
         </div>
         <button 
           onClick={handleRefresh}
@@ -340,15 +335,11 @@ export default function SuperDashboardContent() {
             <TotalFirmsIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Total Users</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Firms</p>
             <p className="text-2xl font-bold text-gray-900">
-              {dashboardData?.overview?.total_users?.toLocaleString() || '0'}
+              {formatNumber(dashboardData?.summary?.total_firms)}
             </p>
-            <div className="flex items-center mt-2">
-              <span className="text-sm text-[#10B981] font-medium">
-                +{dashboardData?.overview?.new_users_30_days || 0} this month
-              </span>
-            </div>
+            <p className="text-sm text-gray-500 mt-2">Firms onboarded</p>
           </div>
         </div>
 
@@ -357,40 +348,24 @@ export default function SuperDashboardContent() {
             <ActiveUsersIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Active Users (30d)</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Active Users</p>
             <p className="text-2xl font-bold text-gray-900">
-              {dashboardData?.overview?.active_users_30_days?.toLocaleString() || '0'}
+              {formatNumber(dashboardData?.summary?.active_users)}
             </p>
-            <div className="flex items-center mt-2">
-              <svg className="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-green-600 font-medium">
-                {dashboardData?.user_statistics?.activity_metrics?.activity_rate_30_days?.toFixed(1) || 0}% activity rate
-              </span>
-            </div>
+            <p className="text-sm text-gray-500 mt-2">Across all firms</p>
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 relative">
           <div className="absolute top-4 right-4">
-            <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12.25 2V22M17.25 5H9.75C8.82174 5 7.9315 5.36875 7.27513 6.02513C6.61875 6.6815 6.25 7.57174 6.25 8.5C6.25 9.42826 6.61875 10.3185 7.27513 10.9749C7.9315 11.6313 8.82174 12 9.75 12H14.75C15.6783 12 16.5685 12.3687 17.2249 13.0251C17.8813 13.6815 18.25 14.5717 18.25 15.5C18.25 16.4283 17.8813 17.3185 17.2249 17.9749C16.5685 18.6313 15.6783 19 14.75 19H6.25" stroke="#3AD6F2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <MonthlyRevenueIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Total Documents</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Monthly Revenue</p>
             <p className="text-2xl font-bold text-gray-900">
-              {dashboardData?.overview?.total_documents?.toLocaleString() || '0'}
+              {formatCurrency(dashboardData?.summary?.monthly_revenue)}
             </p>
-            <div className="flex items-center mt-2">
-              <svg className="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-green-600 font-medium">
-                {dashboardData?.document_statistics?.documents_30_days || 0} this month
-              </span>
-            </div>
+            <p className="text-sm text-gray-500 mt-2">Recurring revenue</p>
           </div>
         </div>
 
@@ -399,13 +374,11 @@ export default function SuperDashboardContent() {
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Total Activities</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">System Health</p>
             <p className="text-2xl font-bold text-gray-900">
-              {dashboardData?.overview?.total_activities?.toLocaleString() || '0'}
+              {`${formatNumber(dashboardData?.summary?.system_health_score)}%`}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              {dashboardData?.activity_statistics?.activities_today || 0} today
-            </p>
+            <p className="text-sm text-gray-500 mt-2">Overall stability</p>
           </div>
         </div>
       </div>
@@ -442,15 +415,24 @@ export default function SuperDashboardContent() {
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
                 />
                 <YAxis 
+                  yAxisId="left"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, 300000]}
-                  ticks={[0, 75000, 150000, 225000, 300000]}
+                  domain={[0, revenueUpperBound]}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  domain={[0, subscriberUpperBound]}
                 />
                 <Tooltip content={<RevenueTooltip />} />
                 <Area
                   type="monotone"
+                  yAxisId="left"
                   dataKey="revenue"
                   stroke="#10B981"
                   strokeWidth={3}
@@ -459,6 +441,15 @@ export default function SuperDashboardContent() {
                   dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
                   activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
                 />
+                <Line
+                  type="monotone"
+                  yAxisId="right"
+                  dataKey="subscribers"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
+                  activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -466,7 +457,11 @@ export default function SuperDashboardContent() {
           <div className="mt-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span>User Registrations</span>
+              <span>Revenue</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+              <span>Subscribers</span>
             </div>
           </div>
         </div>
@@ -504,7 +499,7 @@ export default function SuperDashboardContent() {
             {subscriptionData.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded" style={{backgroundColor: item.color}}></div>
-                <span>{item.name}: {item.value}</span>
+                <span>{item.name}: {formatNumber(item.value)}</span>
               </div>
             ))}
           </div>
@@ -533,7 +528,7 @@ export default function SuperDashboardContent() {
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
                   <XAxis 
-                    dataKey="time" 
+                    dataKey="hour" 
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
@@ -542,13 +537,12 @@ export default function SuperDashboardContent() {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                    domain={[0, 6000]}
-                    ticks={[0, 1500, 3000, 4500, 6000]}
+                    domain={[0, activityUpperBound]}
                   />
                   <Tooltip content={<ActivityTooltip />} />
                   <Line
                     type="monotone"
-                    dataKey="users"
+                    dataKey="count"
                     stroke="#10B981"
                     strokeWidth={3}
                     dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
@@ -561,7 +555,7 @@ export default function SuperDashboardContent() {
             <div className="mt-4 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded"></div>
-                <span>Active Users</span>
+                <span>Activity count</span>
               </div>
             </div>
           </div>
@@ -579,13 +573,17 @@ export default function SuperDashboardContent() {
                 <div key={index}>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-700">{metric.metric}</span>
-                    <span className="text-sm text-gray-600">{metric.current}{metric.unit} / {metric.target}{metric.unit}</span>
+                    <span className="text-sm text-gray-600">
+                      {formatNumber(metric.current)}
+                      {metric.unit}
+                      {metric.target ? ` / ${formatNumber(metric.target)}${metric.unit}` : ''}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className="h-2 rounded-full"
                         style={{ 
-                          width: `${Math.min((metric.current / metric.target) * 100, 100)}%`,
+                          width: `${metric.target ? Math.min((metric.current / metric.target) * 100, 100) : 0}%`,
                           backgroundColor: '#3B4A66'
                         }}
                       ></div>
@@ -603,38 +601,26 @@ export default function SuperDashboardContent() {
             <h4 className="text-base font-semibold text-gray-900 mb-1">Security Status</h4>
             <p className="text-sm text-gray-600 mb-4">Platform security overview</p>
             <div className="flex-1 space-y-3">
-              {securityStatus.map((item, index) => (
-                <div 
-                  key={index} 
-                  className={`flex items-center justify-between p-4 rounded-lg ${
-                    item.color === 'green' ? 'bg-green-50 ' :
-                    item.color === 'yellow' ? 'bg-yellow-50 ' :
-                    item.color === 'blue' ? 'bg-blue-50 ' :
-                    'bg-red-50 '
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {item.color === 'green' ? (
-                      <SecurityGreenIcon className="w-5 h-5" />
-                    ) : item.color === 'yellow' ? (
-                      <SecurityYellowIcon className="w-5 h-5" />
-                    ) : item.color === 'blue' ? (
-                      <SecurityBlueIcon className="w-5 h-5"  />
-                    ) : (
-                      <SecurityGreenIcon className="w-5 h-5" />
-                    )}
-                    <span className="text-sm font-medium text-gray-700">{item.name}</span>
+              {securityItems.map((item, index) => {
+                const itemEnabled = Boolean(item.enabled);
+                const backgroundClass = itemEnabled ? 'bg-green-50' : 'bg-yellow-50';
+                const badgeClass = itemEnabled ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white';
+                const StatusIcon = itemEnabled ? SecurityGreenIcon : SecurityYellowIcon;
+                return (
+                  <div 
+                    key={index} 
+                    className={`flex items-center justify-between p-4 rounded-lg ${backgroundClass}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <StatusIcon className="w-5 h-5" />
+                      <span className="text-sm font-medium text-gray-700">{item.name}</span>
+                    </div>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${badgeClass}`}>
+                      {itemEnabled ? 'Enabled' : 'Check Settings'}
+                    </span>
                   </div>
-                  <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                    item.color === 'green' ? 'bg-green-500 text-white' :
-                    item.color === 'yellow' ? 'bg-yellow-500 text-white border border-yellow-600' :
-                    item.color === 'blue' ? 'bg-blue-500 text-white' :
-                    'bg-red-500 text-white'
-                  }`}>
-                    {item.status}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -643,26 +629,28 @@ export default function SuperDashboardContent() {
       {/* Bottom Row - Recent Firms and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-6">
         {/* Recent User Registrations */}
-          <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6 h-100 flex flex-col">
+          <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
           <div className="flex justify-between items-center">
-            <h4 className="text-lg font-semibold text-gray-900">Recent User Registrations</h4>
+            <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
             <a href="#" className="text-black text-sm font-medium hover:underline cursor-pointer rounded-md px-3 py-2" style={{border: '1px solid #E8F0FF'}}>View All</a>
           </div>
-          <p className="text-sm text-gray-500 mb-3">Latest users that joined the platform</p>  
-          <div className="flex-1 space-y-2 overflow-y-auto">
-            {recentUsers.length > 0 ? recentUsers.map((user, index) => (
+          <p className="text-sm text-gray-500 mb-3">Latest firms that joined the platform</p>  
+          <div className="space-y-2">
+            {recentFirms.length > 0 ? recentFirms.map((firm, index) => (
               <div key={index} className="border border-[#E8F0FF] flex items-center justify-between p-1 rounded-lg">
                 <div className="flex-1">
-                  <h6 className="font-medium text-gray-900">{user.name}</h6>
-                  <p className="text-xs text-gray-600">Joined: {user.lastActive} • Role: {user.plan}</p>
+                  <h6 className="font-medium text-gray-900">{firm.name}</h6>
+                  <p className="text-xs text-gray-600">
+                    Joined: {firm.created_at_display || firm.created_at || 'N/A'} • Users: {formatNumber(firm.active_users)} • Monthly Fee: {formatCurrency(firm.monthly_fee)}
+                  </p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.planColor}`}>
-                  {user.plan}
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                  {firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : '—'}
                 </span>
               </div>
             )) : (
               <div className="text-center py-4">
-                <p className="text-gray-500">No recent users</p>
+                <p className="text-gray-500">No recent firms</p>
               </div>
             )}
           </div>
@@ -676,11 +664,13 @@ export default function SuperDashboardContent() {
             {quickActions.map((action, index) => (
               <button
                 key={index}
-                className="flex flex-col items-center p-6 border border-[#E8F0FF] transition-colors"
+                type="button"
+                onClick={() => action.route && navigate(action.route)}
+                className="flex flex-col items-center p-6 border border-[#E8F0FF] transition-colors hover:border-[#3B4A66]"
                 style={{ borderRadius: '1rem' }}
               >
-                <div className="mb-2 w-6 h-6 text-gray-600">{action.icon}</div>
-                <span className="text-xs font-medium text-gray-700 text-center">{action.name}</span>
+                <div className="mb-2 w-6 h-6 text-gray-600">{getQuickActionIcon(action.label)}</div>
+                <span className="text-xs font-medium text-gray-700 text-center">{action.label}</span>
               </button>
             ))}
           </div>

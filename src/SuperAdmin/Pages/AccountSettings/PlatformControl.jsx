@@ -26,8 +26,8 @@ export default function PlatformControl() {
 
     return (
         <div className=" min-h-screen">
-                {/* Audit Summary (Mock) */}
-                <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
+            {/* Audit Summary (Mock) */}
+            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
                 <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-4">
                     Audit Summary (Mock)
                 </h3>
@@ -50,8 +50,8 @@ export default function PlatformControl() {
                 </div>
             </div>
 
-                {/* Platform Controls */}
-                <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
+            {/* Platform Controls */}
+            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
                 <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
                     Platform Controls
                 </h3>
@@ -67,40 +67,40 @@ export default function PlatformControl() {
                     <p className="text-gray-600 text-sm font-normal font-[BasisGrotesquePro] mb-4">
                         Control system-level storage that maps to subscription plans.
                     </p>
-                    
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {storagePlans.map((plan, index) => {
-                                const percentage = (plan.used / plan.total) * 100;
-                                return (
-                                    <div key={index} className="border border-[#E8F0FF] rounded-lg p-3">
-                                        <div className="mb-2 flex flex-row justify-between items-center">
-                                            <div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {storagePlans.map((plan, index) => {
+                            const percentage = (plan.used / plan.total) * 100;
+                            return (
+                                <div key={index} className="border border-[#E8F0FF] rounded-lg p-3">
+                                    <div className="mb-2 flex flex-row justify-between items-center">
+                                        <div>
                                             <div className="text-[#4B5563] text-sm font-thin font-[BasisGrotesquePro] mb-1">
                                                 {plan.name}
                                             </div>
                                             <div className="text-[#4B5563] text-xs font-thin font-[BasisGrotesquePro]">
                                                 {plan.planId}
                                             </div>
-                                            </div>
-                                            <div>
-                                            <div className="mb-2">
-                                            <div className="text-[#4B5563] text-xs font-thin font-[BasisGrotesquePro]">
-                                                Allocation: {plan.used} GB/{plan.total} GB
-                                            </div>
-                                            </div>
-                                            </div>
                                         </div>
-                                    
-                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-[#3B4A66] rounded-full transition-all duration-300"
-                                                style={{ width: `${percentage}%` }}
-                                            />
+                                        <div>
+                                            <div className="mb-2">
+                                                <div className="text-[#4B5563] text-xs font-thin font-[BasisGrotesquePro]">
+                                                    Allocation: {plan.used} GB/{plan.total} GB
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+
+                                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-[#3B4A66] rounded-full transition-all duration-300"
+                                            style={{ width: `${percentage}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@ export default function PlatformControl() {
                                 value={primaryColor}
                                 onChange={(e) => setPrimaryColor(e.target.value)}
                                 className="w-8 h-8 border border-gray-300  rounded cursor-pointer"
-                                style={{borderRadius: '10px'}}
+                                style={{ borderRadius: '10px' }}
                             />
                             <input
                                 type="text"
@@ -164,21 +164,21 @@ export default function PlatformControl() {
                         Live preview
                     </label>
                     <div className="bg-[#F6F7FF] rounded-lg  flex flex-row items-center justify-start gap-2 pl-2">
-                    <div 
-                        className="w-17 h-8 flex flex-col items-center justify-center text-white font-[BasisGrotesquePro]"
-                        style={{ backgroundColor: primaryColor }}
-                    >
-            
+                        <div
+                            className="w-17 h-8 flex flex-col items-center justify-center text-white font-[BasisGrotesquePro]"
+                            style={{ backgroundColor: primaryColor }}
+                        >
+
+                        </div>
+                        <div className="text-[#4B5563] text-sm font-[BasisGrotesquePro] ml-3 mt-2  pt-2">
+                            <p>{platformName}</p>
+                            <p>firmsstaff.com</p>
+                        </div>
                     </div>
-                   <div className="text-[#4B5563] text-sm font-[BasisGrotesquePro] ml-3 mt-2  pt-2">
-                    <p>{platformName}</p>
-                    <p>firmsstaff.com</p>
-                   </div>
-                </div>
                 </div>
             </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {/* IP / Location Restrictions */}
                 <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
                     <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
@@ -206,11 +206,11 @@ export default function PlatformControl() {
                             </label>
                         </div>
 
-                    
+
 
                         <div>
                             <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                              years to keep
+                                years to keep
                             </label>
                             <div className="bg-white border border-[#E8F0FF] rounded-xl  pl-4 pr-4 pt-2 pb-2 ">
                                 <div className="text-[#3B4A66] text-base font-semibold font-[BasisGrotesquePro] mb-1">
@@ -223,7 +223,7 @@ export default function PlatformControl() {
                         </div>
 
                         <div className="text-gray-500 text-xs font-normal font-[BasisGrotesquePro] leading-relaxed">
-                          <span className="text-[#3B4A66] font-semibold">Tip:</span> Use CIDR Notation For Ranges (Eg. 198.51.100.0/24). IP Restrictions Are Applied At The Tenant-Level And Can Be Overridden Per-Firm If Allowed.
+                            <span className="text-[#3B4A66] font-semibold">Tip:</span> Use CIDR Notation For Ranges (Eg. 198.51.100.0/24). IP Restrictions Are Applied At The Tenant-Level And Can Be Overridden Per-Firm If Allowed.
                         </div>
                     </div>
                 </div>

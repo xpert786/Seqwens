@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiX, FiUsers, FiUserCheck, FiDollarSign, FiTrendingUp, FiCheckCircle } from 'react-icons/fi';
-import { XIcon ,BlueUserIcon, ClientsIcon, DollarIcon, ActiveIcon } from '../Components/icons';
+import { XIcon, BlueUserIcon, ClientsIcon, DollarIcon, ActiveIcon } from '../Components/icons';
 
 const UserDetail = () => {
   const { userId } = useParams();
@@ -59,38 +59,36 @@ const UserDetail = () => {
             </div>
             <button
               onClick={handleClose}
-              
-            >   
+
+            >
               <XIcon size={24} />
             </button>
           </div>
         </div>
 
-         {/* Navigation Tabs */}
-         <div className="bg-white rounded-lg border border-[#E8F0FF] px-4 py-2 mb-6 w-fit">
-           <div className="flex space-x-1">
-             <button
-               onClick={() => setActiveTab('overview')}
-               className={`px-6 py-3 font-medium transition-colors ${
-                 activeTab === 'overview'
-                   ? 'bg-[#3B4A66] text-white'
-                   : 'text-gray-700 hover:text-gray-900'
-               }`}
-               style={{borderRadius: '7px'}}
-             >
-               Overview
-             </button>
-             <button
-               onClick={() => setActiveTab('subscription')}
-               className={`px-6 py-3 font-medium transition-colors ${
-                 activeTab === 'subscription'
-                   ? 'bg-[#3B4A66] text-white'
-                   : 'text-gray-700 hover:text-gray-900'
-               }`}
-               style={{borderRadius: '7px'}}
-             >
-               Subscription Plan
-             </button>
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-lg border border-[#E8F0FF] px-4 py-2 mb-6 w-fit">
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === 'overview'
+                ? 'bg-[#3B4A66] text-white'
+                : 'text-gray-700 hover:text-gray-900'
+                }`}
+              style={{ borderRadius: '7px' }}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('subscription')}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === 'subscription'
+                ? 'bg-[#3B4A66] text-white'
+                : 'text-gray-700 hover:text-gray-900'
+                }`}
+              style={{ borderRadius: '7px' }}
+            >
+              Subscription Plan
+            </button>
           </div>
         </div>
 
@@ -101,10 +99,10 @@ const UserDetail = () => {
 
       {/* Billing Details Modal */}
       {showBillingModal && (
-        <BillingModal 
-          billing={selectedBilling} 
+        <BillingModal
+          billing={selectedBilling}
           userData={userData}
-          onClose={handleCloseModal} 
+          onClose={handleCloseModal}
         />
       )}
     </div>
@@ -121,9 +119,9 @@ const OverviewTab = ({ userData }) => {
         <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
           <div className="flex justify-between items-start">
             <div>
-               <p className="text-[#3B4A66] text-sm font-medium mb-1">Users</p>
-               <p className="text-3xl font-bold text-[#3B4A66]">{userData.users}</p>
-               <p className="text-[#3B4A66] text-sm">Active staff members</p>
+              <p className="text-[#3B4A66] text-sm font-medium mb-1">Users</p>
+              <p className="text-3xl font-bold text-[#3B4A66]">{userData.users}</p>
+              <p className="text-[#3B4A66] text-sm">Active staff members</p>
             </div>
             <div >
               <BlueUserIcon size={35} />
@@ -135,9 +133,9 @@ const OverviewTab = ({ userData }) => {
         <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
           <div className="flex justify-between items-start">
             <div>
-               <p className="text-[#3B4A66] text-sm font-medium mb-1">Clients</p>
-               <p className="text-3xl font-bold text-[#3B4A66]">{userData.clients}</p>
-               <p className="text-[#3B4A66] text-sm">Staff members with access</p>
+              <p className="text-[#3B4A66] text-sm font-medium mb-1">Clients</p>
+              <p className="text-3xl font-bold text-[#3B4A66]">{userData.clients}</p>
+              <p className="text-[#3B4A66] text-sm">Staff members with access</p>
             </div>
             <div >
               <ClientsIcon size={35} />
@@ -149,9 +147,9 @@ const OverviewTab = ({ userData }) => {
         <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
           <div className="flex justify-between items-start">
             <div>
-               <p className="text-[#3B4A66] text-sm font-medium mb-1">Revenue</p>
-               <p className="text-3xl font-bold text-[#3B4A66]">{userData.revenue}</p>
-               <p className="text-[#3B4A66] text-sm">Monthly subscription</p>
+              <p className="text-[#3B4A66] text-sm font-medium mb-1">Revenue</p>
+              <p className="text-3xl font-bold text-[#3B4A66]">{userData.revenue}</p>
+              <p className="text-[#3B4A66] text-sm">Monthly subscription</p>
             </div>
             <div >
               <DollarIcon size={35} />
@@ -164,7 +162,7 @@ const OverviewTab = ({ userData }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Firm Information */}
         <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
-          <h5  className="text-md font-semibold text-[#3B4A66] mb-4">Firm Information</h5>
+          <h5 className="text-md font-semibold text-[#3B4A66] mb-4">Firm Information</h5>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-[#3B4A66] text-sm font-medium">Owner:</span>
@@ -198,31 +196,31 @@ const OverviewTab = ({ userData }) => {
                 <span className="text-[#3B4A66] text-sm">Overall Health</span>
                 <span className="text-[#3B4A66] font-medium">{userData.overallHealth}%</span>
               </div>
-               <div className="w-full bg-gray-200 rounded-full h-2">
-                 <div 
-                   className="bg-[#3B4A66] h-2 rounded-full" 
-                   style={{ width: `${userData.overallHealth}%` }}
-                 ></div>
-               </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-[#3B4A66] h-2 rounded-full"
+                  style={{ width: `${userData.overallHealth}%` }}
+                ></div>
+              </div>
             </div>
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[#3B4A66] text-sm">Storage Used</span>
                 <span className="text-[#3B4A66] font-medium">{userData.storageUsed}GB / {userData.storageTotal}GB</span>
               </div>
-               <div className="w-full bg-gray-200 rounded-full h-2">
-                 <div 
-                   className="bg-[#3B4A66] h-2 rounded-full" 
-                   style={{ width: `${(userData.storageUsed / userData.storageTotal) * 100}%` }}
-                 ></div>
-               </div>
-            </div>
-              <div className="flex items-center text-[#3B4A66] text-sm">
-               <div className="mr-2">
-                 <ActiveIcon />
-               </div>
-               Last active: {userData.lastActive}
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-[#3B4A66] h-2 rounded-full"
+                  style={{ width: `${(userData.storageUsed / userData.storageTotal) * 100}%` }}
+                ></div>
               </div>
+            </div>
+            <div className="flex items-center text-[#3B4A66] text-sm">
+              <div className="mr-2">
+                <ActiveIcon />
+              </div>
+              Last active: {userData.lastActive}
+            </div>
           </div>
         </div>
       </div>
@@ -269,31 +267,31 @@ const SubscriptionTab = ({ userData, onViewBilling }) => {
       {/* Current Plan Section */}
       <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
         <h5 className="text-md font-semibold text-[#3B4A66] mb-4">Current Plan</h5>
-        
+
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-[#3B4A66] text-sm font-medium">Plan:</span>
-            <span 
+            <span
               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
               style={{ backgroundColor: userData.planColor }}
             >
               {userData.plan}
             </span>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <span className="text-[#3B4A66] text-sm font-medium">Monthly Cost:</span>
             <span className="text-[#3B4A66] font-medium">$2,999</span>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <span className="text-[#3B4A66] text-sm font-medium">Next Billing:</span>
             <span className="text-[#3B4A66] font-medium">15-01-2025</span>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <span className="text-[#3B4A66] text-sm font-medium">Status:</span>
-            <span 
+            <span
               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
               style={{ backgroundColor: userData.statusColor }}
             >
@@ -306,7 +304,7 @@ const SubscriptionTab = ({ userData, onViewBilling }) => {
       {/* Billing And Subscription Section */}
       <div className="bg-white rounded-lg p-6 border border-[#E8F0FF]">
         <h5 className="text-md font-semibold text-[#3B4A66] mb-4">Billing And Subscription</h5>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -329,20 +327,20 @@ const SubscriptionTab = ({ userData, onViewBilling }) => {
                   <td className="py-3 px-2 text-[#3B4A66] text-sm">{billing.endDate}</td>
                   <td className="py-3 px-2">
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={() => onViewBilling(billing)}
                         className="text-[#3B4A66] hover:text-blue-600"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
                         </svg>
                       </button>
                       <button className="text-[#3B4A66] hover:text-blue-600">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="7,10 12,15 17,10"/>
-                          <line x1="12" y1="15" x2="12" y2="3"/>
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7,10 12,15 17,10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                       </button>
                     </div>
@@ -363,7 +361,7 @@ const BillingModal = ({ billing, userData, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] ">
-      <div className="bg-white w-full max-w-2xl max-h-[95vh] overflow-y-auto" style={{borderRadius: '10px'}}>
+      <div className="bg-white w-full max-w-2xl max-h-[95vh] overflow-y-auto" style={{ borderRadius: '10px' }}>
         {/* Modal Header */}
         <div className="flex justify-between items-start p-4 border-gray-200">
           <div>
@@ -384,55 +382,55 @@ const BillingModal = ({ billing, userData, onClose }) => {
           <div className="flex flex-col gap-4 py-2 ">
             <div>
               <h6 className="text-xs font-semibold text-[#3B4A66] mb-2">Invoice Details</h6>
-               <div className="space-y-1 text-xs grid grid-cols-3 gap-4">
-                 <div>
-                   <span className="text-gray-600">Name:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">Michael Chen</span>
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Phone:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">(555) 987-6543</span>
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Email:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">michael.chen@firm.com</span>
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Invoice:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">#INV-2025-001</span>
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Billing Period:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">01/08/2024 - 01/08/2025</span>
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Plan:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">Pro Plan - Yearly</span>
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Status:</span>
-                   <br />
-                   <span className="text-[#3B4A66] font-medium">Paid</span>
-                 </div>
-               </div>
+              <div className="space-y-1 text-xs grid grid-cols-3 gap-4">
+                <div>
+                  <span className="text-gray-600">Name:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">Michael Chen</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Phone:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">(555) 987-6543</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Email:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">michael.chen@firm.com</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Invoice:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">#INV-2025-001</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Billing Period:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">01/08/2024 - 01/08/2025</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Plan:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">Pro Plan - Yearly</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Status:</span>
+                  <br />
+                  <span className="text-[#3B4A66] font-medium">Paid</span>
+                </div>
+              </div>
             </div>
 
             <div>
               <h6 className="text-xs font-semibold text-[#3B4A66] mb-2">Billing Information</h6>
-               <div className="space-y-1 text-xs flex flex-row gap-31">
-                 <div className="flex flex-col">
-                    <span className="text-gray-600">Billed To:</span>
-                    <span className="text-[#3B4A66] font-medium">Michael Chen<br />123 Main Street<br />New York, NY</span>
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="text-gray-600">Payment Method:</span>
-                    <span className="text-[#3B4A66] font-medium">Visa .... 5423</span>
+              <div className="space-y-1 text-xs flex flex-row gap-31">
+                <div className="flex flex-col">
+                  <span className="text-gray-600">Billed To:</span>
+                  <span className="text-[#3B4A66] font-medium">Michael Chen<br />123 Main Street<br />New York, NY</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600">Payment Method:</span>
+                  <span className="text-[#3B4A66] font-medium">Visa .... 5423</span>
                 </div>
               </div>
             </div>
@@ -440,8 +438,8 @@ const BillingModal = ({ billing, userData, onClose }) => {
 
           {/* Items Table */}
           <div className="border border-[#E8F0FF] p-2 rounded-lg">
-           
-             <div >
+
+            <div >
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -452,7 +450,7 @@ const BillingModal = ({ billing, userData, onClose }) => {
                   </tr>
                 </thead>
                 <tbody>
-                   <tr className="border border-[#E8F0FF] p-2 rounded-lg mb-2">
+                  <tr className="border border-[#E8F0FF] p-2 rounded-lg mb-2">
                     <td className="py-2 px-2 text-[#3B4A66] text-xs">#Pro Plan - Monthly Subscription</td>
                     <td className="py-2 px-2 text-center text-[#3B4A66] text-xs">1</td>
                     <td className="py-2 px-2 text-right text-[#3B4A66] text-xs">$49.00</td>
@@ -486,12 +484,12 @@ const BillingModal = ({ billing, userData, onClose }) => {
             </div>
 
             {/* Summary */}
-             <div className="mt-2 space-y-2">
-               <div className="flex justify-between items-center border border-[#E8F0FF] p-2 rounded-lg">
-                  <span className="text-[#3B4A66] text-xs">Taxes (8%):</span>
-                  <span className="text-[#3B4A66] font-medium text-xs">$5.12</span>
-                </div>
-               <div className="flex justify-between items-center text-sm font-bold border border-[#E8F0FF] p-2 rounded-lg">
+            <div className="mt-2 space-y-2">
+              <div className="flex justify-between items-center border border-[#E8F0FF] p-2 rounded-lg">
+                <span className="text-[#3B4A66] text-xs">Taxes (8%):</span>
+                <span className="text-[#3B4A66] font-medium text-xs">$5.12</span>
+              </div>
+              <div className="flex justify-between items-center text-sm font-bold border border-[#E8F0FF] p-2 rounded-lg">
                 <span className="text-[#3B4A66]">Grand Total:</span>
                 <span className="text-[#3B4A66]">$69.12</span>
               </div>
@@ -500,11 +498,11 @@ const BillingModal = ({ billing, userData, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className=" border border-[#E8F0FF] p-4" style={{borderRadius: '0 0 10px 10px'}}>
+        <div className=" border border-[#E8F0FF] p-4" style={{ borderRadius: '0 0 10px 10px' }}>
           <div className="flex justify-start">
-            <button 
+            <button
               className="bg-[#F56D2D] text-white py-2 px-4 font-medium hover:bg-[#E55A1A] transition-colors"
-              style={{borderRadius: '10px'}}
+              style={{ borderRadius: '10px' }}
               onClick={() => {
                 // Handle download logic here
                 console.log('Download invoice');

@@ -50,13 +50,21 @@ const refreshAccessToken = async () => {
 // Generic API request function with CORS handling
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
+    const headers = getHeaders();
     const config = {
       method,
-      headers: getHeaders(),
+      headers: { ...headers },
     };
 
     if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-      config.body = JSON.stringify(data);
+      if (data instanceof FormData) {
+        const formHeaders = { ...headers };
+        delete formHeaders['Content-Type'];
+        config.headers = formHeaders;
+        config.body = data;
+      } else {
+        config.body = JSON.stringify(data);
+      }
     }
 
     console.log('SuperAdmin API Request URL:', `${API_BASE_URL}${endpoint}`);
@@ -152,7 +160,7 @@ export const handleAPIError = (error) => {
 export const superAdminAPI = {
   // Get admin dashboard data
   getAdminDashboard: async () => {
-    return await apiRequest('/user/admin/dashboard/', 'GET');
+    return await apiRequest('/user/admin/platform-overview/', 'GET');
   },
 
   // Get user management data
@@ -208,18 +216,71 @@ export const superAdminAPI = {
     return await apiRequest(`/user/subscriptions/charts/?${params}`, 'GET');
   },
 
+  // Check subscription plan existence
+  checkSubscriptionPlanExistence: async (activeOnly = true) => {
+    const params = new URLSearchParams();
+    if (activeOnly !== undefined) {
+      params.append('active_only', activeOnly ? 'true' : 'false');
+    }
+    const query = params.toString();
+    const endpoint = `/user/subscription-plans/existence/${query ? `?${query}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get detailed overview for a specific firm
+  getFirmOverview: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/overview/`, 'GET');
+  },
+
+  // Create a new super admin level user
+  createSuperAdminUser: async (userData) => {
+    return await apiRequest('/user/superadmin/superadmins/create/', 'POST', userData);
+  },
+
+  // Get platform users (internal staff)
+  getPlatformUsers: async ({ status = '', role = '', search = '', page = 1, pageSize = 10 } = {}) => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (role) params.append('role', role);
+    if (search) params.append('search', search);
+    params.append('page', page.toString());
+    params.append('page_size', pageSize.toString());
+
+    const query = params.toString();
+    return await apiRequest(`/user/superadmin/platform-users/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Get system configuration settings
+  getSystemSettings: async () => {
+    return await apiRequest('/user/admin/system-settings/', 'GET');
+  },
+
+  // Update system configuration settings
+  updateSystemSettings: async (payload) => {
+    return await apiRequest('/user/admin/system-settings/', 'PATCH', payload);
+  },
+
+  // Get detailed admin user by ID
+  getAdminUserById: async (userId) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/`, 'GET');
+  },
+
+  // Update admin user suspension status
+  updateAdminUserSuspension: async (userId, payload) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/suspend/`, 'POST', payload);
+  },
+
   // Get analytics data
   getAnalytics: async (period = '30d') => {
     const params = new URLSearchParams({
       period: period,
     });
-
     return await apiRequest(`/seqwens/api/user/admin/analytics/?${params}`, 'GET');
   },
 
   // Get system health data
   getSystemHealth: async () => {
-    return await apiRequest('/seqwens/api/user/admin/system-health/', 'GET');
+    return await apiRequest('/user/admin/system/health/', 'GET');
   },
 
   // Get activity logs
@@ -327,7 +388,15 @@ export const superAdminAPI = {
     if (search) params.append('search', search);
     if (status && status !== 'All Status') params.append('status', status);
     if (priority && priority !== 'All Priority') params.append('priority', priority);
-    if (category && category !== 'all') params.append('category', category);
+    if (category && category !== 'all') {
+      const normalizedCategory = category
+        .toString()
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toLowerCase() + part.slice(1))
+        .join(' ');
+      params.append('category', normalizedCategory);
+    }
 
     return await apiRequest(`/user/admin/support/tickets/?${params}`, 'GET');
   },
@@ -337,14 +406,53 @@ export const superAdminAPI = {
     return await apiRequest(`/user/admin/support/tickets/${ticketId}/`, 'GET');
   },
 
-  // Update support ticket
-  updateSupportTicket: async (ticketId, ticketData) => {
-    return await apiRequest(`/user/admin/support/tickets/${ticketId}/`, 'PATCH', ticketData);
+  // Get assignable support administrators
+  getSupportAdmins: async () => {
+    const response = await apiRequest('/user/admin/internal-admins/', 'GET');
+
+    if (response && response.success && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((admin) => ({
+          id: admin.id,
+          name: admin.name || admin.full_name || admin.email || `Admin ${admin.id}`,
+          role: admin.role,
+        })),
+      };
+    }
+
+    return response;
   },
 
   // Assign support ticket
   assignSupportTicket: async (ticketId, assigneeId) => {
-    return await apiRequest(`/user/admin/support/tickets/${ticketId}/assign/`, 'POST', { assignee_id: assigneeId });
+    return await apiRequest(`/user/admin/support/tickets/${ticketId}/assign/`, 'POST', {
+      assignee_id: assigneeId,
+    });
+  },
+
+  // Update support ticket (reply / status update)
+  updateSupportTicket: async (ticketId, ticketData = {}) => {
+    if (ticketData instanceof FormData) {
+      return await apiRequest(`/user/admin/support/tickets/${ticketId}/`, 'POST', ticketData);
+    }
+
+    const formData = new FormData();
+
+    if (ticketData.message) {
+      formData.append('message', ticketData.message);
+    }
+    if (ticketData.status) {
+      formData.append('status', ticketData.status);
+    }
+    if (ticketData.priority) {
+      formData.append('priority', ticketData.priority);
+    }
+    if (ticketData.attachment) {
+      formData.append('attachment', ticketData.attachment);
+    }
+
+    return await apiRequest(`/user/admin/support/tickets/${ticketId}/`, 'POST', formData);
   },
 
   // Close support ticket

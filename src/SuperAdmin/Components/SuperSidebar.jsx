@@ -24,9 +24,9 @@ export default function SuperSidebar() {
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
-    
+
     setIsLoggingOut(true);
-    
+
     try {
       // Call logout API
       await userAPI.logout();
@@ -36,29 +36,41 @@ export default function SuperSidebar() {
     } finally {
       // Clear local data regardless of API response
       clearUserData();
-      
+
       // Navigate to login page using conditional URL
       navigateToLogin(navigate);
-      
+
       setIsLoggingOut(false);
     }
   };
 
+  const isActivePath = (path) => {
+    if (path === '/superadmin') {
+      return location.pathname === '/superadmin' || location.pathname === '/superadmin/';
+    }
+    if (path === '/superadmin/users') {
+      return (
+        location.pathname === '/superadmin/users' ||
+        location.pathname.startsWith('/superadmin/users/') ||
+        location.pathname.startsWith('/superadmin/users-details/')
+      );
+    }
+    if (location.pathname === path) return true;
+    return location.pathname.startsWith(`${path}/`);
+  };
+
   const linkClass = (path) =>
-    `flex items-center justify-start px-0.5 py-1.5 rounded-lg my-0 text-xs font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${
-      location.pathname === path 
-        ? "bg-[#F6F7FF] !text-[#3B4A66]" 
-        : "!text-[#3B4A66] hover:bg-slate-50 hover:!text-[#3B4A66]"
+    `flex items-center justify-start px-0.5 py-1.5 rounded-lg my-0 text-xs font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${isActivePath(path)
+      ? "bg-[#F6F7FF] !text-[#3B4A66]"
+      : "!text-[#3B4A66] hover:bg-slate-50 hover:!text-[#3B4A66]"
     }`;
 
   const iconWrapperClass = (path) =>
-    `inline-flex items-center justify-center mr-3 w-6 h-6 rounded-full ${
-      location.pathname === path ? "bg-[#3AD6F2] p-1 [&>svg]:!text-white [&>svg]:!fill-[#3AD6F2]" : ""
+    `inline-flex items-center justify-center mr-3 w-6 h-6 rounded-full ${isActivePath(path) ? "bg-[#3AD6F2] p-1 [&>svg]:!text-white [&>svg]:!fill-[#3AD6F2]" : ""
     }`;
 
   const bottomLinkClass = (path) =>
-    `flex items-center justify-start px-2 py-1 rounded-md text-xs font-medium text-black bg-transparent transition-all duration-200 hover:bg-gray-200 hover:text-black whitespace-nowrap text-left no-underline ${
-      location.pathname === path ? "!bg-red-500 !text-white" : ""
+    `flex items-center justify-start px-2 py-1 rounded-md text-xs font-medium text-black bg-transparent transition-all duration-200 hover:bg-gray-200 hover:text-black whitespace-nowrap text-left no-underline ${location.pathname === path ? "!bg-red-500 !text-white" : ""
     }`;
 
   return (
@@ -67,7 +79,7 @@ export default function SuperSidebar() {
         <ul className="flex flex-col">
           {/* Platform Management Section */}
           <li className="mb-3">
-            <div 
+            <div
               className="flex justify-between items-center px-1 py-1 text-[12px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 m-0 mb-2 cursor-pointer transition-colors duration-200 hover:text-gray-700 whitespace-nowrap"
               onClick={() => toggleSection('platformManagement')}
             >
@@ -79,7 +91,7 @@ export default function SuperSidebar() {
             {expandedSections.platformManagement && (
               <ul className="flex flex-col px-0 mt-2">
                 <li className="mb-2 text-[13px]">
-                  <Link  to="/superadmin" className={linkClass("/superadmin")}>
+                  <Link to="/superadmin" className={linkClass("/superadmin")}>
                     <span className={iconWrapperClass("/superadmin")}>
                       <DashIcon />
                     </span>
@@ -91,7 +103,7 @@ export default function SuperSidebar() {
                     <span className={iconWrapperClass("/superadmin/users")}>
                       <UserManage />
                     </span>
-                    User Management  
+                    User Management
                   </Link>
                 </li>
                 <li className="mb-2">
@@ -124,7 +136,7 @@ export default function SuperSidebar() {
 
           {/* System Administration Section */}
           <li className="mb-3">
-            <div 
+            <div
               className="flex justify-between items-center px-1 py-3 text-[13px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 m-0 mb-2 cursor-pointer transition-colors duration-200 hover:text-gray-700 whitespace-nowrap"
               onClick={() => toggleSection('systemAdministration')}
             >
@@ -159,18 +171,18 @@ export default function SuperSidebar() {
 
       {/* Fixed Bottom Box */}
       <div className="bg-[#F6F7FF] mx-2 my-3 mb-2 p-4 rounded-lg flex flex-col gap-2 shrink-0 ">
-        <Link to="/superadmin/admin-settings" className={bottomLinkClass("/superadmin/admin-settings")}>
+        {/* <Link to="/superadmin/admin-settings" className={bottomLinkClass("/superadmin/admin-settings")}>
           <span className="inline-flex items-center justify-center mr-2 w-6 h-6">
             <AccountIcon />
           </span>
           Account Settings
-        </Link>
-        <button 
+        </Link> */}
+        <button
           onClick={handleLogout}
           disabled={isLoggingOut}
           className="flex items-center justify-start px-2 py-1 rounded-md text-[10px] font-medium !text-[#EF4444] bg-transparent transition-all duration-200 hover:bg-gray-200 hover:!text-[#EF4444] whitespace-nowrap text-left no-underline w-full border-none cursor-pointer"
         >
-          <span className="inline-flex items-center justify-center mr-2 w-6 h-6" style={{color: '#EF4444'}}>
+          <span className="inline-flex items-center justify-center mr-2 w-6 h-6" style={{ color: '#EF4444' }}>
             <LogOutIcon />
           </span>
           {isLoggingOut ? 'Logging out...' : 'Log Out'}

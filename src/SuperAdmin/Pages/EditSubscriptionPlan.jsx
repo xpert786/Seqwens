@@ -35,7 +35,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   // Function to fetch existing plan data
   const fetchPlanData = async (planType) => {
     setFetchingPlan(true);
-    
+
     try {
       const response = await fetch(`${getApiBaseUrl()}/user/subscription-plans/${planType.toLowerCase()}/`, {
         method: 'GET',
@@ -43,7 +43,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           'Authorization': `Bearer ${getAccessToken()}`
         }
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {

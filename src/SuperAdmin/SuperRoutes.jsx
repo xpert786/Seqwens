@@ -5,6 +5,7 @@ import SuperDashboard from './Pages/SuperDashboard';
 import SuperDashboardContent from './Pages/SuperDashboardContent';
 import UserManagement from './Pages/UserManagement';
 import UserDetail from './Pages/UserDetail';
+import UsersDetails from './Pages/UsersDetails';
 import Subscriptions from './Pages/Subscriptions';
 import Analytics from './Pages/Analytics';
 import AccountSettings from './Pages/AccountSettings/AccountSettings';
@@ -53,6 +54,7 @@ export default function SuperRoutes() {
         <Route path="dashboard" element={<SuperDashboardContent />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="users/:userId" element={<UserDetail />} />
+        <Route path="users-details/:userId" element={<UsersDetails />} />
         <Route path="subscriptions" element={<Subscriptions />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<AccountSettings />} />
