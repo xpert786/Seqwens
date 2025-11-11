@@ -21,15 +21,39 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // Check if a path is active - handles both top-level and nested dashboard routes
+  const isActive = (path) => {
+    const currentPath = location.pathname;
+    
+    // Special handling for dashboard - only match exact /dashboard or /dashboard/
+    if (path === "/dashboard") {
+      return currentPath === "/dashboard" || currentPath === "/dashboard/";
+    }
+    
+    // Exact match
+    if (currentPath === path) return true;
+    
+    // Check if current path is a nested route under the path
+    // e.g., /documents/123 should match /documents
+    if (currentPath.startsWith(path + "/")) return true;
+    
+    // Check if current path is under /dashboard with the same suffix
+    // e.g., /dashboard/documents should match /documents
+    if (currentPath === `/dashboard${path}`) return true;
+    if (currentPath.startsWith(`/dashboard${path}/`)) return true;
+    
+    return false;
+  };
+
   const linkClass = (path) =>
-    `nav-link d-flex align-items-center px-2 py-2 rounded ${location.pathname === path ? "active-link" : "inactive-link"
+    `nav-link d-flex align-items-center px-2 py-2 rounded ${isActive(path) ? "active-link" : "inactive-link"
     }`;
 
   const iconWrapperClass = (path) =>
-    `icon-wrapper ${location.pathname === path ? "icon-active" : "icon-inactive"}`;
+    `icon-wrapper ${isActive(path) ? "icon-active" : "icon-inactive"}`;
 
   const bottomLinkClass = (path) =>
-    `sidebar-bottom-link ${location.pathname === path ? "bottom-active" : ""}`;
+    `sidebar-bottom-link ${isActive(path) ? "bottom-active" : ""}`;
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
@@ -117,14 +141,14 @@ export default function Sidebar() {
       {/* Fixed Bottom Box */}
       <div className="sidebar-bottom-boxs">
         <Link to="/accounts" className={bottomLinkClass("/accounts")}>
-          <span className={`bottom-icon-wrapper ${location.pathname === "/accounts" ? "active" : ""}`}>
+          <span className={`bottom-icon-wrapper ${isActive("/accounts") ? "active" : ""}`}>
             <AccountIcon />
           </span>
           Account Settings
         </Link>
 
         <Link to="/helpers" className={bottomLinkClass("/helpers")}>
-          <span className={`bottom-icon-wrapper ${location.pathname === "/helpers" ? "active" : ""}`}>
+          <span className={`bottom-icon-wrapper ${isActive("/helpers") ? "active" : ""}`}>
             <HelpsIcon />
           </span>
           Help & Support

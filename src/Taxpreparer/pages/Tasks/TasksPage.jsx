@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendinge, Progressingg, Completeded, Overduer, MiniContact, Dot, AddTask, Cut } from "../../component/icons";
+import { FaChevronDown, FaChevronRight, FaFolder, FaSearch } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { toast } from "react-toastify";
 
 // Custom checkbox styles
 const checkboxStyle = `
@@ -60,6 +62,16 @@ export default function TasksPage() {
   const [loadingClients, setLoadingClients] = useState(false);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientDropdownRef = useRef(null);
+  const [folderTree, setFolderTree] = useState([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [showFolderDropdown, setShowFolderDropdown] = useState(false);
+  const folderDropdownRef = useRef(null);
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const [selectedFolderPath, setSelectedFolderPath] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
+  const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
   const [formData, setFormData] = useState({
     task_type: 'signature_request',
     task_title: '',
@@ -69,24 +81,45 @@ export default function TasksPage() {
     priority: '',
     estimated_hours: '',
     description: '',
-    signature_fields: [],
-    files: []
+    files: [],
+    spouse_signature_required: false
   });
   const [tasks, setTasks] = useState({
-    pending: [
-      { id: 1, title: "Review W-2 Documents", client: "John Doe", due: "Due Today", priority: "High", note: "Please upload all W-2 forms for 2023 tax year" },
-      { id: 2, title: "Schedule Tax Review Meeting", client: "Sarah Wilson", due: "Due Today", priority: "Medium", note: "Please upload all W-2 forms for 2023 tax year" },
-    ],
-    inprogress: [
-      { id: 3, title: "Review W-2 Documents", client: "John Doe", due: "Due Today", priority: "High", note: "Please upload all W-2 forms for 2023 tax year" },
-    ],
-    completed: [
-      { id: 4, title: "Review W-2 Documents", client: "John Doe", due: "Due Today", priority: "High", note: "Please upload all W-2 forms for 2023 tax year" },
-    ],
-    overdue: [
-      { id: 5, title: "Review W-2 Documents", client: "John Doe", due: "Due Today", priority: "High", note: "Please upload all W-2 forms for 2023 tax year" },
-    ]
+    pending: [],
+    inprogress: [],
+    completed: [],
+    overdue: []
   });
+
+  // Tasks API state
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksError, setTasksError] = useState(null);
+  const [tasksStatistics, setTasksStatistics] = useState({
+    total_tasks: 0,
+    pending: 0,
+    in_progress: 0,
+    completed: 0,
+    cancelled: 0,
+    high_priority: 0
+  });
+  const [tasksPagination, setTasksPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
+
+  // Tasks filters
+  const [tasksSearchQuery, setTasksSearchQuery] = useState("");
+  const [tasksStatusFilter, setTasksStatusFilter] = useState("");
+  const [tasksPriorityFilter, setTasksPriorityFilter] = useState("");
+  const [tasksTypeFilter, setTasksTypeFilter] = useState("");
+  const [tasksStartDate, setTasksStartDate] = useState("");
+  const [tasksEndDate, setTasksEndDate] = useState("");
+  const [tasksSortBy, setTasksSortBy] = useState("-created_at");
+
 
   // Handle click outside
   useEffect(() => {
@@ -100,6 +133,11 @@ export default function TasksPage() {
       if (showClientDropdown && clientDropdownRef.current && !clientDropdownRef.current.contains(event.target)) {
         setShowClientDropdown(false);
       }
+
+      // Close folder dropdown if clicking outside
+      if (showFolderDropdown && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
+        setShowFolderDropdown(false);
+      }
     };
 
     // Add event listener when component mounts
@@ -109,7 +147,7 @@ export default function TasksPage() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showCustomize, showClientDropdown]);
+  }, [showCustomize, showClientDropdown, showFolderDropdown]);
 
   // Fetch clients from API
   const fetchClients = async () => {
@@ -132,7 +170,7 @@ export default function TasksPage() {
         },
       };
 
-      const apiUrl = `${API_BASE_URL}/taxpayer/tax-preparer/clients/`;
+      const apiUrl = `${API_BASE_URL}/firm/staff/clients/list/`;
       const response = await fetchWithCors(apiUrl, config);
 
       if (!response.ok) {
@@ -142,9 +180,10 @@ export default function TasksPage() {
 
       const result = await response.json();
 
-      if (result.success && result.data && result.data.clients) {
-        setClients(result.data.clients);
-        console.log('Clients fetched successfully:', result.data.clients.length);
+      // The API returns an array directly
+      if (Array.isArray(result)) {
+        setClients(result);
+        console.log('Clients fetched successfully:', result.length);
       } else {
         setClients([]);
       }
@@ -164,6 +203,471 @@ export default function TasksPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAddTaskModal]);
 
+  // Fetch received tasks from API
+  const fetchReceivedTasks = async () => {
+    try {
+      setTasksLoading(true);
+      setTasksError(null);
+
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const params = new URLSearchParams();
+      if (tasksSearchQuery) {
+        params.append('search', tasksSearchQuery);
+      }
+      if (tasksStatusFilter) {
+        params.append('status', tasksStatusFilter);
+      }
+      if (tasksPriorityFilter) {
+        params.append('priority', tasksPriorityFilter);
+      }
+      if (tasksTypeFilter) {
+        params.append('task_type', tasksTypeFilter);
+      }
+      if (tasksStartDate) {
+        params.append('start_date', tasksStartDate);
+      }
+      if (tasksEndDate) {
+        params.append('end_date', tasksEndDate);
+      }
+      if (tasksSortBy) {
+        params.append('sort_by', tasksSortBy);
+      }
+      if (tasksPagination.page > 1) {
+        params.append('page', tasksPagination.page);
+      }
+      if (tasksPagination.page_size !== 20) {
+        params.append('page_size', tasksPagination.page_size);
+      }
+
+      const queryString = params.toString();
+      const url = `${API_BASE_URL}/taxpayer/tax-preparer/tasks/received/${queryString ? `?${queryString}` : ''}`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      console.log('Fetching received tasks from:', url);
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Received tasks API response:', result);
+
+      if (result.success && result.data) {
+        const apiTasks = result.data.tasks || [];
+
+        // Organize tasks by status
+        const organizedTasks = {
+          pending: [],
+          inprogress: [],
+          completed: [],
+          overdue: []
+        };
+
+        const now = new Date();
+
+        apiTasks.forEach(task => {
+          const taskObj = {
+            id: task.id,
+            title: task.task_title || 'Untitled Task',
+            client: task.clients_info && task.clients_info.length > 0
+              ? task.clients_info.map(c => c.name).join(', ')
+              : `${task.client_count || 0} client(s)`,
+            due: task.due_date
+              ? new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'No due date',
+            priority: task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Medium',
+            note: task.description || '',
+            task_type: task.task_type,
+            status: task.status,
+            created_by: task.created_by_name || 'Admin',
+            folder_info: task.folder_info,
+            clients_info: task.clients_info || [],
+            due_date: task.due_date,
+            estimated_hours: task.estimated_hours,
+            signature_requests_info: task.signature_requests_info || []
+          };
+
+          // Check if overdue
+          if (task.due_date) {
+            const dueDate = new Date(task.due_date);
+            if (dueDate < now && task.status !== 'completed' && task.status !== 'cancelled') {
+              organizedTasks.overdue.push(taskObj);
+              return;
+            }
+          }
+
+          // Categorize by status
+          if (task.status === 'pending') {
+            organizedTasks.pending.push(taskObj);
+          } else if (task.status === 'in_progress') {
+            organizedTasks.inprogress.push(taskObj);
+          } else if (task.status === 'completed') {
+            organizedTasks.completed.push(taskObj);
+          } else if (task.status === 'cancelled') {
+            // Cancelled tasks can go to completed or be filtered out
+            organizedTasks.completed.push(taskObj);
+          } else {
+            // Default to pending for unknown statuses
+            organizedTasks.pending.push(taskObj);
+          }
+        });
+
+        setTasks(organizedTasks);
+
+        if (result.data.statistics) {
+          setTasksStatistics(result.data.statistics);
+        }
+
+        if (result.data.pagination) {
+          setTasksPagination(result.data.pagination);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to fetch tasks');
+      }
+    } catch (error) {
+      console.error('Error fetching received tasks:', error);
+      setTasksError(handleAPIError(error));
+      setTasks({
+        pending: [],
+        inprogress: [],
+        completed: [],
+        overdue: []
+      });
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  // Fetch tasks on component mount and when filters change
+  useEffect(() => {
+    if (active === "kanban") {
+      fetchReceivedTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, tasksSearchQuery, tasksStatusFilter, tasksPriorityFilter, tasksTypeFilter, tasksStartDate, tasksEndDate, tasksSortBy, tasksPagination.page, tasksPagination.page_size]);
+
+
+  // Fetch root folders from API
+  useEffect(() => {
+    const fetchRootFolders = async () => {
+      if (!showAddTaskModal) return; // Only fetch when modal is open
+
+      try {
+        setLoadingFolders(true);
+        const API_BASE_URL = getApiBaseUrl();
+        const token = getAccessToken();
+
+        if (!token) {
+          console.error('No authentication token found');
+          return;
+        }
+
+        const config = {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        };
+
+        const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/`, config);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          // New API structure: result.data.folders
+          let rootFolders = [];
+
+          if (result.data.folders && Array.isArray(result.data.folders)) {
+            rootFolders = result.data.folders;
+          }
+
+          const foldersTree = rootFolders.map(folder => ({
+            id: folder.id,
+            name: folder.title || folder.name,
+            title: folder.title || folder.name,
+            description: folder.description || '',
+            children: [],
+            expanded: false,
+            loaded: false,
+          }));
+          setFolderTree(foldersTree);
+        } else {
+          setFolderTree([]);
+        }
+      } catch (error) {
+        console.error('Error fetching root folders:', error);
+        setFolderTree([]);
+      } finally {
+        setLoadingFolders(false);
+      }
+    };
+
+    fetchRootFolders();
+  }, [showAddTaskModal]);
+
+  // Fetch subfolders for a specific folder
+  const fetchSubfolders = async (folderId) => {
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        return [];
+      }
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/browse/?folder_id=${folderId}`, config);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.folders) {
+        return result.data.folders.map(folder => ({
+          id: folder.id,
+          name: folder.title || folder.name,
+          title: folder.title || folder.name,
+          description: folder.description || '',
+          children: [],
+          expanded: false,
+          loaded: false,
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching subfolders:', error);
+      return [];
+    }
+  };
+
+  // Update folder tree with subfolders
+  const updateFolderWithSubfolders = (tree, targetFolderId, subfolders) => {
+    return tree.map(folder => {
+      if (folder.id === targetFolderId) {
+        return {
+          ...folder,
+          children: subfolders,
+          loaded: true,
+        };
+      }
+      if (folder.children && folder.children.length > 0) {
+        return {
+          ...folder,
+          children: updateFolderWithSubfolders(folder.children, targetFolderId, subfolders),
+        };
+      }
+      return folder;
+    });
+  };
+
+  const toggleExpand = async (folder, path = []) => {
+    const isCurrentlyExpanded = expandedFolders.has(folder.id);
+
+    const newExpandedFolders = new Set(expandedFolders);
+    if (isCurrentlyExpanded) {
+      newExpandedFolders.delete(folder.id);
+    } else {
+      newExpandedFolders.add(folder.id);
+    }
+    setExpandedFolders(newExpandedFolders);
+
+    // If expanding and subfolders haven't been loaded, fetch them
+    if (!isCurrentlyExpanded && !folder.loaded && folder.id) {
+      const subfolders = await fetchSubfolders(folder.id);
+      setFolderTree(prevTree => updateFolderWithSubfolders(prevTree, folder.id, subfolders));
+    }
+  };
+
+  const handleFolderSelect = (path, folderId) => {
+    setSelectedFolderPath(path);
+    handleInputChange('folder_id', folderId || '');
+    setShowFolderDropdown(false);
+  };
+
+  // Helper function to find folder by ID
+  const findFolderById = (tree, folderId) => {
+    for (const folder of tree) {
+      if (folder.id === folderId) {
+        return folder;
+      }
+      if (folder.children && folder.children.length > 0) {
+        const found = findFolderById(folder.children, folderId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // Create new folder
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+
+    setCreatingFolderLoading(true);
+
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        toast.error('No authentication token found. Please login again.', { position: "top-right", autoClose: 3000 });
+        return;
+      }
+
+      // Prepare folder data
+      const folderData = {
+        title: newFolderName.trim(),
+        description: `Documents folder: ${newFolderName.trim()}`
+      };
+
+      // Add parent_id if creating inside a folder
+      if (parentFolderForNewFolder) {
+        folderData.parent_id = parentFolderForNewFolder;
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(folderData)
+      };
+
+      console.log('Create Folder API Request URL:', `${API_BASE_URL}/firm/staff/documents/folders/create/`);
+      console.log('Create Folder API Request Data:', folderData);
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/folders/create/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('Create Folder API Error Response:', errorData);
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing create folder response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('Create Folder API Response:', result);
+
+      // Extract folder data from response
+      let folderInfo = result;
+      if (result.data) {
+        folderInfo = result.data;
+      }
+
+      // Create folder object with API response data
+      const newFolderObj = {
+        name: folderInfo.title || folderInfo.name || newFolderName.trim(),
+        id: folderInfo.id,
+        title: folderInfo.title || folderInfo.name || newFolderName.trim(),
+        description: folderInfo.description || '',
+        children: [],
+        expanded: false,
+        loaded: false
+      };
+
+      // Add folder to tree
+      let updatedTree;
+      if (parentFolderForNewFolder) {
+        // Add as child to parent folder
+        updatedTree = updateFolderWithSubfolders(folderTree, parentFolderForNewFolder, [
+          ...(findFolderById(folderTree, parentFolderForNewFolder)?.children || []),
+          newFolderObj
+        ]);
+      } else {
+        // Add as root level folder
+        updatedTree = [...folderTree, newFolderObj];
+      }
+
+      setFolderTree(updatedTree);
+      setNewFolderName("");
+      setCreatingFolder(false);
+      setParentFolderForNewFolder(null);
+
+      toast.success('Folder created successfully!', { position: "top-right", autoClose: 3000 });
+
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to create folder. Please try again.'), { position: "top-right", autoClose: 3000 });
+    } finally {
+      setCreatingFolderLoading(false);
+    }
+  };
+
+  // Render folder tree
+  const renderFolderTree = (folders, path = []) =>
+    folders.map((folder, idx) => {
+      const fullPath = [...path, folder.name].join(" > ");
+      const hasChildren = folder.children && folder.children.length > 0;
+      const isExpanded = expandedFolders.has(folder.id);
+      // Show expand icon if folder has children or might have children (not loaded yet)
+      const showExpandIcon = hasChildren || (!folder.loaded && folder.id);
+
+      return (
+        <div key={folder.id || idx} style={{ paddingLeft: '8px', marginBottom: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {showExpandIcon ? (
+              <span
+                onClick={() => toggleExpand(folder, path)}
+                style={{ cursor: 'pointer', width: '12px', display: 'inline-block' }}
+              >
+                {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+              </span>
+            ) : <span style={{ width: '12px' }} />}
+            <div
+              onClick={() => handleFolderSelect(fullPath, folder.id)}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '2px 0' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <FaFolder style={{ color: '#F59E0B' }} />
+              <span style={{ fontSize: '14px' }}>{folder.name}</span>
+            </div>
+          </div>
+          {hasChildren && isExpanded && (
+            <div style={{ paddingLeft: '12px' }}>
+              {renderFolderTree(folder.children, [...path, folder.name])}
+            </div>
+          )}
+        </div>
+      );
+    });
+
   // Handle form input changes
   const handleInputChange = (field, value) => {
     if (field === 'client_ids') {
@@ -178,22 +682,81 @@ export default function TasksPage() {
         ...prev,
         files: Array.from(value)
       }));
-    } else if (field === 'signature_fields') {
-      // Handle signature fields - this would typically be built from a form
-      try {
-        const fields = typeof value === 'string' ? JSON.parse(value) : value;
-        setFormData(prev => ({
-          ...prev,
-          signature_fields: Array.isArray(fields) ? fields : []
-        }));
-      } catch (e) {
-        console.error('Invalid signature_fields JSON:', e);
-      }
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
+      setFormData(prev => {
+        const updated = {
+          ...prev,
+          [field]: value
+        };
+        // Debug log for spouse_signature_required changes
+        if (field === 'spouse_signature_required') {
+          console.log('Updated spouse_signature_required in formData:', value, 'type:', typeof value);
+        }
+        return updated;
+      });
+    }
+  };
+
+  // Handle spouse signature toggle with validation
+  const handleSpouseSignatureToggle = async (checked) => {
+    // If unchecking, allow it
+    if (!checked) {
+      handleInputChange('spouse_signature_required', false);
+      return;
+    }
+
+    // If checking, validate that all selected clients have spouses
+    if (!formData.client_ids || formData.client_ids.length === 0) {
+      toast.error('Please select at least one client first.');
+      return;
+    }
+
+    try {
+      // Check spouse for all selected clients
+      const spouseChecks = await Promise.all(
+        formData.client_ids.map(async (clientId) => {
+          try {
+            const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
+            if (response.success && response.data) {
+              return {
+                clientId,
+                hasSpouse: response.data.has_spouse,
+                clientName: response.data.client_name || `Client ${clientId}`
+              };
+            }
+            return {
+              clientId,
+              hasSpouse: false,
+              clientName: `Client ${clientId}`,
+              error: 'Failed to check spouse information'
+            };
+          } catch (error) {
+            console.error(`Error checking spouse for client ${clientId}:`, error);
+            return {
+              clientId,
+              hasSpouse: false,
+              clientName: `Client ${clientId}`,
+              error: handleAPIError(error)
+            };
+          }
+        })
+      );
+
+      // Check if all clients have spouses
+      const clientsWithoutSpouse = spouseChecks.filter(check => !check.hasSpouse);
+
+      if (clientsWithoutSpouse.length > 0) {
+        // Some clients don't have spouses
+        const clientNames = clientsWithoutSpouse.map(c => c.clientName).join(', ');
+        toast.error(`The following client(s) do not have a partner/spouse: ${clientNames}. Spouse signature cannot be required.`);
+        return;
+      }
+
+      // All clients have spouses, allow toggle
+      handleInputChange('spouse_signature_required', true);
+    } catch (error) {
+      console.error('Error checking spouse:', error);
+      toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
     }
   };
 
@@ -202,7 +765,7 @@ export default function TasksPage() {
     e.preventDefault();
 
     if (!formData.task_title || !formData.client_ids || formData.client_ids.length === 0) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields', { position: "top-right", autoClose: 3000 });
       return;
     }
 
@@ -246,8 +809,37 @@ export default function TasksPage() {
         formDataToSend.append('description', formData.description);
       }
 
-      if (formData.signature_fields && formData.signature_fields.length > 0) {
-        formDataToSend.append('signature_fields', JSON.stringify(formData.signature_fields));
+      // Add spouse signature requirement for signature requests
+      // Always send this field for signature requests, even if false
+      if (formData.task_type === 'signature_request') {
+        // Get the raw value from formData
+        const rawValue = formData.spouse_signature_required;
+        console.log('Raw spouse_signature_required value before processing:', rawValue, 'type:', typeof rawValue);
+
+        // Convert to boolean - check multiple possible truthy values
+        const spouseSignValue = !!(rawValue === true ||
+          rawValue === 'true' ||
+          rawValue === 'True' ||
+          rawValue === 1 ||
+          rawValue === '1');
+
+        console.log('Processed spouse_signature_required value:', spouseSignValue);
+
+        // The API expects 'spouse_sign' field name (based on API response)
+        // Django FormData boolean fields often expect "1"/"0" or "True"/"False"
+        // Try "1"/"0" first as it's more commonly accepted
+        const spouseSignString = spouseSignValue ? '1' : '0';
+        formDataToSend.append('spouse_sign', spouseSignString);
+        // Also send the alternative field name for compatibility
+        formDataToSend.append('spouse_signature_required', spouseSignString);
+
+        console.log('Sending spouse_sign as:', spouseSignString, '(1 = true, 0 = false)');
+        console.log('FormData entries for spouse fields:');
+        for (let pair of formDataToSend.entries()) {
+          if (pair[0].includes('spouse')) {
+            console.log('  ', pair[0] + ':', pair[1]);
+          }
+        }   
       }
 
       // Append files (can be multiple files)
@@ -267,6 +859,7 @@ export default function TasksPage() {
       console.log('priority:', formData.priority);
       console.log('estimated_hours:', formData.estimated_hours);
       console.log('description:', formData.description);
+      console.log('spouse_signature_required:', formData.spouse_signature_required);
       console.log('files count:', formData.files.length);
 
       // Log FormData entries
@@ -307,55 +900,61 @@ export default function TasksPage() {
         priority: '',
         estimated_hours: '',
         description: '',
-        signature_fields: [],
-        files: []
+        files: [],
+        spouse_signature_required: false
       });
+      setSelectedFolderPath('');
+      setCreatingFolder(false);
+      setNewFolderName('');
+      setParentFolderForNewFolder(null);
       setShowAddTaskModal(false);
 
       // Show success message
-      alert('Task created successfully!');
+      toast.success('Task created successfully!', { position: "top-right", autoClose: 3000 });
 
       // Optionally refresh tasks list here
       // fetchTasks();
 
     } catch (error) {
       console.error('Error creating task:', error);
-      alert(handleAPIError(error));
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to create task. Please try again.'), { position: "top-right", autoClose: 3000 });
     } finally {
       setLoading(false);
     }
   };
 
+  // Calculate stats from API data
   const stats = [
     {
       label: "Total",
-      count: 5, // Sum of all tasks (2 pending + 1 in progress + 1 completed + 1 overdue)
+      count: tasksStatistics.total_tasks || 0,
       icon: <Task1 />,
-      color: "#4F46E5" // Purple color for total
+      color: "#4F46E5"
     },
     {
       label: "Pending",
-      count: 2,
+      count: tasksStatistics.pending || 0,
       icon: <Clocking />,
-      color: "#F59E0B" // Amber color for pending
+      color: "#F59E0B"
     },
     {
       label: "In Progress",
-      count: 1,
+      count: tasksStatistics.in_progress || 0,
       icon: <Progressing />,
-      color: "#3B82F6" // Blue color for in progress
+      color: "#3B82F6"
     },
     {
       label: "Completed",
-      count: 1,
+      count: tasksStatistics.completed || 0,
       icon: <Completeded />,
-      color: "#10B981" // Green color for completed
+      color: "#10B981"
     },
     {
       label: "Overdue",
-      count: 1,
+      count: tasks.overdue.length || 0,
       icon: <Overduer />,
-      color: "#EF4444" // Red color for overdue
+      color: "#EF4444"
     },
   ];
   // State for checkbox tick marks (only visual)
@@ -496,6 +1095,7 @@ export default function TasksPage() {
             >
               Calendar View
             </button>
+
           </div>
 
           {/* Customize button on the right */}
@@ -595,79 +1195,148 @@ export default function TasksPage() {
       </div>
       {/* Kanban / Calendar sections */}
       {active === "kanban" && (
-        <div className="d-flex justify-content-center">
-          <div className="d-flex flex-wrap gap-3 mt-3" style={{ maxWidth: 'fit-content' }}>
-            {order.map((k) => (
-              <div key={k} className="col-auto">
-                <div className="card" style={{ background: bgForCol(k), borderRadius: 18, border: "1px solid #E8F0FF", width: 'fit-content', minWidth: 280 }}>
-                  <div className="card-body">
-                    <h6 className="fw-semibold d-flex align-items-center mb-3" style={{ color: "#3B4A66", gap: 8 }}>
-                      {iconFor(k)} {titleFor(k)} ({tasks[k].length})
-                    </h6>
-                    {tasks[k].map((t) => (
-                      <div
-                        key={t.id}
-                        className="card mb-3 task-item"
-                        style={{ border: "1px solid #E8F0FF", borderRadius: 14 }}
-                        onClick={() => setSelectedTask(t)}
-                      >
-                        <div className="card-body position-relative p-3">
-                          <div className="position-absolute" style={{ top: 10, right: 10, zIndex: 1 }}>
-                            <span
-                              className="badge text-white"
-                              style={{
-                                background: t.priority.toLowerCase() === 'high' ? '#EF4444' :
-                                  t.priority.toLowerCase() === 'medium' ? '#F59E0B' :
-                                    t.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
-                                color: '#FFFFFF !important',
-                                borderRadius: '20px',
-                                padding: '3px 9px',
-                                fontSize: '10px',
-                                fontWeight: 700,
-                                lineHeight: '14px',
-                                whiteSpace: 'nowrap',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                height: '20px',
-                                border: 'none',
-                                textTransform: 'uppercase',
-                                WebkitFontSmoothing: 'antialiased',
-                                // MozOsxFontSmoothing: 'grayscale'
-                              }}
-                            >
-                              {t.priority}
-                            </span>
-                          </div>
-                          <div className="d-flex align-items-start">
-                            <span className="icon-circle" style={{ width: 28, height: 28, borderRadius: 8, background: "#EAF7FF", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#00C0C6" }}><Doc /></span>
-                            <div style={{ minWidth: 0, flex: 1, marginLeft: 10 }}>
-                              <div className="fw-semibold" style={{ color: "#3B4A66", whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', fontSize: 14, lineHeight: '20px', paddingRight: 60 }}>{t.title}</div>
-                              <div className="text-muted small d-flex align-items-center justify-content-between w-100 flex-wrap" style={{ gap: 12, marginTop: 6, marginBottom: 4 }}>
-                                <span className="d-inline-flex align-items-center" style={{ gap: 6 }}>
-                                  <MiniContact /> {t.client}
-                                  <span className="ms-3">{t.due}</span>
-                                </span>
-                                <button className="btn btn-sm btn-light" style={{ backgroundColor: '#fff', borderRadius: 8, border: '1px solid #E8F0FF' }} aria-label="More options">
-                                  <Dot />
-                                </button>
-                              </div>
-                              <div className="text-muted small" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{t.note}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        <div className="mt-4">
+
+          {/* Loading State */}
+          {tasksLoading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
-            ))}
-          </div>
+              <p className="mt-3">Loading tasks...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {tasksError && !tasksLoading && (
+            <div className="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style={{ backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5" }}>
+              <div>
+                <strong style={{ color: "#DC2626" }}>Error:</strong> <span style={{ color: "#991B1B" }}>{tasksError}</span>
+              </div>
+              <button className="btn btn-sm" onClick={fetchReceivedTasks} style={{ backgroundColor: "#DC2626", color: "#fff", border: "none" }}>
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Kanban Board */}
+          {!tasksLoading && !tasksError && (
+            <div className="d-flex justify-content-center">
+              <div className="mt-3" style={{
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '12px',
+                maxWidth: '1400px'
+              }}>
+                {order.map((k) => (
+                  <div key={k} style={{ display: 'flex' }}>
+                    <div className="card" style={{ background: bgForCol(k), borderRadius: 18, border: "1px solid #E8F0FF", width: '100%' }}>
+                      <div className="card-body">
+                        <h6 className="fw-semibold d-flex align-items-center mb-3" style={{ color: "#3B4A66", gap: 8 }}>
+                          {iconFor(k)} {titleFor(k)} ({tasks[k].length})
+                        </h6>
+                        {tasks[k].length > 0 ? (
+                          tasks[k].map((t) => (
+                            <div
+                              key={t.id}
+                              className="card mb-3 task-item"
+                              style={{ border: "1px solid #E8F0FF", borderRadius: 14 }}
+                              onClick={() => setSelectedTask(t)}
+                            >
+                              <div className="card-body position-relative p-3">
+                                <div className="position-absolute" style={{ top: 10, right: 10, zIndex: 1 }}>
+                                  <span
+                                    className="badge text-white"
+                                    style={{
+                                      background: t.priority.toLowerCase() === 'high' ? '#EF4444' :
+                                        t.priority.toLowerCase() === 'medium' ? '#F59E0B' :
+                                          t.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
+                                      color: '#FFFFFF !important',
+                                      borderRadius: '20px',
+                                      padding: '3px 9px',
+                                      fontSize: '10px',
+                                      fontWeight: 700,
+                                      lineHeight: '14px',
+                                      whiteSpace: 'nowrap',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      height: '20px',
+                                      border: 'none',
+                                      textTransform: 'uppercase',
+                                      WebkitFontSmoothing: 'antialiased',
+                                      // MozOsxFontSmoothing: 'grayscale'
+                                    }}
+                                  >
+                                    {t.priority}
+                                  </span>
+                                </div>
+                                <div className="d-flex align-items-start">
+                                  <span className="icon-circle" style={{ width: 28, height: 28, borderRadius: 8, background: "#EAF7FF", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#00C0C6" }}><Doc /></span>
+                                  <div style={{ minWidth: 0, flex: 1, marginLeft: 10 }}>
+                                    <div className="fw-semibold" style={{ color: "#3B4A66", whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', fontSize: 14, lineHeight: '20px', paddingRight: 60 }}>{t.title}</div>
+                                    <div className="text-muted small d-flex align-items-center justify-content-between w-100 flex-wrap" style={{ gap: 12, marginTop: 6, marginBottom: 4 }}>
+                                      <span className="d-inline-flex align-items-center" style={{ gap: 6 }}>
+                                        <MiniContact /> {t.client}
+                                        <span className="ms-3">{t.due}</span>
+                                      </span>
+                                      <button className="btn btn-sm btn-light" style={{ backgroundColor: '#fff', borderRadius: 8, border: '1px solid #E8F0FF' }} aria-label="More options">
+                                        <Dot />
+                                      </button>
+                                    </div>
+                                    <div className="text-muted small" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{t.note}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-4 text-muted small">
+                            No {titleFor(k).toLowerCase()} tasks
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!tasksLoading && !tasksError && tasksPagination.total_pages > 1 && (
+            <div className="d-flex justify-content-between align-items-center mt-4">
+              <div className="text-muted small">
+                Showing {((tasksPagination.page - 1) * tasksPagination.page_size) + 1} to {Math.min(tasksPagination.page * tasksPagination.page_size, tasksPagination.total_count)} of {tasksPagination.total_count} tasks
+              </div>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => setTasksPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                  disabled={!tasksPagination.has_previous}
+                >
+                  Previous
+                </button>
+                <span className="d-flex align-items-center px-3">
+                  Page {tasksPagination.page} of {tasksPagination.total_pages}
+                </span>
+                <button
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => setTasksPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                  disabled={!tasksPagination.has_next}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {active === "calendar" && (
         <div className="text-muted mt-3">Calendar view coming soon.</div>
       )}
+
 
       {/* Task Details Modal */}
       {selectedTask && (
@@ -810,9 +1479,13 @@ export default function TasksPage() {
                     priority: '',
                     estimated_hours: '',
                     description: '',
-                    signature_fields: [],
-                    files: []
+                    files: [],
+                    spouse_signature_required: false
                   });
+                  setSelectedFolderPath('');
+                  setCreatingFolder(false);
+                  setNewFolderName('');
+                  setParentFolderForNewFolder(null);
                 }}
                 style={{
                   background: 'none',
@@ -869,6 +1542,61 @@ export default function TasksPage() {
                     <option value="document_request">Document Request</option>
                   </select>
                 </div>
+
+                {/* Spouse Signature Required Toggle - Only show for signature_request */}
+                {formData.task_type === 'signature_request' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.spouse_signature_required || false}
+                          onChange={(e) => handleSpouseSignatureToggle(e.target.checked)}
+                          style={{
+                            width: '44px',
+                            height: '24px',
+                            appearance: 'none',
+                            backgroundColor: formData.spouse_signature_required ? '#00C0C6' : '#D1D5DB',
+                            borderRadius: '12px',
+                            position: 'relative',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            outline: 'none'
+                          }}
+                        />
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            left: formData.spouse_signature_required ? '22px' : '2px',
+                            width: '20px',
+                            height: '20px',
+                            backgroundColor: 'white',
+                            borderRadius: '50%',
+                            transition: 'left 0.2s',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        />
+                      </div>
+                      <span>Spouse's signature required</span>
+                    </label>
+                    <p style={{
+                      margin: '4px 0 0 56px',
+                      fontSize: '12px',
+                      color: '#6B7280'
+                    }}>
+                      Enable this if the spouse also needs to sign the document
+                    </p>
+                  </div>
+                )}
 
                 {/* Task Title */}
                 <div style={{ marginBottom: '20px' }}>
@@ -1116,34 +1844,207 @@ export default function TasksPage() {
                   )}
                 </div>
 
-                {/* Folder ID */}
+                {/* Folder Selection */}
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
-                    Folder ID
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.folder_id}
-                    onChange={(e) => handleInputChange('folder_id', e.target.value)}
-                    placeholder="Enter folder ID (optional)"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{
+                      display: 'block',
                       fontSize: '14px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                  />
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Folder (Optional)
+                    </label>
+                    {!creatingFolder ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCreatingFolder(true);
+                          setParentFolderForNewFolder(formData.folder_id || null);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#3B82F6',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          padding: '4px 8px',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Create New Folder
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Enter folder name"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          disabled={creatingFolderLoading}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newFolderName.trim() && !creatingFolderLoading) {
+                              handleCreateFolder();
+                            }
+                            if (e.key === 'Escape') {
+                              setCreatingFolder(false);
+                              setNewFolderName('');
+                              setParentFolderForNewFolder(null);
+                            }
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            width: '120px',
+                            outline: 'none'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateFolder();
+                          }}
+                          disabled={creatingFolderLoading || !newFolderName.trim()}
+                          style={{
+                            padding: '4px 12px',
+                            backgroundColor: creatingFolderLoading || !newFolderName.trim() ? '#9CA3AF' : '#3B82F6',
+                            border: 'none',
+                            borderRadius: '6px',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: creatingFolderLoading || !newFolderName.trim() ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {creatingFolderLoading ? 'Creating...' : 'Add'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCreatingFolder(false);
+                            setNewFolderName("");
+                            setParentFolderForNewFolder(null);
+                          }}
+                          disabled={creatingFolderLoading}
+                          style={{
+                            padding: '4px 12px',
+                            backgroundColor: 'white',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '6px',
+                            color: '#4B5563',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div ref={folderDropdownRef} style={{ position: 'relative' }}>
+                    <div
+                      style={{
+                        width: '100%',
+                        minHeight: '44px',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        backgroundColor: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.2s',
+                      }}
+                      onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
+                    >
+                      <span style={{ color: selectedFolderPath ? '#111827' : '#9CA3AF', fontSize: '14px' }}>
+                        {selectedFolderPath || 'Select a folder (optional)'}
+                      </span>
+                      {selectedFolderPath && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFolderPath('');
+                            handleInputChange('folder_id', '');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#6B7280',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            fontSize: '16px',
+                            marginLeft: '8px'
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                      <FaChevronDown
+                        size={12}
+                        style={{
+                          color: '#9CA3AF',
+                          marginLeft: '8px',
+                          transform: showFolderDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s'
+                        }}
+                      />
+                    </div>
+
+                    {/* Folder dropdown menu */}
+                    {showFolderDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '4px',
+                        backgroundColor: 'white',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        maxHeight: '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        padding: '8px'
+                      }}>
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#6B7280',
+                          marginBottom: '8px',
+                          fontWeight: '500',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Folders
+                        </div>
+                        {loadingFolders ? (
+                          <div style={{ padding: '12px', color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
+                            Loading folders...
+                          </div>
+                        ) : folderTree.length === 0 ? (
+                          <div style={{ padding: '12px', color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
+                            No folders available
+                          </div>
+                        ) : (
+                          renderFolderTree(folderTree)
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Priority, Due Date, and Estimated Hours in one row */}
@@ -1257,90 +2158,43 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                {/* File Upload */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
-                    Files
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={(e) => handleInputChange('files', e.target.files)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
+                {/* File Upload - Hidden for document_request */}
+                {formData.task_type !== 'document_request' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '8px',
                       fontSize: '14px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                      cursor: 'pointer',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                  />
-                  {formData.files.length > 0 && (
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>
-                      {formData.files.length} file(s) selected
-                    </div>
-                  )}
-                </div>
+                      fontWeight: '500',
+                      color: '#4B5563'
+                    }}>
+                      Files
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => handleInputChange('files', e.target.files)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'border-color 0.2s',
+                        cursor: 'pointer',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                    {formData.files.length > 0 && (
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>
+                        {formData.files.length} file(s) selected
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Signature Fields (JSON input for advanced users) */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#4B5563'
-                  }}>
-                    Signature Fields (JSON - Optional)
-                  </label>
-                  <textarea
-                    value={formData.signature_fields.length > 0 ? JSON.stringify(formData.signature_fields, null, 2) : ''}
-                    onChange={(e) => {
-                      try {
-                        if (e.target.value.trim()) {
-                          const parsed = JSON.parse(e.target.value);
-                          handleInputChange('signature_fields', parsed);
-                        } else {
-                          handleInputChange('signature_fields', []);
-                        }
-                      } catch (err) {
-                        // Invalid JSON, but allow user to keep typing
-                        console.warn('Invalid JSON:', err);
-                      }
-                    }}
-                    placeholder='[{"field_type": "signature", "page_number": 1, "position_x": 10, "position_y": 80, "width": 200, "height": 50, "is_required": true, "label": "Taxpayer Signature"}]'
-                    rows="4"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      color: '#111827',
-                      resize: 'vertical',
-                      minHeight: '100px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                      fontFamily: 'monospace',
-                      lineHeight: '1.5'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                  ></textarea>
-                  <small style={{ color: '#6B7280', fontSize: '11px' }}>
-                    Enter signature fields as JSON array (optional)
-                  </small>
-                </div>
 
               </form>
             </div>
@@ -1371,9 +2225,13 @@ export default function TasksPage() {
                     priority: '',
                     estimated_hours: '',
                     description: '',
-                    signature_fields: [],
-                    files: []
+                    files: [],
+                    spouse_signature_required: false
                   });
+                  setSelectedFolderPath('');
+                  setCreatingFolder(false);
+                  setNewFolderName('');
+                  setParentFolderForNewFolder(null);
                 }}
                 style={{
                   padding: '10px 16px',

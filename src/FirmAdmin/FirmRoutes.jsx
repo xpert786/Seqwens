@@ -27,6 +27,7 @@ import SchedulingCalendar from './Pages/Scheduling & calendar/SchedulingCalendar
 import Appointments from './Pages/Scheduling & calendar/Appointments';
 import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
+import EmailTemplate from './Pages/Email-templates/EmailTemplate';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -96,6 +97,7 @@ export default function FirmRoutes() {
         <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
         <Route path="workflow" element={<WorkflowTemp />} />
         <Route path="subscription" element={<SubscriptionManagement />} />
+        <Route path="email-templates" element={<EmailTemplate />} />
         
         {/* System Administration routes */}
         <Route path="settings" element={<FirmSettings />} />

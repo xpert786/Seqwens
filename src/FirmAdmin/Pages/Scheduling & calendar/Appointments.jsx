@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Feature from './Feature';
 
 const Appointments = () => {
     const location = useLocation();
-    const activeTab = location.pathname.includes('/appointments') ? 'Appointments' : 
-                     location.pathname.includes('/features') ? 'Features' :
-                     location.pathname.includes('/staff') ? 'Staff' : 'Calendar';
+    const activeTab = location.pathname.includes('/appointments') ? 'Appointments' :
+        location.pathname.includes('/features') ? 'Features' :
+            location.pathname.includes('/staff') ? 'Staff' : 'Calendar';
+    const navigate = useNavigate();
+    const [selectedTab, setSelectedTab] = useState(activeTab);
+
+    useEffect(() => {
+        setSelectedTab(activeTab);
+    }, [activeTab]);
     
     // Calendar states
     const [viewMode, setViewMode] = useState('Monthly');
@@ -13,9 +20,9 @@ const Appointments = () => {
     
     // Add Event Modal State
     const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
-    const [eventTitle, setEventTitle] = useState('');
-    const [eventType, setEventType] = useState('');
-    const [client, setClient] = useState('');
+    const [eventTitle, setEventTitle] = useState('Consultation Call');
+    const [eventType, setEventType] = useState('Consultation');
+    const [eventClient, setEventClient] = useState('client1');
     const [eventDate, setEventDate] = useState('');
     const [eventTime, setEventTime] = useState('');
     const [duration, setDuration] = useState('60');
@@ -25,9 +32,56 @@ const Appointments = () => {
 
     // Navigation tabs
     const navTabs = ['Calendar', 'Appointments', 'Features', 'Staff'];
+    const tabPaths = {
+        Calendar: '/firmadmin/calendar',
+        Appointments: '/firmadmin/calendar/appointments',
+        Features: null,
+        Staff: '/firmadmin/calendar/staff',
+    };
 
     // View mode tabs
     const viewTabs = ['Day', 'Week', 'Monthly', 'Years', 'Agenda'];
+
+    const featureCards = [
+        {
+            title: 'Calendar Integration',
+            description: 'Sync with external calendars and manage firm vs staff calendars.',
+            icon: '🗓',
+            primary: true,
+        },
+        {
+            title: 'Appointment Types',
+            description: 'Create custom appointment types with time buffers and locations.',
+            icon: '🗂',
+        },
+        {
+            title: 'Staff Assignment',
+            description: 'Set up auto-assignment rules and round-robin scheduling.',
+            icon: '👥',
+        },
+        {
+            title: 'Client Self-Scheduling',
+            description: 'Configure booking links, website embed, and intake forms.',
+            icon: '🧾',
+        },
+        {
+            title: 'Notifications & Reminders',
+            description: 'Set up automated reminders and custom notification sequences.',
+            icon: '🔔',
+        },
+        {
+            title: 'Compliance & Security',
+            description: 'Configure audit trails and e-signature requirements.',
+            icon: '🔐',
+        },
+    ];
+
+    const featureSettings = [
+        { name: 'Google Calendar Sync', status: 'Active', statusClasses: 'bg-[#22C55E] text-white', updated: 'Nov 1, 2023' },
+        { name: 'Outlook Calendar Sync', status: 'Pending', statusClasses: 'bg-[#FACC15] text-[#854D0E]', updated: 'Oct 28, 2023' },
+        { name: 'Two-Way Sync', status: 'Active', statusClasses: 'bg-[#22C55E] text-white', updated: 'Nov 2, 2023' },
+        { name: 'SMS Reminders', status: 'Active', statusClasses: 'bg-[#22C55E] text-white', updated: 'Oct 15, 2023' },
+    ];
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -144,18 +198,24 @@ const Appointments = () => {
                 <div className="mb-6">
                     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6">
                         <div>
-                            <h4 className="text-2xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Firm Calendar</h4>
-                            <p className="text-gray-600 font-[BasisGrotesquePro]">Manage appointments, deadlines, and meetings</p>
+                            <h4 className="text-2xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
+                                {selectedTab === 'Features' ? 'Features' : 'Firm Calendar'}
+                            </h4>
+                            <p className="text-gray-600 font-[BasisGrotesquePro]">
+                                Manage appointments, deadlines, and meetings
+                            </p>
                         </div>
-                        <button
-                            onClick={() => setIsAddEventModalOpen(true)}
-                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] mt-4 lg:mt-0"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Event
-                        </button>
+                        {selectedTab !== 'Features' && (
+                            <button
+                                onClick={() => setIsAddEventModalOpen(true)}
+                                className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] mt-4 lg:mt-0"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Event
+                            </button>
+                        )}
                     </div>
 
                     {/* Navigation Tabs and Event Filters */}
@@ -164,44 +224,42 @@ const Appointments = () => {
                         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-2">
                             <div className="flex gap-2">
                                 {navTabs.map((tab) => {
-                                    const isNavigable = tab === 'Calendar' || tab === 'Appointments';
-                                    const tabPath = tab === 'Calendar' ? '/firmadmin/calendar' : `/firmadmin/calendar/${tab.toLowerCase()}`;
-                                    
-                                    if (isNavigable) {
-                                        return (
-                                            <Link
-                                                key={tab}
-                                                to={tabPath}
-                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${
-                                                    activeTab === tab
-                                                        ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                        : 'bg-transparent hover:bg-gray-50 !text-black'
-                                                }`}
-                                            >
-                                                {tab}
-                                            </Link>
-                                        );
-                                    } else {
-                                        return (
-                                            <button
-                                                key={tab}
-                                                type="button"
-                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${
-                                                    activeTab === tab
-                                                        ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                        : 'bg-transparent hover:bg-gray-50 !text-black'
-                                                }`}
-                                            >
-                                                {tab}
-                                            </button>
-                                        );
-                                    }
+                                    const tabPath = tabPaths[tab];
+                                    const isActive = selectedTab === tab;
+
+                                    return (
+                                        <button
+                                            key={tab}
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedTab(tab);
+                                                if (tabPath && location.pathname !== tabPath) {
+                                                    navigate(tabPath);
+                                                } else if (tabPath && location.pathname === tabPath) {
+                                                    navigate(tabPath, { replace: true });
+                                                }
+                                            }}
+                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${
+                                                isActive
+                                                    ? 'bg-[#3AD6F2] !text-white font-semibold'
+                                                    : 'bg-transparent hover:bg-gray-50 !text-black'
+                                            }`}
+                                        >
+                                            {tab}
+                                        </button>
+                                    );
                                 })}
                             </div>
                         </div>
+                    </div>
+                </div>
 
+                {selectedTab === 'Features' ? (
+                    <Feature />
+                ) : (
+                    <>
                         {/* Event Filters - Right Side */}
-                        <div className="flex flex-col sm:flex-row gap-2 mt-2 lg:mt-0">
+                        <div className="flex flex-col sm:flex-row gap-2 mt-2 lg:mt-0 mb-6">
                             <div className="w-full sm:w-auto">
                                 <input
                                     type="text"
@@ -224,91 +282,117 @@ const Appointments = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Main Content Area */}
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Calendar Section */}
-                    <div className="flex-1">
-                        {/* View Controls */}
-                        <div className="flex gap-2 mb-4 flex-wrap">
-                            {viewTabs.map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setViewMode(tab)}
-                                    className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg ${
-                                        viewMode === tab
-                                            ? 'bg-[#F56D2D] text-white'
-                                            : 'bg-white !border border-[#E8F0FF] text-gray-600 hover:text-gray-900'
-                                    }`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Dynamic Navigation */}
-                        <div className="sm:p-4 mb-4">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <h5 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                    {viewMode === 'Day' && `${dayNames[currentDate.getDay()]}, ${currentMonthName} ${currentDay}, ${currentYear}`}
-                                    {viewMode === 'Week' && `Week of ${currentMonthName} ${weekDays[0].date}, ${currentYear}`}
-                                    {viewMode === 'Monthly' && `${currentMonthName} ${currentYear}`}
-                                    {viewMode === 'Years' && `${currentYear}`}
-                                    {viewMode === 'Agenda' && `Agenda - ${currentMonthName} ${currentYear}`}
-                                </h5>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => {
-                                            if (viewMode === 'Day') navigateDay(-1);
-                                            else if (viewMode === 'Week') navigateWeek(-1);
-                                            else if (viewMode === 'Years') navigateYear(-1);
-                                            else navigateMonth(-1);
-                                        }}
-                                        className="px-2 sm:px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors"
-                                    >
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        onClick={goToToday}
-                                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] transition-colors text-gray-600"
-                                    >
-                                        Today
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (viewMode === 'Day') navigateDay(1);
-                                            else if (viewMode === 'Week') navigateWeek(1);
-                                            else if (viewMode === 'Years') navigateYear(1);
-                                            else navigateMonth(1);
-                                        }}
-                                        className="px-2 sm:px-3 py-2 bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
-                                    >
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
+                        {/* Main Content Area */}
+                        <div className="flex flex-col lg:flex-row gap-6">
+                            {/* Calendar Section */}
+                            <div className="flex-1">
+                                {/* View Controls */}
+                                <div className="flex gap-2 mb-4 flex-wrap">
+                                    {viewTabs.map((tab) => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setViewMode(tab)}
+                                            className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg ${
+                                                viewMode === tab
+                                                    ? 'bg-[#F56D2D] text-white'
+                                                    : 'bg-white !border border-[#E8F0FF] text-gray-600 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            {tab}
+                                        </button>
+                                    ))}
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* Dynamic Calendar Views */}
-                        <div className="bg-white rounded-lg !border border-[#E8F0FF] p-2 sm:p-4 lg:p-6 overflow-x-auto">
-                            {viewMode === 'Day' && (
-                                <div className="min-h-[400px]">
-                                    <div className="text-center mb-4">
-                                        <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{currentDay}</h5>
-                                        <p className="text-gray-600 font-[BasisGrotesquePro]">{dayNames[currentDate.getDay()]}, {currentMonthName} {currentYear}</p>
+                                {/* Dynamic Navigation */}
+                                <div className="sm:p-4 mb-4">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <h5 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                            {viewMode === 'Day' && `${dayNames[currentDate.getDay()]}, ${currentMonthName} ${currentDay}, ${currentYear}`}
+                                            {viewMode === 'Week' && `Week of ${currentMonthName} ${weekDays[0].date}, ${currentYear}`}
+                                            {viewMode === 'Monthly' && `${currentMonthName} ${currentYear}`}
+                                            {viewMode === 'Years' && `${currentYear}`}
+                                            {viewMode === 'Agenda' && `Agenda - ${currentMonthName} ${currentYear}`}
+                                        </h5>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    if (viewMode === 'Day') navigateDay(-1);
+                                                    else if (viewMode === 'Week') navigateWeek(-1);
+                                                    else if (viewMode === 'Years') navigateYear(-1);
+                                                    else navigateMonth(-1);
+                                                }}
+                                                className="px-2 sm:px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors"
+                                            >
+                                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={goToToday}
+                                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] transition-colors text-gray-600"
+                                            >
+                                                Today
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (viewMode === 'Day') navigateDay(1);
+                                                    else if (viewMode === 'Week') navigateWeek(1);
+                                                    else if (viewMode === 'Years') navigateYear(1);
+                                                    else navigateMonth(1);
+                                                }}
+                                                className="px-2 sm:px-3 py-2 bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+                                            >
+                                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        {Array.from({ length: 24 }, (_, i) => (
-                                            <div key={i} className="flex items-center border-b border-[#E8F0FF] py-2">
-                                                <div className="w-20 text-sm text-gray-600 font-[BasisGrotesquePro]">{String(i).padStart(2, '0')}:00</div>
-                                                <div className="flex-1">
-                                                    {i === 6 && currentDay === 21 && currentDate.getMonth() === 6 && currentDate.getFullYear() === 2025 && (
+                                </div>
+
+                                {/* Dynamic Calendar Views */}
+                                <div className="bg-white rounded-lg !border border-[#E8F0FF] p-2 sm:p-4 lg:p-6 overflow-x-auto">
+                                    {viewMode === 'Day' && (
+                                        <div className="min-h-[400px]">
+                                            <div className="text-center mb-4">
+                                                <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{currentDay}</h5>
+                                                <p className="text-gray-600 font-[BasisGrotesquePro]">{dayNames[currentDate.getDay()]}, {currentMonthName} {currentYear}</p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {Array.from({ length: 24 }, (_, i) => (
+                                                    <div key={i} className="flex items-center border-b border-[#E8F0FF] py-2">
+                                                        <div className="w-20 text-sm text-gray-600 font-[BasisGrotesquePro]">{String(i).padStart(2, '0')}:00</div>
+                                                        <div className="flex-1">
+                                                            {i === 6 && currentDay === 21 && currentDate.getMonth() === 6 && currentDate.getFullYear() === 2025 && (
+                                                                <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2">
+                                                                    <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
+                                                                    <div>
+                                                                        <div className="text-xs text-gray-900 font-[BasisGrotesquePro]">Schedule a free Phone...</div>
+                                                                        <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>06:00 - 08:00</div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {viewMode === 'Week' && (
+                                        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 min-w-[600px]">
+                                            {dayNames.map((day) => (
+                                                <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF]">
+                                                    {day}
+                                                </div>
+                                            ))}
+                                            {weekDays.map((day, index) => (
+                                                <div key={index} className={`min-h-[300px] p-2 border border-[#E8F0FF] rounded-lg ${day.isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
+                                                    <div className={`text-sm font-[BasisGrotesquePro] mb-2 text-right ${day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'}`}>
+                                                        {day.date}
+                                                    </div>
+                                                    {day.date === 21 && day.month === currentDate.getMonth() && (
                                                         <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2">
                                                             <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
                                                             <div>
@@ -318,118 +402,93 @@ const Appointments = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {viewMode === 'Week' && (
-                                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 min-w-[600px]">
-                                    {dayNames.map((day) => (
-                                        <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF]">
-                                            {day}
+                                            ))}
                                         </div>
-                                    ))}
-                                    {weekDays.map((day, index) => (
-                                        <div key={index} className={`min-h-[300px] p-2 border border-[#E8F0FF] rounded-lg ${day.isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
-                                            <div className={`text-sm font-[BasisGrotesquePro] mb-2 text-right ${day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'}`}>
-                                                {day.date}
+                                    )}
+
+                                    {viewMode === 'Monthly' && (
+                                        <div className="border border-[#E8F0FF] rounded-lg overflow-hidden min-w-[600px]">
+                                            <div className="grid grid-cols-7">
+                                                {dayNames.map((day) => (
+                                                    <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF] border-r border-[#E8F0FF] last:border-r-0 bg-white">
+                                                        {day}
+                                                    </div>
+                                                ))}
                                             </div>
-                                            {day.date === 21 && day.month === currentDate.getMonth() && (
-                                                <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2">
+                                            <div className="grid grid-cols-7">
+                                                {calendarDays.map((day, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className={`min-h-[60px] sm:min-h-[70px] lg:min-h-[80px] p-1 sm:p-2 border-r border-b border-[#E8F0FF] relative ${
+                                                            !day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
+                                                        } ${day.isToday ? 'bg-blue-50' : ''} ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
+                                                    >
+                                                    {!(day.date === 21 && day.isCurrentMonth) && (
+                                                        <div className={`text-xs sm:text-sm font-[BasisGrotesquePro] mb-1 text-right ${
+                                                            !day.isCurrentMonth ? 'text-gray-400' : day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'
+                                                        }`}>
+                                                            {day.date}
+                                                        </div>
+                                                    )}
+                                                    {day.date === 21 && day.isCurrentMonth && (
+                                                        <>
+                                                            <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                                                <span className="text-white text-xs font-bold font-[BasisGrotesquePro]">{day.date}</span>
+                                                            </div>
+                                                            <div className="mt-6 sm:mt-8">
+                                                                <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 break-words">
+                                                                    <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="text-[10px] sm:text-xs text-gray-900 font-[BasisGrotesquePro] leading-tight break-words">Schedule a free Phone...</div>
+                                                                        <div className="text-[10px] sm:text-xs font-[BasisGrotesquePro] leading-tight" style={{ color: '#00C0C6' }}>09:00 - 10:00</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {viewMode === 'Years' && (
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 min-w-[400px]">
+                                            {yearMonths.map((month) => (
+                                                <div
+                                                    key={`${month.name}-${month.year}`}
+                                                    className={`rounded-lg border border-[#E8F0FF] p-3 text-center font-[BasisGrotesquePro] text-sm ${
+                                                        month.index === currentDate.getMonth() ? 'bg-blue-50 border-blue-300 text-blue-600 font-semibold' : 'bg-white text-gray-700'
+                                                    }`}
+                                                >
+                                                    {month.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {viewMode === 'Agenda' && (
+                                        <div className="space-y-3">
+                                            <div className="border border-[#E8F0FF] rounded-lg p-4">
+                                                <h6 className="text-sm font-semibold text-[#1E293B] font-[BasisGrotesquePro] mb-2">July 21, 2025</h6>
+                                                <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-3 py-2 flex items-start gap-2">
                                                     <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
                                                     <div>
-                                                        <div className="text-xs text-gray-900 font-[BasisGrotesquePro]">Schedule a free Phone...</div>
-                                                        <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>06:00 - 08:00</div>
+                                                        <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">Schedule a free Phone Consultation</div>
+                                                        <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>09:00 - 10:00 · Virtual</div>
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {viewMode === 'Monthly' && (
-                                <div className="border border-[#E8F0FF] rounded-lg overflow-hidden min-w-[600px]">
-                                    <div className="grid grid-cols-7">
-                                        {dayNames.map((day) => (
-                                            <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF] border-r border-[#E8F0FF] last:border-r-0 bg-white">
-                                                {day}
                                             </div>
-                                        ))}
-                                    </div>
-                                    <div className="grid grid-cols-7">
-                                        {calendarDays.map((day, index) => (
-                                            <div
-                                                key={index}
-                                                className={`min-h-[60px] sm:min-h-[70px] lg:min-h-[80px] p-1 sm:p-2 border-r border-b border-[#E8F0FF] relative ${
-                                                    !day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
-                                                } ${day.isToday ? 'bg-blue-50' : ''} ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
-                                            >
-                                            {!(day.date === 21 && day.isCurrentMonth) && (
-                                                <div className={`text-xs sm:text-sm font-[BasisGrotesquePro] mb-1 text-right ${
-                                                    !day.isCurrentMonth ? 'text-gray-400' : day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'
-                                                }`}>
-                                                    {day.date}
-                                                </div>
-                                            )}
-                                            {day.date === 21 && day.isCurrentMonth && (
-                                                <>
-                                                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                                        <span className="text-white text-xs font-bold font-[BasisGrotesquePro]">{day.date}</span>
-                                                    </div>
-                                                    <div className="mt-6 sm:mt-8">
-                                                        <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 break-words">
-                                                            <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-[10px] sm:text-xs text-gray-900 font-[BasisGrotesquePro] leading-tight break-words">Schedule a free Phone...</div>
-                                                                <div className="text-[10px] sm:text-xs font-[BasisGrotesquePro] leading-tight" style={{ color: '#00C0C6' }}>09:00 - 10:00</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {viewMode === 'Years' && (
-                                <div>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-                                        {yearMonths.map((month, index) => (
-                                            <div key={index} className="p-4 border border-[#E8F0FF] rounded-lg hover:bg-gray-50 cursor-pointer">
-                                                <h6 className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">{month.name}</h6>
-                                                <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">{month.year}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {viewMode === 'Agenda' && (
-                                <div className="space-y-4">
-                                    <div className="border-b border-[#E8F0FF] pb-2 mb-4">
-                                        <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">{currentMonthName} {currentYear}</h5>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3 p-3 border border-[#E8F0FF] rounded-lg">
-                                            <div className="w-16 text-sm text-gray-600 font-[BasisGrotesquePro]">Jul 21</div>
-                                            <div className="flex-1">
-                                                <div className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">Schedule a free Phone...</div>
-                                                <div className="text-xs text-gray-500 font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>06:00 - 08:00</div>
+                                            <div className="border border-[#E8F0FF] rounded-lg p-4">
+                                                <h6 className="text-sm font-semibold text-[#1E293B] font-[BasisGrotesquePro] mb-2">July 22, 2025</h6>
+                                                <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">No events scheduled</p>
                                             </div>
                                         </div>
-                                        <div className="text-sm text-gray-500 font-[BasisGrotesquePro] text-center py-4">No more events this month</div>
-                                    </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
+                            </div>
 
-                    {/* Right Sidebar */}
+                            {/* Right Sidebar */}
                     <div className="w-full lg:w-80 space-y-4">
                         {/* Today's Events */}
                         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
@@ -445,7 +504,9 @@ const Appointments = () => {
                             <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No upcoming events</p>
                         </div>
                     </div>
-                </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Add Calendar Event Modal */}
@@ -511,8 +572,8 @@ const Appointments = () => {
                                 <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Client (optional)</label>
                                 <div className="relative">
                                     <select
-                                        value={client}
-                                        onChange={(e) => setClient(e.target.value)}
+                                        value={eventClient}
+                                        onChange={(e) => setEventClient(e.target.value)}
                                         className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-1.5 pr-10 text-sm text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
                                     >
                                         <option value="">Select client</option>

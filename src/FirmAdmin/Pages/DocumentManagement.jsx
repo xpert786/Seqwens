@@ -143,7 +143,10 @@ export default function DocumentManagement() {
           </div>
         </div>
       </div>
-
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
+          <p className="text-gray-600">Manage client documents</p>
+        </div>
 
       {/* Navigation Tabs - Show tabs when NOT in nested route */}
       {!isNestedRoute && (
@@ -152,8 +155,8 @@ export default function DocumentManagement() {
             <button
               onClick={() => setActiveTab('Folder')}
               className={`px-6 py-3 text-sm font-medium transition-colors relative ${activeTab === 'Folder'
-                  ? 'text-white bg-[#3AD6F2] rounded-lg'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-white bg-[#3AD6F2] rounded-lg'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
               style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
             >
@@ -162,8 +165,8 @@ export default function DocumentManagement() {
             <button
               onClick={() => setActiveTab('Compliance')}
               className={`px-6 py-3 text-sm font-medium transition-colors relative ${activeTab === 'Compliance'
-                  ? 'text-white bg-[#3AD6F2] rounded-lg '
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-white bg-[#3AD6F2] rounded-lg '
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
               style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
             >
@@ -172,8 +175,8 @@ export default function DocumentManagement() {
             <button
               onClick={() => setActiveTab('Security')}
               className={`px-6 py-3 text-sm font-medium transition-colors relative ${activeTab === 'Security'
-                  ? 'text-white bg-[#3AD6F2] rounded-lg'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-white bg-[#3AD6F2] rounded-lg'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
               style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
             >
@@ -182,8 +185,8 @@ export default function DocumentManagement() {
             <button
               onClick={() => setActiveTab('Audit Trail')}
               className={`px-6 py-3 text-sm font-medium transition-colors relative ${activeTab === 'Audit Trail'
-                  ? 'text-white bg-[#3AD6F2] rounded-lg'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-white bg-[#3AD6F2] rounded-lg'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
               style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
             >

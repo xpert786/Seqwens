@@ -86,6 +86,9 @@ export default function DataIntakeForm() {
   // Refs for scrolling to error fields
   const fieldRefs = useRef({});
 
+  // Track if user has existing data (to determine POST vs PATCH)
+  const [hasExistingData, setHasExistingData] = useState(false);
+
   // Check if user already has data intake data and pre-fill form
   useEffect(() => {
     const checkExistingData = async () => {
@@ -126,13 +129,16 @@ export default function DataIntakeForm() {
 
           if (personalResult.success && personalResult.data) {
             const data = personalResult.data;
+            
+            // Mark that user has existing data (will use PATCH instead of POST)
+            setHasExistingData(true);
 
             // Pre-fill ALL form fields with existing data
             setPersonalInfo({
               firstName: data.first_name || "",
               middleInitial: data.middle_name || "",
               lastName: data.last_name || "",
-              dateOfBirth: data.dateOfBirth || "",
+              dateOfBirth: formatDateToYYYYMMDD(data.dateOfBirth),
               ssn: data.ssn || "",
               email: data.email || "",
               phone: data.phone_number || "",
@@ -153,7 +159,7 @@ export default function DataIntakeForm() {
                 firstName: data.spouse_info.spouse_first_name || "",
                 middleInitial: "",
                 lastName: data.spouse_info.spouse_last_name || "",
-                dateOfBirth: data.spouse_info.spouse_dateOfBirth || "",
+                dateOfBirth: formatDateToYYYYMMDD(data.spouse_info.spouse_dateOfBirth),
                 ssn: data.spouse_info.spouse_ssn || "",
                 email: data.spouse_info.spouse_email || "",
                 phone: data.spouse_info.spouse_phone_number || "",
@@ -195,7 +201,18 @@ export default function DataIntakeForm() {
             }
 
             // Set dependents
-            if (data.no_of_dependents > 0) {
+            if (data.dependents && Array.isArray(data.dependents) && data.dependents.length > 0) {
+              setHasDependents(true);
+              // Map dependent data from API, formatting dates
+              const formattedDependents = data.dependents.map((dep) => ({
+                firstName: dep.dependent_first_name || '',
+                middleInitial: dep.dependent_middle_name || '',
+                lastName: dep.dependent_last_name || '',
+                dob: formatDateToYYYYMMDD(dep.dependent_dateOfBirth),
+                ssn: dep.dependent_ssn || ''
+              }));
+              setDependents(formattedDependents);
+            } else if (data.no_of_dependents > 0) {
               setHasDependents(true);
               // Create empty dependent objects for the count
               const emptyDependents = Array(data.no_of_dependents).fill().map(() => ({
@@ -214,6 +231,7 @@ export default function DataIntakeForm() {
           console.log("No existing personal data found");
           // Set default income information to w2
           setFilingStatus(["w2"]);
+          setHasExistingData(false);
         }
 
         // Handle file data response
@@ -271,6 +289,30 @@ export default function DataIntakeForm() {
     }
   }, []);
 
+  // Format date to YYYY-MM-DD format
+  const formatDateToYYYYMMDD = (dateValue) => {
+    if (!dateValue) return "";
+    
+    // If it's already in YYYY-MM-DD format, return as is
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "";
+    }
+  };
+
   // Map API field names to form field paths
   const mapApiFieldToFormField = (apiField, source) => {
     // Mapping from API field names to form field paths
@@ -304,7 +346,9 @@ export default function DataIntakeForm() {
       // Bank info fields (nested in bank_info)
       'bank_name': 'bankInfo.bankName',
       'routing_number': 'bankInfo.routingNumber',
+      'confirm_routing_number': 'bankInfo.confirmRoutingNumber',
       'account_number': 'bankInfo.accountNumber',
+      'confirm_account_number': 'bankInfo.confirmAccountNumber',
 
       // Dependent fields (array)
       'dependents': 'dependents',
@@ -317,26 +361,94 @@ export default function DataIntakeForm() {
       'tax_documents': 'uploadedFile',
     };
 
-    // Handle nested fields (e.g., personal_info.first_name, bank_info.routing_number)
+    // Handle nested fields (e.g., personal_info.first_name, personal_info.spouse_info.spouse_dateOfBirth, bank_info.routing_number)
     let fieldKey = apiField;
     if (apiField.includes('.')) {
       const parts = apiField.split('.');
       // Remove known prefixes (personal_info, spouse_info, bank_info)
+      // Extract the last part which is the actual field name
+      // For example: personal_info.spouse_info.spouse_dateOfBirth -> spouse_dateOfBirth
       const prefixes = ['personal_info', 'spouse_info', 'bank_info'];
-      if (prefixes.includes(parts[0])) {
-        fieldKey = parts.slice(1).join('.');
-      } else {
-        fieldKey = parts[parts.length - 1];
+      // Find the last part that's not a prefix
+      for (let i = parts.length - 1; i >= 0; i--) {
+        if (!prefixes.includes(parts[i])) {
+          fieldKey = parts[i];
+          break;
+        }
       }
     }
 
     return fieldMappings[fieldKey] || apiField;
   };
 
+  // Parse error message string that contains a dictionary (e.g., from Django validation errors)
+  const parseErrorMessage = (message) => {
+    if (!message || typeof message !== 'string') return null;
+    
+    // Look for dictionary pattern in message: {...}
+    // Match the entire dictionary including nested structures
+    const dictMatch = message.match(/\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/);
+    if (!dictMatch) return null;
+    
+    try {
+      const dictStr = dictMatch[0];
+      
+      // Extract ErrorDetail objects: ErrorDetail(string='message', code='invalid')
+      // Replace with just the string value wrapped in quotes
+      const cleanedStr = dictStr.replace(/ErrorDetail\(string='([^']+)',\s*code='[^']+'\)/g, "'$1'");
+      
+      // Now we have a Python dict-like string, convert it to JSON
+      // Replace single quotes with double quotes for JSON, but be careful with nested quotes
+      // First, handle keys
+      let jsonStr = cleanedStr.replace(/'([^']+)':/g, '"$1":');
+      // Then handle string values (they're already in single quotes from ErrorDetail replacement)
+      jsonStr = jsonStr.replace(/: '([^']+)'/g, ': "$1"');
+      // Handle array brackets
+      jsonStr = jsonStr.replace(/\[/g, '[').replace(/\]/g, ']');
+      
+      const parsed = JSON.parse(jsonStr);
+      
+      // Convert to our error format
+      const result = {};
+      Object.entries(parsed).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          result[key] = value.map(item => String(item));
+        } else {
+          result[key] = [String(value)];
+        }
+      });
+      
+      return result;
+    } catch (e) {
+      console.error('Error parsing error message:', e, 'Original message:', message);
+      // Fallback: try to extract field names and messages manually
+      try {
+        const result = {};
+        // Extract confirm_routing_number errors
+        const routingMatch = message.match(/confirm_routing_number['"]:\s*\[ErrorDetail\(string='([^']+)'/);
+        if (routingMatch) {
+          result['confirm_routing_number'] = [routingMatch[1]];
+        }
+        // Extract confirm_account_number errors
+        const accountMatch = message.match(/confirm_account_number['"]:\s*\[ErrorDetail\(string='([^']+)'/);
+        if (accountMatch) {
+          result['confirm_account_number'] = [accountMatch[1]];
+        }
+        if (Object.keys(result).length > 0) {
+          return result;
+        }
+      } catch (fallbackError) {
+        console.error('Fallback parsing also failed:', fallbackError);
+      }
+      return null;
+    }
+  };
+
   // Parse API error response and set field errors
   const parseAndSetFieldErrors = (errorData, source) => {
     const errors = {};
 
+    // First, check if errors are in the errors object
     if (errorData.errors) {
       // Helper function to recursively parse nested error objects
       const parseNestedErrors = (errorObj, prefix = '') => {
@@ -345,7 +457,14 @@ export default function DataIntakeForm() {
             // This is a field with error messages
             const fieldPath = prefix ? `${prefix}.${key}` : key;
             const formFieldPath = mapApiFieldToFormField(fieldPath, source);
-            errors[formFieldPath] = value;
+            // Extract string from ErrorDetail objects if present
+            const errorMessages = value.map(item => {
+              if (typeof item === 'object' && item !== null && item.string) {
+                return item.string;
+              }
+              return String(item);
+            });
+            errors[formFieldPath] = errorMessages;
           } else if (typeof value === 'object' && value !== null) {
             // This is a nested object (e.g., personal_info, spouse_info, bank_info)
             const newPrefix = prefix ? `${prefix}.${key}` : key;
@@ -367,10 +486,34 @@ export default function DataIntakeForm() {
       Object.entries(errorData.errors).forEach(([field, errorMessages]) => {
         const formFieldPath = mapApiFieldToFormField(field, source);
         const messages = Array.isArray(errorMessages)
-          ? errorMessages
-          : [errorMessages];
+          ? errorMessages.map(item => {
+              if (typeof item === 'object' && item !== null && item.string) {
+                return item.string;
+              }
+              return String(item);
+            })
+          : [String(errorMessages)];
         errors[formFieldPath] = messages;
       });
+    }
+
+    // If no errors found in errors object, try parsing from message string
+    if (Object.keys(errors).length === 0 && errorData.message) {
+      const parsedErrors = parseErrorMessage(errorData.message);
+      if (parsedErrors) {
+        Object.entries(parsedErrors).forEach(([field, errorMessages]) => {
+          // Handle nested fields like bank_info.confirm_routing_number
+          let fieldPath = field;
+          if (field.includes('_') && !field.includes('.')) {
+            // Check if it's a bank_info field
+            if (field.startsWith('confirm_') || field === 'bank_name' || field === 'routing_number' || field === 'account_number') {
+              fieldPath = `bank_info.${field}`;
+            }
+          }
+          const formFieldPath = mapApiFieldToFormField(fieldPath, source);
+          errors[formFieldPath] = Array.isArray(errorMessages) ? errorMessages : [errorMessages];
+        });
+      }
     }
 
     console.log('Parsed field errors:', errors);
@@ -472,7 +615,7 @@ export default function DataIntakeForm() {
           first_name: personalInfo.firstName,
           middle_initial: personalInfo.middleInitial,
           last_name: personalInfo.lastName,
-          dateOfBirth: personalInfo.dateOfBirth,
+          dateOfBirth: personalInfo.dateOfBirth ? formatDateToYYYYMMDD(personalInfo.dateOfBirth) : "",
           ssn: personalInfo.ssn,
           email: personalInfo.email,
           phone: personalInfo.phone,
@@ -490,7 +633,7 @@ export default function DataIntakeForm() {
             spouse_first_name: spouseInfo.firstName,
             spouse_middle_name: spouseInfo.middleInitial,
             spouse_last_name: spouseInfo.lastName,
-            spouse_dateOfBirth: spouseInfo.dateOfBirth,
+            spouse_dateOfBirth: spouseInfo.dateOfBirth ? formatDateToYYYYMMDD(spouseInfo.dateOfBirth) : "",
             spouse_ssn: spouseInfo.ssn,
             spouse_email: spouseInfo.email,
             spouse_phone_number: spouseInfo.phone
@@ -499,14 +642,16 @@ export default function DataIntakeForm() {
             dependent_first_name: dep.firstName,
             dependent_middle_name: dep.middleInitial,
             dependent_last_name: dep.lastName,
-            dependent_dateOfBirth: dep.dob,
+            dependent_dateOfBirth: dep.dob ? formatDateToYYYYMMDD(dep.dob) : "",
             dependent_ssn: dep.ssn
           })) : []
         },
         bank_info: {
           bank_name: bankInfo.bankName,
           routing_number: bankInfo.routingNumber,
-          account_number: bankInfo.accountNumber
+          confirm_routing_number: bankInfo.confirmRoutingNumber,
+          account_number: bankInfo.accountNumber,
+          confirm_account_number: bankInfo.confirmAccountNumber
         }
       };
 
@@ -517,26 +662,50 @@ export default function DataIntakeForm() {
       if (hasFileToUpload) {
         fileFormData.append("tax_documents", uploadedFile);
       }
-      // Send selected income types as comma-separated string, or default to "w2"
-      const incomeInfo = filingStatus.length > 0 ? filingStatus.join(",") : "w2";
-      fileFormData.append("income_information", incomeInfo);
+      
+      // Send income information according to API spec
+      // income_information: string or null (primary income type)
+      // income_information_types: array of income types
+      const incomeTypes = filingStatus.length > 0 ? filingStatus : ["w2"];
+      const primaryIncomeType = incomeTypes[0] || "w2";
+      
+      // Send primary income type (can be null if no types selected)
+      if (incomeTypes.length > 0) {
+        fileFormData.append("income_information", primaryIncomeType);
+      }
+      
+      // Send income types as array (append each type separately for FormData)
+      incomeTypes.forEach(type => {
+        fileFormData.append("income_information_types", type);
+      });
 
       // Get the access token
-      const token = getAccessToken() || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYwNTkxMzQ5LCJpYXQiOjE3NjA1ODc3NDksImp0aSI6IjQ4NDlmOGNmY2MyNTQ4ZmNhZGRjZmMxYmYzMGIzODVmIiwidXNlcl9pZCI6IjMifQ.i2wpfckXFolye9W0mav1PxBQhg6tmCy31jAqeXQLHFY";
+      const token = getAccessToken();
+      if (!token) {
+        toast.error("Authentication required. Please login again.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
 
       console.log("Submitting dual API calls...");
+      console.log("Has existing data:", hasExistingData);
+      console.log("Using method:", hasExistingData ? "PATCH" : "POST");
       console.log("Bank info being sent:", {
         bank_name: bankInfo.bankName,
         routing_number: bankInfo.routingNumber,
-        account_number: bankInfo.accountNumber
+        confirm_routing_number: bankInfo.confirmRoutingNumber,
+        account_number: bankInfo.accountNumber,
+        confirm_account_number: bankInfo.confirmAccountNumber
       });
 
       // Call both APIs simultaneously using Promise.all
       const apiBaseUrl = getApiBaseUrl();
       const [personalDataResult, fileUploadResult] = await Promise.all([
-        // First API: Personal data (JSON)
+        // First API: Personal data (JSON) - Use PATCH if data exists, POST if new
         fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
-          method: "POST",
+          method: hasExistingData ? "PATCH" : "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -575,13 +744,13 @@ export default function DataIntakeForm() {
               reject(new Error('Network error'));
             });
 
-            xhr.open('POST', `${apiBaseUrl}/taxpayer/income-data-intake/`);
+            xhr.open(hasExistingData ? 'PATCH' : 'POST', `${apiBaseUrl}/taxpayer/income-data-intake/`);
             xhr.setRequestHeader('Authorization', `Bearer ${token}`);
             xhr.setRequestHeader('Cookie', 'csrftoken=ixFCvQ0kTg9v34Ddg81rTDl4v1Q1AOLv');
             xhr.send(fileFormData);
           });
         })() : fetch(`${apiBaseUrl}/taxpayer/income-data-intake/`, {
-          method: "POST",
+          method: hasExistingData ? "PATCH" : "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Cookie": "csrftoken=ixFCvQ0kTg9v34Ddg81rTDl4v1Q1AOLv"
@@ -651,10 +820,46 @@ export default function DataIntakeForm() {
       console.log("Personal data submission successful:", personalDataResponse);
       console.log("File upload successful:", fileUploadResponse);
 
+      // Store original state before updating
+      const wasNewSubmission = !hasExistingData;
+
+      // Handle success response
+      if (personalDataResponse.success) {
+        // Mark that data now exists (for future updates)
+        setHasExistingData(true);
+        
+        // Show success message
+        toast.success(personalDataResponse.message || "Data saved successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      if (fileUploadResponse && fileUploadResponse.success) {
+        toast.success(fileUploadResponse.message || "Documents uploaded successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
       // Clear any previous errors on success
       setFieldErrors({});
-      localStorage.setItem("userStatus", "new");
-      navigate("/dashboard-first");
+      
+      // Redirect to dashboard on successful personal data submission
+      if (personalDataResponse.success) {
+        // Show a brief success message before redirecting
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500); // Wait 1.5 seconds to show the success toast
+      }
     } catch (err) {
       console.error("Dual API submission error:", err);
 
@@ -1003,8 +1208,9 @@ export default function DataIntakeForm() {
               Date of Birth
             </label>
             <input
-              type="date"
+              type="text"
               className={`form-control ${getFieldError('personalInfo.dateOfBirth') ? 'is-invalid' : ''}`}
+              placeholder="YYYY-MM-DD"
               value={personalInfo.dateOfBirth}
               onChange={(e) => handlePersonalInfoChange('dateOfBirth', e.target.value)}
               data-field="personalInfo.dateOfBirth"
@@ -1385,11 +1591,27 @@ export default function DataIntakeForm() {
               Date of Birth
             </label>
             <input
-              type="date"
-              className="form-control"
+              type="text"
+              className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
+              placeholder="YYYY-MM-DD"
               value={spouseInfo.dateOfBirth}
               onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
+              data-field="spouseInfo.dateOfBirth"
+              ref={(el) => {
+                if (!fieldRefs.current['spouseInfo.dateOfBirth']) {
+                  fieldRefs.current['spouseInfo.dateOfBirth'] = el;
+                }
+              }}
             />
+            {getFieldError('spouseInfo.dateOfBirth') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('spouseInfo.dateOfBirth')}
+              </div>
+            )}
           </div>
           <div className="col-md-6">
             <label className="form-label" style={{
@@ -1654,8 +1876,9 @@ export default function DataIntakeForm() {
                           Date of Birth
                         </label>
                         <input
-                          type="date"
+                          type="text"
                           className="form-control"
+                          placeholder="YYYY-MM-DD"
                           value={dep.dob}
                           onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
                         />
@@ -2236,6 +2459,11 @@ export default function DataIntakeForm() {
               value={bankInfo.confirmRoutingNumber}
               onChange={(e) => handleBankInfoChange('confirmRoutingNumber', e.target.value)}
               data-field="bankInfo.confirmRoutingNumber"
+              ref={(el) => {
+                if (!fieldRefs.current['bankInfo.confirmRoutingNumber']) {
+                  fieldRefs.current['bankInfo.confirmRoutingNumber'] = el;
+                }
+              }}
             />
             {getFieldError('bankInfo.confirmRoutingNumber') && (
               <div className="invalid-feedback d-block" style={{
@@ -2293,6 +2521,11 @@ export default function DataIntakeForm() {
               value={bankInfo.confirmAccountNumber}
               onChange={(e) => handleBankInfoChange('confirmAccountNumber', e.target.value)}
               data-field="bankInfo.confirmAccountNumber"
+              ref={(el) => {
+                if (!fieldRefs.current['bankInfo.confirmAccountNumber']) {
+                  fieldRefs.current['bankInfo.confirmAccountNumber'] = el;
+                }
+              }}
             />
             {getFieldError('bankInfo.confirmAccountNumber') && (
               <div className="invalid-feedback d-block" style={{
