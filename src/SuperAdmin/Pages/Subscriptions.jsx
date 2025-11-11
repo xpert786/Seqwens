@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaChevronDown, FaDownload, FaEdit, FaEllipsisV } from 'react-icons/fa';
 import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
@@ -9,45 +9,30 @@ export default function Subscriptions() {
   const [showPlanDetails, setShowPlanDetails] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [notificationError, setNotificationError] = useState(null);
   const [showEditPlan, setShowEditPlan] = useState(false);
   const [showAddPlan, setshowAddPlan] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('Solo');
-  const [hoveredPoint, setHoveredPoint] = useState(null);
-  const [tooltipTimeout, setTooltipTimeout] = useState(null);
-  const [hoveredBar, setHoveredBar] = useState(null);
-  const [barTooltipTimeout, setBarTooltipTimeout] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [planOptions, setPlanOptions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [planFilter, setPlanFilter] = useState('');
+  const [tableLoading, setTableLoading] = useState(false);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [tableError, setTableError] = useState(null);
+  const debounceRef = useRef(null);
+  const [planPerformance, setPlanPerformance] = useState(null);
+  const filtersEffectInitializedRef = useRef(false);
+  const searchEffectInitializedRef = useRef(false);
 
   // API data states
   const [plansData, setPlansData] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Fetch data from APIs
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch both plans and chart data in parallel
-        const [plansResponse, chartsResponse] = await Promise.all([
-          superAdminAPI.getSubscriptionPlans(),
-          superAdminAPI.getSubscriptionCharts('revenue', 30)
-        ]);
-
-        setPlansData(plansResponse.data);
-        setChartData(chartsResponse.data);
-      } catch (err) {
-        console.error('Error fetching subscription data:', err);
-        setError(handleAPIError(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   // If edit plan is open, show the edit plan screen
   if (showEditPlan) {
@@ -59,15 +44,259 @@ export default function Subscriptions() {
     );
   }
 
+  const PLAN_CONFIG = [
+    { key: 'solo', label: 'Solo' },
+    { key: 'team', label: 'Team' },
+    { key: 'professional', label: 'Professional' },
+    { key: 'enterprise', label: 'Enterprise' }
+  ];
+
+  const planLookup = (plansData?.plans || []).reduce((acc, plan) => {
+    if (!plan) {
+      return acc;
+    }
+    const directKey = plan.plan_type?.toLowerCase?.();
+    const displayKey = plan.plan_display?.toLowerCase?.();
+    if (directKey) {
+      acc[directKey] = plan;
+    }
+    if (displayKey) {
+      acc[displayKey] = plan;
+    }
+    return acc;
+  }, {});
+
+  const handleOpenAddPlan = (planLabel, planKey) => {
+    setSelectedPlan(planLabel || planKey || 'Solo');
+    setshowAddPlan(true);
+  };
+
+  const getPlanBadgeStyles = (planType) => {
+    const normalizedType = planType?.toLowerCase?.();
+    switch (normalizedType) {
+      case 'solo':
+        return { badgeClass: 'bg-[#FBBF24]', textClass: 'text-white' };
+      case 'team':
+        return { badgeClass: 'bg-green-500', textClass: 'text-white' };
+      case 'professional':
+        return { badgeClass: 'bg-[#1E40AF]', textClass: 'text-white' };
+      case 'enterprise':
+        return { badgeClass: 'bg-[#CEC6FF]', textClass: 'text-[#1E1B4B]' };
+      default:
+        return { badgeClass: 'bg-gray-500', textClass: 'text-white' };
+    }
+  };
+
+  const formatCurrency = (value) => {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return '$0.00';
+    }
+    return numeric.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  const formatPercentage = (value) => {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return `${value}`;
+    }
+    return `${numeric.toFixed(1)}%`;
+  };
+
+  const formatNumber = (value) => {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return value ?? '0';
+    }
+    return numeric.toLocaleString();
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString();
+  };
+
+  const formatDateDisplay = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const fetchSubscriptionsData = useCallback(
+    async ({ search = '', status = '', plan = '' } = {}) => {
+      setTableLoading(true);
+      setTableError(null);
+
+      try {
+        const response = await superAdminAPI.getSuperadminSubscriptions({
+          search: search?.trim?.() ?? '',
+          status,
+          plan
+        });
+        const data = response?.data || {};
+        setSubscriptions(data.subscriptions || []);
+        if (Array.isArray(data.filters?.status_options)) {
+          setStatusOptions(data.filters.status_options);
+        }
+        if (Array.isArray(data.filters?.plan_options)) {
+          setPlanOptions(data.filters.plan_options);
+        }
+        const notificationSettings = data.notification_settings;
+        if (notificationSettings) {
+          setEmailNotifications(Boolean(notificationSettings.subscription_email_updates_enabled));
+          setSmsAlerts(Boolean(notificationSettings.subscription_sms_updates_enabled));
+        }
+      } catch (err) {
+        console.error('Error fetching subscriptions:', err);
+        setTableError(handleAPIError(err));
+        setSubscriptions([]);
+      } finally {
+        setTableLoading(false);
+      }
+    },
+    []
+  );
+
+  const getStatusBadgeClasses = (status) => {
+    const normalized = status?.toLowerCase?.();
+    switch (normalized) {
+      case 'active':
+        return 'bg-green-100 text-green-700';
+      case 'suspended':
+        return 'bg-red-100 text-red-700';
+      case 'trial':
+        return 'bg-blue-100 text-blue-700';
+      case 'inactive':
+        return 'bg-gray-200 text-gray-700';
+      default:
+        return 'bg-gray-200 text-gray-700';
+    }
+  };
+
+  // Fetch data from APIs
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch both plans and chart data in parallel
+        const [plansResponse, chartsResponse, planPerformanceResponse] = await Promise.all([
+          superAdminAPI.getSubscriptionPlans(),
+          superAdminAPI.getSubscriptionCharts('revenue', 30),
+          superAdminAPI.getSuperadminPlanPerformance()
+        ]);
+
+        setPlansData(plansResponse.data);
+        setChartData(chartsResponse.data);
+        setPlanPerformance(planPerformanceResponse.data || null);
+        await fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
+        setFiltersInitialized(true);
+      } catch (err) {
+        console.error('Error fetching subscription data:', err);
+        setError(handleAPIError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [fetchSubscriptionsData, searchTerm, statusFilter, planFilter]);
+
+  const handleNotificationUpdate = async (updates = {}) => {
+    if (savingNotifications) return;
+
+    const previous = {
+      email: emailNotifications,
+      sms: smsAlerts
+    };
+
+    const nextEmail = updates.subscription_email_updates_enabled ?? emailNotifications;
+    const nextSms = updates.subscription_sms_updates_enabled ?? smsAlerts;
+
+    setEmailNotifications(nextEmail);
+    setSmsAlerts(nextSms);
+    setSavingNotifications(true);
+    setNotificationError(null);
+
+    try {
+      const response = await superAdminAPI.updateSubscriptionNotifications({
+        subscription_email_updates_enabled: nextEmail,
+        subscription_sms_updates_enabled: nextSms
+      });
+
+      const updatedSettings = response?.data || {};
+      setEmailNotifications(Boolean(updatedSettings.subscription_email_updates_enabled ?? nextEmail));
+      setSmsAlerts(Boolean(updatedSettings.subscription_sms_updates_enabled ?? nextSms));
+    } catch (err) {
+      console.error('Error updating notification settings:', err);
+      setNotificationError(handleAPIError(err));
+      setEmailNotifications(previous.email);
+      setSmsAlerts(previous.sms);
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!filtersInitialized) return;
+    if (!filtersEffectInitializedRef.current) {
+      filtersEffectInitializedRef.current = true;
+      return;
+    }
+    fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
+  }, [statusFilter, planFilter, filtersInitialized, fetchSubscriptionsData]);
+
+  useEffect(() => {
+    if (!filtersInitialized) return;
+    if (!searchEffectInitializedRef.current) {
+      searchEffectInitializedRef.current = true;
+      return;
+    }
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
+    }, 400);
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchTerm, filtersInitialized, fetchSubscriptionsData]);
+
   // If add plan is open, show the add plan screen
   if (showAddPlan) {
     return (
       <AddSubscription
-        planType="Solo"
+        planType={selectedPlan}
         onClose={() => setshowAddPlan(false)}
       />
     );
   }
+
+  const mrrTrend = planPerformance?.mrr_trend || [];
+  const churnTrend = planPerformance?.churn_trend || [];
+  const planDistributionData = planPerformance?.plan_distribution || [];
+  const mrrValues = mrrTrend.map(item => Number(item?.value ?? 0));
+  const churnValues = churnTrend.map(item => Number(item?.value ?? 0));
+  const mrrMax = mrrValues.length ? Math.max(...mrrValues) : 0;
+  const mrrMin = mrrValues.length ? Math.min(...mrrValues) : 0;
+  const churnMax = churnValues.length ? Math.max(...churnValues) : 0;
+  const distributionMax = planDistributionData.reduce((max, item) => Math.max(max, item?.firms ?? 0), 0);
 
   // Loading state
   if (loading) {
@@ -114,18 +343,6 @@ export default function Subscriptions() {
             </svg>
 
             Export Report
-          </button>
-          <button
-            onClick={() => {
-              setshowAddPlan(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 text-[10px] text-white transition-colors"
-            style={{ backgroundColor: '#F56D2D', borderRadius: '7px' }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#e55a2b'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#F56D2D'}
-          >
-            <AddSubscriptionPlanIcon className="text-sm" />
-            Add Subscription Plan
           </button>
           <button
             onClick={() => {
@@ -220,6 +437,15 @@ export default function Subscriptions() {
             </div>
             <BlueExclamationTriangleIcon className="text-lg" />
           </div>
+          {(notificationError || savingNotifications) && (
+            <div className="mt-2 px-1">
+              {notificationError ? (
+                <p className="text-xs text-red-500">{notificationError}</p>
+              ) : (
+                <p className="text-xs text-gray-500">Saving notification settings...</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -235,55 +461,82 @@ export default function Subscriptions() {
           </div>
 
           <div className="space-y-2">
-            {plansData?.plans?.map((plan) => {
-              const getPlanColor = (planType) => {
-                switch (planType) {
-                  case 'solo': return 'bg-[#FBBF24]';
-                  case 'team': return 'bg-green-500';
-                  case 'professional': return 'bg-[#1E40AF]';
-                  case 'enterprise': return 'bg-[#CEC6FF]';
-                  default: return 'bg-gray-500';
-                }
-              };
+            {PLAN_CONFIG.map(({ key, label }) => {
+              const normalizedKey = key.toLowerCase();
+              const plan = planLookup[normalizedKey] || planLookup[label.toLowerCase()];
 
-              return (
-                <div
-                  key={plan.id}
-                  className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors"
-                  style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
-                  onClick={() => {
-                    setSelectedPlan(plan.plan_display);
-                    setShowEditPlan(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span className={`${getPlanColor(plan.plan_type)} text-white px-3 py-1 rounded-full text-sm font-medium`}>
-                        {plan.plan_display}
-                      </span>
-                      <div>
-                        <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
-                          {plan.total_subscribers} subscribers
-                        </p>
-                        <div className='flex flex-row gap-2'>
-                          <p className="text-xs" style={{ color: '#3B4A66' }}>
-                            {plan.formatted_revenue} revenue.
+              if (plan) {
+                const { badgeClass, textClass } = getPlanBadgeStyles(plan.plan_type || label);
+                return (
+                  <div
+                    key={normalizedKey}
+                    className="bg-white p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                    style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+                    onClick={() => {
+                      setSelectedPlan(plan.plan_display || label);
+                      setShowEditPlan(true);
+                    }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-start gap-3">
+                        <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
+                          {plan.plan_display || label}
+                        </span>
+                        <div>
+                          <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
+                            {plan.total_subscribers} subscribers
                           </p>
-                          <p className="text-xs" style={{ color: '#3B4A66' }}>
-                            {plan.formatted_growth} growth
-                          </p>
+                          <div className='flex flex-row gap-2'>
+                            <p className="text-xs" style={{ color: '#3B4A66' }}>
+                              {plan.formatted_revenue} revenue.
+                            </p>
+                            <p className="text-xs" style={{ color: '#3B4A66' }}>
+                              {plan.formatted_growth} growth
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold mb-1" style={{ color: '#3B4A66' }}>
-                        {plan.formatted_price}/month
-                      </p>
-                      <p className="text-xs" style={{ color: '#3B4A66' }}>
-                        {plan.is_active ? 'Active' : 'Inactive'}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-sm font-bold mb-1" style={{ color: '#3B4A66' }}>
+                          {plan.formatted_price}/month
+                        </p>
+                        <p className="text-xs" style={{ color: '#3B4A66' }}>
+                          {plan.is_active ? 'Active' : 'Inactive'}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                );
+              }
+
+              const { badgeClass, textClass } = getPlanBadgeStyles(label);
+              return (
+                <div
+                  key={normalizedKey}
+                  className="bg-white p-4 border border-dashed border-[#E8F0FF] rounded-[7px] flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`${badgeClass} ${textClass} px-3 py-1 rounded-full text-sm font-medium`}>
+                      {label}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium" style={{ color: '#3B4A66' }}>
+                        No {label} plan configured
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Click the plus icon to create this plan
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAddPlan(label, normalizedKey)}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-[#F56D2D] text-white"
+                    style={{ borderRadius: '50%' }}
+                    title={`Create ${label} plan`}
+                  >
+                    <AddSubscriptionPlanIcon className="w-4 h-4" stroke="white" />
+                  </button>
                 </div>
               );
             })}
@@ -303,12 +556,15 @@ export default function Subscriptions() {
                   <p className="text-xs" style={{ color: '#3B4A66' }}>Send email when  <br /> subscription events occur</p>
                 </div>
                 <button
-                  onClick={() => setEmailNotifications(!emailNotifications)}
-                  className="relative inline-flex h-6 w-11 items-center transition-colors"
+                  type="button"
+                  onClick={() => handleNotificationUpdate({ subscription_email_updates_enabled: !emailNotifications })}
+                  disabled={savingNotifications}
+                  className="relative inline-flex h-6 w-11 items-center transition-colors disabled:opacity-60"
                   style={{
                     borderRadius: '20px',
                     backgroundColor: emailNotifications ? '#F56D2D' : '#D1D5DB'
                   }}
+                  aria-pressed={emailNotifications}
                 >
                   <span
                     className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
@@ -328,12 +584,15 @@ export default function Subscriptions() {
                   <p className="text-xs" style={{ color: '#3B4A66' }}>Optional SMS notifications</p>
                 </div>
                 <button
-                  onClick={() => setSmsAlerts(!smsAlerts)}
-                  className="relative inline-flex h-6 w-11 items-center transition-colors"
+                  type="button"
+                  onClick={() => handleNotificationUpdate({ subscription_sms_updates_enabled: !smsAlerts })}
+                  disabled={savingNotifications}
+                  className="relative inline-flex h-6 w-11 items-center transition-colors disabled:opacity-60"
                   style={{
                     borderRadius: '20px',
                     backgroundColor: smsAlerts ? '#F56D2D' : '#D1D5DB'
                   }}
+                  aria-pressed={smsAlerts}
                 >
                   <span
                     className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
@@ -350,298 +609,229 @@ export default function Subscriptions() {
 
       {/* Plan Performance Section */}
       <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-        <h3 className="text-xl font-bold mb-2" style={{ color: '#3B4A66' }}>Plan Performance</h3>
-        <p className="text-xs mb-6" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
-
-        <div className="grid grid-cols-2 gap-6">
-          {/* Line Chart */}
-          <div className="bg-white p-6" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-            <div className="h-64 relative">
-              {/* Grid lines */}
-              <div className="absolute inset-0 ml-8">
-                {/* Horizontal grid lines */}
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="absolute w-full border-t border-dashed opacity-30"
-                    style={{
-                      top: `${i * 25}%`,
-                      borderColor: '#E5E7EB',
-                      height: '1px'
-                    }}
-                  />
-                ))}
-                {/* Vertical grid lines */}
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="absolute h-full border-l border-dashed opacity-30"
-                    style={{
-                      left: `${(i * 100) / 5}%`,
-                      borderColor: '#E5E7EB',
-                      width: '1px'
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Y-axis labels */}
-              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs" style={{ color: '#3B4A66' }}>
-                {(() => {
-                  if (chartData?.datasets?.[0]?.data) {
-                    const data = chartData.datasets[0].data;
-                    const maxValue = Math.max(...data);
-                    const minValue = Math.min(...data);
-                    const range = maxValue - minValue || 1;
-                    const step = range / 4;
-
-                    return [4, 3, 2, 1, 0].map(i => {
-                      const value = minValue + (step * i);
-                      return <span key={i}>{Math.round(value).toLocaleString()}</span>;
-                    });
-                  }
-                  return [28000, 21000, 14000, 7000, 0].map((value, i) => (
-                    <span key={i}>{value.toLocaleString()}</span>
-                  ));
-                })()}
-              </div>
-
-              {/* Chart area */}
-              <div className="ml-8 h-full flex items-end justify-between px-4 pb-4 relative">
-                {/* Chart lines and points */}
-                <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
-                  {chartData?.datasets?.[0]?.data && (() => {
-                    const data = chartData.datasets[0].data;
-                    const maxValue = Math.max(...data);
-                    const minValue = Math.min(...data);
-                    const range = maxValue - minValue || 1;
-                    const chartHeight = 200;
-                    const chartWidth = 400;
-                    const pointSpacing = chartWidth / (data.length - 1);
-
-                    // Create path for the line
-                    const pathData = data.map((value, index) => {
-                      const x = index * pointSpacing + 16;
-                      const y = chartHeight - ((value - minValue) / range) * chartHeight;
-                      return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
-                    }).join(' ');
-
-                    return (
-                      <>
-                        {/* Revenue line */}
-                        <path
-                          d={pathData}
-                          fill="none"
-                          stroke="#4CAF50"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-
-                        {/* Data points */}
-                        {data.map((value, index) => {
-                          const x = index * pointSpacing + 16;
-                          const y = chartHeight - ((value - minValue) / range) * chartHeight;
-                          const date = chartData.labels?.[index] ? new Date(chartData.labels[index]) : null;
-                          const formattedDate = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : `Day ${index + 1}`;
-
-                          return (
-                            <g key={`point-${index}`}>
-                              {/* Invisible larger hover area */}
-                              <circle
-                                cx={x}
-                                cy={y}
-                                r="12"
-                                fill="transparent"
-                                style={{ cursor: 'pointer' }}
-                                onMouseEnter={() => {
-                                  if (tooltipTimeout) clearTimeout(tooltipTimeout);
-                                  setHoveredPoint({
-                                    type: 'revenue',
-                                    index,
-                                    value,
-                                    month: formattedDate,
-                                    x: x,
-                                    y: y
-                                  });
-                                }}
-                                onMouseLeave={() => {
-                                  const timeout = setTimeout(() => setHoveredPoint(null), 100);
-                                  setTooltipTimeout(timeout);
-                                }}
-                              />
-                              {/* Visible dot */}
-                              <circle
-                                cx={x}
-                                cy={y}
-                                r="4"
-                                fill="white"
-                                stroke="#4CAF50"
-                                strokeWidth="2"
-                              />
-                            </g>
-                          );
-                        })}
-                      </>
-                    );
-                  })()}
-                </svg>
-
-                {/* X-axis labels */}
-                <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4">
-                  {chartData?.labels?.slice(0, 6).map((label, index) => {
-                    const date = new Date(label);
-                    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    return (
-                      <span key={index} className="text-xs" style={{ color: '#3B4A66' }}>
-                        {formattedDate}
-                      </span>
-                    );
-                  }) || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, index) => (
-                    <span key={index} className="text-xs" style={{ color: '#3B4A66' }}>{month}</span>
-                  ))}
-                </div>
-
-                {/* Dynamic Tooltip - shows on hover */}
-                {hoveredPoint && (
-                  <div
-                    className="absolute"
-                    style={{
-                      left: `${hoveredPoint.x}px`,
-                      top: `${hoveredPoint.y - 50}px`,
-                      zIndex: 20,
-                      transform: 'translateX(-50%)'
-                    }}
-                  >
-                    <div className="bg-white rounded-lg shadow-lg p-3 border" style={{ minWidth: '120px' }}>
-                      <div className="text-sm font-medium" style={{ color: '#374151' }}>{hoveredPoint.month}</div>
-                      <div
-                        className="text-sm"
-                        style={{ color: hoveredPoint.type === 'green' ? '#4CAF50' : '#FF7043' }}
-                      >
-                        Value: {hoveredPoint.value.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white mx-auto"></div>
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
+            <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
           </div>
-
-          {/* Bar Chart */}
-          <div className="bg-white p-6" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-            <div className="h-64 relative">
-              {/* Grid lines */}
-              <div className="absolute inset-0 ml-8">
-                {/* Horizontal grid lines */}
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="absolute w-full border-t border-dashed opacity-30"
-                    style={{
-                      top: `${i * 25}%`,
-                      borderColor: '#E5E7EB',
-                      height: '1px'
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Y-axis labels */}
-              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs" style={{ color: '#3B4A66' }}>
-                {(() => {
-                  if (plansData?.plans) {
-                    const maxSubscribers = Math.max(...plansData.plans.map(plan => plan.total_subscribers));
-                    const step = maxSubscribers / 4;
-                    return [4, 3, 2, 1, 0].map(i => {
-                      const value = Math.round(step * i);
-                      return <span key={i}>{value}</span>;
-                    });
-                  }
-                  return [600, 450, 300, 150, 0].map((value, i) => (
-                    <span key={i}>{value}</span>
-                  ));
-                })()}
-              </div>
-
-              {/* Chart area */}
-              <div className="ml-8 h-full flex items-end justify-between px-4 pb-4 relative">
-                {(() => {
-                  if (plansData?.plans) {
-                    const maxSubscribers = Math.max(...plansData.plans.map(plan => plan.total_subscribers));
-                    return plansData.plans.map((plan, index) => ({
-                      label: plan.plan_display,
-                      value: plan.total_subscribers,
-                      height: (plan.total_subscribers / (maxSubscribers || 1)) * 200
-                    }));
-                  }
-                  return [
-                    { label: 'Solo', value: 440, height: (440 / 600) * 200 },
-                    { label: 'Team', value: 450, height: (450 / 600) * 200 },
-                    { label: 'Professional', value: 240, height: (240 / 600) * 200 },
-                    { label: 'Enterprise', value: 35, height: (35 / 600) * 200 }
-                  ];
-                })().map((item, index) => (
-                  <div key={index} className="flex flex-col items-center relative">
-                    {/* Invisible larger hover area */}
-                    <div
-                      className="absolute inset-0 cursor-pointer"
-                      style={{
-                        width: '60px', // Wider hover area
-                        height: `${item.height + 20}px`, // Taller hover area
-                        zIndex: 10,
-                        transform: 'translateX(-50%)'
-                      }}
-                      onMouseEnter={() => {
-                        if (barTooltipTimeout) clearTimeout(barTooltipTimeout);
-                        setHoveredBar({
-                          label: item.label,
-                          value: item.value,
-                          x: index * 80 + 40, // Center of the bar area
-                          y: 200 - item.height - 20 // Above the bar
-                        });
-                      }}
-                      onMouseLeave={() => {
-                        const timeout = setTimeout(() => setHoveredBar(null), 100);
-                        setBarTooltipTimeout(timeout);
-                      }}
-                    />
-                    {/* Visible bar */}
-                    <div
-                      className="w-12 rounded-t transition-opacity"
-                      style={{
-                        height: `${item.height}px`,
-                        backgroundColor: '#4285F4',
-                        opacity: hoveredBar?.label === item.label ? 0.8 : 1
-                      }}
-                    ></div>
-                    <span className="text-xs mt-2" style={{ color: '#3B4A66' }}>{item.label}</span>
-                  </div>
-                ))}
-
-                {/* Dynamic Bar Tooltip */}
-                {hoveredBar && (
-                  <div
-                    className="absolute"
-                    style={{
-                      left: `${hoveredBar.x}px`,
-                      top: `${hoveredBar.y}px`,
-                      zIndex: 20,
-                      transform: 'translateX(-50%)'
-                    }}
-                  >
-                    <div className="bg-white rounded-lg shadow-lg p-3 border" style={{ minWidth: '100px' }}>
-                      <div className="text-sm font-medium" style={{ color: '#374151' }}>{hoveredBar.label}</div>
-                      <div className="text-sm" style={{ color: '#4285F4' }}>Firms: {hoveredBar.value}</div>
-                    </div>
-                    <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white mx-auto"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          {planPerformance?.timestamp && (
+            <span className="text-xs text-gray-500">
+              Last updated: {formatDateTime(planPerformance.timestamp)}
+            </span>
+          )}
         </div>
+
+        {planPerformance ? (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
+              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
+              {mrrTrend.length > 0 ? (() => {
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 30;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const range = mrrMax - mrrMin || Math.max(mrrMax, 1);
+                const points = mrrTrend.map((item, index) => {
+                  const value = Number(item?.value ?? 0);
+                  const x = mrrTrend.length === 1
+                    ? paddingX + innerWidth / 2
+                    : paddingX + (innerWidth / (mrrTrend.length - 1)) * index;
+                  const normalized = range === 0 ? 0.5 : (value - mrrMin) / range;
+                  const y = paddingY + innerHeight - normalized * innerHeight;
+                  return {
+                    x,
+                    y,
+                    month: item.month || `M${index + 1}`,
+                    value
+                  };
+                });
+                const path = points.map((point, idx) => `${idx === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = mrrMax - (range / 4) * step;
+                        return (
+                          <g key={`mrr-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {formatCurrency(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      <path
+                        d={path}
+                        fill="none"
+                        stroke="#3B4A66"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      {points.map((point, idx) => (
+                        <g key={`mrr-point-${point.month}-${idx}`}>
+                          <circle cx={point.x} cy={point.y} r="4" fill="#3B4A66" />
+                          <text
+                            x={point.x}
+                            y={point.y - 8}
+                            textAnchor="middle"
+                            fontSize="10"
+                            fill="#3B4A66"
+                            fontWeight="600"
+                          >
+                            {formatCurrency(point.value)}
+                          </text>
+                          <text
+                            x={point.x}
+                            y={svgHeight - 8}
+                            textAnchor="middle"
+                            fontSize="10"
+                            fill="#6B7280"
+                          >
+                            {point.month}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                  </div>
+                );
+              })() : (
+                <p className="text-xs text-gray-500 mt-4">No revenue trend data available.</p>
+              )}
+            </div>
+
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
+              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
+              {churnTrend.length > 0 ? (() => {
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 40;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = churnTrend.length ? innerWidth / churnTrend.length : innerWidth;
+                const barWidth = stepWidth * 0.5;
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = churnMax - ((churnMax / 4) * step);
+                        return (
+                          <g key={`churn-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {formatPercentage(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {churnTrend.map((item, index) => {
+                        const value = Number(item?.value ?? 0);
+                        const height = churnMax ? (value / churnMax) * innerHeight : 0;
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`churn-bar-${item.month}-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#6366F1"
+                              rx="6"
+                            />
+                            <text
+                              x={x + barWidth / 2}
+                              y={y - 6}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#4C1D95"
+                              fontWeight="600"
+                            >
+                              {formatPercentage(value)}
+                            </text>
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {item.month || `M${index + 1}`}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+              })() : (
+                <p className="text-xs text-gray-500 mt-4">No churn trend data available.</p>
+              )}
+            </div>
+
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4 lg:col-span-2">
+              <h4 className="text-sm font-semibold text-[#3B4A66] mb-4">Plan Distribution</h4>
+              <div className="space-y-3">
+                {planDistributionData.length > 0 ? planDistributionData.map((item) => {
+                  const width = distributionMax ? Math.max((item.firms / distributionMax) * 100, 6) : 0;
+                  return (
+                    <div key={item.plan} className="flex items-center gap-3">
+                      <span className="w-24 text-sm font-medium text-[#3B4A66]">
+                        {item.label}
+                      </span>
+                      <div className="flex-1 h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${width}%`, backgroundColor: '#3B82F6' }}
+                        ></div>
+                      </div>
+                      <span className="w-16 text-right text-xs font-semibold text-[#3B4A66]">
+                        {formatNumber(item.firms)} firms
+                      </span>
+                    </div>
+                  );
+                }) : (
+                  <p className="text-xs text-gray-500">No plan distribution data available.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">Plan performance data is not available at the moment.</p>
+        )}
       </div>
 
       {/* Subscriptions Table */}
@@ -652,7 +842,9 @@ export default function Subscriptions() {
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
-                placeholder="Search Firm, Tickets or Users.."
+                placeholder="Search subscriptions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
                 className="w-[400px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
@@ -662,17 +854,31 @@ export default function Subscriptions() {
                 </svg>
               </div>
             </div>
-            <select className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-              <option>All Status</option>
-              <option>Active</option>
-              <option>Inactive</option>
+            <select
+              className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Status</option>
+              {statusOptions.map((option) => (
+                <option key={option.value || option.label} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
-            <select className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-              <option>All Plans</option>
-              <option>Solo</option>
-              <option>Team</option>
-              <option>Professional</option>
-              <option>Enterprise</option>
+            <select
+              className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value)}
+            >
+              <option value="">All Plans</option>
+              {planOptions.map((option) => (
+                <option key={option.value || option.label} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -684,78 +890,92 @@ export default function Subscriptions() {
             </div>
           </div>
 
+          {tableError && (
+            <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md px-4 py-2">
+              {tableError}
+            </div>
+          )}
+
           {/* Table Header */}
           <div className=" px-6 py-3 mb-2">
-            <div className="grid grid-cols-7 gap-4 text-sm font-medium" style={{ color: '#3B4A66' }}>
+            <div className="grid grid-cols-6 gap-4 text-sm font-medium" style={{ color: '#3B4A66' }}>
               <div>Firm</div>
               <div>Plan</div>
-              <div>Status</div>
               <div>Amount</div>
+              <div>Status</div>
               <div>Next Billing</div>
               <div>Total Paid</div>
-              <div>Actions</div>
+              {/* <div>Actions</div> */}
             </div>
           </div>
 
           {/* Table */}
           <div className="space-y-4">
-            {/* Row 1 */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
-              <div className="grid grid-cols-7 gap-4 items-center">
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>Johnson & Associates</p>
-                  <p className="text-xs" style={{ color: '#6C757D' }}>Michael Johnson</p>
-                </div>
-                <div>
-                  <span className="bg-[#1E40AF] text-white px-3 py-1 text-xs font-medium" style={{ borderRadius: '12px' }}>Professional</span>
-                </div>
-                <div>
-                  <p className="text-sm" style={{ color: '#3B4A66', fontWeight: '600' }}>$299.00</p>
-                  <p className="text-xs" style={{ color: '#6C757D', fontWeight: '600' }}>Monthly</p>
-                </div>
-                <div>
-                  <span className="bg-green-500 text-white px-3 py-1 text-xs font-medium" style={{ borderRadius: '12px' }}>Active</span>
-                </div>
-                <div>
-                  <p className="text-sm" style={{ color: '#3B4A66' }}>15-01-2025</p>
-                </div>
-                <div>
-                  <p className="text-sm" style={{ color: '#3B4A66' }}>$2,990.00</p>
-                </div>
-                <div>
-                  <Action3Icon className="text-sm" style={{ color: '#3B4A66' }} />
+            {tableLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                  Loading subscriptions...
                 </div>
               </div>
-            </div>
-
-            {/* Row 2 */}
-            <div className="bg-white p-4" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
-              <div className="grid grid-cols-7 gap-4 items-center">
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>Metro Tax Services</p>
-                  <p className="text-xs" style={{ color: '#6C757D' }}>Michael Johnson</p>
-                </div>
-                <div>
-                  <span className="bg-green-500 text-white px-3 py-1 text-xs font-medium" style={{ borderRadius: '12px' }}>Team</span>
-                </div>
-                <div>
-                  <p className="text-sm" style={{ color: '#3B4A66', fontWeight: '600' }}>$149.00</p>
-                  <p className="text-xs" style={{ color: '#6C757D', fontWeight: '600' }}>Monthly</p>
-                </div>
-                <div>
-                  <span className="bg-green-500 text-white px-3 py-1 text-xs font-medium" style={{ borderRadius: '12px' }}>Active</span>
-                </div>
-                <div>
-                  <p className="text-sm" style={{ color: '#3B4A66' }}>12-02-2025</p>
-                </div>
-                <div>
-                  <p className="text-sm" style={{ color: '#3B4A66' }}>$1,490.00</p>
-                </div>
-                <div>
-                  <Action3Icon className="text-sm" style={{ color: '#3B4A66' }} />
-                </div>
+            ) : subscriptions.length > 0 ? (
+              subscriptions.map((subscription) => {
+                const planStyles = getPlanBadgeStyles(subscription.plan);
+                const statusClasses = getStatusBadgeClasses(subscription.status);
+                return (
+                  <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
+                    <div className="grid grid-cols-6 gap-4 items-center">
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                          {subscription.firm_name || '—'}
+                        </p>
+                        <p className="text-xs" style={{ color: '#6C757D' }}>
+                          {subscription.firm_owner || '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span
+                          className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${planStyles.badgeClass} ${planStyles.textClass}`}
+                          style={{ borderRadius: '12px' }}
+                        >
+                          {subscription.plan_label || subscription.plan || '—'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                          {subscription.amount_formatted || formatCurrency(subscription.amount)}
+                        </p>
+                        <p className="text-xs" style={{ color: '#6C757D', fontWeight: 600 }}>
+                          {subscription.billing_frequency || '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span
+                          className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${statusClasses}`}
+                          style={{ borderRadius: '12px' }}
+                        >
+                          {subscription.status_label || subscription.status || '—'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm" style={{ color: '#3B4A66' }}>
+                          {formatDateDisplay(subscription.next_billing_date)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
+                          {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-sm text-gray-500">
+                No subscriptions found for the selected filters.
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

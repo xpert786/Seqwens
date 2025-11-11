@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 
 export default function FirmManagement() {
+    const PAGE_SIZE = 5;
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All Status");
     const [planFilter, setPlanFilter] = useState("All Plans");
@@ -16,18 +18,17 @@ export default function FirmManagement() {
         plan: ""
     });
 
-
-
     // API state management
     const [firms, setFirms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [pagination, setPagination] = useState({
         page: 1,
-        page_size: 20,
+        page_size: PAGE_SIZE,
         total_count: 0,
         total_pages: 1
     });
+    const [currentPage, setCurrentPage] = useState(1);
     const [creatingFirm, setCreatingFirm] = useState(false);
     const [createError, setCreateError] = useState(null);
     const [createSuccess, setCreateSuccess] = useState(false);
@@ -37,7 +38,6 @@ export default function FirmManagement() {
     const [selectedFirm, setSelectedFirm] = useState(null);
     const [loadingFirmDetails, setLoadingFirmDetails] = useState(false);
     const [firmDetailsError, setFirmDetailsError] = useState(null);
-    const navigate = useNavigate();
 
     // Suspend modal state
     const [showSuspendModal, setShowSuspendModal] = useState(false);
@@ -47,6 +47,14 @@ export default function FirmManagement() {
     const [suspendError, setSuspendError] = useState(null);
     const [suspendSuccess, setSuspendSuccess] = useState(false);
 
+    // Unsuspend modal state
+    const [showUnsuspendModal, setShowUnsuspendModal] = useState(false);
+    const [firmToUnsuspend, setFirmToUnsuspend] = useState(null);
+    const [unsuspendReason, setUnsuspendReason] = useState('');
+    const [unsuspendingFirm, setUnsuspendingFirm] = useState(false);
+    const [unsuspendError, setUnsuspendError] = useState(null);
+    const [unsuspendSuccess, setUnsuspendSuccess] = useState(false);
+
     // Fetch firms data from API
     const fetchFirms = async () => {
         try {
@@ -54,8 +62,8 @@ export default function FirmManagement() {
             setError(null);
 
             const response = await superAdminAPI.getFirms(
-                1, // page
-                20, // limit
+                currentPage, // page
+                PAGE_SIZE, // limit
                 searchTerm, // search
                 statusFilter === "All Status" ? '' : statusFilter.toLowerCase(), // status
                 planFilter === "All Plans" ? '' : planFilter.toLowerCase() // plan
@@ -63,11 +71,14 @@ export default function FirmManagement() {
 
             if (response.success && response.data) {
                 setFirms(response.data.firms || []);
-                setPagination(response.data.pagination || {
-                    page: 1,
-                    page_size: 20,
-                    total_count: 0,
-                    total_pages: 1
+                const paginationData = response.data.pagination || {};
+                const totalCount = paginationData.total_count ?? 0;
+                const totalPages = paginationData.total_pages ?? Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+                setPagination({
+                    page: paginationData.page ?? currentPage,
+                    page_size: paginationData.page_size ?? PAGE_SIZE,
+                    total_count: totalCount,
+                    total_pages: totalPages
                 });
             } else {
                 throw new Error(response.message || 'Failed to fetch firms');
@@ -84,6 +95,10 @@ export default function FirmManagement() {
     // Load firms on component mount and when filters change
     useEffect(() => {
         fetchFirms();
+    }, [searchTerm, statusFilter, planFilter, currentPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
     }, [searchTerm, statusFilter, planFilter]);
 
     // Helper function to get plan color
@@ -214,25 +229,53 @@ export default function FirmManagement() {
         }
     };
 
+    const unsuspendFirm = async () => {
+        try {
+            setUnsuspendingFirm(true);
+            setUnsuspendError(null);
+
+            const response = await superAdminAPI.reactivateFirm(firmToUnsuspend.id, unsuspendReason);
+
+            if (response.success) {
+                setUnsuspendSuccess(true);
+                await fetchFirms();
+                setTimeout(() => {
+                    setShowUnsuspendModal(false);
+                    setUnsuspendSuccess(false);
+                    setUnsuspendReason('');
+                    setFirmToUnsuspend(null);
+                }, 2000);
+            } else {
+                throw new Error(response.message || 'Failed to unsuspend firm');
+            }
+        } catch (err) {
+            console.error('Error unsuspending firm:', err);
+            setUnsuspendError(handleAPIError(err));
+        } finally {
+            setUnsuspendingFirm(false);
+        }
+    };
+
     const handleAction = (action, firmId) => {
         console.log(`${action} for firm ${firmId}`);
         setActiveDropdown(null);
 
-        if (action === 'View Details') {
-            navigate(`/superadmin/firms/${firmId}`);
-        } else if (action === 'Edit User') {
-            // TODO: Implement edit functionality
-            console.log('Edit firm:', firmId);
+        if (action === 'Edit User') {
+            navigate(`/superadmin/firms/${firmId}?tab=Settings`);
         } else if (action === 'Send Message') {
             // TODO: Implement message functionality
             console.log('Send message to firm:', firmId);
         } else if (action === 'Manage Billing') {
             // TODO: Implement billing management
             console.log('Manage billing for firm:', firmId);
-        } else if (action === 'Suspend User') {
+        } else if (action === 'Suspend Firm') {
             const firm = firms.find(f => f.id === firmId);
             setFirmToSuspend(firm);
             setShowSuspendModal(true);
+        } else if (action === 'Unsuspend Firm') {
+            const firm = firms.find(f => f.id === firmId);
+            setFirmToUnsuspend(firm);
+            setShowUnsuspendModal(true);
         } else if (action === 'Delete') {
             // TODO: Implement delete functionality
             console.log('Delete firm:', firmId);
@@ -334,7 +377,7 @@ export default function FirmManagement() {
                     {/* Action Buttons */}
                     <div className="flex flex-wrap items-center gap-2">
                         <button
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             style={{ borderRadius: '8px' }}
                         >
                             <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -344,7 +387,7 @@ export default function FirmManagement() {
                             Import Report
                         </button>
                         <button
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             style={{ borderRadius: '8px' }}
                         >
                             <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -354,7 +397,7 @@ export default function FirmManagement() {
                         </button>
                         <button
                             onClick={handleAddFirm}
-                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
+                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
                             style={{ borderRadius: '8px' }}
                         >
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -449,21 +492,21 @@ export default function FirmManagement() {
                         <h4 className="text-md font-bold text-gray-800 mb-2">
                             Firms ({pagination.total_count})
                         </h4>
-                        <p className="text-gray-500 text-xs">
+                        <p className="text-gray-500 text-sm">
                             Comprehensive list of all firms registered on the platform
                         </p>
                     </div>
 
                     {/* Table Headers */}
-                    <div className="px-3 py-3  ">
-                        <div className="grid grid-cols-12 gap-1 text-sm font-medium text-[#4B5563] justify-items-start">
+                    <div className="px-3 py-3">
+                        <div className="grid grid-cols-12 gap-4 items-center text-sm font-semibold text-[#4B5563]">
                             <div className="col-span-3">Firm</div>
                             <div className="col-span-2">Plan</div>
                             <div className="col-span-2">Status</div>
-                            <div className="col-span-1">Users</div>
+                            <div className="col-span-1">Staff</div>
                             <div className="col-span-2">Revenue</div>
-                            <div className="col-span-1">Last Active</div>
-                            <div className="col-span-1">Actions</div>
+                            <div className="col-span-1">Created At</div>
+                            <div className="col-span-1 text-center">Actions</div>
                         </div>
                     </div>
 
@@ -482,50 +525,51 @@ export default function FirmManagement() {
                         <div className="divide-y divide-gray-200">
                             {firms.length > 0 ? firms.map((firm) => (
                                 <div key={firm.id} className="pr-1 pl-3 py-3 transition-colors border-1 border-[#E8F0FF] m-2" style={{ borderRadius: '7px' }}>
-                                    <div className="grid grid-cols-12 gap-1 items-center">
+                                    <div className="grid grid-cols-12 gap-4 items-center">
                                         {/* Firm Column */}
                                         <div className="col-span-3">
-                                            <div className="text-[#4B5563] text-xs truncate">
-                                                <span className="font-medium">{firm.name}</span>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => navigate(`/superadmin/firms/${firm.id}`)}
+                                                className="text-left text-sm font-semibold text-[#3B4A66] truncate hover:underline"
+                                            >
+                                                {firm.name || firm.firm_name || firm.admin_user_name || 'Unnamed Firm'}
+                                            </button>
                                             <div className="text-gray-500 text-xs truncate">
-                                                {firm.admin_user_name}
-                                            </div>
-                                            <div className="text-gray-500 text-xs truncate">
-                                                {firm.admin_user_email}
+                                                {firm.admin_user_email || firm.owner_email || 'No contact email'}
                                             </div>
                                         </div>
 
                                         {/* Plan Column */}
                                         <div className="col-span-2">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium text-white ${getPlanColor(firm.subscription_plan)}`}>
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-sm font-medium text-white ${getPlanColor(firm.subscription_plan)}`}>
                                                 {formatPlan(firm.subscription_plan)}
                                             </span>
                                         </div>
 
                                         {/* Status Column */}
                                         <div className="col-span-2">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(firm.status)}`}>
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-sm font-medium text-white ${getStatusColor(firm.status)}`}>
                                                 {formatStatus(firm.status)}
                                             </span>
                                         </div>
 
                                         {/* Users Column */}
-                                        <div className="col-span-1 flex items-center text-xs text-gray-700">
+                                        <div className="col-span-1 flex items-center text-sm text-gray-700">
                                             <svg className="w-3 h-3 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                                             </svg>
-                                            {firm.staff_count + firm.client_count}
+                                            {firm.staff_count ?? 0}
                                         </div>
 
                                         {/* Revenue Column */}
-                                        <div className="col-span-2 text-xs text-gray-700">
-                                            ${firm.monthly_fee}/month
+                                        <div className="col-span-2 text-sm text-gray-700">
+                                            {formatCurrency(firm.monthly_fee)}/month
                                         </div>
 
                                         {/* Last Active Column */}
-                                        <div className="col-span-1 text-xs text-gray-700">
-                                            {firm.trial_days_remaining ? `${firm.trial_days_remaining}d left` : 'Active'}
+                                        <div className="col-span-1 text-sm text-gray-700">
+                                            {formatDate(firm.created_at) || (firm.trial_days_remaining ? `${firm.trial_days_remaining}d left` : '—')}
                                         </div>
 
                                         {/* Actions Column */}
@@ -545,23 +589,12 @@ export default function FirmManagement() {
                                             {activeDropdown === firm.id && (
                                                 <div className="absolute right-0 top-8 z-50 bg-white rounded-lg  border-1 border-[#E8F0FF] py-2 min-w-[160px]">
                                                     <button
-                                                        onClick={() => handleAction('View Details', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                    >
-                                                        View Details
-                                                    </button>
-                                                    <button
                                                         onClick={() => handleAction('Edit User', firm.id)}
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                                                     >
                                                         Edit User
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleAction('Send Message', firm.id)}
-                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                    >
-                                                        Send Message
-                                                    </button>
+
                                                     <button
                                                         onClick={() => handleAction('Manage Billing', firm.id)}
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
@@ -569,10 +602,11 @@ export default function FirmManagement() {
                                                         Manage Billing
                                                     </button>
                                                     <button
-                                                        onClick={() => handleAction('Suspend User', firm.id)}
+
+                                                        onClick={() => handleAction(firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm', firm.id)}
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                                                     >
-                                                        Suspend User
+                                                        {firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm'}
                                                     </button>
                                                     <button
                                                         onClick={() => handleAction('Delete', firm.id)}
@@ -597,6 +631,33 @@ export default function FirmManagement() {
                             )}
                         </div>
                     )}
+                    <div className="flex items-center justify-between px-4 py-4">
+                        <div className="text-sm text-gray-500">
+                            Showing {Math.min((pagination.page - 1) * pagination.page_size + 1, pagination.total_count)}-
+                            {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} firms
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={pagination.page <= 1 || loading}
+                                className="px-3 py-1 text-sm border border-[#E8F0FF] rounded-md disabled:opacity-50 hover:bg-[#F6F7FF]"
+                            >
+                                Previous
+                            </button>
+                            <span className="text-sm text-gray-600">
+                                Page {pagination.page} of {Math.max(pagination.total_pages, 1)}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages || prev + 1))}
+                                disabled={pagination.page >= (pagination.total_pages || 1) || loading}
+                                className="px-3 py-1 text-sm border border-[#E8F0FF] rounded-md disabled:opacity-50 hover:bg-[#F6F7FF]"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -659,11 +720,11 @@ export default function FirmManagement() {
                                         <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
                                             <p className="text-sm text-gray-500 mb-1">Firm Status</p>
                                             <div className="flex items-center gap-2">
-                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold text-white ${getStatusColor(selectedFirm.firm?.status)}`}>
+                                                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-semibold text-white ${getStatusColor(selectedFirm.firm?.status)}`}>
                                                     {formatStatus(selectedFirm.firm?.status)}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-2">
+                                            <p className="text-sm text-gray-500 mt-2">
                                                 Joined on {formatDate(selectedFirm.firm?.join_date)}
                                             </p>
                                         </div>
@@ -672,7 +733,7 @@ export default function FirmManagement() {
                                             <h4 className="text-lg font-semibold text-gray-900">
                                                 {formatDateTime(selectedFirm.system_health?.last_active)}
                                             </h4>
-                                            <p className="text-xs text-gray-500 mt-2">
+                                            <p className="text-sm text-gray-500 mt-2">
                                                 Overall Health:&nbsp;
                                                 <span className="font-semibold">
                                                     {selectedFirm.system_health?.overall_health?.status || 'N/A'} ({selectedFirm.system_health?.overall_health?.score ?? '—'}%)
@@ -696,7 +757,7 @@ export default function FirmManagement() {
                                             <div>
                                                 <p className="text-gray-500">Owner</p>
                                                 <p className="font-medium text-gray-900">{selectedFirm.firm?.owner || 'N/A'}</p>
-                                                <p className="text-xs text-gray-500">{selectedFirm.firm?.owner_email || 'N/A'}</p>
+                                                <p className="text-sm text-gray-500">{selectedFirm.firm?.owner_email || 'N/A'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500">Tax ID</p>
@@ -736,7 +797,7 @@ export default function FirmManagement() {
                                             <h3 className="text-xl font-semibold text-gray-900 mt-1">
                                                 {formatCurrency(selectedFirm.metrics?.revenue?.monthly_subscription)}
                                             </h3>
-                                            <p className="text-xs text-gray-500 mt-2">
+                                            <p className="text-sm text-gray-500 mt-2">
                                                 Paid Invoice Revenue:&nbsp;
                                                 <span className="font-semibold text-gray-900">
                                                     {formatCurrency(selectedFirm.metrics?.revenue?.paid_invoice_revenue)}
@@ -754,7 +815,7 @@ export default function FirmManagement() {
                                                 <p className="text-xl font-semibold text-gray-900 mt-1">
                                                     {selectedFirm.system_health?.overall_health?.status || 'N/A'}
                                                 </p>
-                                                <p className="text-xs text-gray-500">
+                                                <p className="text-sm text-gray-500">
                                                     Score: {selectedFirm.system_health?.overall_health?.score ?? '—'} / 100
                                                 </p>
                                             </div>
@@ -770,7 +831,7 @@ export default function FirmManagement() {
                                                             style={{ width: `${Math.min(selectedFirm.system_health?.storage?.percent_used ?? 0, 100)}%` }}
                                                         ></div>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="text-sm text-gray-500 mt-1">
                                                         {selectedFirm.system_health?.storage?.percent_used ?? '—'}% used
                                                     </p>
                                                 </div>
@@ -793,7 +854,7 @@ export default function FirmManagement() {
                         <div className="flex justify-between items-start p-3">
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900">Add New Firm</h3>
-                                <p className="text-xs text-gray-500">Create a new firm account on the platform</p>
+                                <p className="text-sm text-gray-500">Create a new firm account on the platform</p>
                             </div>
                             <button
                                 onClick={handleCloseModal}
@@ -824,59 +885,59 @@ export default function FirmManagement() {
                             )}
                             {/* Firm Name */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-0.5">Firm Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Firm Name</label>
                                 <input
                                     type="text"
                                     value={newFirm.firmName}
                                     onChange={(e) => handleInputChange('firmName', e.target.value)}
                                     placeholder="Enter Firm name"
-                                    className="w-full px-2 py-0.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
 
                             {/* Owner Name */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-0.5">Owner Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Owner Name</label>
                                 <input
                                     type="text"
                                     value={newFirm.ownerName}
                                     onChange={(e) => handleInputChange('ownerName', e.target.value)}
                                     placeholder="Enter Owner Name"
-                                    className="w-full px-2 py-0.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
 
                             {/* Email Address */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-0.5">Email Address</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Email Address</label>
                                 <input
                                     type="email"
                                     value={newFirm.email}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
                                     placeholder="Enter Email Address"
-                                    className="w-full px-2 py-0.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
 
                             {/* Phone Number */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-0.5">Phone Number</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Phone Number</label>
                                 <input
                                     type="tel"
                                     value={newFirm.phone}
                                     onChange={(e) => handleInputChange('phone', e.target.value)}
                                     placeholder="Enter Phone Number"
-                                    className="w-full px-2 py-0.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
 
                             {/* Subscription Plan */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-0.5">Subscription Plan</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Subscription Plan</label>
                                 <select
                                     value={newFirm.plan}
                                     onChange={(e) => handleInputChange('plan', e.target.value)}
-                                    className="w-full px-2 py-0.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 >
                                     <option value="">Select Plan</option>
                                     <option value="Solo">Solo</option>
@@ -891,14 +952,14 @@ export default function FirmManagement() {
                         <div className="flex justify-end space-x-2 p-2 gap-2">
                             <button
                                 onClick={handleCloseModal}
-                                className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                                className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreateFirm}
                                 disabled={creatingFirm}
-                                className="px-3 py-1 text-xs font-medium text-white bg-[#F56D2D] rounded hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-1 text-sm font-medium text-white bg-[#F56D2D] rounded hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ borderRadius: '7px' }}
                             >
                                 {creatingFirm ? 'Creating...' : 'Create Firm'}
@@ -960,7 +1021,7 @@ export default function FirmManagement() {
                                     <div><strong>Admin:</strong> {firmToSuspend.admin_user_name}</div>
                                     <div><strong>Email:</strong> {firmToSuspend.admin_user_email}</div>
                                     <div><strong>Current Status:</strong>
-                                        <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(firmToSuspend.status)}`}>
+                                        <span className={`ml-1 px-2 py-0.5 rounded-full text-sm font-medium text-white ${getStatusColor(firmToSuspend.status)}`}>
                                             {formatStatus(firmToSuspend.status)}
                                         </span>
                                     </div>
@@ -1020,6 +1081,107 @@ export default function FirmManagement() {
                                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {suspendingFirm ? 'Suspending...' : 'Suspend Firm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Unsuspend Firm Modal */}
+            {showUnsuspendModal && firmToUnsuspend && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
+                    <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4" style={{ borderRadius: '12px' }}>
+                        <div className="flex justify-between items-start p-4 border-b border-gray-200">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">Unsuspend Firm</h3>
+                                <p className="text-sm text-gray-500">Restore access for {firmToUnsuspend.name}</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowUnsuspendModal(false);
+                                    setUnsuspendReason('');
+                                    setFirmToUnsuspend(null);
+                                    setUnsuspendError(null);
+                                    setUnsuspendSuccess(false);
+                                }}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="p-4 space-y-4">
+                            {unsuspendError && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                    <div className="text-sm text-red-700">{unsuspendError}</div>
+                                </div>
+                            )}
+
+                            {unsuspendSuccess && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div className="text-sm text-green-700">Firm unsuspended successfully!</div>
+                                </div>
+                            )}
+
+                            <div className="bg-gray-50 rounded-lg p-3">
+                                <div className="text-sm font-medium text-gray-900 mb-1">Firm Details</div>
+                                <div className="text-sm text-gray-600">
+                                    <div><strong>Name:</strong> {firmToUnsuspend.name}</div>
+                                    <div><strong>Admin:</strong> {firmToUnsuspend.admin_user_name}</div>
+                                    <div><strong>Email:</strong> {firmToUnsuspend.admin_user_email}</div>
+                                    <div><strong>Current Status:</strong>
+                                        <span className={`ml-1 px-2 py-0.5 rounded-full text-sm font-medium text-white ${getStatusColor(firmToUnsuspend.status)}`}>
+                                            {formatStatus(firmToUnsuspend.status)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Reason / Notes (optional)
+                                </label>
+                                <textarea
+                                    value={unsuspendReason}
+                                    onChange={(e) => setUnsuspendReason(e.target.value)}
+                                    placeholder="Add any notes about reactivating this firm..."
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                                    rows={3}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    This note is stored with the audit log for future reference.
+                                </p>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+                                The firm and all associated users will regain full access immediately after reactivation.
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-3 p-4 border-t border-gray-200">
+                            <button
+                                onClick={() => {
+                                    setShowUnsuspendModal(false);
+                                    setUnsuspendReason('');
+                                    setFirmToUnsuspend(null);
+                                    setUnsuspendError(null);
+                                    setUnsuspendSuccess(false);
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                disabled={unsuspendingFirm}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={unsuspendFirm}
+                                disabled={unsuspendingFirm}
+                                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {unsuspendingFirm ? 'Unsuspending...' : 'Unsuspend Firm'}
                             </button>
                         </div>
                     </div>

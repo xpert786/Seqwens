@@ -201,7 +201,27 @@ export const superAdminAPI = {
     return await apiRequest(`/seqwens/api/user/admin/subscriptions/?${params}`, 'GET');
   },
 
-  // Get subscription plans analytics
+  // Get superadmin subscription management data
+  getSuperadminSubscriptions: async ({ search = '', status = '', plan = '' } = {}) => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (plan) params.append('plan', plan);
+    const query = params.toString();
+    return await apiRequest(`/user/superadmin/subscriptions/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Update subscription notification settings
+  updateSubscriptionNotifications: async (payload) => {
+    return await apiRequest('/user/superadmin/subscriptions/', 'PATCH', payload);
+  },
+
+  // Get superadmin plan performance metrics
+  getSuperadminPlanPerformance: async () => {
+    return await apiRequest('/user/superadmin/subscriptions/plan-performance/', 'GET');
+  },
+
+  // Get subscription plans analytics 
   getSubscriptionPlans: async () => {
     return await apiRequest('/user/subscriptions/plans/', 'GET');
   },
@@ -214,6 +234,21 @@ export const superAdminAPI = {
     });
 
     return await apiRequest(`/user/subscriptions/charts/?${params}`, 'GET');
+  },
+
+  // Get firm settings
+  getFirmSettings: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/settings/`, 'GET');
+  },
+
+  // Update firm settings
+  updateFirmSettings: async (firmId, payload) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/settings/`, 'PATCH', payload);
+  },
+
+  // Get firm billing overview
+  getFirmBillingOverview: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/billing/overview/`, 'GET');
   },
 
   // Check subscription plan existence
@@ -270,7 +305,43 @@ export const superAdminAPI = {
     return await apiRequest(`/user/superadmin/users/${userId}/suspend/`, 'POST', payload);
   },
 
-  // Get analytics data
+  // Get revenue insights analytics
+  getRevenueInsights: async ({ days = 30, startDate = '', endDate = '' } = {}) => {
+    const params = new URLSearchParams();
+
+    if ((days || days === 0) && !startDate && !endDate) {
+      params.append('days', days.toString());
+    }
+
+    if (startDate) {
+      params.append('start_date', startDate);
+    }
+
+    if (endDate) {
+      params.append('end_date', endDate);
+    }
+
+    const query = params.toString();
+    return await apiRequest(`/user/admin/revenue-insights/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Custom reports
+  getCustomReportConfig: async () => {
+    return await apiRequest('/user/admin/reports/custom/config/', 'GET');
+  },
+
+  generateCustomReport: async (payload) => {
+    return await apiRequest('/user/admin/reports/custom/generate/', 'POST', payload);
+  },
+
+  scheduleCustomReport: async (payload) => {
+    return await apiRequest('/user/admin/reports/custom/schedule/', 'POST', payload);
+  },
+
+  getCustomReportSchedules: async () => {
+    return await apiRequest('/user/admin/reports/custom/schedule/', 'GET');
+  },
+
   getAnalytics: async (period = '30d') => {
     const params = new URLSearchParams({
       period: period,
@@ -343,7 +414,7 @@ export const superAdminAPI = {
   reactivateFirm: async (firmId, reason) => {
     const reactivateData = {
       reason: reason,
-      action: 'reactivate'
+      action: 'unsuspend'
     };
     return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', reactivateData);
   },

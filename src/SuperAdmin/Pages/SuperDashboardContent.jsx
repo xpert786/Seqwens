@@ -630,7 +630,7 @@ export default function SuperDashboardContent() {
       {/* Bottom Row - Recent Firms and Quick Actions */}
       <div className={`grid grid-cols-1 ${showRecentFirmsSection ? 'lg:grid-cols-2' : ''} gap-2 mt-4 pb-0`}>
         {showRecentFirmsSection && (
-          <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
+          <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 self-start">
             <div className="flex justify-between items-center">
               <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
               <a href="#" className="text-black text-sm font-medium hover:underline cursor-pointer rounded-md px-3 py-2" style={{ border: '1px solid #E8F0FF' }}>View All</a>
