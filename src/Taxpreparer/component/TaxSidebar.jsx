@@ -11,6 +11,7 @@ export default function TaxSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const isActive = (path) => {
     const p = location.pathname;

@@ -84,7 +84,7 @@ export default function SuperDashboardContent() {
       setLoading(true);
       setError(null);
       const response = await superAdminAPI.getAdminDashboard();
-      
+
       if (response.success && response.data) {
         setDashboardData(response.data);
         setLastRefresh(new Date());
@@ -158,29 +158,29 @@ export default function SuperDashboardContent() {
     };
 
     return [
-      { 
-        metric: 'API Response', 
-        current: dashboardData.performance?.api_response_ms ?? 0, 
+      {
+        metric: 'API Response',
+        current: dashboardData.performance?.api_response_ms ?? 0,
         target: thresholds.api_response_ms,
-        unit: 'ms' 
+        unit: 'ms'
       },
-      { 
-        metric: 'Database Query', 
-        current: dashboardData.performance?.db_query_ms ?? 0, 
+      {
+        metric: 'Database Query',
+        current: dashboardData.performance?.db_query_ms ?? 0,
         target: thresholds.db_query_ms,
-        unit: 'ms' 
+        unit: 'ms'
       },
-      { 
-        metric: 'Page Load', 
-        current: dashboardData.performance?.page_load_seconds ?? 0, 
+      {
+        metric: 'Page Load',
+        current: dashboardData.performance?.page_load_seconds ?? 0,
         target: thresholds.page_load_seconds,
-        unit: 's' 
+        unit: 's'
       },
-      { 
-        metric: 'Error Rate', 
-        current: dashboardData.performance?.error_rate_percent ?? 0, 
+      {
+        metric: 'Error Rate',
+        current: dashboardData.performance?.error_rate_percent ?? 0,
         target: thresholds.error_rate_percent,
-        unit: '%' 
+        unit: '%'
       }
     ];
   };
@@ -190,6 +190,7 @@ export default function SuperDashboardContent() {
   const recentFirms = dashboardData?.recent_firms || [];
   const securityStatus = dashboardData?.security || {};
   const quickActions = dashboardData?.quick_actions || [];
+  const showRecentFirmsSection = (recentFirms || []).length > 0;
   const maxRevenueValue = revenueData.reduce((max, item) => Math.max(max, item.revenue || 0), 0);
   const maxSubscriberValue = revenueData.reduce((max, item) => Math.max(max, item.subscribers || 0), 0);
   const revenueUpperBound = maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.2) : 1;
@@ -222,15 +223,15 @@ export default function SuperDashboardContent() {
       const revenueEntry = payload.find(item => item.dataKey === 'revenue');
       const subscribersEntry = payload.find(item => item.dataKey === 'subscribers');
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
-          <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
           {revenueEntry && (
-            <div className="text-sm" style={{color: '#10B981'}}>
+            <div className="text-sm" style={{ color: '#10B981' }}>
               Revenue: {formatCurrency(revenueEntry.value || 0)}
             </div>
           )}
           {subscribersEntry && (
-            <div className="text-sm mt-1" style={{color: '#374151'}}>
+            <div className="text-sm mt-1" style={{ color: '#374151' }}>
               Subscribers: {formatNumber(subscribersEntry.value || 0)}
             </div>
           )}
@@ -245,9 +246,9 @@ export default function SuperDashboardContent() {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
-          <div className="text-sm font-semibold mb-1" style={{color: data.payload.color}}>{data.name}</div>
-          <div className="text-lg font-bold" style={{color: data.payload.color}}>
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: data.payload.color }}>{data.name}</div>
+          <div className="text-lg font-bold" style={{ color: data.payload.color }}>
             {data.value}
           </div>
         </div>
@@ -260,10 +261,10 @@ export default function SuperDashboardContent() {
   const ActivityTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{minWidth: '140px'}}>
-          <div className="text-sm font-semibold mb-1" style={{color: '#374151'}}>{label}</div>
-          <div className="text-sm" style={{color: '#374151'}}>
-            Activity: <span style={{color: '#10B981'}}>{formatNumber(payload[0].value)}</span>
+        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
+          <div className="text-sm" style={{ color: '#374151' }}>
+            Activity: <span style={{ color: '#10B981' }}>{formatNumber(payload[0].value)}</span>
           </div>
         </div>
       );
@@ -297,7 +298,7 @@ export default function SuperDashboardContent() {
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Dashboard</h3>
           <p className="text-gray-600 mb-4">{error}</p>
-          <button 
+          <button
             onClick={handleRefresh}
             className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
           >
@@ -309,7 +310,7 @@ export default function SuperDashboardContent() {
   }
 
   return (
-    <div className="w-full px-3 py-4 bg-[#F6F7FF]">
+    <div className="w-full px-3 pt-4 pb-0 bg-[#F6F7FF]">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
@@ -317,13 +318,13 @@ export default function SuperDashboardContent() {
           <p className="text-gray-600 mt-1">Monitor and manage the entire tax practice platform</p>
           <p className="text-xs text-gray-500 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
         </div>
-        <button 
+        <button
           onClick={handleRefresh}
           disabled={loading}
-          className="taxdashboardr-titler flex items-center gap-2 px-6 py-3 text-black bg-white rounded-3xl transition-colors disabled:opacity-50" 
-          style={{borderRadius: '7px'}}
+          className="taxdashboardr-titler flex items-center gap-2 px-6 py-3 text-black bg-white rounded-3xl transition-colors disabled:opacity-50"
+          style={{ borderRadius: '7px' }}
         >
-            <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />  
+          <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Refreshing...' : 'Refresh Status'}
         </button>
       </div>
@@ -389,7 +390,7 @@ export default function SuperDashboardContent() {
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
           <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
           <p className="text-sm text-gray-600 mb-4">Monthly recurring revenue and user growth</p>
-          
+
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
@@ -403,18 +404,18 @@ export default function SuperDashboardContent() {
               >
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
                 />
-                <YAxis 
+                <YAxis
                   yAxisId="left"
                   axisLine={false}
                   tickLine={false}
@@ -453,7 +454,7 @@ export default function SuperDashboardContent() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          
+
           <div className="mt-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
@@ -470,7 +471,7 @@ export default function SuperDashboardContent() {
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
           <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
           <p className="text-sm text-gray-600 mb-4">Revenue breakdown by plan typee</p>
-          
+
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -493,12 +494,12 @@ export default function SuperDashboardContent() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          
+
           {/* Legend */}
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
             {subscriptionData.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{backgroundColor: item.color}}></div>
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
                 <span>{item.name}: {formatNumber(item.value)}</span>
               </div>
             ))}
@@ -514,7 +515,7 @@ export default function SuperDashboardContent() {
           <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 h-100 flex flex-col">
             <h4 className="text-base font-semibold text-gray-900 mb-1">Recent Firm Registrations</h4>
             <p className="text-sm text-gray-600 mb-4">Latest firms that joined the platform</p>
-            
+
             <div className="flex-1 h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
@@ -527,13 +528,13 @@ export default function SuperDashboardContent() {
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
-                  <XAxis 
-                    dataKey="hour" 
+                  <XAxis
+                    dataKey="hour"
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
                   />
-                  <YAxis 
+                  <YAxis
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
@@ -551,7 +552,7 @@ export default function SuperDashboardContent() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            
+
             <div className="mt-4 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded"></div>
@@ -580,13 +581,13 @@ export default function SuperDashboardContent() {
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="h-2 rounded-full"
-                        style={{ 
-                          width: `${metric.target ? Math.min((metric.current / metric.target) * 100, 100) : 0}%`,
-                          backgroundColor: '#3B4A66'
-                        }}
-                      ></div>
+                    <div
+                      className="h-2 rounded-full"
+                      style={{
+                        width: `${metric.target ? Math.min((metric.current / metric.target) * 100, 100) : 0}%`,
+                        backgroundColor: '#3B4A66'
+                      }}
+                    ></div>
                   </div>
                 </div>
               ))}
@@ -607,8 +608,8 @@ export default function SuperDashboardContent() {
                 const badgeClass = itemEnabled ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white';
                 const StatusIcon = itemEnabled ? SecurityGreenIcon : SecurityYellowIcon;
                 return (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={`flex items-center justify-between p-4 rounded-lg ${backgroundClass}`}
                   >
                     <div className="flex items-center gap-2">
@@ -627,40 +628,37 @@ export default function SuperDashboardContent() {
       </div>
 
       {/* Bottom Row - Recent Firms and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-6">
-        {/* Recent User Registrations */}
+      <div className={`grid grid-cols-1 ${showRecentFirmsSection ? 'lg:grid-cols-2' : ''} gap-2 mt-4 pb-0`}>
+        {showRecentFirmsSection && (
           <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <div className="flex justify-between items-center">
-            <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
-            <a href="#" className="text-black text-sm font-medium hover:underline cursor-pointer rounded-md px-3 py-2" style={{border: '1px solid #E8F0FF'}}>View All</a>
-          </div>
-          <p className="text-sm text-gray-500 mb-3">Latest firms that joined the platform</p>  
-          <div className="space-y-2">
-            {recentFirms.length > 0 ? recentFirms.map((firm, index) => (
-              <div key={index} className="border border-[#E8F0FF] flex items-center justify-between p-1 rounded-lg">
-                <div className="flex-1">
-                  <h6 className="font-medium text-gray-900">{firm.name}</h6>
-                  <p className="text-xs text-gray-600">
-                    Joined: {firm.created_at_display || firm.created_at || 'N/A'} • Users: {formatNumber(firm.active_users)} • Monthly Fee: {formatCurrency(firm.monthly_fee)}
-                  </p>
+            <div className="flex justify-between items-center">
+              <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
+              <a href="#" className="text-black text-sm font-medium hover:underline cursor-pointer rounded-md px-3 py-2" style={{ border: '1px solid #E8F0FF' }}>View All</a>
+            </div>
+            <p className="text-sm text-gray-500 mb-3">Latest firms that joined the platform</p>
+            <div className="space-y-2">
+              {recentFirms.map((firm, index) => (
+                <div key={index} className="border border-[#E8F0FF] flex items-center justify-between p-3 rounded-lg">
+                  <div className="flex-1">
+                    <h6 className="font-medium text-gray-900">{firm.name}</h6>
+                    <p className="text-xs text-gray-600">
+                      Joined: {firm.created_at_display || firm.created_at || 'N/A'} • Users: {formatNumber(firm.active_users)} • Monthly Fee: {formatCurrency(firm.monthly_fee)}
+                    </p>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                    {firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : '—'}
+                  </span>
                 </div>
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                  {firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : '—'}
-                </span>
-              </div>
-            )) : (
-              <div className="text-center py-4">
-                <p className="text-gray-500">No recent firms</p>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Quick Actions */}
-          <div className="bg-white rounded-xl  border border-[#E8F0FF] p-6 h-100 flex flex-col">
-            <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
-            <p className="text-sm text-gray-500 mb-3">Common administrative tasks</p>  
-          <div className="flex-1 grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
+          <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
+          <p className="text-sm text-gray-500 mb-3">Common administrative tasks</p>
+          <div className={`${quickActions.length > 2 ? 'grid grid-cols-2 gap-3' : 'flex flex-wrap gap-3'}`}>
             {quickActions.map((action, index) => (
               <button
                 key={index}
@@ -673,6 +671,9 @@ export default function SuperDashboardContent() {
                 <span className="text-xs font-medium text-gray-700 text-center">{action.label}</span>
               </button>
             ))}
+            {quickActions.length === 0 && (
+              <p className="text-xs text-gray-500">No quick actions available.</p>
+            )}
           </div>
         </div>
       </div>

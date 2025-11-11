@@ -250,7 +250,7 @@ export default function Appointments() {
 
   // Function to create appointment
   const createAppointment = async () => {
-    if (!selectedDate || !selectedTime || !formData.subject.trim()) {
+    if (!hasSelectedDate || !hasSelectedTime || !formData.subject.trim()) {
       toast.error('Please fill in all required fields', {
         position: "top-right",
         autoClose: 3000,
@@ -289,24 +289,37 @@ export default function Appointments() {
       setCreatingAppointment(true);
 
       // Convert selected date and time to API format
-      let appointmentDate;
-      if (selectedCalendarDate) {
-        // Use the full date from calendar
-        appointmentDate = `${selectedCalendarDate.getFullYear()}-${String(selectedCalendarDate.getMonth() + 1).padStart(2, '0')}-${String(selectedCalendarDate.getDate()).padStart(2, '0')}`;
-      } else {
-        // Fallback to old format if calendar date not set
-        const currentYear = new Date().getFullYear();
-        appointmentDate = `${currentYear}-06-${selectedDate.toString().padStart(2, '0')}`;
+      const appointmentDate = selectedCalendarDate
+        ? `${selectedCalendarDate.getFullYear()}-${String(selectedCalendarDate.getMonth() + 1).padStart(2, '0')}-${String(selectedCalendarDate.getDate()).padStart(2, '0')}`
+        : (() => {
+          const currentYear = new Date().getFullYear();
+          return `${currentYear}-06-${selectedDate.toString().padStart(2, '0')}`;
+        })();
+
+      // Prefer API start_time from the selected slot; fall back to parsing the display string
+      let appointmentTime;
+      if (selectedTimeSlot?.start_time) {
+        appointmentTime = selectedTimeSlot.start_time.slice(0, 5);
+      } else if (selectedTime) {
+        const time12Hour = selectedTime;
+        const [time, period] = time12Hour.split(' ');
+        const [hours, minutes] = time.split(':');
+        let hour24 = parseInt(hours, 10);
+        if (period === 'PM' && hour24 !== 12) hour24 += 12;
+        if (period === 'AM' && hour24 === 12) hour24 = 0;
+        appointmentTime = `${hour24.toString().padStart(2, '0')}:${minutes}`;
       }
 
-      // Convert time from "09:00 AM" format to "14:30" format (24-hour, no seconds)
-      const time12Hour = selectedTime;
-      const [time, period] = time12Hour.split(' ');
-      const [hours, minutes] = time.split(':');
-      let hour24 = parseInt(hours);
-      if (period === 'PM' && hour24 !== 12) hour24 += 12;
-      if (period === 'AM' && hour24 === 12) hour24 = 0;
-      const appointmentTime = `${hour24.toString().padStart(2, '0')}:${minutes}`;
+      if (!appointmentTime) {
+        toast.error('Please choose an available time slot', {
+          position: "top-right",
+          autoClose: 3000,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+          icon: false,
+        });
+        return;
+      }
 
       // Calculate duration from selected time slot (in minutes)
       let appointmentDuration = 30; // Default to 30 minutes
@@ -756,6 +769,9 @@ export default function Appointments() {
     setCurrentMonth(new Date().getMonth());
     setCurrentYear(new Date().getFullYear());
   };
+
+  const hasSelectedDate = Boolean(selectedCalendarDate || selectedDate);
+  const hasSelectedTime = Boolean(selectedTimeSlot || selectedTime);
 
   // Load appointments and staff members on component mount
   useEffect(() => {
@@ -1724,7 +1740,7 @@ export default function Appointments() {
                                 Back
                               </button>
                               <button
-                                disabled={!selectedDate || !selectedTime}
+                                disabled={!hasSelectedDate || !hasSelectedTime}
                                 onClick={() => setStep(2)}
                                 className="nex-btn"
                               >
@@ -2143,8 +2159,8 @@ export default function Appointments() {
                     onClick={createAppointment}
                     disabled={
                       creatingAppointment ||
-                      !selectedDate ||
-                      !selectedTime ||
+                      !hasSelectedDate ||
+                      !hasSelectedTime ||
                       !formData.subject.trim() ||
                       (formData.meeting_type === 'on_call' && !formData.phone_number.trim()) ||
                       (formData.meeting_type === 'in_person' && !formData.meeting_location.trim())

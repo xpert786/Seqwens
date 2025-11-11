@@ -1375,6 +1375,8 @@ export const taxPreparerThreadsAPI = {
     });
   },
   // Get thread details with messages
+
+
   getThreadDetails: async (threadId) => {
     // Use the same endpoint as taxpayer (as per documentation)
     return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');

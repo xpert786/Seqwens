@@ -83,6 +83,11 @@
   cursor: pointer;
 }
 
+.upload-dropzone.drag-active {
+  border-color: #00C0C6;
+  background-color: #f0fbfc;
+}
+
 .upload-icon {
   font-size: 2rem;
   color: #2a98f0;
@@ -167,6 +172,75 @@
   background-color: #F3F7FF;
 }
 
+.doc-status-badge {
+  font-family: 'BasisGrotesquePro';
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.doc-status-queued {
+  background-color: #E8F0FF;
+  color: #1f2937;
+}
+
+.doc-status-uploading {
+  background-color: #FBBF24;
+  color: #1f2937;
+}
+
+.doc-status-success {
+  background-color: #22C55E;
+  color: #ffffff;
+}
+
+.doc-status-error {
+  background-color: #EF4444;
+  color: #ffffff;
+}
+
+.doc-progress {
+  height: 6px;
+  background-color: #E5E7EB;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.doc-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.doc-progress-queued {
+  background-color: #9CA3AF;
+}
+
+.doc-progress-uploading {
+  background-color: #FBBF24;
+}
+
+.doc-progress-success {
+  background-color: #22C55E;
+}
+
+.doc-progress-error {
+  background-color: #EF4444;
+}
+
+.doc-issues .doc-error-box {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.doc-retry-button {
+  font-size: 12px;
+  font-family: 'BasisGrotesquePro';
+}
+
 .doc-action-btns {
   display: flex !important;
   gap: 8px !important;
@@ -236,6 +310,12 @@
   font-size: 0.9rem;
   cursor: pointer;
   color: #999;
+}
+
+.btn-outline-primary.btn-sm:disabled,
+.btn-outline-secondary.btn-sm:disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 

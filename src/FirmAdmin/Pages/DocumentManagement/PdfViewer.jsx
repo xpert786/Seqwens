@@ -16,35 +16,9 @@ const DownloadIcon = () => (
   </svg>
 );
 
-const EditIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M11.3333 2.66667C11.687 2.31299 12.1619 2.11035 12.6667 2.11035C13.1714 2.11035 13.6463 2.31299 14 2.66667C14.3537 3.02035 14.5563 3.49529 14.5563 4C14.5563 4.50471 14.3537 4.97965 14 5.33333L5.33333 14L2 14L2 10.6667L10.6667 2C11.0203 1.64632 11.4953 1.44368 12 1.44368C12.5047 1.44368 12.9797 1.64632 13.3333 2L11.3333 4L11.3333 2.66667Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 const UserIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M13.3333 13.6667C13.3333 11.3131 11.3536 9.33333 8.99996 9.33333C6.6463 9.33333 4.66663 11.3131 4.66663 13.6667M11.6666 4.66667C11.6666 6.13893 10.4389 7.33333 8.99996 7.33333C7.56109 7.33333 6.33329 6.13893 6.33329 4.66667C6.33329 3.1944 7.56109 2 8.99996 2C10.4389 2 11.6666 3.1944 11.6666 4.66667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const DocumentIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M11.3333 14H4.66667C4.29848 14 3.95009 13.8522 3.69019 13.5899C3.43029 13.3276 3.33333 12.9706 3.33333 12.6V3.4C3.33333 3.0294 3.43029 2.67238 3.69019 2.41011C3.95009 2.14785 4.29848 2 4.66667 2H9.33333L12.6667 5.2V12.6C12.6667 12.9706 12.5697 13.3276 12.3098 13.5899C12.0499 13.8522 11.7015 14 11.3333 14Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M9.33333 2V5.2H12.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-
-const CheckmarkIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const PaperPlaneIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.6667 2L7.33333 9.33333M14.6667 2L9.33333 14.6667L7.33333 9.33333L2 7.33333L14.6667 2Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -170,9 +144,9 @@ export default function PdfViewer() {
       {/* Top Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-xl font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+          <h5 className="text-xl font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
             {documentData.name}
-          </h1>
+          </h5>
           <div className="flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
             <span className="text-gray-600">{documentData.type}</span>
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
@@ -212,7 +186,7 @@ export default function PdfViewer() {
             <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Client
             </p>
-            <p className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
               {documentData.client}
             </p>
           </div>
@@ -225,7 +199,7 @@ export default function PdfViewer() {
             <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Assigned To
             </p>
-            <p className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
               {documentData.assignedTo}
             </p>
           </div>
@@ -238,7 +212,7 @@ export default function PdfViewer() {
             <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Upload Date
             </p>
-            <p className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
               {documentData.uploadDate}
             </p>
           </div>
@@ -251,7 +225,7 @@ export default function PdfViewer() {
             <p className="text-sm text-gray-500 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Version
             </p>
-            <p className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <p className="text-sm font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
               {documentData.version}
             </p>
           </div>
@@ -292,9 +266,9 @@ export default function PdfViewer() {
           {/* Left Column - Document Preview */}
           <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              <h5 className="text-lg font-medium text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
                 {documentData.name}
-              </h2>
+              </h5>
               <div className="flex gap-3">
                 <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
                   <EyeIcon />
@@ -334,9 +308,9 @@ export default function PdfViewer() {
 
           {/* Right Column - Comments & Notes */}
           <div className="w-96 bg-white rounded-lg shadow-sm p-6 flex flex-col border border-blue-[#3AD6F2]">
-            <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            <h5 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Comments & Notes
-            </h2>
+            </h5>
             <p className="text-sm text-gray-600 mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Communication history for this document
             </p>
@@ -385,9 +359,9 @@ export default function PdfViewer() {
       ) : (
         /* Versions Tab Content */
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+          <h5 className="text-2xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
             Version History
-          </h2>
+          </h5>
           <p className="text-sm text-gray-600 mb-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
             Track all changes and versions of this document
           </p>
@@ -400,9 +374,9 @@ export default function PdfViewer() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  <h6 className="text-lg font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Version 1.2
-                  </h3>
+                  </h6>
                   <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-500 text-white" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Current
                   </span>
@@ -431,9 +405,9 @@ export default function PdfViewer() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  <h6 className="text-lg font-semibold text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Version 1.1
-                  </h3>
+                  </h6>
                   <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Archived
                   </span>
@@ -462,9 +436,9 @@ export default function PdfViewer() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-sm font-semibold text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  <h6 className="text-sm font-semibold text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Version 1.0
-                  </h3>
+                  </h6>
                   <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     Archived
                   </span>

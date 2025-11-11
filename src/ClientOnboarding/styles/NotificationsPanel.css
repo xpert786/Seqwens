@@ -107,3 +107,32 @@
     font-size: 12px;
     font-family: 400;
 }
+
+.notification-item {
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notification-item:hover,
+.notification-item:focus-visible {
+    background-color: #f6faff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    outline: none;
+}
+
+.notification-unread {
+    border-left: 4px solid #00C0C6;
+    padding-left: calc(1rem - 4px);
+}
+
+.notification-read {
+    opacity: 0.85;
+}
+
+.notification-dismiss {
+    color: #9ca3af !important;
+}
+
+.notification-dismiss:hover {
+    color: #f56d2d !important;
+}
