@@ -207,6 +207,39 @@ export default function MyClients() {
     setShowFilterDropdown(false);
   };
 
+  const openClientDetails = (client, options = {}) => {
+    setOpenDropdown(null);
+    navigate(`/taxdashboard/clients/${client.id}`, { state: { client, ...options } });
+  };
+
+  const handleMenuSelect = (event, action, client) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    setOpenDropdown(null);
+
+    switch (action) {
+      case "details":
+        openClientDetails(client);
+        break;
+      case "tasks":
+        navigate("/taxdashboard/tasks", { state: { clientId: client.id, client } });
+        break;
+      case "documents":
+        navigate("/taxdashboard/documents", { state: { clientId: client.id, client } });
+        break;
+      case "messages":
+        navigate("/taxdashboard/messages", { state: { clientId: client.id, client } });
+        break;
+      case "schedule":
+        navigate("/taxdashboard/calendar", { state: { clientId: client.id, client } });
+        break;
+      default:
+        break;
+    }
+  };
+
   if (loading) {
     return (
       <div className="myclients-container">
@@ -434,15 +467,55 @@ export default function MyClients() {
                   style={{
                     border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)"
                   }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openClientDetails(client)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openClientDetails(client);
+                    }
+                  }}
                 >
                   <div className="d-flex justify-content-between align-items-start">
                     {/* Left */}
                     <div className="d-flex gap-3">
-                      <div className="client-initials">
+                      <button
+                        type="button"
+                        className="client-initials"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openClientDetails(client);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            openClientDetails(client);
+                          }
+                        }}
+                        aria-label={`Open ${client.name} details`}
+                      >
                         {client.initials}
-                      </div>
+                      </button>
                       <div>
-                        <h6 className="mb-1 fw-semibold">{client.name}</h6>
+                        <button
+                          type="button"
+                          className="client-name-button fw-semibold"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openClientDetails(client);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              openClientDetails(client);
+                            }
+                          }}
+                        >
+                          {client.name}
+                        </button>
                         <div className="client-contact-info">
                           <small className="text-muted client-email">
                             {client.email}
@@ -469,37 +542,63 @@ export default function MyClients() {
                         <div
                           className="dot-container"
                           ref={el => dropdownRefs.current[client.id] = el}
-                          onClick={() =>
-                            setOpenDropdown(openDropdown === client.id ? null : client.id)
-                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setOpenDropdown(openDropdown === client.id ? null : client.id);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setOpenDropdown(openDropdown === client.id ? null : client.id);
+                            }
+                          }}
+                          tabIndex={0}
                           style={{ position: 'relative' }}
                         >
                           <Dot />
                           {openDropdown === client.id && (
                             <ul className="dot-dropdown" style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px' }}>
-                              <li onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                navigate(`/taxdashboard/clients/${client.id}`, { state: { client } });
-                              }}>
+                              <li
+                                onMouseDown={(e) => handleMenuSelect(e, "details", client)}
+                                onClick={(e) => handleMenuSelect(e, "details", client)}
+                                tabIndex={0}
+                                role="button"
+                              >
                                 View Details
                               </li>
-                              <li onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                navigate(`/taxdashboard/clients/${client.id}`, { state: { client, tab: 'tasks' } });
-                              }}>
+                              <li
+                                onMouseDown={(e) => handleMenuSelect(e, "tasks", client)}
+                                onClick={(e) => handleMenuSelect(e, "tasks", client)}
+                                tabIndex={0}
+                                role="button"
+                              >
                                 View Tasks
                               </li>
-                              <li onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                navigate(`/taxdashboard/clients/${client.id}`, { state: { client, tab: 'documents' } });
-                              }}>
+                              <li
+                                onMouseDown={(e) => handleMenuSelect(e, "documents", client)}
+                                onClick={(e) => handleMenuSelect(e, "documents", client)}
+                                tabIndex={0}
+                                role="button"
+                              >
                                 Documents
                               </li>
-                              <li>Send Message</li>
-                              <li>Schedule Meeting</li>
+                              <li
+                                onMouseDown={(e) => handleMenuSelect(e, "messages", client)}
+                                onClick={(e) => handleMenuSelect(e, "messages", client)}
+                                tabIndex={0}
+                                role="button"
+                              >
+                                Send Message
+                              </li>
+                              <li
+                                onMouseDown={(e) => handleMenuSelect(e, "schedule", client)}
+                                onClick={(e) => handleMenuSelect(e, "schedule", client)}
+                                tabIndex={0}
+                                role="button"
+                              >
+                                Schedule Meeting
+                              </li>
                             </ul>
                           )}
                         </div>

@@ -242,8 +242,8 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                   </span>
                   Messaging & Notifications
                 </Link>
-                <Link to="/firmadmin/appointments" className={linkClass("/firmadmin/appointments")}>
-                  <span className={iconWrapperClass("/firmadmin/appointments")}>
+                <Link to="/firmadmin/calendar" className={linkClass("/firmadmin/calendar")}>
+                  <span className={iconWrapperClass("/firmadmin/calendar")}>
                     <Schedule />
                   </span>
                   Scheduling & Calendar

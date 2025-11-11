@@ -114,7 +114,7 @@ export default function BillingManagement() {
   };
 
   return (
-    <div className="p-6" style={{ minHeight: '100vh' }}>
+    <div className="p-6 !bg-[#F3F7FF]" style={{ minHeight: '100vh' }}>
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
@@ -166,7 +166,7 @@ export default function BillingManagement() {
       </div>
 
       {/* Invoice List */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg p-6">
         <div className="mb-6">
           <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
             All Invoices ({invoices.length})

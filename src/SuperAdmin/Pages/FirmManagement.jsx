@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 
 export default function FirmManagement() {
@@ -14,7 +15,9 @@ export default function FirmManagement() {
         phone: "",
         plan: ""
     });
-                                                                    
+
+
+
     // API state management
     const [firms, setFirms] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,13 +31,14 @@ export default function FirmManagement() {
     const [creatingFirm, setCreatingFirm] = useState(false);
     const [createError, setCreateError] = useState(null);
     const [createSuccess, setCreateSuccess] = useState(false);
-    
+
     // Firm details modal state
     const [showFirmDetailsModal, setShowFirmDetailsModal] = useState(false);
     const [selectedFirm, setSelectedFirm] = useState(null);
     const [loadingFirmDetails, setLoadingFirmDetails] = useState(false);
     const [firmDetailsError, setFirmDetailsError] = useState(null);
-    
+    const navigate = useNavigate();
+
     // Suspend modal state
     const [showSuspendModal, setShowSuspendModal] = useState(false);
     const [firmToSuspend, setFirmToSuspend] = useState(null);
@@ -48,7 +52,7 @@ export default function FirmManagement() {
         try {
             setLoading(true);
             setError(null);
-            
+
             const response = await superAdminAPI.getFirms(
                 1, // page
                 20, // limit
@@ -56,7 +60,7 @@ export default function FirmManagement() {
                 statusFilter === "All Status" ? '' : statusFilter.toLowerCase(), // status
                 planFilter === "All Plans" ? '' : planFilter.toLowerCase() // plan
             );
-            
+
             if (response.success && response.data) {
                 setFirms(response.data.firms || []);
                 setPagination(response.data.pagination || {
@@ -114,6 +118,42 @@ export default function FirmManagement() {
         return plan?.charAt(0).toUpperCase() + plan?.slice(1) || 'Unknown';
     };
 
+    const formatCurrency = (value) => {
+        if (value === null || value === undefined || isNaN(Number(value))) {
+            return '$0.00';
+        }
+        return Number(value).toLocaleString('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return dateString;
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    };
+
     const toggleDropdown = (firmId) => {
         setActiveDropdown(activeDropdown === firmId ? null : firmId);
     };
@@ -123,12 +163,11 @@ export default function FirmManagement() {
         try {
             setLoadingFirmDetails(true);
             setFirmDetailsError(null);
-            
-            const response = await superAdminAPI.getFirmById(firmId);
-            
+
+            const response = await superAdminAPI.getFirmOverview(firmId);
+
             if (response.success && response.data) {
                 setSelectedFirm(response.data);
-                setShowFirmDetailsModal(true);
             } else {
                 throw new Error(response.message || 'Failed to fetch firm details');
             }
@@ -150,9 +189,9 @@ export default function FirmManagement() {
         try {
             setSuspendingFirm(true);
             setSuspendError(null);
-            
+
             const response = await superAdminAPI.suspendFirm(firmToSuspend.id, suspendReason);
-            
+
             if (response.success) {
                 setSuspendSuccess(true);
                 // Refresh firms list
@@ -178,9 +217,9 @@ export default function FirmManagement() {
     const handleAction = (action, firmId) => {
         console.log(`${action} for firm ${firmId}`);
         setActiveDropdown(null);
-        
+
         if (action === 'View Details') {
-            fetchFirmDetails(firmId);
+            navigate(`/superadmin/firms/${firmId}`);
         } else if (action === 'Edit User') {
             // TODO: Implement edit functionality
             console.log('Edit firm:', firmId);
@@ -231,7 +270,7 @@ export default function FirmManagement() {
         try {
             setCreatingFirm(true);
             setCreateError(null);
-            
+
             const firmData = {
                 firm_name: newFirm.firmName,
                 owner_name: newFirm.ownerName,
@@ -241,14 +280,14 @@ export default function FirmManagement() {
             };
 
             const response = await superAdminAPI.createFirm(firmData);
-            
+
             if (response.success) {
                 setCreateSuccess(true);
                 // Refresh firms list
                 await fetchFirms();
                 // Close modal after a short delay
                 setTimeout(() => {
-        handleCloseModal();
+                    handleCloseModal();
                     setCreateSuccess(false);
                 }, 2000);
             } else {
@@ -276,47 +315,53 @@ export default function FirmManagement() {
         };
     }, [activeDropdown]);
 
+    const closeFirmDetailsModal = () => {
+        setShowFirmDetailsModal(false);
+        setSelectedFirm(null);
+        setFirmDetailsError(null);
+    };
+
     return (
-        <div className="min-h-screen  p-6">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
+            <div className="mx-auto flex w-full flex-col gap-6">
                 {/* Header Section with Action Buttons */}
-                <div className="flex justify-between items-start mb-8">
-                    <div>
-                        <h3 className="text-3xl font-bold text-gray-800 mb-2">
-                            Firm Management
-                        </h3>
-                        <p className="text-gray-500 text-md ">
-                            Manage all firms on the platform
-                        </p>
+                <div className="flex flex-col items-start justify-between gap-3 rounded-2xl  px-6 py-5 sm:flex-row sm:items-center">
+                    <div className="space-y-1">
+                        <h3 className="text-3xl font-bold text-gray-900">Firm Management</h3>
+                        <p className="text-sm text-gray-500">Manage all firms registered on the platform</p>
                     </div>
-                    
+
                     {/* Action Buttons */}
-                    <div className="flex space-x-3 gap-2">
-                    <button className="px-2 py-1 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" style={{borderRadius: '7px'}}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12.75 6.5L9 2.75M9 2.75L5.25 6.5M9 2.75V11.75" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/> 
-                    </svg>
-
-                        Import Report
-                    </button>
-                    <button className="px-2 py-1 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" style={{borderRadius: '7px'}}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-
-                        Export Report
-                    </button>
-                    <button 
-                        onClick={handleAddFirm}
-                        className="px-2 py-1 text-xs bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center" 
-                        style={{borderRadius: '7px'}}
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                         Add Firm
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12.75 6.5L9 2.75M9 2.75L5.25 6.5M9 2.75V11.75" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Import Report
+                        </button>
+                        <button
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Export Report
+                        </button>
+                        <button
+                            onClick={handleAddFirm}
+                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Firm
+                        </button>
                     </div>
                 </div>
 
@@ -411,15 +456,15 @@ export default function FirmManagement() {
 
                     {/* Table Headers */}
                     <div className="px-3 py-3  ">
-                <div className="grid grid-cols-12 gap-1 text-sm font-medium text-[#4B5563] justify-items-start">
-                    <div className="col-span-3">Firm</div>
-                    <div className="col-span-2">Plan</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Users</div>
-                    <div className="col-span-2">Revenue</div>
-                    <div className="col-span-1">Last Active</div>
-                    <div className="col-span-1">Actions</div>
-                </div>
+                        <div className="grid grid-cols-12 gap-1 text-sm font-medium text-[#4B5563] justify-items-start">
+                            <div className="col-span-3">Firm</div>
+                            <div className="col-span-2">Plan</div>
+                            <div className="col-span-2">Status</div>
+                            <div className="col-span-1">Users</div>
+                            <div className="col-span-2">Revenue</div>
+                            <div className="col-span-1">Last Active</div>
+                            <div className="col-span-1">Actions</div>
+                        </div>
                     </div>
 
                     {/* Loading State */}
@@ -434,132 +479,316 @@ export default function FirmManagement() {
 
                     {/* Firm Entries */}
                     {!loading && (
-                    <div className="divide-y divide-gray-200">
+                        <div className="divide-y divide-gray-200">
                             {firms.length > 0 ? firms.map((firm) => (
-                            <div key={firm.id} className="pr-1 pl-3 py-3 transition-colors border-1 border-[#E8F0FF] m-2" style={{borderRadius: '7px'}}>
-                                <div className="grid grid-cols-12 gap-1 items-center">
-                                    {/* Firm Column */}
-                                    <div className="col-span-3">
-                                        <div className="text-[#4B5563] text-xs truncate">
-                                            <span className="font-medium">{firm.name}</span>
-                                        </div>
-                                        <div className="text-gray-500 text-xs truncate">
-                                            {firm.admin_user_name}
-                                        </div>
-                                        <div className="text-gray-500 text-xs truncate">
-                                            {firm.admin_user_email}
-                                        </div>
-                                    </div>
-
-                                    {/* Plan Column */}
-                                    <div className="col-span-2">
-                                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium text-white ${getPlanColor(firm.subscription_plan)}`}>
-                                            {formatPlan(firm.subscription_plan)}
-                                        </span>
-                                    </div>
-
-                                    {/* Status Column */}
-                                    <div className="col-span-2">
-                                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(firm.status)}`}>
-                                            {formatStatus(firm.status)}
-                                        </span>
-                                    </div>
-
-                                    {/* Users Column */}
-                                    <div className="col-span-1 flex items-center text-xs text-gray-700">
-                                        <svg className="w-3 h-3 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                        </svg>
-                                        {firm.staff_count + firm.client_count}
-                                    </div>
-
-                                    {/* Revenue Column */}
-                                    <div className="col-span-2 text-xs text-gray-700">
-                                        ${firm.monthly_fee}/month
-                                    </div>
-
-                                    {/* Last Active Column */}
-                                    <div className="col-span-1 text-xs text-gray-700">
-                                        {firm.trial_days_remaining ? `${firm.trial_days_remaining}d left` : 'Active'}
-                                    </div>
-
-                                    {/* Actions Column */}
-                                    <div className="col-span-1 flex justify-center relative dropdown-container">
-                                        <button 
-                                            onClick={() => toggleDropdown(firm.id)}
-                                            className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
-                                        >
-                                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect x="0.25" y="0.25" width="21.5" height="21.5" rx="3.75" fill="#F3F7FF"/>
-                                                <rect x="0.25" y="0.25" width="21.5" height="21.5" rx="3.75" stroke="#E8F0FF" strokeWidth="0.5"/>
-                                                <path d="M6.27344 10.1016C6.57181 10.1016 6.85795 10.2201 7.06893 10.4311C7.27991 10.642 7.39844 10.9282 7.39844 11.2266C7.39844 11.5249 7.27991 11.8111 7.06893 12.0221C6.85795 12.233 6.57181 12.3516 6.27344 12.3516C5.97507 12.3516 5.68892 12.233 5.47794 12.0221C5.26696 11.8111 5.14844 11.5249 5.14844 11.2266C5.14844 10.9282 5.26696 10.642 5.47794 10.4311C5.68892 10.2201 5.97507 10.1016 6.27344 10.1016ZM10.7734 10.1016C11.0718 10.1016 11.358 10.2201 11.5689 10.4311C11.7799 10.642 11.8984 10.9282 11.8984 11.2266C11.8984 11.5249 11.7799 11.8111 11.5689 12.0221C11.358 12.233 11.0718 12.3516 10.7734 12.3516C10.4751 12.3516 10.1889 12.233 9.97794 12.0221C9.76696 11.8111 9.64844 11.5249 9.64844 11.2266C9.64844 10.9282 9.76696 10.642 9.97794 10.4311C10.1889 10.2201 10.4751 10.1016 10.7734 10.1016ZM15.2734 10.1016C15.5718 10.1016 15.858 10.2201 16.0689 10.4311C16.2799 10.642 16.3984 10.9282 16.3984 11.2266C16.3984 11.5249 16.2799 11.8111 16.0689 12.0221C15.858 12.233 15.5718 12.3516 15.2734 12.3516C14.9751 12.3516 14.6889 12.233 14.4779 12.0221C14.267 11.8111 14.1484 11.5249 14.1484 11.2266C14.1484 10.9282 14.267 10.642 14.4779 10.4311C14.6889 10.2201 14.9751 10.1016 15.2734 10.1016Z" fill="#131323"/>
-                                            </svg>
-                                        </button>
-
-                                        {/* Dropdown Menu */}
-                                        {activeDropdown === firm.id && (
-                                            <div className="absolute right-0 top-8 z-50 bg-white rounded-lg  border-1 border-[#E8F0FF] py-2 min-w-[160px]">
-                                                <button
-                                                    onClick={() => handleAction('View Details', firm.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                >
-                                                    View Details
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction('Edit User', firm.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                >
-                                                    Edit User
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction('Send Message', firm.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                >
-                                                    Send Message
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction('Manage Billing', firm.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                >
-                                                    Manage Billing
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction('Suspend User', firm.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                                >
-                                                    Suspend User
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction('Delete', firm.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                                >
-                                                    Delete
-                                                </button>
+                                <div key={firm.id} className="pr-1 pl-3 py-3 transition-colors border-1 border-[#E8F0FF] m-2" style={{ borderRadius: '7px' }}>
+                                    <div className="grid grid-cols-12 gap-1 items-center">
+                                        {/* Firm Column */}
+                                        <div className="col-span-3">
+                                            <div className="text-[#4B5563] text-xs truncate">
+                                                <span className="font-medium">{firm.name}</span>
                                             </div>
-                                        )}
+                                            <div className="text-gray-500 text-xs truncate">
+                                                {firm.admin_user_name}
+                                            </div>
+                                            <div className="text-gray-500 text-xs truncate">
+                                                {firm.admin_user_email}
+                                            </div>
+                                        </div>
+
+                                        {/* Plan Column */}
+                                        <div className="col-span-2">
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium text-white ${getPlanColor(firm.subscription_plan)}`}>
+                                                {formatPlan(firm.subscription_plan)}
+                                            </span>
+                                        </div>
+
+                                        {/* Status Column */}
+                                        <div className="col-span-2">
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(firm.status)}`}>
+                                                {formatStatus(firm.status)}
+                                            </span>
+                                        </div>
+
+                                        {/* Users Column */}
+                                        <div className="col-span-1 flex items-center text-xs text-gray-700">
+                                            <svg className="w-3 h-3 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                                            </svg>
+                                            {firm.staff_count + firm.client_count}
+                                        </div>
+
+                                        {/* Revenue Column */}
+                                        <div className="col-span-2 text-xs text-gray-700">
+                                            ${firm.monthly_fee}/month
+                                        </div>
+
+                                        {/* Last Active Column */}
+                                        <div className="col-span-1 text-xs text-gray-700">
+                                            {firm.trial_days_remaining ? `${firm.trial_days_remaining}d left` : 'Active'}
+                                        </div>
+
+                                        {/* Actions Column */}
+                                        <div className="col-span-1 flex justify-center relative dropdown-container">
+                                            <button
+                                                onClick={() => toggleDropdown(firm.id)}
+                                                className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="0.25" y="0.25" width="21.5" height="21.5" rx="3.75" fill="#F3F7FF" />
+                                                    <rect x="0.25" y="0.25" width="21.5" height="21.5" rx="3.75" stroke="#E8F0FF" strokeWidth="0.5" />
+                                                    <path d="M6.27344 10.1016C6.57181 10.1016 6.85795 10.2201 7.06893 10.4311C7.27991 10.642 7.39844 10.9282 7.39844 11.2266C7.39844 11.5249 7.27991 11.8111 7.06893 12.0221C6.85795 12.233 6.57181 12.3516 6.27344 12.3516C5.97507 12.3516 5.68892 12.233 5.47794 12.0221C5.26696 11.8111 5.14844 11.5249 5.14844 11.2266C5.14844 10.9282 5.26696 10.642 5.47794 10.4311C5.68892 10.2201 5.97507 10.1016 6.27344 10.1016ZM10.7734 10.1016C11.0718 10.1016 11.358 10.2201 11.5689 10.4311C11.7799 10.642 11.8984 10.9282 11.8984 11.2266C11.8984 11.5249 11.7799 11.8111 11.5689 12.0221C11.358 12.233 11.0718 12.3516 10.7734 12.3516C10.4751 12.3516 10.1889 12.233 9.97794 12.0221C9.76696 11.8111 9.64844 11.5249 9.64844 11.2266C9.64844 10.9282 9.76696 10.642 9.97794 10.4311C10.1889 10.2201 10.4751 10.1016 10.7734 10.1016ZM15.2734 10.1016C15.5718 10.1016 15.858 10.2201 16.0689 10.4311C16.2799 10.642 16.3984 10.9282 16.3984 11.2266C16.3984 11.5249 16.2799 11.8111 16.0689 12.0221C15.858 12.233 15.5718 12.3516 15.2734 12.3516C14.9751 12.3516 14.6889 12.233 14.4779 12.0221C14.267 11.8111 14.1484 11.5249 14.1484 11.2266C14.1484 10.9282 14.267 10.642 14.4779 10.4311C14.6889 10.2201 14.9751 10.1016 15.2734 10.1016Z" fill="#131323" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Dropdown Menu */}
+                                            {activeDropdown === firm.id && (
+                                                <div className="absolute right-0 top-8 z-50 bg-white rounded-lg  border-1 border-[#E8F0FF] py-2 min-w-[160px]">
+                                                    <button
+                                                        onClick={() => handleAction('View Details', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                                    >
+                                                        View Details
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction('Edit User', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                                    >
+                                                        Edit User
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction('Send Message', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                                    >
+                                                        Send Message
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction('Manage Billing', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                                    >
+                                                        Manage Billing
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction('Suspend User', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                                    >
+                                                        Suspend User
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction('Delete', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             )) : (
                                 <div className="text-center py-8">
                                     <div className="text-gray-500 mb-2">No firms found</div>
                                     <div className="text-sm text-gray-400">
-                                        {searchTerm || statusFilter !== "All Status" || planFilter !== "All Plans" 
-                                            ? "Try adjusting your search or filters" 
+                                        {searchTerm || statusFilter !== "All Status" || planFilter !== "All Plans"
+                                            ? "Try adjusting your search or filters"
                                             : "No firms have been registered yet"}
                                     </div>
                                 </div>
                             )}
-                    </div>
+                        </div>
                     )}
                 </div>
             </div>
 
+            {/* Firm Details Modal */}
+            {showFirmDetailsModal && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
+                    <div className="absolute inset-0 bg-black bg-opacity-40" onClick={closeFirmDetailsModal}></div>
+                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-5xl mx-auto overflow-hidden" style={{ borderRadius: '14px' }}>
+                        <div className="flex justify-between items-start p-6 border-b border-gray-200 bg-[#F9FBFF]">
+                            <div>
+                                <h3 className="text-2xl font-semibold text-gray-900">
+                                    {selectedFirm?.firm?.name || 'Firm Overview'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Detailed insight into firm performance, contact information, and system health
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeFirmDetailsModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Close"
+                            >
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path d="M15.7793 8.21899C16.0723 8.51196 16.0723 8.98682 15.7793 9.27979L12.9976 12.0615L15.777 14.8408C16.07 15.1338 16.07 15.6086 15.777 15.9016C15.484 16.1946 15.0092 16.1946 14.7162 15.9016L11.9369 13.1223L9.15759 15.9016C8.86462 16.1946 8.38976 16.1946 8.0968 15.9016C7.80383 15.6086 7.80383 15.1338 8.0968 14.8408L10.8761 12.0615L8.09444 9.27979C7.80147 8.98682 7.80147 8.51196 8.09444 8.21899C8.3874 7.92603 8.86227 7.92603 9.15523 8.21899L11.9369 10.9993L14.7186 8.21899C15.0115 7.92603 15.4864 7.92603 15.7793 8.21899Z" fill="#3B4A66" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                            {loadingFirmDetails && (
+                                <div className="flex flex-col items-center justify-center py-12 text-gray-600">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+                                    Loading firm overview...
+                                </div>
+                            )}
+
+                            {!loadingFirmDetails && firmDetailsError && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <div className="text-sm text-red-700">{firmDetailsError}</div>
+                                </div>
+                            )}
+
+                            {!loadingFirmDetails && !firmDetailsError && selectedFirm && (
+                                <>
+                                    {/* Subscription & Status Summary */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
+                                            <p className="text-sm text-gray-500 mb-1">Subscription Plan</p>
+                                            <h4 className="text-xl font-semibold text-gray-900 mb-2">
+                                                {selectedFirm.firm?.subscription_plan?.label || 'N/A'}
+                                            </h4>
+                                            <div className="text-sm text-gray-600">
+                                                Monthly Fee:&nbsp;
+                                                <span className="font-semibold text-gray-900">
+                                                    {formatCurrency(selectedFirm.firm?.subscription_plan?.monthly_fee)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
+                                            <p className="text-sm text-gray-500 mb-1">Firm Status</p>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold text-white ${getStatusColor(selectedFirm.firm?.status)}`}>
+                                                    {formatStatus(selectedFirm.firm?.status)}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Joined on {formatDate(selectedFirm.firm?.join_date)}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
+                                            <p className="text-sm text-gray-500 mb-1">Last Active</p>
+                                            <h4 className="text-lg font-semibold text-gray-900">
+                                                {formatDateTime(selectedFirm.system_health?.last_active)}
+                                            </h4>
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Overall Health:&nbsp;
+                                                <span className="font-semibold">
+                                                    {selectedFirm.system_health?.overall_health?.status || 'N/A'} ({selectedFirm.system_health?.overall_health?.score ?? '—'}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact & Address */}
+                                    <div className="bg-white border border-[#E8F0FF] rounded-xl p-5">
+                                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                                <p className="text-gray-500">Firm Email</p>
+                                                <p className="font-medium text-gray-900">{selectedFirm.firm?.firm_email || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500">Phone</p>
+                                                <p className="font-medium text-gray-900">{selectedFirm.firm?.phone || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500">Owner</p>
+                                                <p className="font-medium text-gray-900">{selectedFirm.firm?.owner || 'N/A'}</p>
+                                                <p className="text-xs text-gray-500">{selectedFirm.firm?.owner_email || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500">Tax ID</p>
+                                                <p className="font-medium text-gray-900">{selectedFirm.firm?.tax_id || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4">
+                                            <p className="text-gray-500 text-sm mb-1">Address</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {[
+                                                    selectedFirm.firm?.address?.street,
+                                                    selectedFirm.firm?.address?.city,
+                                                    selectedFirm.firm?.address?.state,
+                                                    selectedFirm.firm?.address?.zip_code,
+                                                    selectedFirm.firm?.address?.country
+                                                ].filter(Boolean).join(', ') || 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Metrics */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
+                                            <p className="text-sm text-gray-500">{selectedFirm.metrics?.users?.label || 'Users'}</p>
+                                            <h3 className="text-2xl font-semibold text-gray-900 mt-1">
+                                                {selectedFirm.metrics?.users?.count ?? '—'}
+                                            </h3>
+                                        </div>
+                                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
+                                            <p className="text-sm text-gray-500">{selectedFirm.metrics?.clients?.label || 'Clients'}</p>
+                                            <h3 className="text-2xl font-semibold text-gray-900 mt-1">
+                                                {selectedFirm.metrics?.clients?.count ?? '—'}
+                                            </h3>
+                                        </div>
+                                        <div className="bg-white border border-[#E8F0FF] rounded-xl p-4">
+                                            <p className="text-sm text-gray-500">Monthly Subscription</p>
+                                            <h3 className="text-xl font-semibold text-gray-900 mt-1">
+                                                {formatCurrency(selectedFirm.metrics?.revenue?.monthly_subscription)}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Paid Invoice Revenue:&nbsp;
+                                                <span className="font-semibold text-gray-900">
+                                                    {formatCurrency(selectedFirm.metrics?.revenue?.paid_invoice_revenue)}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* System Health */}
+                                    <div className="bg-white border border-[#E8F0FF] rounded-xl p-5">
+                                        <h4 className="text-lg font-semibold text-gray-900 mb-4">System Health</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-sm text-gray-500">Overall Health Status</p>
+                                                <p className="text-xl font-semibold text-gray-900 mt-1">
+                                                    {selectedFirm.system_health?.overall_health?.status || 'N/A'}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Score: {selectedFirm.system_health?.overall_health?.score ?? '—'} / 100
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500">Storage Usage</p>
+                                                <p className="text-xl font-semibold text-gray-900 mt-1">
+                                                    {selectedFirm.system_health?.storage?.used_gb ?? '—'} GB / {selectedFirm.system_health?.storage?.limit_gb ?? '—'} GB
+                                                </p>
+                                                <div className="mt-2">
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div
+                                                            className="bg-orange-500 h-2 rounded-full"
+                                                            style={{ width: `${Math.min(selectedFirm.system_health?.storage?.percent_used ?? 0, 100)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {selectedFirm.system_health?.storage?.percent_used ?? '—'}% used
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Add New Firm Modal */}
             {showAddFirmModal && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                    <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 my-50 " style={{borderRadius: '12px'}}>
+                    <div className="absolute inset-0 bg-transparent"></div>
+                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 my-12" style={{ borderRadius: '12px' }}>
                         {/* Modal Header */}
                         <div className="flex justify-between items-start p-3">
                             <div>
@@ -571,9 +800,9 @@ export default function FirmManagement() {
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="12" fill="#E8F0FF"/>
-                                    <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66"/>
-                                    </svg>
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66" />
+                                </svg>
 
                             </button>
                         </div>
@@ -670,7 +899,7 @@ export default function FirmManagement() {
                                 onClick={handleCreateFirm}
                                 disabled={creatingFirm}
                                 className="px-3 py-1 text-xs font-medium text-white bg-[#F56D2D] rounded hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{borderRadius: '7px'}}
+                                style={{ borderRadius: '7px' }}
                             >
                                 {creatingFirm ? 'Creating...' : 'Create Firm'}
                             </button>
@@ -683,7 +912,7 @@ export default function FirmManagement() {
             {showSuspendModal && firmToSuspend && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
                     <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4" style={{borderRadius: '12px'}}>
+                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4" style={{ borderRadius: '12px' }}>
                         {/* Modal Header */}
                         <div className="flex justify-between items-start p-4 border-b border-gray-200">
                             <div>
@@ -701,8 +930,8 @@ export default function FirmManagement() {
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="12" fill="#E8F0FF"/>
-                                    <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66"/>
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66" />
                                 </svg>
                             </button>
                         </div>
@@ -730,7 +959,7 @@ export default function FirmManagement() {
                                     <div><strong>Name:</strong> {firmToSuspend.name}</div>
                                     <div><strong>Admin:</strong> {firmToSuspend.admin_user_name}</div>
                                     <div><strong>Email:</strong> {firmToSuspend.admin_user_email}</div>
-                                    <div><strong>Current Status:</strong> 
+                                    <div><strong>Current Status:</strong>
                                         <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(firmToSuspend.status)}`}>
                                             {formatStatus(firmToSuspend.status)}
                                         </span>

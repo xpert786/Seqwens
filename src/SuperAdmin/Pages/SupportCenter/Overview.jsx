@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import TicketDetail from "./TicketDetail";
 import {
     Chart as ChartJS,
@@ -26,29 +26,128 @@ ChartJS.register(
     ChartDataLabels
 );
 
+const DEFAULT_CATEGORY_COLORS = {
+    compliance: '#3B82F6',
+    technical: '#EF4444',
+    billing: '#10B981',
+    account: '#8B5CF6',
+    general: '#F59E0B',
+    support: '#6366F1',
+    operations: '#0EA5E9',
+};
+
+const FALLBACK_CHART_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#8B5CF6', '#F59E0B', '#6366F1', '#0EA5E9', '#F97316'];
+const PREFERRED_CATEGORY_ORDER = ['compliance', 'technical', 'billing', 'account', 'general', 'support', 'operations'];
+
+const createInitialOverviewData = () => ({
+    counters: {
+        total_tickets: 0,
+        open: 0,
+        in_progress: 0,
+        closed_today: 0,
+        avg_response_hours: 0,
+        satisfaction_score: 0,
+        resolved: 0,
+    },
+    charts: {
+        avg_resolution_time: [],
+        category_distribution: [],
+        status_distribution: [],
+        priority_distribution: [],
+        top_issue_category: null,
+    },
+    recent_tickets: [],
+    filters: {
+        statuses: [],
+        categories: [],
+        priorities: [],
+    },
+});
+
+const formatCategoryLabel = (category) => {
+    if (!category) {
+        return 'Unknown';
+    }
+    return category
+        .toString()
+        .replace(/_/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
+const formatMonthLabel = (month) => {
+    if (!month) {
+        return 'Unknown';
+    }
+    if (/^\d{4}-\d{2}$/.test(month)) {
+        const [year, monthPart] = month.split('-');
+        const parsedDate = new Date(Number(year), Number(monthPart) - 1);
+        return parsedDate.toLocaleString('default', { month: 'short', year: 'numeric' });
+    }
+    return month;
+};
+
+const getCategoryColor = (categoryKey, index = 0) => {
+    const normalizedKey = categoryKey?.toLowerCase();
+    if (normalizedKey && DEFAULT_CATEGORY_COLORS[normalizedKey]) {
+        return DEFAULT_CATEGORY_COLORS[normalizedKey];
+    }
+    return FALLBACK_CHART_COLORS[index % FALLBACK_CHART_COLORS.length];
+};
+
+const normalizeOverviewResponse = (data) => {
+    const initial = createInitialOverviewData();
+    return {
+        ...initial,
+        ...data,
+        counters: {
+            ...initial.counters,
+            ...(data?.counters || {}),
+        },
+        charts: {
+            ...initial.charts,
+            ...(data?.charts || {}),
+        },
+        filters: {
+            ...initial.filters,
+            ...(data?.filters || {}),
+        },
+        recent_tickets: data?.recent_tickets || [],
+    };
+};
+
+const formatCategoryForAPI = (category) => {
+    if (!category || category === 'all') {
+        return '';
+    }
+    return formatCategoryLabel(category);
+};
+
 export default function Overview({ showHeader = false, onTicketDetailToggle }) {
-    const [selectedCategory, setSelectedCategory] = useState("compliance");
+    const [selectedCategory, setSelectedCategory] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All Status");
     const [priorityFilter, setPriorityFilter] = useState("All Priority");
-    const [activeDropdown, setActiveDropdown] = useState(null);
     const [selectedTicketId, setSelectedTicketId] = useState(null);
     const [allTickets, setAllTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [actionMenuTicketId, setActionMenuTicketId] = useState(null);
+    const [actionBusyTicketId, setActionBusyTicketId] = useState(null);
+    const [refreshCounter, setRefreshCounter] = useState(0);
+    const [assignModalOpen, setAssignModalOpen] = useState(false);
+    const [assignModalTicket, setAssignModalTicket] = useState(null);
+    const [assignableAdmins, setAssignableAdmins] = useState([]);
+    const [assignListLoading, setAssignListLoading] = useState(false);
+    const [assignSubmitLoading, setAssignSubmitLoading] = useState(false);
+    const [assignSelectedAdminId, setAssignSelectedAdminId] = useState(null);
+    const [assignError, setAssignError] = useState(null);
+    const [hasFetchedAssignableAdmins, setHasFetchedAssignableAdmins] = useState(false);
 
     // Overview/analytics data from API
-    const [overviewData, setOverviewData] = useState({
-        counters: {
-            total_tickets: 0,
-            open: 0,
-            in_progress: 0,
-            closed_today: 0,
-            avg_response_hours: 0
-        },
-        category_distribution: [],
-        avg_resolution_by_month: []
-    });
+    const [overviewData, setOverviewData] = useState(() => createInitialOverviewData());
     const [overviewLoading, setOverviewLoading] = useState(true);
 
     // Fetch overview/analytics data from API
@@ -63,7 +162,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
                 if (response.success && response.data) {
                     console.log('✅ Support overview fetched successfully:', response.data);
-                    setOverviewData(response.data);
+                    setOverviewData(normalizeOverviewResponse(response.data));
                 } else {
                     console.log('❌ Failed to fetch support overview:', response.message);
                 }
@@ -79,6 +178,37 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         fetchOverview();
     }, []);
 
+    // Ensure the selected category remains valid when overview data updates
+    useEffect(() => {
+        const distribution = overviewData.charts?.category_distribution || [];
+        if (!distribution.length) {
+            return;
+        }
+
+        const normalizedSelected = selectedCategory?.toLowerCase();
+        if (normalizedSelected === 'all') {
+            return;
+        }
+
+        const availableCategories = distribution.map((item) => (item.category || 'other').toLowerCase());
+        if (!availableCategories.includes(normalizedSelected)) {
+            setSelectedCategory('all');
+        }
+    }, [overviewData.charts?.category_distribution, selectedCategory]);
+
+    useEffect(() => {
+        const handleDocumentClick = (event) => {
+            if (!event.target.closest('[data-ticket-action-menu="true"]')) {
+                setActionMenuTicketId(null);
+            }
+        };
+
+        document.addEventListener('click', handleDocumentClick);
+        return () => {
+            document.removeEventListener('click', handleDocumentClick);
+        };
+    }, []);
+
     // Fetch support tickets from API - Same pattern as MyTickets.jsx
     useEffect(() => {
         const fetchTickets = async () => {
@@ -87,20 +217,17 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 setLoading(true);
                 setError(null);
 
-                const categoryMapForAPI = {
-                    "compliance": "Compliance",
-                    "account": "Account",
-                    "billing": "Billing",
-                    "technical": "Technical"
-                };
+                const categoryFilter = formatCategoryForAPI(selectedCategory);
 
-                const categoryFilter = categoryMapForAPI[selectedCategory] || selectedCategory || '';
+                const normalizedStatusFilter = statusFilter !== "All Status"
+                    ? statusFilter.toLowerCase().replace(/\s+/g, "_")
+                    : '';
 
                 const response = await superAdminAPI.getSupportTickets(
                     1,
                     100, // Get a large number of tickets
                     searchTerm,
-                    statusFilter !== "All Status" ? statusFilter : '',
+                    normalizedStatusFilter,
                     priorityFilter !== "All Priority" ? priorityFilter : '',
                     categoryFilter
                 );
@@ -112,24 +239,42 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
                     // Use the same data structure as MyTickets.jsx
                     // Map API response to component format
-                    const mappedTickets = response.data.map(ticket => ({
-                        id: ticket.id,
-                        ticket_number: ticket.ticket_number || ticket.id?.toString(),
-                        subject: ticket.subject || 'No Subject',
-                        category: ticket.category || 'Other',
-                        firm: ticket.firm_name || ticket.firm || 'N/A',
-                        contact: ticket.contact_name || ticket.user_name || ticket.contact || 'N/A',
-                        priority: ticket.priority || 'Medium',
-                        status: ticket.status || 'Open',
-                        assignee: ticket.assigned_to_name || ticket.assignee || 'Unassigned',
-                        updated: ticket.updated_at ? new Date(ticket.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) : new Date().toLocaleDateString(),
-                        time: ticket.updated_at ? new Date(ticket.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString(),
-                        created_at: ticket.created_at,
-                        updated_at: ticket.updated_at,
-                        description: ticket.description,
-                        user_name: ticket.user_name || ticket.contact_name || 'N/A',
-                        rawData: ticket // Keep raw data for details
-                    }));
+                    const mappedTickets = response.data.map((ticket, index) => {
+                        const categoryKey = (ticket.category || ticket.category_display || '').toLowerCase();
+                        const priorityKey = (ticket.priority || ticket.priority_display || '').toLowerCase();
+                        const statusKey = (ticket.status || ticket.status_display || '').toLowerCase();
+
+                        const categoryLabel = ticket.category_display || formatCategoryLabel(ticket.category) || 'Other';
+                        const priorityLabel = ticket.priority_display || formatCategoryLabel(ticket.priority) || 'Medium';
+                        const statusLabel = ticket.status_display || formatCategoryLabel(ticket.status) || 'Open';
+
+                        const updatedDate = ticket.updated_at ? new Date(ticket.updated_at) : null;
+                        const fallbackDate = new Date();
+                        const updatedDateDisplay = (updatedDate || fallbackDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                        const updatedTimeDisplay = (updatedDate || fallbackDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                        return {
+                            id: ticket.id ?? index,
+                            ticket_number: ticket.ticket_number || ticket.id?.toString(),
+                            subject: ticket.subject || 'No Subject',
+                            category: categoryLabel,
+                            categoryKey: categoryKey || 'other',
+                            firm: ticket.firm_name || ticket.firm || 'N/A',
+                            contact: ticket.user_name || ticket.contact_name || ticket.contact || 'N/A',
+                            priority: priorityLabel,
+                            priorityKey: priorityKey || 'medium',
+                            status: statusLabel,
+                            statusKey: statusKey || 'open',
+                            assignee: ticket.assigned_to_name || ticket.assignee || 'Unassigned',
+                            updated: updatedDateDisplay,
+                            time: updatedTimeDisplay,
+                            created_at: ticket.created_at,
+                            updated_at: ticket.updated_at,
+                            description: ticket.description,
+                            user_name: ticket.user_name || ticket.contact_name || 'N/A',
+                            rawData: ticket // Keep raw data for details
+                        };
+                    });
 
                     setAllTickets(mappedTickets);
                 } else {
@@ -160,91 +305,82 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         };
 
         fetchTickets();
-    }, [selectedCategory, statusFilter, priorityFilter, searchTerm]);
+    }, [selectedCategory, statusFilter, priorityFilter, searchTerm, refreshCounter]);
 
     // Filter tickets based on selected category (already filtered by API, but keep for client-side filtering if needed)
-    const tickets = allTickets.filter(ticket => {
-        const categoryMapForFilter = {
-            "compliance": "Compliance",
-            "account": "Account",
-            "billing": "Billing",
-            "technical": "Technical"
-        };
-        const categoryLower = ticket.category?.toLowerCase() || '';
-        const selectedCategoryValue = categoryMapForFilter[selectedCategory]?.toLowerCase() || selectedCategory?.toLowerCase() || '';
-        return categoryLower === selectedCategoryValue || categoryLower === selectedCategory?.toLowerCase();
-    });
+    const normalizedSelectedCategory = selectedCategory?.toLowerCase();
+    const tickets = normalizedSelectedCategory === 'all'
+        ? allTickets
+        : allTickets.filter((ticket) => {
+            const ticketCategory = ticket.categoryKey || ticket.rawData?.category?.toLowerCase() || ticket.category?.toLowerCase() || '';
+            return ticketCategory === normalizedSelectedCategory;
+        });
 
     // Categories from API category_distribution
-    const categoryMap = {
-        "compliance": "Compliance",
-        "account": "Account",
-        "billing": "Billing",
-        "technical": "Technical"
-    };
-
-    // Get category counts from API overview data
-    const getCategoryCount = (categoryName) => {
-        const categoryItem = overviewData.category_distribution?.find(
-            item => item.category.toLowerCase() === categoryName.toLowerCase()
-        );
-        return categoryItem ? categoryItem.count : 0;
-    };
+    const categoryDistribution = overviewData.charts?.category_distribution || [];
+    const totalTicketsCount = overviewData.counters?.total_tickets
+        ?? categoryDistribution.reduce((sum, item) => sum + (item.count || 0), 0);
 
     const categories = [
         {
-            id: "compliance",
-            label: "Compliance",
-            count: getCategoryCount("compliance"),
-            active: selectedCategory === "compliance"
+            id: "all",
+            label: "All",
+            count: totalTicketsCount || allTickets.length,
+            active: selectedCategory === "all"
         },
-        {
-            id: "account",
-            label: "Account",
-            count: getCategoryCount("account"),
-            active: selectedCategory === "account"
-        },
-        {
-            id: "billing",
-            label: "Billing",
-            count: getCategoryCount("billing"),
-            active: selectedCategory === "billing"
-        },
-        {
-            id: "technical",
-            label: "Technical",
-            count: getCategoryCount("technical"),
-            active: selectedCategory === "technical"
-        }
-    ].filter(cat => cat.count > 0 || selectedCategory === cat.id); // Show categories with count > 0 or currently selected
+        ...categoryDistribution.map((item) => {
+            const id = (item.category || 'other').toLowerCase();
+            return {
+                id,
+                label: formatCategoryLabel(item.category),
+                count: item.count || 0,
+                active: selectedCategory === id
+            };
+        })
+    ].filter((cat, index) => cat.id === 'all' || cat.count > 0 || selectedCategory === cat.id); // Show categories with count > 0 or currently selected
 
     // KPI data from API overview
+    const avgResponseHours = overviewData.counters?.avg_response_hours;
+    const satisfactionScore = overviewData.counters?.satisfaction_score;
+    const resolvedCount = overviewData.counters?.resolved;
+    const closedTodayCount = overviewData.counters?.closed_today;
+
+    const avgResponseDisplay = typeof avgResponseHours === 'number' && !Number.isNaN(avgResponseHours)
+        ? `${avgResponseHours.toFixed(1)} hrs`
+        : "0 hrs";
+
+    const satisfactionDisplay = typeof satisfactionScore === 'number' && !Number.isNaN(satisfactionScore)
+        ? `${satisfactionScore.toFixed(1)}/5`
+        : "N/A";
+
     const kpiData = [
         {
             label: "Total Tickets",
-            value: overviewData.counters?.total_tickets?.toString() || "0"
+            value: (overviewData.counters?.total_tickets ?? 0).toString()
         },
         {
             label: "Open",
-            value: overviewData.counters?.open?.toString() || "0"
+            value: (overviewData.counters?.open ?? 0).toString()
         },
         {
             label: "In Progress",
-            value: overviewData.counters?.in_progress?.toString() || "0"
+            value: (overviewData.counters?.in_progress ?? 0).toString()
+        },
+        {
+            label: "Resolved",
+            value: (resolvedCount ?? 0).toString()
         },
         {
             label: "Closed Today",
-            value: overviewData.counters?.closed_today?.toString() || "0"
+            value: (closedTodayCount ?? 0).toString()
         },
         {
             label: "Avg Response",
-            value: overviewData.counters?.avg_response_hours
-                ? `${overviewData.counters.avg_response_hours.toFixed(1)} hours`
-                : "0 hours"
+            value: avgResponseDisplay
         },
         {
             label: "Satisfaction",
-            value: "N/A" // Not in API response
+            value: satisfactionDisplay
         }
     ];
 
@@ -268,9 +404,9 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
     // Chart data for Average Resolution Time - from API (fallback to default if no data)
     const getResolutionTimeData = () => {
-        const avgResolutionByMonth = overviewData.avg_resolution_by_month || [];
+        const avgResolutionTime = overviewData.charts?.avg_resolution_time || [];
 
-        if (avgResolutionByMonth.length === 0) {
+        if (!avgResolutionTime.length) {
             // Fallback to default data
             return {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
@@ -278,65 +414,96 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     {
                         label: 'Compliance',
                         data: [9, 10, 9.5, 12.5, 11],
-                        backgroundColor: '#3B82F6',
-                        borderColor: '#3B82F6',
+                        backgroundColor: getCategoryColor('compliance', 0),
+                        borderColor: getCategoryColor('compliance', 0),
                         borderWidth: 0,
                     },
                     {
                         label: 'Technical',
                         data: [5, 5, 5, 6, 5.5],
-                        backgroundColor: '#EF4444',
-                        borderColor: '#EF4444',
+                        backgroundColor: getCategoryColor('technical', 1),
+                        borderColor: getCategoryColor('technical', 1),
                         borderWidth: 0,
                     },
                     {
                         label: 'Billing',
                         data: [4, 4.5, 4.5, 5.5, 5],
-                        backgroundColor: '#10B981',
-                        borderColor: '#10B981',
+                        backgroundColor: getCategoryColor('billing', 2),
+                        borderColor: getCategoryColor('billing', 2),
                         borderWidth: 0,
                     },
                 ],
             };
         }
 
-        // Process API data for resolution time chart
-        // Assuming avg_resolution_by_month has format like:
-        // [{ month: 'Jan', compliance: 9, technical: 5, billing: 4 }, ...]
-        const labels = avgResolutionByMonth.map(item => item.month || item.period);
-        const complianceData = avgResolutionByMonth.map(item => item.compliance || 0);
-        const technicalData = avgResolutionByMonth.map(item => item.technical || 0);
-        const billingData = avgResolutionByMonth.map(item => item.billing || 0);
+        const categorySet = new Set();
+        avgResolutionTime.forEach((entry) => {
+            (entry.categories || []).forEach((categoryItem) => {
+                if (categoryItem?.category) {
+                    categorySet.add(categoryItem.category.toLowerCase());
+                }
+            });
+        });
+
+        if (!categorySet.size) {
+            return {
+                labels: avgResolutionTime.map((item) => formatMonthLabel(item.month || item.period || '')),
+                datasets: [],
+            };
+        }
+
+        const sortedCategoryKeys = Array.from(categorySet).sort((a, b) => {
+            const indexA = PREFERRED_CATEGORY_ORDER.indexOf(a);
+            const indexB = PREFERRED_CATEGORY_ORDER.indexOf(b);
+            if (indexA === -1 && indexB === -1) {
+                return a.localeCompare(b);
+            }
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+
+        const labels = avgResolutionTime.map((item) => formatMonthLabel(item.month || item.period || ''));
+
+        const datasets = sortedCategoryKeys.map((categoryKey, index) => {
+            const color = getCategoryColor(categoryKey, index);
+            const data = avgResolutionTime.map((entry) => {
+                const matchedCategory = (entry.categories || []).find(
+                    (categoryItem) => categoryItem?.category?.toLowerCase() === categoryKey
+                );
+                if (!matchedCategory) {
+                    return 0;
+                }
+                const avgHours = typeof matchedCategory.avg_hours === 'number'
+                    ? matchedCategory.avg_hours
+                    : Number(matchedCategory.avg_hours);
+                return Number.isFinite(avgHours) ? avgHours : 0;
+            });
+
+            return {
+                label: formatCategoryLabel(categoryKey),
+                data,
+                backgroundColor: color,
+                borderColor: color,
+                borderWidth: 0,
+            };
+        });
 
         return {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Compliance',
-                    data: complianceData,
-                    backgroundColor: '#3B82F6',
-                    borderColor: '#3B82F6',
-                    borderWidth: 0,
-                },
-                {
-                    label: 'Technical',
-                    data: technicalData,
-                    backgroundColor: '#EF4444',
-                    borderColor: '#EF4444',
-                    borderWidth: 0,
-                },
-                {
-                    label: 'Billing',
-                    data: billingData,
-                    backgroundColor: '#10B981',
-                    borderColor: '#10B981',
-                    borderWidth: 0,
-                },
-            ],
+            labels,
+            datasets,
         };
     };
 
     const resolutionTimeData = getResolutionTimeData();
+    const resolutionValues = (resolutionTimeData.datasets || []).flatMap((dataset) => dataset.data || []);
+    const calculatedMax = resolutionValues.length ? Math.max(...resolutionValues) : 0;
+    const yAxisMax = calculatedMax > 0 ? Math.ceil(calculatedMax / 4) * 4 : 16;
+    const resolutionLegendItems = (resolutionTimeData.datasets || []).map((dataset, index) => ({
+        label: dataset.label,
+        color: dataset.backgroundColor,
+        key: `${dataset.label}-${index}`,
+    }));
 
     const resolutionTimeOptions = {
         responsive: true,
@@ -370,7 +537,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         scales: {
             y: {
                 beginAtZero: true,
-                max: 16,
+                max: Math.max(yAxisMax, 16),
                 ticks: {
                     stepSize: 4,
                     callback: function (value) {
@@ -394,7 +561,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
     // Chart data for Top Issue Category - from API
     const getCategoryChartData = () => {
-        const distribution = overviewData.category_distribution || [];
+        const distribution = overviewData.charts?.category_distribution || [];
         if (distribution.length === 0) {
             // Fallback to default data
             return {
@@ -410,22 +577,11 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
         // Calculate percentages
         const total = distribution.reduce((sum, item) => sum + item.count, 0);
-        const labels = distribution.map(item => {
-            const catName = item.category.charAt(0).toUpperCase() + item.category.slice(1);
-            return categoryMap[item.category.toLowerCase()] || catName;
-        });
+        const labels = distribution.map(item => formatCategoryLabel(item.category));
         const data = distribution.map(item => total > 0 ? Math.round((item.count / total) * 100) : 0);
 
-        // Color mapping
-        const colorMap = {
-            'compliance': '#10B981',
-            'account': '#8B5CF6',
-            'billing': '#3B82F6',
-            'technical': '#F97316'
-        };
-
-        const backgroundColor = distribution.map(item =>
-            colorMap[item.category.toLowerCase()] || '#6B7280'
+        const backgroundColor = distribution.map((item, index) =>
+            getCategoryColor(item.category, index)
         );
 
         return {
@@ -491,26 +647,173 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
     // Action handlers - Same pattern as MyTickets.jsx
     const handleViewDetails = async (ticketId) => {
         console.log('🔄 View Details for ticket:', ticketId);
+        setActionMenuTicketId(null);
         setSelectedTicketId(ticketId);
-        setActiveDropdown(null);
         if (onTicketDetailToggle) {
             onTicketDetailToggle(true);
         }
     };
 
-    const handleAssign = (ticketId) => {
-        console.log('Assign ticket:', ticketId);
-        setActiveDropdown(null);
+    const handleToggleActionMenu = (event, ticketId) => {
+        event.stopPropagation();
+        setActionMenuTicketId((current) => (current === ticketId ? null : ticketId));
     };
 
-    const handleReply = (ticketId) => {
-        console.log('Reply to ticket:', ticketId);
-        setActiveDropdown(null);
+    const extractAssigneeId = (ticket) => {
+        return (
+            ticket?.rawData?.assigned_to_id ??
+            ticket?.rawData?.assignee_id ??
+            ticket?.rawData?.assigned_to ??
+            ticket?.rawData?.assignee ??
+            null
+        );
     };
 
-    const handleCloseTicket = (ticketId) => {
-        console.log('Close ticket:', ticketId);
-        setActiveDropdown(null);
+    const openAssignModalForTicket = async (event, ticket) => {
+        event.stopPropagation();
+        setActionMenuTicketId(null);
+        setAssignModalTicket(ticket);
+        setAssignError(null);
+        const initialAssigneeId = extractAssigneeId(ticket);
+        setAssignSelectedAdminId(initialAssigneeId ? Number(initialAssigneeId) : null);
+        setAssignModalOpen(true);
+
+        if (!hasFetchedAssignableAdmins) {
+            setAssignListLoading(true);
+            try {
+                const response = await superAdminAPI.getSupportAdmins();
+                if (response?.success && Array.isArray(response.data)) {
+                    setAssignableAdmins(response.data);
+                    setHasFetchedAssignableAdmins(true);
+                    if (!initialAssigneeId && response.data.length === 1) {
+                        setAssignSelectedAdminId(response.data[0].id);
+                    }
+                } else {
+                    throw new Error(response?.message || "Failed to fetch internal admins.");
+                }
+            } catch (err) {
+                const message = handleAPIError(err);
+                setAssignError(message);
+                toast.error(message, {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+            } finally {
+                setAssignListLoading(false);
+            }
+        }
+    };
+
+    const closeAssignModal = () => {
+        if (assignSubmitLoading) {
+            return;
+        }
+        setAssignModalOpen(false);
+        setAssignModalTicket(null);
+        setAssignSelectedAdminId(null);
+        setAssignError(null);
+    };
+
+    const handleSubmitAssignTicket = async () => {
+        const ticketIdentifier = assignModalTicket?.rawData?.id ?? assignModalTicket?.id;
+
+        if (!ticketIdentifier) {
+            toast.error("Ticket information is missing.", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (!assignSelectedAdminId) {
+            toast.warn("Please select an administrator to assign.", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        setAssignSubmitLoading(true);
+        try {
+            const response = await superAdminAPI.assignSupportTicket(
+                ticketIdentifier,
+                assignSelectedAdminId
+            );
+
+            if (response?.success) {
+                const assignedAdmin = assignableAdmins.find(
+                    (admin) => admin.id === Number(assignSelectedAdminId)
+                );
+
+                toast.success(response?.message || "Ticket assigned successfully.", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+
+                const assignedName =
+                    assignedAdmin?.name ||
+                    assignedAdmin?.full_name ||
+                    assignedAdmin?.email ||
+                    "Assigned";
+
+                setAllTickets((previousTickets) =>
+                    previousTickets.map((item) =>
+                        (item.rawData?.id ?? item.id) === ticketIdentifier
+                            ? {
+                                ...item,
+                                assignee: assignedName,
+                                rawData: {
+                                    ...item.rawData,
+                                    assigned_to_id: Number(assignSelectedAdminId),
+                                    assignee: assignedName,
+                                },
+                            }
+                            : item
+                    )
+                );
+
+                setRefreshCounter((previous) => previous + 1);
+                closeAssignModal();
+            } else {
+                throw new Error(response?.message || "Failed to assign the ticket.");
+            }
+        } catch (err) {
+            const message = handleAPIError(err);
+            toast.error(message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setAssignSubmitLoading(false);
+        }
+    };
+
+    const handleReplyToTicket = (event, ticketId) => {
+        event.stopPropagation();
+        setActionMenuTicketId(null);
+        handleViewDetails(ticketId);
+    };
+
+    const handleCloseTicket = async (event, ticketId) => {
+        event.stopPropagation();
+        setActionMenuTicketId(null);
+        setActionBusyTicketId(ticketId);
+        try {
+            await superAdminAPI.closeSupportTicket(ticketId);
+            toast.success("Ticket closed successfully.", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            setRefreshCounter((previous) => previous + 1);
+        } catch (err) {
+            const message = handleAPIError(err);
+            toast.error(message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setActionBusyTicketId(null);
+        }
     };
 
     const handleBackToOverview = () => {
@@ -519,20 +822,6 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
             onTicketDetailToggle(false);
         }
     };
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (activeDropdown && !event.target.closest('.dropdown-container')) {
-                setActiveDropdown(null);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [activeDropdown]);
 
     // If a ticket is selected, show the ticket detail within the same layout
     if (selectedTicketId) {
@@ -546,7 +835,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
     return (
         <div className="space-y-4">
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                 {kpiData.map((kpi, index) => (
                     <div key={index} className="bg-white border border-[#E8F0FF] rounded-lg p-3">
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
@@ -578,19 +867,24 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     </div>
 
                     {/* Legend */}
-                    <div className="flex justify-center space-x-4 mt-4">
-                        <div className="flex items-center">
-                            <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                            <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Compliance</span>
-                        </div>
-                        <div className="flex items-center">
-                            <div className="w-3 h-3 bg-red-500 rounded mr-2"></div>
-                            <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Technical</span>
-                        </div>
-                        <div className="flex items-center">
-                            <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
-                            <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">Billing</span>
-                        </div>
+                    <div className="flex justify-center flex-wrap gap-4 mt-4">
+                        {resolutionLegendItems.length > 0 ? (
+                            resolutionLegendItems.map((item) => (
+                                <div key={item.key} className="flex items-center">
+                                    <div
+                                        className="w-3 h-3 rounded mr-2"
+                                        style={{ backgroundColor: item.color }}
+                                    ></div>
+                                    <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">
+                                        {item.label}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            <span className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
+                                No resolution data available yet
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -612,24 +906,20 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
                     {/* Legend - Dynamic from API */}
                     <div className="space-y-2 mt-4">
-                        {overviewData.category_distribution && overviewData.category_distribution.length > 0 ? (
+                        {overviewData.charts?.category_distribution && overviewData.charts.category_distribution.length > 0 ? (
                             (() => {
-                                const total = overviewData.category_distribution.reduce((sum, item) => sum + item.count, 0);
-                                const colorMap = {
-                                    'compliance': 'bg-green-500',
-                                    'account': 'bg-purple-500',
-                                    'billing': 'bg-blue-500',
-                                    'technical': 'bg-orange-500'
-                                };
-                                return overviewData.category_distribution.map((item, index) => {
+                                const total = overviewData.charts.category_distribution.reduce((sum, item) => sum + item.count, 0);
+                                return overviewData.charts.category_distribution.map((item, index) => {
                                     const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0;
-                                    const categoryName = categoryMap[item.category.toLowerCase()] ||
-                                        (item.category.charAt(0).toUpperCase() + item.category.slice(1));
-                                    const colorClass = colorMap[item.category.toLowerCase()] || 'bg-gray-500';
+                                    const categoryName = formatCategoryLabel(item.category);
+                                    const color = getCategoryColor(item.category, index);
                                     return (
                                         <div key={index} className="flex items-center justify-between">
                                             <div className="flex items-center">
-                                                <div className={`w-3 h-3 ${colorClass} rounded mr-2`}></div>
+                                                <div
+                                                    className="w-3 h-3 rounded mr-2"
+                                                    style={{ backgroundColor: color }}
+                                                ></div>
                                                 <span className="text-xs text-[#3B4A66] font-[BasisGrotesquePro]">
                                                     {categoryName}: {percentage}%
                                                 </span>
@@ -765,7 +1055,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                             <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Status</div>
                             <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Assignee</div>
                             <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Updated</div>
-                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Actions</div>
+                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] text-right">Actions</div>
                         </div>
 
                         {/* Empty State */}
@@ -777,7 +1067,19 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
                         {/* Ticket Rows */}
                         {tickets.map((ticket) => (
-                            <div key={ticket.id} className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50">
+                            <div
+                                key={ticket.id}
+                                className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-shadow focus-within:ring-2 focus-within:ring-[#3B4A66]/40 focus-within:ring-offset-2"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => handleViewDetails(ticket.id || ticket.ticket_number)}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault();
+                                        handleViewDetails(ticket.id || ticket.ticket_number);
+                                    }
+                                }}
+                            >
                                 {/* Ticket ID */}
                                 <div className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
                                     {ticket.ticket_number || ticket.id}
@@ -833,45 +1135,54 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="relative dropdown-container">
+                                <div
+                                    className="relative flex justify-end"
+                                    data-ticket-action-menu="true"
+                                    onClick={(event) => event.stopPropagation()}
+                                >
                                     <button
-                                        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
-                                        onClick={() => setActiveDropdown(activeDropdown === ticket.id ? null : ticket.id)}
+                                        type="button"
+                                        onClick={(event) => handleToggleActionMenu(event, ticket.id)}
+                                        className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66]/40"
+                                        aria-haspopup="menu"
+                                        aria-expanded={actionMenuTicketId === ticket.id}
+                                        data-ticket-action-menu="true"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4.27539 8.10156C4.57376 8.10156 4.85991 8.22009 5.07089 8.43107C5.28186 8.64205 5.40039 8.92819 5.40039 9.22656C5.40039 9.52493 5.28186 9.81108 5.07089 10.0221C4.85991 10.233 4.57376 10.3516 4.27539 10.3516C3.97702 10.3516 3.69087 10.233 3.47989 10.0221C3.26892 9.81108 3.15039 9.52493 3.15039 9.22656C3.15039 8.92819 3.26892 8.64205 3.47989 8.43107C3.69087 8.22009 3.97702 8.10156 4.27539 8.10156ZM8.77539 8.10156C9.07376 8.10156 9.35991 8.22009 9.57089 8.43107C9.78186 8.64205 9.90039 8.92819 9.90039 9.22656C9.90039 9.52493 9.78186 9.81108 9.57089 10.0221C9.35991 10.233 9.07376 10.3516 8.77539 10.3516C8.47702 10.3516 8.19087 10.233 7.9799 10.0221C7.76892 9.81108 7.65039 9.52493 7.65039 9.22656C7.65039 8.92819 7.76892 8.64205 7.9799 8.43107C8.19087 8.22009 8.47702 8.10156 8.77539 8.10156ZM13.2754 8.10156C13.5738 8.10156 13.8599 8.22009 14.0709 8.43107C14.2819 8.64205 14.4004 8.92819 14.4004 9.22656C14.4004 9.52493 14.2819 9.81108 14.0709 10.0221C13.8599 10.233 13.5738 10.3516 13.2754 10.3516C12.977 10.3516 12.6909 10.233 12.4799 10.0221C12.2689 9.81108 12.1504 9.52493 12.1504 9.22656C12.1504 8.92819 12.2689 8.64205 12.4799 8.43107C12.6909 8.22009 12.977 8.10156 13.2754 8.10156Z" fill="#131323" />
                                         </svg>
-                                    </button>
 
-                                    {/* Dropdown Menu */}
-                                    {activeDropdown === ticket.id && (
-                                        <div className="absolute right-0 top-8 bg-white border border-[#E8F0FF] rounded-lg z-10 min-w-[160px]">
-                                            <div className="py-1">
-                                                <button
-                                                    onClick={() => handleViewDetails(ticket.id || ticket.ticket_number)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
-                                                >
-                                                    View Details
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAssign(ticket.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
-                                                >
-                                                    Assign
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReply(ticket.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
-                                                >
-                                                    Reply
-                                                </button>
-                                                <button
-                                                    onClick={() => handleCloseTicket(ticket.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-[BasisGrotesquePro]"
-                                                >
-                                                    Close Ticket
-                                                </button>
-                                            </div>
+                                    </button>
+                                    {actionMenuTicketId === ticket.id && (
+                                        <div
+                                            className="absolute right-0 top-10 z-20 w-44 bg-white border border-[#E8F0FF] rounded-lg shadow-lg py-1"
+                                            data-ticket-action-menu="true"
+                                        >
+                                            <button
+                                                type="button"
+                                                className="w-full px-4 py-2 text-left text-sm text-[#3B4A66] hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                                                onClick={(event) => openAssignModalForTicket(event, ticket)}
+                                                data-ticket-action-menu="true"
+                                            >
+                                                Assign Ticket
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="w-full px-4 py-2 text-left text-sm text-[#3B4A66] hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                                                onClick={(event) => handleReplyToTicket(event, ticket.id)}
+                                                data-ticket-action-menu="true"
+                                            >
+                                                Reply to Ticket
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="w-full px-4 py-2 text-left text-sm text-[#B91C1C] hover:bg-red-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-60"
+                                                onClick={(event) => handleCloseTicket(event, ticket.id)}
+                                                disabled={actionBusyTicketId === ticket.id}
+                                                data-ticket-action-menu="true"
+                                            >
+                                                {actionBusyTicketId === ticket.id ? "Closing..." : "Close Ticket"}
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -880,6 +1191,108 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     </div>
                 )}
             </div>
+
+            {assignModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6" data-ticket-action-menu="true">
+                    <div
+                        className="absolute inset-0"
+                        style={{ background: 'var(--Color-overlay, #00000099)' }}
+                        onClick={closeAssignModal}
+                        data-ticket-action-menu="true"
+                    ></div>
+                    <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-auto border border-[#E8F0FF]" data-ticket-action-menu="true">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-[#E8F0FF]" data-ticket-action-menu="true">
+                            <div>
+                                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    Assign Ticket
+                                </h3>
+                                {assignModalTicket && (
+                                    <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-1">
+                                        {assignModalTicket.ticket_number || assignModalTicket.id} · {assignModalTicket.subject}
+                                    </p>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeAssignModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Close"
+                                disabled={assignSubmitLoading}
+                                data-ticket-action-menu="true"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path d="M15.7793 8.21899C16.0723 8.51196 16.0723 8.98682 15.7793 9.27979L12.9976 12.0615L15.777 14.8408C16.07 15.1338 16.07 15.6086 15.777 15.9016C15.484 16.1946 15.0092 16.1946 14.7162 15.9016L11.9369 13.1223L9.15759 15.9016C8.86462 16.1946 8.38976 16.1946 8.0968 15.9016C7.80383 15.6086 7.80383 15.1338 8.0968 14.8408L10.8761 12.0615L8.09444 9.27979C7.80147 8.98682 7.80147 8.51196 8.09444 8.21899C8.3874 7.92603 8.86227 7.92603 9.15523 8.21899L11.9369 10.9993L14.7186 8.21899C15.0115 7.92603 15.4864 7.92603 15.7793 8.21899Z" fill="#3B4A66" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="px-6 py-4 space-y-4" data-ticket-action-menu="true">
+                            {assignError && (
+                                <div className="text-sm text-[#B91C1C] bg-[#FEE2E2] border border-[#FECACA] rounded-lg px-3 py-2 font-[BasisGrotesquePro]">
+                                    {assignError}
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                                    Select Administrator<span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg text-sm text-[#3B4A66] font-[BasisGrotesquePro] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]"
+                                    value={assignSelectedAdminId ?? ""}
+                                    onChange={(event) => {
+                                        setAssignSelectedAdminId(event.target.value ? Number(event.target.value) : null);
+                                        if (assignError) {
+                                            setAssignError(null);
+                                        }
+                                    }}
+                                    disabled={assignListLoading || assignSubmitLoading}
+                                    data-ticket-action-menu="true"
+                                >
+                                    <option value="">Choose an administrator</option>
+                                    {assignableAdmins.map((admin) => (
+                                        <option key={admin.id || admin.user_id} value={admin.id || admin.user_id}>
+                                            {admin.name || admin.full_name || admin.email || `Admin ${admin.id}`}
+                                        </option>
+                                    ))}
+                                </select>
+                                {assignListLoading && (
+                                    <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
+                                        Loading administrators...
+                                    </p>
+                                )}
+                                {!assignListLoading && assignableAdmins.length === 0 && !assignError && (
+                                    <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">
+                                        No administrators available for assignment.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E8F0FF]" data-ticket-action-menu="true">
+                            <button
+                                type="button"
+                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors font-[BasisGrotesquePro]"
+                                style={{ borderRadius: "7px" }}
+                                onClick={closeAssignModal}
+                                disabled={assignSubmitLoading}
+                                data-ticket-action-menu="true"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60 font-[BasisGrotesquePro]"
+                                style={{ borderRadius: "7px" }}
+                                onClick={handleSubmitAssignTicket}
+                                disabled={assignSubmitLoading || assignListLoading}
+                                data-ticket-action-menu="true"
+                            >
+                                {assignSubmitLoading ? "Assigning..." : "Assign Ticket"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

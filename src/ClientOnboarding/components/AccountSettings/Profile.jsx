@@ -206,9 +206,9 @@ export default function Profile() {
                 console.log('🔄 Refreshing navbar profile picture...');
                 window.refreshNavbarProfilePicture();
             }
-            if (window.refreshTopbarProfilePicture) {
+            if (window.refreshClientTopbarAvatar) {
                 console.log('🔄 Refreshing topbar profile picture...');
-                window.refreshTopbarProfilePicture();
+                window.refreshClientTopbarAvatar();
             }
             
         setUploadingImage(false);

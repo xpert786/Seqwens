@@ -3,6 +3,7 @@ import { SaveIcon } from "../../component/icons";
 import { toast } from "react-toastify";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
+const DEFAULT_AVATAR_URL = "https://i.pravatar.cc/120";
 
 export default function Profile({ profileData, companyProfile, onUpdate }) {
     const fileInputRef = useRef(null);
@@ -16,7 +17,24 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         efin: companyProfile?.efin || ''
     });
     const [saving, setSaving] = useState(false);
-    const [uploadingPicture, setUploadingPicture] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [currentProfileImage, setCurrentProfileImage] = useState(
+        profileData?.profile_picture ||
+        profileData?.profile_image ||
+        DEFAULT_AVATAR_URL
+    );
+    const [errorMessage, setErrorMessage] = useState(null);
+
+    const syncHeaderProfile = (data) => {
+        if (typeof window === "undefined") return;
+        if (data && typeof window.setTaxHeaderProfile === "function") {
+            window.setTaxHeaderProfile(data);
+        } else if (typeof window.refreshTaxHeaderProfile === "function") {
+            window.refreshTaxHeaderProfile();
+        }
+    };
 
     // Update form data when props change
     useEffect(() => {
@@ -31,7 +49,19 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 efin: companyProfile?.efin || ''
             });
         }
-    }, [profileData, companyProfile]);
+
+        const nextProfileImage =
+            profileData?.profile_picture ||
+            profileData?.profile_image ||
+            profileData?.avatar ||
+            null;
+
+        if (nextProfileImage && nextProfileImage !== 'null' && nextProfileImage !== 'undefined') {
+            setCurrentProfileImage(nextProfileImage);
+        } else if (!imagePreview) {
+            setCurrentProfileImage(DEFAULT_AVATAR_URL);
+        }
+    }, [profileData, companyProfile, imagePreview]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -39,6 +69,197 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleImageSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        const isValidImage =
+            file.type.startsWith('image/') ||
+            file.name.toLowerCase().endsWith('.avif') ||
+            file.name.toLowerCase().endsWith('.webp') ||
+            file.name.toLowerCase().endsWith('.heic') ||
+            file.name.toLowerCase().endsWith('.heif');
+
+        if (!isValidImage) {
+            const message = 'Please select a valid image file (JPG, PNG, GIF, AVIF, WEBP, etc.)';
+            setErrorMessage(message);
+            toast.error(message);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            return;
+        }
+
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            const message = `Image size should be less than ${Math.round(maxSize / (1024 * 1024))}MB`;
+            setErrorMessage(message);
+            toast.error(message);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            return;
+        }
+
+        setSelectedImage(file);
+        setErrorMessage(null);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            setImagePreview(event.target?.result || null);
+        };
+        reader.onerror = () => {
+            setErrorMessage('Failed to load image preview');
+            toast.error('Failed to load image preview');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleUploadSuccess = async (response) => {
+        const isSuccess = typeof response?.success === 'boolean' ? response.success : true;
+        if (!isSuccess) {
+            throw new Error(response?.message || 'Failed to update profile picture');
+        }
+
+        const profilePayload =
+            response?.data?.profile_information ||
+            response?.data?.profile ||
+            response?.profile_information ||
+            response?.profile ||
+            null;
+
+        const newProfileImageUrl =
+            profilePayload?.profile_picture ||
+            profilePayload?.profile_image ||
+            response?.data?.profile_picture ||
+            response?.profile_picture ||
+            response?.profile_image ||
+            null;
+
+        if (newProfileImageUrl && newProfileImageUrl !== 'null' && newProfileImageUrl !== 'undefined') {
+            setCurrentProfileImage(newProfileImageUrl);
+        }
+
+        setSelectedImage(null);
+        setImagePreview(null);
+        setErrorMessage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+
+        syncHeaderProfile(profilePayload || response?.data || null);
+        if (onUpdate) {
+            onUpdate();
+        }
+
+        toast.success('Profile picture updated successfully');
+        setUploadingImage(false);
+    };
+
+    const handleImageUpload = async () => {
+        if (!selectedImage) {
+            const message = 'Please select an image first';
+            setErrorMessage(message);
+            toast.error(message);
+            return;
+        }
+
+        let isAvifFile = false;
+        try {
+            setUploadingImage(true);
+            setErrorMessage(null);
+
+            const isAVIF =
+                selectedImage.name.toLowerCase().endsWith('.avif') ||
+                selectedImage.type === 'image/avif' ||
+                selectedImage.type === 'image/avif-sequence';
+
+            let fileToUpload = selectedImage;
+
+            if (isAVIF) {
+                isAvifFile = true;
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const img = new Image();
+                        img.onload = async function () {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+
+                            canvas.toBlob(
+                                async (blob) => {
+                                    if (!blob) {
+                                        const message = 'Failed to convert AVIF image. Please upload a JPG or PNG file instead.';
+                                        setErrorMessage(message);
+                                        toast.error(message);
+                                        setUploadingImage(false);
+                                        return;
+                                    }
+
+                                    const convertedFile = new File([blob], selectedImage.name.replace(/\.avif$/i, '.png'), {
+                                        type: 'image/png',
+                                        lastModified: Date.now()
+                                    });
+
+                                    try {
+                                        const response = await taxPreparerSettingsAPI.updateProfilePicture(convertedFile);
+                                        await handleUploadSuccess(response);
+                                    } catch (err) {
+                                        console.error('Error uploading converted image:', err);
+                                        const message = err.message || 'Failed to upload profile picture';
+                                        setErrorMessage(message);
+                                        toast.error(message);
+                                        setUploadingImage(false);
+                                    }
+                                },
+                                'image/png',
+                                0.9
+                            );
+                        };
+                        img.onerror = () => {
+                            const message = 'Failed to process AVIF image. Please try another file.';
+                            setErrorMessage(message);
+                            toast.error(message);
+                            setUploadingImage(false);
+                        };
+                        img.src = event.target?.result || '';
+                    } catch (err) {
+                        console.error('Error converting AVIF:', err);
+                        const message = 'AVIF files are not supported. Please convert to JPG or PNG and try again.';
+                        setErrorMessage(message);
+                        toast.error(message);
+                        setUploadingImage(false);
+                    }
+                };
+                reader.onerror = () => {
+                    const message = 'Failed to read image file.';
+                    setErrorMessage(message);
+                    toast.error(message);
+                    setUploadingImage(false);
+                };
+                reader.readAsDataURL(selectedImage);
+                return;
+            }
+
+            const response = await taxPreparerSettingsAPI.updateProfilePicture(fileToUpload);
+            await handleUploadSuccess(response);
+        } catch (err) {
+            console.error('Error uploading profile picture:', err);
+            const message = err.message || 'Failed to upload profile picture';
+            setErrorMessage(message);
+            toast.error(message);
+        } finally {
+            if (!isAvifFile) {
+                setUploadingImage(false);
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -66,6 +287,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
 
             if (result.success) {
                 toast.success('Settings updated successfully');
+                syncHeaderProfile(result?.data?.profile_information || result?.data?.profile || null);
                 if (onUpdate) {
                     onUpdate();
                 }
@@ -81,53 +303,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         }
     };
 
-    const handleAvatarChange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            toast.error('Please select a valid image file');
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Image size should be less than 5MB');
-            return;
-        }
-
-        uploadProfilePicture(file);
-    };
-
-    const uploadProfilePicture = async (file) => {
-        try {
-            setUploadingPicture(true);
-
-            const result = await taxPreparerSettingsAPI.updateProfilePicture(file);
-
-            if (result.success) {
-                toast.success('Profile picture updated successfully');
-                if (onUpdate) {
-                    onUpdate();
-                }
-            } else {
-                throw new Error(result.message || 'Failed to update profile picture');
-            }
-        } catch (error) {
-            console.error('Error uploading profile picture:', error);
-            const errorMessage = handleAPIError(error);
-            toast.error(typeof errorMessage === 'string' ? errorMessage : 'Failed to update profile picture. Please try again.');
-        } finally {
-            setUploadingPicture(false);
-            // Reset file input
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-    };
-
-    const profilePicture = profileData?.profile_picture || "https://i.pravatar.cc/120";
+    const effectiveProfilePicture = imagePreview || currentProfileImage || DEFAULT_AVATAR_URL;
     const fullName = profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || 'User';
 
     return (
@@ -165,32 +341,115 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 </div>
 
                 {/* Profile Image */}
-                <div className="d-flex align-items-center mb-4 mt-2">
-                    <img
-                        src={profilePicture}
-                        alt={fullName}
-                        className="rounded-circle me-3"
-                        width="99.96px"
-                        height="98px"
-                        style={{ objectFit: 'cover' }}
-                    />
-                    <div>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={handleAvatarChange}
-                        />
-                        <button
-                            type="button"
-                            className="btn border border-[#E8F0FF] text-black btn-sm mb-2"
-                            style={{ fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingPicture}
+                <div className="d-flex align-items-center mb-4 mt-6">
+                    {effectiveProfilePicture && effectiveProfilePicture !== 'null' && effectiveProfilePicture !== 'undefined' ? (
+                        <div className="me-3" style={{ position: 'relative' }}>
+                            <img
+                                src={effectiveProfilePicture}
+                                alt={fullName}
+                                style={{
+                                    width: '100px',
+                                    height: '100px',
+                                    objectFit: 'cover',
+                                    borderRadius: '50%',
+                                    border: '3px solid #e0e0e0',
+                                    display: 'block'
+                                }}
+                                onError={(e) => {
+                                    e.target.src = DEFAULT_AVATAR_URL;
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <div
+                            className="me-3"
+                            style={{
+                                width: '100px',
+                                height: '100px',
+                                borderRadius: '50%',
+                                backgroundColor: '#e0e0e0',
+                                border: '3px solid #ccc',
+                                color: '#666',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
                         >
-                            {uploadingPicture ? 'Uploading...' : 'Change Avatar'}
-                        </button>
+                            <span style={{ fontSize: '32px' }}>👤</span>
+                        </div>
+                    )}
+                    <div>
+                        <div className="mb-2">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                id="taxProfileImageInput"
+                                accept="image/*,.avif,.webp,.heic,.heif"
+                                onChange={handleImageSelect}
+                                style={{ display: 'none' }}
+                            />
+                            <label
+                                htmlFor="taxProfileImageInput"
+                                className="btn text-white btn-sm mb-2"
+                                style={{
+                                    background: "#F56D2D",
+                                    fontSize: "15px",
+                                    fontWeight: "400",
+                                    fontFamily: "BasisGrotesquePro",
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {selectedImage ? `Selected: ${selectedImage.name}` : 'Choose Photo'}
+                            </label>
+                        </div>
+
+                        {selectedImage && (
+                            <div className="mb-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-success btn-sm me-2"
+                                    onClick={handleImageUpload}
+                                    disabled={uploadingImage}
+                                    style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                                >
+                                    {uploadingImage ? (
+                                        <>
+                                            <div className="spinner-border spinner-border-sm me-1" role="status">
+                                                <span className="visually-hidden">Uploading...</span>
+                                            </div>
+                                            Uploading...
+                                        </>
+                                    ) : (
+                                        'Upload Photo'
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => {
+                                        setSelectedImage(null);
+                                        setImagePreview(null);
+                                        setErrorMessage(null);
+                                        if (fileInputRef.current) {
+                                            fileInputRef.current.value = '';
+                                        }
+                                    }}
+                                    style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
+
+                        {errorMessage && (
+                            <p className="text-danger small mb-1" style={{ fontFamily: "BasisGrotesquePro" }}>
+                                {errorMessage}
+                            </p>
+                        )}
+
+                        <p className="text-muted small mb-0" style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
+                            JPG, PNG, AVIF, WEBP, GIF up to 10MB
+                        </p>
                     </div>
                 </div>
 
