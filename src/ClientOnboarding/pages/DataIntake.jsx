@@ -129,7 +129,7 @@ export default function DataIntakeForm() {
 
           if (personalResult.success && personalResult.data) {
             const data = personalResult.data;
-            
+
             // Mark that user has existing data (will use PATCH instead of POST)
             setHasExistingData(true);
 
@@ -254,7 +254,8 @@ export default function DataIntakeForm() {
               type: "image/png", // Default type, could be improved
               lastModified: new Date(firstFile.created_at).getTime(),
               url: firstFile.document_url, // Store the URL for reference
-              isExistingFile: true // Flag to indicate this is an existing file
+              isExistingFile: true, // Flag to indicate this is an existing file
+              created_at: firstFile.created_at // Store the created_at date for display
             };
 
             setUploadedFile(mockFile);
@@ -292,12 +293,12 @@ export default function DataIntakeForm() {
   // Format date to YYYY-MM-DD format
   const formatDateToYYYYMMDD = (dateValue) => {
     if (!dateValue) return "";
-    
+
     // If it's already in YYYY-MM-DD format, return as is
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
       return dateValue;
     }
-    
+
     try {
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) {
@@ -384,19 +385,19 @@ export default function DataIntakeForm() {
   // Parse error message string that contains a dictionary (e.g., from Django validation errors)
   const parseErrorMessage = (message) => {
     if (!message || typeof message !== 'string') return null;
-    
+
     // Look for dictionary pattern in message: {...}
     // Match the entire dictionary including nested structures
     const dictMatch = message.match(/\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/);
     if (!dictMatch) return null;
-    
+
     try {
       const dictStr = dictMatch[0];
-      
+
       // Extract ErrorDetail objects: ErrorDetail(string='message', code='invalid')
       // Replace with just the string value wrapped in quotes
       const cleanedStr = dictStr.replace(/ErrorDetail\(string='([^']+)',\s*code='[^']+'\)/g, "'$1'");
-      
+
       // Now we have a Python dict-like string, convert it to JSON
       // Replace single quotes with double quotes for JSON, but be careful with nested quotes
       // First, handle keys
@@ -405,9 +406,9 @@ export default function DataIntakeForm() {
       jsonStr = jsonStr.replace(/: '([^']+)'/g, ': "$1"');
       // Handle array brackets
       jsonStr = jsonStr.replace(/\[/g, '[').replace(/\]/g, ']');
-      
+
       const parsed = JSON.parse(jsonStr);
-      
+
       // Convert to our error format
       const result = {};
       Object.entries(parsed).forEach(([key, value]) => {
@@ -417,7 +418,7 @@ export default function DataIntakeForm() {
           result[key] = [String(value)];
         }
       });
-      
+
       return result;
     } catch (e) {
       console.error('Error parsing error message:', e, 'Original message:', message);
@@ -487,11 +488,11 @@ export default function DataIntakeForm() {
         const formFieldPath = mapApiFieldToFormField(field, source);
         const messages = Array.isArray(errorMessages)
           ? errorMessages.map(item => {
-              if (typeof item === 'object' && item !== null && item.string) {
-                return item.string;
-              }
-              return String(item);
-            })
+            if (typeof item === 'object' && item !== null && item.string) {
+              return item.string;
+            }
+            return String(item);
+          })
           : [String(errorMessages)];
         errors[formFieldPath] = messages;
       });
@@ -600,7 +601,105 @@ export default function DataIntakeForm() {
     }
   };
 
+  // Validate required fields before submission
+  const validateRequiredFields = () => {
+    const errors = {};
+
+    // Personal Information - Required fields
+    if (!personalInfo.firstName || personalInfo.firstName.trim() === '') {
+      errors['personalInfo.firstName'] = ['First name is required'];
+    }
+    if (!personalInfo.lastName || personalInfo.lastName.trim() === '') {
+      errors['personalInfo.lastName'] = ['Last name is required'];
+    }
+    if (!personalInfo.dateOfBirth || personalInfo.dateOfBirth.trim() === '') {
+      errors['personalInfo.dateOfBirth'] = ['Date of birth is required'];
+    }
+    if (!personalInfo.ssn || personalInfo.ssn.trim() === '') {
+      errors['personalInfo.ssn'] = ['SSN is required'];
+    }
+    if (!personalInfo.email || personalInfo.email.trim() === '') {
+      errors['personalInfo.email'] = ['Email is required'];
+    }
+    if (!personalInfo.phone || personalInfo.phone.trim() === '') {
+      errors['personalInfo.phone'] = ['Phone number is required'];
+    }
+    if (!personalInfo.address || personalInfo.address.trim() === '') {
+      errors['personalInfo.address'] = ['Address is required'];
+    }
+    if (!personalInfo.city || personalInfo.city.trim() === '') {
+      errors['personalInfo.city'] = ['City is required'];
+    }
+    if (!personalInfo.state || personalInfo.state.trim() === '') {
+      errors['personalInfo.state'] = ['State is required'];
+    }
+    if (!personalInfo.zip || personalInfo.zip.trim() === '') {
+      errors['personalInfo.zip'] = ['ZIP code is required'];
+    }
+    if (!personalInfo.filingStatus || personalInfo.filingStatus.trim() === '') {
+      errors['personalInfo.filingStatus'] = ['Filing status is required'];
+    }
+
+    // Spouse Information - Required if filing status is "Married Filing Jointly" or "Married Filing Separately"
+    if (personalInfo.filingStatus === 'Married Filing Jointly' || personalInfo.filingStatus === 'Married Filing Separately') {
+      if (!spouseInfo.firstName || spouseInfo.firstName.trim() === '') {
+        errors['spouseInfo.firstName'] = ['Spouse first name is required'];
+      }
+      if (!spouseInfo.lastName || spouseInfo.lastName.trim() === '') {
+        errors['spouseInfo.lastName'] = ['Spouse last name is required'];
+      }
+      if (!spouseInfo.dateOfBirth || spouseInfo.dateOfBirth.trim() === '') {
+        errors['spouseInfo.dateOfBirth'] = ['Spouse date of birth is required'];
+      }
+      if (!spouseInfo.ssn || spouseInfo.ssn.trim() === '') {
+        errors['spouseInfo.ssn'] = ['Spouse SSN is required'];
+      }
+    }
+
+    // Dependents - Validate if hasDependents is true
+    if (hasDependents) {
+      dependents.forEach((dep, index) => {
+        if (!dep.firstName || dep.firstName.trim() === '') {
+          errors[`dependents.${index}.firstName`] = ['Dependent first name is required'];
+        }
+        if (!dep.lastName || dep.lastName.trim() === '') {
+          errors[`dependents.${index}.lastName`] = ['Dependent last name is required'];
+        }
+        if (!dep.dob || dep.dob.trim() === '') {
+          errors[`dependents.${index}.dob`] = ['Dependent date of birth is required'];
+        }
+        if (!dep.ssn || dep.ssn.trim() === '') {
+          errors[`dependents.${index}.ssn`] = ['Dependent SSN is required'];
+        }
+      });
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async () => {
+    // Validate required fields first
+    const validationErrors = validateRequiredFields();
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      // Scroll to first error
+      setTimeout(() => {
+        scrollToFirstError(validationErrors);
+      }, 100);
+      toast.error('Please fill in all required fields', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
+      return;
+    }
+
     try {
       // Reset upload states if file exists
       if (uploadedFile && !uploadedFile.isExistingFile) {
@@ -612,48 +711,52 @@ export default function DataIntakeForm() {
       // Build the personal data payload for first API
       const personalDataPayload = {
         personal_info: {
-          first_name: personalInfo.firstName,
-          middle_initial: personalInfo.middleInitial,
-          last_name: personalInfo.lastName,
+          first_name: personalInfo.firstName || "",
+          middle_initial: personalInfo.middleInitial || "",
+          last_name: personalInfo.lastName || "",
           dateOfBirth: personalInfo.dateOfBirth ? formatDateToYYYYMMDD(personalInfo.dateOfBirth) : "",
-          ssn: personalInfo.ssn,
-          email: personalInfo.email,
-          phone: personalInfo.phone,
-          address: personalInfo.address,
-          city: personalInfo.city,
-          state: personalInfo.state,
-          zip: personalInfo.zip,
-          filing_status: personalInfo.filingStatus,
+          ssn: personalInfo.ssn || "",
+          email: personalInfo.email || "",
+          phone: personalInfo.phone || "",
+          address: personalInfo.address || "",
+          city: personalInfo.city || "",
+          state: personalInfo.state || "",
+          zip: personalInfo.zip || "",
+          filing_status: personalInfo.filingStatus || "",
           income_information: filingStatus.length > 0 ? filingStatus : ["w2"],
           no_of_dependents: hasDependents ? dependents.length : 0,
           other_deductions: otherInfo.otherDeductions === "yes",
           does_own_a_home: otherInfo.ownsHome,
           in_school: otherInfo.inSchool,
           spouse_info: {
-            spouse_first_name: spouseInfo.firstName,
-            spouse_middle_name: spouseInfo.middleInitial,
-            spouse_last_name: spouseInfo.lastName,
+            spouse_first_name: spouseInfo.firstName || "",
+            spouse_middle_name: spouseInfo.middleInitial || "",
+            spouse_last_name: spouseInfo.lastName || "",
             spouse_dateOfBirth: spouseInfo.dateOfBirth ? formatDateToYYYYMMDD(spouseInfo.dateOfBirth) : "",
-            spouse_ssn: spouseInfo.ssn,
-            spouse_email: spouseInfo.email,
-            spouse_phone_number: spouseInfo.phone
+            spouse_ssn: spouseInfo.ssn || "",
+            spouse_email: spouseInfo.email || "",
+            spouse_phone_number: spouseInfo.phone || ""
           },
           dependents: hasDependents ? dependents.map(dep => ({
-            dependent_first_name: dep.firstName,
-            dependent_middle_name: dep.middleInitial,
-            dependent_last_name: dep.lastName,
+            dependent_first_name: dep.firstName || "",
+            dependent_middle_name: dep.middleInitial || "",
+            dependent_last_name: dep.lastName || "",
             dependent_dateOfBirth: dep.dob ? formatDateToYYYYMMDD(dep.dob) : "",
-            dependent_ssn: dep.ssn
+            dependent_ssn: dep.ssn || ""
           })) : []
         },
         bank_info: {
-          bank_name: bankInfo.bankName,
-          routing_number: bankInfo.routingNumber,
-          confirm_routing_number: bankInfo.confirmRoutingNumber,
-          account_number: bankInfo.accountNumber,
-          confirm_account_number: bankInfo.confirmAccountNumber
+          bank_name: bankInfo.bankName || "",
+          routing_number: bankInfo.routingNumber || "",
+          confirm_routing_number: bankInfo.confirmRoutingNumber || "",
+          account_number: bankInfo.accountNumber || "",
+          confirm_account_number: bankInfo.confirmAccountNumber || ""
         }
       };
+
+      // Log the payload for debugging
+      console.log("Full payload being sent:", JSON.stringify(personalDataPayload, null, 2));
+      console.log("Spouse info in payload:", personalDataPayload.personal_info.spouse_info);
 
       // Prepare file upload form data for second API
       const fileFormData = new FormData();
@@ -662,18 +765,18 @@ export default function DataIntakeForm() {
       if (hasFileToUpload) {
         fileFormData.append("tax_documents", uploadedFile);
       }
-      
+
       // Send income information according to API spec
       // income_information: string or null (primary income type)
       // income_information_types: array of income types
       const incomeTypes = filingStatus.length > 0 ? filingStatus : ["w2"];
       const primaryIncomeType = incomeTypes[0] || "w2";
-      
+
       // Send primary income type (can be null if no types selected)
       if (incomeTypes.length > 0) {
         fileFormData.append("income_information", primaryIncomeType);
       }
-      
+
       // Send income types as array (append each type separately for FormData)
       incomeTypes.forEach(type => {
         fileFormData.append("income_information_types", type);
@@ -827,7 +930,7 @@ export default function DataIntakeForm() {
       if (personalDataResponse.success) {
         // Mark that data now exists (for future updates)
         setHasExistingData(true);
-        
+
         // Show success message
         toast.success(personalDataResponse.message || "Data saved successfully!", {
           position: "top-right",
@@ -852,7 +955,7 @@ export default function DataIntakeForm() {
 
       // Clear any previous errors on success
       setFieldErrors({});
-      
+
       // Redirect to dashboard on successful personal data submission
       if (personalDataResponse.success) {
         // Show a brief success message before redirecting
@@ -1304,25 +1407,22 @@ export default function DataIntakeForm() {
               Phone
             </label>
             <PhoneInput
-              country={spousePhoneCountry}
-              value={spouseInfo.phone || ''}
+              country={personalPhoneCountry}
+              value={personalInfo.phone || ''}
               onChange={(phone) => {
-                // Always allow the change - let the library handle it
-                handleSpouseInfoChange('phone', phone);
+                handlePersonalInfoChange('phone', phone);
               }}
               onCountryChange={(countryCode, countryData) => {
-                setSpousePhoneCountry(countryCode.toLowerCase());
-                setSpousePhoneCountrySelected(true);
-                // When country is selected, insert the dial code
-                handleSpouseInfoChange('phone', `+${countryData.dialCode}`);
+                setPersonalPhoneCountry(countryCode.toLowerCase());
+                setPersonalPhoneCountrySelected(true);
+                handlePersonalInfoChange('phone', `+${countryData.dialCode}`);
               }}
               onFocus={() => {
-                // If field is empty and country not selected, ensure we have a default
-                if (!spouseInfo.phone && !spousePhoneCountrySelected) {
+                if (!personalInfo.phone && !personalPhoneCountrySelected) {
                   // Keep empty, user must select country first
                 }
               }}
-              inputClass="form-control"
+              inputClass={`form-control ${getFieldError('personalInfo.phone') ? 'is-invalid' : ''}`}
               containerClass="w-100 phone-input-container"
               inputStyle={{
                 height: '45px',
@@ -1332,7 +1432,7 @@ export default function DataIntakeForm() {
                 paddingBottom: '6px',
                 width: '100%',
                 fontSize: '1rem',
-                border: '1px solid #ced4da',
+                border: getFieldError('personalInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
                 borderRadius: '0.375rem',
                 backgroundColor: '#fff'
               }}
@@ -1340,7 +1440,17 @@ export default function DataIntakeForm() {
               countryCodeEditable={false}
               disabled={false}
               specialLabel=""
+              data-field="personalInfo.phone"
             />
+            {getFieldError('personalInfo.phone') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('personalInfo.phone')}
+              </div>
+            )}
           </div>
           <div className="col-md-12">
             <label className="form-label" style={{
@@ -1542,11 +1652,26 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${getFieldError('spouseInfo.firstName') ? 'is-invalid' : ''}`}
               placeholder="Sara"
               value={spouseInfo.firstName}
               onChange={(e) => handleSpouseInfoChange('firstName', e.target.value)}
+              data-field="spouseInfo.firstName"
+              ref={(el) => {
+                if (!fieldRefs.current['spouseInfo.firstName']) {
+                  fieldRefs.current['spouseInfo.firstName'] = el;
+                }
+              }}
             />
+            {getFieldError('spouseInfo.firstName') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('spouseInfo.firstName')}
+              </div>
+            )}
           </div>
           <div className="col-md-2">
             <label className="form-label" style={{
@@ -1575,11 +1700,26 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${getFieldError('spouseInfo.lastName') ? 'is-invalid' : ''}`}
               placeholder="Johnson"
               value={spouseInfo.lastName}
               onChange={(e) => handleSpouseInfoChange('lastName', e.target.value)}
+              data-field="spouseInfo.lastName"
+              ref={(el) => {
+                if (!fieldRefs.current['spouseInfo.lastName']) {
+                  fieldRefs.current['spouseInfo.lastName'] = el;
+                }
+              }}
             />
+            {getFieldError('spouseInfo.lastName') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('spouseInfo.lastName')}
+              </div>
+            )}
           </div>
           <div className="col-md-6">
             <label className="form-label" style={{
@@ -1624,10 +1764,25 @@ export default function DataIntakeForm() {
             </label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${getFieldError('spouseInfo.ssn') ? 'is-invalid' : ''}`}
               value={spouseInfo.ssn}
               onChange={(e) => handleSpouseInfoChange('ssn', e.target.value)}
+              data-field="spouseInfo.ssn"
+              ref={(el) => {
+                if (!fieldRefs.current['spouseInfo.ssn']) {
+                  fieldRefs.current['spouseInfo.ssn'] = el;
+                }
+              }}
             />
+            {getFieldError('spouseInfo.ssn') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('spouseInfo.ssn')}
+              </div>
+            )}
           </div>
           <div className="col-md-6">
             <label className="form-label" style={{
@@ -1825,11 +1980,21 @@ export default function DataIntakeForm() {
                         <input
                           ref={index === 0 ? firstDependentFirstNameRef : null}
                           type="text"
-                          className="form-control"
+                          className={`form-control ${getFieldError(`dependents.${index}.firstName`) ? 'is-invalid' : ''}`}
                           value={dep.firstName}
                           onChange={(e) => handleInputChange(index, 'firstName', e.target.value)}
                           placeholder="Sara"
+                          data-field={`dependents.${index}.firstName`}
                         />
+                        {getFieldError(`dependents.${index}.firstName`) && (
+                          <div className="invalid-feedback d-block" style={{
+                            fontSize: "12px",
+                            color: "#EF4444",
+                            marginTop: "4px"
+                          }}>
+                            {getFieldError(`dependents.${index}.firstName`)}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-2">
                         <label className="form-label" style={{
@@ -1860,11 +2025,21 @@ export default function DataIntakeForm() {
                         </label>
                         <input
                           type="text"
-                          className="form-control"
+                          className={`form-control ${getFieldError(`dependents.${index}.lastName`) ? 'is-invalid' : ''}`}
                           value={dep.lastName}
                           onChange={(e) => handleInputChange(index, 'lastName', e.target.value)}
                           placeholder="Johnson"
+                          data-field={`dependents.${index}.lastName`}
                         />
+                        {getFieldError(`dependents.${index}.lastName`) && (
+                          <div className="invalid-feedback d-block" style={{
+                            fontSize: "12px",
+                            color: "#EF4444",
+                            marginTop: "4px"
+                          }}>
+                            {getFieldError(`dependents.${index}.lastName`)}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-2">
                         <label className="form-label" style={{
@@ -1877,11 +2052,21 @@ export default function DataIntakeForm() {
                         </label>
                         <input
                           type="text"
-                          className="form-control"
+                          className={`form-control ${getFieldError(`dependents.${index}.dob`) ? 'is-invalid' : ''}`}
                           placeholder="YYYY-MM-DD"
                           value={dep.dob}
                           onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
+                          data-field={`dependents.${index}.dob`}
                         />
+                        {getFieldError(`dependents.${index}.dob`) && (
+                          <div className="invalid-feedback d-block" style={{
+                            fontSize: "12px",
+                            color: "#EF4444",
+                            marginTop: "4px"
+                          }}>
+                            {getFieldError(`dependents.${index}.dob`)}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-3">
                         <label className="form-label" style={{
@@ -1894,11 +2079,21 @@ export default function DataIntakeForm() {
                         </label>
                         <input
                           type="text"
-                          className="form-control"
+                          className={`form-control ${getFieldError(`dependents.${index}.ssn`) ? 'is-invalid' : ''}`}
                           value={dep.ssn}
                           onChange={(e) => handleInputChange(index, 'ssn', e.target.value)}
                           placeholder="123-45-6789"
+                          data-field={`dependents.${index}.ssn`}
                         />
+                        {getFieldError(`dependents.${index}.ssn`) && (
+                          <div className="invalid-feedback d-block" style={{
+                            fontSize: "12px",
+                            color: "#EF4444",
+                            marginTop: "4px"
+                          }}>
+                            {getFieldError(`dependents.${index}.ssn`)}
+                          </div>
+                        )}
                       </div>
                       <button
                         className="btn"
@@ -2666,18 +2861,13 @@ export default function DataIntakeForm() {
                         fontSize: "0.875rem",
                         fontFamily: "BasisGrotesquePro"
                       }}>
-                        {uploadedFile.isExistingFile ? (
-                          <>Previously uploaded file</>
-                        ) : (
-                          <>Size: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</>
-                        )}
+
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={handleRemoveFile}
                     className="btn p-0 m-0 d-flex align-items-center justify-content-center"
-
                     title="Remove file"
                   >
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2745,6 +2935,15 @@ export default function DataIntakeForm() {
                       padding: "4px 8px"
                     }}>
                       Previously Uploaded
+                      {uploadedFile.created_at && (
+                        <> • {new Date(uploadedFile.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}</>
+                      )}
                     </span>
                   ) : (
                     <span className="badge bg-secondary" style={{

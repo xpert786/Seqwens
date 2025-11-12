@@ -617,7 +617,7 @@ export default function Messages() {
             </div>
 
           </div>
-          <div className="flex-grow-1 overflow-auto d-flex flex-column mt-3" style={{ gap: "12px" }}>
+          <div className="flex-grow-1 d-flex flex-column mt-3" style={{ gap: "12px", overflowY: "auto", overflowX: "hidden", maxHeight: "calc(55vh - 150px)" }}>
             {/* Loading State */}
             {loading && (
               <div className="text-center py-5">
@@ -716,10 +716,10 @@ export default function Messages() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column">
+        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column" style={{ height: "55vh", minHeight: "400px" }}>
           {activeConversation ? (
             <>
-              <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+              <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
                 <ConverIcon className="text-primary" size={20} />
                 <div>
                   <h6 className="mb-0" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{activeConversation.name}</h6>
@@ -729,7 +729,7 @@ export default function Messages() {
                 </div>
               </div>
 
-              <div className="flex-grow-1 overflow-auto mb-3" style={{ minHeight: "200px" }}>
+              <div className="flex-grow-1 mb-3" style={{ overflowY: "auto", overflowX: "hidden", minHeight: "200px" }}>
                 {console.log('Rendering messages, count:', activeChatMessages.length, 'messages:', activeChatMessages, 'loading:', loadingMessages)}
                 {loadingMessages ? (
                   <div className="text-center py-5">
@@ -822,7 +822,7 @@ export default function Messages() {
                 )}
               </div>
 
-              <div className="border-top pt-2">
+              <div className="border-top pt-2" style={{ flexShrink: 0 }}>
                 <div className="d-flex align-items-center">
                   {/* WebSocket connection indicator */}
                   {wsConnected && (
