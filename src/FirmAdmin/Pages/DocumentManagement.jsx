@@ -220,7 +220,15 @@ export default function DocumentManagement() {
               <div
                 key={folder.id}
                 onClick={() => handleFolderClick(folder.id)}
-                className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 transition-all cursor-pointer relative shadow-sm hover:shadow-md"
+                className="bg-white rounded-lg p-3 transition-all cursor-pointer relative"
+                style={{
+                  border: '1px solid #E8F0FF',
+                  borderRadius: '10px',
+                  padding: '10px',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  relative: 'true',
+                }}
               >
                 {/* Header with icon, title, and menu */}
                 <div className="flex items-start justify-between mb-3">
@@ -293,7 +301,7 @@ export default function DocumentManagement() {
                 </p>
 
                 {/* Footer with document count, size, and date */}
-                <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between text-xs text-gray-500 pt-3 ">
                   {/* Left side: Documents and Modified */}
                   <div className="flex flex-col" style={{ fontFamily: 'BasisGrotesquePro' }}>
                     <span>{folder.documentCount} documents</span>

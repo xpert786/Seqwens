@@ -576,7 +576,7 @@ export default function SecurityCompliance() {
                                                     type="checkbox"
                                                     checked={trackedEvents[event.key]}
                                                     onChange={() => handleTrackedEventChange(event.key)}
-                                                    className="h-4 w-4 rounded border border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                                    className="h-4 w-4 rounded-full accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
                                                 />
                                                 <span className="text-sm text-[#4B5563] ml-2  ">{event.label}</span>
                                             </label>
