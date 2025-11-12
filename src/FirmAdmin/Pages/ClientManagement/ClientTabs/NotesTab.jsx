@@ -1,35 +1,138 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 
 export default function NotesTab({ client }) {
+  const API_BASE_URL = getApiBaseUrl();
+  
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('All Notes');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [visibilityFilter, setVisibilityFilter] = useState('all');
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
   const [noteContent, setNoteContent] = useState('');
-  const [noteVisibility, setNoteVisibility] = useState('Staff Only');
+  const [noteVisibility, setNoteVisibility] = useState('staff_only');
+  const [creatingNote, setCreatingNote] = useState(false);
 
-  const notes = [
-    {
-      id: 1,
-      author: 'Michael Chen',
-      visibility: 'Staff Only',
-      content: 'Client prefers email communication over phone calls. Very responsive to messages.',
-      timestamp: '1/10/2024 At 02:30 PM'
-    },
-    {
-      id: 2,
-      author: 'Sarah Martinez',
-      visibility: 'Client Visible',
-      content: 'Discussed tax planning strategies for 2024. Client interested in retirement planning.',
-      timestamp: '1/8/2024 At 08:00 PM'
-    },
-    {
-      id: 3,
-      author: 'Michael Chen',
-      visibility: 'Staff Only',
-      content: 'Client has complex business structure with multiple LLCs. Requires careful attention to K-1 distributions.',
-      timestamp: '1/5/2024 At 09:50 PM'
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch notes from API
+  const fetchNotes = useCallback(async () => {
+    if (!client?.id) return;
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+      
+      if (visibilityFilter !== 'all') {
+        queryParams.append('visibility', visibilityFilter);
+      }
+      
+      if (debouncedSearchQuery.trim()) {
+        queryParams.append('search', debouncedSearchQuery.trim());
+      }
+
+      const url = `${API_BASE_URL}/user/firm-admin/clients/${client.id}/notes${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setNotes(result.data.notes || []);
+      } else {
+        setNotes([]);
+      }
+    } catch (err) {
+      console.error('Error fetching notes:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to load notes. Please try again.');
+      setNotes([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [client?.id, visibilityFilter, debouncedSearchQuery, API_BASE_URL]);
+
+  // Fetch notes on mount and when filters change
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  // Create new note
+  const createNote = async () => {
+    if (!client?.id || !noteContent.trim()) {
+      setError('Note content is required');
+      return;
+    }
+
+    try {
+      setCreatingNote(true);
+      setError('');
+
+      const token = getAccessToken();
+      const url = `${API_BASE_URL}/user/firm-admin/clients/${client.id}/notes/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          content: noteContent.trim(),
+          visibility: noteVisibility
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Close modal and reset form
+        setShowAddNoteModal(false);
+        setNoteContent('');
+        setNoteVisibility('staff_only');
+        // Refresh notes list
+        fetchNotes();
+      } else {
+        throw new Error('Failed to create note');
+      }
+    } catch (err) {
+      console.error('Error creating note:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to create note. Please try again.');
+    } finally {
+      setCreatingNote(false);
+    }
+  };
 
   return (
     <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF]">
@@ -61,15 +164,20 @@ export default function NotesTab({ client }) {
 
         {/* Filter Dropdown */}
         <div className="relative">
-          <button
-            onClick={() => setFilter(filter === 'All Notes' ? 'Filter Notes' : 'All Notes')}
-            className="px-4 py-2 text-sm bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 flex items-center gap-2 font-[BasisGrotesquePro]"
+          <select
+            value={visibilityFilter}
+            onChange={(e) => setVisibilityFilter(e.target.value)}
+            className="px-4 py-2 text-sm bg-white border border-gray-300 !rounded-lg hover:bg-gray-50 appearance-none font-[BasisGrotesquePro] pr-8 cursor-pointer"
           >
-            <span>{filter}</span>
+            <option value="all">All Notes</option>
+            <option value="staff_only">Staff Only</option>
+            <option value="client_visible">Client Visible</option>
+          </select>
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </button>
+          </div>
         </div>
 
         {/* Add Note Button */}
@@ -84,28 +192,54 @@ export default function NotesTab({ client }) {
         </button>
       </div>
 
-      {/* Notes List */}
-      <div className="space-y-3">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className="bg-white !rounded-lg p-4 !border border-[#E8F0FF]"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">{note.author}</span>
-                <span className={`px-2 py-0.5 text-xs font-medium text-[#3B4A66] !rounded-full font-[BasisGrotesquePro] ${
-                  note.visibility === 'Staff Only' ? 'bg-[#E8F0FF]' : 'bg-[#E8F0FF]'
-                }`}>
-                  {note.visibility}
-                </span>
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500 font-[BasisGrotesquePro]">Loading notes...</div>
+        </div>
+      ) : (
+        /* Notes List */
+        <div className="space-y-3">
+          {notes.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-gray-500 font-[BasisGrotesquePro]">
+                {debouncedSearchQuery || visibilityFilter !== 'all' 
+                  ? 'No notes found matching your filters.' 
+                  : 'No notes yet. Add your first note above.'}
               </div>
-              <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">{note.timestamp}</span>
             </div>
-            <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">{note.content}</p>
-          </div>
-        ))}
-      </div>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note.id}
+                className="bg-white !rounded-lg p-4 !border border-[#E8F0FF]"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                      {note.created_by_name || 'Unknown'}
+                    </span>
+                    <span className={`px-2 py-0.5 text-xs font-medium text-[#3B4A66] !rounded-full font-[BasisGrotesquePro] bg-[#E8F0FF]`}>
+                      {note.visibility_display || note.visibility}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                    {note.formatted_datetime || note.formatted_date || 'N/A'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700 font-[BasisGrotesquePro] whitespace-pre-wrap">{note.content}</p>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Add Note Modal */}
       {showAddNoteModal && (
@@ -114,7 +248,8 @@ export default function NotesTab({ client }) {
           onClick={() => {
             setShowAddNoteModal(false);
             setNoteContent('');
-            setNoteVisibility('Staff Only');
+            setNoteVisibility('staff_only');
+            setError('');
           }}
         >
           <div 
@@ -128,7 +263,8 @@ export default function NotesTab({ client }) {
                 onClick={() => {
                   setShowAddNoteModal(false);
                   setNoteContent('');
-                  setNoteVisibility('Staff Only');
+                  setNoteVisibility('staff_only');
+                  setError('');
                 }}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
               >
@@ -168,8 +304,8 @@ export default function NotesTab({ client }) {
                     onChange={(e) => setNoteVisibility(e.target.value)}
                     className="px-4 py-2.5 text-sm !border border-[#E8F0FF] !rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent font-[BasisGrotesquePro] bg-white pr-10 cursor-pointer min-w-[140px]"
                   >
-                    <option value="Staff Only">Staff Only</option>
-                    <option value="Client Visible">Client Visible</option>
+                    <option value="staff_only">Staff Only</option>
+                    <option value="client_visible">Client Visible</option>
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -185,23 +321,20 @@ export default function NotesTab({ client }) {
                   onClick={() => {
                     setShowAddNoteModal(false);
                     setNoteContent('');
-                    setNoteVisibility('Staff Only');
+                    setNoteVisibility('staff_only');
+                    setError('');
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+                  disabled={creatingNote}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    // Handle add note logic here
-                    console.log('Adding note:', { content: noteContent, visibility: noteVisibility });
-                    setShowAddNoteModal(false);
-                    setNoteContent('');
-                    setNoteVisibility('Staff Only');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                  onClick={createNote}
+                  disabled={creatingNote || !noteContent.trim()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Note
+                  {creatingNote ? 'Adding...' : 'Add Note'}
                 </button>
               </div>
             </div>

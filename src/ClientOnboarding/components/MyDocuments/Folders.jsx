@@ -6,6 +6,7 @@ import { handleAPIError, folderTrashAPI } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
 import { toast } from "react-toastify";
+import Pagination from "../Pagination";
 import "../../styles/Folders.css";
 
 export default function Folders({ onFolderSelect }) {
@@ -28,6 +29,8 @@ export default function Folders({ onFolderSelect }) {
     const [trashedFolders, setTrashedFolders] = useState([]);
     const [trashingFolder, setTrashingFolder] = useState(null);
     const [recoveringFolder, setRecoveringFolder] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 3;
 
     // Fetch folders from API
     const fetchFolders = async (folderId = null) => {
@@ -115,6 +118,8 @@ export default function Folders({ onFolderSelect }) {
 
                 console.log('Setting documents:', docs.length, 'documents');
                 setDocuments(docs);
+                // Reset to first page when documents change
+                setCurrentPage(1);
 
                 // Set statistics
                 if (result.data.statistics) {
@@ -570,29 +575,39 @@ export default function Folders({ onFolderSelect }) {
                         ) : (
                             <div className="pt-2 pb-2">
                                 <div className="row g-3">
-                                    {documents.map((doc, index) => {
-                                        const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
-                                        const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
-                                        const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
-                                        const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
-                                        const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || doc.category?.name || doc.category || 'General';
-                                        const docStatus = doc.status || 'Pending';
-                                        const docTags = doc.tags || doc.tag_list || [];
-                                        const docVersion = doc.version || '';
-                                        const isEditable = doc.editable || false;
-                                        const fileUrl = doc.file_url || doc.tax_documents || '';
-
+                                    {(() => {
+                                        // Calculate pagination
+                                        const totalPages = Math.ceil(documents.length / itemsPerPage);
+                                        const startIndex = (currentPage - 1) * itemsPerPage;
+                                        const endIndex = startIndex + itemsPerPage;
+                                        const paginatedDocuments = documents.slice(startIndex, endIndex);
+                                        
                                         return (
-                                            <div className="col-12" key={doc.id || doc.document_id || index}>
-                                                <div
-                                                    className="p-3 border rounded-4"
-                                                    style={{
-                                                        backgroundColor: selectedDocIndex === index ? "#FFF4E6" : "#FFFFFF",
-                                                        cursor: "pointer",
-                                                        transition: "background-color 0.3s ease",
-                                                    }}
-                                                    onClick={() => setSelectedDocIndex(index)}
-                                                >
+                                            <>
+                                                {paginatedDocuments.map((doc, index) => {
+                                                    const actualIndex = startIndex + index;
+                                                    const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
+                                                    const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
+                                                    const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
+                                                    const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
+                                                    const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || doc.category?.name || doc.category || 'General';
+                                                    const docStatus = doc.status || 'Pending';
+                                                    const docTags = doc.tags || doc.tag_list || [];
+                                                    const docVersion = doc.version || '';
+                                                    const isEditable = doc.editable || false;
+                                                    const fileUrl = doc.file_url || doc.tax_documents || '';
+
+                                                    return (
+                                                        <div className="col-12" key={doc.id || doc.document_id || actualIndex}>
+                                                            <div
+                                                                className="p-3 border rounded-4"
+                                                                style={{
+                                                                    backgroundColor: selectedDocIndex === actualIndex ? "#FFF4E6" : "#FFFFFF",
+                                                                    cursor: "pointer",
+                                                                    transition: "background-color 0.3s ease",
+                                                                }}
+                                                                onClick={() => setSelectedDocIndex(actualIndex)}
+                                                            >
                                                     <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                         {/* Left Side: File Info */}
                                                         <div className="d-flex gap-3 align-items-start" style={{ flex: 1 }}>
@@ -707,8 +722,24 @@ export default function Folders({ onFolderSelect }) {
                                                     </div>
                                                 </div>
                                             </div>
+                                                    );
+                                                })}
+                                                {documents.length > itemsPerPage && (
+                                                    <div className="col-12">
+                                                        <Pagination
+                                                            currentPage={currentPage}
+                                                            totalPages={totalPages}
+                                                            onPageChange={setCurrentPage}
+                                                            totalItems={documents.length}
+                                                            itemsPerPage={itemsPerPage}
+                                                            startIndex={startIndex}
+                                                            endIndex={Math.min(endIndex, documents.length)}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </>
                                         );
-                                    })}
+                                    })()}
                                 </div>
                             </div>
                         )}
@@ -1239,29 +1270,39 @@ export default function Folders({ onFolderSelect }) {
                                 Documents ({documents.length})
                             </h6>
                             <div className="row g-3">
-                                {documents.map((doc, index) => {
-                                    const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
-                                    const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
-                                    const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
-                                    const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
-                                    const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || doc.category?.name || doc.category || 'General';
-                                    const docStatus = doc.status || 'Pending';
-                                    const docTags = doc.tags || doc.tag_list || [];
-                                    const docVersion = doc.version || '';
-                                    const isEditable = doc.editable || false;
-                                    const fileUrl = doc.file_url || doc.tax_documents || '';
-
+                                {(() => {
+                                    // Calculate pagination
+                                    const totalPages = Math.ceil(documents.length / itemsPerPage);
+                                    const startIndex = (currentPage - 1) * itemsPerPage;
+                                    const endIndex = startIndex + itemsPerPage;
+                                    const paginatedDocuments = documents.slice(startIndex, endIndex);
+                                    
                                     return (
-                                        <div className="col-12" key={doc.id || doc.document_id || index}>
-                                            <div
-                                                className="p-3 border rounded-4"
-                                                style={{
-                                                    backgroundColor: selectedDocIndex === index ? "#FFF4E6" : "#FFFFFF",
-                                                    cursor: "pointer",
-                                                    transition: "background-color 0.3s ease",
-                                                }}
-                                                onClick={() => setSelectedDocIndex(index)}
-                                            >
+                                        <>
+                                            {paginatedDocuments.map((doc, index) => {
+                                                const actualIndex = startIndex + index;
+                                                const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
+                                                const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
+                                                const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
+                                                const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
+                                                const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || doc.category?.name || doc.category || 'General';
+                                                const docStatus = doc.status || 'Pending';
+                                                const docTags = doc.tags || doc.tag_list || [];
+                                                const docVersion = doc.version || '';
+                                                const isEditable = doc.editable || false;
+                                                const fileUrl = doc.file_url || doc.tax_documents || '';
+
+                                                return (
+                                                    <div className="col-12" key={doc.id || doc.document_id || actualIndex}>
+                                                        <div
+                                                            className="p-3 border rounded-4"
+                                                            style={{
+                                                                backgroundColor: selectedDocIndex === actualIndex ? "#FFF4E6" : "#FFFFFF",
+                                                                cursor: "pointer",
+                                                                transition: "background-color 0.3s ease",
+                                                            }}
+                                                            onClick={() => setSelectedDocIndex(actualIndex)}
+                                                        >
                                                 <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                     {/* Left Side: File Info */}
                                                     <div className="d-flex gap-3 align-items-start" style={{ flex: 1 }}>
@@ -1373,12 +1414,28 @@ export default function Folders({ onFolderSelect }) {
                                                         >
                                                             <i className="bi bi-three-dots-vertical" />
                                                         </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                        );
+                                    })}
+                                    {documents.length > itemsPerPage && (
+                                        <div className="col-12">
+                                            <Pagination
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                onPageChange={setCurrentPage}
+                                                totalItems={documents.length}
+                                                itemsPerPage={itemsPerPage}
+                                                startIndex={startIndex}
+                                                endIndex={Math.min(endIndex, documents.length)}
+                                            />
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                </>
+                            );
+                        })()}
                             </div>
                         </div>
                     )}

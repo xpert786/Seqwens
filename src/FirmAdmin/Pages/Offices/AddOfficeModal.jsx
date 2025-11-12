@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 
-export default function AddOfficeModal({ isOpen, onClose }) {
+export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
         officeName: 'Downtown Branch',
@@ -210,6 +210,10 @@ export default function AddOfficeModal({ isOpen, onClose }) {
             // Handle form submission
             console.log('Form submitted:', formData);
             onClose();
+            // Call the callback to refresh offices if provided
+            if (onOfficeCreated) {
+                onOfficeCreated();
+            }
         }
     };
 

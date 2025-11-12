@@ -1,8 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 
-export default function ScheduleTab() {
+export default function ScheduleTab({ staffId }) {
   const [currentView, setCurrentView] = useState('Week');
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 22)); // July 22, 2025
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [scheduleData, setScheduleData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (staffId) {
+      fetchSchedule();
+    }
+  }, [staffId]);
+
+  const fetchSchedule = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/taxpayer/staff/${staffId}/schedule/`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setScheduleData(result.data);
+      } else {
+        throw new Error(result.message || 'Failed to fetch schedule');
+      }
+    } catch (err) {
+      console.error('Error fetching schedule:', err);
+      setError(handleAPIError(err));
+      setScheduleData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to check if a date matches an appointment date
+  const getAppointmentsForDate = (date) => {
+    if (!scheduleData || !scheduleData.schedule) return [];
+    
+    const dateStr = date.toISOString().split('T')[0];
+    return scheduleData.schedule.filter(apt => apt.date === dateStr);
+  };
+
+  // Helper function to get appointments for a specific hour
+  const getAppointmentsForHour = (date, hour) => {
+    const appointments = getAppointmentsForDate(date);
+    return appointments.filter(apt => {
+      if (!apt.start_time) return false;
+      const startHour = parseInt(apt.start_time.split(':')[0]);
+      return startHour === hour;
+    });
+  };
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -88,28 +163,56 @@ export default function ScheduleTab() {
 
   const renderDayView = () => {
     const hours = Array.from({ length: 24 }, (_, i) => i);
+    const appointments = getAppointmentsForDate(currentDate);
+    
     return (
       <div className="space-y-2">
-        {hours.map((hour) => (
-          <div key={hour} className="flex border-b border-gray-200 py-2">
-            <div className="w-20 text-sm text-gray-600 font-[BasisGrotesquePro]">{hour.toString().padStart(2, '0')}:00</div>
-            <div className="flex-1">
-              {hour === 6 && (
-                <div className="bg-orange-50 border border-orange-400 rounded-lg p-2">
-                  <div className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-orange-500 mt-1 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="text-xs text-orange-700 font-[BasisGrotesquePro] mb-1">
-                        Schedule a free Phone...
+        {hours.map((hour) => {
+          const hourAppointments = appointments.filter(apt => {
+            if (!apt.start_time) return false;
+            const startHour = parseInt(apt.start_time.split(':')[0]);
+            return startHour === hour;
+          });
+          
+          return (
+            <div key={hour} className="flex border-b border-gray-200 py-2">
+              <div className="w-20 text-sm text-gray-600 font-[BasisGrotesquePro]">{hour.toString().padStart(2, '0')}:00</div>
+              <div className="flex-1 space-y-2">
+                {hourAppointments.map((apt) => {
+                  const startTime = apt.start_time ? apt.start_time.substring(0, 5) : '';
+                  const endTime = apt.end_time ? apt.end_time.substring(0, 5) : '';
+                  const statusColor = apt.status === 'confirmed' ? 'bg-blue-50 border-blue-400' : 
+                                     apt.status === 'pending' ? 'bg-yellow-50 border-yellow-400' : 
+                                     'bg-gray-50 border-gray-400';
+                  const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' : 
+                                        apt.status === 'pending' ? 'bg-yellow-500' : 
+                                        'bg-gray-500';
+                  
+                  return (
+                    <div key={apt.id} className={`${statusColor} border rounded-lg p-2`}>
+                      <div className="flex items-start gap-2">
+                        <div className={`w-2 h-2 rounded-full ${statusDotColor} mt-1 flex-shrink-0`}></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-gray-900 font-[BasisGrotesquePro] mb-1 truncate">
+                            {apt.subject || apt.client_name || 'Appointment'}
+                          </div>
+                          {apt.client_name && (
+                            <div className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1">
+                              {apt.client_name}
+                            </div>
+                          )}
+                          <div className="text-xs text-[#3AD6F2] font-[BasisGrotesquePro]">
+                            {startTime} - {endTime}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-[#3AD6F2] font-[BasisGrotesquePro]">06:00 - 08:00</div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -127,11 +230,13 @@ export default function ScheduleTab() {
         </div>
         <div className="grid grid-cols-7 gap-2">
           {weekDates.map((date, index) => {
-            const isDate22 = date.getDate() === 22 && date.getMonth() === 6;
+            const dateAppointments = getAppointmentsForDate(date);
+            const isCurrentDate = isToday(date);
+            
             return (
               <div key={index} className="p-2 border border-gray-200 rounded min-h-[80px] relative">
                 <div className="flex items-center justify-end mb-1">
-                  {isDate22 || isToday(date) ? (
+                  {isCurrentDate ? (
                     <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
                       <span className="text-sm font-semibold text-white font-[BasisGrotesquePro]">{date.getDate()}</span>
                     </div>
@@ -139,19 +244,36 @@ export default function ScheduleTab() {
                     <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">{date.getDate()}</span>
                   )}
                 </div>
-                {isDate22 && (
-                  <div className="mt-2 bg-orange-50 border border-orange-400 rounded-lg p-2">
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-orange-500 mt-1 flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs text-orange-700 font-[BasisGrotesquePro] mb-1">
-                          Schedule a free Phone...
+                <div className="space-y-1 mt-2">
+                  {dateAppointments.slice(0, 2).map((apt) => {
+                    const startTime = apt.start_time ? apt.start_time.substring(0, 5) : '';
+                    const statusColor = apt.status === 'confirmed' ? 'bg-blue-50 border-blue-400' : 
+                                       apt.status === 'pending' ? 'bg-yellow-50 border-yellow-400' : 
+                                       'bg-gray-50 border-gray-400';
+                    const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' : 
+                                          apt.status === 'pending' ? 'bg-yellow-500' : 
+                                          'bg-gray-500';
+                    
+                    return (
+                      <div key={apt.id} className={`${statusColor} border rounded-lg p-1.5`}>
+                        <div className="flex items-start gap-1">
+                          <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor} mt-0.5 flex-shrink-0`}></div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
+                              {apt.subject || apt.client_name || 'Appointment'}
+                            </div>
+                            <div className="text-xs text-[#3AD6F2] font-[BasisGrotesquePro]">{startTime}</div>
+                          </div>
                         </div>
-                        <div className="text-xs text-[#3AD6F2] font-[BasisGrotesquePro]">06:00 - 08:00</div>
                       </div>
+                    );
+                  })}
+                  {dateAppointments.length > 2 && (
+                    <div className="text-xs text-gray-500 font-[BasisGrotesquePro] text-center">
+                      +{dateAppointments.length - 2} more
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}
@@ -174,8 +296,11 @@ export default function ScheduleTab() {
         <div className="grid grid-cols-7 gap-2">
           {monthDates.map((date, index) => {
             const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+            const dateAppointments = getAppointmentsForDate(date);
+            const hasAppointments = dateAppointments.length > 0;
+            
             return (
-              <div key={index} className={`p-2 border border-gray-200 rounded text-center min-h-[60px] ${!isCurrentMonth ? 'opacity-40' : ''}`}>
+              <div key={index} className={`p-1 border border-gray-200 rounded text-center min-h-[60px] ${!isCurrentMonth ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-center mb-1">
                   {isToday(date) ? (
                     <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -185,6 +310,21 @@ export default function ScheduleTab() {
                     <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">{date.getDate()}</span>
                   )}
                 </div>
+                {hasAppointments && isCurrentMonth && (
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {dateAppointments.slice(0, 3).map((apt, aptIndex) => {
+                      const statusDotColor = apt.status === 'confirmed' ? 'bg-blue-500' : 
+                                            apt.status === 'pending' ? 'bg-yellow-500' : 
+                                            'bg-gray-500';
+                      return (
+                        <div key={apt.id || aptIndex} className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`}></div>
+                      );
+                    })}
+                    {dateAppointments.length > 3 && (
+                      <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">+{dateAppointments.length - 3}</span>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -234,11 +374,34 @@ export default function ScheduleTab() {
     return 'Appointments and availability';
   };
 
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading schedule...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <div className="mb-4">
         <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">{getTitle()}</h5>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">{getSubtitle()}</p>
+        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+          {scheduleData?.total_meetings ? `${scheduleData.total_meetings} meeting${scheduleData.total_meetings !== 1 ? 's' : ''} scheduled` : getSubtitle()}
+        </p>
       </div>
       <div className="flex items-center gap-2 mb-4">
         <button

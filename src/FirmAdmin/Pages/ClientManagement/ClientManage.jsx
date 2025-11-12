@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding } from 'react-icons/fa';
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
@@ -11,6 +11,7 @@ import AddClientModal from "./AddClientModal";
 import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -33,6 +34,44 @@ export default function ClientManage() {
   const [clients, setClients] = useState([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState(null);
+  const [overview, setOverview] = useState({
+    total_clients: 0,
+    active: 0,
+    pending: 0,
+    high_priority: 0
+  });
+
+  // Dashboard statistics state
+  const [dashboardStats, setDashboardStats] = useState({
+    active_clients: 0,
+    total_billed: 0,
+    outstanding: 0,
+    new_this_month: {
+      count: 0,
+      vs_last_month: 0
+    },
+    revenue_by_type: {
+      individual: 0,
+      business: 0
+    },
+    revenue_by_segment: {
+      recurring: 0,
+      seasonal: 0
+    }
+  });
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   // Filter states
   const [statusFilters, setStatusFilters] = useState({
     allStatus: false,
@@ -78,6 +117,47 @@ export default function ClientManage() {
     portal: false
   });
 
+  // Fetch dashboard statistics
+  const fetchDashboardStats = useCallback(async () => {
+    try {
+      setDashboardLoading(true);
+      setDashboardError(null);
+
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/dashboard/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setDashboardStats(result.data);
+      } else {
+        throw new Error('Failed to load dashboard statistics');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      const errorMsg = handleAPIError(err);
+      setDashboardError(errorMsg || 'Failed to load dashboard statistics');
+    } finally {
+      setDashboardLoading(false);
+    }
+  }, []);
+
+  // Fetch dashboard stats on component mount
+  useEffect(() => {
+    fetchDashboardStats();
+  }, [fetchDashboardStats]);
+
   // Fetch staff members on component mount
   useEffect(() => {
     const fetchStaffMembers = async () => {
@@ -118,7 +198,23 @@ export default function ClientManage() {
     fetchStaffMembers();
   }, []);
 
-  // Fetch clients on component mount
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    if (debouncedSearchTerm !== '') {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm]);
+
+  // Fetch clients on component mount and when page or search changes
   useEffect(() => {
     const fetchClients = async () => {
       try {
@@ -126,7 +222,15 @@ export default function ClientManage() {
         setClientsError(null);
 
         const token = getAccessToken();
-        const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/list/`, {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', currentPage.toString());
+        queryParams.append('page_size', '20');
+
+        if (debouncedSearchTerm.trim()) {
+          queryParams.append('search', debouncedSearchTerm.trim());
+        }
+
+        const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/list/?${queryParams.toString()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -140,27 +244,40 @@ export default function ClientManage() {
 
         const result = await response.json();
 
-        if (result.success && result.data && result.data.clients) {
+        if (result.success && result.data) {
+          // Set overview data
+          if (result.data.overview) {
+            setOverview(result.data.overview);
+          }
+
+          // Set pagination data
+          if (result.data.pagination) {
+            setPagination(result.data.pagination);
+          }
+
           // Map API response to match the expected structure
-          const mappedClients = result.data.clients.map(client => ({
-            id: client.id,
-            name: `${client.first_name} ${client.last_name}`,
-            company: client.client_type || 'Individual',
-            type: client.client_type || 'Individual',
-            email: client.email || '',
-            phone: client.phone_number || '',
-            status: client.status || 'new',
-            tags: [], // API doesn't provide tags, can be extended later
-            assignedStaff: 'Not Assigned', // Can be mapped from assigned_to_staff if available
-            lastActivity: client.next_due_date ? new Date(client.next_due_date).toLocaleDateString() : 'N/A',
-            lastActivityType: 'N/A',
-            lastActivityIcon: 'DocumentIcon',
-            totalBilled: '$0', // Can be calculated from invoices if available
-            compliance: client.status === 'active' ? 'Active' : 'Pending',
-            dueDiligence: 0 // Can be calculated if needed
-          }));
-          setClients(mappedClients);
-          console.log('Clients loaded:', mappedClients);
+          if (result.data.clients) {
+            const mappedClients = result.data.clients.map(client => ({
+              id: client.id,
+              name: client.full_name || `${client.first_name} ${client.last_name}`,
+              company: client.client_type || 'Individual',
+              type: client.client_type || 'Individual',
+              email: client.email || '',
+              phone: client.phone_number || '',
+              status: client.status || 'new',
+              lastActivity: client.next_due_date || 'N/A',
+              lastActivityType: 'N/A',
+              lastActivityIcon: 'DocumentIcon',
+              totalBilled: '$0', // Can be calculated from invoices if available
+              compliance: client.status === 'active' ? 'Active' : client.status === 'pending' ? 'Pending' : 'New',
+              pendingTasks: client.pending_tasks_count || 0,
+              documentsCount: client.documents_count || 0
+            }));
+            setClients(mappedClients);
+            console.log('Clients loaded:', mappedClients);
+          } else {
+            setClients([]);
+          }
         } else {
           setClients([]);
         }
@@ -174,7 +291,7 @@ export default function ClientManage() {
     };
 
     fetchClients();
-  }, []);
+  }, [currentPage, debouncedSearchTerm]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -274,39 +391,48 @@ export default function ClientManage() {
           </button>
         </div>
       </div>
+      {/* Dashboard Error Display */}
+      {dashboardError && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+          {dashboardError}
+        </div>
+      )}
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
         {[
           {
             label: "Active Clients",
-            value: "2",
-
+            value: dashboardLoading ? '...' : dashboardStats.active_clients || 0,
           },
           {
             label: "Total Billed",
-            value: "$36,470",
-
+            value: dashboardLoading ? '...' : `$${dashboardStats.total_billed?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`,
           },
           {
             label: "Outstanding",
-            value: "$3,700",
-
+            value: dashboardLoading ? '...' : `$${dashboardStats.outstanding?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`,
           },
           {
             label: "New This Month",
-            value: "0",
-            content: "vs 8 last month",
-            contentColor: "red"
+            value: dashboardLoading ? '...' : dashboardStats.new_this_month?.count || 0,
+            content: dashboardStats.new_this_month?.vs_last_month !== undefined
+              ? `vs Last Month: ${dashboardStats.new_this_month.vs_last_month >= 0 ? '+' : ''}${dashboardStats.new_this_month.vs_last_month}`
+              : '',
+            contentColor: "gray"
           },
           {
             label: "Revenue by Type",
             value: "",
-            content: "Individual: $21,050\nBusiness: $15,420"
+            content: dashboardLoading
+              ? 'Loading...'
+              : `Individual: $${dashboardStats.revenue_by_type?.individual?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nBusiness: $${dashboardStats.revenue_by_type?.business?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
           },
           {
             label: "Revenue by Segment",
             value: "",
-            content: "Recurring: $27,720\nSeasonal: $8,750"
+            content: dashboardLoading
+              ? 'Loading...'
+              : `Recurring: $${dashboardStats.revenue_by_segment?.recurring?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nSeasonal: $${dashboardStats.revenue_by_segment?.seasonal?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
           },
         ].map((card, index) => (
           <div className="w-full h-full" key={index}>
@@ -346,12 +472,29 @@ export default function ClientManage() {
               <input
                 type="text"
                 placeholder="Search clients by name, email or company.."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setCurrentPage(1);
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                 <SearchIcon />
               </div>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
             <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
@@ -378,9 +521,9 @@ export default function ClientManage() {
 
         {/* Client Table */}
         <div className="overflow-x-auto px-6">
-          <table className="min-w-full" style={{ minWidth: '1800px' }}>
+          <table className="min-w-full" style={{ minWidth: '1200px' }}>
             <thead className="">
-              <tr className="flex gap-8" style={{ minWidth: '1800px' }}>
+              <tr className="flex gap-8" style={{ minWidth: '1200px' }}>
                 <th className="w-[60px] flex justify-center py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <input
                     type="checkbox"
@@ -401,12 +544,9 @@ export default function ClientManage() {
                 <th className="flex-1 min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                 <th className="w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                 <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
-                <th className="w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Staff</th>
                 <th className="w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
                 <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Billed</th>
                 <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
-                <th className="w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Diligence</th>
                 <th className="w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -414,28 +554,28 @@ export default function ClientManage() {
             <tbody className="bg-white">
               {clientsLoading ? (
                 <tr>
-                  <td colSpan="11" className="p-6 text-center text-gray-500">
+                  <td colSpan="8" className="p-6 text-center text-gray-500">
                     Loading clients...
                   </td>
                 </tr>
               ) : clientsError ? (
                 <tr>
-                  <td colSpan="11" className="p-6 text-center text-red-500">
+                  <td colSpan="8" className="p-6 text-center text-red-500">
                     {clientsError}
                   </td>
                 </tr>
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="p-6 text-center text-gray-500">
+                  <td colSpan="8" className="p-6 text-center text-gray-500">
                     No clients found
                   </td>
                 </tr>
               ) : (
                 clients.map((client) => (
                   <tr key={client.id}>
-                    <td colSpan="11" className="p-0">
+                    <td colSpan="8" className="p-0">
                       <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
-                        <div className="flex items-center gap-8" style={{ minWidth: '1800px' }}>
+                        <div className="flex items-center gap-8" style={{ minWidth: '1200px' }}>
                           {/* Checkbox Column */}
                           <div className="w-[60px] flex justify-center">
                             <input
@@ -466,7 +606,12 @@ export default function ClientManage() {
                                 />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 text-sm mb-1">{client.name}</div>
+                                <div
+                                  className="font-semibold text-gray-900 text-sm mb-1 cursor-pointer hover:text-blue-600 transition-colors"
+                                  onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
+                                >
+                                  {client.name}
+                                </div>
                                 <div className="text-xs text-gray-600 flex items-center mb-1">
                                   {client.company === "Smith Enterprises" || client.company === "Davis LLC" ? (
                                     <div className="mr-1">
@@ -498,39 +643,19 @@ export default function ClientManage() {
                           <div className="w-[120px] flex justify-start">
                             <span
                               className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}
-                              style={client.status === 'Active' ? {
+                              style={client.status === 'active' || client.status === 'Active' ? {
                                 background: '#22C55E',
                                 border: '0.5px solid #22C55E'
-                              } : client.status === 'Pending' ? {
+                              } : client.status === 'pending' || client.status === 'Pending' ? {
                                 background: 'var(--color-yellow-400, #FBBF24)',
                                 border: '0.5px solid var(--color-yellow-400, #FBBF24)'
+                              } : client.status === 'new' ? {
+                                background: '#3B82F6',
+                                border: '0.5px solid #3B82F6'
                               } : {}}
                             >
-                              {client.status}
+                              {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
                             </span>
-                          </div>
-
-                          {/* Tags Column */}
-                          <div className="w-[180px]">
-                            <div className="flex flex-wrap gap-1">
-                              {client.tags.map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-gray-800 mb-1"
-                                  style={{
-                                    background: 'var(--Palette2-Dark-blue-100, #E8F0FF)',
-                                    border: '0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF)'
-                                  }}
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Assigned Staff Column */}
-                          <div className="w-[140px] text-sm text-gray-900">
-                            <div className="font-medium">{client.assignedStaff}</div>
                           </div>
 
                           {/* Last Activity Column */}
@@ -568,18 +693,6 @@ export default function ClientManage() {
                               <span className="ml-1">{client.compliance}</span>
                             </span>
                           </div>
-                          {/* Due Diligence Column */}
-                          <div className="w-[140px] flex items-center justify-start">
-                            <div className="flex items-center w-full">
-                              <div className="w-20 bg-gray-200 rounded-full h-2 mr-3">
-                                <div
-                                  className="bg-blue-600 h-2 rounded-full"
-                                  style={{ width: `${client.dueDiligence}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-sm text-gray-600 font-medium">{client.dueDiligence}%</span>
-                            </div>
-                          </div>
 
                           {/* Action Column */}
                           <div className="w-[100px] text-sm font-medium relative dropdown-container flex justify-center">
@@ -601,23 +714,7 @@ export default function ClientManage() {
                                 }}
                               >
                                 <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
-                                  <button
-                                    onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
-                                    className="block w-full text-center py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    style={{
-                                      backgroundColor: 'var(--Palette2-Gold-200, #FFF4E6)',
-                                      border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
-                                      borderRadius: '8px',
-                                      marginTop: '4px',
-                                      marginLeft: '4px',
-                                      marginRight: '4px',
-                                      marginBottom: '4px',
-                                      paddingLeft: '16px',
-                                      paddingRight: '16px'
-                                    }}
-                                  >
-                                    View Details
-                                  </button>
+                                  {/* View Details removed - clicking on client name now redirects to details page */}
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Client</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Timeline</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Send Message</button>
@@ -644,6 +741,62 @@ export default function ClientManage() {
           </table>
         </div>
 
+        {/* Pagination */}
+        {pagination.total_pages > 1 && (
+          <div className="p-6 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+              Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} clients
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={!pagination.has_previous || currentPage === 1}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_previous || currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.total_pages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= pagination.total_pages - 2) {
+                    pageNum = pagination.total_pages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
+                        ? 'bg-[#3AD6F2] text-white'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
+                disabled={!pagination.has_next || currentPage === pagination.total_pages}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_next || currentPage === pagination.total_pages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filters Modal */}

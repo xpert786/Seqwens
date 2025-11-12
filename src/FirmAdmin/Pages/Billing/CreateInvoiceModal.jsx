@@ -5,7 +5,7 @@ import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
-export default function CreateInvoiceModal({ onClose }) {
+export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
   const [invoiceData, setInvoiceData] = useState({
     client_id: '',
     invoice_number: '',
@@ -220,7 +220,11 @@ export default function CreateInvoiceModal({ onClose }) {
       // Close modal after a brief delay
       setTimeout(() => {
         onClose();
-        if (window.location) {
+        // Call the callback to refresh invoices if provided
+        if (onInvoiceCreated) {
+          onInvoiceCreated();
+        } else if (window.location) {
+          // Fallback to page reload if no callback provided
           window.location.reload();
         }
       }, 1500);

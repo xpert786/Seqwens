@@ -11,6 +11,7 @@ import { signatureRequestsAPI, handleAPIError } from "../../utils/apiUtils";
 import { toast } from "react-toastify";
 
 import { FileIcon, ProfileIcon, LegalIcon, SignatureIcon, DateIcon, InitialIcon, CompletedIcon, AwaitingIcon, Sign2WhiteIcon } from "../icons";
+import Pagination from "../Pagination";
 
 export default function ESignature() {
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -36,6 +37,8 @@ export default function ESignature() {
   const [filterStatus, setFilterStatus] = useState(null); // null = all, 'pending', 'sent', etc.
   const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [showExpiredOnly, setShowExpiredOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
 
   const [previewPages] = useState([
     { id: 1, image: page1Image },
@@ -168,6 +171,17 @@ export default function ESignature() {
   };
 
   const stats = calculateStatistics();
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, showActiveOnly, showExpiredOnly]);
+
+  // Pagination for signature requests
+  const totalPages = Math.ceil(signatureRequests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, signatureRequests.length);
+  const paginatedRequests = signatureRequests.slice(startIndex, endIndex);
 
   // Format date helper
   const formatDate = (dateString) => {
@@ -393,18 +407,20 @@ export default function ESignature() {
             </p>
           </div>
         ) : (
-          signatureRequests.map((request, index) => {
-            const statusColors = getStatusBadgeColor(request.status);
-            const selectedRequest = signatureRequests[selectedIndex];
-            
-            return (
-              <div
-                key={request.id || index}
-                onClick={() => setSelectedIndex(index)}
+          <>
+            {paginatedRequests.map((request, index) => {
+              const statusColors = getStatusBadgeColor(request.status);
+              const originalIndex = startIndex + index;
+              const selectedRequest = signatureRequests[selectedIndex];
+              
+              return (
+                <div
+                  key={request.id || originalIndex}
+                  onClick={() => setSelectedIndex(originalIndex)}
                 className="p-3 rounded  d-flex justify-content-between align-items-center flex-wrap mb-3 cursor-pointer"
                 style={{
-                  backgroundColor: selectedIndex === index ? "#FFF4E6" : "#fff",
-                  border: selectedIndex === index ? "1px solid #F49C2D" : "1px solid #eee",
+                  backgroundColor: selectedIndex === originalIndex ? "#FFF4E6" : "#fff",
+                  border: selectedIndex === originalIndex ? "1px solid #F49C2D" : "1px solid #eee",
                   transition: "background-color 0.2s ease, border-color 0.2s ease",
                 }}
               >
@@ -471,7 +487,7 @@ export default function ESignature() {
                       className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedIndex(index);
+                        setSelectedIndex(originalIndex);
                         setShowPreviewModal(true);
                       }}
                     >
@@ -486,7 +502,7 @@ export default function ESignature() {
                       style={{ backgroundColor: "#F56D2D" }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedIndex(index);
+                        setSelectedIndex(originalIndex);
                         setShowModal(true);
                       }}
                     >
@@ -507,7 +523,19 @@ export default function ESignature() {
                 </div>
               </div>
             );
-          })
+            })}
+            {signatureRequests.length > itemsPerPage && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={signatureRequests.length}
+                itemsPerPage={itemsPerPage}
+                startIndex={startIndex}
+                endIndex={endIndex}
+              />
+            )}
+          </>
         )}
       </div>
 
