@@ -134,8 +134,6 @@ export default function OfficeDashboardView() {
 
 
                 {/* Summary Metrics Section */}
-
-                {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {/* Staff Members */}
                     <div className="bg-white rounded-lg p-4 gap-3">
@@ -218,7 +216,6 @@ export default function OfficeDashboardView() {
                         </div>
                     </div>
                 </div>
-                )}
 
 
                 <div className="bg-white p-2 mb-6 overflow-x-auto">

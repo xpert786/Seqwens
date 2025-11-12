@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
-
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Legend,
+    Tooltip,
+    BarChart,
+    Bar
+} from 'recharts';
 const tabs = [
     'Security Overview',
     'Active Sessions',
@@ -121,8 +135,136 @@ const statusBadgeStyles = {
     Blocked: 'bg-[#EF4444] text-white'
 };
 
+// Issue Breakdown data for pie chart
+const issueBreakdownData = [
+    { name: 'Missing docs', value: 6, color: '#3B82F6' },
+    { name: 'Other', value: 3, color: '#F56D2D' },
+    { name: 'Critical', value: 5, color: '#EF4444' }
+];
+
+// ROI Comparison data for bar chart
+const roiComparisonData = [
+    { name: 'EIC', complete: 6, background: 6.5 },
+    { name: 'CTC', complete: 4, background: 4 },
+    { name: 'HOH', complete: 5, background: 5 }
+];
+
+const auditLogs = [
+    {
+        logId: 'LOG-001',
+        action: 'Document Access',
+        user: 'john.smith@example.com',
+        resource: 'Tax Return - ABC Corp',
+        timestamp: '2024-01-15 15:30:00',
+        ipAddress: '192.168.1.50',
+        status: 'Resolved'
+    },
+    {
+        logId: 'LOG-002',
+        action: 'User Login',
+        user: 'jane.doe@example.com',
+        resource: 'Dashboard',
+        timestamp: '2024-01-15 15:30:00',
+        ipAddress: '192.168.1.51',
+        status: 'Resolved'
+    },
+    {
+        logId: 'LOG-003',
+        action: 'Settings Change',
+        user: 'admin@example.com',
+        resource: 'Security Settings',
+        timestamp: '2024-01-15 15:20:00',
+        ipAddress: '192.168.1.52',
+        status: 'Resolved'
+    }
+];
+
+const complianceDetails = [
+    {
+        client: 'John Doe',
+        type: 'Individual',
+        issue: 'Missing Docs',
+        status: 'Open',
+        lastUpdated: '2025-09-10',
+        action: 'Review'
+    },
+    {
+        client: 'Jane Smith',
+        type: 'Individual',
+        issue: 'Unsigned 8879',
+        status: 'Resolved',
+        lastUpdated: '2025-09-10',
+        action: 'Review'
+    },
+    {
+        client: 'Acme LLC',
+        type: 'Business',
+        issue: 'Missing W-2',
+        status: 'Open',
+        lastUpdated: '2025-09-10',
+        action: 'Review'
+    }
+];
+
 export default function SecurityCompliance() {
     const [activeTab, setActiveTab] = useState('Security Overview');
+    const [auditLoggingEnabled, setAuditLoggingEnabled] = useState(true);
+    const [csvExportEnabled, setCsvExportEnabled] = useState(true);
+    const [printPdfEnabled, setPrintPdfEnabled] = useState(true);
+    const [trackedEvents, setTrackedEvents] = useState({
+        documentAccess: true,
+        eSignatureEvents: false,
+        clientEdits: true,
+        returnSubmissions: false
+    });
+    const [sessionTimeout, setSessionTimeout] = useState('60');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [complianceSearch, setComplianceSearch] = useState('');
+    const [soc2Enabled, setSoc2Enabled] = useState(true);
+    const [hipaaEnabled, setHipaaEnabled] = useState(true);
+    const [dataRetention, setDataRetention] = useState('7');
+    const [encryptionLevel, setEncryptionLevel] = useState('AES-256');
+
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [selectedCompliance, setSelectedCompliance] = useState(null);
+    const [checklistItems, setChecklistItems] = useState({
+        eic: true,
+        ctc: false,
+        hoh: true
+    });
+    const [notes, setNotes] = useState('');
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [roleBasedAccess, setRoleBasedAccess] = useState('Manager (Limited)');
+    const [twoFactorAuth, setTwoFactorAuth] = useState(true);
+    const [geoRestrictions, setGeoRestrictions] = useState('North America');
+    const [sessionTimeoutControl, setSessionTimeoutControl] = useState('15 (minutes)');
+
+    // Security Settings state
+    const [require2FA, setRequire2FA] = useState(true);
+    const [enableSSO, setEnableSSO] = useState(true);
+    const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState('60');
+    const [passwordPolicy, setPasswordPolicy] = useState('Strong (12+ chars, mixed case, numbers)');
+    const [ssnViewers, setSsnViewers] = useState({ owner: true, admin: true, manager: true, preparer: true, staff: false, viewer: false });
+    const [paymentViewers, setPaymentViewers] = useState({ owner: true, admin: true, manager: true, preparer: true, staff: false, viewer: false });
+    const [irsFormViewers, setIrsFormViewers] = useState({ owner: true, admin: true, manager: true, preparer: true, staff: false, viewer: false });
+    const [enforce2FARoles, setEnforce2FARoles] = useState({ owner: true, admin: true, manager: true, preparer: false, staff: false, viewer: false });
+    const [encryptionAtRest, setEncryptionAtRest] = useState('Policy Control only');
+    const [encryptionInTransit, setEncryptionInTransit] = useState('Policy Control only');
+    const [enableWatermarking, setEnableWatermarking] = useState(true);
+    const [watermarkText, setWatermarkText] = useState('[ClientName] [timestamp]');
+    const [watermarkOpacity, setWatermarkOpacity] = useState(15);
+    const [enableRedaction, setEnableRedaction] = useState(true);
+    const [redactionTypes, setRedactionTypes] = useState({ ssn: true, itin: true, acct: true });
+    const [securePortalOnly, setSecurePortalOnly] = useState(false);
+    const [includeIRSPub, setIncludeIRSPub] = useState(false);
+    const [dataSharingConsent, setDataSharingConsent] = useState(false);
+    const [glbaAligned, setGlbaAligned] = useState(true);
+    const [soc2Aligned, setSoc2Aligned] = useState(true);
+    const [hipaaAligned, setHipaaAligned] = useState(true);
+    const [eSignConsent, setESignConsent] = useState(false);
+    const [enableActiveSessionsView, setEnableActiveSessionsView] = useState(false);
+    const [allowForceLogout, setAllowForceLogout] = useState(true);
+    const [enableStaffReports, setEnableStaffReports] = useState(false);
 
     const renderSecurityOverview = () => (
         <>
@@ -130,7 +272,7 @@ export default function SecurityCompliance() {
                 {metrics.map((metric) => (
                     <div key={metric.label} className="rounded-2xl bg-white p-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{metric.label}</span>
+                            <span className="text-sm font-medium tracking-wide text-[#6B7280]">{metric.label}</span>
                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0F9FF] text-[#3AD6F2]">
                                 {metric.icon}
                             </span>
@@ -212,14 +354,14 @@ export default function SecurityCompliance() {
         <div className="rounded-xl bg-white p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h5 className="text-base font-semibold text-[#1F2937]">Active User Sessions</h5>
-                    <p className="text-sm text-[#6B7280]">Monitor and manage active user sessions</p>
+                    <p className="text-base font-semibold text-gray-600 mb-0">Active User Sessions</p>
+                    <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
                 </div>
             </div>
 
             <div className="mt-6 overflow-x-auto">
                 <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                    <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
+                    <thead className="text-xs tracking-wide text-[#6B7280]">
                         <tr>
                             <th className="px-4 py-3">User</th>
                             <th className="px-4 py-3">Device</th>
@@ -234,16 +376,16 @@ export default function SecurityCompliance() {
                             <tr key={session.user} className="hover:bg-[#F8FAFF]">
                                 <td className="px-4 py-3">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-semibold text-[#1F2937]">{session.user}</span>
+                                        <span className="text-sm font-semibold text-gray-500">{session.user}</span>
                                         <span className="text-xs text-[#6B7280]">{session.email}</span>
                                     </div>
                                 </td>
-                                <td className="px-4 py-3 text-sm font-semibold text-[#1F2937]">{session.device}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-[#1F2937]">{session.location}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-[#1F2937]">{session.lastActivity}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-[#1F2937]">{session.duration}</td>
+                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.device}</td>
+                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.location}</td>
+                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.lastActivity}</td>
+                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.duration}</td>
                                 <td className="px-4 py-3 text-right">
-                                    <button className="text-sm font-semibold text-[#EF4444] transition-colors hover:text-[#DC2626]" type="button">
+                                    <button className="text-sm font-semibold text-red-500 transition-colors hover:text-red-500" type="button">
                                         Terminate
                                     </button>
                                 </td>
@@ -255,11 +397,1490 @@ export default function SecurityCompliance() {
         </div>
     );
 
+    const handleTrackedEventChange = (event) => {
+        setTrackedEvents(prev => ({
+            ...prev,
+            [event]: !prev[event]
+        }));
+    };
+
+    const renderAuditLogs = () => (
+        <div className="flex flex-col gap-6">
+            {/* Search and Export Section */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex-1 max-w-md">
+                    <input
+                        type="text"
+                        placeholder="Search user /action /ip"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                        style={{ borderRadius: '8px' }}
+                    />
+                </div>
+                <div className="relative">
+                    <button
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                        style={{ borderRadius: '8px' }}
+                        type="button"
+                    >
+                        Export CSV
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Active User Sessions Section */}
+            <div className="rounded-xl bg-white p-6">
+                <div className="gap-4 mb-6">
+                    <div>
+                        <h5 className="text-base font-semibold text-[#1F2937] mb-1">Active User Sessions</h5>
+                        <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-4">
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+
+                            Date Range
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip0_5150_36810)">
+                                    <path d="M12.6875 14H1.3125C0.58625 14 0 13.4137 0 12.6875V2.1875C0 1.46125 0.58625 0.875 1.3125 0.875H12.6875C13.4137 0.875 14 1.46125 14 2.1875V12.6875C14 13.4137 13.4137 14 12.6875 14ZM1.3125 1.75C1.0675 1.75 0.875 1.9425 0.875 2.1875V12.6875C0.875 12.9325 1.0675 13.125 1.3125 13.125H12.6875C12.9325 13.125 13.125 12.9325 13.125 12.6875V2.1875C13.125 1.9425 12.9325 1.75 12.6875 1.75H1.3125Z" fill="#3B4A66" />
+                                    <path d="M3.9375 3.5C3.6925 3.5 3.5 3.3075 3.5 3.0625V0.4375C3.5 0.1925 3.6925 0 3.9375 0C4.1825 0 4.375 0.1925 4.375 0.4375V3.0625C4.375 3.3075 4.1825 3.5 3.9375 3.5ZM10.0625 3.5C9.8175 3.5 9.625 3.3075 9.625 3.0625V0.4375C9.625 0.1925 9.8175 0 10.0625 0C10.3075 0 10.5 0.1925 10.5 0.4375V3.0625C10.5 3.3075 10.3075 3.5 10.0625 3.5ZM13.5625 5.25H0.4375C0.1925 5.25 0 5.0575 0 4.8125C0 4.5675 0.1925 4.375 0.4375 4.375H13.5625C13.8075 4.375 14 4.5675 14 4.8125C14 5.0575 13.8075 5.25 13.5625 5.25Z" fill="#3B4A66" />
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_5150_36810">
+                                        <rect width="14" height="14" fill="white" />
+                                    </clipPath>
+                                </defs>
+                            </svg>
+
+                        </button>
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Actions
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Refresh
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.14664 7.58334L1.83864 7.89367C1.92057 7.97489 2.03127 8.02046 2.14664 8.02046C2.26201 8.02046 2.37271 7.97489 2.45464 7.89367L2.14664 7.58334ZM3.43464 6.92184C3.5171 6.84 3.56367 6.72875 3.56411 6.61257C3.56455 6.49639 3.51881 6.3848 3.43697 6.30234C3.39645 6.26151 3.34828 6.22906 3.29522 6.20685C3.24215 6.18463 3.18523 6.17309 3.12771 6.17287C3.01153 6.17243 2.89993 6.21816 2.81747 6.30001L3.43464 6.92184ZM1.47464 6.30001C1.3918 6.22059 1.28108 6.1769 1.16633 6.17836C1.05159 6.17981 0.942005 6.22629 0.861206 6.30778C0.780407 6.38927 0.734859 6.49924 0.734379 6.61399C0.733899 6.72875 0.778525 6.83909 0.85864 6.92126L1.47464 6.30001ZM10.8593 4.31201C10.8886 4.3625 10.9278 4.40662 10.9744 4.44175C11.0211 4.47689 11.0743 4.50233 11.1309 4.51657C11.1875 4.53082 11.2464 4.53359 11.3042 4.52471C11.3619 4.51583 11.4172 4.49548 11.467 4.46488C11.5167 4.43427 11.5598 4.39401 11.5937 4.34648C11.6276 4.29895 11.6517 4.24511 11.6645 4.18813C11.6773 4.13116 11.6786 4.07219 11.6682 4.01472C11.6578 3.95725 11.6361 3.90244 11.6042 3.85351L10.8593 4.31201ZM7.04606 1.31251C4.10197 1.31251 1.70856 3.68142 1.70856 6.61092H2.58356C2.58356 4.17142 4.57856 2.18751 7.04606 2.18751V1.31251ZM1.70856 6.61092V7.58334H2.58356V6.61092H1.70856ZM2.45522 7.89426L3.43464 6.92184L2.81747 6.30001L1.83747 7.27242L2.45522 7.89426ZM2.45522 7.27301L1.47464 6.30001L0.858056 6.92126L1.83806 7.89309L2.45522 7.27301ZM11.6042 3.85467C11.1253 3.07664 10.4548 2.43441 9.65689 1.98935C8.85898 1.54429 7.9597 1.31125 7.04606 1.31251V2.18751C7.81035 2.18603 8.56282 2.38062 9.23044 2.75268C9.89806 3.12474 10.4591 3.66182 10.8599 4.31259L11.6042 3.85467ZM11.8498 6.41667L12.1572 6.10576C12.0753 6.02489 11.9649 5.97954 11.8498 5.97954C11.7347 5.97954 11.6243 6.02489 11.5424 6.10576L11.8498 6.41667ZM10.5583 7.07759C10.5174 7.118 10.4849 7.16606 10.4626 7.21903C10.4403 7.27201 10.4287 7.32885 10.4284 7.38632C10.4277 7.50239 10.4732 7.61397 10.5548 7.69651C10.6364 7.77904 10.7475 7.82578 10.8635 7.82644C10.9796 7.82709 11.0912 7.78161 11.1737 7.70001L10.5583 7.07759ZM12.5259 7.70001C12.5665 7.74147 12.615 7.77443 12.6685 7.79697C12.722 7.81951 12.7794 7.83118 12.8375 7.8313C12.8955 7.83141 12.953 7.81997 13.0066 7.79765C13.0602 7.77532 13.1088 7.74255 13.1496 7.70125C13.1904 7.65995 13.2226 7.61095 13.2443 7.55709C13.2659 7.50323 13.2766 7.4456 13.2758 7.38756C13.275 7.32951 13.2626 7.27221 13.2394 7.21899C13.2162 7.16578 13.1827 7.11771 13.1407 7.07759L12.5259 7.70001ZM3.10214 9.68684C3.04118 9.58806 2.94348 9.51754 2.83053 9.49079C2.71758 9.46404 2.59863 9.48326 2.49985 9.54421C2.40107 9.60517 2.33054 9.70287 2.3038 9.81582C2.27705 9.92877 2.29627 10.0477 2.35722 10.1465L3.10214 9.68684ZM6.93172 12.6875C9.88456 12.6875 12.2867 10.3203 12.2867 7.38909H11.4117C11.4117 9.82742 9.41089 11.8125 6.93172 11.8125V12.6875ZM12.2867 7.38909V6.41667H11.4117V7.38909H12.2867ZM11.5424 6.10576L10.5583 7.07759L11.1737 7.70001L12.1572 6.72759L11.5424 6.10576ZM11.5424 6.72759L12.5259 7.70001L13.1407 7.07759L12.1572 6.10576L11.5424 6.72759ZM2.35664 10.1459C2.83884 10.9248 3.51237 11.5672 4.31311 12.0121C5.11384 12.457 6.01512 12.6895 6.93114 12.6875V11.8125C6.16446 11.8145 5.41003 11.6202 4.73969 11.2481C4.06935 10.876 3.50599 10.3385 3.10214 9.68684L2.35664 10.1459Z" fill="#3B4A66" />
+                            </svg>
+
+                        </button>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
+                        <thead className="text-sm font-medium tracking-wide text-[#6B7280]">
+                            <tr>
+                                <th className="px-4 py-3">Log ID</th>
+                                <th className="px-4 py-3">Action</th>
+                                <th className="px-4 py-3">User</th>
+                                <th className="px-4 py-3">Resource</th>
+                                <th className="px-4 py-3">Timestamp</th>
+                                <th className="px-4 py-3">IP Address</th>
+                                <th className="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
+                            {auditLogs.map((log) => (
+                                <tr key={log.logId} className="hover:bg-[#F8FAFF]">
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.logId}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.action}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.user}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.resource}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.timestamp}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.ipAddress}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="inline-flex items-center gap-1 rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white">
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <g clipPath="url(#clip0_5150_36845)">
+                                                    <path
+                                                        d="M12.8332 6.46407V7.00073C12.8325 8.25865 12.4251 9.48263 11.6719 10.4901C10.9188 11.4976 9.86009 12.2347 8.6538 12.5913C7.4475 12.948 6.15824 12.9052 4.97828 12.4692C3.79832 12.0333 2.79089 11.2276 2.10623 10.1724C1.42158 9.11709 1.09638 7.86877 1.17915 6.61358C1.26192 5.3584 1.74821 4.16359 2.5655 3.20736C3.38279 2.25113 4.4873 1.58471 5.71428 1.30749C6.94127 1.03027 8.22499 1.1571 9.37401 1.66907M5.24984 6.4174L6.99984 8.1674L12.8332 2.33407"
+                                                        stroke="white"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                </g>
+                                                <defs>
+                                                    <clipPath id="clip0_5150_36845">
+                                                        <rect width="14" height="14" fill="white" />
+                                                    </clipPath>
+                                                </defs>
+                                            </svg>
+
+                                            <span>{log.status}</span>
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Audit Logs Configuration Section */}
+            <div className="rounded-xl bg-white p-6">
+                <div className="mb-6">
+                    <h5 className="text-base font-semibold text-[#1F2937] mb-1">Audit Logs</h5>
+                    <p className="text-sm text-[#6B7280] mb-0">Enable tamper-evident logging and export filtered logs for audits.</p>
+                </div>
+
+                {/* Enable Audit Logging */}
+                <div className="mb-8 pb-8 border-b border-[#E5E7EB]">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between mb-4">
+                                <h6 className="text-sm font-semibold text-[#1F2937]">Enable Audit Logging</h6>
+                            </div>
+
+                            {/* Grid to divide 6/6 columns */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                {/* Tracked Events */}
+                                <div className="flex flex-col gap-3">
+                                    <span className="text-xs font-medium text-[#6B7280]">Tracked Events</span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {[
+                                            { key: 'documentAccess', label: 'Document Access' },
+                                            { key: 'eSignatureEvents', label: 'eSignature Events' },
+                                            { key: 'clientEdits', label: 'Client Edits' },
+                                            { key: 'returnSubmissions', label: 'Return Submissions' },
+                                        ].map((event) => (
+                                            <label
+                                                key={event.key}
+                                                className="flex items-center space-x-3 cursor-pointer select-none"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={trackedEvents[event.key]}
+                                                    onChange={() => handleTrackedEventChange(event.key)}
+                                                    className="h-4 w-4 rounded border border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                                />
+                                                <span className="text-sm text-[#4B5563] ml-2  ">{event.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Session Timeout */}
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-xs font-medium text-[#6B7280]">
+                                        Session Timeout (minutes)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={sessionTimeout}
+                                        onChange={(e) => setSessionTimeout(e.target.value)}
+                                        className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                        style={{ borderRadius: '8px' }}
+                                    />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* Toggle button */}
+                        <div className="flex items-start sm:items-center pt-1">
+                            <button
+                                type="button"
+                                onClick={() => setAuditLoggingEnabled(!auditLoggingEnabled)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                {/* Enable CSV Export */}
+                <div className="mb-8 pb-8 border-b border-[#E5E7EB]">
+                    <div className="gap-6 sm:flex-row sm:items-start sm:justify-between">
+                        {/* Enable Toggles Section */}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-1">
+                            {/* Enable CSV Export */}
+                            <div className="flex items-center justify-between">
+                                <h6 className="text-sm font-semibold text-[#1F2937]">Enable CSV Export</h6>
+                                <button
+                                    type="button"
+                                    onClick={() => setCsvExportEnabled(!csvExportEnabled)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${csvExportEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${csvExportEnabled ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
+
+                            {/* Enable Print To PDF */}
+                            <div className="flex items-center justify-between">
+                                <h6 className="text-sm font-semibold text-[#1F2937]">Enable Print To PDF</h6>
+                                <button
+                                    type="button"
+                                    onClick={() => setPrintPdfEnabled(!printPdfEnabled)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${printPdfEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${printPdfEnabled ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Info Text (Now below the toggles) */}
+                        <p className="text-sm text-[#6B7280] mt-4">
+                            Logs are append-only and cannot be altered by staff. Admins may export read-only CSV or print a PDF.
+                        </p>
+                    </div>
+                    {/* Filters Section */}
+                    <div className="">
+                        <div className="grid grid-cols gap-4 sm:grid-cols-3">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-[#6B7280]">Filter By User</label>
+                                <input
+                                    type="text"
+                                    placeholder="Filter By User"
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-[#6B7280]">Filter By Client</label>
+                                <input
+                                    type="text"
+                                    placeholder="Filter By Client"
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-[#6B7280]">All Actions</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                                    >
+                                        <option>All Actions</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 16 16"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                d="M4 6L8 10L12 6"
+                                                stroke="#4B5563"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    );
+
+    const renderCompliance = () => (
+        <div className="flex flex-col gap-6">
+            {/* Header Section - Search and Export */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center flex-1">
+                    <div className="flex-1 max-w-md">
+                        <input
+                            type="text"
+                            placeholder="Search client or issue"
+                            value={complianceSearch}
+                            onChange={(e) => setComplianceSearch(e.target.value)}
+                            className="w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                            style={{ borderRadius: '8px' }}
+                        />
+                    </div>
+                    <div className="relative">
+                        <select
+                            className="appearance-none rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                            style={{ borderRadius: '8px', minWidth: '100px' }}
+                        >
+                            <option>All</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <button
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                    style={{ borderRadius: '8px' }}
+                    type="button"
+                >
+                    Export CSV
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Charts Section - Two Columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Issue Breakdown Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <h5 className="text-base font-semibold text-[#1F2937] mb-4">Issue Breakdown</h5>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                        {/* Pie Chart Representation */}
+                        <div className="relative w-full sm:w-64 h-64 flex-shrink-0">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={issueBreakdownData}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        label={({ value }) => value}
+                                        outerRadius={100}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                    >
+                                        {issueBreakdownData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full bg-[#3B82F6]"></div>
+                                <span className="text-sm text-[#4B5563]">Missing docs: 6</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full bg-[#F56D2D]"></div>
+                                <span className="text-sm text-[#4B5563]">3</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full bg-[#EF4444]"></div>
+                                <span className="text-sm text-[#4B5563]">5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ROI Comparison Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <h5 className="text-base font-semibold text-[#1F2937] mb-4">ROI Comparison</h5>
+                    <div className="w-full" style={{ height: '300px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={roiComparisonData}
+                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                barCategoryGap="60%" // Increases space between bars → thinner bars
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                <XAxis
+                                    dataKey="name"
+                                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                                    axisLine={{ stroke: '#E5E7EB' }}
+                                />
+                                <YAxis
+                                    domain={[0, 8]}
+                                    ticks={[0, 2, 4, 6, 8]}
+                                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                                    axisLine={{ stroke: '#E5E7EB' }}
+                                />
+                                <Tooltip
+                                    content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            if (data.name === 'EIC') {
+                                                return (
+                                                    <div className="bg-white border border-[#E5E7EB] rounded-lg p-2 shadow-lg">
+                                                        <p className="text-sm font-semibold text-[#1F2937]">{data.name}</p>
+                                                        <p className="text-xs text-[#4B5563]">Complete: {data.complete}</p>
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                        return null;
+                                    }}
+                                />
+
+                                {/* Slim Foreground Bar */}
+                                <Bar
+                                    dataKey="complete"
+                                    fill="#22C55E"
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={20} // 👈 Controls bar thickness directly (try 10, 15, or 20)
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+
+                    </div>
+                </div>
+            </div>
+
+            {/* Compliance Detail Table */}
+            <div className="rounded-xl bg-white p-6">
+                <p className="text-base font-semibold text-gray-600 mb-4">Compliance Detail</p>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
+                        <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
+                            <tr>
+                                <th className="px-4 py-3">Client</th>
+                                <th className="px-4 py-3">Type</th>
+                                <th className="px-4 py-3">Issue</th>
+                                <th className="px-4 py-3">Status</th>
+                                <th className="px-4 py-3">Last Updated</th>
+                                <th className="px-4 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
+                            {complianceDetails.map((detail, index) => (
+                                <tr key={index} className="hover:bg-[#F8FAFF]">
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.client}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.type}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.issue}</td>
+                                    <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${detail.status === 'Resolved'
+                                            ? 'bg-[#22C55E] text-white'
+                                            : 'bg-[#FBBF24] text-white'
+                                            }`}>
+                                            {detail.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{detail.lastUpdated}</td>
+                                    <td className="px-4 py-3">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedCompliance(detail);
+                                                setIsReviewModalOpen(true);
+                                            }}
+                                            className="inline-flex items-center rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
+                                            style={{ borderRadius: '8px' }}
+                                            type="button"
+                                        >
+                                            {detail.action}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Compliance Settings Card */}
+            <div className="rounded-xl bg-white p-6">
+                <div className="mb-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">Compliance Settings</p>
+                    <p className="text-sm text-[#6B7280] mb-0">Configure compliance and data protection</p>
+                </div>
+
+                <div className="space-y-6">
+                    {/* SOC 2 Compliance */}
+                    <div className="flex items-center justify-between pb-2">
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-600 mb-0">SOC 2 Compliance</p>
+                            <span className="text-sm font-medium text-gray-500 mb-0">Enable SOC 2 Audit Controls</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setSoc2Enabled(!soc2Enabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                }`}
+                        >
+                            <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Enabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                            />
+                        </button>
+                    </div>
+
+                    {/* HIPAA Compliance */}
+                    <div className="flex items-center justify-between pb-2">
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-600 mb-0">HIPAA Compliance</p>
+                            <span className="text-sm font-semibold text-gray-500 mb-0">Enable HIPAA Data Protection</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setHipaaEnabled(!hipaaEnabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${hipaaEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                }`}
+                        >
+                            <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hipaaEnabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                            />
+                        </button>
+                    </div>
+
+                    {/* Data Retention */}
+                    <div className="">
+                        <div className="">
+                            <label className="text-sm font-semibold text-gray-600">Data Retention (years)</label>
+                        </div>
+                        <div className="w-full">
+                            <input
+                                type="number"
+                                value={dataRetention}
+                                onChange={(e) => setDataRetention(e.target.value)}
+                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                style={{ borderRadius: '8px' }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Encryption Level */}
+                    <div className="">
+                        <div className="">
+                            <label className="text-sm font-semibold text-gray-600">Encryption Level</label>
+                        </div>
+                        <div className="w-full relative">
+                            <select
+                                value={encryptionLevel}
+                                onChange={(e) => setEncryptionLevel(e.target.value)}
+                                className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                <option value="AES-256">AES-256</option>
+                                <option value="AES-128">AES-128</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderSecurityControls = () => (
+        <div className="flex flex-col bg-white rounded-xl">
+            {/* Header */}
+            <div className="rounded-xl p-6">
+                <p className="text-xl font-medium text-gray-600 mb-0">Security Controls</p>
+                <p className="text-sm text-[#6B7280] mb-0">Your first and strongest line of defense against cyber risks.</p>
+            </div>
+
+            {/* Role-based Access Levels */}
+            <div className="rounded-xl bg-white p-6 ml-6">
+                <p className="text-sm font-semibold text-gray-500 mb-0">Role-based Access Levels</p>
+                <div className="relative">
+                    <select
+                        value={roleBasedAccess}
+                        onChange={(e) => setRoleBasedAccess(e.target.value)}
+                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                        style={{ borderRadius: '8px' }}
+                    >
+                        <option value="Manager (Limited)">Manager (Limited)</option>
+                        <option value="Admin (Full)">Admin (Full)</option>
+                        <option value="Viewer (Read-only)">Viewer (Read-only)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div className="rounded-xl bg-white p-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-600 mb-0">Two-Factor Authentication</p>
+                        <p className="text-xs text-[#6B7280] mt-0">Role-based Access Levels</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setTwoFactorAuth(!twoFactorAuth)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${twoFactorAuth ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                            }`}
+                    >
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                        />
+                    </button>
+                </div>
+            </div>
+
+            {/* Geo Restrictions */}
+            <div className="rounded-xl bg-white p-6 ml-6">
+                <p className="text-sm font-semibold text-gray-600 mb-0">Geo Restrictions</p>
+                <div className="relative">
+                    <select
+                        value={geoRestrictions}
+                        onChange={(e) => setGeoRestrictions(e.target.value)}
+                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                        style={{ borderRadius: '8px' }}
+                    >
+                        <option value="North America">North America</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Asia">Asia</option>
+                        <option value="Global">Global</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {/* Session Timeout */}
+            <div className="rounded-xl bg-white p-6 ml-6">
+                <p className="text-sm font-semibold text-gray-500 mb-0">Session Timeout</p>
+                <div className="relative">
+                    <select
+                        value={sessionTimeoutControl}
+                        onChange={(e) => setSessionTimeoutControl(e.target.value)}
+                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                        style={{ borderRadius: '8px' }}
+                    >
+                        <option value="15 (minutes)">15 (minutes)</option>
+                        <option value="30 (minutes)">30 (minutes)</option>
+                        <option value="60 (minutes)">60 (minutes)</option>
+                        <option value="120 (minutes)">120 (minutes)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-start p-6 ml-6">
+                <button
+                    type="button"
+                    className="px-6 py-2 rounded-lg border border-[#E5E7EB] bg-white text-sm font-semibold text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                    style={{ borderRadius: '8px' }}
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    className="px-6 py-2 rounded-lg bg-[#F56D2D] text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                    style={{ borderRadius: '8px' }}
+                >
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    );
+
+    const handleCheckboxChange = (setter, key) => {
+        setter(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const handleRedactionChange = (key) => {
+        setRedactionTypes(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const renderSecuritySettings = () => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="flex flex-col gap-6">
+                {/* Authentication Settings Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">Authentication Settings</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Configure authentication and access controls</p>
+
+                    <div className="space-y-4">
+                        {/* Two-Factor Authentication */}
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            <div className="flex flex-col">
+                                <p className="text-sm font-semibold text-gray-600 mb-0">Two-Factor Authentication</p>
+                                <span className="text-sm font-medium text-gray-500">Require 2FA For All Users</span>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setRequire2FA(!require2FA)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${require2FA ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${require2FA ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+
+                        {/* Single Sign-On */}
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            {/* Left side text */}
+                            <div className="flex flex-col">
+                                <span className="text-sm font-semibold text-gray-600 mb-0">Single Sign-On (SSO)</span>
+                                <span className="text-sm font-medium text-gray-500">Enable SAML/OAuth Integration</span>
+                            </div>
+
+                            {/* Right side toggle */}
+                            <button
+                                type="button"
+                                onClick={() => setEnableSSO(!enableSSO)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableSSO ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableSSO ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+
+                        {/* Session Timeout */}
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-gray-600">Session Timeout (minutes)</label>
+                            <input
+                                type="number"
+                                value={sessionTimeoutMinutes}
+                                onChange={(e) => setSessionTimeoutMinutes(e.target.value)}
+                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                style={{ borderRadius: '8px' }}
+                            />
+                        </div>
+
+                        {/* Password Policy */}
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-gray-600">Password Policy</label>
+                            <div className="relative">
+                                <select
+                                    value={passwordPolicy}
+                                    onChange={(e) => setPasswordPolicy(e.target.value)}
+                                    className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    <option>Strong (12+ chars, mixed case, numbers)</option>
+                                    <option>Medium (8+ chars, mixed case)</option>
+                                    <option>Basic (8+ chars)</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* User Security Controls Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">User Security Controls</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Control access to SSNs, payment details, and IRS forms. Configure 2FA, IP geo, and session policies.</p>
+
+                    <div className="space-y-4">
+                        {/* Who can view SSNs */}
+                        <div>
+                            <label className="text-xl font-medium text-gray-500 mb-2 block">Who can view SSNs?</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {['owner', 'admin', 'manager', 'preparer', 'staff', 'viewer'].map((role) => (
+                                    <label key={role} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={ssnViewers[role]}
+                                            onChange={() => handleCheckboxChange(setSsnViewers, role)}
+                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                        />
+                                        <span className="text-sm text-[#4B5563] capitalize ml-2">{role}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Who can view payment info */}
+                        <div>
+                            <label className="text-xl font-medium text-gray-500 mb-2 block">Who can view payment info?</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {['owner', 'admin', 'manager', 'preparer', 'staff', 'viewer'].map((role) => (
+                                    <label key={role} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={paymentViewers[role]}
+                                            onChange={() => handleCheckboxChange(setPaymentViewers, role)}
+                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                        />
+                                        <span className="text-sm text-[#4B5563] capitalize">{role}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Who can view IRS forms */}
+                        <div>
+                            <label className="text-xl font-medium text-gray-500 mb-2 block">Who can view IRS forms?</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {['owner', 'admin', 'manager', 'preparer', 'staff', 'viewer'].map((role) => (
+                                    <label key={role} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={irsFormViewers[role]}
+                                            onChange={() => handleCheckboxChange(setIrsFormViewers, role)}
+                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                        />
+                                        <span className="text-sm text-[#4B5563] capitalize ml-2">{role}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Enforce 2FA for roles */}
+                        <div>
+                            <label className="text-xl font-medium text-gray-500 mb-2 block">Enforce 2FA for roles</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {['owner', 'admin', 'manager', 'preparer', 'staff', 'viewer'].map((role) => (
+                                    <label key={role} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={enforce2FARoles[role]}
+                                            onChange={() => handleCheckboxChange(setEnforce2FARoles, role)}
+                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                        />
+                                        <span className="text-sm text-[#4B5563] capitalize ml-2">{role}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Data Protection Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">Data Protection</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Policy-only demonstration controls for encryption, redaction, watermarking, and sharing.</p>
+
+                    <div className="space-y-4">
+                        {/* Encryption policies */}
+                        <div className="space-y-3">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-gray-500">At rest</label>
+                                <div className="relative">
+                                    <select
+                                        value={encryptionAtRest}
+                                        onChange={(e) => setEncryptionAtRest(e.target.value)}
+                                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        <option>Policy Control only</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-gray-500">In transit</label>
+                                <div className="relative">
+                                    <select
+                                        value={encryptionInTransit}
+                                        onChange={(e) => setEncryptionInTransit(e.target.value)}
+                                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                                        style={{ borderRadius: '8px' }}
+                                    >
+                                        <option>Policy Control only</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Watermarking */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+                                <span className="text-sm font-medium text-gray-500">Enable Watermarking On Downloads</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setEnableWatermarking(!enableWatermarking)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableWatermarking ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        }`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                            <input
+                                type="text"
+                                value={watermarkText}
+                                onChange={(e) => setWatermarkText(e.target.value)}
+                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                style={{ borderRadius: '8px' }}
+                            />
+                            <div className="flex flex-col gap-2 mt-2">
+                                <label className="text-sm font-medium text-gray-500">
+                                    Opacity: {watermarkOpacity}%
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={watermarkOpacity}
+                                    onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
+                                    className="w-full appearance-none h-2 rounded-lg bg-gray-200 accent-[#3AD6F2] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#3AD6F2] [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#3AD6F2]"
+                                />
+                            </div>
+
+                        </div>
+
+                        {/* PII Redaction */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+                                <span className="text-sm font-medium text-gray-500">Enable Redaction When Sharing</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setEnableRedaction(!enableRedaction)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableRedaction ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        }`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableRedaction ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                            <div className="flex gap-4">
+                                {['ssn', 'itin', 'acct'].map((type) => (
+                                    <label key={type} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={redactionTypes[type]}
+                                            onChange={() => handleRedactionChange(type)}
+                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                        />
+                                        <span className="text-sm text-[#4B5563] uppercase">{type}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* File Sharing Policy */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-500">Use Secure Client Portal Only (Disable Email Attachments)</span>
+                            <button
+                                type="button"
+                                onClick={() => setSecurePortalOnly(!securePortalOnly)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${securePortalOnly ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${securePortalOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="flex flex-col gap-6">
+                {/* Compliance Settings Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">Compliance Settings</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Configure compliance and data protection</p>
+
+                    <div className="space-y-4">
+                        {/* SOC 2 Compliance */}
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            {/* Left side text */}
+                            <div className="flex flex-col">
+                                <p className="text-sm font-semibold text-gray-600 mb-0">SOC 2 Compliance</p>
+                                <span className="text-sm font-semibold text-gray-500">Enable SOC 2 Audit Controls</span>
+                            </div>
+
+                            {/* Right side toggle */}
+                            <button
+                                type="button"
+                                onClick={() => setSoc2Enabled(!soc2Enabled)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Enabled ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+
+                        {/* HIPAA Compliance */}
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            {/* Left side text */}
+                            <div className="flex flex-col">
+                                <p className="text-sm font-semibold text-gray-600 mb-0">HIPAA Compliance</p>
+                                <span className="text-sm font-semibold text-gray-500">Enable HIPAA Data Protection</span>
+                            </div>
+
+                            {/* Right side toggle */}
+                            <button
+                                type="button"
+                                onClick={() => setHipaaEnabled(!hipaaEnabled)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${hipaaEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hipaaEnabled ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Data Retention */}
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-gray-600">Data Retention (years)</label>
+                            <input
+                                type="number"
+                                value={dataRetention}
+                                onChange={(e) => setDataRetention(e.target.value)}
+                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                style={{ borderRadius: '8px' }}
+                            />
+                        </div>
+
+                        {/* Encryption Level */}
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-gray-600">Encryption Level</label>
+                            <div className="relative">
+                                <select
+                                    value={encryptionLevel}
+                                    onChange={(e) => setEncryptionLevel(e.target.value)}
+                                    className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    <option value="AES-256">AES-256</option>
+                                    <option value="AES-128">AES-128</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Regulatory Readiness Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">Regulatory Readiness</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Align with IRS Pub. 4567 and industry standards. Capture client consent.</p>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            <span className="text-sm font-medium text-gray-500">Include IRS Pub. 4557 Safeguards Checklist</span>
+                            <button
+                                type="button"
+                                onClick={() => setIncludeIRSPub(!includeIRSPub)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${includeIRSPub ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIRSPub ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            <span className="text-sm font-medium text-gray-500">Data Sharing Consent</span>
+                            <button
+                                type="button"
+                                onClick={() => setDataSharingConsent(!dataSharingConsent)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${dataSharingConsent ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${dataSharingConsent ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            {/* Group wrapper for all three toggles */}
+                            <div className="flex items-center gap-8">
+                                {/* Toggle 1 */}
+                                <div className="flex items-center gap-[40px]">
+                                    <span className="text-sm font-semibold text-gray-500">GLBA-Aligned</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setGlbaAligned(!glbaAligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${glbaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+
+                                {/* Toggle 2 */}
+                                <div className="flex items-center gap-[40px]">
+                                    <span className="text-sm font-semibold text-gray-500">SOC 2-Aligned</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSoc2Aligned(!soc2Aligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Aligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            {/* Group wrapper for all three toggles */}
+                            <div className="flex items-center gap-8">
+                                {/* Toggle 1 */}
+                                <div className="flex items-center gap-[40px]">
+                                    <span className="text-sm font-semibold text-gray-500">HIPAA-Aligned</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setGlbaAligned(!glbaAligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${glbaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+
+                                {/* Toggle 2 */}
+                                <div className="flex items-center gap-[40px]">
+                                    <span className="text-sm font-semibold text-gray-500">Consent Logs</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSoc2Aligned(!soc2Aligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Aligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            {/* Group wrapper for all three toggles */}
+                            <div className="flex items-center gap-8">
+                                {/* Toggle 1 */}
+                                <div className="flex items-center gap-[40px]">
+                                    <span className="text-sm font-semibold text-gray-500">E-sign consent</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setGlbaAligned(!glbaAligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${glbaAligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${glbaAligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+
+                                {/* Toggle 2 */}
+                                <div className="flex items-center gap-[40px]">
+                                    <span className="text-sm font-semibold text-gray-500">Marketing consent</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSoc2Aligned(!soc2Aligned)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Aligned ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Aligned ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Staff Oversight Card */}
+                <div className="rounded-xl bg-white p-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">Staff Oversight</p>
+                    <p className="text-sm text-[#6B7280] mb-4">Monitor active sessions and enable force logout and compliance reporting.</p>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            <span className="text-sm font-semibold text-gray-500">Enable Active Sessions View</span>
+                            <button
+                                type="button"
+                                onClick={() => setEnableActiveSessionsView(!enableActiveSessionsView)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableActiveSessionsView ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableActiveSessionsView ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
+                            <span className="text-sm font-semibold text-gray-500">Allow Force Logout Of Sessions</span>
+                            <button
+                                type="button"
+                                onClick={() => setAllowForceLogout(!allowForceLogout)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${allowForceLogout ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowForceLogout ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-500">Enable Staff-Level Compliance Reports</span>
+                            <button
+                                type="button"
+                                onClick={() => setEnableStaffReports(!enableStaffReports)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${enableStaffReports ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableStaffReports ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     const renderPlaceholder = () => (
         <div className="rounded-xl bg-white p-6 text-center text-sm text-[#6B7280]">
             Content for <span className="font-semibold">{activeTab}</span> is coming soon.
         </div>
     );
+
+    const handleChecklistChange = (item) => {
+        setChecklistItems(prev => ({
+            ...prev,
+            [item]: !prev[item]
+        }));
+    };
+
+    const handleFileUpload = (e) => {
+        const files = Array.from(e.target.files);
+        setUploadedFiles(prev => [...prev, ...files]);
+    };
+
+    const handleFileDrop = (e) => {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files);
+        setUploadedFiles(prev => [...prev, ...files]);
+    };
+
+    const handleFileDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const renderReviewModal = () => {
+        if (!isReviewModalOpen || !selectedCompliance) return null;
+
+        return (
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+                onClick={() => setIsReviewModalOpen(false)}
+            >
+                <div
+                    className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between p-6 border-b border-[#E5E7EB]">
+                        <div>
+                            <p className="text-xl font-semibold text-gray-600">
+                                Review: {selectedCompliance.client}
+                            </p>
+                            <p className="text-sm text-[#6B7280] mt-1">
+                                Last updated: {selectedCompliance.lastUpdated}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setIsReviewModalOpen(false)}
+                            className="text-[#6B7280] hover:text-[#1F2937] transition-colors bg-[#E8F0FF] rounded-full p-2"
+                            type="button"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-6">
+                        {/* Checklist Section */}
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 mb-3">Checklist</p>
+                            <div className="space-y-2 grid grid-cols-3">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={checklistItems.eic}
+                                        onChange={() => handleChecklistChange('eic')}
+                                        className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                    />
+                                    <span className="text-sm text-[#4B5563] ml-2">EIC</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={checklistItems.ctc}
+                                        onChange={() => handleChecklistChange('ctc')}
+                                        className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                    />
+                                    <span className="text-sm text-[#4B5563] ml-2">CTC</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={checklistItems.hoh}
+                                        onChange={() => handleChecklistChange('hoh')}
+                                        className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                    />
+                                    <span className="text-sm text-[#4B5563] ml-2">HOH</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Notes Section */}
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 mb-3">Notes</p>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Add internal notes..."
+                                rows={4}
+                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 resize-none"
+                                style={{ borderRadius: '8px' }}
+                            />
+                        </div>
+
+                        {/* Add Files Section */}
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 mb-3">Add Files</p>
+                            <div
+                                onDrop={handleFileDrop}
+                                onDragOver={handleFileDragOver}
+                                className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-8 text-center cursor-pointer hover:border-[#3AD6F2] transition-colors bg-[#F8FAFF]"
+                                style={{ borderRadius: '8px' }}
+                                onClick={() => document.getElementById('file-upload').click()}
+                            >
+                                <input
+                                    id="file-upload"
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                />
+                                <div className="flex flex-col items-center gap-2">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#9CA3AF]">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
+                                        <path d="M12 8V16M12 8L9 11M12 8L15 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    <p className="text-sm text-[#4B5563] font-medium">
+                                        Drop files here or click to browse
+                                    </p>
+                                    <p className="text-xs text-[#9CA3AF]">
+                                        {uploadedFiles.length > 0 ? `${uploadedFiles.length} file(s) uploaded` : 'No file uploaded'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-[#E5E7EB]">
+                        <button
+                            onClick={() => {
+                                // Handle add note logic
+                                setIsReviewModalOpen(false);
+                            }}
+                            className="flex-1 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Add Note
+                        </button>
+                        <button
+                            onClick={() => {
+                                // Handle send reminder logic
+                                setIsReviewModalOpen(false);
+                            }}
+                            className="flex-1 rounded-lg bg-gray-300 px-4 py-2 text-sm font-semibold text-[#4B5563] transition-colors hover:bg-gray-400"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Send Reminder
+                        </button>
+                        <button
+                            onClick={() => {
+                                // Handle marked resolved logic
+                                setIsReviewModalOpen(false);
+                            }}
+                            className="flex-1 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Marked Resolved
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
@@ -287,9 +1908,8 @@ export default function SecurityCompliance() {
                                 key={tab}
                                 type="button"
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                    activeTab === tab ? 'bg-[#3AD6F2] text-white' : 'text-[#4B5563]'
-                                }`}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === tab ? 'bg-[#3AD6F2] text-white' : 'text-[#4B5563]'
+                                    }`}
                                 style={{ borderRadius: '8px' }}
                             >
                                 {tab}
@@ -302,8 +1922,17 @@ export default function SecurityCompliance() {
 
                 {activeTab === 'Active Sessions' && renderActiveSessions()}
 
-                {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && renderPlaceholder()}
+                {activeTab === 'Audits Logs' && renderAuditLogs()}
+
+                {activeTab === 'Compliance' && renderCompliance()}
+
+                {activeTab === 'Security Controls' && renderSecurityControls()}
+
+                {activeTab === 'Security Settings' && renderSecuritySettings()}
+
+                {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && activeTab !== 'Audits Logs' && activeTab !== 'Compliance' && activeTab !== 'Security Controls' && activeTab !== 'Security Settings' && renderPlaceholder()}
             </div>
+            {renderReviewModal()}
         </div>
     );
 }
