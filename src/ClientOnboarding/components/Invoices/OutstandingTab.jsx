@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye } from 'react-icons/fa';
-import { PayIcon, ViewIcon, LockIcon, CrossIcon } from "../icons";
+import { PayIcon, ViewIcon, LockIcon, CrossIcon, DownloadIcon, PrintIcon } from "../icons";
 import { Modal, Button, Form } from 'react-bootstrap';
 import { toast } from "react-toastify";
 
 const OutstandingTab = ({ invoices = [] }) => {
     const [selectedBoxes, setSelectedBoxes] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [showInvoiceDetailsModal, setShowInvoiceDetailsModal] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
 
     const toggleSelection = (id) => {
@@ -25,6 +26,16 @@ const OutstandingTab = ({ invoices = [] }) => {
         setSelectedInvoice(null);
     };
 
+    const handleViewInvoice = (invoice) => {
+        setSelectedInvoice(invoice);
+        setShowInvoiceDetailsModal(true);
+    };
+
+    const handleCloseInvoiceDetailsModal = () => {
+        setShowInvoiceDetailsModal(false);
+        setSelectedInvoice(null);
+    };
+
     const handlePaymentSubmit = () => {
         toast.success(`Payment of $${(selectedInvoice.remaining_amount || selectedInvoice.amount || 0).toFixed(2)} for ${selectedInvoice.invoice_number || selectedInvoice.id} processed.`, {
           position: "top-right",
@@ -40,34 +51,42 @@ const OutstandingTab = ({ invoices = [] }) => {
         setShowModal(false);
     };
 
-    // Filter and map invoices to display format
-    // Show invoices that are outstanding (unpaid, partial status or have remaining amount)
-    const outstandingInvoices = invoices
-        .filter(inv => {
-            const status = inv.status?.toLowerCase();
-            const remainingAmount = parseFloat(inv.remaining_amount || 0);
-            // Include unpaid, partial, or any invoice with remaining amount > 0
-            return (status === 'unpaid' || status === 'partial' || status === 'pending') || remainingAmount > 0;
-        })
-        .map(inv => ({
+    // Map all invoices to display format (show all invoices, not just outstanding)
+    const allInvoices = invoices.map(inv => {
+        const status = (inv.status || 'pending').toLowerCase();
+        const remainingAmount = parseFloat(inv.remaining_amount || 0);
+        const totalAmount = parseFloat(inv.amount || 0);
+        const paidAmount = parseFloat(inv.paid_amount || 0);
+        const isPaid = status === 'paid' || (remainingAmount === 0 && paidAmount > 0);
+        
+        return {
             id: inv.id,
             invoice_number: inv.invoice_number || `INV-${inv.id}`,
             status: inv.status || 'pending',
             name: inv.description || 'Invoice',
-            amount: parseFloat(inv.remaining_amount || inv.amount || 0),
+            amount: totalAmount,
+            remaining_amount: remainingAmount,
+            paid_amount: paidAmount,
             due: inv.formatted_due_date || inv.due_date,
             description: inv.description,
             issue_date: inv.formatted_issue_date || inv.issue_date,
             due_date: inv.formatted_due_date || inv.due_date,
             client_name: inv.client_name,
             status_display: inv.status_display || inv.status,
-            status_color: inv.status_color || (inv.status === 'overdue' ? 'red' : 'yellow'),
-            paid_amount: parseFloat(inv.paid_amount || 0),
-            remaining_amount: parseFloat(inv.remaining_amount || inv.amount || 0)
-        }));
+            status_color: inv.status_color || (inv.status === 'overdue' ? 'red' : inv.status === 'paid' ? 'green' : 'yellow'),
+            isPaid: isPaid
+        };
+    });
 
     // Get status badge style
-    const getStatusBadgeStyle = (status, statusColor) => {
+    const getStatusBadgeStyle = (status, statusColor, isPaid) => {
+        if (isPaid || status === 'paid' || statusColor === 'green') {
+            return {
+                color: '#166534',
+                border: '1px solid #166534',
+                backgroundColor: '#DCFCE7'
+            };
+        }
         if (status === 'overdue' || statusColor === 'red') {
             return {
                 color: '#991B1B',
@@ -83,12 +102,12 @@ const OutstandingTab = ({ invoices = [] }) => {
     };
 
     useEffect(() => {
-        if (showModal) {
+        if (showModal || showInvoiceDetailsModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'auto';
         }
-    }, [showModal]);
+    }, [showModal, showInvoiceDetailsModal]);
 
 
     return (
@@ -118,16 +137,16 @@ const OutstandingTab = ({ invoices = [] }) => {
                 </p>
             </div>
 
-            {outstandingInvoices.length === 0 ? (
+            {allInvoices.length === 0 ? (
                 <div className="text-center py-4" style={{ marginLeft: "10px" }}>
                     <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
-                        No outstanding invoices at this time.
+                        No invoices at this time.
                     </p>
                 </div>
             ) : (
-                outstandingInvoices.map((inv, idx) => {
+                allInvoices.map((inv, idx) => {
                     const isSelected = selectedBoxes.includes(inv.id);
-                    const statusStyle = getStatusBadgeStyle(inv.status, inv.status_color);
+                    const statusStyle = getStatusBadgeStyle(inv.status, inv.status_color, inv.isPaid);
                     return (
                         <div
                             key={inv.id || idx}
@@ -178,10 +197,10 @@ const OutstandingTab = ({ invoices = [] }) => {
                                 <div className="text-center flex-grow-1">
                                     <div className="mb-0">
                                         <span style={{ color: "#4B5563", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                            Pay Invoice:
+                                            {inv.isPaid ? 'Paid Invoice:' : 'Pay Invoice:'}
                                         </span>{' '}
                                         <span style={{ color: '#F56D2D', fontSize: "19px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
-                                            ${inv.amount.toFixed(2)}
+                                            ${inv.isPaid ? inv.paid_amount.toFixed(2) : (inv.remaining_amount || inv.amount).toFixed(2)}
                                         </span>
                                     </div>
                                 </div>
@@ -195,30 +214,35 @@ const OutstandingTab = ({ invoices = [] }) => {
                                             borderRadius: '4px',
                                             border: '1px solid #e0e0e0'
                                         }}
-                                        onClick={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewInvoice(inv);
+                                        }}
                                     >
                                         <ViewIcon />
                                     </button>
 
-                                    <button
-                                        className="btn"
-                                        style={{
-                                            backgroundColor: '#F56D2D',
-                                            color: '#FFFFFF',
-                                            fontSize: '16px',
-                                            padding: '8px 10px',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handlePayNowClick(inv);
-                                        }}
-                                    >
-                                        <PayIcon style={{ fontSize: '30px' }} />
-                                        <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
-                                    </button>
+                                    {!inv.isPaid && (
+                                        <button
+                                            className="btn"
+                                            style={{
+                                                backgroundColor: '#F56D2D',
+                                                color: '#FFFFFF',
+                                                fontSize: '16px',
+                                                padding: '8px 10px',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePayNowClick(inv);
+                                            }}
+                                        >
+                                            <PayIcon style={{ fontSize: '30px' }} />
+                                            <span style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px" }}>Pay Now</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -370,6 +394,202 @@ const OutstandingTab = ({ invoices = [] }) => {
                             >
                                 Pay ${(selectedInvoice.remaining_amount || selectedInvoice.amount || 0).toFixed(2)}
                             </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invoice Details Modal */}
+            {showInvoiceDetailsModal && selectedInvoice && (
+                <div
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+                    onClick={handleCloseInvoiceDetailsModal}
+                >
+                    <div
+                        className="rounded-4 p-0"
+                        style={{
+                            width: '85vw',
+                            maxWidth: '550px',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            border: "1px solid #E8F0FF",
+                            backgroundColor: "#FFFFFF",
+                            borderRadius: "12px"
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-3">
+                            <div className="text-end mb-2">
+                                <button
+                                    onClick={handleCloseInvoiceDetailsModal}
+                                    style={{
+                                        background: "transparent",
+                                        border: "none",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    <CrossIcon style={{ width: "18px", height: "18px", color: "#3B4A66" }} />
+                                </button>
+                            </div>
+
+                            <div className="d-flex justify-content-between">
+                                <div>
+                                    <h5 className="mb-1" style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>
+                                        Invoice {selectedInvoice.invoice_number}
+                                    </h5>
+                                    <p className="text-muted mb-3" style={{ fontFamily: "BasisGrotesquePro", fontSize: "12px" }}>
+                                        Invoice details and payment information
+                                    </p>
+
+                                    <div
+                                        className="p-2 rounded d-flex align-items-center justify-content-center"
+                                        style={{
+                                            width: "80px",
+                                            height: "50px",
+                                            backgroundColor: "#E8F0FF",
+                                        }}
+                                    >
+                                        <strong style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Logo</strong>
+                                    </div>
+
+                                    <p className="mt-2 mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "8px", fontWeight: "400" }}>123 Business Street</p>
+                                    <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "8px", fontWeight: "400" }}>City, State 12345</p>
+                                    <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "8px", fontWeight: "400" }}>Phone: (555) 123-4567</p>
+                                    <p style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "8px", fontWeight: "400" }}>Email: billing@seqwens.com</p>
+                                </div>
+
+                                <div style={{ marginTop: "65px" }}>
+                                    <h6 style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "600", fontFamily: "BasisGrotesquePro" }}>INVOICE</h6>
+                                    <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{selectedInvoice.invoice_number}</p>
+                                    <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>Phone: (555) 123-4567</p>
+                                    <p style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>Email: billing@seqwens.com</p>
+                                </div>
+                            </div>
+
+                            <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
+
+                            <div className="mb-3 mt-2">
+                                <h5 style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Bill To:</h5>
+                                <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>
+                                    {selectedInvoice.client_name || 'Client'}
+                                </p>
+                                <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>
+                                    456 Client Avenue
+                                </p>
+                                <p style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>
+                                    Client City, State 67890
+                                </p>
+                            </div>
+
+                            <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
+
+                            <div className="mb-3">
+                                <h5 className="mb-2" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                    Services
+                                </h5>
+
+                                <div className="d-flex fw-bold p-2 mb-1" style={{ borderColor: "#dee2e6", backgroundColor: "#F3F7FF", borderRadius: "10px" }}>
+                                    <div className="flex-grow-1" style={{ fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>Description</div>
+                                    <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>Qty</div>
+                                    <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>Rate</div>
+                                    <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>Amount</div>
+                                </div>
+
+                                <div className="d-flex align-items-center border-bottom pb-1 mb-1" style={{ fontSize: "11px", borderColor: "#000" }}>
+                                    <div className="flex-grow-1" style={{ fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                                        {selectedInvoice.description || selectedInvoice.name || 'Service'}
+                                    </div>
+                                    <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>1</div>
+                                    <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                                        ${selectedInvoice.amount.toFixed(2)}
+                                    </div>
+                                    <div style={{ width: "80px", textAlign: "end", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                                        ${selectedInvoice.amount.toFixed(2)}
+                                    </div>
+                                </div>
+
+                                <div className="d-flex justify-content-end mt-2">
+                                    <div style={{ width: "100px", textAlign: "end", fontSize: "10px", fontWeight: 400, fontFamily: "BasisGrotesquePro", color: "#3B4A66", marginLeft: "150px" }}>
+                                        Subtotal:
+                                    </div>
+                                    <div style={{ width: "100px", textAlign: "end", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                                        ${selectedInvoice.amount.toFixed(2)}
+                                    </div>
+                                </div>
+
+                                <div className="d-flex justify-content-end mt-3">
+                                    <div style={{ width: "100px", textAlign: "end", fontSize: "10px", fontWeight: 400, fontFamily: "BasisGrotesquePro", color: "#3B4A66", marginLeft: "150px" }}>
+                                        Tax (0%):
+                                    </div>
+                                    <div style={{ width: "100px", textAlign: "end", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                                        $0.00
+                                    </div>
+                                </div>
+
+                                <hr style={{ width: "30%", borderTop: "2px solid #000", marginLeft: "70%" }} />
+
+                                <div className="d-flex justify-content-end mt-2">
+                                    <div style={{ width: "100px", textAlign: "end", fontSize: "12px", fontWeight: "600", color: "#3B4A66", fontFamily: "BasisGrotesquePro", marginLeft: "150px" }}>
+                                        Total:
+                                    </div>
+                                    <div style={{ width: "100px", textAlign: "end", fontSize: "12px", fontWeight: "700", color: "#3B4A66" }}>
+                                        ${selectedInvoice.amount.toFixed(2)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
+
+                            <p className="mt-2" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>
+                                <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Payment Terms:</strong><br />
+                                Payment is due within 30 days of invoice date.<br />
+                                Late payments may be subject to a 1.5% monthly service charge.
+                            </p>
+
+                            <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
+
+                            <div className="text-end mt-2">
+                                <button
+                                    className="btn btn-sm"
+                                    style={{
+                                        backgroundColor: "#E8F0FF",
+                                        border: "1px solid #ced4da",
+                                        color: "#000",
+                                        fontFamily: "BasisGrotesquePro",
+                                        fontSize: "11px",
+                                        width: "80px",
+                                        height: "34px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: "8px",
+                                    }}
+                                    onClick={() => window.print()}
+                                >
+                                    <PrintIcon style={{ marginRight: "4px" }} />
+                                    Print
+                                </button>
+
+                                <button
+                                    className="btn btn-sm"
+                                    style={{
+                                        backgroundColor: "#E8F0FF",
+                                        border: "1px solid #ced4da",
+                                        color: "#000",
+                                        fontFamily: "BasisGrotesquePro",
+                                        fontSize: "11px",
+                                        width: "120px",
+                                        height: "34px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <DownloadIcon style={{ marginRight: "4px" }} />
+                                    Download PDF
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

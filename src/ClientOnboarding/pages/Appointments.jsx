@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaPlus } from "react-icons/fa";
 import { BsCameraVideo } from "react-icons/bs";
 import { toast } from "react-toastify";
@@ -6,12 +6,14 @@ import { DateIcon, AwaitingIcon, MobileIcon, PersonIcon, DiscusIcon, EditIcon, D
 import { appointmentsAPI, adminAvailabilityAPI, timeSlotsAPI, staffAPI, handleAPIError } from "../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../utils/corsConfig";
 import { getAccessToken } from "../utils/userUtils";
+import Pagination from "../components/Pagination";
 import "../styles/Icon.css"
 import "../styles/fonts.css"
 export default function Appointments() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [step, setStep] = useState(1);
+  const step2Ref = useRef(null);
   const [selectedBox, setSelectedBox] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -51,7 +53,7 @@ export default function Appointments() {
     appointment_time: '',
     meeting_type: 'zoom'
   });
-  
+
   // Edit modal time slots state
   const [editModalTimeSlots, setEditModalTimeSlots] = useState([]);
   const [loadingEditTimeSlots, setLoadingEditTimeSlots] = useState(false);
@@ -73,6 +75,11 @@ export default function Appointments() {
   const [staffMembers, setStaffMembers] = useState([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [staffError, setStaffError] = useState(null);
+
+  // Pagination state
+  const [upcomingCurrentPage, setUpcomingCurrentPage] = useState(1);
+  const [pastCurrentPage, setPastCurrentPage] = useState(1);
+  const itemsPerPage = 3;
 
 
   const dates = Array.from({ length: 30 }, (_, i) => i + 1);
@@ -103,12 +110,12 @@ export default function Appointments() {
       const endTime = new Date(startTime.getTime() + duration * 60000);
 
       // Get meeting link (check multiple possible fields)
-      const meetingLink = appointment.zoom_meeting_link || appointment.zoom_link || 
-                         appointment.google_meet_link || appointment.meeting_link;
-      
+      const meetingLink = appointment.zoom_meeting_link || appointment.zoom_link ||
+        appointment.google_meet_link || appointment.meeting_link;
+
       // Determine if appointment is upcoming (considering date and time)
       const isUpcoming = startTime >= now;
-      
+
       // Determine meeting type display
       let meetingTypeDisplay = 'Phone Call';
       if (appointment.meeting_type === 'zoom') {
@@ -546,7 +553,7 @@ export default function Appointments() {
         appointmentDate = appointment.date;
       }
     }
-    
+
     // Map appointment type to meeting_type
     let meetingType = 'zoom'; // default
     if (appointment.type === 'Zoom Meeting') {
@@ -558,7 +565,7 @@ export default function Appointments() {
     } else if (appointment.type === 'In Person') {
       meetingType = 'in_person';
     }
-    
+
     setEditFormData({
       subject: appointment.title || '',
       appointment_date: appointmentDate,
@@ -567,7 +574,7 @@ export default function Appointments() {
     });
     setEditModalTimeSlots([]);
     setShowEditModal(true);
-    
+
     // Fetch time slots if date exists
     if (appointmentDate) {
       fetchEditModalTimeSlots(appointmentDate);
@@ -773,11 +780,33 @@ export default function Appointments() {
   const hasSelectedDate = Boolean(selectedCalendarDate || selectedDate);
   const hasSelectedTime = Boolean(selectedTimeSlot || selectedTime);
 
+  // Automatically show step 2 when date and time are selected
+  useEffect(() => {
+    if (hasSelectedDate && hasSelectedTime && step === 1) {
+      setStep(2);
+      // Scroll to step 2 after a short delay to ensure it's rendered
+      setTimeout(() => {
+        if (step2Ref.current) {
+          step2Ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [hasSelectedDate, hasSelectedTime, step]);
+
   // Load appointments and staff members on component mount
   useEffect(() => {
     fetchAppointments();
     fetchStaffMembers();
   }, []);
+
+  // Reset pagination when appointments change
+  useEffect(() => {
+    setUpcomingCurrentPage(1);
+  }, [appointments.upcoming.length]);
+
+  useEffect(() => {
+    setPastCurrentPage(1);
+  }, [appointments.past.length]);
 
   return (
     <div className="px-4" >
@@ -904,7 +933,7 @@ export default function Appointments() {
 
       {/* Appointment Lists - Only show when not loading */}
       {!loading && (
-        <div className="d-flex gap-4 flex-wrap">
+        <div className="d-flex gap-4 flex-wrap align-items-start">
 
           <div className="bg-white rounded shadow-sm p-3 flex-grow-1" style={{ minWidth: "350px" }}>
 
@@ -933,139 +962,172 @@ export default function Appointments() {
               </p>
             </div>
 
-            {appointments.upcoming.length > 0 ? appointments.upcoming.map((appt) => (
-              <div
-                key={appt.id}
-                className="border rounded p-3 mb-3 mt-3"
-                onClick={() => setSelectedAppointmentId(appt.id)}
-                style={{
-                  cursor: "pointer",
-                  backgroundColor: selectedAppointmentId === appt.id ? "#FFF4E6" : "white",
-                }}
-              >
+            {(() => {
+              const totalPages = Math.ceil(appointments.upcoming.length / itemsPerPage);
+              const startIndex = (upcomingCurrentPage - 1) * itemsPerPage;
+              const endIndex = startIndex + itemsPerPage;
+              const paginatedUpcoming = appointments.upcoming.slice(startIndex, endIndex);
 
-
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <div className="d-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro" }}>
-                    <strong>{appt.title}</strong>
-
-
-                    <span
-                      className="px-1 py-1 fw-semibold"
+              return (
+                <>
+                  {paginatedUpcoming.length > 0 ? paginatedUpcoming.map((appt) => (
+                    <div
+                      key={appt.id}
+                      className="border rounded p-3 mb-3 mt-3"
+                      onClick={() => setSelectedAppointmentId(appt.id)}
                       style={{
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        fontFamily: "BasisGrotesquePro",
-                        backgroundColor:
-                          appt.status === "Confirmed"
-                            ? "#DCFCE7"
-                            : appt.status === "Pending"
-                              ? "#FEF9C3"
-                              : "#E0E7FF",
-                        borderRadius: "30px",
-                        color:
-                          appt.status === "Confirmed"
-                            ? "#166534"
-                            : appt.status === "Pending"
-                              ? "#92400E"
-                              : "#3730A3",
+                        cursor: "pointer",
+                        backgroundColor: selectedAppointmentId === appt.id ? "#FFF4E6" : "white",
                       }}
                     >
-                      {appt.status}
-                    </span>
-
-                  </div>
-
-                  {/* Edit & Delete buttons */}
-                  <div className="d-flex align-items-center gap-2">
-                    <button
-                      className="btn btn-sm"
-                      style={{
-
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditModal(appt);
-                      }}
-                    >
-                      <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
-                        <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
-                        <path d="M13 8.50011H9.5C9.23478 8.50011 8.98043 8.60547 8.79289 8.79301C8.60536 8.98054 8.5 9.2349 8.5 9.50011V16.5001C8.5 16.7653 8.60536 17.0197 8.79289 17.2072C8.98043 17.3948 9.23478 17.5001 9.5 17.5001H16.5C16.7652 17.5001 17.0196 17.3948 17.2071 17.2072C17.3946 17.0197 17.5 16.7653 17.5 16.5001V13.0001M16.1875 8.31261C16.3864 8.1137 16.6562 8.00195 16.9375 8.00195C17.2188 8.00195 17.4886 8.1137 17.6875 8.31261C17.8864 8.51153 17.9982 8.78131 17.9982 9.06261C17.9982 9.34392 17.8864 9.6137 17.6875 9.81261L13 14.5001L11 15.0001L11.5 13.0001L16.1875 8.31261Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                    </button>
-
-                    <button
-                      className="btn btn-sm ms-2"
-                      style={{
-
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        cancelAppointment(appt.id);
-                      }}
-                    >
-                      <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
-                        <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
-                        <path d="M8.5 10H17.5M16.5 10V17C16.5 17.5 16 18 15.5 18H10.5C10 18 9.5 17.5 9.5 17V10M11 10V9C11 8.5 11.5 8 12 8H14C14.5 8 15 8.5 15 9V10M12 12.5V15.5M14 12.5V15.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-
-                    </button>
-
-                  </div>
-                </div>
 
 
-                {/* Date, Time, Type in one line */}
-                <div className="small text-muted d-flex align-items-center mb-2" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
-                </div>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div className="d-flex align-items-center gap-2" style={{ fontFamily: "BasisGrotesquePro" }}>
+                          <strong>{appt.title}</strong>
 
 
-                <div className="small text-muted d-flex align-items-center" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
-                </div>
+                          <span
+                            className="px-1 py-1 fw-semibold"
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 500,
+                              fontFamily: "BasisGrotesquePro",
+                              backgroundColor:
+                                appt.status === "Confirmed"
+                                  ? "#DCFCE7"
+                                  : appt.status === "Pending"
+                                    ? "#FEF9C3"
+                                    : "#E0E7FF",
+                              borderRadius: "30px",
+                              color:
+                                appt.status === "Confirmed"
+                                  ? "#166534"
+                                  : appt.status === "Pending"
+                                    ? "#92400E"
+                                    : "#3730A3",
+                            }}
+                          >
+                            {appt.status}
+                          </span>
 
-                {/* Join button for upcoming meetings with meeting link */}
-                {appt.joinable && appt.meeting_link && (
-                  <button
-                    className="btn w-100 mt-3"
-                    style={{ background: "#F56D2D", color: "#fff" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (appt.meeting_link) {
-                        window.open(appt.meeting_link, '_blank');
-                      } else {
-                        toast.error('Meeting link not available', {
-                          position: "top-right",
-                          autoClose: 3000,
-                          className: "custom-toast-success",
-                          bodyClassName: "custom-toast-body",
-                          icon: false,
-                        });
-                      }
-                    }}
-                  >
-                    <BsCameraVideo className="me-2" /> Join Meeting
-                  </button>
-                )}
-              </div>
-            )) : (
-              <div className="text-center py-4">
-                <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>
-                  No upcoming appointments scheduled
-                </p>
-              </div>
-            )}
+                        </div>
+
+                        {/* Edit & Delete buttons */}
+                        <div className="d-flex align-items-center gap-2">
+                          <button
+                            className="btn btn-sm"
+                            style={{
+
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(appt);
+                            }}
+                          >
+                            <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
+                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
+                              <path d="M13 8.50011H9.5C9.23478 8.50011 8.98043 8.60547 8.79289 8.79301C8.60536 8.98054 8.5 9.2349 8.5 9.50011V16.5001C8.5 16.7653 8.60536 17.0197 8.79289 17.2072C8.98043 17.3948 9.23478 17.5001 9.5 17.5001H16.5C16.7652 17.5001 17.0196 17.3948 17.2071 17.2072C17.3946 17.0197 17.5 16.7653 17.5 16.5001V13.0001M16.1875 8.31261C16.3864 8.1137 16.6562 8.00195 16.9375 8.00195C17.2188 8.00195 17.4886 8.1137 17.6875 8.31261C17.8864 8.51153 17.9982 8.78131 17.9982 9.06261C17.9982 9.34392 17.8864 9.6137 17.6875 9.81261L13 14.5001L11 15.0001L11.5 13.0001L16.1875 8.31261Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+
+                          <button
+                            className="btn btn-sm ms-2"
+                            style={{
+
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              cancelAppointment(appt.id);
+                            }}
+                          >
+                            <svg width="30" height="30" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" fill="white" />
+                              <rect x="0.25" y="0.25" width="25.5" height="25.5" rx="5.75" stroke="#E8F0FF" stroke-width="0.5" />
+                              <path d="M8.5 10H17.5M16.5 10V17C16.5 17.5 16 18 15.5 18H10.5C10 18 9.5 17.5 9.5 17V10M11 10V9C11 8.5 11.5 8 12 8H14C14.5 8 15 8.5 15 9V10M12 12.5V15.5M14 12.5V15.5" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+
+                          </button>
+
+                        </div>
+                      </div>
+
+
+                      {/* Date, Time, Type in one line */}
+                      <div className="small text-muted d-flex align-items-center mb-2" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
+                      </div>
+
+
+                      <div className="small text-muted d-flex align-items-center" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
+                      </div>
+
+                      {/* Join button for upcoming meetings with meeting link */}
+                      {appt.joinable && appt.meeting_link && (
+                        <div className="d-flex justify-content-center mt-2">
+                          <button
+                            className="btn d-inline-flex align-items-center justify-content-center"
+                            style={{
+                              background: "#F56D2D",
+                              color: "#fff",
+                              padding: "6px 12px",
+                              fontSize: "13px",
+                              fontFamily: "BasisGrotesquePro",
+                              fontWeight: "500",
+                              borderRadius: "6px",
+                              border: "none"
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (appt.meeting_link) {
+                                window.open(appt.meeting_link, '_blank');
+                              } else {
+                                toast.error('Meeting link not available', {
+                                  position: "top-right",
+                                  autoClose: 3000,
+                                  className: "custom-toast-success",
+                                  bodyClassName: "custom-toast-body",
+                                  icon: false,
+                                });
+                              }
+                            }}
+                          >
+                            <BsCameraVideo style={{ fontSize: "14px", marginRight: "6px" }} /> Join Meeting
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )) : (
+                    <div className="text-center py-4">
+                      <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>
+                        No upcoming appointments scheduled
+                      </p>
+                    </div>
+                  )}
+                  {appointments.upcoming.length > itemsPerPage && (
+                    <Pagination
+                      currentPage={upcomingCurrentPage}
+                      totalPages={totalPages}
+                      onPageChange={setUpcomingCurrentPage}
+                      totalItems={appointments.upcoming.length}
+                      itemsPerPage={itemsPerPage}
+                      startIndex={startIndex}
+                      endIndex={Math.min(endIndex, appointments.upcoming.length)}
+                    />
+                  )}
+                </>
+              );
+            })()}
           </div>
 
 
           {/* Past */}
-          <div className="bg-white rounded shadow-sm p-3 flex-grow-1" style={{ minWidth: "350px" }}>
+          <div className="bg-white rounded shadow-sm p-3" style={{ minWidth: "350px", alignSelf: "flex-start" }}>
 
             <div className="align-items-center mb-3 ">
               <h5
@@ -1093,71 +1155,90 @@ export default function Appointments() {
             </div>
 
 
-            {appointments.past.length > 0 ? appointments.past.map((appt) => (
-              <div
-                key={appt.id}
-                className="border rounded p-3 mb-3 mt-3"
-                onClick={() => setSelectedAppointmentId(appt.id)}
-                style={{
-                  cursor: "pointer",
-                  backgroundColor: selectedAppointmentId === appt.id ? "#FFF4E6" : "white",
-                }}
-              >
+            {(() => {
+              const totalPages = Math.ceil(appointments.past.length / itemsPerPage);
+              const startIndex = (pastCurrentPage - 1) * itemsPerPage;
+              const endIndex = startIndex + itemsPerPage;
+              const paginatedPast = appointments.past.slice(startIndex, endIndex);
+
+              return (
+                <>
+                  {paginatedPast.length > 0 ? paginatedPast.map((appt) => (
+                    <div
+                      key={appt.id}
+                      className="border rounded p-3 mb-3"
+                      onClick={() => setSelectedAppointmentId(appt.id)}
+                      style={{
+                        cursor: "pointer",
+                        backgroundColor: selectedAppointmentId === appt.id ? "#FFF4E6" : "white",
+                      }}
+                    >
 
 
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <strong>{appt.title}</strong>
-                  <span
-                    className="px-2 py-1 small fw-semibold"
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      backgroundColor:
-                        appt.status === "Completed"
-                          ? "#DCFCE7"
-                          : appt.status === "Cancelled"
-                            ? "#FEE2E2"
-                            : "#E0E7FF",
-                      borderRadius: "30px",
-                      color:
-                        appt.status === "Completed"
-                          ? "#166534"
-                          : appt.status === "Cancelled"
-                            ? "#991B1B"
-                            : "#3730A3",
-                    }}
-                  >
-                    {appt.status}
-                  </span>
-                </div>
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <strong>{appt.title}</strong>
+                        <span
+                          className="px-2 py-1 small fw-semibold"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            backgroundColor:
+                              appt.status === "Completed"
+                                ? "#DCFCE7"
+                                : appt.status === "Cancelled"
+                                  ? "#FEE2E2"
+                                  : "#E0E7FF",
+                            borderRadius: "30px",
+                            color:
+                              appt.status === "Completed"
+                                ? "#166534"
+                                : appt.status === "Cancelled"
+                                  ? "#991B1B"
+                                  : "#3730A3",
+                          }}
+                        >
+                          {appt.status}
+                        </span>
+                      </div>
 
 
-                <div className="small text-muted d-flex align-items-center mb-2" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
-                </div>
+                      <div className="small text-muted d-flex align-items-center mb-2" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DateIcon className="me-1 text-primary" /> {appt.date}</span>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><AwaitingIcon className="text-success" />{appt.time}</span>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><MobileIcon className="me-1 text-info" /> {appt.type}</span>
+                      </div>
 
 
-                <div className="small text-muted d-flex align-items-center" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
-                  <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
-                </div>
-              </div>
-            )) : (
-              <div className="text-center py-4">
-                <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>
-                  No past appointments
-                </p>
-              </div>
-            )}
+                      <div className="small text-muted d-flex align-items-center" style={{ gap: "15px", fontFamily: "BasisGrotesquePro" }}>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><PersonIcon className="me-1 text-primary" />{appt.person}</span>
+                        <span className="d-flex align-items-center small-icon" style={{ gap: "8px" }}><DiscusIcon className="me-1 text-primary" />{appt.description}</span>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="text-center py-4">
+                      <p style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>
+                        No past appointments
+                      </p>
+                    </div>
+                  )}
+                  {appointments.past.length > itemsPerPage && (
+                    <Pagination
+                      currentPage={pastCurrentPage}
+                      totalPages={totalPages}
+                      onPageChange={setPastCurrentPage}
+                      totalItems={appointments.past.length}
+                      itemsPerPage={itemsPerPage}
+                      startIndex={startIndex}
+                      endIndex={Math.min(endIndex, appointments.past.length)}
+                    />
+                  )}
+                </>
+              );
+            })()}
           </div>
 
         </div>
       )}
-
-
-
 
       {/* ---------- Custom Modal Popup ---------- */}
       {showModal && (
@@ -1203,428 +1284,427 @@ export default function Appointments() {
               </div>
             </div>
 
-            {/* Step 1 */}
-            {step === 1 && (
-              <div className="popup-body">
-                {/* Staff Error Message - Show prominently if staff couldn't be loaded */}
-                {staffError && staffError.includes('associated with a firm') && (
-                  <div className="alert alert-warning mb-3" role="alert" style={{
-                    backgroundColor: "#FEF3C7",
-                    border: "1px solid #F59E0B",
-                    color: "#92400E",
-                    fontFamily: "BasisGrotesquePro",
+            {/* Step 1 - Always visible */}
+            <div className="popup-body">
+              {/* Staff Error Message - Show prominently if staff couldn't be loaded */}
+              {staffError && staffError.includes('associated with a firm') && (
+                <div className="alert alert-warning mb-3" role="alert" style={{
+                  backgroundColor: "#FEF3C7",
+                  border: "1px solid #F59E0B",
+                  color: "#92400E",
+                  fontFamily: "BasisGrotesquePro",
+                  borderRadius: "8px",
+                  padding: "12px 16px",
+                  marginBottom: "16px"
+                }}>
+                  <strong style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                    <svg width="20" height="20" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g clipPath="url(#clip0_584_1462)">
+                        <path d="M4.99992 3.33301V4.99968M9.16659 4.99968C9.16659 7.30086 7.30111 9.16634 4.99992 9.16634C2.69873 9.16634 0.833252 7.30086 0.833252 4.99968C0.833252 2.69849 2.69873 0.833008 4.99992 0.833008C7.30111 0.833008 9.16659 2.69849 9.16659 4.99968Z" stroke="#F56D2D" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M5 6.66699H5.01042" stroke="#F56D2D" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_584_1462">
+                          <rect width="10" height="10" fill="white" />
+                        </clipPath>
+                      </defs>
+                    </svg>
+                    Firm Association Required
+                  </strong>
+                  <small>{staffError}</small>
+                </div>
+              )}
+
+              {/* Only show appointment options if there's no firm association error */}
+              {!(staffError && staffError.includes('associated with a firm')) && (
+                <>
+                  {/* Meeting Type Selection */}
+                  <div className="option-box mb-3" style={{
+                    border: "1px solid #E5E7EB",
                     borderRadius: "8px",
-                    padding: "12px 16px",
-                    marginBottom: "16px"
+                    padding: "15px",
+                    background: "#fff"
                   }}>
-                    <strong style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                      <svg width="20" height="20" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clipPath="url(#clip0_584_1462)">
-                          <path d="M4.99992 3.33301V4.99968M9.16659 4.99968C9.16659 7.30086 7.30111 9.16634 4.99992 9.16634C2.69873 9.16634 0.833252 7.30086 0.833252 4.99968C0.833252 2.69849 2.69873 0.833008 4.99992 0.833008C7.30111 0.833008 9.16659 2.69849 9.16659 4.99968Z" stroke="#F56D2D" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M5 6.66699H5.01042" stroke="#F56D2D" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_584_1462">
-                            <rect width="10" height="10" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                      Firm Association Required
-                    </strong>
-                    <small>{staffError}</small>
-                  </div>
-                )}
-
-                {/* Only show appointment options if there's no firm association error */}
-                {!(staffError && staffError.includes('associated with a firm')) && (
-                  <>
-                    {/* Meeting Type Selection */}
-                    <div className="option-box mb-3" style={{
-                      border: "1px solid #E5E7EB",
-                      borderRadius: "8px",
-                      padding: "15px",
-                      background: "#fff"
-                    }}>
-                      {/* Staff Member Selection - Show dropdown if more than 1 staff member */}
-                      {staffMembers.length > 1 && (
-                        <div className="mb-3">
-                          <label style={{
-                            fontSize: "13px",
-                            fontWeight: "500",
+                    {/* Staff Member Selection - Show dropdown if more than 1 staff member */}
+                    {staffMembers.length > 1 && (
+                      <div className="mb-3">
+                        <label style={{
+                          fontSize: "13px",
+                          fontWeight: "500",
+                          color: "#3B4A66",
+                          fontFamily: "BasisGrotesquePro",
+                          marginBottom: "6px",
+                          display: "block"
+                        }}>
+                          Select Tax Professional:
+                        </label>
+                        <select
+                          className="form-control"
+                          value={selectedAdminId || ''}
+                          onChange={(e) => {
+                            const newAdminId = parseInt(e.target.value);
+                            setSelectedAdminId(newAdminId);
+                            setFormData(prev => ({ ...prev, appointment_with: newAdminId }));
+                            // Reset selections when staff member changes
+                            setSelectedBox(null);
+                            setSelectedDate(null);
+                            setSelectedTime(null);
+                            setSelectedTimeSlot(null);
+                            setAvailableTimeSlots([]);
+                            setSelectedCalendarDate(null);
+                            setAvailableDates([]);
+                          }}
+                          style={{
+                            fontFamily: "BasisGrotesquePro",
+                            fontSize: "14px",
+                            padding: "8px 12px",
+                            border: "1px solid #E5E7EB",
+                            borderRadius: "8px",
                             color: "#3B4A66",
-                            fontFamily: "BasisGrotesquePro",
-                            marginBottom: "6px",
-                            display: "block"
-                          }}>
-                            Select Tax Professional:
-                          </label>
-                          <select
-                            className="form-control"
-                            value={selectedAdminId || ''}
-                            onChange={(e) => {
-                              const newAdminId = parseInt(e.target.value);
-                              setSelectedAdminId(newAdminId);
-                              setFormData(prev => ({ ...prev, appointment_with: newAdminId }));
-                              // Reset selections when staff member changes
-                              setSelectedBox(null);
-                              setSelectedDate(null);
-                              setSelectedTime(null);
-                              setSelectedTimeSlot(null);
-                              setAvailableTimeSlots([]);
-                              setSelectedCalendarDate(null);
-                              setAvailableDates([]);
-                            }}
-                            style={{
-                              fontFamily: "BasisGrotesquePro",
-                              fontSize: "14px",
-                              padding: "8px 12px",
-                              border: "1px solid #E5E7EB",
-                              borderRadius: "8px",
-                              color: "#3B4A66",
-                              width: "100%"
-                            }}
-                          >
-                            {staffMembers.map((staff) => (
-                              <option key={staff.id} value={staff.id}>
-                                {staff.name} {staff.role_display ? `(${staff.role_display})` : ''} {staff.email ? `- ${staff.email}` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      <h6 style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: "#3B4A66",
-                        fontFamily: "BasisGrotesquePro",
-                        marginBottom: "12px"
-                      }}>
-                        Schedule a free call with {staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}
-                      </h6>
-
-                      {/* Meeting Type Options */}
-                      <div className="d-flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'zoom' }))}
-                          style={{
-                            border: formData.meeting_type === 'zoom' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
-                            background: formData.meeting_type === 'zoom' ? "#F56D2D" : "#fff",
-                            color: formData.meeting_type === 'zoom' ? "#fff" : "#374151",
-                            borderRadius: "8px",
-                            padding: "8px 16px",
-                            fontSize: "13px",
-                            fontFamily: "BasisGrotesquePro",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease"
+                            width: "100%"
                           }}
                         >
-                          Zoom
-                        </button>
-                        <button
-                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'google_meet' }))}
-                          style={{
-                            border: formData.meeting_type === 'google_meet' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
-                            background: formData.meeting_type === 'google_meet' ? "#F56D2D" : "#fff",
-                            color: formData.meeting_type === 'google_meet' ? "#fff" : "#374151",
-                            borderRadius: "8px",
-                            padding: "8px 16px",
-                            fontSize: "13px",
-                            fontFamily: "BasisGrotesquePro",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          Google Meet
-                        </button>
-                        <button
-                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'in_person' }))}
-                          style={{
-                            border: formData.meeting_type === 'in_person' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
-                            background: formData.meeting_type === 'in_person' ? "#F56D2D" : "#fff",
-                            color: formData.meeting_type === 'in_person' ? "#fff" : "#374151",
-                            borderRadius: "8px",
-                            padding: "8px 16px",
-                            fontSize: "13px",
-                            fontFamily: "BasisGrotesquePro",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          In Person
-                        </button>
-                        <button
-                          onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'on_call' }))}
-                          style={{
-                            border: formData.meeting_type === 'on_call' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
-                            background: formData.meeting_type === 'on_call' ? "#F56D2D" : "#fff",
-                            color: formData.meeting_type === 'on_call' ? "#fff" : "#374151",
-                            borderRadius: "8px",
-                            padding: "8px 16px",
-                            fontSize: "13px",
-                            fontFamily: "BasisGrotesquePro",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          Phone Call
-                        </button>
+                          {staffMembers.map((staff) => (
+                            <option key={staff.id} value={staff.id}>
+                              {staff.name} {staff.role_display ? `(${staff.role_display})` : ''} {staff.email ? `- ${staff.email}` : ''}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    </div>
+                    )}
 
-                    {(selectedBox
-                      ? [
-                        {
-                          id: selectedBox,
-                          ...{
-                            id: 1,
-                            icon: <span className="icon-custom"><ZoomIcon /></span>,
-                            title: `Schedule a free ${formData.meeting_type === 'zoom' ? 'Zoom call' : formData.meeting_type === 'google_meet' ? 'Google Meet' : formData.meeting_type === 'in_person' ? 'in-person meeting' : 'phone call'} with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
-                            // desc: "Use this to schedule 1 hour long zoom meeting",
-                          },
-                        },
-                      ]
-                      : [
-                        {
+                    <h6 style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#3B4A66",
+                      fontFamily: "BasisGrotesquePro",
+                      marginBottom: "12px"
+                    }}>
+                      Schedule a free call with {staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}
+                    </h6>
+
+                    {/* Meeting Type Options */}
+                    <div className="d-flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'zoom' }))}
+                        style={{
+                          border: formData.meeting_type === 'zoom' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                          background: formData.meeting_type === 'zoom' ? "#F56D2D" : "#fff",
+                          color: formData.meeting_type === 'zoom' ? "#fff" : "#374151",
+                          borderRadius: "8px",
+                          padding: "8px 16px",
+                          fontSize: "13px",
+                          fontFamily: "BasisGrotesquePro",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Zoom
+                      </button>
+                      <button
+                        onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'google_meet' }))}
+                        style={{
+                          border: formData.meeting_type === 'google_meet' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                          background: formData.meeting_type === 'google_meet' ? "#F56D2D" : "#fff",
+                          color: formData.meeting_type === 'google_meet' ? "#fff" : "#374151",
+                          borderRadius: "8px",
+                          padding: "8px 16px",
+                          fontSize: "13px",
+                          fontFamily: "BasisGrotesquePro",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Google Meet
+                      </button>
+                      <button
+                        onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'in_person' }))}
+                        style={{
+                          border: formData.meeting_type === 'in_person' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                          background: formData.meeting_type === 'in_person' ? "#F56D2D" : "#fff",
+                          color: formData.meeting_type === 'in_person' ? "#fff" : "#374151",
+                          borderRadius: "8px",
+                          padding: "8px 16px",
+                          fontSize: "13px",
+                          fontFamily: "BasisGrotesquePro",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        In Person
+                      </button>
+                      <button
+                        onClick={() => setFormData(prev => ({ ...prev, meeting_type: 'on_call' }))}
+                        style={{
+                          border: formData.meeting_type === 'on_call' ? "2px solid #F56D2D" : "1px solid #E5E7EB",
+                          background: formData.meeting_type === 'on_call' ? "#F56D2D" : "#fff",
+                          color: formData.meeting_type === 'on_call' ? "#fff" : "#374151",
+                          borderRadius: "8px",
+                          padding: "8px 16px",
+                          fontSize: "13px",
+                          fontFamily: "BasisGrotesquePro",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Phone Call
+                      </button>
+                    </div>
+                  </div>
+
+                  {(selectedBox
+                    ? [
+                      {
+                        id: selectedBox,
+                        ...{
                           id: 1,
                           icon: <span className="icon-custom"><ZoomIcon /></span>,
                           title: `Schedule a free ${formData.meeting_type === 'zoom' ? 'Zoom call' : formData.meeting_type === 'google_meet' ? 'Google Meet' : formData.meeting_type === 'in_person' ? 'in-person meeting' : 'phone call'} with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
                           // desc: "Use this to schedule 1 hour long zoom meeting",
                         },
-                      ]
-                    ).map((option) => (
-                      <div key={option.id} className="option-box">
-                        <div
-                          onClick={async () => {
-                            // Toggle selection when clicking anywhere on the option box
-                            if (selectedBox === option.id) {
-                              setSelectedBox(null);
-                              setSelectedDate(null);
-                              setSelectedTime(null);
-                              setSelectedTimeSlot(null);
-                              setAvailableTimeSlots([]);
-                              setSelectedCalendarDate(null);
-                              setAvailableDates([]);
-                            } else {
-                              setSelectedBox(option.id);
-                              setHighlightBox(option.id);
-                              // Fetch available dates for the selected staff member
-                              await fetchAvailableDates(selectedAdminId);
-                            }
-                          }}
-                          className={`info ${selectedBox === option.id ? "active" : ""} ${highlightBox === option.id ? "highlighted" : ""}`}
-                          style={{
-                            cursor: "pointer",
-                            transition: "all 0.3s ease"
-                          }}
-                        >
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div className="d-flex gap-2 align-items-start">
-                              <span>{option.icon}</span>
-                              <div>
-                                <strong className="option-title">{option.title}</strong>
-                                {option.desc && <p className="option-desc">{option.desc}</p>}
-                              </div>
+                      },
+                    ]
+                    : [
+                      {
+                        id: 1,
+                        icon: <span className="icon-custom"><ZoomIcon /></span>,
+                        title: `Schedule a free ${formData.meeting_type === 'zoom' ? 'Zoom call' : formData.meeting_type === 'google_meet' ? 'Google Meet' : formData.meeting_type === 'in_person' ? 'in-person meeting' : 'phone call'} with ${staffMembers.find(s => s.id === selectedAdminId)?.name || 'Tax Professional'}`,
+                        // desc: "Use this to schedule 1 hour long zoom meeting",
+                      },
+                    ]
+                  ).map((option) => (
+                    <div key={option.id} className="option-box">
+                      <div
+                        onClick={async () => {
+                          // Toggle selection when clicking anywhere on the option box
+                          if (selectedBox === option.id) {
+                            setSelectedBox(null);
+                            setSelectedDate(null);
+                            setSelectedTime(null);
+                            setSelectedTimeSlot(null);
+                            setAvailableTimeSlots([]);
+                            setSelectedCalendarDate(null);
+                            setAvailableDates([]);
+                          } else {
+                            setSelectedBox(option.id);
+                            setHighlightBox(option.id);
+                            // Fetch available dates for the selected staff member
+                            await fetchAvailableDates(selectedAdminId);
+                          }
+                        }}
+                        className={`info ${selectedBox === option.id ? "active" : ""} ${highlightBox === option.id ? "highlighted" : ""}`}
+                        style={{
+                          cursor: "pointer",
+                          transition: "all 0.3s ease"
+                        }}
+                      >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div className="d-flex gap-2 align-items-start">
+                            <span>{option.icon}</span>
+                            <div>
+                              <strong className="option-title">{option.title}</strong>
+                              {option.desc && <p className="option-desc">{option.desc}</p>}
                             </div>
-
-                            {selectedBox !== option.id && (
-                              <span
-                                className="arrow-icon"
-                                style={{
-                                  fontSize: "20px",
-                                  color: "#3B4A66",
-                                  transition: "transform 0.3s ease"
-                                }}
-                              >
-                                ›
-                              </span>
-                            )}
-                            {selectedBox === option.id && (
-                              <span
-                                className="arrow-icon"
-                                style={{
-                                  fontSize: "20px",
-                                  color: "#3B4A66",
-                                  transform: "rotate(90deg)",
-                                  transition: "transform 0.3s ease"
-                                }}
-                              >
-                                ›
-                              </span>
-                            )}
                           </div>
 
+                          {selectedBox !== option.id && (
+                            <span
+                              className="arrow-icon"
+                              style={{
+                                fontSize: "20px",
+                                color: "#3B4A66",
+                                transition: "transform 0.3s ease"
+                              }}
+                            >
+                              ›
+                            </span>
+                          )}
                           {selectedBox === option.id && (
-                            <div className="mt-1" style={{
-                              animation: "fadeIn 0.3s ease",
-                              overflow: "hidden"
-                            }}>
-                              {/* <button className="btn schedule-btn d-flex align-items-center gap-2">
+                            <span
+                              className="arrow-icon"
+                              style={{
+                                fontSize: "20px",
+                                color: "#3B4A66",
+                                transform: "rotate(90deg)",
+                                transition: "transform 0.3s ease"
+                              }}
+                            >
+                              ›
+                            </span>
+                          )}
+                        </div>
+
+                        {selectedBox === option.id && (
+                          <div className="mt-1" style={{
+                            animation: "fadeIn 0.3s ease",
+                            overflow: "hidden"
+                          }}>
+                            {/* <button className="btn schedule-btn d-flex align-items-center gap-2">
                                 <span className="d-flex align-items-center small-icon">
                                   <AwaitingIcon className="text-success" />
                                 </span>
                                 <span className="schedule-time">1 hour</span>
                               </button> */}
-                            </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
+                      </div>
 
-                        {selectedBox === option.id && (
-                          <div style={{
-                            maxHeight: "1000px",
-                            overflow: "hidden",
-                            animation: "slideDown 0.3s ease",
-                            transition: "all 0.3s ease"
-                          }}>
-                            <div className="selection-box">
-                              <div className="row">
-                                <div className="col-7">
-                                  <h6 className="selection-title">Select a date</h6>
+                      {selectedBox === option.id && (
+                        <div style={{
+                          maxHeight: "1000px",
+                          overflow: "hidden",
+                          animation: "slideDown 0.3s ease",
+                          transition: "all 0.3s ease"
+                        }}>
+                          <div className="selection-box">
+                            <div className="row">
+                              <div className="col-7">
+                                <h6 className="selection-title">Select a date</h6>
 
-                                  {/* Month/Year Navigation */}
-                                  <div className="d-flex justify-content-between align-items-center mb-2" style={{
-                                    fontFamily: "BasisGrotesquePro",
-                                    color: "#6B7280",
-                                    fontSize: "14px"
-                                  }}>
-                                    <span>{monthNames[currentMonth]} {currentYear}</span>
-                                    <div className="d-flex align-items-center gap-2">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigateMonth(-1);
-                                        }}
-                                        style={{
-                                          border: "none",
-                                          background: "transparent",
-                                          cursor: "pointer",
-                                          fontSize: "16px",
-                                          color: "#374151",
-                                          padding: "4px 8px"
-                                        }}
-                                      >
-                                        &lt;
-                                      </button>
-                                      <span style={{ minWidth: "50px", textAlign: "center" }}>
-                                        {monthNamesShort[currentMonth]}
-                                      </span>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigateMonth(1);
-                                        }}
-                                        style={{
-                                          border: "none",
-                                          background: "transparent",
-                                          cursor: "pointer",
-                                          fontSize: "16px",
-                                          color: "#374151",
-                                          padding: "4px 8px"
-                                        }}
-                                      >
-                                        &gt;
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* Days of Week Header */}
-                                  <div className="d-flex mb-2" style={{
-                                    borderBottom: "1px solid #E5E7EB",
-                                    paddingBottom: "8px"
-                                  }}>
-                                    {dayNames.map((day) => (
-                                      <div
-                                        key={day}
-                                        style={{
-                                          flex: 1,
-                                          textAlign: "center",
-                                          fontSize: "12px",
-                                          color: "#6B7280",
-                                          fontFamily: "BasisGrotesquePro",
-                                          fontWeight: 400
-                                        }}
-                                      >
-                                        {day}
-                                      </div>
-                                    ))}
-                                  </div>
-
-                                  {/* Calendar Grid */}
-                                  <div className="calendar-grid">
-                                    {loadingAvailableDates && (
-                                      <div className="d-flex justify-content-center align-items-center" style={{
-                                        gridColumn: "1 / -1",
-                                        padding: "20px",
-                                        fontSize: "13px",
-                                        color: "#6B7280",
-                                        fontFamily: "BasisGrotesquePro"
-                                      }}>
-                                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                        Loading available dates...
-                                      </div>
-                                    )}
-                                    {!loadingAvailableDates && generateCalendarDays().map((date, index) => {
-                                      const isCurrentMonth = date.getMonth() === currentMonth;
-                                      const isSelected = selectedCalendarDate &&
-                                        date.toDateString() === selectedCalendarDate.toDateString();
-                                      const isAvailable = isDateAvailable(date);
-
-                                      // Only block past dates, allow all future available dates regardless of month
-                                      const today = new Date();
-                                      today.setHours(0, 0, 0, 0);
-                                      const dateToCheck = new Date(date);
-                                      dateToCheck.setHours(0, 0, 0, 0);
-                                      const isPast = dateToCheck < today;
-
-                                      // Make all available dates clickable (from any month if available)
-                                      const canSelect = isAvailable && !isPast;
-
-                                      return (
-                                        <button
-                                          key={index}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (canSelect) {
-                                              handleDateSelection(date);
-                                            }
-                                          }}
-                                          className={`calendar-btn ${isSelected ? "active" : ""}`}
-                                          disabled={!canSelect}
-                                          style={{
-                                            color: isCurrentMonth
-                                              ? (canSelect ? "#374151" : "#9CA3AF")
-                                              : (canSelect ? "#374151" : "#9CA3AF"),
-                                            fontWeight: isCurrentMonth ? 400 : 300,
-                                            opacity: canSelect ? 1 : 0.4,
-                                            cursor: canSelect ? 'pointer' : 'not-allowed',
-                                            backgroundColor: isSelected ? '#FF6600' : 'transparent'
-                                          }}
-                                        >
-                                          {date.getDate()}
-                                        </button>
-                                      );
-                                    })}
+                                {/* Month/Year Navigation */}
+                                <div className="d-flex justify-content-between align-items-center mb-2" style={{
+                                  fontFamily: "BasisGrotesquePro",
+                                  color: "#6B7280",
+                                  fontSize: "14px"
+                                }}>
+                                  <span>{monthNames[currentMonth]} {currentYear}</span>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigateMonth(-1);
+                                      }}
+                                      style={{
+                                        border: "none",
+                                        background: "transparent",
+                                        cursor: "pointer",
+                                        fontSize: "16px",
+                                        color: "#374151",
+                                        padding: "4px 8px"
+                                      }}
+                                    >
+                                      &lt;
+                                    </button>
+                                    <span style={{ minWidth: "50px", textAlign: "center" }}>
+                                      {monthNamesShort[currentMonth]}
+                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigateMonth(1);
+                                      }}
+                                      style={{
+                                        border: "none",
+                                        background: "transparent",
+                                        cursor: "pointer",
+                                        fontSize: "16px",
+                                        color: "#374151",
+                                        padding: "4px 8px"
+                                      }}
+                                    >
+                                      &gt;
+                                    </button>
                                   </div>
                                 </div>
 
-                                <div className="col-5">
-                                  <h6 className="selection-title">
-                                    Select a time
-                                    {loadingTimeSlots && (
-                                      <span className="ms-2">
-                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                          <span className="visually-hidden">Loading...</span>
-                                        </div>
-                                      </span>
-                                    )}
-                                  </h6>
+                                {/* Days of Week Header */}
+                                <div className="d-flex mb-2" style={{
+                                  borderBottom: "1px solid #E5E7EB",
+                                  paddingBottom: "8px"
+                                }}>
+                                  {dayNames.map((day) => (
+                                    <div
+                                      key={day}
+                                      style={{
+                                        flex: 1,
+                                        textAlign: "center",
+                                        fontSize: "12px",
+                                        color: "#6B7280",
+                                        fontFamily: "BasisGrotesquePro",
+                                        fontWeight: 400
+                                      }}
+                                    >
+                                      {day}
+                                    </div>
+                                  ))}
+                                </div>
 
-                                  {/* Duration */}
-                                  {/* <div style={{
+                                {/* Calendar Grid */}
+                                <div className="calendar-grid">
+                                  {loadingAvailableDates && (
+                                    <div className="d-flex justify-content-center align-items-center" style={{
+                                      gridColumn: "1 / -1",
+                                      padding: "20px",
+                                      fontSize: "13px",
+                                      color: "#6B7280",
+                                      fontFamily: "BasisGrotesquePro"
+                                    }}>
+                                      <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                      Loading available dates...
+                                    </div>
+                                  )}
+                                  {!loadingAvailableDates && generateCalendarDays().map((date, index) => {
+                                    const isCurrentMonth = date.getMonth() === currentMonth;
+                                    const isSelected = selectedCalendarDate &&
+                                      date.toDateString() === selectedCalendarDate.toDateString();
+                                    const isAvailable = isDateAvailable(date);
+
+                                    // Only block past dates, allow all future available dates regardless of month
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const dateToCheck = new Date(date);
+                                    dateToCheck.setHours(0, 0, 0, 0);
+                                    const isPast = dateToCheck < today;
+
+                                    // Make all available dates clickable (from any month if available)
+                                    const canSelect = isAvailable && !isPast;
+
+                                    return (
+                                      <button
+                                        key={index}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (canSelect) {
+                                            handleDateSelection(date);
+                                          }
+                                        }}
+                                        className={`calendar-btn ${isSelected ? "active" : ""}`}
+                                        disabled={!canSelect}
+                                        style={{
+                                          color: isCurrentMonth
+                                            ? (canSelect ? "#374151" : "#9CA3AF")
+                                            : (canSelect ? "#374151" : "#9CA3AF"),
+                                          fontWeight: isCurrentMonth ? 400 : 300,
+                                          opacity: canSelect ? 1 : 0.4,
+                                          cursor: canSelect ? 'pointer' : 'not-allowed',
+                                          backgroundColor: isSelected ? '#FF6600' : 'transparent'
+                                        }}
+                                      >
+                                        {date.getDate()}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="col-5">
+                                <h6 className="selection-title">
+                                  Select a time
+                                  {loadingTimeSlots && (
+                                    <span className="ms-2">
+                                      <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                      </div>
+                                    </span>
+                                  )}
+                                </h6>
+
+                                {/* Duration */}
+                                {/* <div style={{
                                     fontSize: "13px",
                                     color: "#6B7280",
                                     fontFamily: "BasisGrotesquePro",
@@ -1633,133 +1713,101 @@ export default function Appointments() {
                                     Duration: 1 hour
                                   </div> */}
 
-                                  {/* Timezone Selector */}
-                                  <div className="mb-3">
-                                    <select
-                                      className="form-select"
-                                      value={formData.timezone || 'eastern'}
-                                      onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                                      style={{
-                                        fontSize: "12px",
-                                        fontFamily: "BasisGrotesquePro",
-                                        color: "#374151",
-                                        border: "1px solid #E5E7EB",
-                                        borderRadius: "30px",
-                                        padding: "8px 35px 8px 12px",
-                                        backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
-                                        cursor: "pointer",
-                                        appearance: "none",
-                                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-                                        backgroundRepeat: "no-repeat",
-                                        backgroundPosition: "right 12px center",
-                                        backgroundSize: "16px 12px"
-                                      }}
-                                    >
-                                      <option value="eastern">Eastern Time - US & Canada (EST/EDT)</option>
-                                      <option value="central">Central Time - US & Canada (CST/CDT)</option>
-                                      <option value="mountain">Mountain Time - US & Canada (MST/MDT)</option>
-                                      <option value="pacific">Pacific Time - US & Canada (PST/PDT)</option>
-                                      <option value="alaska">Alaska Time (AKST/AKDT)</option>
-                                      <option value="hawaii">Hawaii Time (HST)</option>
-                                      <option value="utc">UTC (Coordinated Universal Time)</option>
-                                    </select>
-                                  </div>
-
-                                  <div className={`time-list ${selectedTime ? "clicked" : ""}`}>
-                                    {loadingTimeSlots ? (
-                                      <div className="text-center py-3">
-                                        <div className="spinner-border text-primary mb-2" role="status">
-                                          <span className="visually-hidden">Loading...</span>
-                                        </div>
-                                        <div>
-                                          <small>Loading available times for selected date...</small>
-                                        </div>
-                                      </div>
-                                    ) : availableTimeSlots.length > 0 ? (
-                                      availableTimeSlots.map((slot, index) => {
-                                        // Use start_time_display which is extracted from formatted_time
-                                        const timeDisplay = slot.start_time_display || slot.start_time;
-
-                                        return (
-                                          <button
-                                            key={slot.start_time || index}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (slot.is_available && !slot.is_booked) {
-                                                setSelectedTime(timeDisplay);
-                                                setSelectedTimeSlot(slot); // Store the full slot object
-                                              }
-                                            }}
-                                            className={`time-btn ${selectedTime === timeDisplay ? "active" : ""} ${!(slot.is_available && !slot.is_booked) ? "disabled" : ""}`}
-                                            disabled={!(slot.is_available && !slot.is_booked)}
-                                            style={{
-                                              opacity: (slot.is_available && !slot.is_booked) ? 1 : 0.5,
-                                              cursor: (slot.is_available && !slot.is_booked) ? 'pointer' : 'not-allowed'
-                                            }}
-                                          >
-                                            {timeDisplay}
-                                            {slot.is_booked && <small className="d-block">Booked</small>}
-                                          </button>
-                                        );
-                                      })
-                                    ) : selectedDate ? (
-                                      <div className="text-center py-2">
-                                        <small>No available time slots for this date</small>
-                                      </div>
-                                    ) : (
-                                      <div className="text-center py-2">
-                                        <small>Please select a date to see available times</small>
-                                      </div>
-                                    )}
-                                  </div>
-
+                                {/* Timezone Selector */}
+                                <div className="mb-3">
+                                  <select
+                                    className="form-select"
+                                    value={formData.timezone || 'eastern'}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
+                                    style={{
+                                      fontSize: "12px",
+                                      fontFamily: "BasisGrotesquePro",
+                                      color: "#374151",
+                                      border: "1px solid #E5E7EB",
+                                      borderRadius: "30px",
+                                      padding: "8px 35px 8px 12px",
+                                      backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
+                                      cursor: "pointer",
+                                      appearance: "none",
+                                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+                                      backgroundRepeat: "no-repeat",
+                                      backgroundPosition: "right 12px center",
+                                      backgroundSize: "16px 12px"
+                                    }}
+                                  >
+                                    <option value="eastern">Eastern Time - US & Canada (EST/EDT)</option>
+                                    <option value="central">Central Time - US & Canada (CST/CDT)</option>
+                                    <option value="mountain">Mountain Time - US & Canada (MST/MDT)</option>
+                                    <option value="pacific">Pacific Time - US & Canada (PST/PDT)</option>
+                                    <option value="alaska">Alaska Time (AKST/AKDT)</option>
+                                    <option value="hawaii">Hawaii Time (HST)</option>
+                                    <option value="utc">UTC (Coordinated Universal Time)</option>
+                                  </select>
                                 </div>
+
+                                <div className={`time-list ${selectedTime ? "clicked" : ""}`}>
+                                  {loadingTimeSlots ? (
+                                    <div className="text-center py-3">
+                                      <div className="spinner-border text-primary mb-2" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                      </div>
+                                      <div>
+                                        <small>Loading available times for selected date...</small>
+                                      </div>
+                                    </div>
+                                  ) : availableTimeSlots.length > 0 ? (
+                                    availableTimeSlots.map((slot, index) => {
+                                      // Use start_time_display which is extracted from formatted_time
+                                      const timeDisplay = slot.start_time_display || slot.start_time;
+
+                                      return (
+                                        <button
+                                          key={slot.start_time || index}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (slot.is_available && !slot.is_booked) {
+                                              setSelectedTime(timeDisplay);
+                                              setSelectedTimeSlot(slot); // Store the full slot object
+                                            }
+                                          }}
+                                          className={`time-btn ${selectedTime === timeDisplay ? "active" : ""} ${!(slot.is_available && !slot.is_booked) ? "disabled" : ""}`}
+                                          disabled={!(slot.is_available && !slot.is_booked)}
+                                          style={{
+                                            opacity: (slot.is_available && !slot.is_booked) ? 1 : 0.5,
+                                            cursor: (slot.is_available && !slot.is_booked) ? 'pointer' : 'not-allowed'
+                                          }}
+                                        >
+                                          {timeDisplay}
+                                          {slot.is_booked && <small className="d-block">Booked</small>}
+                                        </button>
+                                      );
+                                    })
+                                  ) : selectedDate ? (
+                                    <div className="text-center py-2">
+                                      <small>No available time slots for this date</small>
+                                    </div>
+                                  ) : (
+                                    <div className="text-center py-2">
+                                      <small>Please select a date to see available times</small>
+                                    </div>
+                                  )}
+                                </div>
+
                               </div>
                             </div>
-
-                            <div className="d-flex justify-content-between mt-3">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedBox(null);
-                                  setSelectedDate(null);
-                                  setSelectedTime(null);
-                                  setSelectedTimeSlot(null);
-                                  setAvailableTimeSlots([]);
-                                  setSelectedCalendarDate(null);
-                                }}
-                                style={{
-                                  background: "#ffffff",
-                                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                                  padding: "8px 16px",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontFamily: "BasisGrotesquePro",
-                                }}
-                              >
-                                Back
-                              </button>
-                              <button
-                                disabled={!hasSelectedDate || !hasSelectedTime}
-                                onClick={() => setStep(2)}
-                                className="nex-btn"
-                              >
-                                Next
-                              </button>
-                            </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
 
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
 
-            {/* Step 2 : Subject of Meeting */}
-            {step === 2 && (
-              <div style={{ padding: "20px" }}>
+            {/* Step 2 : Subject of Meeting - Shows below Step 1 when step >= 2 */}
+            {step >= 2 && (
+              <div ref={step2Ref} style={{ padding: "20px" }}>
                 {/* Staff Error Message - Show prominently if staff couldn't be loaded */}
                 {staffError && staffError.includes('associated with a firm') && (
                   <div className="alert alert-warning mb-3" role="alert" style={{
@@ -2139,22 +2187,9 @@ export default function Appointments() {
                   style={{
                     marginTop: "20px",
                     display: "flex",
-                    justifyContent: "space-between",
+                    justifyContent: "flex-end",
                   }}
                 >
-                  <button
-                    onClick={() => setStep(1)}
-                    style={{
-                      background: "#ffffff",
-                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontFamily: "BasisGrotesquePro",
-                    }}
-                  >
-                    Back
-                  </button>
                   <button
                     onClick={createAppointment}
                     disabled={
