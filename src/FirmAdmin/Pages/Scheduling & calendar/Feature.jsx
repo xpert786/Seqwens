@@ -153,7 +153,7 @@ const Feature = () => {
                 </div>
 
                 <div className="rounded-lg border border-[#E8F0FF] bg-white p-4 sm:p-6">
-                    <h3 className="text-lg font-semibold text-[#1E293B] mb-4 font-[BasisGrotesquePro]">System Features & Configuration</h3>
+                    <h4 className="text-lg font-semibold text-[#1E293B] mb-4 font-[BasisGrotesquePro]">System Features & Configuration</h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {featureCards.map((card) => (
                             <div key={card.title} className="rounded-xl !border border-[#E8F0FF] bg-white p-4 sm:p-5 flex flex-col gap-4">
@@ -195,7 +195,7 @@ const Feature = () => {
 
                 <div className="rounded-lg !border border-[#E8F0FF] bg-white">
                     <div className="px-4 sm:px-6 py-4 !border-b border-[#E8F0FF]">
-                        <h3 className="text-lg font-semibold text-[#1E293B] font-[BasisGrotesquePro]">Current Settings Overview</h3>
+                        <h4 className="text-lg font-semibold text-[#1E293B] font-[BasisGrotesquePro]">Current Settings Overview</h4>
                     </div>
                     <div className="px-3 sm:px-6 py-4 space-y-3">
                         <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_auto] items-center text-xs font-semibold uppercase tracking-wide text-[#3B4A66] font-[BasisGrotesquePro] px-4">

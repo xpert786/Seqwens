@@ -16,7 +16,7 @@ import DocumentManagement from './Pages/DocumentManagement';
 import FolderContents from './Pages/DocumentManagement/FolderContents';
 import PdfViewer from './Pages/DocumentManagement/PdfViewer';
 import Messages from './Pages/messages/Message';
-import FirmSettings from './Pages/FirmSettings';
+import FirmSettings from './Pages/FirmSetting/FirmSetting';
 import SupportCenter from './Pages/SupportCenter';
 import AccountSettings from './Pages/AccountSettings';
 import TaskManagementMain from './Pages/TaskManagement/TaskManagementMain';
@@ -25,9 +25,11 @@ import BillingManagement from './Pages/Billing/BillingManagement';
 import InvoiceDetails from './Pages/Billing/InvoiceDetails';
 import SchedulingCalendar from './Pages/Scheduling & calendar/SchedulingCalendar';
 import Appointments from './Pages/Scheduling & calendar/Appointments';
+import Staff from './Pages/Scheduling & calendar/Staff';
 import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
 import EmailTemplate from './Pages/Email-templates/EmailTemplate';
+import Integrations from './Pages/Integrations/Integrations';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -85,6 +87,7 @@ export default function FirmRoutes() {
         {/* Client Management routes */}
         <Route path="calendar" element={<SchedulingCalendar />} />
         <Route path="calendar/appointments" element={<Appointments />} />
+        <Route path="calendar/staff" element={<Staff />} />
         <Route path="documents" element={<DocumentManagement />}>
           <Route path="folder/:folderId" element={<FolderContents />}>
             <Route path="document/:documentId" element={<PdfViewer />} />
@@ -98,6 +101,7 @@ export default function FirmRoutes() {
         <Route path="workflow" element={<WorkflowTemp />} />
         <Route path="subscription" element={<SubscriptionManagement />} />
         <Route path="email-templates" element={<EmailTemplate />} />
+        <Route path="integrations" element={<Integrations />} />
         
         {/* System Administration routes */}
         <Route path="settings" element={<FirmSettings />} />

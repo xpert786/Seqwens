@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import TabNavigation from '../../Components/TabNavigation';
+import TabNavigation from '../Integrations/TabNavigation';
 import FoldersAndTagsView from './FoldersAndTagsView';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const stats = [
   {
@@ -46,20 +46,33 @@ const stats = [
   }
 ];
 
-const Toggle = ({ label, description, defaultOn }) => (
-  <div className="flex items-start justify-between rounded-lg px-2 py-2">
-    <div>
-      <p className="text-sm font-semibold text-[#1F2A55]">{label}</p>
-      {description && <p className="text-xs text-[#7B8AB2]">{description}</p>}
-    </div>
-    <label className="relative inline-flex cursor-pointer items-center">
-      <input type="checkbox" className="peer sr-only" defaultChecked={defaultOn} />
-      <div className="inline-flex h-6 w-11 items-center rounded-full bg-[#CBD5F5] px-1 peer-checked:bg-[#FF8A63]">
-        <span className="inline-block h-4 w-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+const Toggle = ({ label, description, defaultOn }) => {
+  const [isOn, setIsOn] = useState(defaultOn);
+  
+  return (
+    <div className="flex items-start justify-between rounded-lg px-2 py-2">
+      <div>
+        <p className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">{label}</p>
+        {description && <p className="text-xs text-[#7B8AB2] font-[BasisGrotesquePro]">{description}</p>}
       </div>
-    </label>
-  </div>
-);
+      <label className="relative inline-flex cursor-pointer items-center">
+        <input 
+          type="checkbox" 
+          className="sr-only" 
+          checked={isOn}
+          onChange={() => setIsOn(!isOn)}
+        />
+        <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${
+          isOn ? 'bg-[#FF8A63]' : 'bg-[#CBD5F5]'
+        }`}>
+          <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+            isOn ? 'translate-x-5' : 'translate-x-0'
+          }`} />
+        </div>
+      </label>
+    </div>
+  );
+};
 
 export default function EmailSettingsView() {
   return (
@@ -93,7 +106,7 @@ export default function EmailSettingsView() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">SMTP Host</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">SMTP Host</label>
                 <input
                   type="text"
                   defaultValue="smtp.gmail.com"
@@ -102,7 +115,7 @@ export default function EmailSettingsView() {
               </div>
               <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
                 <div>
-                  <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Port</label>
+                  <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Port</label>
                   <input
                     type="text"
                     defaultValue="587"
@@ -110,7 +123,7 @@ export default function EmailSettingsView() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Encryption</label>
+                  <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Encryption</label>
                   <select className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30">
                     <option>TLS</option>
                     <option>SSL</option>
@@ -118,7 +131,7 @@ export default function EmailSettingsView() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Username</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Username</label>
                 <input
                   type="email"
                   defaultValue="admin@taxpractice.com"
@@ -126,7 +139,7 @@ export default function EmailSettingsView() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Password</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Password</label>
                 <input
                   type="password"
                   defaultValue="********"
@@ -148,7 +161,7 @@ export default function EmailSettingsView() {
               <Toggle label="Enable Audit Trails" description="Track all template changes and usage" defaultOn />
 
               <div>
-                <label className="text-sm font-semibold tracking-wide text-[#3B4A66]">Default IRS Disclaimer</label>
+                <label className="text-sm font-semibold tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Default IRS Disclaimer</label>
                 <div className="rounded-2xl !border border-[#E8F0FF] bg-[#FFFFFF] p-4 text-sm text-[#1F2A55]">
                   This communication is for informational purposes only and does not constitute tax advice. Please consult with a qualified tax professional for specific guidance.
                 </div>
@@ -160,21 +173,21 @@ export default function EmailSettingsView() {
         <div className="space-y-6">
           <div className="rounded-2xl bg-white p-6 !border border-[#E8F0FF]">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold text-[#1F2A55]">Email Branding</h3>
+              <h3 className="text-lg font-regular text-[#1F2A55]">Email Branding</h3>
               <p className="text-sm text-[#7B8AB2]">Customize your email appearance</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">From Name</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">From Name</label>
                 <input
                   type="text"
                   defaultValue="Tax Practice Pro"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                  className="mt-1 w-full rounded-lg !border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">From Email</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">From Email</label>
                 <input
                   type="email"
                   defaultValue="noreply@taxpractice.com"
@@ -182,7 +195,7 @@ export default function EmailSettingsView() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Reply-To Email</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Reply-To Email</label>
                 <input
                   type="email"
                   defaultValue="support@taxpractice.com"
@@ -190,7 +203,7 @@ export default function EmailSettingsView() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Email Footer</label>
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Email Footer</label>
                 <textarea
                   rows={3}
                   defaultValue="© 2024 Tax Practice Pro. All rights reserved."
@@ -199,7 +212,7 @@ export default function EmailSettingsView() {
               </div>
               {/* Logo URL Section */}
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">
                   Logo URL
                 </label>
                 <input
@@ -218,7 +231,7 @@ export default function EmailSettingsView() {
 
               {/* Upload Logo Section */}
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">
+                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">
                   Upload Logo
                 </label>
                 <div className="mt-1 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#C8D5FF] bg-[#F8FBFF] p-6 text-sm">
@@ -261,7 +274,7 @@ export default function EmailSettingsView() {
               />
 
               <div>
-                <label className="text-xs font-semibold tracking-wide text-[#7B8AB2]">Reminder Frequency (days)</label>
+                <label className="text-sm font-semibold tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Reminder Frequency (days)</label>
                 <input
                   type="number"
                   defaultValue={3}
@@ -270,15 +283,16 @@ export default function EmailSettingsView() {
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-              <button className="rounded-lg px-4 py-2 text-sm font-semibold text-[#1F2A55] shadow-sm ring-1 ring-[#DDE5FF]">
+           
+          </div>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <button className="!rounded-lg px-4 py-2 text-sm font-regular text-[#3B4A66] bg-[#FFFFFF] !border border-[#E8F0FF]">
                 Test Email Configuration
               </button>
-              <button className="rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#FF7142]">
+              <button className="!rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-regular text-white transition hover:bg-[#FF7142]">
                 Save Settings
               </button>
             </div>
-          </div>
         </div>
       </div>
     </div>

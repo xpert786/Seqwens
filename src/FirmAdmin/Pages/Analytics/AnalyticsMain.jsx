@@ -4,7 +4,7 @@ import RevenueAnalysis from './RevenueAnalysis';
 import ClientAnalytics from './ClientAnalytics';
 import ServicePerformance from './ServicePerformance';
 import ComplianceReporting from './ComplianceReporting';
-import TabNavigation from '../../Components/TabNavigation';
+import TabNavigation from '../Integrations/TabNavigation';
 
 export default function AnalyticsMain() {
   const [activeTab, setActiveTab] = useState('Overview');

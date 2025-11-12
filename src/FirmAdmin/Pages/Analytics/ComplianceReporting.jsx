@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Line } from 'recharts';
-import TabNavigation from '../../Components/TabNavigation';
+import TabNavigation from '../Integrations/TabNavigation';
 
 const ComplianceReporting = ({ activeTab, setActiveTab, tabs }) => {
   // KPI Data for Compliance Reporting

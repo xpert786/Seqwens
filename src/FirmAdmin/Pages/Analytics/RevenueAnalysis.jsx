@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ComposedChart } from 'recharts';
-import TabNavigation from '../../Components/TabNavigation';
+import TabNavigation from '../Integrations/TabNavigation';
 
 export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
 

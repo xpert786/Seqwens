@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, Cell } from 'recharts';
-import TabNavigation from '../../Components/TabNavigation';
+import TabNavigation from '../Integrations/TabNavigation';
 
 export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
   // KPI Data
