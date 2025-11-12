@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MailIcon, CallIcon, WatIcon,DollerIcon, AppointIcon,DoccIcon } from '../../Components/icons';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { MailIcon, CallIcon, WatIcon, DollerIcon, AppointIcon, DoccIcon } from '../../Components/icons';
 import OverviewTab from './ClientTabs/OverviewTab';
 import DocumentsTab from './ClientTabs/DocumentsTab';
 import BillingTab from './ClientTabs/BillingTab';
@@ -9,11 +12,65 @@ import AppointmentsTab from './ClientTabs/AppointmentsTab';
 import DueDiligenceTab from './ClientTabs/DueDiligenceTab';
 import NotesTab from './ClientTabs/NotesTab';
 
+const API_BASE_URL = getApiBaseUrl();
+
 export default function ClientDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('Overview');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch client details from API
+  const fetchClientDetails = useCallback(async () => {
+    if (!id) {
+      setError('Client ID is required');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const token = getAccessToken();
+      const url = `${API_BASE_URL}/user/firm-admin/clients/${id}/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setClient(result.data);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      console.error('Error fetching client details:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to load client details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  // Fetch client details on mount
+  useEffect(() => {
+    fetchClientDetails();
+  }, [fetchClientDetails]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -29,37 +86,70 @@ export default function ClientDetails() {
     };
   }, [showDropdown]);
 
-  // Mock data for the client - in real app, this would come from an API
-  const client = {
-    id: id || 1,
-    name: 'John Doe',
-    email: 'john.doe@email.com',
-    phone: '(555) 123-4567',
-    ssn: '123-45-6789',
-    status: 'active',
-    filingStatus: 'Married',
-    gender: 'Male',
-    dob: 'August 27th, 1999',
+  // Map API data to component format
+  const clientData = client ? {
+    id: client.id,
+    initials: client.initials || '',
+    name: client.full_name || `${client.first_name} ${client.last_name}`,
+    firstName: client.first_name || '',
+    lastName: client.last_name || '',
+    profilePicture: client.profile_picture || null,
+    email: client.email || client.contact_details?.email || '',
+    phone: client.phone_number_formatted || client.phone_number || client.contact_details?.phone_formatted || client.contact_details?.phone || '',
+    phoneRaw: client.phone_number || client.contact_details?.phone || '',
+    ssn: client.ssn || client.personal_information?.ssn || '',
+    ssnValue: client.personal_information?.ssn_value || '',
+    status: client.status || client.account_details?.status || 'active',
+    filingStatus: client.filing_status || client.personal_information?.filing_status || '',
+    filingStatusValue: client.personal_information?.filing_status_value || '',
+
+    dob: client.personal_information?.date_of_birth || '',
+    dobValue: client.personal_information?.date_of_birth_value || '',
     address: {
-      line: 'No 35 Jimmy Ebi Street',
-      city: 'Yenagoa',
-      state: 'Bayelsa',
-      zip: '654133'
+      line: client.address?.address_line || '',
+      city: client.address?.city || '',
+      state: client.address?.state || '',
+      zip: client.address?.zip_code || ''
     },
     spouse: {
-      name: 'Xavier Woods',
-      gender: 'Male',
-      dob: 'March 27th, 1999',
-      ssn: '515424561LN23',
-      filingStatus: 'Married Filing Jointly'
+      name: client.spouse_information?.name || '',
+      firstName: client.spouse_information?.first_name || '',
+      middleName: client.spouse_information?.middle_name || '',
+      lastName: client.spouse_information?.last_name || '',
+
+      dob: client.spouse_information?.date_of_birth || '',
+      dobValue: client.spouse_information?.date_of_birth_value || '',
+      ssn: client.spouse_information?.ssn || '',
+      ssnValue: client.spouse_information?.ssn_value || '',
+      filingStatus: client.spouse_information?.filing_status || '',
+      filingStatusValue: client.spouse_information?.filing_status_value || ''
     },
-    assignedStaff: 'Michael Chen',
-    joinDate: '15-01-2024',
-    totalBilled: '$15,420',
-    documents: 10,
-    appointments: 3,
-    lastActivity: '2 days ago'
-  };
+    spouseContact: {
+      phone: client.spouse_contact_details?.phone || '',
+      email: client.spouse_contact_details?.email || ''
+    },
+    assignedStaff: {
+      id: client.account_details?.assigned_staff?.id || null,
+      name: client.account_details?.assigned_staff_name || client.account_details?.assigned_staff?.name || '',
+      email: client.account_details?.assigned_staff?.email || ''
+    },
+    joinDate: client.account_details?.join_date || '',
+    joinDateValue: client.account_details?.join_date_value || client.date_joined || '',
+    accountStatus: client.account_details?.status || 'active',
+    accountStatusDisplay: client.account_details?.status_display || 'Active',
+    totalBilled: client.statistics?.total_billed_formatted || '$0.00',
+    totalBilledRaw: client.statistics?.total_billed || 0,
+    documents: client.statistics?.documents || 0,
+    appointments: client.statistics?.appointments || 0,
+    lastActivity: client.statistics?.last_activity || client.last_activity?.last_active_relative || '',
+    lastActivityDetails: {
+      lastActive: client.last_activity?.last_active || '',
+      lastActiveDisplay: client.last_activity?.last_active_display || '',
+      lastActiveRelative: client.last_activity?.last_active_relative || ''
+    },
+    billingHistory: client.billing_history || [],
+    dateJoined: client.date_joined || ''
+  } : null;
 
   const tabs = [
     'Overview',
@@ -71,35 +161,101 @@ export default function ClientDetails() {
     'Notes'
   ];
 
-  const initials = (client.name || '')
+  const initials = clientData ? (clientData.initials || clientData.name || '')
     .split(' ')
     .map((n) => n[0])
     .join('')
-    .toUpperCase();
+    .toUpperCase() : '';
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading client details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !clientData) {
+    return (
+      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Back
+            </button>
+            <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Client Details</h4>
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error || 'Client not found'}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
       {/* Header Section */}
       <div className="mb-6">
-        <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Client Details</h4>
-        <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Detailed information about {client.name}</p>
+        <div className="flex items-center gap-4 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            style={{ borderRadius: '7px' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Back
+          </button>
+          <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Client Details</h4>
+        </div>
+        <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Detailed information about {clientData.name}</p>
       </div>
 
       {/* Client Profile Card */}
       <div className="bg-white rounded-xl p-6 mb-6 !border border-[#E8F0FF]">
         <div className="flex items-start gap-6">
           {/* Left Side - Avatar */}
-          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xl flex-shrink-0">
-            {initials}
+          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xl flex-shrink-0 overflow-hidden relative">
+            {clientData.profilePicture ? (
+              <img
+                src={clientData.profilePicture}
+                alt={clientData.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const fallback = e.target.parentElement.querySelector('.avatar-fallback');
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`w-full h-full flex items-center justify-center avatar-fallback ${clientData.profilePicture ? 'hidden' : ''}`}>
+              {initials}
+            </div>
           </div>
 
           {/* Center - Client Details */}
           <div className="flex-1">
             {/* Name and Status Badge */}
             <div className="flex items-center gap-3 mb-4">
-              <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">{client.name}</h3>
-              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#22C55E] text-white font-[BasisGrotesquePro]">
-                {client.status}
+              <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">{clientData.name}</h3>
+              <span className={`px-3 py-1 text-xs font-semibold rounded-full text-white font-[BasisGrotesquePro] ${clientData.status === 'active' ? 'bg-[#22C55E]' :
+                clientData.status === 'pending' ? 'bg-[#F59E0B]' :
+                  'bg-gray-500'
+                }`}>
+                {clientData.status.charAt(0).toUpperCase() + clientData.status.slice(1)}
               </span>
             </div>
 
@@ -110,7 +266,7 @@ export default function ClientDetails() {
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Email</div>
                 <div className="flex items-center gap-2">
                   <MailIcon />
-                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.email}</span>
+                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.email}</span>
                 </div>
               </div>
               {/* Phone - Row 1, Col 2 */}
@@ -118,18 +274,18 @@ export default function ClientDetails() {
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Phone</div>
                 <div className="flex items-center gap-2">
                   <CallIcon />
-                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.phone}</span>
+                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.phone}</span>
                 </div>
               </div>
               {/* Filing Status - Row 2, Col 1 */}
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Filing Status</div>
-                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.filingStatus}</div>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.filingStatus}</div>
               </div>
               {/* SSN - Row 2, Col 2 */}
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Social Security Number (SSN)</div>
-                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.ssn}</div>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.ssn || 'N/A'}</div>
               </div>
             </div>
           </div>
@@ -179,10 +335,10 @@ export default function ClientDetails() {
       {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total Billed', value: client.totalBilled, icon: <DollerIcon /> },
-          { label: 'Documents', value: client.documents, icon: <DoccIcon /> },
-          { label: 'Appointments', value: client.appointments, icon: <AppointIcon /> },
-          { label: 'Last Activity', value: client.lastActivity, icon: <WatIcon /> }
+          { label: 'Total Billed', value: clientData.totalBilled, icon: <DollerIcon /> },
+          { label: 'Documents', value: clientData.documents, icon: <DoccIcon /> },
+          { label: 'Appointments', value: clientData.appointments, icon: <AppointIcon /> },
+          { label: 'Last Activity', value: clientData.lastActivity, icon: <WatIcon /> }
         ].map((metric, index) => (
           <div key={index} className="bg-white rounded-lg p-4 !border border-[#E8F0FF] relative">
             {/* Icon at top right */}
@@ -205,8 +361,8 @@ export default function ClientDetails() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 !rounded-lg text-sm font-medium font-[BasisGrotesquePro] whitespace-nowrap transition-colors flex-shrink-0 ${activeTab === tab
-                  ? 'bg-[#3AD6F2] text-white'
-                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                ? 'bg-[#3AD6F2] text-white'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
             >
               {tab}
@@ -217,31 +373,31 @@ export default function ClientDetails() {
 
       {/* Tab Content */}
       {activeTab === 'Overview' && (
-        <OverviewTab client={client} />
+        <OverviewTab client={clientData} />
       )}
 
       {activeTab === 'Documents' && (
-        <DocumentsTab client={client} />
+        <DocumentsTab client={clientData} />
       )}
 
       {activeTab === 'Billing' && (
-        <BillingTab client={client} />
+        <BillingTab client={clientData} billingHistory={clientData.billingHistory} />
       )}
 
       {activeTab === 'Timeline' && (
-        <TimelineTab client={client} />
+        <TimelineTab client={clientData} />
       )}
 
       {activeTab === 'Appointments' && (
-        <AppointmentsTab client={client} />
+        <AppointmentsTab client={clientData} />
       )}
 
       {activeTab === 'Due-Diligence' && (
-        <DueDiligenceTab client={client} />
+        <DueDiligenceTab client={clientData} />
       )}
 
       {activeTab === 'Notes' && (
-        <NotesTab client={client} />
+        <NotesTab client={clientData} />
       )}
     </div>
   );

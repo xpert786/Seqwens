@@ -96,16 +96,44 @@ export default function ClientDetails() {
       if (result.success && result.data) {
         // Map API response to component structure
         const apiData = result.data;
+        
+        // Build spouse name from available fields
+        const spouseName = apiData.spouse_information?.name || 
+          (apiData.spouse_information?.first_name || apiData.spouse_information?.last_name
+            ? `${apiData.spouse_information.first_name || ''} ${apiData.spouse_information.middle_name || ''} ${apiData.spouse_information.last_name || ''}`.trim()
+            : '');
+        
+        // Map statistics with new structure
+        const statistics = apiData.statistics ? {
+          total_billed: apiData.statistics.total_billed || 0,
+          total_billed_formatted: apiData.statistics.total_billed_formatted || '$0.00',
+          documents: apiData.statistics.documents || 0,
+          appointments: apiData.statistics.appointments || 0,
+          last_activity: apiData.statistics.last_activity || apiData.last_activity?.last_active_relative || '',
+          // Maintain backward compatibility for old structure
+          tasks: apiData.statistics.tasks || { total: 0, pending: 0, completed: 0, high_priority: 0 },
+          invoices: apiData.statistics.invoices || { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 }
+        } : {
+          tasks: { total: 0, pending: 0, completed: 0, high_priority: 0 },
+          documents: { total: 0, archived: 0 },
+          invoices: { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 },
+          appointments: { total: 0, upcoming: 0 },
+          total_billed: 0,
+          total_billed_formatted: '$0.00',
+          last_activity: ''
+        };
+        
         const mappedClient = {
           id: apiData.id,
-          name: apiData.full_name || `${apiData.first_name} ${apiData.last_name}`,
+          name: apiData.full_name || `${apiData.first_name || ''} ${apiData.last_name || ''}`.trim(),
           email: apiData.email || apiData.contact_details?.email || '',
           phone: apiData.phone_number_formatted || apiData.phone_number || apiData.contact_details?.phone || '',
           ssn: apiData.personal_information?.ssn || '',
-          status: apiData.status || 'active',
+          status: apiData.status || apiData.account_details?.status || 'active',
           priority: apiData.priority || 'medium',
-          filingStatus: apiData.filing_status || apiData.personal_information?.filing_status || '',
-          dob: apiData.personal_information?.date_of_birth || '',
+          filingStatus: apiData.filing_status || apiData.personal_information?.filing_status || apiData.personal_information?.filing_status_value || '',
+          dob: apiData.personal_information?.date_of_birth || apiData.personal_information?.date_of_birth_value || '',
+          gender: apiData.personal_information?.gender || apiData.personal_information?.gender_value || '',
           address: {
             line: apiData.address?.address_line || '',
             city: apiData.address?.city || '',
@@ -113,18 +141,32 @@ export default function ClientDetails() {
             zip: apiData.address?.zip_code || '',
           },
           spouse: {
-            name: apiData.spouse_information?.name || '',
+            name: spouseName,
+            first_name: apiData.spouse_information?.first_name || '',
+            middle_name: apiData.spouse_information?.middle_name || '',
+            last_name: apiData.spouse_information?.last_name || '',
             ssn: apiData.spouse_information?.ssn || '',
             phone: apiData.spouse_contact_details?.phone || '',
             email: apiData.spouse_contact_details?.email || '',
+            gender: apiData.spouse_information?.gender || apiData.spouse_information?.gender_value || '',
+            dob: apiData.spouse_information?.date_of_birth || apiData.spouse_information?.date_of_birth_value || '',
+            filing_status: apiData.spouse_information?.filing_status || apiData.spouse_information?.filing_status_value || '',
           },
-          statistics: apiData.statistics || {
-            tasks: { total: 0, pending: 0, completed: 0, high_priority: 0 },
-            documents: { total: 0, archived: 0 },
-            invoices: { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 },
-            appointments: { total: 0, upcoming: 0 }
-          },
-          date_joined: apiData.date_joined || '',
+          statistics: statistics,
+          account_details: apiData.account_details ? {
+            assigned_staff: apiData.account_details.assigned_staff || null,
+            assigned_staff_name: apiData.account_details.assigned_staff_name || '',
+            join_date: apiData.account_details.join_date || '',
+            join_date_value: apiData.account_details.join_date_value || '',
+            status: apiData.account_details.status || 'active',
+            status_display: apiData.account_details.status_display || 'Active'
+          } : null,
+          last_activity: apiData.last_activity ? {
+            last_active: apiData.last_activity.last_active || '',
+            last_active_display: apiData.last_activity.last_active_display || '',
+            last_active_relative: apiData.last_activity.last_active_relative || ''
+          } : null,
+          date_joined: apiData.date_joined || apiData.account_details?.join_date_value || '',
           initials: apiData.initials || `${apiData.first_name?.[0] || ''}${apiData.last_name?.[0] || ''}`.toUpperCase(),
           client_tags: apiData.client_tags || []
         };
@@ -1001,6 +1043,14 @@ export default function ClientDetails() {
                 <div className="font-medium " style={{
                   color: "var(--Palette2-Dark-blue-100, #3B4A66)",
                 }}>{client.ssn || "N/A"}</div>
+                {client.gender && (
+                  <>
+                    <div className="text-xs text-gray-500 mt-3">Gender</div>
+                    <div className="font-medium " style={{
+                      color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                    }}>{client.gender}</div>
+                  </>
+                )}
               </div>
               <div className="flex justify-between">
                 <div>
@@ -1112,11 +1162,23 @@ export default function ClientDetails() {
                   <div className="font-medium text-gray-900">{client.spouse.name}</div>
                   <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
                   <div className="font-medium text-gray-900">{client.spouse.ssn || "N/A"}</div>
+                  {client.spouse.gender && (
+                    <>
+                      <div className="text-xs text-gray-500 mt-3">Gender</div>
+                      <div className="font-medium text-gray-900">{client.spouse.gender}</div>
+                    </>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <div>
                     <div className="text-xs text-gray-500 mt-3">Filing Status</div>
-                    <div className="font-medium text-gray-900">{client.filingStatus || "N/A"}</div>
+                    <div className="font-medium text-gray-900">{client.spouse.filing_status || client.filingStatus || "N/A"}</div>
+                    {client.spouse.dob && (
+                      <>
+                        <div className="text-xs text-gray-500 mt-3">Date of Birth</div>
+                        <div className="font-medium text-gray-900">{client.spouse.dob}</div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

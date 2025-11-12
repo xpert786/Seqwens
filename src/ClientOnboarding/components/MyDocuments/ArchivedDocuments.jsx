@@ -4,6 +4,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
 import { UpIcon } from '../icons';
 import "../../styles/Document.css";
+import Pagination from "../Pagination";
 
 export default function ArchivedDocuments() {
     const [documents, setDocuments] = useState([]);
@@ -14,6 +15,8 @@ export default function ArchivedDocuments() {
     const [selectedStatus, setSelectedStatus] = useState('All Status');
     const [categories, setCategories] = useState([]);
     const categoryMapRef = useRef({}); // Map category names to IDs (using ref to avoid re-renders)
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 3;
 
     // Fetch archived documents from the API
     const fetchArchivedDocuments = async (search = '', categoryId = null) => {
@@ -135,6 +138,17 @@ export default function ArchivedDocuments() {
 
         return matchesStatus && matchesCategory;
     });
+
+    // Reset to page 1 when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategory, selectedStatus, searchQuery]);
+
+    // Pagination for archived documents
+    const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredDocuments.length);
+    const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
 
     const handleRecover = async (docId) => {
         try {
@@ -390,17 +404,18 @@ export default function ArchivedDocuments() {
                         </p>
                     </div>
                 ) : (
-                    <div className="table-responsive">
-                        <table className="table" style={{ fontFamily: "BasisGrotesquePro" }}>
-                            <thead>
-                                <tr style={{ borderBottom: "1px solid #E8F0FF" }}>
-                                    <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>File Name</th>
-                                    <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>Category</th>
-                                    <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px", textAlign: "right" }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredDocuments.map((doc, index) => {
+                    <>
+                        <div className="table-responsive">
+                            <table className="table" style={{ fontFamily: "BasisGrotesquePro" }}>
+                                <thead>
+                                    <tr style={{ borderBottom: "1px solid #E8F0FF" }}>
+                                        <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>File Name</th>
+                                        <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px" }}>Category</th>
+                                        <th style={{ padding: "12px", color: "#3B4A66", fontWeight: "500", fontSize: "14px", textAlign: "right" }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedDocuments.map((doc, index) => {
                                     const docName = doc.document_name || doc.file_name || doc.name || doc.filename || 'Untitled Document';
                                     const docCategory = doc.category?.name || 'General';
                                     const fileUrl = doc.tax_documents || doc.file_url || '';
@@ -463,10 +478,22 @@ export default function ArchivedDocuments() {
                                             </td>
                                         </tr>
                                     );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                        {filteredDocuments.length > itemsPerPage && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                totalItems={filteredDocuments.length}
+                                itemsPerPage={itemsPerPage}
+                                startIndex={startIndex}
+                                endIndex={endIndex}
+                            />
+                        )}
+                    </>
                 )}
             </div>
         </div>

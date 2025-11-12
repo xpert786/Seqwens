@@ -1,435 +1,972 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TwouserIcon, Mails2Icon, CallIcon,PowersIcon,DownsIcon,UpperDownsIcon} from "../../Components/icons";
+import { toast } from 'react-toastify';
+import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon } from "../../Components/icons";
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import BulkImportModal from './BulkImportModal';
 import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
 
+const API_BASE_URL = getApiBaseUrl();
+
 
 export default function StaffManagement() {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState('All Staff');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [performanceFilter, setPerformanceFilter] = useState('all');
   const [showDropdown, setShowDropdown] = useState(null);
   const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [staffData, setStaffData] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [pendingInvitesSearch, setPendingInvitesSearch] = useState('');
+  const [pendingInvitesPage, setPendingInvitesPage] = useState(1);
+  const [pendingInvitesPagination, setPendingInvitesPagination] = useState({
+    total_count: 0,
+    page: 1,
+    page_size: 20
+  });
+  const [processingInviteId, setProcessingInviteId] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [summary, setSummary] = useState({
+    active_staff: 0,
+    pending_invites: 0,
+    avg_performance: 0,
+    training_pending: 0
+  });
+  const dropdownRefs = useRef({});
 
-  const staffData = [
-    {
-      id: 1,
-      name: 'Michael Chen',
-      title: 'Tax Performer',
-      subtitle: 'Mentor',
-      email: 'michael.chen@firm.com',
-      phone: '(555) 111-2222',
-      role: 'Tax Preparer',
-      roleLevel: 'Advanced',
-      status: 'Active',
-      clients: 15,
-      efficiency: 94,
-      tasksCompleted: 28,
-      compliance: 94,
-      onboarding: 94,
-      hireDate: 'Jan 15, 2022',
-      revenue: '$125K',
-      avatar: 'MC'
-    },
-    {
-      id: 2,
-      name: 'Sarah Martinez',
-      title: 'Manager',
-      subtitle: 'Leadership',
-      email: 'sarah.martinez@firm.com',
-      phone: '(555) 222-3333',
-      role: 'Tax Manager',
-      roleLevel: 'Manager',
-      status: 'Active',
-      clients: 12,
-      efficiency: 91,
-      tasksCompleted: 22,
-      compliance: 85,
-      onboarding: 85,
-      hireDate: 'Mar 10, 2021',
-      revenue: '$98K',
-      avatar: 'SM'
-    },
-    {
-      id: 3,
-      name: 'David Rodriguez',
-      title: 'New Hire',
-      subtitle: 'Training',
-      email: 'david.rodriguez@firm.com',
-      phone: '(555) 333-4444',
-      role: 'Tax Preparer',
-      roleLevel: 'Beginner',
-      status: 'Active',
-      clients: 18,
-      efficiency: 88,
-      tasksCompleted: 31,
-      compliance: 92,
-      onboarding: 92,
-      hireDate: 'Sep 5, 2022',
-      revenue: '$85K',
-      avatar: 'DR'
-    },
-    {
-      id: 4,
-      name: 'Lisa Thompson',
-      title: 'Admin Support',
-      subtitle: 'On Leave',
-      email: 'lisa.thompson@firm.com',
-      phone: '(555) 444-5555',
-      role: 'Tax Preparer',
-      roleLevel: 'Beginner',
-      status: 'Active',
-      clients: 10,
-      efficiency: 92,
-      tasksCompleted: 18,
-      compliance: 80,
-      onboarding: 80,
-      hireDate: 'Nov 20, 2023',
-      revenue: '$60K',
-      avatar: 'LT'
-    },
-    {
-      id: 5,
-      name: 'James Wilson',
-      title: 'Inactive',
-      subtitle: 'CPA',
-      email: 'james.wilson@firm.com',
-      phone: '(555) 555-6666',
-      role: 'Tax Preparer',
-      roleLevel: 'Advanced',
-      status: 'Inactive',
-      clients: 0,
-      efficiency: 0,
-      tasksCompleted: 0,
-      compliance: 65,
-      onboarding: 65,
-      hireDate: 'Jun 1, 2025',
-      revenue: '$55K',
-      avatar: 'JW'
+  // Fetch staff members from API
+  const fetchStaffMembers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+
+      // Map filter values to API format
+      if (activeFilter && activeFilter !== 'all') {
+        queryParams.append('status', activeFilter);
+      } else {
+        queryParams.append('status', 'all');
+      }
+
+      if (searchTerm.trim()) {
+        queryParams.append('search', searchTerm.trim());
+      } else {
+        queryParams.append('search', '');
+      }
+
+      if (roleFilter && roleFilter !== 'all') {
+        queryParams.append('role', roleFilter);
+      } else {
+        queryParams.append('role', 'all');
+      }
+
+      if (performanceFilter && performanceFilter !== 'all') {
+        queryParams.append('performance', performanceFilter);
+      } else {
+        queryParams.append('performance', 'all');
+      }
+
+      const url = `${API_BASE_URL}/user/firm-admin/staff/tax-preparers/?${queryParams.toString()}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setStaffData(result.data.staff_members || []);
+
+        // Calculate summary from staff data
+        const activeCount = result.data.staff_members?.filter(
+          (staff) => staff.status?.value === 'active'
+        ).length || 0;
+
+        // Pending invites count will be updated from fetchPendingInvites
+
+        const performances = result.data.staff_members
+          ?.map((staff) => staff.performance?.efficiency_percentage || 0)
+          .filter((p) => p > 0) || [];
+        const avgPerformance = performances.length > 0
+          ? (performances.reduce((a, b) => a + b, 0) / performances.length).toFixed(1)
+          : 0;
+
+        setSummary({
+          active_staff: activeCount,
+          pending_invites: summary.pending_invites, // Will be updated from fetchPendingInvites
+          avg_performance: avgPerformance,
+          training_pending: 0 // This might need to come from API in future
+        });
+      } else {
+        setStaffData([]);
+        setSummary({
+          active_staff: 0,
+          pending_invites: 0,
+          avg_performance: 0,
+          training_pending: 0
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching staff members:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to load staff members. Please try again.');
+      setStaffData([]);
+    } finally {
+      setLoading(false);
     }
+  }, [activeFilter, searchTerm, roleFilter, performanceFilter]);
+
+  // Fetch pending invites from API
+  const fetchPendingInvites = useCallback(async () => {
+    try {
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+
+      if (pendingInvitesSearch.trim()) {
+        queryParams.append('search', pendingInvitesSearch.trim());
+      }
+
+      queryParams.append('page', pendingInvitesPage.toString());
+      queryParams.append('page_size', '20');
+
+      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/pending${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setPendingInvites(result.data.pending_invites || []);
+        setPendingInvitesPagination({
+          total_count: result.data.total_count || 0,
+          page: result.data.page || 1,
+          page_size: result.data.page_size || 20
+        });
+
+        // Update summary with pending invites count
+        setSummary(prev => ({
+          ...prev,
+          pending_invites: result.data.total_count || 0
+        }));
+      } else {
+        setPendingInvites([]);
+        setPendingInvitesPagination({
+          total_count: 0,
+          page: 1,
+          page_size: 20
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching pending invites:', err);
+      setPendingInvites([]);
+    }
+  }, [pendingInvitesSearch, pendingInvitesPage, API_BASE_URL]);
+
+  // Debounce search for pending invites
+  const [debouncedPendingInvitesSearch, setDebouncedPendingInvitesSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPendingInvitesSearch(pendingInvitesSearch);
+      setPendingInvitesPage(1); // Reset to page 1 when search changes
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [pendingInvitesSearch]);
+
+  // Fetch pending invites on mount and when search/page changes
+  useEffect(() => {
+    fetchPendingInvites();
+  }, [fetchPendingInvites, debouncedPendingInvitesSearch]);
+
+  // Reset pending invites page when filter changes
+  useEffect(() => {
+    if (activeFilter === 'pending_invites') {
+      setPendingInvitesPage(1);
+    }
+  }, [activeFilter]);
+
+  // Handle resend invite
+  const handleResendInvite = async (inviteId) => {
+    try {
+      setProcessingInviteId(inviteId);
+      setShowDropdown(null); // Close dropdown
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/${inviteId}/resend/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Invitation email resent successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        // Refresh the pending invites list
+        fetchPendingInvites();
+      } else {
+        throw new Error(result.message || 'Failed to resend invitation');
+      }
+    } catch (err) {
+      console.error('Error resending invite:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to resend invitation. Please try again.', {
+        position: "top-right",
+        autoClose: 4000,
+      });
+    } finally {
+      setProcessingInviteId(null);
+    }
+  };
+
+  // Handle cancel invite
+  const handleCancelInvite = async (inviteId) => {
+    try {
+      setProcessingInviteId(inviteId);
+      setShowDropdown(null); // Close dropdown
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/${inviteId}/cancel/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Invitation cancelled successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        // Refresh the pending invites list
+        fetchPendingInvites();
+      } else {
+        throw new Error(result.message || 'Failed to cancel invitation');
+      }
+    } catch (err) {
+      console.error('Error cancelling invite:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to cancel invitation. Please try again.', {
+        position: "top-right",
+        autoClose: 4000,
+      });
+    } finally {
+      setProcessingInviteId(null);
+    }
+  };
+
+  // Fetch staff members on mount and when filters change
+  useEffect(() => {
+    fetchStaffMembers();
+  }, [fetchStaffMembers]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDropdown !== null) {
+        // Check if click is outside the button and dropdown
+        const dropdownElement = dropdownRefs.current[showDropdown];
+        const isClickOnButton = event.target.closest('button[data-dropdown-trigger]');
+        const isClickOnDropdown = event.target.closest('[data-dropdown-menu]');
+
+        if (!isClickOnButton && !isClickOnDropdown && dropdownElement && !dropdownElement.contains(event.target)) {
+          setShowDropdown(null);
+        }
+      }
+    };
+
+    if (showDropdown !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  // Helper function to get initials from name
+  const getInitials = (name) => {
+    if (!name) return 'NA';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Map API data to UI format
+  const mapStaffData = (staff) => {
+    const name = staff.staff_member?.name || 'N/A';
+    const tags = staff.staff_member?.tags || [];
+    const profilePicture = staff.staff_member?.profile_picture;
+
+    return {
+      id: staff.id,
+      name: name,
+      title: tags[0] || '',
+      subtitle: tags.slice(1).join(', ') || '',
+      email: staff.contact?.email || 'N/A',
+      phone: staff.contact?.phone || 'N/A',
+      role: staff.role?.primary || 'N/A',
+      roleLevel: staff.role?.level || '',
+      roleType: staff.role?.role_type || '',
+      status: staff.status?.display || staff.status?.value || 'N/A',
+      statusValue: staff.status?.value || '',
+      isActive: staff.status?.is_active || false,
+      clients: staff.clients?.count || 0,
+      efficiency: staff.performance?.efficiency_percentage || 0,
+      tasksCompleted: staff.performance?.tasks_completed || 0,
+      compliance: staff.compliance?.percentage || 0,
+      onboarding: staff.onboarding?.percentage || 0,
+      hireDate: staff.hire_date?.display || staff.hire_date?.date || 'N/A',
+      revenue: staff.revenue?.display || `$${staff.revenue?.amount || 0}`,
+      avatar: getInitials(name),
+      profilePicture: profilePicture
+    };
+  };
+
+  const filters = [
+    { label: 'All Staff', value: 'all' },
+    { label: 'Active', value: 'active' },
+    { label: 'Inactive', value: 'inactive' },
+    { label: 'Pending Invites', value: 'pending_invites' }
   ];
 
-  const filters = ['All Staff', 'Active', 'Inactive', 'Pending Invites'];
+  const roleOptions = [
+    { label: 'All Roles', value: 'all' },
+    { label: 'Tax Preparer', value: 'tax_preparer' },
+    { label: 'Senior Tax Preparer', value: 'senior_tax_preparer' },
+    { label: 'Team Leader', value: 'team_leader' },
+    { label: 'Mentor', value: 'mentor' },
+    { label: 'Specialist', value: 'specialist' }
+  ];
 
-  const handleDropdownToggle = (id) => {
-    setShowDropdown(showDropdown === id ? null : id);
+  const performanceOptions = [
+    { label: 'All Performance', value: 'all' },
+    { label: 'High', value: 'high' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'Low', value: 'low' }
+  ];
+
+  const handleDropdownToggle = (id, event) => {
+    if (showDropdown === id) {
+      setShowDropdown(null);
+    } else {
+      const button = event?.currentTarget;
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY + 4,
+          right: window.innerWidth - rect.right
+        });
+      }
+      setShowDropdown(id);
+    }
   };
 
   return (
     <>
-      <BulkImportModal 
-        isOpen={isBulkImportModalOpen} 
-        onClose={() => setIsBulkImportModalOpen(false)} 
+      <BulkImportModal
+        isOpen={isBulkImportModalOpen}
+        onClose={() => setIsBulkImportModalOpen(false)}
         onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
       />
       <DownloadModal isOpen={isDownloadModalOpen} onClose={() => setIsDownloadModalOpen(false)} />
       <AddStaffModal isOpen={isAddStaffModalOpen} onClose={() => setIsAddStaffModalOpen(false)} />
       <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
-      {/* Header and Action Buttons */}
-      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4">
-        {/* Header */}
-        <div className="flex-1">
-          <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Staff Management</h4>
-          <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Manage team members and their assignments</p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          {/* Top Row - 3 buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
-              <PowersIcon />
-              Performance Report
-            </button>
-            <button 
-              onClick={() => setIsBulkImportModalOpen(true)}
-              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
-            >
-              <UpperDownsIcon />
-              Bulk Import
-            </button>
-            <button 
-              onClick={() => setIsAddStaffModalOpen(true)}
-              className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Staff Member
-            </button>
+        {/* Header and Action Buttons */}
+        <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4">
+          {/* Header */}
+          <div className="flex-1">
+            <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Staff Management</h4>
+            <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Manage team members and their assignments</p>
           </div>
-          
-          {/* Bottom Row - 1 button */}
-          <div className="flex items-center">
-            <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
-              <DownsIcon />
-              Export Report
-            </button>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            {/* Top Row - 3 buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+                <PowersIcon />
+                Performance Report
+              </button>
+              <button
+                onClick={() => setIsBulkImportModalOpen(true)}
+                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+              >
+                <UpperDownsIcon />
+                Bulk Import
+              </button>
+              <button
+                onClick={() => setIsAddStaffModalOpen(true)}
+                className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Staff Member
+              </button>
+            </div>
+
+            {/* Bottom Row - 1 button */}
+            <div className="flex items-center">
+              <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+                <DownsIcon />
+                Export Report
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-4 text-left">
-          <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Active Staff</div>
-          <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">4</div>
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg p-4 text-left">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Active Staff</div>
+            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.active_staff}</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-left">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Pending Invites</div>
+            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.pending_invites}</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-left">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Avg Performance</div>
+            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.avg_performance}%</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-left">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Training Pending</div>
+            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.training_pending}</div>
+          </div>
         </div>
-        <div className="bg-white rounded-lg p-4 text-left">
-          <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Pending Invites</div>
-          <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">2</div>
-        </div>
-        <div className="bg-white rounded-lg p-4 text-left">
-          <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Avg Performance</div>
-          <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">3.8</div>
-        </div>
-        <div className="bg-white rounded-lg p-4 text-left">
-          <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Training Pending</div>
-          <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">2</div>
-        </div>
-      </div>
 
-      {/* Staff Status Filters */}
-      <div className="bg-white rounded-lg p-3 mb-6 w-fit">
-        <div className="flex items-center gap-1">
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-3 py-2 !rounded-[8px] text-sm font-medium font-[BasisGrotesquePro] transition-colors transition-transform focus:outline-none active:scale-[0.98] ${
-                activeFilter === filter
+        {/* Staff Status Filters */}
+        <div className="bg-white rounded-lg p-3 mb-6 w-fit">
+          <div className="flex items-center gap-1">
+            {filters.map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => setActiveFilter(filter.value)}
+                className={`px-3 py-2 !rounded-[8px] text-sm font-medium font-[BasisGrotesquePro] transition-colors transition-transform focus:outline-none active:scale-[0.98] ${activeFilter === filter.value
                   ? 'bg-[#3AD6F2] text-white ring-2 ring-[#3AD6F2]/40 shadow-sm'
                   : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Team Members Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Team Members (5)</h2>
-          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">Complete list of staff members with performance metrics</p>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="p-4 lg:p-6 border-b border-gray-200">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Search staff by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option>All Roles</option>
-                <option>Tax Preparer</option>
-                <option>Tax Manager</option>
-                <option>Admin</option>
-              </select>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option>All Departments</option>
-                <option>Tax Preparation</option>
-                <option>Management</option>
-                <option>Support</option>
-              </select>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option>All Performance</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
-              </select>
-            </div>
+                  }`}
+              >
+                {filter.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Staff Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-[1200px] divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Staff Member</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Contact</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[120px]">Role</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Clients</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Performance</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Compliance</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Onboarding</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Hire Date</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Revenue</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Action</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {staffData.map((staff) => (
-                <tr key={staff.id} className="hover:bg-gray-50">
-                  {/* Staff Member */}
-                  <td className="px-4 py-4 w-[200px]">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                          {staff.avatar}
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">{staff.name}</div>
-                        <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{staff.title}</div>
-                        <div className="text-xs text-gray-400 font-[BasisGrotesquePro]">{staff.subtitle}</div>
-                      </div>
-                    </div>
-                  </td>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
-                  {/* Contact */}
-                  <td className="px-4 py-4 w-[180px]">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Mails2Icon />
-                      <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{staff.email}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CallIcon />
-                      <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{staff.phone}</div>
-                    </div>
-                  </td>
+        {/* Team Members Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 lg:p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">
+              {activeFilter === 'pending_invites'
+                ? `Pending Invites (${pendingInvites.length})`
+                : `Team Members (${staffData.length})`}
+            </h2>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+              {activeFilter === 'pending_invites'
+                ? 'Staff members who have been invited but not yet accepted'
+                : 'Complete list of staff members with performance metrics'}
+            </p>
+          </div>
 
-                  {/* Role */}
-                  <td className="px-4 py-4 w-[120px]">
-                    <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{staff.role}</div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-[BasisGrotesquePro] ${
-                      staff.roleLevel === 'Advanced'
-                        ? 'bg-gray-100 text-gray-700'
-                        : staff.roleLevel === 'Manager'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-green-100 text-green-700'
-                    }`}>
-                      {staff.roleLevel}
-                    </span>
-                  </td>
+          {/* Search and Filter Bar */}
+          <div className="p-4 lg:p-6 border-b border-gray-200">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder={activeFilter === 'pending_invites' ? "Search pending invites..." : "Search staff by name or email..."}
+                  value={activeFilter === 'pending_invites' ? pendingInvitesSearch : searchTerm}
+                  onChange={(e) => {
+                    if (activeFilter === 'pending_invites') {
+                      setPendingInvitesSearch(e.target.value);
+                    } else {
+                      setSearchTerm(e.target.value);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (activeFilter === 'pending_invites') {
+                        fetchPendingInvites();
+                      } else {
+                        fetchStaffMembers();
+                      }
+                    }
+                  }}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {roleOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={performanceFilter}
+                  onChange={(e) => setPerformanceFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {performanceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
 
-                  {/* Status */}
-                  <td className="px-4 py-4 w-[100px]">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      staff.status === 'Active' 
-                        ? 'bg-[#22C55E] text-white' 
-                        : 'bg-[#EF4444] text-white'
-                    }`}>
-                      {staff.status}
-                    </span>
-                  </td>
+          {/* Staff Table / Pending Invites Table */}
+          <div className="overflow-x-auto">
+            {loading && activeFilter !== 'pending_invites' ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading staff members...</p>
+              </div>
+            ) : activeFilter === 'pending_invites' ? (
+              // Pending Invites Table
+              pendingInvites.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No pending invites found</p>
+                </div>
+              ) : (
+                <table className="min-w-[1200px] divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[120px]">Role</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Invited By</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Invited At</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Expires At</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingInvites.map((invite) => (
+                      <tr key={invite.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 w-[200px]">
+                          <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">{invite.name}</div>
+                        </td>
+                        <td className="px-4 py-4 w-[180px]">
+                          <div className="flex items-center gap-2">
+                            <Mails2Icon />
+                            <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.email}</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 w-[120px]">
+                          <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.role_display || invite.role}</div>
+                        </td>
+                        <td className="px-4 py-4 w-[150px]">
+                          <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.invited_by || 'N/A'}</div>
+                        </td>
+                        <td className="px-4 py-4 w-[150px]">
+                          <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.invited_at_formatted || 'N/A'}</div>
+                        </td>
+                        <td className="px-4 py-4 w-[150px]">
+                          <div className={`text-sm font-[BasisGrotesquePro] ${invite.is_expired ? 'text-red-600' : 'text-gray-900'}`}>
+                            {invite.expires_at_formatted || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 w-[100px]">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${invite.is_expired
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-[#F59E0B] text-white'
+                            }`}>
+                            {invite.is_expired ? 'Expired' : (invite.status_display || invite.status)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 w-[80px]">
+                          <div className="relative dropdown-container">
+                            <button
+                              onClick={() => handleDropdownToggle(`invite-${invite.id}`)}
+                              className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                              </svg>
+                            </button>
+                            {showDropdown === `invite-${invite.id}` && (
+                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200" style={{ zIndex: 9999 }}>
+                                <div className="py-1">
+                                  <button
+                                    onClick={() => handleResendInvite(invite.id)}
+                                    disabled={processingInviteId === invite.id || invite.is_expired}
+                                    className={`block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] transition-colors ${processingInviteId === invite.id || invite.is_expired
+                                      ? 'text-gray-400 cursor-not-allowed'
+                                      : 'text-gray-700 hover:bg-gray-100'
+                                      }`}
+                                  >
+                                    {processingInviteId === invite.id ? 'Processing...' : 'Resend Invite'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm('Are you sure you want to cancel this invitation? This action cannot be undone.')) {
+                                        handleCancelInvite(invite.id);
+                                      }
+                                    }}
+                                    disabled={processingInviteId === invite.id || invite.is_expired}
+                                    className={`block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] transition-colors ${processingInviteId === invite.id || invite.is_expired
+                                      ? 'text-gray-400 cursor-not-allowed'
+                                      : 'text-gray-700 hover:bg-gray-100'
+                                      }`}
+                                  >
+                                    {processingInviteId === invite.id ? 'Processing...' : 'Cancel Invite'}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )
+            ) : null}
 
-                  {/* Clients */}
-                  <td className="px-4 py-4 w-[80px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <TwouserIcon />
-                      </div>
-                      <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{staff.clients}</span>
-                    </div>
-                  </td>
+            {/* Pending Invites Pagination */}
+            {activeFilter === 'pending_invites' && pendingInvitesPagination.total_count > pendingInvitesPagination.page_size && (
+              <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                  Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of {pendingInvitesPagination.total_count} invites
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPendingInvitesPage(prev => Math.max(1, prev - 1))}
+                    disabled={pendingInvitesPage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size) }, (_, i) => i + 1)
+                      .filter((page) => {
+                        const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
+                        return (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= pendingInvitesPage - 1 && page <= pendingInvitesPage + 1)
+                        );
+                      })
+                      .map((page, index, array) => {
+                        const totalPages = Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size);
+                        const prevPage = array[index - 1];
+                        const showEllipsisBefore = prevPage && page - prevPage > 1;
+                        const showEllipsisAfter = index === array.length - 1 && page < totalPages;
 
-                  {/* Performance */}
-                  <td className="px-4 py-4 w-[150px]">
-                    <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">Efficiency {staff.efficiency}%</div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div 
-                        className="bg-[#3AD6F2] h-2 rounded-full" 
-                        style={{width: `${staff.efficiency}%`}}
-                      ></div>
-                    </div>
-                    <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">{staff.tasksCompleted} Tasks Completed</div>
-                  </td>
+                        return (
+                          <React.Fragment key={page}>
+                            {showEllipsisBefore && (
+                              <span className="px-2 text-gray-500">...</span>
+                            )}
+                            <button
+                              onClick={() => setPendingInvitesPage(page)}
+                              className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${pendingInvitesPage === page
+                                ? 'bg-[#F56D2D] text-white'
+                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                              {page}
+                            </button>
+                            {showEllipsisAfter && (
+                              <span className="px-2 text-gray-500">...</span>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                  </div>
+                  <button
+                    onClick={() => setPendingInvitesPage(prev => Math.min(Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size), prev + 1))}
+                    disabled={pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)}
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
 
-                  {/* Compliance */}
-                  <td className="px-4 py-4 w-[100px]">
-                    <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{staff.compliance}%</div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div 
-                        className="bg-[#3AD6F2] h-2 rounded-full" 
-                        style={{width: `${staff.compliance}%`}}
-                      ></div>
-                    </div>
-                  </td>
+            {activeFilter !== 'pending_invites' && (
+              <>
+                {staffData.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No staff members found</p>
+                  </div>
+                ) : (
+                  <table className="min-w-[1200px] divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Staff Member</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Contact</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[120px]">Role</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Clients</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Performance</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Hire Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Revenue</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {staffData.map((staff) => {
+                        const mappedStaff = mapStaffData(staff);
+                        return (
+                          <tr key={mappedStaff.id} className="hover:bg-gray-50">
+                            {/* Staff Member */}
+                            <td className="px-4 py-4 w-[200px]">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  {mappedStaff.profilePicture ? (
+                                    <img
+                                      src={mappedStaff.profilePicture}
+                                      alt={mappedStaff.name}
+                                      className="h-10 w-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                                      {mappedStaff.avatar}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-4">
+                                  <div
+                                    className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] cursor-pointer hover:text-blue-600 transition-colors"
+                                    onClick={() => {
+                                      navigate(`/firmadmin/staff/${mappedStaff.id}`);
+                                    }}
+                                  >
+                                    {mappedStaff.name}
+                                  </div>
+                                  {mappedStaff.title && (
+                                    <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{mappedStaff.title}</div>
+                                  )}
+                                  {mappedStaff.subtitle && (
+                                    <div className="text-xs text-gray-400 font-[BasisGrotesquePro]">{mappedStaff.subtitle}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
 
-                  {/* Onboarding */}
-                  <td className="px-4 py-4 w-[100px]">
-                    <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{staff.onboarding}%</div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div 
-                        className="bg-[#3AD6F2] h-2 rounded-full" 
-                        style={{width: `${staff.onboarding}%`}}
-                      ></div>
-                    </div>
-                  </td>
+                            {/* Contact */}
+                            <td className="px-4 py-4 w-[180px]">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Mails2Icon />
+                                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.email}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CallIcon />
+                                <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{mappedStaff.phone}</div>
+                              </div>
+                            </td>
 
-                  {/* Hire Date */}
-                  <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">
-                    {staff.hireDate}
-                  </td>
+                            {/* Role */}
+                            <td className="px-4 py-4 w-[120px]">
+                              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.role}</div>
+                              {mappedStaff.roleLevel && (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-[BasisGrotesquePro] mt-1 ${mappedStaff.roleLevel === 'Advanced'
+                                  ? 'bg-gray-100 text-gray-700'
+                                  : mappedStaff.roleLevel === 'Manager'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-green-100 text-green-700'
+                                  }`}>
+                                  {mappedStaff.roleLevel}
+                                </span>
+                              )}
+                            </td>
 
-                  {/* Revenue */}
-                  <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">
-                    {staff.revenue}
-                  </td>
+                            {/* Status */}
+                            <td className="px-4 py-4 w-[100px]">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${mappedStaff.statusValue === 'active' || mappedStaff.isActive
+                                ? 'bg-[#22C55E] text-white'
+                                : mappedStaff.statusValue === 'pending_invites'
+                                  ? 'bg-[#F59E0B] text-white'
+                                  : 'bg-[#EF4444] text-white'
+                                }`}>
+                                {mappedStaff.status}
+                              </span>
+                            </td>
 
-                  {/* Action */}
-                  <td className="px-4 py-4 w-[80px] text-sm font-medium relative">
-                    <button
-                      onClick={() => handleDropdownToggle(staff.id)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                    
-                    {showDropdown === staff.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                        <div className="py-1">
-                          <button 
-                            onClick={() => navigate(`/firmadmin/staff/${staff.id}`)}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-                          >
-                            View Details
-                          </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
-                            Edit Task
-                          </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
-                            Send Message
-                          </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
-                            Reassign Clients
-                          </button>
-                          <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
-                            Remove Staff
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                            {/* Clients */}
+                            <td className="px-4 py-4 w-[80px]">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <TwouserIcon />
+                                </div>
+                                <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.clients}</span>
+                              </div>
+                            </td>
+
+                            {/* Performance */}
+                            <td className="px-4 py-4 w-[150px]">
+                              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">Efficiency {mappedStaff.efficiency}%</div>
+                              <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                <div
+                                  className="bg-[#3AD6F2] h-2 rounded-full"
+                                  style={{ width: `${mappedStaff.efficiency}%` }}
+                                ></div>
+                              </div>
+                              <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">{mappedStaff.tasksCompleted} Tasks Completed</div>
+                            </td>
+
+                            {/* Hire Date */}
+                            <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">
+                              {mappedStaff.hireDate}
+                            </td>
+
+                            {/* Revenue */}
+                            <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">
+                              {mappedStaff.revenue}
+                            </td>
+
+                            {/* Action */}
+                            <td className="px-4 py-4 w-[80px] text-sm font-medium">
+                              <div
+                                ref={(el) => { dropdownRefs.current[mappedStaff.id] = el; }}
+                              >
+                                <button
+                                  onClick={(e) => handleDropdownToggle(mappedStaff.id, e)}
+                                  className="text-gray-400 hover:text-gray-600"
+                                  data-dropdown-trigger
+                                >
+                                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
-      </div>
+
+      {/* Dropdown Menu - Rendered outside table to avoid overflow issues */}
+      {showDropdown && staffData.find(s => {
+        const mapped = mapStaffData(s);
+        return mapped.id === showDropdown;
+      }) && (
+          <div
+            className="fixed w-48 bg-white rounded-md shadow-lg border border-gray-200"
+            data-dropdown-menu
+            style={{
+              zIndex: 9999,
+              top: `${dropdownPosition.top}px`,
+              right: `${dropdownPosition.right}px`
+            }}
+          >
+            <div className="py-1">
+              <button
+                onClick={() => setShowDropdown(null)}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
+              >
+                Edit Task
+              </button>
+              <button
+                onClick={() => setShowDropdown(null)}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
+              >
+                Send Message
+              </button>
+              <button
+                onClick={() => setShowDropdown(null)}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
+              >
+                Reassign Clients
+              </button>
+              <button
+                onClick={() => setShowDropdown(null)}
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
+              >
+                Remove Staff
+              </button>
+            </div>
+          </div>
+        )}
     </>
   );
 }

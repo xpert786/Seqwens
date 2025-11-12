@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import OverviewTab from './StaffTabs/OverviewTab';
 import AssignedClientsTab from './StaffTabs/AssignedClientsTab';
 import CurrentTasksTab from './StaffTabs/CurrentTasksTab';
@@ -12,26 +15,111 @@ export default function StaffDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('Overview');
+  const [staffData, setStaffData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data for the staff member - in real app, this would come from an API
-  const staffMember = {
-    id: 1,
-    name: 'Michael Chen',
-    title: 'Senior Tax Preparer',
-    status: 'Active',
-    email: 'michael.chen@firm.com',
-    phone: '(555) 987-6543',
-    address: '456 Oak Ave, New York, NY 10002',
-    department: 'Tax Preparation',
-    hireDate: '15-03-2023',
-    hoursWeek: '40',
-    clients: 45,
-    tasksDone: 128,
-    revenue: '$125K',
-    hours: 1840,
-    efficiency: 92,
-    specialties: ['Individual Tax Returns', 'Business Tax Returns', 'Tax Planning']
+  // Fetch staff details from API
+  useEffect(() => {
+    if (id) {
+      fetchStaffDetails();
+    }
+  }, [id]);
+
+  const fetchStaffDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/firm/staff/${id}/`;
+
+      const config = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setStaffData(result.data);
+      } else {
+        throw new Error(result.message || 'Failed to fetch staff details');
+      }
+    } catch (err) {
+      console.error('Error fetching staff details:', err);
+      setError(handleAPIError(err));
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Helper function to construct full profile picture URL
+  const getProfilePictureUrl = (url) => {
+    if (!url) return null;
+    // If URL already starts with http:// or https://, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // If URL starts with /, prepend API base URL (remove trailing slash from API_BASE_URL if present)
+    if (url.startsWith('/')) {
+      const API_BASE_URL = getApiBaseUrl();
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      return `${baseUrl}${url}`;
+    }
+    // Otherwise, assume it's a relative path and prepend API base URL
+    const API_BASE_URL = getApiBaseUrl();
+    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+    return `${baseUrl}${url}`;
+  };
+
+  // State to track if profile picture failed to load
+  const [profilePictureError, setProfilePictureError] = useState(false);
+
+  // Map API data to component format
+  const staffMember = staffData ? {
+    id: staffData.profile?.id || id,
+    name: staffData.profile?.name || 'N/A',
+    title: staffData.profile?.role_display || staffData.profile?.role || 'N/A',
+    status: staffData.profile?.status ? staffData.profile.status.charAt(0).toUpperCase() + staffData.profile.status.slice(1) : 'Active',
+    email: staffData.profile?.email || staffData.contact_information?.email || 'N/A',
+    phone: staffData.profile?.phone_number || staffData.contact_information?.phone || 'N/A',
+    address: staffData.contact_information?.address || 'N/A',
+    department: staffData.employment_details?.department || 'N/A',
+    hireDate: staffData.employment_details?.hire_date || 'N/A',
+    hoursWeek: staffData.employment_details?.hours_per_week?.toString() || 'N/A',
+    clients: staffData.kpis?.clients || 0,
+    tasksDone: staffData.kpis?.tasks_done || 0,
+    revenue: staffData.kpis?.revenue ? `$${(staffData.kpis.revenue / 1000).toFixed(0)}K` : '$0',
+    hours: staffData.kpis?.hours || 0,
+    efficiency: staffData.kpis?.efficiency || 0,
+    specialties: staffData.specialties || [],
+    initials: staffData.profile?.initials || 'NA',
+    profilePicture: getProfilePictureUrl(staffData.profile?.profile_picture_url)
+  } : null;
+
+  // Reset profile picture error when staff data changes
+  useEffect(() => {
+    if (staffData) {
+      setProfilePictureError(false);
+    }
+  }, [staffData]);
 
   const tabs = [
     'Overview',
@@ -77,10 +165,67 @@ export default function StaffDetails() {
     { id: 4, type: 'email', title: 'Email sent to client', client: 'Mike Johnson', date: '2024-03-17 09:20', icon: 'message' }
   ];
 
+  if (loading) {
+    return (
+      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading staff details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <button
+              onClick={() => navigate('/firmadmin/staff')}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm font-medium">Back</span>
+            </button>
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!staffMember) {
+    return (
+      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+        <div className="text-center py-12">
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No staff data found</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="mb-6">
+        <div className="flex items-center gap-3 mb-3">
+          <button
+            onClick={() => navigate('/firmadmin/staff')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        </div>
         <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Staff Details</h4>
         <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Detailed information about staff member</p>
       </div>
@@ -90,9 +235,18 @@ export default function StaffDetails() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             {/* Avatar */}
-            <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
-              MC
-            </div>
+            {staffMember.profilePicture && !profilePictureError ? (
+              <img
+                src={staffMember.profilePicture}
+                alt={staffMember.name}
+                className="h-16 w-16 rounded-full object-cover"
+                onError={() => setProfilePictureError(true)}
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                {staffMember.initials}
+              </div>
+            )}
 
             {/* Name and Info */}
             <div className="flex-1">
@@ -115,7 +269,7 @@ export default function StaffDetails() {
                   {staffMember.status.toLowerCase()}
                 </span>
               </div>
-              
+
               {/* Action Buttons - Mobile & Small Laptop: Below title */}
               <div className="flex flex-wrap items-center gap-2 lg:hidden mt-2">
                 {/* Send Message Button - Orange gradient */}
@@ -259,19 +413,19 @@ export default function StaffDetails() {
       )}
 
       {activeTab === 'Assigned Clients' && (
-        <AssignedClientsTab assignedClients={assignedClients} />
+        <AssignedClientsTab staffId={id} />
       )}
 
       {activeTab === 'Current Tasks' && (
-        <CurrentTasksTab currentTasks={currentTasks} />
+        <CurrentTasksTab staffId={id} />
       )}
 
       {activeTab === 'Performance' && (
-        <PerformanceTab />
+        <PerformanceTab staffId={id} />
       )}
 
       {activeTab === 'Schedule' && (
-        <ScheduleTab />
+        <ScheduleTab staffId={id} />
       )}
 
       {activeTab === 'Onboarding' && (

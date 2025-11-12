@@ -11,6 +11,7 @@ import {
 import { dashboardAPI, handleAPIError } from "../utils/apiUtils";
 import "../styles/Popup.css";
 import "../styles/Dashboard.css";
+import Pagination from "../components/Pagination";
 
 // ------------------- Styling Map ----------------------
 const priorityBadgeClass = {
@@ -115,6 +116,9 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tasksCurrentPage, setTasksCurrentPage] = useState(1);
+  const [activityCurrentPage, setActivityCurrentPage] = useState(1);
+  const itemsPerPage = 3;
 
   useEffect(() => {
     // Check if user is completed from stored user data
@@ -159,6 +163,12 @@ export default function Dashboard() {
     priority: task.priority,
   })) || [];
 
+  // Pagination for Tasks
+  const tasksTotalPages = Math.ceil(whatsDueTasks.length / itemsPerPage);
+  const tasksStartIndex = (tasksCurrentPage - 1) * itemsPerPage;
+  const tasksEndIndex = Math.min(tasksStartIndex + itemsPerPage, whatsDueTasks.length);
+  const paginatedTasks = whatsDueTasks.slice(tasksStartIndex, tasksEndIndex);
+
   // Helper function to replace full name with first name + last name in titles
   const formatActivityTitle = (title) => {
     if (!title || !dashboardData?.taxpayer_info) return title;
@@ -177,9 +187,8 @@ export default function Dashboard() {
     return title;
   };
 
-  // Transform recent_activity data for TaskCard - limit to top 4
+  // Transform recent_activity data for TaskCard
   const recentActivityTasks = dashboardData?.recent_activity
-    ?.slice(0, 4)
     ?.map((activity) => ({
       id: activity.id,
       title: formatActivityTitle(activity.title),
@@ -188,6 +197,12 @@ export default function Dashboard() {
       iconType: activity.icon_type || "document",
       priority: activity.priority,
     })) || [];
+
+  // Pagination for Recent Activity
+  const activityTotalPages = Math.ceil(recentActivityTasks.length / itemsPerPage);
+  const activityStartIndex = (activityCurrentPage - 1) * itemsPerPage;
+  const activityEndIndex = Math.min(activityStartIndex + itemsPerPage, recentActivityTasks.length);
+  const paginatedActivity = recentActivityTasks.slice(activityStartIndex, activityEndIndex);
 
   return (
     <div className="container-fluid px-2 px-md-2">
@@ -210,11 +225,24 @@ export default function Dashboard() {
                 <p className="text-danger">{error}</p>
               </div>
             ) : whatsDueTasks.length > 0 ? (
-              <div className="d-flex flex-column gap-3">
-                {whatsDueTasks.map((task, i) => (
-                  <TaskCard key={task.id || i} {...task} />
-                ))}
-              </div>
+              <>
+                <div className="d-flex flex-column gap-3">
+                  {paginatedTasks.map((task, i) => (
+                    <TaskCard key={task.id || i} {...task} />
+                  ))}
+                </div>
+                {whatsDueTasks.length > itemsPerPage && (
+                  <Pagination
+                    currentPage={tasksCurrentPage}
+                    totalPages={tasksTotalPages}
+                    onPageChange={setTasksCurrentPage}
+                    totalItems={whatsDueTasks.length}
+                    itemsPerPage={itemsPerPage}
+                    startIndex={tasksStartIndex}
+                    endIndex={tasksEndIndex}
+                  />
+                )}
+              </>
             ) : (
               <div className="text-center py-4">
                 <p className="text-muted">No tasks due at this time</p>
@@ -239,11 +267,24 @@ export default function Dashboard() {
                 <p className="text-danger">{error}</p>
               </div>
             ) : recentActivityTasks.length > 0 ? (
-              <div className="d-flex flex-column gap-3">
-                {recentActivityTasks.map((activity, i) => (
-                  <TaskCard key={activity.id || i} {...activity} isRecentActivity={true} />
-                ))}
-              </div>
+              <>
+                <div className="d-flex flex-column gap-3">
+                  {paginatedActivity.map((activity, i) => (
+                    <TaskCard key={activity.id || i} {...activity} isRecentActivity={true} />
+                  ))}
+                </div>
+                {recentActivityTasks.length > itemsPerPage && (
+                  <Pagination
+                    currentPage={activityCurrentPage}
+                    totalPages={activityTotalPages}
+                    onPageChange={setActivityCurrentPage}
+                    totalItems={recentActivityTasks.length}
+                    itemsPerPage={itemsPerPage}
+                    startIndex={activityStartIndex}
+                    endIndex={activityEndIndex}
+                  />
+                )}
+              </>
             ) : (
               <div className="text-center py-4">
                 <p className="text-muted">No recent activity</p>

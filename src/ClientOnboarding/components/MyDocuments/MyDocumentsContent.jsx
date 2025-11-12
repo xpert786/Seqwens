@@ -5,6 +5,7 @@ import "../../styles/Document.css";
 import { handleAPIError } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
+import Pagination from "../Pagination";
 
 export default function MyDocumentsContent() {
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -22,6 +23,8 @@ export default function MyDocumentsContent() {
         uploaded: 0
     });
     const [archivingDocumentId, setArchivingDocumentId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 3;
 
     // Fetch all documents from the documents API
     const fetchAllDocuments = async () => {
@@ -263,6 +266,18 @@ export default function MyDocumentsContent() {
         return documents;
     };
 
+    // Reset to page 1 when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedFilter]);
+
+    // Pagination for documents
+    const filteredDocuments = getFilteredDocuments();
+    const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredDocuments.length);
+    const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
+
     if (loading) {
         return (
             <div>
@@ -418,9 +433,9 @@ export default function MyDocumentsContent() {
                 {/* Documents Section */}
                 <div className="align-items-center mb-3">
                     <h5 className="mb-0 me-3" style={{ fontSize: "20px", fontWeight: "500", color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                        {selectedFilter ? `${selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)} Documents` : 'All Documents'} {getFilteredDocuments().length > 0 && `(${getFilteredDocuments().length})`}
+                        {selectedFilter ? `${selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)} Documents` : 'All Documents'} {filteredDocuments.length > 0 && `(${filteredDocuments.length})`}
                     </h5>
-                    {getFilteredDocuments().length > 0 && (
+                    {filteredDocuments.length > 0 && (
                         <p
                             className="mb-0"
                             style={{
@@ -435,7 +450,7 @@ export default function MyDocumentsContent() {
                     )}
                 </div>
 
-                {getFilteredDocuments().length === 0 && documents.length === 0 && (
+                {filteredDocuments.length === 0 && documents.length === 0 && (
                     <div className="pt-4 pb-4 text-center">
                         <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
                             No Documents Yet
@@ -445,7 +460,7 @@ export default function MyDocumentsContent() {
                         </p>
                     </div>
                 )}
-                {getFilteredDocuments().length === 0 && documents.length > 0 && (
+                {filteredDocuments.length === 0 && documents.length > 0 && (
                     <div className="pt-4 pb-4 text-center">
                         <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
                             No {selectedFilter ? selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1) : ''} Documents
@@ -455,10 +470,10 @@ export default function MyDocumentsContent() {
                         </p>
                     </div>
                 )}
-                {getFilteredDocuments().length > 0 && (
+                {filteredDocuments.length > 0 && (
                     <div className="pt-2 pb-2">
                         <div className="row g-3">
-                            {getFilteredDocuments().map((doc, index) => {
+                            {paginatedDocuments.map((doc, index) => {
                                 const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
                                 const docSize = doc.file_size_formatted || (doc.file_size_bytes ? formatFileSize(doc.file_size_bytes) : (doc.file_size ? formatFileSize(doc.file_size) : '0 KB'));
                                 const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
@@ -474,12 +489,12 @@ export default function MyDocumentsContent() {
                                         <div
                                             className="p-3 border rounded-4"
                                             style={{
-                                                backgroundColor: selectedIndex === index ? "#FFF4E6" : "#FFFFFF",
+                                                backgroundColor: selectedIndex === (startIndex + index) ? "#FFF4E6" : "#FFFFFF",
                                                 cursor: "pointer",
                                                 transition: "background-color 0.3s ease",
                                             }}
                                             onClick={() => {
-                                                setSelectedIndex(index);
+                                                setSelectedIndex(startIndex + index);
                                                 // Check if document is a PDF
                                                 const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
                                                 if (isPdf && fileUrl) {
@@ -597,6 +612,17 @@ export default function MyDocumentsContent() {
                                 );
                             })}
                         </div>
+                        {filteredDocuments.length > itemsPerPage && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                totalItems={filteredDocuments.length}
+                                itemsPerPage={itemsPerPage}
+                                startIndex={startIndex}
+                                endIndex={endIndex}
+                            />
+                        )}
                     </div>
                 )}
 

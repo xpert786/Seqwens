@@ -31,22 +31,22 @@ export default function OverviewTab({ client }) {
               </div>
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Gender</div>
-                <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro]">{client.gender}</div>
+                <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro]">{client.gender || 'N/A'}</div>
               </div>
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Date of Birth</div>
-                <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro]">{client.dob}</div>
+                <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro]">{client.dob || 'N/A'}</div>
               </div>
             </div>
             {/* Second Row: Social Security Number (SSN), Filing Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Social Security Number (SSN)</div>
-                <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro]">515424561LN23</div>
+                <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro]">{client.ssn || 'N/A'}</div>
               </div>
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Filing Status</div>
-                <div className="text-[13px] text-[#3B4A66] font-bold  font-[BasisGrotesquePro]">Married Filing Jointly</div>
+                <div className="text-[13px] text-[#3B4A66] font-bold  font-[BasisGrotesquePro]">{client.filingStatus || 'N/A'}</div>
               </div>
             </div>
           </div>
@@ -58,19 +58,19 @@ export default function OverviewTab({ client }) {
           <div className="grid grid-cols-4 gap-4">
             <div>
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Address Line</div>
-              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address.line}</div>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address?.line || 'N/A'}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">City</div>
-              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address.city}</div>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address?.city || 'N/A'}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">State</div>
-              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address.state}</div>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address?.state || 'N/A'}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">ZIP Code</div>
-              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address.zip}</div>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{client.address?.zip || 'N/A'}</div>
             </div>
           </div>
         </div>
@@ -87,7 +87,11 @@ export default function OverviewTab({ client }) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">Assigned Staff:</div>
-              <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">{client.assignedStaff}</div>
+              <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
+                {typeof client.assignedStaff === 'object' && client.assignedStaff !== null
+                  ? client.assignedStaff.name || 'Not Assigned'
+                  : client.assignedStaff || 'Not Assigned'}
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">Join Date:</div>
@@ -95,7 +99,9 @@ export default function OverviewTab({ client }) {
             </div>
             <div className="flex items-center justify-between">
               <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">Status:</div>
-              <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">515424561LN23</div>
+              <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
+                {client.accountStatusDisplay || client.accountStatus || client.status || 'N/A'}
+              </div>
             </div>
           </div>
         </div>
@@ -124,6 +130,7 @@ export default function OverviewTab({ client }) {
       </div>
 
       {/* Spouse Information Card - Full Width */}
+      {/* Commented out - Spouse information section
       <div className="col-span-1 lg:col-span-2">
         <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF]">
           <div className="flex items-start justify-between mb-4">
@@ -140,7 +147,6 @@ export default function OverviewTab({ client }) {
             </button>
           </div>
           <div className="space-y-4">
-            {/* First Row: Name, Gender, Date of Birth */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Name</div>
@@ -155,7 +161,6 @@ export default function OverviewTab({ client }) {
                 <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">{client.spouse.dob}</div>
               </div>
             </div>
-            {/* Second Row: Social Security Number (SSN), Filing Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Social Security Number (SSN)</div>
@@ -169,7 +174,6 @@ export default function OverviewTab({ client }) {
           </div>
         </div>
 
-        {/* Contact Details Card (Below Spouse) */}
         <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF] mt-6">
           <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4">Contact Details</h5>
           <div className="space-y-3">
@@ -177,19 +181,24 @@ export default function OverviewTab({ client }) {
               <CallIcon />
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Phone</div>
-                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">09034867656</div>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {client.spouseContact?.phone || 'N/A'}
+                </div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <MailIcon />
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Email</div>
-                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">tomilola@me.com</div>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {client.spouseContact?.email || 'N/A'}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      */}
     </div>
   );
 }
