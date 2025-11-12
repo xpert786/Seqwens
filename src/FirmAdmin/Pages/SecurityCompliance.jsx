@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     LineChart,
     Line,
@@ -265,6 +265,29 @@ export default function SecurityCompliance() {
     const [enableActiveSessionsView, setEnableActiveSessionsView] = useState(false);
     const [allowForceLogout, setAllowForceLogout] = useState(true);
     const [enableStaffReports, setEnableStaffReports] = useState(false);
+
+    // Handle body scroll lock when modal is open
+    useEffect(() => {
+        if (isReviewModalOpen) {
+            // Save current scroll position
+            const scrollY = window.scrollY;
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+            // Prevent scrolling on iOS and preserve scroll position
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            
+            return () => {
+                // Restore scroll position when modal closes
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                window.scrollTo(0, scrollY);
+            };
+        }
+    }, [isReviewModalOpen]);
 
     const renderSecurityOverview = () => (
         <>
@@ -1537,10 +1560,10 @@ export default function SecurityCompliance() {
                         </div>
 
                         <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
-                            {/* Group wrapper for all three toggles */}
-                            <div className="flex items-center gap-8">
+                            {/* Group wrapper for all two toggles */}
+                            <div className="grid grid-cols-2 gap-8 w-full"> {/* Changed to grid for equal column distribution */}
                                 {/* Toggle 1 */}
-                                <div className="flex items-center gap-[40px]">
+                                <div className="flex items-center justify-between col-span-1"> {/* Use justify-between to push content to ends */}
                                     <span className="text-sm font-semibold text-gray-500">GLBA-Aligned</span>
                                     <button
                                         type="button"
@@ -1556,7 +1579,7 @@ export default function SecurityCompliance() {
                                 </div>
 
                                 {/* Toggle 2 */}
-                                <div className="flex items-center gap-[40px]">
+                                <div className="flex items-center justify-between col-span-1"> {/* Use justify-between to push content to ends */}
                                     <span className="text-sm font-semibold text-gray-500">SOC 2-Aligned</span>
                                     <button
                                         type="button"
@@ -1576,10 +1599,12 @@ export default function SecurityCompliance() {
 
 
                         <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
-                            {/* Group wrapper for all three toggles */}
-                            <div className="flex items-center gap-8">
+                            {/* Group wrapper for all two toggles */}
+                            {/* Changed outer flex to grid grid-cols-2 for equal width distribution */}
+                            <div className="grid grid-cols-2 gap-8 w-full">
                                 {/* Toggle 1 */}
-                                <div className="flex items-center gap-[40px]">
+                                {/* Changed inner div to use justify-between to push label and toggle to opposite ends */}
+                                <div className="flex items-center justify-between col-span-1">
                                     <span className="text-sm font-semibold text-gray-500">HIPAA-Aligned</span>
                                     <button
                                         type="button"
@@ -1595,7 +1620,8 @@ export default function SecurityCompliance() {
                                 </div>
 
                                 {/* Toggle 2 */}
-                                <div className="flex items-center gap-[40px]">
+                                {/* Changed inner div to use justify-between to push label and toggle to opposite ends */}
+                                <div className="flex items-center justify-between col-span-1">
                                     <span className="text-sm font-semibold text-gray-500">Consent Logs</span>
                                     <button
                                         type="button"
@@ -1613,10 +1639,12 @@ export default function SecurityCompliance() {
                         </div>
 
                         <div className="flex items-center justify-between pb-4 border-b border-[#E5E7EB]">
-                            {/* Group wrapper for all three toggles */}
-                            <div className="flex items-center gap-8">
-                                {/* Toggle 1 */}
-                                <div className="flex items-center gap-[40px]">
+                            {/* Group wrapper for the two toggles */}
+                            {/* Changed the inner flex wrapper to a grid with 2 columns for equal width distribution */}
+                            <div className="grid grid-cols-2 gap-8 w-full">
+                                {/* Toggle 1: E-sign consent */}
+                                {/* Uses justify-between to push the label to the start and the toggle button to the end */}
+                                <div className="flex items-center justify-between col-span-1">
                                     <span className="text-sm font-semibold text-gray-500">E-sign consent</span>
                                     <button
                                         type="button"
@@ -1631,8 +1659,9 @@ export default function SecurityCompliance() {
                                     </button>
                                 </div>
 
-                                {/* Toggle 2 */}
-                                <div className="flex items-center gap-[40px]">
+                                {/* Toggle 2: Marketing consent */}
+                                {/* Uses justify-between to push the label to the start and the toggle button to the end */}
+                                <div className="flex items-center justify-between col-span-1">
                                     <span className="text-sm font-semibold text-gray-500">Marketing consent</span>
                                     <button
                                         type="button"
@@ -1728,73 +1757,71 @@ export default function SecurityCompliance() {
 
     const renderReviewModal = () => {
         if (!isReviewModalOpen || !selectedCompliance) return null;
-
+    
         return (
             <div
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+                className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50"
+                style={{ 
+                    position: 'fixed', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    bottom: 0,
+                    zIndex: 9999
+                }}
                 onClick={() => setIsReviewModalOpen(false)}
             >
                 <div
-                    className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                    className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col mx-auto"
+                    style={{ 
+                        maxWidth: '672px',
+                        position: 'relative',
+                        zIndex: 10000
+                    }}
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Modal Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-[#E5E7EB]">
-                        <div>
-                            <p className="text-xl font-semibold text-gray-600">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-[#E5E7EB] gap-2 sm:gap-0 sticky top-0 bg-white z-10 rounded-t-xl">
+                        <div className="flex-1 min-w-0">
+                            <p className="text-lg sm:text-xl font-semibold text-gray-600 truncate">
                                 Review: {selectedCompliance.client}
                             </p>
-                            <p className="text-sm text-[#6B7280] mt-1">
+                            <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
                                 Last updated: {selectedCompliance.lastUpdated}
                             </p>
                         </div>
                         <button
                             onClick={() => setIsReviewModalOpen(false)}
-                            className="text-[#6B7280] hover:text-[#1F2937] transition-colors bg-[#E8F0FF] rounded-full p-2"
+                            className="text-[#6B7280] hover:text-[#1F2937] transition-colors bg-[#E8F0FF] rounded-full p-2 flex-shrink-0 ml-auto sm:ml-0"
                             type="button"
+                            aria-label="Close modal"
                         >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </button>
                     </div>
-
+    
                     {/* Modal Body */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
                         {/* Checklist Section */}
                         <div>
                             <p className="text-sm font-medium text-gray-600 mb-3">Checklist</p>
-                            <div className="space-y-2 grid grid-cols-3">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={checklistItems.eic}
-                                        onChange={() => handleChecklistChange('eic')}
-                                        className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
-                                    />
-                                    <span className="text-sm text-[#4B5563] ml-2">EIC</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={checklistItems.ctc}
-                                        onChange={() => handleChecklistChange('ctc')}
-                                        className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
-                                    />
-                                    <span className="text-sm text-[#4B5563] ml-2">CTC</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={checklistItems.hoh}
-                                        onChange={() => handleChecklistChange('hoh')}
-                                        className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
-                                    />
-                                    <span className="text-sm text-[#4B5563] ml-2">HOH</span>
-                                </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                {['eic', 'ctc', 'hoh'].map((item) => (
+                                    <label key={item} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={checklistItems[item]}
+                                            onChange={() => handleChecklistChange(item)}
+                                            className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                        />
+                                        <span className="text-sm text-[#4B5563] ml-2">{item.toUpperCase()}</span>
+                                    </label>
+                                ))}
                             </div>
                         </div>
-
+    
                         {/* Notes Section */}
                         <div>
                             <p className="text-sm font-medium text-gray-600 mb-3">Notes</p>
@@ -1804,18 +1831,16 @@ export default function SecurityCompliance() {
                                 placeholder="Add internal notes..."
                                 rows={4}
                                 className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 resize-none"
-                                style={{ borderRadius: '8px' }}
                             />
                         </div>
-
+    
                         {/* Add Files Section */}
                         <div>
                             <p className="text-sm font-medium text-gray-600 mb-3">Add Files</p>
                             <div
                                 onDrop={handleFileDrop}
                                 onDragOver={handleFileDragOver}
-                                className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-8 text-center cursor-pointer hover:border-[#3AD6F2] transition-colors bg-[#F8FAFF]"
-                                style={{ borderRadius: '8px' }}
+                                className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-[#3AD6F2] transition-colors bg-[#F8FAFF]"
                                 onClick={() => document.getElementById('file-upload').click()}
                             >
                                 <input
@@ -1840,47 +1865,29 @@ export default function SecurityCompliance() {
                             </div>
                         </div>
                     </div>
-
+    
                     {/* Modal Footer */}
-                    <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-[#E5E7EB]">
-                        <button
-                            onClick={() => {
-                                // Handle add note logic
-                                setIsReviewModalOpen(false);
-                            }}
-                            className="flex-1 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Add Note
-                        </button>
-                        <button
-                            onClick={() => {
-                                // Handle send reminder logic
-                                setIsReviewModalOpen(false);
-                            }}
-                            className="flex-1 rounded-lg bg-gray-300 px-4 py-2 text-sm font-semibold text-[#4B5563] transition-colors hover:bg-gray-400"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Send Reminder
-                        </button>
-                        <button
-                            onClick={() => {
-                                // Handle marked resolved logic
-                                setIsReviewModalOpen(false);
-                            }}
-                            className="flex-1 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Marked Resolved
-                        </button>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-4 sm:p-6 border-t border-[#E5E7EB] sticky bottom-0 bg-white rounded-b-xl">
+                        {['Add Note', 'Send Reminder', 'Marked Resolved'].map((label) => (
+                            <button
+                                key={label}
+                                onClick={() => setIsReviewModalOpen(false)}
+                                className={`flex-1 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors ${
+                                    label === 'Send Reminder'
+                                        ? 'bg-gray-300 text-[#4B5563] hover:bg-gray-400'
+                                        : 'bg-[#F56D2D] text-white hover:bg-orange-600'
+                                }`}
+                                type="button"
+                            >
+                                {label}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
         );
     };
+    
 
     return (
         <div className="bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
