@@ -5,7 +5,10 @@ import FirmSidebar from './FirmSidebar';
 
 export default function FirmDashboardLayout() {
   const [sidebarWidth, setSidebarWidth] = useState('320px');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Check if screen is mobile (less than 768px) and close sidebar by default on mobile
+  const isMobileScreen = () => window.innerWidth < 768;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobileScreen());
 
   useEffect(() => {
     // Listen for sidebar width changes from FirmSidebar
@@ -16,6 +19,18 @@ export default function FirmDashboardLayout() {
     window.addEventListener('sidebarWidthChange', handleSidebarWidthChange);
     return () => window.removeEventListener('sidebarWidthChange', handleSidebarWidthChange);
   }, []);
+
+  useEffect(() => {
+    // Handle window resize to close sidebar on mobile screens
+    const handleResize = () => {
+      if (isMobileScreen() && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

@@ -1888,7 +1888,6 @@ export default function SecurityCompliance() {
         );
     };
     
-
     return (
         <div className="bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
             <div className="mx-auto flex w-full flex-col gap-6">
