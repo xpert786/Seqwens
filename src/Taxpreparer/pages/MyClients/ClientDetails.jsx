@@ -27,6 +27,11 @@ export default function ClientDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
+  const [saving, setSaving] = useState(false);
+
   // Create Task Modal state
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [loadingTask, setLoadingTask] = useState(false);
@@ -125,6 +130,9 @@ export default function ClientDetails() {
         
         const mappedClient = {
           id: apiData.id,
+          first_name: apiData.first_name || '',
+          last_name: apiData.last_name || '',
+          middle_name: apiData.middle_name || '',
           name: apiData.full_name || `${apiData.first_name || ''} ${apiData.last_name || ''}`.trim(),
           email: apiData.email || apiData.contact_details?.email || '',
           phone: apiData.phone_number_formatted || apiData.phone_number || apiData.contact_details?.phone || '',
@@ -171,6 +179,20 @@ export default function ClientDetails() {
           client_tags: apiData.client_tags || []
         };
         setClient(mappedClient);
+        // Initialize edit form data
+        setEditFormData({
+          first_name: apiData.first_name || '',
+          last_name: apiData.last_name || '',
+          middle_name: apiData.middle_name || '',
+          email: apiData.email || apiData.contact_details?.email || '',
+          phone_number: apiData.phone_number || apiData.contact_details?.phone || '',
+          filing_status: apiData.filing_status || apiData.personal_information?.filing_status || '',
+          address_line: apiData.address?.address_line || '',
+          city: apiData.address?.city || '',
+          state: apiData.address?.state || '',
+          zip_code: apiData.address?.zip_code || '',
+          client_tags: apiData.client_tags || []
+        });
       } else {
         throw new Error(result.message || 'Failed to fetch client details');
       }
@@ -367,6 +389,56 @@ export default function ClientDetails() {
       }
     }
     return null;
+  };
+
+  // Handle edit form changes
+  const handleEditFormChange = (field, value) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Save taxpayer updates
+  const handleSaveTaxpayer = async () => {
+    if (!editFormData || !clientId) {
+      toast.error('Invalid client data');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await taxPreparerClientAPI.updateTaxpayer(clientId, editFormData);
+      
+      if (response.success) {
+        toast.success('Taxpayer information updated successfully!', {
+          position: "top-right",
+          autoClose: 3000
+        });
+        setIsEditMode(false);
+        // Refresh client details
+        fetchClientDetails();
+      } else {
+        throw new Error(response.message || 'Failed to update taxpayer');
+      }
+    } catch (error) {
+      console.error('Error updating taxpayer:', error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Cancel edit mode
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    // Reset form data to original client data by re-fetching
+    if (clientId) {
+      fetchClientDetails();
+    }
   };
 
   // Create new folder
@@ -1014,21 +1086,55 @@ export default function ClientDetails() {
                 </div>
                 <div className="text-gray-500 text-xs mt-1">Your basic personal and contact information</div>
               </div>
-              {/* <button
-              className="flex items-center gap-2 rounded-md text-sm"
-              style={{
-                fontSize: "15px",
-                borderRadius: "6px",
-                border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                color: "#fff",
-                padding: "5px 12px",
-                opacity: 1,
-              }}
-            >
-              <WhiteEdit />
-              Edit
-            </button> */}
+              {!isEditMode ? (
+                <button
+                  className="flex items-center gap-2 rounded-md text-sm"
+                  onClick={() => setIsEditMode(true)}
+                  style={{
+                    fontSize: "15px",
+                    borderRadius: "6px",
+                    border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                    backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                    color: "#fff",
+                    padding: "5px 12px",
+                    opacity: 1,
+                    cursor: "pointer"
+                  }}
+                >
+                  <WhiteEdit />
+                  Edit
+                </button>
+              ) : (
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-light"
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                    style={{
+                      borderRadius: "6px",
+                      padding: "5px 12px",
+                      fontSize: "15px",
+                      border: "1px solid #E5E7EB"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveTaxpayer}
+                    disabled={saving}
+                    style={{
+                      borderRadius: "6px",
+                      padding: "5px 12px",
+                      fontSize: "15px",
+                      backgroundColor: "#FF7A2F",
+                      borderColor: "#FF7A2F"
+                    }}
+                  >
+                    {saving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
@@ -1036,9 +1142,30 @@ export default function ClientDetails() {
                   style={{
                     color: "var(--Palette2-Dark-blue-100, #3B4A66)",
                   }}>Name</div>
-                <div className="font-medium" style={{
-                  color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-                }}>{client.name}</div>
+                {isEditMode && editFormData ? (
+                  <div className="d-flex gap-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editFormData.first_name}
+                      onChange={(e) => handleEditFormChange('first_name', e.target.value)}
+                      placeholder="First Name"
+                      style={{ borderRadius: "6px", fontSize: "14px" }}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editFormData.last_name}
+                      onChange={(e) => handleEditFormChange('last_name', e.target.value)}
+                      placeholder="Last Name"
+                      style={{ borderRadius: "6px", fontSize: "14px" }}
+                    />
+                  </div>
+                ) : (
+                  <div className="font-medium" style={{
+                    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                  }}>{client.name}</div>
+                )}
                 <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
                 <div className="font-medium " style={{
                   color: "var(--Palette2-Dark-blue-100, #3B4A66)",
@@ -1055,9 +1182,25 @@ export default function ClientDetails() {
               <div className="flex justify-between">
                 <div>
                   <div className="text-xs text-gray-500 mt-3">Filing Status</div>
-                  <div className="font-medium " style={{
-                    color: "var(--Palette2-Dark-blue-100, #3B4A66)",
-                  }}>{client.filingStatus || "N/A"}</div>
+                  {isEditMode && editFormData ? (
+                    <select
+                      className="form-select"
+                      value={editFormData.filing_status}
+                      onChange={(e) => handleEditFormChange('filing_status', e.target.value)}
+                      style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "200px" }}
+                    >
+                      <option value="">Select filing status</option>
+                      <option value="single">Single</option>
+                      <option value="married_joint">Married Filing Jointly</option>
+                      <option value="married_separate">Married Filing Separately</option>
+                      <option value="head_of_household">Head of Household</option>
+                      <option value="qualifying_widow">Qualifying Widow(er)</option>
+                    </select>
+                  ) : (
+                    <div className="font-medium " style={{
+                      color: "var(--Palette2-Dark-blue-100, #3B4A66)",
+                    }}>{client.filingStatus || "N/A"}</div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-xs " style={{
@@ -1069,7 +1212,6 @@ export default function ClientDetails() {
                 </div>
               </div>
             </div>
-            {/* <button className="absolute top-3 right-3 border border-gray-200 rounded-lg px-4 py-2 text-sm">Edit</button> */}
           </div>
 
           {/* Address and Contact Details */}
@@ -1079,28 +1221,69 @@ export default function ClientDetails() {
                 Address
               </div>
               <div className="mt-4">
-                {/* Labels Row */}
-                <div className="grid grid-cols-4 gap-6 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                  <div>Address Line</div>
-                  <div>City</div>
-                  <div>State</div>
-                  <div>ZIP Code</div>
-                </div>
-                {/* Values Row */}
-                <div className="grid grid-cols-4 gap-6 mt-1">
-                  <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.line || "N/A"}
+                {isEditMode && editFormData ? (
+                  <div className="d-flex flex-column gap-3">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editFormData.address_line}
+                      onChange={(e) => handleEditFormChange('address_line', e.target.value)}
+                      placeholder="Address Line"
+                      style={{ borderRadius: "6px", fontSize: "14px" }}
+                    />
+                    <div className="d-flex gap-2">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editFormData.city}
+                        onChange={(e) => handleEditFormChange('city', e.target.value)}
+                        placeholder="City"
+                        style={{ borderRadius: "6px", fontSize: "14px" }}
+                      />
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editFormData.state}
+                        onChange={(e) => handleEditFormChange('state', e.target.value)}
+                        placeholder="State"
+                        style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "100px" }}
+                      />
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editFormData.zip_code}
+                        onChange={(e) => handleEditFormChange('zip_code', e.target.value)}
+                        placeholder="ZIP Code"
+                        style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "120px" }}
+                      />
+                    </div>
                   </div>
-                  <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.city || "N/A"}
-                  </div>
-                  <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.state || "N/A"}
-                  </div>
-                  <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.address.zip || "N/A"}
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    {/* Labels Row */}
+                    <div className="grid grid-cols-4 gap-6 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                      <div>Address Line</div>
+                      <div>City</div>
+                      <div>State</div>
+                      <div>ZIP Code</div>
+                    </div>
+                    {/* Values Row */}
+                    <div className="grid grid-cols-4 gap-6 mt-1">
+                      <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                        {client.address.line || "N/A"}
+                      </div>
+                      <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                        {client.address.city || "N/A"}
+                      </div>
+                      <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                        {client.address.state || "N/A"}
+                      </div>
+                      <div className="font-medium" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                        {client.address.zip || "N/A"}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1113,20 +1296,41 @@ export default function ClientDetails() {
                   <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
                     <BlackPhone />
                     <span>Phone</span>
-
                   </div>
-                  <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.phone}
-                  </div>
+                  {isEditMode && editFormData ? (
+                    <input
+                      type="tel"
+                      className="form-control mt-1"
+                      value={editFormData.phone_number}
+                      onChange={(e) => handleEditFormChange('phone_number', e.target.value)}
+                      placeholder="Phone Number"
+                      style={{ borderRadius: "6px", fontSize: "14px" }}
+                    />
+                  ) : (
+                    <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                      {client.phone}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
                     <BlackEmail />
                     <span>Email</span>
                   </div>
-                  <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
-                    {client.email}
-                  </div>
+                  {isEditMode && editFormData ? (
+                    <input
+                      type="email"
+                      className="form-control mt-1"
+                      value={editFormData.email}
+                      onChange={(e) => handleEditFormChange('email', e.target.value)}
+                      placeholder="Email Address"
+                      style={{ borderRadius: "6px", fontSize: "14px" }}
+                    />
+                  ) : (
+                    <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
+                      {client.email}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

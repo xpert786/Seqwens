@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { DocumentUpload, DocumentBrowseFolder, DocumentDownload, DocumentMoreIcon, DocumentCriticalIssuesIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentOverdueIcon, PdfDocumentIconLight, DocumentWarningIconCompliance, DocumentTextIcon, DocumentPostion, DocumentOpacity, DocumentRotation, DocumentEye } from '../Components/icons';
+import { firmAdminDocumentsAPI } from '../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
+import FirmAdminUploadModal from './DocumentManagement/FirmAdminUploadModal';
 
 // Search icon
 const SearchIcon = () => (
@@ -28,6 +32,23 @@ export default function DocumentManagement() {
   const [includeDocumentInfo, setIncludeDocumentInfo] = useState(true);
   const [showPreview, setShowPreview] = useState(true);
 
+  // API state
+  const [folders, setFolders] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [statistics, setStatistics] = useState({
+    total_folders: 0,
+    total_documents: 0,
+    archived_documents: 0,
+    is_root: true
+  });
+  const [firmInfo, setFirmInfo] = useState(null);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
+  const [currentFolder, setCurrentFolder] = useState(null);
+  const [parentFolder, setParentFolder] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
   // Check if we're in a nested route (folder contents)
   const isNestedRoute = location.pathname.includes('/folder/');
   const isViewingDocument = location.pathname.includes('/document/');
@@ -49,58 +70,120 @@ export default function DocumentManagement() {
     };
   }, [openActionsMenu]);
 
-  const folders = [
-    {
-      id: 1,
-      name: 'Client Documents',
-      description: 'Personal Documents, IDs, And Client-Specific File:',
-      documentCount: 156,
-      modified: 'Modified 2 hours ago',
-      date: '03/05/2024',
-      size: '43.2 MB',
-      badges: ['System', 'Admin']
-    },
-    {
-      id: 2,
-      name: 'Firm Compliance',
-      description: 'Regulatory Documents, Licenses, And Compliance Materials',
-      documentCount: 56,
-      modified: 'Modified 1 hours ago',
-      date: '03/05/2024',
-      size: '28.5 MB',
-      badges: ['System', 'Admin']
-    },
-    {
-      id: 3,
-      name: 'Training Materials',
-      description: 'Educational Content, Guides, And Training Resources',
-      documentCount: 86,
-      modified: 'Modified 3 hours ago',
-      date: '03/05/2024',
-      size: '15.8 MB',
-      badges: ['System', 'Admin']
-    },
-    {
-      id: 4,
-      name: 'Tax Returns',
-      description: 'Completed Tax Returns And Related Forms',
-      documentCount: 256,
-      modified: 'Modified 2 hours ago',
-      date: '03/05/2024',
-      size: '125.3 MB',
-      badges: ['System', 'Admin']
-    },
-    {
-      id: 5,
-      name: 'Receipts & Expenses',
-      description: 'Business Receipts, Expense Reports, And Deductible Items',
-      documentCount: 456,
-      modified: 'Modified 0.30 hours ago',
-      date: '03/05/2024',
-      size: '89.7 MB',
-      badges: ['System']
+  // Fetch folders and documents from API
+  const fetchDocuments = useCallback(async (folderId = null, search = '') => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = {};
+      if (folderId) {
+        params.folder_id = folderId;
+      }
+      if (search) {
+        params.search = search;
+      }
+
+      const response = await firmAdminDocumentsAPI.browseDocuments(params);
+
+      if (response.success && response.data) {
+        // Set firm info
+        if (response.data.firm) {
+          setFirmInfo(response.data.firm);
+        }
+
+        // Set current folder and parent
+        setCurrentFolder(response.data.current_folder || null);
+        setParentFolder(response.data.parent_folder || null);
+
+        // Set breadcrumbs
+        if (response.data.breadcrumbs) {
+          setBreadcrumbs(response.data.breadcrumbs);
+        }
+
+        // Transform folders
+        const transformedFolders = (response.data.folders || []).map(folder => ({
+          id: folder.id,
+          name: folder.title,
+          description: folder.description || '',
+          documentCount: folder.files_count || 0,
+          modified: folder.updated_at ? `Modified ${formatDate(folder.updated_at)}` : '',
+          date: folder.created_at ? formatDateShort(folder.created_at) : '',
+          size: '—', // Size not provided in API
+          badges: ['System'], // Default badge
+          files: folder.files || []
+        }));
+
+        setFolders(transformedFolders);
+
+        // Transform documents
+        const transformedDocuments = (response.data.documents || []).map(doc => ({
+          id: doc.id,
+          tax_documents: doc.tax_documents,
+          status: doc.status,
+          is_archived: doc.is_archived || false,
+          folder: doc.folder,
+          category: doc.category,
+          created_at: doc.created_at,
+          updated_at: doc.updated_at
+        }));
+
+        setDocuments(transformedDocuments);
+
+        // Set statistics
+        if (response.data.statistics) {
+          setStatistics(response.data.statistics);
+        }
+      } else {
+        throw new Error(response.message || 'Failed to fetch documents');
+      }
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+      setError(handleAPIError(err));
+      toast.error(handleAPIError(err));
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, []);
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  // Format date short helper
+  const formatDateShort = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+  };
+
+  // Fetch documents on mount and when search changes
+  useEffect(() => {
+    if (!isNestedRoute) {
+      const timer = setTimeout(() => {
+        fetchDocuments(null, searchQuery);
+      }, searchQuery ? 500 : 0); // Debounce search
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery, isNestedRoute, fetchDocuments]);
 
   const handleFolderClick = (folderId) => {
     navigate(`folder/${folderId}`);
@@ -116,7 +199,7 @@ export default function DocumentManagement() {
     handleFolderClick(folderId);
   };
 
-  // Filter folders based on search
+  // Filter folders based on search (now handled by API, but keep for client-side filtering if needed)
   const filteredFolders = folders.filter(folder =>
     folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     folder.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -152,6 +235,7 @@ export default function DocumentManagement() {
               <button
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+                onClick={() => setShowUploadModal(true)}
               >
                 <DocumentUpload />
                 <span>Upload Documents</span>
@@ -214,9 +298,37 @@ export default function DocumentManagement() {
             </div>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
+              <button
+                onClick={() => fetchDocuments(null, searchQuery)}
+                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* Folder Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {filteredFolders.map((folder) => (
+          {!loading && !error && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {filteredFolders.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-600 font-[BasisGrotesquePro]">No folders found</p>
+                </div>
+              ) : (
+                filteredFolders.map((folder) => (
               <div
                 key={folder.id}
                 onClick={() => handleFolderClick(folder.id)}
@@ -306,8 +418,10 @@ export default function DocumentManagement() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -1940,6 +2054,18 @@ export default function DocumentManagement() {
 
       {/* Render nested routes - Always render Outlet, it will show FolderContents when route matches */}
       <Outlet />
+
+      {/* Upload Document Modal */}
+      <FirmAdminUploadModal
+        show={showUploadModal}
+        handleClose={() => setShowUploadModal(false)}
+        onUploadSuccess={() => {
+          // Refresh folders and documents after successful upload
+          if (!isNestedRoute) {
+            fetchDocuments(null, searchQuery);
+          }
+        }}
+      />
     </div>
   );
 }

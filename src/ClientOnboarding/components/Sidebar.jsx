@@ -25,9 +25,11 @@ export default function Sidebar() {
   const isActive = (path) => {
     const currentPath = location.pathname;
     
-    // Special handling for dashboard - only match exact /dashboard or /dashboard/
+    // Special handling for dashboard - match /dashboard, /dashboard/, and /dashboard-first
     if (path === "/dashboard") {
-      return currentPath === "/dashboard" || currentPath === "/dashboard/";
+      return currentPath === "/dashboard" || 
+             currentPath === "/dashboard/" || 
+             currentPath === "/dashboard-first";
     }
     
     // Exact match

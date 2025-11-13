@@ -1,14 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
-import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
-import image from "../../assets/image.png";
 import { LogoIcond } from "../../Taxpreparer/component/icons"
 import { UserIconBuild } from "./icons";
+import SuperAdminNotificationPanel from "./SuperAdminNotificationPanel";
+import { superAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 
 export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarCollapsed = false }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationButtonRef = useRef(null);
+
+  // Fetch unread count
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await superAdminNotificationAPI.getUnreadCount();
+      if (response.success && response.data) {
+        setUnreadCount(response.data.unread_count || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching unread count:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch unread count on mount and periodically
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Every 30 seconds
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
+
+  const toggleNotifications = () => {
+    setShowNotifications((prev) => !prev);
+  };
+
+  const closeNotifications = () => {
+    setShowNotifications(false);
+    if (notificationButtonRef.current) {
+      notificationButtonRef.current.focus();
+    }
+    // Refresh unread count when closing
+    fetchUnreadCount();
+  };
   return (
     <>
       <nav className="bg-white fixed top-0 left-0 right-0 border-b border-gray-200 h-[70px] z-[1030] px-0">
@@ -34,11 +68,40 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarColl
 
               {/* Right side */}
               <div className="flex items-center gap-3">
-                <div
-                  className="w-[35px] h-[35px] rounded-md bg-[#F56D2D] flex items-center justify-center cursor-pointer"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <FaBell size={14} color="white" />
+                <div className="relative">
+                  <div
+                    ref={notificationButtonRef}
+                    className="w-[35px] h-[35px] rounded-md bg-[#F56D2D] flex items-center justify-center cursor-pointer hover:bg-[#E55A1D] transition-colors relative"
+                    onClick={toggleNotifications}
+                    title="Notifications"
+                  >
+                    <FaBell size={14} color="white" />
+                    {unreadCount > 0 && (
+                      <span
+                        className="position-absolute"
+                        style={{
+                          top: "-4px",
+                          right: "-4px",
+                          backgroundColor: "#EF4444",
+                          color: "#fff",
+                          borderRadius: "50%",
+                          width: "18px",
+                          height: "18px",
+                          fontSize: "10px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "600",
+                          fontFamily: "BasisGrotesquePro",
+                        }}
+                      >
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  {showNotifications && (
+                    <SuperAdminNotificationPanel onClose={closeNotifications} />
+                  )}
                 </div>
                 <UserIconBuild />
               </div>
@@ -50,10 +113,6 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarColl
         </div>
       </nav>
 
-      {/* Notification Panel */}
-      {/* {showNotifications && (
-                <NotificationPanel onClose={() => setShowNotifications(false)} />
-            )} */}
     </>
   );
 }

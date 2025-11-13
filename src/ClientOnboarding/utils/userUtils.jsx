@@ -18,13 +18,30 @@ export const setUserStatus = (status) => {
 };
 
 /**
- * Get user data from localStorage
+ * Get user data from appropriate storage (localStorage or sessionStorage)
  * @returns {Object|null} User data object or null if not found
  */
 export const getUserData = () => {
   try {
-    const userData = localStorage.getItem("userData");
-    return userData ? JSON.parse(userData) : null;
+    // Check the appropriate storage based on rememberMe setting
+    const storage = getStorage();
+    const userData = storage.getItem("userData");
+    if (userData) {
+      return JSON.parse(userData);
+    }
+    
+    // Fallback: check both storages if not found in primary storage
+    const localUserData = localStorage.getItem("userData");
+    if (localUserData) {
+      return JSON.parse(localUserData);
+    }
+    
+    const sessionUserData = sessionStorage.getItem("userData");
+    if (sessionUserData) {
+      return JSON.parse(sessionUserData);
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error parsing user data:", error);
     return null;

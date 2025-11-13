@@ -255,6 +255,14 @@ export default function Dashboard() {
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [recentMessages, setRecentMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination states
+  const [myTasksPage, setMyTasksPage] = useState(1);
+  const [deadlinesPage, setDeadlinesPage] = useState(1);
+  const [messagesPage, setMessagesPage] = useState(1);
+  
+  // Items per page
+  const ITEMS_PER_PAGE = 3;
 
   useEffect(() => {
     const isFirstTime = localStorage.getItem("firstTimeUser");
@@ -304,6 +312,88 @@ export default function Dashboard() {
     return "#6B7280";
   };
 
+  // Pagination helper functions
+  const getPaginatedData = (data, page, itemsPerPage) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (data, itemsPerPage) => {
+    return Math.ceil(data.length / itemsPerPage);
+  };
+
+  // Quick Actions data (static for now)
+  const quickActions = [
+    {
+      icon: <Client className="action-icon" />,
+      label: "View Client",
+      path: '/taxdashboard/clients'
+    },
+    {
+      icon: <FileIcon className="action-icon" />,
+      label: "Documents",
+      path: '/taxdashboard/documents'
+    },
+    {
+      icon: <Schedule className="action-icon" />,
+      label: "Schedule",
+      path: '/taxdashboard/calendar'
+    },
+    {
+      icon: <Analytics className="action-icon" />,
+      label: "Tasks",
+      path: '/taxdashboard/tasks'
+    }
+  ];
+
+  // Pagination Component
+  const PaginationControls = ({ currentPage, totalPages, onPageChange, sectionName }) => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="d-flex justify-content-center align-items-center gap-2 mt-3" style={{ paddingTop: '0.5rem', borderTop: '1px solid #E5E7EB' }}>
+        <button
+          className="btn btn-sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={{
+            backgroundColor: currentPage === 1 ? '#E5E7EB' : '#F56D2D',
+            color: currentPage === 1 ? '#9CA3AF' : '#FFFFFF',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '6px 12px',
+            fontSize: '14px',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage === 1 ? 0.6 : 1
+          }}
+        >
+          Previous
+        </button>
+        <span style={{ fontSize: '14px', color: '#4B5563', minWidth: '80px', textAlign: 'center' }}>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          className="btn btn-sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          style={{
+            backgroundColor: currentPage === totalPages ? '#E5E7EB' : '#F56D2D',
+            color: currentPage === totalPages ? '#9CA3AF' : '#FFFFFF',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '6px 12px',
+            fontSize: '14px',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            opacity: currentPage === totalPages ? 0.6 : 1
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="container-fluid px-2 px-md-2">
       <TaxDashboardWidget />
@@ -330,7 +420,7 @@ export default function Dashboard() {
               ) : myTasks.length === 0 ? (
                 <div className="text-center py-3">No tasks assigned</div>
               ) : (
-                myTasks.map((task, i) => {
+                getPaginatedData(myTasks, myTasksPage, ITEMS_PER_PAGE).map((task, i) => {
                   const taskTitle = task.task_title || task.title || 'Untitled Task';
                   return (
                     <TaskCard
@@ -352,6 +442,12 @@ export default function Dashboard() {
                 })
               )}
             </div>
+            <PaginationControls
+              currentPage={myTasksPage}
+              totalPages={getTotalPages(myTasks, ITEMS_PER_PAGE)}
+              onPageChange={setMyTasksPage}
+              sectionName="myTasks"
+            />
           </div>
         </div>
 
@@ -368,7 +464,7 @@ export default function Dashboard() {
               ) : upcomingDeadlines.length === 0 ? (
                 <div className="text-center py-3">No upcoming deadlines</div>
               ) : (
-                upcomingDeadlines.map((deadline, i) => {
+                getPaginatedData(upcomingDeadlines, deadlinesPage, ITEMS_PER_PAGE).map((deadline, i) => {
                   const deadlineTitle = deadline.title || 'Untitled';
                   return (
                     <TaskCard
@@ -393,6 +489,12 @@ export default function Dashboard() {
                 })
               )}
             </div>
+            <PaginationControls
+              currentPage={deadlinesPage}
+              totalPages={getTotalPages(upcomingDeadlines, ITEMS_PER_PAGE)}
+              onPageChange={setDeadlinesPage}
+              sectionName="deadlines"
+            />
           </div>
 
         </div>
@@ -423,7 +525,7 @@ export default function Dashboard() {
               ) : recentMessages.length === 0 ? (
                 <div className="text-center py-3">No recent messages</div>
               ) : (
-                recentMessages.map((msg, i) => {
+                getPaginatedData(recentMessages, messagesPage, ITEMS_PER_PAGE).map((msg, i) => {
                   const msgType = msg.sender?.role === 'client' || msg.sender_type === 'Client' ? 'client' : 'internal';
                   const senderName = msg.sender?.name || msg.sender_name || 'Unknown';
                   return (
@@ -460,6 +562,12 @@ export default function Dashboard() {
                 })
               )}
             </div>
+            <PaginationControls
+              currentPage={messagesPage}
+              totalPages={getTotalPages(recentMessages, ITEMS_PER_PAGE)}
+              onPageChange={setMessagesPage}
+              sectionName="messages"
+            />
           </div>
         </div>
 
@@ -471,38 +579,17 @@ export default function Dashboard() {
               <p className="section-subtitle m-0">Common tasks and shortcuts</p>
             </div>
             <div className="quick-action-container">
-              <div
-                className="quick-action-card"
-                onClick={() => navigate('/taxdashboard/clients')}
-                style={{ cursor: 'pointer' }}
-              >
-                <Client className="action-icon" />
-                <span>View Client</span>
-              </div>
-              <div
-                className="quick-action-card"
-                onClick={() => navigate('/taxdashboard/documents')}
-                style={{ cursor: 'pointer' }}
-              >
-                <FileIcon className="action-icon" />
-                <span>Documents</span>
-              </div>
-              <div
-                className="quick-action-card"
-                onClick={() => navigate('/taxdashboard/calendar')}
-                style={{ cursor: 'pointer' }}
-              >
-                <Schedule className="action-icon" />
-                <span>Schedule</span>
-              </div>
-              <div
-                className="quick-action-card"
-                onClick={() => navigate('/taxdashboard/tasks')}
-                style={{ cursor: 'pointer' }}
-              >
-                <Analytics className="action-icon" />
-                <span>Tasks</span>
-              </div>
+              {quickActions.map((action, i) => (
+                <div
+                  key={i}
+                  className="quick-action-card"
+                  onClick={() => navigate(action.path)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {action.icon}
+                  <span>{action.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

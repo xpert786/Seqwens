@@ -12,6 +12,7 @@ import AccountSettings from './Pages/AccountSettings/AccountSettings';
 import SupportCenter from './Pages/SupportCenter/SupportCenter';
 import FirmManagement from './Pages/FirmManagement';
 import FirmDetails from './Pages/FirmDetails';
+import Notifications from './Pages/AccountSettings/Notifications';
 
 // Protected Route Component for Super Admin
 function SuperAdminProtectedRoute({ children }) {
@@ -59,6 +60,7 @@ export default function SuperRoutes() {
         <Route path="subscriptions" element={<Subscriptions />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<AccountSettings />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="firms" element={<FirmManagement />} />
         <Route path="firms/:firmId" element={<FirmDetails />} />

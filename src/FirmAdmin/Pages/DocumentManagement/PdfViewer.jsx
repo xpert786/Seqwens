@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PdfCalendarIcon, PdfCheckmarkIcon, PdfDocumentIcon, PdfDocumentIconLight, PdfEditIcon, PdfPaperPlaneIcon, PdfProfileIcon } from '../../Components/icons';
+import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 // Icons
 const EyeIcon = () => (
@@ -27,6 +30,11 @@ export default function PdfViewer() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Details');
   const [newComment, setNewComment] = useState('');
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [addingComment, setAddingComment] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   // Document data mapping based on documentId - matching FolderContents documents
   const documentDataMap = {
@@ -86,61 +94,197 @@ export default function PdfViewer() {
   // Dummy PDF URL - using a sample PDF that can be displayed
   const pdfUrl = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
 
-  // Dummy comments data
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: 'Michael Chen',
-      date: '2024-03-16 10:30 AM',
-      content: 'Document has been reviewed and approved. All calculations are correct.',
-      icon: <PdfCheckmarkIcon />,
-    },
-    {
-      id: 2,
-      author: 'John Smith',
-      date: '2024-03-18 2:15 PM',
-      content: 'Thank you for the quick review. When will this be filed?',
-      icon: <PdfProfileIcon />,
-    },
-    {
-      id: 3,
-      author: 'Michael Chen',
-      date: '2024-03-18 3:45PM',
-      content: 'Filing will be completed by March 20th. You\'ll receive confirmation once submitted.',
-      icon: <PdfDocumentIcon />,
-    },
-  ]);
+  // Helper function to get icon based on comment type
+  const getCommentIcon = (commentType) => {
+    switch (commentType) {
+      case 'comment':
+        return <PdfDocumentIcon />;
+      case 'note':
+        return <PdfCheckmarkIcon />;
+      case 'annotation':
+        return <PdfEditIcon />;
+      default:
+        return <PdfProfileIcon />;
+    }
+  };
 
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      const newId = comments.length > 0 ? Math.max(...comments.map(c => c.id)) + 1 : 1;
-      setComments([
-        ...comments,
-        {
-          id: newId,
-          author: 'Current User',
-          date: new Date().toLocaleString('en-US', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit', 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: true 
-          }),
-          content: newComment.trim(),
-          icon: <UserIcon />,
-        },
-      ]);
-      setNewComment('');
+  // Format date from API
+  const formatCommentDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Fetch comments from API
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!documentId) return;
+
+      try {
+        setLoadingComments(true);
+        const response = await firmAdminDocumentsAPI.getComments(documentId);
+        
+        if (response.success && response.data) {
+          const commentsList = Array.isArray(response.data) ? response.data : 
+                              (response.data.comments || []);
+          
+          // Transform API comments to match component structure
+          const transformedComments = commentsList.map(comment => ({
+            id: comment.id,
+            author: comment.created_by_name || 
+                   comment.created_by?.full_name || 
+                   comment.created_by?.username || 
+                   `${comment.created_by?.first_name || ''} ${comment.created_by?.last_name || ''}`.trim() ||
+                   'Unknown User',
+            date: formatCommentDate(comment.created_at),
+            content: comment.content,
+            comment_type: comment.comment_type || 'comment',
+            is_resolved: comment.is_resolved || false,
+            page_number: comment.page_number,
+            position_x: comment.position_x,
+            position_y: comment.position_y,
+            icon: getCommentIcon(comment.comment_type),
+            created_by: comment.created_by,
+            created_by_name: comment.created_by_name,
+            created_by_initials: comment.created_by_initials
+          }));
+
+          setComments(transformedComments);
+        } else {
+          setComments([]);
+        }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        toast.error(handleAPIError(error) || 'Failed to load comments');
+        setComments([]);
+      } finally {
+        setLoadingComments(false);
+      }
+    };
+
+    fetchComments();
+  }, [documentId]);
+
+  // Create a new comment
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !documentId) return;
+
+    try {
+      setAddingComment(true);
+      const commentData = {
+        comment_type: 'comment', // Default to comment, can be changed later
+        content: newComment.trim()
+      };
+
+      const response = await firmAdminDocumentsAPI.createComment(documentId, commentData);
+
+      if (response.success && response.data) {
+        const newCommentData = response.data;
+        const transformedComment = {
+          id: newCommentData.id,
+          author: newCommentData.created_by_name || 
+                 newCommentData.created_by?.full_name || 
+                 newCommentData.created_by?.username || 
+                 `${newCommentData.created_by?.first_name || ''} ${newCommentData.created_by?.last_name || ''}`.trim() ||
+                 'You',
+          date: formatCommentDate(newCommentData.created_at),
+          content: newCommentData.content,
+          comment_type: newCommentData.comment_type || 'comment',
+          is_resolved: newCommentData.is_resolved || false,
+          page_number: newCommentData.page_number,
+          position_x: newCommentData.position_x,
+          position_y: newCommentData.position_y,
+          icon: getCommentIcon(newCommentData.comment_type),
+          created_by: newCommentData.created_by,
+          created_by_name: newCommentData.created_by_name,
+          created_by_initials: newCommentData.created_by_initials
+        };
+
+        setComments(prev => [transformedComment, ...prev]);
+        setNewComment('');
+        toast.success('Comment added successfully');
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error(handleAPIError(error) || 'Failed to add comment');
+    } finally {
+      setAddingComment(false);
+    }
+  };
+
+  // Update a comment (mark as resolved/unresolved)
+  const handleUpdateComment = async (commentId, updates) => {
+    try {
+      const response = await firmAdminDocumentsAPI.updateComment(commentId, updates);
+
+      if (response.success && response.data) {
+        const updatedComment = response.data;
+        setComments(prev => prev.map(comment => 
+          comment.id === commentId 
+            ? {
+                ...comment,
+                ...updates,
+                is_resolved: updatedComment.is_resolved !== undefined ? updatedComment.is_resolved : comment.is_resolved,
+                content: updatedComment.content || comment.content
+              }
+            : comment
+        ));
+        toast.success('Comment updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      toast.error(handleAPIError(error) || 'Failed to update comment');
+    }
+  };
+
+  // Delete a comment
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await firmAdminDocumentsAPI.deleteComment(commentId);
+
+      if (response.success || response.status === 204) {
+        setComments(prev => prev.filter(comment => comment.id !== commentId));
+        setDeleteConfirmId(null);
+        toast.success('Comment deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error(handleAPIError(error) || 'Failed to delete comment');
     }
   };
 
   const handleBack = () => {
-    navigate(`/firmadmin/documents/folder/${folderId}`);
+    navigate(-1);
   };
+
+  // Back arrow icon
+  const BackArrowIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 12L6 8L10 4" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
 
   return (
     <div className="p-6 bg-[rgb(243,247,255)] min-h-screen" style={{ fontFamily: 'BasisGrotesquePro' }}>
+      {/* Back Button */}
+      <div className="mb-4">
+        <button 
+          onClick={handleBack}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+          style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+        >
+          <BackArrowIcon />
+          <span>Back</span>
+        </button>
+      </div>
+
       {/* Top Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
@@ -315,19 +459,108 @@ export default function PdfViewer() {
               Communication history for this document
             </p>
 
-            <div className="flex-1max-h-screen overflow-auto space-y-4 mb-4 pr-2">
-              {comments.map((comment) => (
-                <div key={comment.id} className="bg-gray-50 p-1 rounded-lg ">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="text-gray-600">
-                      {comment.icon}
-                    </div>
-                    <span className="font-medium text-gray-800 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>{comment.author}</span>
-                    <span className="text-gray-500 text-xs" style={{ fontFamily: 'BasisGrotesquePro' }}>{comment.date}</span>
+            <div className="flex-1 max-h-[600px] overflow-auto space-y-4 mb-4 pr-2">
+              {loadingComments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-gray-500 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Loading comments...
                   </div>
-                  <p className="text-gray-700 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>{comment.content}</p>
                 </div>
-              ))}
+              ) : comments.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-gray-500 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    No comments yet. Be the first to comment!
+                  </div>
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div 
+                    key={comment.id} 
+                    className={`bg-gray-50 p-4 rounded-lg border ${comment.is_resolved ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="text-gray-600 flex-shrink-0">
+                          {comment.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-800 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                              {comment.author}
+                            </span>
+                            <span className="text-gray-500 text-xs" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                              {comment.date}
+                            </span>
+                            {comment.comment_type && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                {comment.comment_type}
+                              </span>
+                            )}
+                            {comment.is_resolved && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                Resolved
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        {!comment.is_resolved && (
+                          <button
+                            onClick={() => handleUpdateComment(comment.id, { is_resolved: true })}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors text-green-600"
+                            title="Mark as resolved"
+                          >
+                            <PdfCheckmarkIcon />
+                          </button>
+                        )}
+                        {comment.is_resolved && (
+                          <button
+                            onClick={() => handleUpdateComment(comment.id, { is_resolved: false })}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors text-gray-600"
+                            title="Mark as unresolved"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M4 8L6 10L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        )}
+                        {deleteConfirmId === comment.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                              style={{ fontFamily: 'BasisGrotesquePro' }}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(null)}
+                              className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+                              style={{ fontFamily: 'BasisGrotesquePro' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteConfirmId(comment.id)}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors text-red-600"
+                            title="Delete comment"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className={`text-sm ${comment.is_resolved ? 'text-gray-500 line-through' : 'text-gray-700'}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      {comment.content}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Add Comment Section */}
@@ -347,11 +580,21 @@ export default function PdfViewer() {
               </div>
               <button
                 onClick={handleAddComment}
-                className="w-fit flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium"
+                disabled={addingComment || !newComment.trim()}
+                className="w-fit flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
-                <PdfPaperPlaneIcon   />
-                <span>Add Comment</span>
+                {addingComment ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <PdfPaperPlaneIcon />
+                    <span>Add Comment</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -61,7 +61,7 @@ export default function DashboardFirst() {
       case "Schedule a Consultation":
         return "/dashboard/appointments";
       case "Set Up Payment Method":
-        return "/dashboard/invoices";
+        return "/accounts?tab=billing";
       default:
         return "#";
     }

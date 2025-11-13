@@ -7,7 +7,7 @@ const TableView = ({ taskData, getPriorityColor, getStatusColor, handleActionCli
   return (
     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
       <div className="mb-6">
-        <h4 className="text-xl font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">All Tasks (4)</h4>
+        <h4 className="text-xl font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">All Tasks ({taskData.length})</h4>
         <p className="text-gray-600 font-[BasisGrotesquePro]">Complete list of tasks with status, assignments, and progress</p>
       </div>
 
@@ -26,10 +26,20 @@ const TableView = ({ taskData, getPriorityColor, getStatusColor, handleActionCli
             </tr>
           </thead>
           <tbody className="bg-white">
-            {taskData.map((task) => (
+            {taskData.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="p-8 text-center">
+                  <p className="text-gray-500 font-[BasisGrotesquePro]">No tasks found</p>
+                </td>
+              </tr>
+            ) : (
+              taskData.map((task) => (
               <tr key={task.id}>
                 <td colSpan="8" className="p-0">
-                  <div className="!border border-[#E8F0FF] p-1 mb-2 !rounded-lg">
+                  <div 
+                    className="!border border-[#E8F0FF] p-1 mb-2 !rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate(`/firmadmin/tasks/${task.id}`)}
+                  >
                     <div className="grid grid-cols-8 gap-6 items-center" style={{ minWidth: '1200px' }}>
                       <div className="px-3 py-2 min-w-[200px]">
                         <div>
@@ -77,7 +87,10 @@ const TableView = ({ taskData, getPriorityColor, getStatusColor, handleActionCli
                       </div>
                       <div className="px-3 py-2 text-sm font-medium min-w-[80px] relative dropdown-container flex justify-center">
                         <button 
-                          onClick={() => handleActionClick(task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActionClick(task.id);
+                          }}
                           className="text-gray-400 hover:text-gray-600 p-1 rounded"
                         >
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -90,28 +103,40 @@ const TableView = ({ taskData, getPriorityColor, getStatusColor, handleActionCli
                           <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 z-50">
                             <div className="">
                               <button
-                                onClick={() => handleActionSelect('View Details', task.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActionSelect('View Details', task.id);
+                                }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#FFF4E6] hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
                                 style={{borderRadius: '7px'}}
                               >
                                 View Details
                               </button>
                               <button
-                                onClick={() => handleActionSelect('Edit Task', task.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActionSelect('Edit Task', task.id);
+                                }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-100 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
                                 style={{borderRadius: '7px'}}
                               >
                                 Edit Task
                               </button>
                               <button
-                                onClick={() => handleActionSelect('Start Timer', task.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActionSelect('Start Timer', task.id);
+                                }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-100 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
                                 style={{borderRadius: '7px'}}
                               >
                                 Start Timer
                               </button>
                               <button
-                                onClick={() => handleActionSelect('Delete Task', task.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActionSelect('Delete Task', task.id);
+                                }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-100 hover:text-gray-900 transition-colors font-[BasisGrotesquePro]"
                                 style={{borderRadius: '7px'}}
                               >
@@ -125,7 +150,8 @@ const TableView = ({ taskData, getPriorityColor, getStatusColor, handleActionCli
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

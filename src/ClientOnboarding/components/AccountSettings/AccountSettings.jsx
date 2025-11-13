@@ -1,11 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
 import Billing from "./Billing";
 
 export default function AccountSettings() {
-    const [activeTab, setActiveTab] = useState("profile");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabFromUrl = searchParams.get("tab");
+    const [activeTab, setActiveTab] = useState(tabFromUrl || "profile");
+
+    // Update active tab when URL parameter changes
+    useEffect(() => {
+        if (tabFromUrl) {
+            setActiveTab(tabFromUrl);
+        }
+    }, [tabFromUrl]);
 
     const tabs = [
         { id: "profile", label: "Profile" },
@@ -61,7 +71,11 @@ export default function AccountSettings() {
                     {tabs.map((tab) => (
                         <li key={tab.id}>
                             <button
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => {
+                                    setActiveTab(tab.id);
+                                    // Update URL parameter when tab is clicked
+                                    setSearchParams({ tab: tab.id });
+                                }}
                                 style={{
                                     padding: "8px 22px",
                                     borderRadius: "8px",

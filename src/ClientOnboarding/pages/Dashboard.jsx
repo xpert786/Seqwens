@@ -125,6 +125,7 @@ export default function Dashboard() {
     const userData = JSON.parse(localStorage.getItem("userData") || sessionStorage.getItem("userData") || "{}");
 
     // If user is not completed, redirect to dashboard-first
+    // User must stay on dashboard-first until all information is complete
     if (userData && userData.is_completed === false) {
       navigate("/dashboard-first");
       return;

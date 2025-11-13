@@ -80,9 +80,26 @@ const TaskDetails = () => {
         }
     };
 
+    const handleBack = () => {
+        navigate(-1); // Go back to previous page
+    };
+
     return (
         <div className="min-h-screen bg-[#F6F7FF] p-6">
             <div className="mx-auto">
+                {/* Back Button */}
+                <div className="mb-4">
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Back
+                    </button>
+                </div>
+
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 space-y-4 lg:space-y-0">
                     <div className="flex-1">

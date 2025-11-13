@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Profile from "./Profile";
-import Notifications from "./Notifications";
 import Security from "./Security";
 import Billing from "./Billing";
 import SystemHealth from "./SystemHealth";
