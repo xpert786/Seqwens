@@ -42,6 +42,8 @@ export default function MessagePage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const typingTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   // WebSocket hook for real-time messaging
   const {
@@ -132,6 +134,13 @@ export default function MessagePage() {
                 wsMarkAsRead(msg.id);
               }
             });
+
+            // Auto-scroll to bottom after initial load
+            setTimeout(() => {
+              if (messagesEndRef.current) {
+                messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+              }
+            }, 100);
           } else {
             setActiveChatMessages([]);
           }
@@ -163,83 +172,122 @@ export default function MessagePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversationId]);
 
-  // Sync WebSocket messages with local state
+  // Sync WebSocket messages with local state - INSTANT display
   useEffect(() => {
-    if (wsMessages && wsMessages.length > 0) {
-      const transformedMessages = wsMessages.map(msg => {
-        // Tax preparer's sent messages appear on RIGHT, client's received messages appear on LEFT
-        const isClient = msg.sender_role === "Client" || msg.sender_role === "client";
-        let messageType = isClient ? "admin" : "user";
-
-        return {
-          id: msg.id,
-          type: messageType,
-          text: msg.content || '',
-          date: msg.created_at,
-          sender: msg.sender_name || '',
-          senderRole: msg.sender_role || '',
-          isRead: msg.is_read || false,
-          isEdited: msg.is_edited || false,
-          messageType: msg.message_type || 'text',
-          isInternal: msg.is_internal || false,
-          attachment: msg.attachment || null,
-          attachmentName: msg.attachment_name || null,
-          attachmentSize: msg.attachment_size_display || null,
-        };
+    if (wsMessages && wsMessages.length > 0 && activeConversationId) {
+      // Filter messages that belong to the active conversation
+      // WebSocket is already connected to the specific thread, but double-check
+      const relevantMessages = wsMessages.filter(msg => {
+        // Check if message has thread_id and it matches active conversation
+        return !msg.thread_id || msg.thread_id === activeConversationId;
       });
 
-      // Merge with existing messages, avoiding duplicates
-      setActiveChatMessages(prev => {
-        const existingIds = new Set(prev.map(m => m.id));
-        const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+      if (relevantMessages.length > 0) {
+        const transformedMessages = relevantMessages.map(msg => {
+          // Tax preparer's sent messages appear on RIGHT, client's received messages appear on LEFT
+          const isClient = msg.sender_role === "Client" || msg.sender_role === "client";
+          let messageType = isClient ? "admin" : "user";
 
-        if (newMessages.length > 0) {
-          const merged = [...prev, ...newMessages].sort((a, b) => {
-            return new Date(a.date) - new Date(b.date);
-          });
-          return merged;
-        }
-        return prev;
-      });
-
-      // Update conversation's last message in conversations list
-      if (transformedMessages.length > 0 && activeConversationId) {
-        const lastMessage = transformedMessages[transformedMessages.length - 1];
-        const truncatedMessage = lastMessage.text.length > 50
-          ? lastMessage.text.substring(0, 50) + '...'
-          : lastMessage.text;
-
-        setConversations(prevConvs => {
-          const updated = prevConvs.map(conv => {
-            if (conv.id === activeConversationId) {
-              return {
-                ...conv,
-                lastMessage: truncatedMessage,
-                time: 'Just now',
-                unreadCount: lastMessage.type === "admin" && !lastMessage.isRead
-                  ? (conv.unreadCount || 0) + 1
-                  : conv.unreadCount || 0
-              };
-            }
-            return conv;
-          });
-          // Sort conversations by last message time (most recent first)
-          return updated.sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0);
-            const dateB = new Date(b.createdAt || 0);
-            return dateB - dateA;
-          });
+          return {
+            id: msg.id,
+            type: messageType,
+            text: msg.content || '',
+            date: msg.created_at,
+            sender: msg.sender_name || '',
+            senderRole: msg.sender_role || '',
+            isRead: msg.is_read || false,
+            isEdited: msg.is_edited || false,
+            messageType: msg.message_type || 'text',
+            isInternal: msg.is_internal || false,
+            attachment: msg.attachment || null,
+            attachmentName: msg.attachment_name || null,
+            attachmentSize: msg.attachment_size_display || null,
+          };
         });
-      }
 
-      // Mark client messages as read (client messages are type "admin" now, appearing on left)
-      transformedMessages.forEach(msg => {
-        if (!msg.isRead && msg.type === "admin") {
-          wsMarkAsRead(msg.id);
+        // Merge with existing messages, avoiding duplicates - INSTANT UPDATE
+        setActiveChatMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+
+          if (newMessages.length > 0) {
+            // Remove optimistic messages that match the new real messages (by text and approximate time)
+            const filtered = prev.filter(prevMsg => {
+              if (prevMsg.isOptimistic) {
+                // Check if this optimistic message matches any new message
+                return !newMessages.some(newMsg => 
+                  newMsg.text === prevMsg.text && 
+                  Math.abs(new Date(newMsg.date) - new Date(prevMsg.date)) < 5000 // Within 5 seconds
+                );
+              }
+              return true;
+            });
+            
+            const merged = [...filtered, ...newMessages].sort((a, b) => {
+              return new Date(a.date) - new Date(b.date);
+            });
+            return merged;
+          }
+          return prev;
+        });
+
+        // Update conversation's last message in conversations list - INSTANT
+        if (transformedMessages.length > 0 && activeConversationId) {
+          const lastMessage = transformedMessages[transformedMessages.length - 1];
+          const truncatedMessage = lastMessage.text.length > 50
+            ? lastMessage.text.substring(0, 50) + '...'
+            : lastMessage.text;
+
+          setConversations(prevConvs => {
+            const updated = prevConvs.map(conv => {
+              if (conv.id === activeConversationId) {
+                return {
+                  ...conv,
+                  lastMessage: truncatedMessage,
+                  time: 'Just now',
+                  unreadCount: lastMessage.type === "admin" && !lastMessage.isRead
+                    ? (conv.unreadCount || 0) + 1
+                    : conv.unreadCount || 0
+                };
+              }
+              return conv;
+            });
+            // Sort conversations by last message time (most recent first)
+            return updated.sort((a, b) => {
+              const dateA = new Date(a.createdAt || 0);
+              const dateB = new Date(b.createdAt || 0);
+              return dateB - dateA;
+            });
+          });
         }
-      });
+
+        // Mark client messages as read (client messages are type "admin" now, appearing on left)
+        transformedMessages.forEach(msg => {
+          if (!msg.isRead && msg.type === "admin") {
+            wsMarkAsRead(msg.id);
+          }
+        });
+
+        // Auto-scroll to bottom for new messages - INSTANT
+        setTimeout(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 50);
+      }
     }
   }, [wsMessages, activeConversationId, wsMarkAsRead]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [activeChatMessages]);
 
   const handleSend = async () => {
     if (newMessage.trim() === "" || !activeConversationId) return;
@@ -251,11 +299,62 @@ export default function MessagePage() {
     wsSendTyping(false);
 
     try {
+      // Determine message type: Tax preparer's sent messages go to RIGHT
+      const messageType = "user"; // Tax preparer sends → "user" (right side)
+
+      // Optimistic update - add message instantly to chat area
+      const optimisticMsg = {
+        id: `temp-${Date.now()}`,
+        type: messageType,
+        text: messageText,
+        date: new Date().toISOString(),
+        sender: 'You',
+        senderRole: '',
+        isRead: false,
+        isEdited: false,
+        messageType: 'text',
+        isOptimistic: true, // Mark as optimistic
+      };
+
+      // Add message instantly to chat area
+      setActiveChatMessages(prev => [...prev, optimisticMsg].sort((a, b) => new Date(a.date) - new Date(b.date)));
+      
+      // Update conversation list instantly
+      const truncatedMessage = messageText.length > 50
+        ? messageText.substring(0, 50) + '...'
+        : messageText;
+
+      setConversations(prevConvs => {
+        const updated = prevConvs.map(conv => {
+          if (conv.id === activeConversationId) {
+            return {
+              ...conv,
+              lastMessage: truncatedMessage,
+              time: 'Just now'
+            };
+          }
+          return conv;
+        });
+        return updated.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB - dateA;
+        });
+      });
+
+      // Auto-scroll to bottom instantly
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 50);
+
       // Try WebSocket first if connected
       if (wsConnected) {
         const sent = wsSendMessage(messageText, false); // false = not internal
         if (sent) {
           console.log('✅ Message sent via WebSocket');
+          // Message will come back via WebSocket and replace optimistic message
           return;
         }
       }
@@ -268,14 +367,14 @@ export default function MessagePage() {
       });
 
       if (response.success) {
-        // Determine message type: Tax preparer's sent messages go to RIGHT, client messages go to LEFT
+        // Replace optimistic message with real message
         const senderRole = response.data?.sender_role || '';
         const isClient = senderRole === "Client" || senderRole === "client";
-        const messageType = isClient ? "admin" : "user"; // Tax preparer sends → "user" (right side)
+        const finalMessageType = isClient ? "admin" : "user";
 
-        const newMsg = {
+        const realMsg = {
           id: response.data?.id || Date.now(),
-          type: messageType, // Tax preparer's own sent messages should be "user" (right side)
+          type: finalMessageType,
           text: messageText,
           date: response.data?.created_at || new Date().toISOString(),
           sender: response.data?.sender_name || 'You',
@@ -286,10 +385,11 @@ export default function MessagePage() {
         };
 
         setActiveChatMessages(prev => {
-          // Check if message already exists to avoid duplicates
-          const exists = prev.some(m => m.id === newMsg.id);
-          if (exists) return prev;
-          return [...prev, newMsg].sort((a, b) => new Date(a.date) - new Date(b.date));
+          // Remove optimistic message and add real one
+          const filtered = prev.filter(m => m.id !== optimisticMsg.id);
+          const exists = filtered.some(m => m.id === realMsg.id);
+          if (exists) return filtered;
+          return [...filtered, realMsg].sort((a, b) => new Date(a.date) - new Date(b.date));
         });
 
         // Update conversation's last message in conversations list
@@ -829,14 +929,42 @@ export default function MessagePage() {
                 const activeConversation = conversations.find(c => c.id === activeConversationId);
                 return activeConversation ? (
                   <>
-                    <div className="flex-grow-1 overflow-auto mb-3" style={{ minHeight: "200px" }}>
+                    <div 
+                      ref={messagesContainerRef}
+                      className="flex-grow-1 overflow-auto mb-3" 
+                      style={{ 
+                        minHeight: "200px",
+                        maxHeight: "calc(55vh - 200px)",
+                        scrollbarWidth: "thin",
+                        scrollbarColor: "#C1C1C1 #F3F7FF"
+                      }}
+                    >
+                      <style>
+                        {`
+                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar {
+                            width: 8px;
+                          }
+                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-track {
+                            background: #F3F7FF;
+                            border-radius: 10px;
+                          }
+                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-thumb {
+                            background: #C1C1C1;
+                            border-radius: 10px;
+                          }
+                          .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar-thumb:hover {
+                            background: #A0A0A0;
+                          }
+                        `}
+                      </style>
                       {loadingMessages ? (
                         <div className="text-center py-5">
                           <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
                           <p className="text-muted mt-2 small">Loading messages...</p>
                         </div>
                       ) : activeChatMessages.length > 0 ? (
-                        activeChatMessages.map((msg) => {
+                        <>
+                        {activeChatMessages.map((msg) => {
                           // Client messages (received) appear on LEFT
                           if (msg.type === "admin") {
                             return (
@@ -913,7 +1041,9 @@ export default function MessagePage() {
                             );
                           }
                           return null;
-                        })
+                        })}
+                        <div ref={messagesEndRef} />
+                        </>
                       ) : (
                         <div className="text-center py-5">
                           <p className="text-muted">No messages yet. Start the conversation!</p>

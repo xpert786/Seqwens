@@ -1,14 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
 import image from "../../assets/image.png";
 import { LogoIcon } from "../../ClientOnboarding/components/icons";
+import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
+import { firmAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 import "../styles/FirmHeader.css";
 
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const notificationButtonRef = useRef(null);
+
+    // Fetch unread count
+    const fetchUnreadCount = useCallback(async () => {
+        try {
+            const response = await firmAdminNotificationAPI.getUnreadCount();
+            if (response.success && response.data) {
+                setUnreadNotifications(response.data.unread_count || 0);
+            }
+        } catch (err) {
+            console.error("Error fetching unread count:", err);
+        }
+    }, []);
+
+    // Fetch unread count on mount and periodically
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
+        return () => clearInterval(interval);
+    }, [fetchUnreadCount]);
+
+    const toggleNotifications = () => {
+        setShowNotifications((prev) => {
+            const next = !prev;
+            if (next) {
+                fetchUnreadCount(); // Refresh when opening
+            }
+            return next;
+        });
+    };
+
+    const closeNotifications = () => {
+        setShowNotifications(false);
+        if (notificationButtonRef.current) {
+            notificationButtonRef.current.focus();
+        }
+    };
+
+    const handleNotificationChange = useCallback((data) => {
+        if (data && data.unreadCount !== undefined) {
+            setUnreadNotifications(data.unreadCount);
+        }
+    }, []);
 
     return (
         <>
@@ -65,8 +111,9 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                     >
                         {/* Notification Bell */}
                         <div
-                            className="firm-notification-bell d-flex align-items-center justify-content-center"
-                            onClick={() => setShowNotifications(!showNotifications)}
+                            ref={notificationButtonRef}
+                            className="firm-notification-bell d-flex align-items-center justify-content-center position-relative"
+                            onClick={toggleNotifications}
                             style={{
                                 width: "34px",
                                 height: "34px",
@@ -77,6 +124,20 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                             }}
                         >
                             <FaBell size={14} color="white" />
+                            {unreadNotifications > 0 && (
+                                <span
+                                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    style={{
+                                        fontSize: "10px",
+                                        minWidth: "18px",
+                                        height: "18px",
+                                        padding: "2px 6px",
+                                        border: "2px solid white",
+                                    }}
+                                >
+                                    {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                                </span>
+                            )}
                         </div>
 
                         {/* User Profile */}
@@ -102,7 +163,15 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                     </div>
                 </div>
             </nav>
-            {/* Static notification panel placeholder */}
+            
+            {/* Notification Panel */}
+            {showNotifications && (
+                <NotificationPanel
+                    onClose={closeNotifications}
+                    onChange={handleNotificationChange}
+                    userType="firm_admin"
+                />
+            )}
         </>
     );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaPaperPlane, FaSearch } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
 import { getAccessToken } from "../utils/userUtils";
@@ -8,6 +9,14 @@ import { useThreadWebSocket } from "../utils/useThreadWebSocket";
 import { toast } from "react-toastify";
 
 export default function Messages() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const urlParams = new URLSearchParams(location.search);
+  const threadIdFromUrl = urlParams.get('threadId');
+  const clientIdFromUrl = urlParams.get('clientId');
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -85,11 +94,17 @@ export default function Messages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal]);
 
-  // Fetch chats from API
+  // Fetch chats from API (initial load and periodic polling)
   useEffect(() => {
-    const fetchChats = async () => {
+    let isInitialFetch = true;
+
+    const fetchChats = async (isPolling = false) => {
       try {
-        setLoading(true);
+        // Only show loading on initial fetch, not on periodic updates
+        if (isInitialFetch && !isPolling) {
+          setLoading(true);
+          isInitialFetch = false;
+        }
         setError(null);
 
         console.log('Fetching threads from API...');
@@ -159,11 +174,36 @@ export default function Messages() {
           setConversations(transformedChats);
           console.log('✅ Conversations state set');
 
-          // Set first chat as active if available
-          if (transformedChats.length > 0) {
-            console.log('Setting active conversation ID:', transformedChats[0].id);
-            console.log('First conversation data:', transformedChats[0]);
-            setActiveConversationId(transformedChats[0].id);
+          // Handle URL parameters to open specific thread
+          if (threadIdFromUrl || clientIdFromUrl) {
+            let targetThread = null;
+
+            if (threadIdFromUrl) {
+              // Find thread by ID
+              targetThread = transformedChats.find(conv => conv.id.toString() === threadIdFromUrl.toString());
+            } else if (clientIdFromUrl) {
+              // Find thread by client ID (if available in data)
+              targetThread = transformedChats.find(conv => {
+                // Try to match by client ID if stored
+                return conv.clientId && conv.clientId.toString() === clientIdFromUrl.toString();
+              });
+            }
+
+            if (targetThread) {
+              setActiveConversationId(targetThread.id);
+              // Clear URL parameters after setting active conversation
+              navigate(location.pathname, { replace: true });
+            } else if (transformedChats.length > 0 && !activeConversationId) {
+              // Fallback to first thread if no match found
+              setActiveConversationId(transformedChats[0].id);
+            }
+          } else {
+            // Set first chat as active if available and no active conversation
+            if (transformedChats.length > 0 && !activeConversationId) {
+              console.log('Setting active conversation ID:', transformedChats[0].id);
+              console.log('First conversation data:', transformedChats[0]);
+              setActiveConversationId(transformedChats[0].id);
+            }
           }
         } else {
           console.log('No threads in response');
@@ -171,22 +211,40 @@ export default function Messages() {
         }
       } catch (err) {
         console.error('Error fetching threads:', err);
-        setError(err.message || 'Failed to load chats');
+        if (!isPolling) {
+          setError(err.message || 'Failed to load chats');
+        }
       } finally {
-        setLoading(false);
+        if (!isPolling) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchChats();
+    // Initial fetch
+    fetchChats(false);
+
+    // Set up periodic polling every 5 seconds to fetch new conversations
+    const intervalId = setInterval(() => {
+      fetchChats(true); // Pass true to indicate this is a polling call
+    }, 5000); // Poll every 5 seconds
+
+    // Cleanup interval on unmount
+    return () => {
+      clearInterval(intervalId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId
   ) || null;
 
-  // Fetch messages for active conversation (initial load)
+  // Fetch messages for active conversation (initial load and periodic polling)
   useEffect(() => {
-    const fetchMessages = async () => {
+    let isInitialFetch = true;
+
+    const fetchMessages = async (isPolling = false) => {
       if (!activeConversationId) {
         setActiveChatMessages([]);
         setLoadingMessages(false);
@@ -194,7 +252,12 @@ export default function Messages() {
       }
 
       try {
-        setLoadingMessages(true);
+        // Only show loading on initial fetch, not on periodic updates
+        if (isInitialFetch && !isPolling) {
+          setLoadingMessages(true);
+          isInitialFetch = false;
+        }
+
         console.log('Fetching messages for thread:', activeConversationId);
         const response = await threadsAPI.getThreadDetails(activeConversationId);
         console.log('Thread details response:', response);
@@ -229,26 +292,48 @@ export default function Messages() {
             });
 
             console.log('Transformed messages:', transformedMessages);
-            setActiveChatMessages(transformedMessages);
 
-            // Update conversation's last message in the list
-            if (transformedMessages.length > 0) {
-              const lastMessage = transformedMessages[transformedMessages.length - 1];
-              setConversations(prevConvs =>
-                prevConvs.map(conv =>
-                  conv.id === activeConversationId
-                    ? { ...conv, lastMessage: lastMessage.text, messages: transformedMessages }
-                    : conv
-                )
-              );
-            }
+            // Update messages - will merge with existing if polling
+            setActiveChatMessages(prev => {
+              // Check if messages have changed
+              const prevIds = new Set(prev.map(m => m.id));
+              const newIds = new Set(transformedMessages.map(m => m.id));
 
-            // Mark messages as read via WebSocket
-            transformedMessages.forEach(msg => {
-              if (!msg.isRead && msg.type === "admin") {
-                wsMarkAsRead(msg.id);
+              // If same messages, don't update
+              if (prevIds.size === newIds.size &&
+                [...prevIds].every(id => newIds.has(id)) &&
+                [...newIds].every(id => prevIds.has(id))) {
+                return prev;
               }
-            });
+
+            return transformedMessages;
+          });
+
+          // Update conversation's last message in the list
+          if (transformedMessages.length > 0) {
+            const lastMessage = transformedMessages[transformedMessages.length - 1];
+            setConversations(prevConvs =>
+              prevConvs.map(conv =>
+                conv.id === activeConversationId
+                  ? { ...conv, lastMessage: lastMessage.text, messages: transformedMessages }
+                  : conv
+              )
+            );
+          }
+
+          // Mark messages as read via WebSocket
+          transformedMessages.forEach(msg => {
+            if (!msg.isRead && msg.type === "admin") {
+              wsMarkAsRead(msg.id);
+            }
+          });
+
+          // Auto-scroll to bottom after initial load
+          setTimeout(() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 100);
           } else {
             setActiveChatMessages([]);
           }
@@ -257,69 +342,131 @@ export default function Messages() {
         }
       } catch (err) {
         console.error('Error fetching messages:', err);
-        setActiveChatMessages([]);
+        // Don't clear messages on error during polling
+        if (!isPolling) {
+          setActiveChatMessages([]);
+        }
       } finally {
-        setLoadingMessages(false);
+        if (!isPolling) {
+          setLoadingMessages(false);
+        }
       }
     };
 
-    fetchMessages();
-  }, [activeConversationId, wsMarkAsRead]);
+    // Initial fetch
+    fetchMessages(false);
 
-  // Sync WebSocket messages with local state
-  useEffect(() => {
-    if (wsMessages && wsMessages.length > 0) {
-      const transformedMessages = wsMessages.map(msg => {
-        // Determine message type based on sender_role
-        let messageType = "user"; // Default for client messages
-        if (msg.sender_role === "Admin" || msg.sender_role === "Staff" || msg.sender_role === "Accountant" || msg.sender_role === "Bookkeeper" || msg.sender_role === "Assistant") {
-          messageType = "admin";
-        }
-
-        return {
-          id: msg.id,
-          type: messageType,
-          text: msg.content || '',
-          date: msg.created_at,
-          sender: msg.sender_name || '',
-          senderRole: msg.sender_role || '',
-          isRead: msg.is_read || false,
-          isEdited: msg.is_edited || false,
-          messageType: msg.message_type || 'text',
-          attachment: msg.attachment || null,
-          attachmentName: msg.attachment_name || null,
-          attachmentSize: msg.attachment_size_display || null,
-        };
-      });
-
-      // Merge with existing messages, avoiding duplicates
-      setActiveChatMessages(prev => {
-        const existingIds = new Set(prev.map(m => m.id));
-        const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
-        const merged = [...prev, ...newMessages].sort((a, b) => {
-          return new Date(a.date) - new Date(b.date);
-        });
-        return merged;
-      });
-
-      // Update conversation's last message
-      if (transformedMessages.length > 0) {
-        const lastMessage = transformedMessages[transformedMessages.length - 1];
-        setConversations(prevConvs =>
-          prevConvs.map(conv =>
-            conv.id === activeConversationId
-              ? { ...conv, lastMessage: lastMessage.text }
-              : conv
-          )
-        );
+    // Set up periodic polling every 3 seconds to fetch new messages
+    const intervalId = setInterval(() => {
+      if (activeConversationId) {
+        fetchMessages(true); // Pass true to indicate this is a polling call
       }
+    }, 3000); // Poll every 3 seconds
 
-      // Mark new messages as read
-      transformedMessages.forEach(msg => {
-        if (!msg.isRead && msg.type === "admin") {
-          wsMarkAsRead(msg.id);
-        }
+    // Cleanup interval on unmount or when activeConversationId changes
+    return () => {
+      clearInterval(intervalId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversationId]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [activeChatMessages]);
+
+  // Sync WebSocket messages with local state - INSTANT display
+  useEffect(() => {
+    if (wsMessages && wsMessages.length > 0 && activeConversationId) {
+      // Filter messages that belong to the active conversation
+      // WebSocket is already connected to the specific thread, but double-check
+      const relevantMessages = wsMessages.filter(msg => {
+        // Check if message has thread_id and it matches active conversation
+        return !msg.thread_id || msg.thread_id === activeConversationId;
       });
+
+      if (relevantMessages.length > 0) {
+        const transformedMessages = relevantMessages.map(msg => {
+          // Determine message type based on sender_role
+          let messageType = "user"; // Default for client messages
+          if (msg.sender_role === "Admin" || msg.sender_role === "Staff" || msg.sender_role === "Accountant" || msg.sender_role === "Bookkeeper" || msg.sender_role === "Assistant") {
+            messageType = "admin";
+          }
+
+          return {
+            id: msg.id,
+            type: messageType,
+            text: msg.content || '',
+            date: msg.created_at,
+            sender: msg.sender_name || '',
+            senderRole: msg.sender_role || '',
+            isRead: msg.is_read || false,
+            isEdited: msg.is_edited || false,
+            messageType: msg.message_type || 'text',
+            attachment: msg.attachment || null,
+            attachmentName: msg.attachment_name || null,
+            attachmentSize: msg.attachment_size_display || null,
+          };
+        });
+
+        // Merge with existing messages, avoiding duplicates - INSTANT UPDATE
+        setActiveChatMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+          
+          if (newMessages.length > 0) {
+            // Remove optimistic messages that match the new real messages (by text and approximate time)
+            const filtered = prev.filter(prevMsg => {
+              if (prevMsg.isOptimistic) {
+                // Check if this optimistic message matches any new message
+                return !newMessages.some(newMsg => 
+                  newMsg.text === prevMsg.text && 
+                  Math.abs(new Date(newMsg.date) - new Date(prevMsg.date)) < 5000 // Within 5 seconds
+                );
+              }
+              return true;
+            });
+            
+            const merged = [...filtered, ...newMessages].sort((a, b) => {
+              return new Date(a.date) - new Date(b.date);
+            });
+            return merged;
+          }
+          return prev;
+        });
+
+        // Update conversation's last message instantly
+        if (transformedMessages.length > 0) {
+          const lastMessage = transformedMessages[transformedMessages.length - 1];
+          setConversations(prevConvs =>
+            prevConvs.map(conv =>
+              conv.id === activeConversationId
+                ? { ...conv, lastMessage: lastMessage.text, time: 'Just now' }
+                : conv
+            )
+          );
+        }
+
+        // Mark new messages as read
+        transformedMessages.forEach(msg => {
+          if (!msg.isRead && msg.type === "admin") {
+            wsMarkAsRead(msg.id);
+          }
+        });
+
+        // Auto-scroll to bottom for new messages - INSTANT
+        setTimeout(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 50);
+      }
     }
   }, [wsMessages, activeConversationId, wsMarkAsRead]);
 
@@ -334,11 +481,45 @@ export default function Messages() {
     wsSendTyping(false);
 
     try {
+      // Optimistic update - add message instantly to chat area
+      const optimisticMsg = {
+        id: `temp-${Date.now()}`,
+        type: "user",
+        text: messageText,
+        date: new Date().toISOString(),
+        sender: 'You',
+        senderRole: '',
+        isRead: false,
+        isEdited: false,
+        messageType: 'text',
+        isOptimistic: true, // Mark as optimistic
+      };
+
+      // Add message instantly to chat area
+      setActiveChatMessages(prev => [...prev, optimisticMsg].sort((a, b) => new Date(a.date) - new Date(b.date)));
+      
+      // Update conversation list instantly
+      setConversations(prevConvs =>
+        prevConvs.map(conv =>
+          conv.id === activeConversationId
+            ? { ...conv, lastMessage: messageText, time: 'Just now' }
+            : conv
+        )
+      );
+
+      // Auto-scroll to bottom instantly
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 50);
+
       // Try WebSocket first if connected
       if (wsConnected) {
         const sent = wsSendMessage(messageText, false);
         if (sent) {
           console.log('✅ Message sent via WebSocket');
+          // Message will come back via WebSocket and replace optimistic message
           return;
         }
       }
@@ -353,8 +534,8 @@ export default function Messages() {
 
       if (response.success) {
         console.log('✅ Message sent successfully via REST API');
-        // Message will be added via WebSocket or we can add it manually
-        const newMsg = {
+        // Replace optimistic message with real message
+        const realMsg = {
           id: response.data?.id || Date.now(),
           type: "user",
           text: messageText,
@@ -366,15 +547,14 @@ export default function Messages() {
           messageType: 'text',
         };
 
-        setActiveChatMessages(prev => [...prev, newMsg]);
-        setConversations(prevConvs =>
-          prevConvs.map(conv =>
-            conv.id === activeConversationId
-              ? { ...conv, lastMessage: messageText }
-              : conv
-          )
-        );
+        setActiveChatMessages(prev => {
+          // Remove optimistic message and add real one
+          const filtered = prev.filter(m => m.id !== optimisticMsg.id);
+          return [...filtered, realMsg].sort((a, b) => new Date(a.date) - new Date(b.date));
+        });
       } else {
+        // Remove optimistic message on error
+        setActiveChatMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
         throw new Error(response.message || 'Failed to send message');
       }
     } catch (err) {
@@ -729,7 +909,36 @@ export default function Messages() {
                 </div>
               </div>
 
-              <div className="flex-grow-1 mb-3" style={{ overflowY: "auto", overflowX: "hidden", minHeight: "200px" }}>
+              <div 
+                ref={messagesContainerRef}
+                className="flex-grow-1 mb-3" 
+                style={{ 
+                  overflowY: "auto", 
+                  overflowX: "hidden", 
+                  minHeight: "200px",
+                  maxHeight: "calc(55vh - 200px)",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#C1C1C1 #F3F7FF"
+                }}
+              >
+                <style>
+                  {`
+                    .flex-grow-1.mb-3::-webkit-scrollbar {
+                      width: 8px;
+                    }
+                    .flex-grow-1.mb-3::-webkit-scrollbar-track {
+                      background: #F3F7FF;
+                      border-radius: 10px;
+                    }
+                    .flex-grow-1.mb-3::-webkit-scrollbar-thumb {
+                      background: #C1C1C1;
+                      border-radius: 10px;
+                    }
+                    .flex-grow-1.mb-3::-webkit-scrollbar-thumb:hover {
+                      background: #A0A0A0;
+                    }
+                  `}
+                </style>
                 {console.log('Rendering messages, count:', activeChatMessages.length, 'messages:', activeChatMessages, 'loading:', loadingMessages)}
                 {loadingMessages ? (
                   <div className="text-center py-5">
@@ -737,7 +946,8 @@ export default function Messages() {
                     <p className="text-muted mt-2 small">Loading messages...</p>
                   </div>
                 ) : activeChatMessages.length > 0 ? (
-                  activeChatMessages.map((msg) => {
+                  <>
+                  {activeChatMessages.map((msg) => {
                     // Admin/Staff messages appear on left
                     if (msg.type === "admin") {
                       return (
@@ -814,7 +1024,9 @@ export default function Messages() {
                       );
                     }
                     return null;
-                  })
+                  })}
+                  <div ref={messagesEndRef} />
+                  </>
                 ) : (
                   <div className="text-center py-5">
                     <p className="text-muted">No messages yet. Start the conversation!</p>

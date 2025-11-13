@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { DocumentUpload, DocumentBrowseFolder, DocumentMoreIcon, DocumentPdfIcon } from '../../Components/icons';
+import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 // Search icon
 const SearchIcon = () => (
@@ -31,28 +34,161 @@ export default function FolderContents() {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // API state
+  const [documents, setDocuments] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [folderInfo, setFolderInfo] = useState(null);
+  const [statistics, setStatistics] = useState({
+    total_documents: 0,
+    pending: 0,
+    approved: 0,
+    total_storage: 0
+  });
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
 
   // Check if we're viewing a document (nested route)
   const isViewingDocument = location.pathname.includes('/document/');
 
-  // Folder names mapping
-  const folderNames = {
-    '1': 'Client Documents',
-    '2': 'Firm Compliance',
-    '3': 'Training Materials',
-    '4': 'Tax Returns',
-    '5': 'Receipts & Expenses'
+  // Fetch folder contents from API
+  const fetchFolderContents = useCallback(async () => {
+    if (!folderId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        folder_id: folderId
+      };
+
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+      if (selectedCategory !== 'All Categories') {
+        params.category_id = selectedCategory; // This would need to be the actual category ID
+      }
+
+      const response = await firmAdminDocumentsAPI.browseDocuments(params);
+
+      if (response.success && response.data) {
+        // Set folder info
+        if (response.data.current_folder) {
+          setFolderInfo(response.data.current_folder);
+        }
+
+        // Set breadcrumbs
+        if (response.data.breadcrumbs) {
+          setBreadcrumbs(response.data.breadcrumbs);
+        }
+
+        // Transform sub-folders
+        const transformedFolders = (response.data.folders || []).map(folder => ({
+          id: folder.id,
+          title: folder.title,
+          description: folder.description || '',
+          files_count: folder.files_count || 0
+        }));
+
+        setFolders(transformedFolders);
+
+        // Transform documents
+        const transformedDocuments = (response.data.documents || []).map(doc => {
+          // Extract filename from URL
+          const url = doc.tax_documents || '';
+          const filename = url.split('/').pop() || 'document.pdf';
+          
+          return {
+            id: doc.id,
+            name: filename,
+            type: filename.split('.').pop().toUpperCase() || 'PDF',
+            tax_documents: doc.tax_documents,
+            status: doc.status || 'pending_review',
+            statusColor: getStatusColor(doc.status),
+            textColor: getStatusTextColor(doc.status),
+            category: doc.category?.name || 'General',
+            created_at: doc.created_at,
+            updated_at: doc.updated_at,
+            is_archived: doc.is_archived || false
+          };
+        });
+
+        setDocuments(transformedDocuments);
+
+        // Calculate statistics
+        const totalDocs = transformedDocuments.length;
+        const pending = transformedDocuments.filter(d => d.status === 'pending_review').length;
+        const approved = transformedDocuments.filter(d => d.status === 'approved').length;
+
+        setStatistics({
+          total_documents: totalDocs,
+          pending: pending,
+          approved: approved,
+          total_storage: 0 // Not provided by API
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch folder contents');
+      }
+    } catch (err) {
+      console.error('Error fetching folder contents:', err);
+      setError(handleAPIError(err));
+      toast.error(handleAPIError(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [folderId, searchQuery, selectedCategory]);
+
+  // Get status color
+  const getStatusColor = (status) => {
+    if (!status) return 'bg-gray-500';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('approved')) return 'bg-green-500';
+    if (statusLower.includes('pending') || statusLower.includes('review')) return 'bg-amber-400';
+    if (statusLower.includes('rejected')) return 'bg-red-500';
+    return 'bg-gray-500';
   };
 
-  const folderName = folderNames[folderId] || 'Folder';
-  console.log(folderId);
-  console.log(folderName);
+  // Get status text color
+  const getStatusTextColor = (status) => {
+    if (!status) return 'text-white';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('pending') || statusLower.includes('review')) return 'text-gray-900';
+    return 'text-white';
+  };
 
-  // Debug: Log folderId to verify it's being received
+  // Format status display
+  const formatStatus = (status) => {
+    if (!status) return 'Pending';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('approved')) return 'Approved';
+    if (statusLower.includes('pending_review')) return 'Pending Review';
+    if (statusLower.includes('reviewed')) return 'Reviewed';
+    if (statusLower.includes('rejected')) return 'Rejected';
+    return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Fetch folder contents on mount and when filters change
   useEffect(() => {
-    console.log('FolderContents - Received folderId:', folderId);
-    console.log('FolderContents - Folder Name:', folderName);
-  }, [folderId, folderName]);
+    if (folderId) {
+      const timer = setTimeout(() => {
+        fetchFolderContents();
+      }, searchQuery ? 500 : 0); // Debounce search
+
+      return () => clearTimeout(timer);
+    }
+  }, [folderId, searchQuery, selectedCategory, fetchFolderContents]);
+
+  const folderName = folderInfo?.title || 'Folder';
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -71,61 +207,6 @@ export default function FolderContents() {
     };
   }, [openActionsMenu]);
 
-  // Sample documents - same static data for all folders (can be made folder-specific later)
-  const documents = [
-    {
-      id: 1,
-      name: '2023_Tax_Return_Johnson_LLC.Pdf',
-      type: 'PDF',
-      client: 'Johnson & Associates LLC',
-      category: 'Tax Returns',
-      uploadedBy: 'Michael Chen',
-      uploadDate: 'Mar 1, 2024',
-      status: 'Approved',
-      statusColor: 'bg-green-500',
-      textColor: 'text-white',
-      size: '2.4 MB'
-    },
-    {
-      id: 2,
-      name: 'W2_Smith_Corp_2023.Pdf',
-      type: 'PDF',
-      client: 'Smith Corporation',
-      category: 'W-2 Forms',
-      uploadedBy: 'Sarah Martinez',
-      uploadDate: 'Feb 28, 2024',
-      status: 'Reviewed',
-      statusColor: 'bg-amber-700',
-      textColor: 'text-white',
-      size: '1.2 MB'
-    },
-    {
-      id: 3,
-      name: 'Receipt_Office_Supplies.Jpg',
-      type: 'IMAGE',
-      client: 'Wilson Enterprises',
-      category: 'Receipts',
-      uploadedBy: 'David Rodriguez',
-      uploadDate: 'Feb 25, 2024',
-      status: 'Pending',
-      statusColor: 'bg-amber-400',
-      textColor: 'text-gray-900',
-      size: '856 KB'
-    },
-    {
-      id: 4,
-      name: '1099_Davis_Inc_2023.Pdf',
-      type: 'PDF',
-      client: 'Davis Inc',
-      category: '1099 Forms',
-      uploadedBy: 'Lisa Thompson',
-      uploadDate: 'Feb 20, 2024',
-      status: 'Approved',
-      statusColor: 'bg-green-500',
-      textColor: 'text-white',
-      size: '945 KB'
-    }
-  ];
 
   const toggleActionsMenu = (id) => {
     setOpenActionsMenu(openActionsMenu === id ? null : id);
@@ -163,54 +244,104 @@ export default function FolderContents() {
             </div>
         </div> */}
 
+          {/* Breadcrumbs */}
+          {breadcrumbs.length > 0 && (
+            <div className="mb-4 flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              {breadcrumbs.map((crumb, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <span className="text-gray-400">/</span>}
+                  <button
+                    onClick={() => {
+                      if (crumb.id) {
+                        navigate(`/firmadmin/documents/folder/${crumb.id}`);
+                      } else {
+                        navigate('/firmadmin/documents');
+                      }
+                    }}
+                    className={`${index === breadcrumbs.length - 1 ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}
+                  >
+                    {crumb.title}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
+              <button
+                onClick={fetchFolderContents}
+                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* Summary Cards */}
-          <div className="grid grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-5 ">
-          <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
-          <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>4</p>
-        </div>
-        <div className="bg-white rounded-lg p-5">
-          <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
-          <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>1</p>
-        </div>
-        <div className="bg-white rounded-lg p-5">
-          <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
-          <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>2</p>
-        </div>
-        <div className="bg-white rounded-lg p-5">
-          <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
-          <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>2</p>
-        </div>
-        <div className="bg-white rounded-lg p-5">
-          <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
-          <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>5.4 MB</p>
-        </div>
-      </div>
+          {!loading && !error && (
+            <div className="grid grid-cols-5 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-5 ">
+                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
+                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
+              </div>
+              <div className="bg-white rounded-lg p-5">
+                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
+                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
+              </div>
+              <div className="bg-white rounded-lg p-5">
+                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
+                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
+              </div>
+              <div className="bg-white rounded-lg p-5">
+                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
+                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+              </div>
+              <div className="bg-white rounded-lg p-5">
+                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
+                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+              </div>
+            </div>
+          )}
 
       {/* Document List Section */}
-      <div className="bg-white rounded-lg p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            All Documents (4)
-          </h2>
-          <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-            Complete list of documents with review status and metadata
-          </p>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="flex gap-3 mb-6">
-          <div className="flex relative bg-blue-50">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-              <SearchIcon />
-            </div>
-            <input
-              type="text"
-              placeholder="Search documents by name, client, or uploader..."
-              className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
-              style={{ fontFamily: 'BasisGrotesquePro' }}
-            />
+      {!loading && !error && (
+        <div className="bg-white rounded-lg p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              All Documents ({documents.length})
+            </h2>
+            <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Complete list of documents with review status and metadata
+            </p>
           </div>
+
+          {/* Search and Filter Bar */}
+          <div className="flex gap-3 mb-6">
+            <div className="flex relative bg-blue-50">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <SearchIcon />
+              </div>
+              <input
+                type="text"
+                placeholder="Search documents by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              />
+            </div>
           <div className="relative">
             <button
               onClick={() => setSelectedCategory(selectedCategory === 'All Categories' ? null : 'All Categories')}
@@ -239,12 +370,9 @@ export default function FolderContents() {
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Status</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
               </tr>
             </thead>
@@ -266,26 +394,17 @@ export default function FolderContents() {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.client}</p>
-                  </td>
-                  <td className="py-4 px-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       {doc.category}
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploadedBy}</p>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploadDate}</p>
+                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
                   </td>
                   <td className="py-4 px-4">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${doc.statusColor} ${doc.textColor}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {doc.status}
+                      {formatStatus(doc.status)}
                     </span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.size}</p>
                   </td>
                   <td className="py-4 px-4">
                     <div className="relative actions-menu-container">
@@ -330,7 +449,13 @@ export default function FolderContents() {
             </tbody>
           </table>
         </div>
+        {documents.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
+          </div>
+        )}
       </div>
+      )}
         </>
       )}
 

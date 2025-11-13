@@ -97,7 +97,7 @@ export default function Login() {
             // User is completed, go to main dashboard
             navigate("/dashboard");
           } else {
-            // User is not completed, go to first-time dashboard
+            // User is not completed, stay on dashboard-first page
             navigate("/dashboard-first");
           }
         }

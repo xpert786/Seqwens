@@ -36,8 +36,10 @@ export default function RootAuthCheck() {
         if (!isEmailVerified && !isPhoneVerified) {
           navigate("/two-auth", { replace: true });
         } else if (isCompleted) {
+          // User is completed, go to main dashboard
           navigate("/dashboard", { replace: true });
         } else {
+          // User is not completed, stay on dashboard-first page
           navigate("/dashboard-first", { replace: true });
         }
       } else {

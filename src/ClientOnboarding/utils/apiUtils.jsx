@@ -63,7 +63,9 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
       config.body = JSON.stringify(data);
     }
 
-    const response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
+    const fullUrl = `${API_BASE_URL}${endpoint}`;
+    console.log('Public API Request:', { method, url: fullUrl, data });
+    const response = await fetchWithCors(fullUrl, config);
 
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
@@ -751,6 +753,57 @@ export const notificationAPI = {
   }
 };
 
+// Client Notifications API functions
+export const clientNotificationAPI = {
+  // List all notifications with optional filters
+  listNotifications: async (params = {}) => {
+    const { is_read, type, limit = 50, offset = 0 } = params;
+    const queryParams = new URLSearchParams();
+
+    if (is_read !== undefined) {
+      queryParams.append('is_read', is_read);
+    }
+    if (type) {
+      queryParams.append('type', type);
+    }
+    if (limit) {
+      queryParams.append('limit', limit);
+    }
+    if (offset) {
+      queryParams.append('offset', offset);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/notifications/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get unread count
+  getUnreadCount: async () => {
+    return await apiRequest('/taxpayer/notifications/unread-count/', 'GET');
+  },
+
+  // Get notification details
+  getNotificationDetails: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'GET');
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/mark-read/`, 'POST');
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    return await apiRequest('/taxpayer/notifications/mark-all-read/', 'POST');
+  },
+
+  // Delete notification
+  deleteNotification: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+  }
+};
+
 export const securityAPI = {
   // Get security preferences
   getSecurityPreferences: async () => {
@@ -1316,6 +1369,587 @@ export const taxPreparerNotificationAPI = {
   // Update notification preferences
   updateNotificationPreferences: async (preferences) => {
     return await apiRequest('/user/notification-preferences/', 'PATCH', preferences);
+  },
+
+  // List all notifications with optional filters
+  listNotifications: async (params = {}) => {
+    const { is_read, type, limit = 50, offset = 0 } = params;
+    const queryParams = new URLSearchParams();
+
+    if (is_read !== undefined) {
+      queryParams.append('is_read', is_read);
+    }
+    if (type) {
+      queryParams.append('type', type);
+    }
+    if (limit) {
+      queryParams.append('limit', limit);
+    }
+    if (offset) {
+      queryParams.append('offset', offset);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/notifications/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get unread count
+  getUnreadCount: async () => {
+    return await apiRequest('/taxpayer/notifications/unread-count/', 'GET');
+  },
+
+  // Get notification details
+  getNotificationDetails: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'GET');
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/mark-read/`, 'POST');
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    return await apiRequest('/taxpayer/notifications/mark-all-read/', 'POST');
+  },
+
+  // Delete notification
+  deleteNotification: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+  }
+};
+
+// Firm Admin Tasks API functions
+export const firmAdminTasksAPI = {
+  // Create task
+  createTask: async (taskData, files = []) => {
+    const token = getAccessToken();
+    const formData = new FormData();
+
+    // Add all task fields to FormData
+    formData.append('task_type', taskData.task_type);
+    formData.append('task_title', taskData.task_title);
+    formData.append('tax_preparer_id', taskData.tax_preparer_id);
+    formData.append('folder_id', taskData.folder_id);
+    formData.append('due_date', taskData.due_date);
+    formData.append('priority', taskData.priority);
+    formData.append('description', taskData.description);
+    formData.append('estimated_hours', taskData.estimated_hours);
+    formData.append('status', taskData.status);
+
+    // Add client_ids as JSON string (backend will parse it)
+    if (Array.isArray(taskData.client_ids)) {
+      formData.append('client_ids', JSON.stringify(taskData.client_ids));
+    }
+
+    // Add files
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
+
+    // Add optional fields
+    if (taskData.signature_fields) {
+      formData.append('signature_fields', JSON.stringify(taskData.signature_fields));
+    }
+    if (taskData.spouse_sign !== undefined) {
+      formData.append('spouse_sign', taskData.spouse_sign);
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - let browser set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/tasks/create/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // List tasks (if needed in future)
+  listTasks: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null) {
+        queryParams.append(key, params[key]);
+      }
+    });
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/firm-admin/tasks/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get task details (if needed in future)
+  getTaskDetails: async (taskId) => {
+    return await apiRequest(`/taxpayer/firm-admin/tasks/${taskId}/`, 'GET');
+  }
+};
+
+// Firm Admin Notifications API functions
+export const firmAdminNotificationAPI = {
+  // List all notifications with optional filters
+  listNotifications: async (params = {}) => {
+    const { is_read, type, limit = 50, offset = 0 } = params;
+    const queryParams = new URLSearchParams();
+
+    if (is_read !== undefined) {
+      queryParams.append('is_read', is_read);
+    }
+    if (type) {
+      queryParams.append('type', type);
+    }
+    if (limit) {
+      queryParams.append('limit', limit);
+    }
+    if (offset) {
+      queryParams.append('offset', offset);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/notifications/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get unread count
+  getUnreadCount: async () => {
+    return await apiRequest('/taxpayer/notifications/unread-count/', 'GET');
+  },
+
+  // Get notification details
+  getNotificationDetails: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'GET');
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/mark-read/`, 'POST');
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    return await apiRequest('/taxpayer/notifications/mark-all-read/', 'POST');
+  },
+
+  // Delete notification
+  deleteNotification: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+  }
+};
+
+// Firm Admin Documents API functions
+export const firmAdminDocumentsAPI = {
+  // Browse documents (root level or within a folder)
+  browseDocuments: async (params = {}) => {
+    const { folder_id, show_archived, search, category_id, sort_by } = params;
+    const queryParams = new URLSearchParams();
+
+    if (folder_id !== undefined && folder_id !== null) {
+      queryParams.append('folder_id', folder_id);
+    }
+    if (show_archived !== undefined) {
+      queryParams.append('show_archived', show_archived);
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (category_id !== undefined && category_id !== null) {
+      queryParams.append('category_id', category_id);
+    }
+    if (sort_by) {
+      queryParams.append('sort_by', sort_by);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/firm-admin/documents/browse/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // List documents in a specific folder
+  listFolderDocuments: async (params = {}) => {
+    const { folder_id, folder_name, is_archived, category_id, search } = params;
+    const queryParams = new URLSearchParams();
+
+    if (folder_id !== undefined && folder_id !== null) {
+      queryParams.append('folder_id', folder_id);
+    }
+    if (folder_name) {
+      queryParams.append('folder_name', folder_name);
+    }
+    if (is_archived !== undefined) {
+      queryParams.append('is_archived', is_archived);
+    }
+    if (category_id !== undefined && category_id !== null) {
+      queryParams.append('category_id', category_id);
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/firm-admin/documents/folder/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Create a comment/note on a document
+  createComment: async (documentId, commentData) => {
+    const { comment_type, content, page_number, position_x, position_y } = commentData;
+    const payload = {
+      comment_type: comment_type || 'comment',
+      content,
+    };
+
+    if (page_number !== undefined && page_number !== null) {
+      payload.page_number = page_number;
+    }
+    if (position_x !== undefined && position_x !== null) {
+      payload.position_x = position_x;
+    }
+    if (position_y !== undefined && position_y !== null) {
+      payload.position_y = position_y;
+    }
+
+    const endpoint = `/taxpayer/firm-admin/documents/${documentId}/comments/`;
+    return await apiRequest(endpoint, 'POST', payload);
+  },
+
+  // Get all comments for a document
+  getComments: async (documentId, params = {}) => {
+    const { is_resolved, comment_type, page_number } = params;
+    const queryParams = new URLSearchParams();
+
+    if (is_resolved !== undefined && is_resolved !== null) {
+      queryParams.append('is_resolved', is_resolved);
+    }
+    if (comment_type) {
+      queryParams.append('comment_type', comment_type);
+    }
+    if (page_number !== undefined && page_number !== null) {
+      queryParams.append('page_number', page_number);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/firm-admin/documents/${documentId}/comments/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Update a comment
+  updateComment: async (commentId, commentData) => {
+    const endpoint = `/taxpayer/firm-admin/documents/comments/${commentId}/`;
+    return await apiRequest(endpoint, 'PATCH', commentData);
+  },
+
+  // Delete a comment
+  deleteComment: async (commentId) => {
+    const endpoint = `/taxpayer/firm-admin/documents/comments/${commentId}/`;
+    return await apiRequest(endpoint, 'DELETE');
+  }
+};
+
+// Firm Admin Calendar API functions
+export const firmAdminCalendarAPI = {
+  // Get calendar data for a specific view and date
+  getCalendar: async (params = {}) => {
+    const { view = 'month', date } = params;
+    const queryParams = new URLSearchParams();
+
+    if (view) {
+      queryParams.append('view', view);
+    }
+    if (date) {
+      // Ensure date is in YYYY-MM-DD format
+      const dateStr = date instanceof Date
+        ? date.toISOString().split('T')[0]
+        : date;
+      queryParams.append('date', dateStr);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/firm/calendar/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  }
+};
+
+// Firm Admin Clients API functions
+export const firmAdminClientsAPI = {
+  // List all clients for firm admin
+  listClients: async (params = {}) => {
+    const { page = 1, page_size = 20, search, status, priority } = params;
+    const queryParams = new URLSearchParams();
+
+    if (page) {
+      queryParams.append('page', page.toString());
+    }
+    if (page_size) {
+      queryParams.append('page_size', page_size.toString());
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (status) {
+      queryParams.append('status', status);
+    }
+    if (priority) {
+      queryParams.append('priority', priority);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/firm/clients/list/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  }
+};
+
+// Firm Admin Staff API functions
+export const firmAdminStaffAPI = {
+  // List all staff members (tax preparers) for firm admin
+  listStaff: async (params = {}) => {
+    const { status = 'all', search = '', role = 'all', performance = 'all' } = params;
+    const queryParams = new URLSearchParams();
+
+    if (status) {
+      queryParams.append('status', status);
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (role) {
+      queryParams.append('role', role);
+    }
+    if (performance) {
+      queryParams.append('performance', performance);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/user/firm-admin/staff/tax-preparers/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  }
+};
+
+// Firm Admin Meetings API functions
+export const firmAdminMeetingsAPI = {
+  // Create meeting/appointment (checks for overlaps)
+  createMeeting: async (meetingData) => {
+    const endpoint = `/firm/meetings/create/`;
+
+    // Make the API request and return the response with status code
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const API_BASE_URL = getApiBaseUrl();
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(meetingData)
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
+      const data = await response.json();
+
+      // Return response with status for handling overlaps
+      return {
+        status: response.status,
+        ...data
+      };
+    } catch (error) {
+      console.error('Error creating meeting:', error);
+      throw error;
+    }
+  },
+
+  // Confirm overwrite (cancel overlapping meetings and create new one)
+  confirmOverwrite: async (overwriteData) => {
+    const endpoint = `/firm/meetings/confirm-overwrite/`;
+    return await apiRequest(endpoint, 'POST', overwriteData);
+  }
+};
+
+// Firm Admin Signature/Document Requests API functions
+export const firmSignatureDocumentRequestsAPI = {
+  // Create signature or document request
+  createRequest: async (requestData) => {
+    try {
+      const token = getAccessToken() || AUTH_TOKEN;
+      if (!token) {
+        throw new Error('No authentication token found. Please login again.');
+      }
+
+      const formData = new FormData();
+
+      // Required fields
+      formData.append('type', requestData.type); // "signature_request" or "document_request"
+      formData.append('task_title', requestData.task_title);
+      formData.append('client_id', requestData.client_id.toString());
+
+      // Optional fields
+      if (requestData.spouse_sign !== undefined) {
+        formData.append('spouse_sign', requestData.spouse_sign ? 'true' : 'false');
+      }
+
+      // Add files (multiple files)
+      if (requestData.files && Array.isArray(requestData.files)) {
+        requestData.files.forEach((file) => {
+          formData.append('files', file);
+        });
+      }
+
+      // Add documents_metadata or documents (JSON string array)
+      if (requestData.documents_metadata && Array.isArray(requestData.documents_metadata)) {
+        formData.append('documents_metadata', JSON.stringify(requestData.documents_metadata));
+      } else if (requestData.documents && Array.isArray(requestData.documents)) {
+        formData.append('documents_metadata', JSON.stringify(requestData.documents));
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - let browser set it with boundary
+        },
+        body: formData
+      };
+
+      console.log('Signature/Document Request API Request URL:', `${API_BASE_URL}/firm/signature-document-requests/create/`);
+      console.log('Signature/Document Request API Request Config:', config);
+      console.log('Request Data:', {
+        type: requestData.type,
+        task_title: requestData.task_title,
+        client_id: requestData.client_id,
+        spouse_sign: requestData.spouse_sign,
+        files_count: requestData.files?.length || 0,
+        documents_metadata: requestData.documents_metadata || requestData.documents
+      });
+
+      let response = await fetchWithCors(`${API_BASE_URL}/firm/signature-document-requests/create/`, config);
+
+      // Handle 401 Unauthorized - try to refresh token
+      if (response.status === 401) {
+        console.log('Received 401, attempting to refresh token...');
+
+        try {
+          await refreshAccessToken();
+
+          // Retry the original request with new token
+          config.headers = {
+            'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
+          };
+          response = await fetchWithCors(`${API_BASE_URL}/firm/signature-document-requests/create/`, config);
+
+          if (response.status === 401) {
+            // Refresh failed, redirect to login
+            console.log('Token refresh failed, clearing user data and redirecting to login');
+            clearUserData();
+            window.location.href = getLoginUrl();
+            throw new Error('Session expired. Please login again.');
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      }
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('Signature/Document Request API Error Response:', errorData);
+
+          if (errorData.errors) {
+            console.error('Field Validation Errors:', errorData.errors);
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('; ');
+            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          } else {
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing signature/document request response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('Signature/Document Request API Success Response:', result);
+      return result;
+    } catch (error) {
+      console.error('Signature/Document Request API Request Error:', error);
+
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
+      }
+
+      throw error;
+    }
+  }
+};
+
+// Super Admin Notifications API functions
+// Note: Super Admin uses the same endpoints as other users but with different notification types
+export const superAdminNotificationAPI = {
+  // List all notifications with optional filters
+  listNotifications: async (params = {}) => {
+    const { is_read, type, limit = 50, offset = 0 } = params;
+    const queryParams = new URLSearchParams();
+
+    if (is_read !== undefined) {
+      queryParams.append('is_read', is_read);
+    }
+    if (type) {
+      queryParams.append('type', type);
+    }
+    if (limit) {
+      queryParams.append('limit', limit);
+    }
+    if (offset) {
+      queryParams.append('offset', offset);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/taxpayer/notifications/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get unread count
+  getUnreadCount: async () => {
+    return await apiRequest('/taxpayer/notifications/unread-count/', 'GET');
+  },
+
+  // Get notification details
+  getNotificationDetails: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'GET');
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/mark-read/`, 'POST');
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    return await apiRequest('/taxpayer/notifications/mark-all-read/', 'POST');
+  },
+
+  // Delete notification
+  deleteNotification: async (notificationId) => {
+    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
   }
 };
 
@@ -1341,6 +1975,31 @@ export const taxPreparerClientAPI = {
   // Check if client has a spouse
   checkClientSpouse: async (clientId) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/spouse/check/`, 'GET');
+  },
+
+  // Create a new taxpayer/client
+  createTaxpayer: async (taxpayerData) => {
+    return await apiRequest('/taxpayer/tax-preparer/clients/create/', 'POST', taxpayerData);
+  },
+
+  // Update taxpayer/client information
+  updateTaxpayer: async (clientId, taxpayerData) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/`, 'PATCH', taxpayerData);
+  },
+
+  // Invite taxpayer via link
+  generateInviteLink: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invite/link/`, 'POST');
+  },
+
+  // Invite taxpayer via email
+  inviteTaxpayerEmail: async (clientId, emailData) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invite/email/`, 'POST', emailData);
+  },
+
+  // Invite taxpayer via SMS
+  inviteTaxpayerSMS: async (clientId, smsData) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invite/sms/`, 'POST', smsData);
   }
 };
 
@@ -1585,12 +2244,12 @@ export const signatureRequestsAPI = {
 
   // Submit signature request
   submitSignatureRequest: async (signatureData) => {
-    const { 
-      signature_request_id, 
-      signature_image, 
+    const {
+      signature_request_id,
+      signature_image,
       typed_text,
-      spouse_signature_image, 
-      spouse_typed_text 
+      spouse_signature_image,
+      spouse_typed_text
     } = signatureData;
 
     const requestBody = {
@@ -1881,5 +2540,38 @@ export const folderTrashAPI = {
       console.error('Error fetching trashed folders:', error);
       throw error;
     }
+  }
+};
+
+// Staff Invite API functions
+export const invitationAPI = {
+  // Validate invitation token (public endpoint, no auth required)
+  validateInvitation: async (token) => {
+    const params = new URLSearchParams({ token });
+    const endpoint = `/user/staff-invite/validate/?${params}`;
+    console.log('Validate invitation endpoint:', endpoint);
+    console.log('Full URL will be:', `${API_BASE_URL}${endpoint}`);
+    return await publicApiRequest(endpoint, 'GET');
+  },
+
+  // Accept invitation with password and phone number (public endpoint, no auth required)
+  acceptInvitation: async (token, password, passwordConfirm, phoneNumber = null) => {
+    const payload = {
+      token,
+      password,
+      password_confirm: passwordConfirm,
+    };
+
+    if (phoneNumber) {
+      payload.phone_number = phoneNumber;
+    }
+
+    return await publicApiRequest('/user/staff-invite/accept/', 'POST', payload);
+  },
+
+  // Deny/decline invitation with token (public endpoint, no auth required)
+  // Note: This endpoint may not exist in the new API, keeping for backward compatibility
+  denyInvitation: async (token) => {
+    return await publicApiRequest('/user/staff/invites/deny/', 'POST', { token });
   }
 };

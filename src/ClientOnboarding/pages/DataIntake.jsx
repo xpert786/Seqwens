@@ -808,7 +808,7 @@ export default function DataIntakeForm() {
       const [personalDataResult, fileUploadResult] = await Promise.all([
         // First API: Personal data (JSON) - Use PATCH if data exists, POST if new
         fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
-          method: hasExistingData ? "PATCH" : "POST",
+          method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"

@@ -22,6 +22,7 @@ import SetNewPassword from "./ClientOnboarding/Login-setup/SetNewPassword";
 import TwoFactorAuth from "./ClientOnboarding/Login-setup/TwoFactorAuth";
 import VerifyEmail from "./ClientOnboarding/Login-setup/VerifyEmail";
 import VerifyPhone from "./ClientOnboarding/Login-setup/VerifyPhone";
+import AcceptInvite from "./ClientOnboarding/Login-setup/AcceptInvite";
 import ProtectedRoute from "./ClientOnboarding/components/ProtectedRoute";
 import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
 import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/two-auth" element={<TwoFactorAuth />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify-phone" element={<VerifyPhone />} />
+        <Route path="/invite" element={<AcceptInvite />} />
         {/* Tailwind test route */}
         <Route path="/tw-test" element={<TailwindTest />} />
         {/* Root path - Authentication check */}

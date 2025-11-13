@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TableView from './TableView';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
 import GanttView from './GanttView';
 import ReportingView from './ReportingView';
+import CreateTaskModal from './CreateTaskModal';
+import { firmAdminTasksAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const TaskManagementMain = () => {
   const navigate = useNavigate();
@@ -13,117 +16,176 @@ const TaskManagementMain = () => {
   const [priorityFilter, setPriorityFilter] = useState('All Priorities');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [taskData, setTaskData] = useState([]);
+  const [summary, setSummary] = useState({
+    completed: 0,
+    in_progress: 0,
+    pending: 0,
+    overdue: 0,
+    total_hours: 0
+  });
+  const [pagination, setPagination] = useState({
+    total_count: 0,
+    page: 1,
+    page_size: 3,
+    total_pages: 1
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const tabs = ['Table View', 'Kanban', 'Calendar', 'Gantt', 'Reporting'];
 
-  // KPI Data
+  // Fetch tasks from API
+  const fetchTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        page: currentPage,
+        page_size: 3 // Show 3 tasks per page
+      };
+      
+      // Add filters if needed
+      if (priorityFilter !== 'All Priorities') {
+        params.priority = priorityFilter.toLowerCase();
+      }
+      if (categoryFilter !== 'All Categories') {
+        params.category = categoryFilter;
+      }
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const response = await firmAdminTasksAPI.listTasks(params);
+
+      if (response.success && response.data) {
+        // Update summary
+        if (response.data.summary) {
+          setSummary({
+            completed: response.data.summary.completed || 0,
+            in_progress: response.data.summary.in_progress || 0,
+            pending: response.data.summary.pending || 0,
+            overdue: response.data.summary.overdue || 0,
+            total_hours: response.data.summary.total_hours || 0
+          });
+        }
+
+        // Transform API tasks to component format
+        const transformedTasks = (response.data.tasks || []).map(task => ({
+          id: task.id,
+          task: task.task_title,
+          description: task.description || task.category || '',
+          assignedTo: {
+            initials: task.assigned_to_initials || (task.assigned_to_name ? task.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'NA'),
+            name: task.assigned_to_name || 'Unassigned'
+          },
+          client: task.client_name || (task.clients_info && task.clients_info.length > 0 ? task.clients_info[0].name : 'No Client'),
+          priority: task.priority_display || task.priority || 'Medium',
+          status: task.status_display || task.status || 'Pending',
+          progress: task.progress_percentage || 0,
+          dueDate: task.due_date_formatted || task.due_date || '',
+          hours: task.hours_display || `${task.hours_spent || 0}h / ${task.estimated_hours || 0}h`,
+          category: task.category || task.task_type_display || '',
+          is_overdue: task.is_overdue || false
+        }));
+
+        setTaskData(transformedTasks);
+
+        // Update pagination info
+        if (response.data.pagination) {
+          setPagination({
+            total_count: response.data.pagination.total_count || 0,
+            page: response.data.pagination.page || currentPage,
+            page_size: response.data.pagination.page_size || 3,
+            total_pages: response.data.pagination.total_pages || 1
+          });
+        }
+      } else {
+        throw new Error(response.message || 'Failed to fetch tasks');
+      }
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      setError(handleAPIError(err));
+      toast.error(handleAPIError(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [priorityFilter, categoryFilter, searchTerm, currentPage]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, priorityFilter, categoryFilter]);
+
+  // Fetch tasks when filters or page changes (with debounce for search)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTasks();
+    }, searchTerm ? 500 : 0); // Only debounce search, not filters
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, priorityFilter, categoryFilter, currentPage, fetchTasks]);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // KPI Data - using real summary data
   const kpiData = [
     {
       title: 'Completed',
-      value: '0',
+      value: summary.completed.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 11L12 14L22 4" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M9 11L12 14L22 4" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-
       )
     },
     {
       title: 'In Progress',
-      value: '1',
+      value: summary.in_progress.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 3L20 12L6 21V3Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M6 3L20 12L6 21V3Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-
       )
     },
     {
       title: 'Pending',
-      value: '1',
+      value: summary.pending.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M12 6V12L16 14" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 6V12L16 14" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-
       )
     },
     {
       title: 'Overdue',
-      value: '1',
+      value: summary.overdue.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M12 8V12" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M12 16H12.01" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 8V12" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 16H12.01" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-
       )
     },
     {
       title: 'Total Hours',
-      value: '9',
+      value: summary.total_hours.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-
       )
-    }
-  ];
-
-  // Task Data
-  const taskData = [
-    {
-      id: 1,
-      task: 'Complete 2023 Tax Return - John Smith',
-      description: 'Tax Preparation',
-      assignedTo: { initials: 'MC', name: 'Michael Chen' },
-      client: 'John Smith',
-      priority: 'High',
-      status: 'In progress',
-      progress: 75,
-      dueDate: '2024-03-20',
-      hours: '6h / 8h'
-    },
-    {
-      id: 2,
-      task: 'Quarterly Business Review - Davis LLC',
-      description: 'Business Review',
-      assignedTo: { initials: 'SM', name: 'Sarah Martinez' },
-      client: 'Michael Davis',
-      priority: 'Medium',
-      status: 'Pending',
-      progress: 0,
-      dueDate: '2024-03-22',
-      hours: '0h / 4h'
-    },
-    {
-      id: 3,
-      task: 'Amendment Filing - Emily Wilson',
-      description: 'Amendment',
-      assignedTo: { initials: 'DR', name: 'David Rodriguez' },
-      client: 'Emily Wilson',
-      priority: 'High',
-      status: 'Review',
-      progress: 90,
-      dueDate: '2024-03-18',
-      hours: '2.5h / 3h'
-    },
-    {
-      id: 4,
-      task: 'Document Collection - Sarah Johnson',
-      description: 'Document Management',
-      assignedTo: { initials: 'DR', name: 'Lisa Thompson' },
-      client: 'Sarah Johnson',
-      priority: 'Low',
-      status: 'Overdue',
-      progress: 25,
-      dueDate: '2024-03-15',
-      hours: '0.5h / 2h'
     }
   ];
 
@@ -137,13 +199,13 @@ const TaskManagementMain = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'In progress': return 'bg-[#1E40AF] text-white';
-      case 'Pending': return 'bg-[#FBBF24] text-white';
-      case 'Review': return 'bg-[#854D0E] text-white';
-      case 'Overdue': return 'bg-[#EF4444] text-white';
-      default: return 'bg-[#6B7280] text-white';
-    }
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('progress')) return 'bg-[#1E40AF] text-white';
+    if (statusLower.includes('pending')) return 'bg-[#FBBF24] text-white';
+    if (statusLower.includes('review')) return 'bg-[#854D0E] text-white';
+    if (statusLower.includes('overdue')) return 'bg-[#EF4444] text-white';
+    if (statusLower.includes('completed')) return 'bg-[#10B981] text-white';
+    return 'bg-[#6B7280] text-white';
   };
 
   const handleActionClick = (taskId) => {
@@ -201,7 +263,10 @@ const TaskManagementMain = () => {
               Export Report
             </button>
 
-            <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]">
+            <button 
+              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]"
+              onClick={() => setShowCreateTaskModal(true)}
+            >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -291,10 +356,18 @@ const TaskManagementMain = () => {
           {(activeTab === 'Kanban' || activeTab === 'Calendar') && (
             <div className="flex items-center gap-3 mb-4 overflow-x-auto">
               <div className="flex items-center gap-3 text-sm font-[BasisGrotesquePro] flex-shrink-0">
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">All: 4</span>
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">To Do: 2</span>
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">In Progress: 2</span>
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">Done: 0</span>
+                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
+                  All: {taskData.length}
+                </span>
+                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
+                  To Do: {summary.pending}
+                </span>
+                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
+                  In Progress: {summary.in_progress}
+                </span>
+                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
+                  Done: {summary.completed}
+                </span>
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm whitespace-nowrap">
@@ -329,20 +402,102 @@ const TaskManagementMain = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'Table View' && (
-          <TableView
-            taskData={taskData}
-            getPriorityColor={getPriorityColor}
-            getStatusColor={getStatusColor}
-            handleActionClick={handleActionClick}
-            openDropdown={openDropdown}
-            handleActionSelect={handleActionSelect}
-          />
+        {!loading && !error && (
+          <>
+            {activeTab === 'Table View' && (
+              <>
+                <TableView
+                  taskData={taskData}
+                  getPriorityColor={getPriorityColor}
+                  getStatusColor={getStatusColor}
+                  handleActionClick={handleActionClick}
+                  openDropdown={openDropdown}
+                  handleActionSelect={handleActionSelect}
+                />
+                {/* Pagination Controls */}
+                {pagination.total_pages > 1 && (
+                  <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      style={{
+                        backgroundColor: currentPage === 1 ? '#E5E7EB' : '#F56D2D',
+                        color: currentPage === 1 ? '#9CA3AF' : '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '14px',
+                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        opacity: currentPage === 1 ? 0.6 : 1,
+                        fontFamily: 'BasisGrotesquePro'
+                      }}
+                    >
+                      Previous
+                    </button>
+                    <span style={{ fontSize: '14px', color: '#4B5563', minWidth: '100px', textAlign: 'center', fontFamily: 'BasisGrotesquePro' }}>
+                      Page {currentPage} of {pagination.total_pages}
+                    </span>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage >= pagination.total_pages}
+                      style={{
+                        backgroundColor: currentPage >= pagination.total_pages ? '#E5E7EB' : '#F56D2D',
+                        color: currentPage >= pagination.total_pages ? '#9CA3AF' : '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '14px',
+                        cursor: currentPage >= pagination.total_pages ? 'not-allowed' : 'pointer',
+                        opacity: currentPage >= pagination.total_pages ? 0.6 : 1,
+                        fontFamily: 'BasisGrotesquePro'
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+            {activeTab === 'Kanban' && <KanbanView />}
+            {activeTab === 'Calendar' && <CalendarView />}
+            {activeTab === 'Gantt' && <GanttView />}
+            {activeTab === 'Reporting' && <ReportingView />}
+          </>
         )}
-        {activeTab === 'Kanban' && <KanbanView />}
-        {activeTab === 'Calendar' && <CalendarView />}
-        {activeTab === 'Gantt' && <GanttView />}
-        {activeTab === 'Reporting' && <ReportingView />}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
+            <button
+              onClick={fetchTasks}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Create Task Modal */}
+        <CreateTaskModal
+          isOpen={showCreateTaskModal}
+          onClose={() => setShowCreateTaskModal(false)}
+          onTaskCreated={() => {
+            setShowCreateTaskModal(false);
+            fetchTasks(); // Refresh task list after creating
+          }}
+        />
       </div>
     </div>
   );

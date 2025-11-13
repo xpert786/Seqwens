@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
@@ -6,8 +6,9 @@ import logo from "../../assets/logo.png";
 import { LogoIcon } from "./icons";
 import image from "../../assets/image.png";
 import NotificationPanel from "./Notifications/NotificationPanel";
-import { profileAPI, userAPI } from "../utils/apiUtils";
-import { clearUserData } from "../utils/userUtils";
+import { profileAPI, userAPI, clientNotificationAPI } from "../utils/apiUtils";
+import { clearUserData, getUserData } from "../utils/userUtils";
+import { useNotificationWebSocket } from "../utils/useNotificationWebSocket";
 import "../styles/Topbar.css";
 
 const CLIENT_AVATAR_KEY = "clientProfileImageUrl";
@@ -60,26 +61,72 @@ export default function Topbar() {
     // Function to refresh profile picture (can be called from other components)
     const refreshProfilePicture = async () => {
         try {
+            console.log('🔄 Refreshing topbar profile picture...');
+
+            // Always fetch from API first to get the latest picture
+            const response = await profileAPI.getProfilePicture();
+            console.log('📋 Refresh topbar profile picture API response:', response);
+            
+            if (response.success && response.data && response.data.has_profile_picture && response.data.profile_picture_url) {
+                console.log('🖼️ Topbar profile picture refreshed:', response.data.profile_picture_url);
+                setClientAvatar(response.data.profile_picture_url);
+                
+                // Update user info and initials
+                const accountResponse = await profileAPI.getUserAccount();
+                if (accountResponse?.success && accountResponse?.data) {
+                    setUserInfo(accountResponse.data);
+                    setProfileInitials(deriveInitials(accountResponse.data));
+                }
+                return;
+            }
+
+            // Fallback: check userData if API doesn't return a picture
+            const userData = getUserData();
+            if (userData) {
+                // Check both profile_picture and profile_image fields
+                const pictureUrl = userData.profile_picture || userData.profile_image;
+                if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
+                    console.log('🖼️ Topbar profile picture from user data (fallback):', pictureUrl);
+                    setClientAvatar(pictureUrl);
+                    setProfileInitials(deriveInitials(userData));
+                    return;
+                }
+            }
+            
+            // Check localStorage cache as last resort
             const stored = localStorage.getItem(CLIENT_AVATAR_KEY);
-            if (stored) {
+            if (stored && stored !== 'null' && stored !== 'undefined') {
+                console.log('🖼️ Topbar profile picture from localStorage cache:', stored);
                 setProfilePicture(stored);
                 return;
             }
 
-            const response = await profileAPI.getProfilePicture();
+            // If no picture found anywhere, clear it
+            console.log('❌ No profile picture found, clearing topbar avatar');
+            setClientAvatar(null);
             
-            if (response.success && response.data && response.data.has_profile_picture && response.data.profile_picture_url) {
-                setClientAvatar(response.data.profile_picture_url);
-            } else {
-                setClientAvatar(null);
-            }
-
+            // Update user info and initials even if no picture
             const accountResponse = await profileAPI.getUserAccount();
             if (accountResponse?.success && accountResponse?.data) {
+                setUserInfo(accountResponse.data);
                 setProfileInitials(deriveInitials(accountResponse.data));
             }
         } catch (err) {
             console.error('💥 Error refreshing topbar profile picture:', err);
+            
+            // On error, fallback to userData
+            const userData = getUserData();
+            if (userData) {
+                const pictureUrl = userData.profile_picture || userData.profile_image;
+                if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
+                    console.log('🖼️ Topbar profile picture from user data (error fallback):', pictureUrl);
+                    setClientAvatar(pictureUrl);
+                    setProfileInitials(deriveInitials(userData));
+                    return;
+                }
+            }
+            
+            setClientAvatar(null);
         }
     };
 
@@ -91,10 +138,55 @@ export default function Topbar() {
         };
     }, []);
 
+    // Fetch unread count
+    const fetchUnreadCount = useCallback(async () => {
+        try {
+            const response = await clientNotificationAPI.getUnreadCount();
+            if (response.success && response.data) {
+                setUnreadNotifications(response.data.unread_count || 0);
+            }
+        } catch (err) {
+            console.error('💥 Error fetching unread count:', err);
+        }
+    }, []);
+
+    // Handle new notification from WebSocket
+    const handleNewNotification = useCallback(() => {
+        // Refresh unread count when a new notification is received
+        fetchUnreadCount();
+    }, [fetchUnreadCount]);
+
+    // Handle unread count update from WebSocket
+    const handleUnreadCountUpdate = useCallback((count) => {
+        setUnreadNotifications(count);
+    }, []);
+
+    // Connect to WebSocket for real-time notifications
+    useNotificationWebSocket(true, handleNewNotification, handleUnreadCountUpdate);
+
     // Fetch profile picture and user info on component mount
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
+                // First, check userData from login response
+                const userData = getUserData();
+                if (userData) {
+                    setUserInfo(userData);
+                    setProfileInitials(deriveInitials(userData));
+                    
+                    // Check both profile_picture and profile_image fields
+                    const pictureUrl = userData.profile_picture || userData.profile_image;
+                    if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
+                        // Use profile picture from userData if available
+                        console.log('🖼️ Topbar profile picture from user data:', pictureUrl);
+                        setClientAvatar(pictureUrl);
+                        setLoading(false);
+                        return;
+                    } else {
+                        console.log('❌ No profile picture in user data, will fetch from API');
+                    }
+                }
+                
                 const storedAvatar = localStorage.getItem(CLIENT_AVATAR_KEY);
                 if (storedAvatar) {
                     setProfilePicture(storedAvatar);
@@ -108,24 +200,30 @@ export default function Topbar() {
                     } else {
                         setClientAvatar(null);
                     }
+                } else if (!storedAvatar) {
+                    setClientAvatar(null);
                 }
 
-                // Fetch user account info for name display
-                const userResponse = await profileAPI.getUserAccount();
-                
-                if (userResponse.success && userResponse.data) {
-                    setUserInfo(userResponse.data);
-                    setProfileInitials(deriveInitials(userResponse.data));
+                // Fetch user account info for name display if not already set
+                if (!userData) {
+                    const userResponse = await profileAPI.getUserAccount();
+                    
+                    if (userResponse.success && userResponse.data) {
+                        setUserInfo(userResponse.data);
+                        setProfileInitials(deriveInitials(userResponse.data));
+                    }
                 }
             } catch (err) {
                 console.error('💥 Error fetching topbar profile data:', err);
+                setClientAvatar(null);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchProfileData();
-    }, []);
+        fetchUnreadCount(); // Fetch unread count on mount
+    }, [fetchUnreadCount]);
 
     // Monitor profile picture state changes
     useEffect(() => {
@@ -424,7 +522,11 @@ export default function Topbar() {
             {showNotifications && (
                 <NotificationPanel
                     onClose={() => setShowNotifications(false)}
-                    onChange={({ unreadCount }) => setUnreadNotifications(unreadCount)}
+                    onChange={({ unreadCount }) => {
+                        setUnreadNotifications(unreadCount);
+                        // Refresh unread count after notification changes
+                        fetchUnreadCount();
+                    }}
                 />
             )}
         </>
