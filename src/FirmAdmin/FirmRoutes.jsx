@@ -11,10 +11,9 @@ import StaffManagement from './Pages/Staff/StaffManagement';
 import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
 import ClientDetails from './Pages/ClientManagement/ClientDetails';
-import Analytics from './Pages/Analytics';
+import Analytics from './Pages/Analytics/Analytics';
 import DocumentManagement from './Pages/DocumentManagement';
-import FolderContents from './Pages/DocumentManagement/FolderContents';
-import PdfViewer from './Pages/DocumentManagement/PdfViewer';
+
 import Messages from './Pages/messages/Message';
 import FirmSettings from './Pages/FirmSetting/FirmSetting';
 import SupportCenter from './Pages/SupportCenter';
@@ -26,6 +25,7 @@ import InvoiceDetails from './Pages/Billing/InvoiceDetails';
 import SchedulingCalendar from './Pages/Scheduling & calendar/SchedulingCalendar';
 import Appointments from './Pages/Scheduling & calendar/Appointments';
 import Staff from './Pages/Scheduling & calendar/Staff';
+import Feature from './Pages/Scheduling & calendar/Feature';
 import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
 import EmailTemplate from './Pages/Email-templates/EmailTemplate';
@@ -87,12 +87,9 @@ export default function FirmRoutes() {
         {/* Client Management routes */}
         <Route path="calendar" element={<SchedulingCalendar />} />
         <Route path="calendar/appointments" element={<Appointments />} />
+        <Route path="calendar/features" element={<Feature />} />
         <Route path="calendar/staff" element={<Staff />} />
-        <Route path="documents" element={<DocumentManagement />}>
-          <Route path="folder/:folderId" element={<FolderContents />}>
-            <Route path="document/:documentId" element={<PdfViewer />} />
-          </Route>
-        </Route>
+        <Route path="documents" element={<DocumentManagement />} />
         <Route path="messages" element={<Messages />} />
         
         {/* Business Operations routes */}

@@ -103,8 +103,8 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
       </div>
 
       {/* Tab Navigation with Filters */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0 mb-6">
-        <div className="w-fit">
+      <div className="flex flex-col 2xl:flex-row 2xl:justify-between 2xl:items-center space-y-4 2xl:space-y-0 mb-6">
+        <div className="w-full 2xl:w-fit">
           <TabNavigation
             tabs={tabs}
             activeTab={activeTab}
@@ -113,9 +113,9 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
         </div>
 
         {/* Tab-specific filters */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full 2xl:w-auto">
           <div className="relative">
-            <select className="appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-2 py-1 pr-6 text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[60px]">
+            <select className="appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-2 py-1 pr-6 text-xs focus:outline-none min-w-[60px]">
               <option>2025</option>
               <option>2024</option>
               <option>2023</option>
@@ -128,7 +128,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
           </div>
 
           <div className="relative">
-            <select className="appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-2 py-1 pr-6 text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[70px]">
+            <select className="appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-2 py-1 pr-6 text-xs focus:outline-none min-w-[70px]">
               <option>All offices</option>
               <option>Office A</option>
               <option>Office B</option>
@@ -142,7 +142,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
           </div>
 
           <div className="relative">
-            <select className="appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-2 py-1 pr-6 text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[40px]">
+            <select className="appearance-none text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg px-2 py-1 pr-6 text-xs focus:outline-none min-w-[40px]">
               <option>All</option>
               <option>Q1</option>
               <option>Q2</option>

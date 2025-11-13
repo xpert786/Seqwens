@@ -35,7 +35,7 @@ const Appointments = () => {
     const tabPaths = {
         Calendar: '/firmadmin/calendar',
         Appointments: '/firmadmin/calendar/appointments',
-        Features: null,
+        Features: '/firmadmin/calendar/features',
         Staff: '/firmadmin/calendar/staff',
     };
 
@@ -517,7 +517,7 @@ const Appointments = () => {
                         <div className="flex items-start justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0">
                             <div>
                                 <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-0.5">Add Calendar Event</h5>
-                                <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">Schedule a new meeting, appointment, or deadline</p>
+                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Schedule a new meeting, appointment, or deadline</p>
                             </div>
                             <button
                                 onClick={() => setIsAddEventModalOpen(false)}
@@ -534,7 +534,7 @@ const Appointments = () => {
                         <div className="p-3 space-y-3 overflow-y-auto hide-scrollbar flex-1">
                             {/* Event Title */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Event Title</label>
+                                <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Event Title</label>
                                 <input
                                     type="text"
                                     value={eventTitle}
@@ -546,7 +546,7 @@ const Appointments = () => {
 
                             {/* Event Type */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Event type</label>
+                                <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Event type</label>
                                 <div className="relative">
                                     <select
                                         value={eventType}
@@ -569,7 +569,7 @@ const Appointments = () => {
 
                             {/* Client (optional) */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Client (optional)</label>
+                                <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Client (optional)</label>
                                 <div className="relative">
                                     <select
                                         value={eventClient}
@@ -591,7 +591,7 @@ const Appointments = () => {
                             {/* Date & Time */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Date</label>
+                                    <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Date</label>
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -608,7 +608,7 @@ const Appointments = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Time</label>
+                                    <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Time</label>
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -628,7 +628,7 @@ const Appointments = () => {
 
                             {/* Duration */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Duration(minutes)</label>
+                                <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Duration(minutes)</label>
                                 <input
                                     type="number"
                                     value={duration}
@@ -639,7 +639,7 @@ const Appointments = () => {
 
                             {/* Assign Staff */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Assign Staff</label>
+                                <label className="block text-[16px] text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Assign Staff</label>
                                 <div className="relative">
                                     <select
                                         value={assignStaff}
@@ -660,7 +660,7 @@ const Appointments = () => {
 
                             {/* Location */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Location</label>
+                                <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Location</label>
                                 <input
                                     type="text"
                                     value={eventLocation}
@@ -671,7 +671,7 @@ const Appointments = () => {
 
                             {/* Description */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Description</label>
+                                <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Description</label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}

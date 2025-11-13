@@ -232,38 +232,21 @@ const SchedulingCalendar = () => {
                         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-2">
                             <div className="flex gap-2">
                                 {navTabs.map((tab) => {
-                                    const isNavigable = tab === 'Calendar' || tab === 'Appointments';
                                     const tabPath = tab === 'Calendar' ? '/firmadmin/calendar' : `/firmadmin/calendar/${tab.toLowerCase()}`;
                                     
-                                    if (isNavigable) {
-                                        return (
-                                            <Link
-                                                key={tab}
-                                                to={tabPath}
-                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${
-                                                    activeTab === tab
-                                                        ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                        : 'bg-transparent hover:bg-gray-50 !text-black'
-                                                }`}
-                                            >
-                                                {tab}
-                                            </Link>
-                                        );
-                                    } else {
-                                        return (
-                                            <button
-                                                key={tab}
-                                                type="button"
-                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${
-                                                    activeTab === tab
-                                                        ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                        : 'bg-transparent hover:bg-gray-50 !text-black'
-                                                }`}
-                                            >
-                                                {tab}
-                                            </button>
-                                        );
-                                    }
+                                    return (
+                                        <Link
+                                            key={tab}
+                                            to={tabPath}
+                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${
+                                                activeTab === tab
+                                                    ? 'bg-[#3AD6F2] !text-white font-semibold'
+                                                    : 'bg-transparent hover:bg-gray-50 !text-black'
+                                            }`}
+                                        >
+                                            {tab}
+                                        </Link>
+                                    );
                                 })}
                             </div>
                         </div>
@@ -571,7 +554,7 @@ const SchedulingCalendar = () => {
 
             {/* Add Calendar Event Modal */}
             {isAddEventModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ml-10 mt-6">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
                     <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[75vh] flex flex-col">
                         {/* Modal Header */}
                         <div className="flex items-start justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0">
