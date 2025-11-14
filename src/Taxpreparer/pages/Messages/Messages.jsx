@@ -14,6 +14,22 @@ export default function MessagePage() {
   const urlParams = new URLSearchParams(location.search);
   const clientIdFromUrl = urlParams.get('clientId');
   const threadIdFromUrl = urlParams.get('threadId');
+  const sanitizedClientIdFromUrl = clientIdFromUrl ? clientIdFromUrl.toString() : "";
+
+  const buildComposeForm = (prefilledClientId = null) => {
+    const resolvedClientId = prefilledClientId !== null && prefilledClientId !== undefined && prefilledClientId !== ''
+      ? prefilledClientId
+      : sanitizedClientIdFromUrl;
+
+    return {
+      clientId: resolvedClientId ? resolvedClientId.toString() : "",
+      subject: "",
+      category: "Client",
+      priority: "Medium",
+      message: "",
+      assignedStaffText: "",
+    };
+  };
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("All Messages");
   const [newMessage, setNewMessage] = useState("");
@@ -26,13 +42,11 @@ export default function MessagePage() {
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [threadsError, setThreadsError] = useState(null);
   const [showComposeModal, setShowComposeModal] = useState(false);
-  const [composeForm, setComposeForm] = useState({
-    recipients: ["@everyone", "@smithjohnson", "@everyone"],
-    subject: "",
-    category: "Client",
-    priority: "Medium",
-    message: ""
-  });
+  const [composeForm, setComposeForm] = useState(() => buildComposeForm());
+  const [availableClients, setAvailableClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [clientsError, setClientsError] = useState(null);
+  const clientsFetchedRef = useRef(false);
   const [tasks, setTasks] = useState([
     { id: 1, text: "Review all sections carefully", completed: true },
     { id: 2, text: "Check personal information", completed: true },
@@ -190,6 +204,52 @@ export default function MessagePage() {
     },
     [clientIdFromUrl, threadIdFromUrl, activeConversationId, navigate, location.pathname]
   );
+
+  const fetchAssignedClients = useCallback(async () => {
+    try {
+      setClientsLoading(true);
+      setClientsError(null);
+      const response = await taxPreparerThreadsAPI.listAssignedClients();
+      let clientList = [];
+
+      if (Array.isArray(response)) {
+        clientList = response;
+      } else if (response?.data) {
+        if (Array.isArray(response.data)) {
+          clientList = response.data;
+        } else if (Array.isArray(response.data.clients)) {
+          clientList = response.data.clients;
+        }
+      }
+
+      if (!Array.isArray(clientList)) {
+        clientList = [];
+      }
+
+      setAvailableClients(clientList);
+      clientsFetchedRef.current = true;
+    } catch (error) {
+      console.error("Error fetching assigned clients:", error);
+      setClientsError(error.message || "Failed to load clients");
+    } finally {
+      setClientsLoading(false);
+    }
+  }, []);
+
+  const handleOpenComposeModal = () => {
+    if (!clientsFetchedRef.current && !clientsLoading) {
+      fetchAssignedClients();
+    }
+    const activeConversation = conversations.find(conv => conv.id === activeConversationId);
+    const fallbackClientId = activeConversation?.clientId || sanitizedClientIdFromUrl || "";
+    setComposeForm(buildComposeForm(fallbackClientId));
+    setShowComposeModal(true);
+  };
+
+  const handleCloseComposeModal = () => {
+    setShowComposeModal(false);
+    setComposeForm(buildComposeForm());
+  };
 
   // Fetch messages for active conversation (initial load and periodic polling)
   const fetchMessages = useCallback(
@@ -601,6 +661,12 @@ export default function MessagePage() {
     return () => clearInterval(intervalId);
   }, [fetchThreads]);
 
+  useEffect(() => {
+    if (showComposeModal && !clientsFetchedRef.current && !clientsLoading) {
+      fetchAssignedClients();
+    }
+  }, [showComposeModal, clientsLoading, fetchAssignedClients]);
+
   // Handle click outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -640,7 +706,7 @@ export default function MessagePage() {
         <button
           className="btn d-flex align-items-center"
           style={{ backgroundColor: "#F56D2D", color: "#FFFFFF", fontFamily: "BasisGrotesquePro" }}
-          onClick={() => setShowComposeModal(true)}
+          onClick={handleOpenComposeModal}
         >
           <span className="me-2 text-white"><PLusIcon /></span>
           New Message
@@ -1077,7 +1143,7 @@ export default function MessagePage() {
           zIndex: 9999,
 
         }}
-          onClick={() => setShowComposeModal(false)}
+          onClick={handleCloseComposeModal}
         >
           <div style={{
             backgroundColor: "white",
@@ -1119,7 +1185,7 @@ export default function MessagePage() {
                 </p>
               </div>
               <button
-                onClick={() => setShowComposeModal(false)}
+                onClick={handleCloseComposeModal}
                 style={{
                   background: "#F7F9FC",
                   border: "none",
@@ -1148,7 +1214,7 @@ export default function MessagePage() {
 
             {/* Form Fields */}
             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              {/* Enter Recipients */}
+              {/* Select Client */}
               <div>
                 <label style={{
                   display: "block",
@@ -1157,74 +1223,95 @@ export default function MessagePage() {
                   color: "#2D3748",
                   marginBottom: "12px"
                 }}>
-                  Enter Recipients
+                  Select Client <span style={{ color: "#F56D2D" }}>*</span>
                 </label>
-                <div style={{
-                  border: "1px solid #E2E8F0",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  minHeight: "60px",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "10px",
-                  alignItems: "center",
-                  backgroundColor: "#FAFAFA"
-                }}>
-                  {composeForm.recipients.map((recipient, index) => (
-                    <div key={index} style={{
-                      backgroundColor: "#E3F2FD",
-                      color: "#1976D2",
-                      padding: "6px 12px",
-                      borderRadius: "20px",
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontWeight: "500"
-                    }}>
-                      {recipient}
-                      <button
-                        onClick={() => {
-                          const newRecipients = composeForm.recipients.filter((_, i) => i !== index);
-                          setComposeForm({ ...composeForm, recipients: newRecipients });
-                        }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#1976D2",
-                          cursor: "pointer",
-                          fontSize: "14px",
-                          padding: 0,
-                          width: "18px",
-                          height: "18px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          borderRadius: "50%",
-                          backgroundColor: "rgba(25, 118, 210, 0.1)"
-                        }}
-                      >
-                        ×
-                      </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {clientsLoading ? (
+                    <div style={{ padding: "12px 0" }}>
+                      <span style={{ fontSize: "14px", color: "#718096" }}>Loading clients...</span>
                     </div>
-                  ))}
-                  <button style={{
-                    backgroundColor: "#F56D2D",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    width: "32px",
-                    height: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    fontSize: "16px",
-                    fontWeight: "bold"
-                  }}>
-                    @
-                  </button>
+                  ) : (
+                    <select
+                      value={composeForm.clientId}
+                      onChange={(e) => setComposeForm({ ...composeForm, clientId: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "16px",
+                        border: "1px solid #E2E8F0",
+                        borderRadius: "12px",
+                        fontSize: "16px",
+                        backgroundColor: "#FAFAFA",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select a client</option>
+                      {availableClients.map((client) => {
+                        const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+                        const label = fullName || client.email || `Client #${client.id}`;
+                        const secondary = client.email && fullName ? ` (${client.email})` : "";
+                        return (
+                          <option key={client.id} value={client.id}>
+                            {label}{secondary}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <button
+                      type="button"
+                      onClick={fetchAssignedClients}
+                      style={{
+                        backgroundColor: "#EDF2F7",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "8px 12px",
+                        fontSize: "14px",
+                        color: "#4A5568",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Refresh Clients
+                    </button>
+                    {clientsError && (
+                      <span style={{ color: "#E53E3E", fontSize: "13px" }}>{clientsError}</span>
+                    )}
+                    {!clientsLoading && !clientsError && availableClients.length === 0 && (
+                      <span style={{ color: "#718096", fontSize: "13px" }}>No assigned clients found.</span>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Additional Staff */}
+              <div>
+                <label style={{
+                  display: "block",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "#2D3748",
+                  marginBottom: "12px"
+                }}>
+                  Additional Staff IDs (optional)
+                </label>
+                <input
+                  type="text"
+                  value={composeForm.assignedStaffText}
+                  onChange={(e) => setComposeForm({ ...composeForm, assignedStaffText: e.target.value })}
+                  placeholder="e.g., 305, 410"
+                  style={{
+                    width: "100%",
+                    padding: "16px",
+                    border: "1px solid #E2E8F0",
+                    borderRadius: "12px",
+                    fontSize: "16px",
+                    outline: "none",
+                    backgroundColor: "#FAFAFA"
+                  }}
+                />
+                <p style={{ fontSize: "13px", color: "#718096", marginTop: "8px" }}>
+                  Separate multiple staff IDs with commas to loop teammates into the chat.
+                </p>
               </div>
 
               {/* Subject */}
@@ -1356,7 +1443,7 @@ export default function MessagePage() {
               marginTop: "40px"
             }}>
               <button
-                onClick={() => setShowComposeModal(false)}
+                onClick={handleCloseComposeModal}
                 style={{
                   padding: "16px 32px",
                   border: "1px solid #E2E8F0",
@@ -1380,7 +1467,15 @@ export default function MessagePage() {
               <button
                 onClick={async () => {
                   try {
-                    if (!composeForm.subject || !composeForm.message) {
+                    if (!composeForm.clientId) {
+                      toast.error('Please select a client', {
+                        position: "top-right",
+                        autoClose: 3000,
+                      });
+                      return;
+                    }
+
+                    if (!composeForm.subject.trim() || !composeForm.message.trim()) {
                       toast.error('Please fill in subject and message', {
                         position: "top-right",
                         autoClose: 3000,
@@ -1388,83 +1483,65 @@ export default function MessagePage() {
                       return;
                     }
 
-                    // Extract client_id from recipients (assuming format like "client:26" or just the ID)
-                    // For now, we'll need to get client_id from the selected recipient
-                    // This is a placeholder - you may need to adjust based on your recipient selection logic
-                    const clientId = composeForm.recipients.length > 0
-                      ? parseInt(composeForm.recipients[0].replace('client:', ''))
-                      : null;
-
-                    if (!clientId) {
-                      toast.error('Please select a client recipient', {
+                    const clientIdNumber = parseInt(composeForm.clientId, 10);
+                    if (Number.isNaN(clientIdNumber)) {
+                      toast.error('Invalid client selected', {
                         position: "top-right",
                         autoClose: 3000,
                       });
                       return;
                     }
 
-                    // Extract assigned_staff_ids from recipients (staff members)
-                    const assignedStaffIds = composeForm.recipients
-                      .filter(r => r.startsWith('@') || r.includes('staff'))
-                      .map(r => {
-                        // Extract ID from recipient string
-                        const match = r.match(/\d+/);
-                        return match ? parseInt(match[0]) : null;
-                      })
-                      .filter(id => id !== null);
+                    const assignedStaffIds = composeForm.assignedStaffText
+                      .split(',')
+                      .map((id) => id.trim())
+                      .filter((id) => id.length > 0)
+                      .map((id) => parseInt(id, 10))
+                      .filter((id) => !Number.isNaN(id));
 
                     const payload = {
-                      client_id: clientId,
-                      subject: composeForm.subject,
-                      assigned_staff_ids: assignedStaffIds.length > 0 ? assignedStaffIds : [],
-                      message: composeForm.message
+                      client_id: clientIdNumber,
+                      subject: composeForm.subject.trim(),
+                      message: composeForm.message.trim(),
+                      assigned_staff_ids: assignedStaffIds,
                     };
-
-                    console.log('Creating thread with payload:', payload);
 
                     const response = await taxPreparerThreadsAPI.createThread(payload);
 
                     if (response.success && response.data) {
-                      const thread = response.data;
+                      const threadData = response.data.thread || response.data;
+                      if (!threadData) {
+                        throw new Error('Invalid response received from server');
+                      }
 
-                      // Format the time
-                      let formattedTime = 'Just now';
-
-                      // Get client name
-                      const clientName = thread.client_name || 'Unknown Client';
-
-                      // Get last message preview text
-                      const lastMessageText = thread.last_message_preview
-                        ? (thread.last_message_preview.content || composeForm.message || 'No message')
-                        : (composeForm.message || 'No message');
-
-                      // Truncate message if too long
+                      const lastMessageText = threadData.last_message_preview?.content
+                        || composeForm.message
+                        || 'No message';
                       const truncatedMessage = lastMessageText.length > 50
-                        ? lastMessageText.substring(0, 50) + '...'
+                        ? `${lastMessageText.substring(0, 50)}...`
                         : lastMessageText;
+                      const threadTimestamp = threadData.last_message_at || threadData.created_at || new Date().toISOString();
 
-                      // Transform the created thread to match component structure
-                      const threadTimestamp = thread.last_message_at || thread.created_at || new Date().toISOString();
                       const newThread = {
-                        id: thread.id,
-                        name: clientName,
+                        id: threadData.id,
+                        name: threadData.client_name || 'Unknown Client',
                         lastMessage: truncatedMessage,
-                        time: formattedTime,
-                        status: thread.status,
-                        unreadCount: thread.unread_count || 0,
+                        time: 'Just now',
+                        status: threadData.status,
+                        unreadCount: threadData.unread_count || 0,
                         createdAt: threadTimestamp,
                         lastMessageAt: threadTimestamp,
-                        subject: thread.subject,
-                        assignedStaff: thread.assigned_staff,
-                        assignedStaffNames: thread.assigned_staff_names,
-                        clientName: thread.client_name,
-                        clientEmail: thread.client_email,
-                        firmName: thread.firm_name,
-                        lastMessagePreview: thread.last_message_preview,
+                        subject: threadData.subject,
+                        assignedStaff: threadData.assigned_staff,
+                        assignedStaffNames: threadData.assigned_staff_names,
+                        clientName: threadData.client_name,
+                        clientEmail: threadData.client_email,
+                        firmName: threadData.firm_name,
+                        lastMessagePreview: threadData.last_message_preview,
                         messages: [],
+                        clientId: threadData.client || threadData.client_id || clientIdNumber,
                       };
 
-                      // Add the new thread to the beginning of conversations list
                       setConversations(prev =>
                         [newThread, ...prev].sort((a, b) => {
                           const dateA = new Date(a.lastMessageAt || 0);
@@ -1474,26 +1551,42 @@ export default function MessagePage() {
                       );
                       setActiveConversationId(newThread.id);
 
-                      toast.success('Thread created successfully', {
+                      const initialMessage = response.data.initial_message;
+                      if (initialMessage) {
+                        const formattedInitialMessage = {
+                          id: initialMessage.id,
+                          type: initialMessage.sender_role?.toLowerCase() === 'client' ? 'admin' : 'user',
+                          text: initialMessage.content || '',
+                          date: initialMessage.created_at,
+                          sender: initialMessage.sender_name || '',
+                          senderRole: initialMessage.sender_role || '',
+                          isRead: initialMessage.is_read || false,
+                          isEdited: initialMessage.is_edited || false,
+                          messageType: initialMessage.message_type || 'text',
+                          isInternal: initialMessage.is_internal || false,
+                          attachment: initialMessage.attachment || null,
+                          attachmentName: initialMessage.attachment_name || null,
+                          attachmentSize: initialMessage.attachment_size_display || null,
+                        };
+                        setActiveChatMessages([formattedInitialMessage]);
+                      } else {
+                        setActiveChatMessages([]);
+                      }
+
+                      fetchThreads(true);
+
+                      toast.success(response.message || 'Chat created successfully', {
                         position: "top-right",
                         autoClose: 3000,
                       });
 
-                      setShowComposeModal(false);
-                      // Reset form
-                      setComposeForm({
-                        recipients: [],
-                        subject: "",
-                        category: "Client",
-                        priority: "Medium",
-                        message: ""
-                      });
+                      handleCloseComposeModal();
                     } else {
                       throw new Error(response.message || 'Failed to create thread');
                     }
                   } catch (err) {
                     console.error('Error creating thread:', err);
-                    toast.error('Failed to create thread: ' + err.message, {
+                    toast.error('Failed to create thread: ' + (err.message || 'Unknown error'), {
                       position: "top-right",
                       autoClose: 3000,
                     });

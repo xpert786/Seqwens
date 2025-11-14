@@ -1813,7 +1813,38 @@ export const firmAdminStaffAPI = {
     const queryString = queryParams.toString();
     const endpoint = `/user/firm-admin/staff/tax-preparers/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
-  }
+  },
+  // Lightweight staff directory for assigning managers or participants
+  listBasicStaff: async () => {
+    return await apiRequest('/taxpayer/firm-admin/staff/', 'GET');
+  },
+};
+
+// Firm Admin Office Locations API functions
+export const firmOfficeAPI = {
+  listOffices: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.search) {
+      queryParams.append('search', params.search);
+    }
+    if (params.status) {
+      queryParams.append('status', params.status);
+    }
+    const queryString = queryParams.toString();
+    return await apiRequest(`/firm/office-locations/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+  createOffice: async (officeData) => {
+    return await apiRequest('/firm/office-locations/', 'POST', officeData);
+  },
+  getOffice: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/`, 'GET');
+  },
+  updateOffice: async (officeId, officeData) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', officeData);
+  },
+  deleteOffice: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/`, 'DELETE');
+  },
 };
 
 // Firm Admin Meetings API functions
@@ -2085,6 +2116,10 @@ export const taxPreparerClientAPI = {
 };
 
 export const taxPreparerThreadsAPI = {
+  // List clients assigned to the authenticated staff member
+  listAssignedClients: async () => {
+    return await apiRequest('/firm/staff/clients/list/', 'GET');
+  },
   // Get all chat threads for the current tax preparer
   // Uses same endpoint as taxpayer but with query parameters for filtering
   getThreads: async (options = {}) => {
@@ -2106,13 +2141,50 @@ export const taxPreparerThreadsAPI = {
   // Create a new chat thread (Tax Preparer to client)
   // Uses JSON format with client_id, subject, assigned_staff_ids, and message
   createThread: async (threadData) => {
-    // Use the same endpoint as taxpayer (as per documentation)
-    return await apiRequest('/taxpayer/threads/create/', 'POST', {
+    const payload = {
       client_id: threadData.client_id,
       subject: threadData.subject,
       assigned_staff_ids: threadData.assigned_staff_ids || [],
       message: threadData.message || ''
-    });
+    };
+
+    const documentFile = threadData.document || threadData.attachment || null;
+
+    if (documentFile) {
+      const token = getAccessToken() || AUTH_TOKEN;
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const formData = new FormData();
+      formData.append('client_id', payload.client_id);
+      formData.append('subject', payload.subject);
+      if (payload.message) {
+        formData.append('message', payload.message);
+      }
+      (payload.assigned_staff_ids || []).forEach((id) => {
+        if (id !== undefined && id !== null) {
+          formData.append('assigned_staff_ids[]', id);
+        }
+      });
+      formData.append('document', documentFile);
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/chats/create/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create chat thread');
+      }
+      return data;
+    }
+
+    return await apiRequest('/firm/staff/chats/create/', 'POST', payload);
   },
   // Get thread details with messages
 

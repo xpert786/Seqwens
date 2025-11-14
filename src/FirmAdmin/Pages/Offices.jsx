@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaBuilding, FaUsers, FaPhone, FaMapMarkerAlt, FaEllipsisV, FaChevronUp, FaChevronDown, FaMinus, FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmOfficeAPI } from '../../ClientOnboarding/utils/apiUtils';
 import AddOfficeModal from './Offices/AddOfficeModal';
-
-const API_BASE_URL = getApiBaseUrl();
 
 export default function Offices() {
     const navigate = useNavigate();
@@ -32,34 +28,17 @@ export default function Offices() {
             setLoading(true);
             setError('');
 
-            const token = getAccessToken();
-            const queryParams = new URLSearchParams();
-
+            const params = {};
             if (searchTerm.trim()) {
-                queryParams.append('search', searchTerm.trim());
+                params.search = searchTerm.trim();
             }
             if (statusFilter && statusFilter !== 'All Status') {
-                queryParams.append('status', statusFilter.toLowerCase());
+                const normalizedStatus = statusFilter.toLowerCase().replace(/\s+/g, '_');
+                params.status = normalizedStatus;
             }
 
-            const url = `${API_BASE_URL}/firm/office-locations/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+            const result = await firmOfficeAPI.listOffices(params);
 
-            const response = await fetchWithCors(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            // Default summary structure
             const defaultSummary = {
                 total_offices: 0,
                 active_offices: 0,
@@ -68,16 +47,18 @@ export default function Offices() {
                 monthly_revenue: 0
             };
 
-            // Handle different response structures
-            if (result.success && result.data) {
+            if (result?.success && result.data) {
                 setOffices(result.data.offices || []);
                 setSummary(result.data.summary || defaultSummary);
-            } else if (result.offices) {
-                // Direct response with offices and summary
+            } else if (result?.offices) {
                 setOffices(result.offices || []);
                 setSummary(result.summary || defaultSummary);
+            } else if (Array.isArray(result)) {
+                setOffices(result);
+                setSummary(defaultSummary);
             } else {
                 setOffices([]);
+                setSummary(defaultSummary);
             }
         } catch (err) {
             console.error('Error fetching offices:', err);
@@ -122,20 +103,31 @@ export default function Offices() {
 
     // Format office data for display
     const formatOfficeData = (office) => {
+        const performanceData = office.performance || {};
+        const performancePercentage = typeof performanceData === 'object'
+            ? (performanceData.percentage ?? performanceData.value ?? 0)
+            : (performanceData ?? 0);
+        const performanceTrend = performanceData.trend
+            || (performancePercentage > 0 ? 'up' : performancePercentage < 0 ? 'down' : 'neutral');
+        const performanceDisplay = performanceData.display
+            || `${performancePercentage > 0 ? '+' : ''}${performancePercentage}%`;
+
         return {
             id: office.id,
             name: office.name || 'Unnamed Office',
-            phone: office.phone_number || office.phone || 'N/A',
-            address: office.address || '',
+            phone: office.phone_number || office.phone_number_formatted || office.phone || 'N/A',
+            address: office.full_address || office.street_address || office.address || '',
             city: office.city ? `${office.city}${office.state ? `, ${office.state}` : ''}${office.zip_code ? ` ${office.zip_code}` : ''}` : '',
             manager: office.manager_name || (office.manager ? `${office.manager.first_name || ''} ${office.manager.last_name || ''}`.trim() : '') || 'N/A',
             managerEmail: office.manager_email || (office.manager?.email || '') || 'N/A',
             status: office.status || 'active',
+            statusDisplay: office.status_display || (office.status ? office.status.replace('_', ' ') : 'Active'),
             staff: office.staff_count || office.staff || 0,
             clients: office.clients_count || office.clients || 0,
-            monthlyRevenue: office.monthly_revenue || office.monthlyRevenue || 0,
-            performance: office.performance || 0,
-            performanceType: office.performance_type || office.performanceType || 'neutral'
+            monthlyRevenue: office.monthly_revenue ?? office.monthlyRevenue ?? 0,
+            performancePercentage,
+            performanceTrend,
+            performanceDisplay,
         };
     };
 
@@ -395,12 +387,13 @@ export default function Offices() {
                                                 <span
                                                     className={`px-3 py-1 rounded-full text-xs font-medium ${(formattedOffice.status || '').toLowerCase() === 'active'
                                                         ? 'bg-[#22C55E] text-white'
-                                                        : (formattedOffice.status || '').toLowerCase() === 'opening soon' || (formattedOffice.status || '').toLowerCase() === 'opening_soon'
+                                                        : (formattedOffice.status || '').toLowerCase().includes('opening')
                                                             ? 'bg-[#1E40AF] text-white'
                                                             : 'bg-gray-100 text-gray-600'
                                                         }`}
                                                 >
-                                                    {formattedOffice.status.charAt(0).toUpperCase() + formattedOffice.status.slice(1).replace('_', ' ')}
+                                                    {(formattedOffice.statusDisplay || formattedOffice.status || 'Active')
+                                                        .replace('_', ' ')}
                                                 </span>
                                             </td>
 
@@ -434,16 +427,15 @@ export default function Offices() {
                                             {/* Performance Column */}
                                             <td className="px-4 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
-                                                    {formattedOffice.performanceType === 'increase' && (
+                                                    {formattedOffice.performanceTrend === 'up' && (
                                                         <>
                                                             <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                 <path d="M13 0.5L7.6875 5.8125L4.5625 2.6875L0.5 6.75" stroke="#22C55E" strokeLinecap="round" strokeLinejoin="round" />
                                                             </svg>
-
-                                                            <span className="text-sm text-green-600 font-medium">+{formattedOffice.performance}%</span>
+                                                            <span className="text-sm text-green-600 font-medium">{formattedOffice.performanceDisplay}</span>
                                                         </>
                                                     )}
-                                                    {formattedOffice.performanceType === 'decrease' && (
+                                                    {formattedOffice.performanceTrend === 'down' && (
                                                         <>
                                                             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                 <g clipPath="url(#clip0_5150_7661)">
@@ -456,14 +448,13 @@ export default function Offices() {
                                                                     </clipPath>
                                                                 </defs>
                                                             </svg>
-
-                                                            <span className=" text-red-400 font-semibold">-{formattedOffice.performance}%</span>
+                                                            <span className="text-sm text-red-500 font-semibold">{formattedOffice.performanceDisplay}</span>
                                                         </>
                                                     )}
-                                                    {formattedOffice.performanceType === 'neutral' && (
+                                                    {formattedOffice.performanceTrend === 'neutral' && (
                                                         <>
-                                                            <FaMinus className="text-gray-400 " />
-                                                            <span className="text-gray-500 font-semibold">-{formattedOffice.performance}%</span>
+                                                            <FaMinus className="text-gray-400" />
+                                                            <span className="text-sm text-gray-500 font-semibold">{formattedOffice.performanceDisplay}</span>
                                                         </>
                                                     )}
                                                 </div>

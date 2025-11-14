@@ -1246,7 +1246,7 @@ export default function StaffManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border border-gray-200 rounded-xl p-4">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">
                     <FaEnvelope size={14} /> Send Email Invite
@@ -1293,7 +1293,7 @@ export default function StaffManagement() {
                       : "Send SMS"}
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div className="mt-6 text-right">
