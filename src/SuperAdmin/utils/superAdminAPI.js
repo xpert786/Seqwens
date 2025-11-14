@@ -173,22 +173,22 @@ export const superAdminAPI = {
     if (search) params.append('search', search);
     if (role) params.append('role', role);
 
-    return await apiRequest(`/seqwens/api/user/admin/users/?${params}`, 'GET');
+    return await apiRequest(`/user/admin/users/?${params}`, 'GET');
   },
 
   // Get user details by ID
   getUserById: async (userId) => {
-    return await apiRequest(`/seqwens/api/user/admin/users/${userId}/`, 'GET');
+    return await apiRequest(`/user/admin/users/${userId}/`, 'GET');
   },
 
   // Update user
   updateUser: async (userId, userData) => {
-    return await apiRequest(`/seqwens/api/user/admin/users/${userId}/`, 'PATCH', userData);
+    return await apiRequest(`/user/admin/users/${userId}/`, 'PATCH', userData);
   },
 
   // Delete user
   deleteUser: async (userId) => {
-    return await apiRequest(`/seqwens/api/user/admin/users/${userId}/`, 'DELETE');
+    return await apiRequest(`/user/admin/users/${userId}/`, 'DELETE');
   },
 
   // Get subscription data
@@ -198,7 +198,7 @@ export const superAdminAPI = {
       limit: limit.toString(),
     });
 
-    return await apiRequest(`/seqwens/api/user/admin/subscriptions/?${params}`, 'GET');
+    return await apiRequest(`/user/admin/subscriptions/?${params}`, 'GET');
   },
 
   // Get superadmin subscription management data
@@ -346,7 +346,7 @@ export const superAdminAPI = {
     const params = new URLSearchParams({
       period: period,
     });
-    return await apiRequest(`/seqwens/api/user/admin/analytics/?${params}`, 'GET');
+    return await apiRequest(`/user/admin/analytics/?${params}`, 'GET');
   },
 
   // Get system health data
@@ -364,7 +364,7 @@ export const superAdminAPI = {
     if (activityType) params.append('activity_type', activityType);
     if (userId) params.append('user_id', userId);
 
-    return await apiRequest(`/seqwens/api/user/admin/activity-logs/?${params}`, 'GET');
+    return await apiRequest(`/user/admin/activity-logs/?${params}`, 'GET');
   },
 
   // Get firms data

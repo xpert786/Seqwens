@@ -1,196 +1,348 @@
-import React, { useState } from 'react';
-import { FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
+import { CrossesIcon } from '../../Components/icons';
+import { firmOfficeAPI, handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+
+const initialFormState = {
+    name: '',
+    phone_number: '',
+    street_address: '',
+    city: '',
+        state: '',
+    zip_code: '',
+    country: 'USA',
+    manager_id: '',
+    status: 'active',
+};
 
 export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
-    const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState({
-        officeName: 'Downtown Branch',
-        officeManager: '',
-        description: '',
-        streetAddress: '123 Business Ave',
-        city: 'New York',
-        state: '',
-        zipCode: '10001',
-        phoneNumber: '(555) 123-4567',
-        emailAddress: 'office@taxfirm.com',
-        timezone: '',
-        operatingHours: {
-            monday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
-            tuesday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
-            wednesday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
-            thursday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
-            friday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
-            saturday: { isOpen: true, startTime: '09:00 AM', endTime: '01:00 PM' },
-            sunday: { isOpen: false, startTime: '', endTime: '' }
-        },
-        branding: {
-            logoUrl: 'https://example.com/logo.png',
-            faviconUrl: 'https://example.com/favicon.ico',
-            primaryColor: '#3AD6F2',
-            secondaryColor: '#F56D2D',
-            customDomain: 'downtown.taxfirm.com',
-            whiteLabelBranding: false,
-            letterheadTemplate: '',
-            digitalSignature: ''
-        },
-        servicePricing: {
-            individualTaxReturn: '250',
-            quarterlyBookkeeping: '500',
-            businessTaxReturn: '750',
-            payrollProcessing: '150'
-        },
-        customServices: [],
-        compliance: {
-            efinNumber: '123456',
-            efinStatus: 'Not Applied',
-            refundAdvanceProducts: false,
-            refundTransfer: false,
-            stateTaxPreparerLicense: '',
-            eaLicenseNumber: '',
-            cpaLicenseNumber: '',
-            eoPolicyNumber: '',
-            eoPolicyExpiry: '',
-            generalLiabilityPolicy: ''
-        },
-        signature: {
-            tab: 'draw', // 'draw', 'type', 'upload'
-            signatureData: null,
-            signatureImage: null
-        },
-        logo: {
-            file: null,
-            preview: null
-        }
-    });
+    const [formData, setFormData] = useState(initialFormState);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [staffOptions, setStaffOptions] = useState([]);
+    const [staffLoading, setStaffLoading] = useState(false);
+    const [staffError, setStaffError] = useState(null);
 
-    const steps = [
-        { id: 1, name: 'Basic Information' },
-        { id: 2, name: 'Operating Hours' },
-        { id: 3, name: 'Branding & Identity' },
-        { id: 4, name: 'Service Pricing' },
-        { id: 5, name: 'Compliance & Licensing' },
-        { id: 6, name: 'State Tax Preparer License and EA License Number' },
-        { id: 7, name: 'Office Compliance & Setup Checklist' }
-    ];
-
-    const handleInputChange = (e) => {
+    const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
     };
 
-    const handleDayToggle = (day) => {
-        setFormData(prev => ({
-            ...prev,
-            operatingHours: {
-                ...prev.operatingHours,
-                [day]: {
-                    ...prev.operatingHours[day],
-                    isOpen: !prev.operatingHours[day].isOpen,
-                    startTime: !prev.operatingHours[day].isOpen ? '09:00 AM' : prev.operatingHours[day].startTime,
-                    endTime: !prev.operatingHours[day].isOpen ? '05:00 PM' : prev.operatingHours[day].endTime
-                }
-            }
-        }));
+    const resetForm = () => {
+        setFormData(initialFormState);
+        setError(null);
     };
 
-    const handleTimeChange = (day, field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            operatingHours: {
-                ...prev.operatingHours,
-                [day]: {
-                    ...prev.operatingHours[day],
-                    [field]: value
-                }
-            }
-        }));
-    };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
 
-    const handleBrandingChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            branding: {
-                ...prev.branding,
-                [field]: value
-            }
-        }));
-    };
-
-    const handleServicePricingChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            servicePricing: {
-                ...prev.servicePricing,
-                [field]: value
-            }
-        }));
-    };
-
-    const handleAddCustomService = () => {
-        setFormData(prev => ({
-            ...prev,
-            customServices: [
-                ...prev.customServices,
-                { id: Date.now(), name: '', price: '0' }
-            ]
-        }));
-    };
-
-    const handleRemoveCustomService = (id) => {
-        setFormData(prev => ({
-            ...prev,
-            customServices: prev.customServices.filter(service => service.id !== id)
-        }));
-    };
-
-    const handleCustomServiceChange = (id, field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            customServices: prev.customServices.map(service =>
-                service.id === id ? { ...service, [field]: value } : service
-            )
-        }));
-    };
-
-    const handleComplianceChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            compliance: {
-                ...prev.compliance,
-                [field]: value
-            }
-        }));
-    };
-
-    const handleSignatureTabChange = (tab) => {
-        setFormData(prev => ({
-            ...prev,
-            signature: {
-                ...prev.signature,
-                tab
-            }
-        }));
-    };
-
-    const handleLogoUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData(prev => ({
-                    ...prev,
-                    logo: {
-                        file,
-                        preview: reader.result
-                    }
-                }));
+        try {
+            const payload = {
+                name: formData.name.trim(),
+                phone_number: formData.phone_number.trim(),
+                street_address: formData.street_address.trim(),
+                city: formData.city.trim(),
+                state: formData.state.trim(),
+                zip_code: formData.zip_code.trim(),
+                country: formData.country.trim(),
+                status: formData.status,
             };
-            reader.readAsDataURL(file);
+
+            if (formData.manager_id) {
+                payload.manager_id = Number(formData.manager_id);
+            }
+
+            const response = await firmOfficeAPI.createOffice(payload);
+
+            if (response.success) {
+                toast.success(response.message || 'Office location created successfully', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                resetForm();
+                onClose();
+                if (typeof onOfficeCreated === 'function') {
+                    onOfficeCreated();
+                }
+            } else {
+                throw new Error(response.message || 'Failed to create office location');
+            }
+        } catch (err) {
+            const errorMsg = handleAPIError(err);
+            setError(errorMsg);
+            toast.error(errorMsg || 'Failed to create office location.', {
+                position: 'top-right',
+                autoClose: 4000,
+            });
+        } finally {
+            setLoading(false);
         }
     };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
+    };
+
+    const fetchStaffOptions = useCallback(async () => {
+        setStaffLoading(true);
+        setStaffError(null);
+        try {
+            const response = await firmAdminStaffAPI.listBasicStaff();
+            let staffList = [];
+
+            if (Array.isArray(response)) {
+                staffList = response;
+            } else if (Array.isArray(response?.data?.staff_members)) {
+                staffList = response.data.staff_members;
+            } else if (Array.isArray(response?.staff_members)) {
+                staffList = response.staff_members;
+            }
+
+            setStaffOptions(staffList || []);
+        } catch (err) {
+            console.error('Error loading staff members:', err);
+            setStaffError(handleAPIError(err));
+            setStaffOptions([]);
+        } finally {
+            setStaffLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchStaffOptions();
+        }
+    }, [isOpen, fetchStaffOptions]);
+
+    if (!isOpen) {
+        return null;
+    }
+
+    return (
+        <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+            style={{ zIndex: 9999 }}
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    handleClose();
+                }
+            }}
+        >
+            <div
+                className="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6 relative"
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 className="text-xl font-semibold text-gray-900">Add Office Location</h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Create a new office for your firm and assign a manager.
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleClose}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label="Close"
+                    >
+                        <CrossesIcon className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {error && (
+                    <div className="mb-4 p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Office Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="Enter office name"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Phone Number <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="tel"
+                                name="phone_number"
+                                value={formData.phone_number}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="+1 408 555 0123"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Street Address <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="street_address"
+                            value={formData.street_address}
+                            onChange={handleChange}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                            placeholder="123 Main St, Suite 100"
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                City <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="San Francisco"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                State <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="state"
+                                value={formData.state}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="CA"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Zip Code <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="zip_code"
+                                value={formData.zip_code}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="94105"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Country
+                            </label>
+                            <input
+                                type="text"
+                                name="country"
+                                value={formData.country}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="USA"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Office Manager (optional)
+                            </label>
+                            <div className="flex flex-col gap-2">
+                                <select
+                                    name="manager_id"
+                                    value={formData.manager_id}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#3AD6F2]"
+                                    disabled={staffLoading || staffOptions.length === 0}
+                                >
+                                    <option value="">Select a manager</option>
+                                    {staffOptions.map((staff) => (
+                                        <option key={staff.id} value={staff.id}>
+                                            {staff.name || staff.email || `Staff #${staff.id}`}
+                                            {staff.role_display ? ` (${staff.role_display})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                    <button
+                                        type="button"
+                                        onClick={fetchStaffOptions}
+                                        className="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm"
+                                        disabled={staffLoading}
+                                    >
+                                        {staffLoading ? 'Loading...' : 'Refresh Staff'}
+                                    </button>
+                                    {staffError && <span className="text-red-500">{staffError}</span>}
+                                    {!staffLoading && !staffError && staffOptions.length === 0 && (
+                                        <span>No staff members found.</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Status
+                            </label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#3AD6F2]"
+                            >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            onClick={handleClose}
+                            disabled={loading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+                            disabled={loading}
+                        >
+                            {loading ? 'Saving...' : 'Save Office'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 
     const handleClearSignature = () => {
         setFormData(prev => ({
