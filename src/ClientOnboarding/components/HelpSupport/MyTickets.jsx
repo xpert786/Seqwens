@@ -14,6 +14,12 @@ const MyTickets = () => {
   const [error, setError] = useState(null);
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(null);
   const [loadingTicketDetails, setLoadingTicketDetails] = useState(false);
+  const isTicketSendActive = messageInput.trim().length > 0;
+  const ticketSendButtonStyles = {
+    background: isTicketSendActive ? "#F56D2D" : "#E5E7EB",
+    color: isTicketSendActive ? "#fff" : "#9CA3AF",
+    cursor: isTicketSendActive ? "pointer" : "not-allowed"
+  };
 
   // Fetch support tickets from API
   useEffect(() => {
@@ -417,7 +423,13 @@ const MyTickets = () => {
                 onChange={(e) => setMessageInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               />
-              <button className="ticket-send-btn" onClick={handleSendMessage}>
+              <button
+                className="ticket-send-btn"
+                style={ticketSendButtonStyles}
+                onClick={handleSendMessage}
+                disabled={!isTicketSendActive}
+                aria-label="Send ticket message"
+              >
                 <FaPaperPlane />
               </button>
             </div>

@@ -46,6 +46,13 @@ export default function MessagePage() {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
+  const isSendButtonActive = newMessage.trim().length > 0;
+  const sendButtonStyles = {
+    background: isSendButtonActive ? "#F56D2D" : "#E5E7EB",
+    color: isSendButtonActive ? "#fff" : "#9CA3AF",
+    cursor: isSendButtonActive ? "pointer" : "not-allowed"
+  };
+
   // WebSocket hook for real-time messaging
   const {
     isConnected: wsConnected,
@@ -880,8 +887,26 @@ export default function MessagePage() {
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     style={{ fontFamily: "BasisGrotesquePro" }}
                   />
-                  <button className="btn" style={{ background: "#F56D2D", color: "#fff" }} onClick={handleSend}>
-                    <FaPaperPlane />
+                  <button
+                    type="button"
+                    className="btn"
+                    style={sendButtonStyles}
+                    onClick={handleSend}
+                    aria-label="Send message"
+                    disabled={!isSendButtonActive}
+                  >
+                    <FaPaperPlane
+                      onClick={handleSend}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      style={{ cursor: "pointer" }}
+                    />
                   </button>
                 </div>
               </div>
@@ -1043,8 +1068,26 @@ export default function MessagePage() {
                           onKeyDown={(e) => e.key === "Enter" && handleSend()}
                           style={{ fontFamily: "BasisGrotesquePro" }}
                         />
-                        <button className="btn" style={{ background: "#F56D2D", color: "#fff" }} onClick={handleSend} disabled={!wsConnected && wsError}>
-                          <FaPaperPlane />
+                        <button
+                          type="button"
+                          className="btn"
+                          style={sendButtonStyles}
+                          onClick={handleSend}
+                          disabled={!isSendButtonActive}
+                          aria-label="Send message"
+                        >
+                          <FaPaperPlane
+                            onClick={handleSend}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleSend();
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            style={{ cursor: "pointer" }}
+                          />
                         </button>
                       </div>
                     </div>
