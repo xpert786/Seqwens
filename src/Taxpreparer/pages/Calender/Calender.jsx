@@ -131,11 +131,23 @@ export default function CalendarPage() {
   };
 
   // Convert API appointment to event format
+  const formatDateKey = (dateObj) => {
+    return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+  };
+
   const convertAppointmentToEvent = (appointment) => {
-    const appointmentDate = new Date(appointment.appointment_date);
+    const dateParts = (appointment.appointment_date || '').split('-').map(Number);
+    const [year, month, day] = [
+      dateParts[0] || new Date().getFullYear(),
+      (dateParts[1] || 1) - 1,
+      dateParts[2] || 1,
+    ];
+
     const timeStr = appointment.appointment_time || '00:00:00';
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    appointmentDate.setHours(hours, minutes, 0);
+    const [hours = 0, minutes = 0] = timeStr.split(':').map(Number);
+
+    // Construct date in local time to avoid timezone shift
+    const appointmentDate = new Date(year, month, day, hours, minutes, 0, 0);
 
     // Convert start time to AM/PM format
     const startTime = convertTo12HourFormat(appointment.appointment_time || '00:00:00');
@@ -162,6 +174,7 @@ export default function CalendarPage() {
       id: appointment.id,
       title: appointment.subject || `${appointment.type_display || 'Appointment'}`,
       date: appointmentDate,
+       dateKey: formatDateKey(appointmentDate),
       time: timeDisplay,
       timeSort: hours * 60 + minutes, // For sorting purposes
       type: appointment.appointment_type,
@@ -238,7 +251,7 @@ export default function CalendarPage() {
 
   // Get appointments for a specific date
   const getAppointmentsForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const dateStr = formatDateKey(date);
     const dateApps = appointmentsByDate[dateStr] || [];
     const events = dateApps.map(convertAppointmentToEvent);
     // Sort appointments by time (earliest first)
@@ -247,7 +260,7 @@ export default function CalendarPage() {
 
   const getTodayEvents = () => {
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = formatDateKey(today);
     const todayApps = appointmentsByDate[todayStr] || [];
     const events = todayApps.map(convertAppointmentToEvent);
     // Sort appointments by time (earliest first)

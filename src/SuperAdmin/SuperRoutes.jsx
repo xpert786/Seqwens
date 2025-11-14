@@ -59,7 +59,7 @@ export default function SuperRoutes() {
         <Route path="users-details/:userId" element={<UsersDetails />} />
         <Route path="subscriptions" element={<Subscriptions />} />
         <Route path="analytics" element={<Analytics />} />
-        <Route path="settings" element={<AccountSettings />} />
+        <Route path="system-settings" element={<AccountSettings />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="firms" element={<FirmManagement />} />

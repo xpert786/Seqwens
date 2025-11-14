@@ -142,74 +142,78 @@ export default function Dashboard() {
             icon: <Client size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.assigned_clients?.count || 0,
             content: loading ? "Loading..." : summaryCards.assigned_clients?.status || "",
-            onClick: () => navigate('/taxdashboard/clients'),
+            statusType: summaryCards.assigned_clients?.status_type || "",
           },
           {
-            label: "Pending Tasks",
+            label: "Client Pending Tasks",
             icon: <Clock size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.pending_tasks?.count || 0,
             content: loading ? "Loading..." : summaryCards.pending_tasks?.status || "",
+            statusType: summaryCards.pending_tasks?.status_type || "",
             tooltip: summaryCards.pending_tasks?.status && summaryCards.pending_tasks.status.includes('behind target') 
               ? `This shows tasks that are behind your daily completion target. The target is set in your firm's settings and represents the expected number of tasks to complete per day. Currently: ${summaryCards.pending_tasks.count} pending tasks.`
               : summaryCards.pending_tasks?.status || "",
-            onClick: () => navigate('/taxdashboard/tasks'),
           },
           {
             label: "Completed Today",
             icon: <Check size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.completed_today?.count || 0,
             content: loading ? "Loading..." : summaryCards.completed_today?.status || "",
-            onClick: () => navigate('/taxdashboard/tasks'),
+            statusType: summaryCards.completed_today?.status_type || "",
           },
           {
             label: "New Messages",
             icon: <Msg size={26} style={{ color: "#00C0C6" }} />,
             value: loading ? "..." : summaryCards.new_messages?.count || 0,
             content: loading ? "Loading..." : summaryCards.new_messages?.status || "",
-            onClick: () => navigate('/taxdashboard/messages'),
+            statusType: summaryCards.new_messages?.status_type || "",
           },
-        ].map((card, index) => (
-          <div className="col-sm-6 col-md-3 px-4" key={index}>
-            <div
-              className="carded dashboard-carded"
-              onClick={card.onClick}
-              style={{ cursor: card.onClick ? 'pointer' : 'default', position: 'relative' }}
-            >
-              <div className="d-flex justify-content-between align-items-start">
-                <div className="dashboarded-carded-labeled">{card.label}</div>
-                {card.icon}
-              </div>
-              <h5 className="dashboarded-carded-valued">{card.value}</h5>
-              <div style={{ position: 'relative' }}>
-                <p 
-                  className="card-contented"
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '4px',
-                    cursor: card.tooltip ? 'help' : 'default'
-                  }}
-                  title={card.tooltip || card.content}
-                >
-                  {card.content}
-                  {card.tooltip && (
-                    <span 
-                      style={{ 
-                        fontSize: '12px', 
-                        color: '#6B7280',
-                        cursor: 'help'
-                      }}
-                      title={card.tooltip}
-                    >
-                      ℹ️
-                    </span>
-                  )}
-                </p>
+        ].map((card, index) => {
+          // Hide icons when status_type is "no_change"
+          const shouldShowStatusIcon = card.statusType !== "no_change";
+          
+          return (
+            <div className="col-sm-6 col-md-3 px-4" key={index}>
+              <div
+                className="carded dashboard-carded"
+                style={{ cursor: 'default', position: 'relative' }}
+              >
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="dashboarded-carded-labeled">{card.label}</div>
+                  {card.icon}
+                </div>
+                <h5 className="dashboarded-carded-valued">{card.value}</h5>
+                <div style={{ position: 'relative' }}>
+                  <p 
+                    className="card-contented"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      cursor: card.tooltip ? 'help' : 'default'
+                    }}
+                    title={card.tooltip || card.content}
+                  >
+                    {card.content}
+                    {/* Only show tooltip icon if status_type is not "no_change" */}
+                    {card.tooltip && shouldShowStatusIcon && (
+                      <span 
+                        style={{ 
+                          fontSize: '12px', 
+                          color: '#6B7280',
+                          cursor: 'help'
+                        }}
+                        title={card.tooltip}
+                      >
+                        ℹ️
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-
-        ))}
+          );
+        })}
       </div>
 
 

@@ -16,7 +16,7 @@ import { userAPI } from "../utils/apiUtils";
 import { clearUserData } from "../utils/userUtils";
 import { navigateToLogin } from "../utils/urlUtils";
 
-export default function Sidebar() {
+export default function Sidebar({ isSidebarOpen = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -80,7 +80,10 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="client-sidebar-container">
+    <div
+      className={`client-sidebar-container ${isSidebarOpen ? "" : "collapsed"}`}
+      aria-hidden={!isSidebarOpen}
+    >
     
       <div className="sidebar-top">
         <ul className="nav flex-column px-3">

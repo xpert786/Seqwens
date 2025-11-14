@@ -9,7 +9,10 @@ import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/ap
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import "../styles/topbar.css";
 
-export default function Topbar() {
+export default function Topbar({
+  onToggleSidebar = () => {},
+  isSidebarOpen = true,
+}) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -283,7 +286,21 @@ export default function Topbar() {
             <Link to="/" className="navbar-brand d-flex align-items-center m-0">
               <img src={logo} alt="Logo" className="topbar-logo" />
             </Link>
-            <LogoIcond />
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="sidebar-toggle-btn"
+              aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              style={{ background: "transparent", border: "none" }}
+            >
+              <span
+                className={`sidebar-toggle-icon ${
+                  isSidebarOpen ? "" : "collapsed"
+                }`}
+              >
+                <LogoIcond />
+              </span>
+            </button>
             <div className="sd">
               {/* Search */}
               <div className="topbar-search">

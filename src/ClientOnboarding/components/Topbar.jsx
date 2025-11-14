@@ -13,7 +13,10 @@ import "../styles/Topbar.css";
 
 const CLIENT_AVATAR_KEY = "clientProfileImageUrl";
 
-export default function Topbar() {
+export default function Topbar({
+    onToggleSidebar = () => {},
+    isSidebarOpen = true,
+}) {
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -164,6 +167,12 @@ export default function Topbar() {
     // Connect to WebSocket for real-time notifications
     useNotificationWebSocket(true, handleNewNotification, handleUnreadCountUpdate);
 
+    // Fetch unread count only once on component mount
+    useEffect(() => {
+        fetchUnreadCount();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array - only run once on mount
+
     // Fetch profile picture and user info on component mount
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -222,8 +231,7 @@ export default function Topbar() {
         };
 
         fetchProfileData();
-        fetchUnreadCount(); // Fetch unread count on mount
-    }, [fetchUnreadCount]);
+    }, []);
 
     // Monitor profile picture state changes
     useEffect(() => {
@@ -312,7 +320,19 @@ export default function Topbar() {
                         <Link to="/" className="navbar-brand d-flex align-items-center m-0">
                             <img src={logo} alt="Logo" className="topbar-logo" />
                         </Link>
-                        <LogoIcon />
+                        <button
+                            type="button"
+                            onClick={onToggleSidebar}
+                            className="sidebar-toggle-btn"
+                            aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                            style={{ background: "transparent", border: "none" }}
+                        >
+                            <span
+                                className={`sidebar-toggle-icon ${isSidebarOpen ? "" : "collapsed"}`}
+                            >
+                                <LogoIcon />
+                            </span>
+                        </button>
 
                    
                         <div className="topbar-search">
@@ -524,8 +544,7 @@ export default function Topbar() {
                     onClose={() => setShowNotifications(false)}
                     onChange={({ unreadCount }) => {
                         setUnreadNotifications(unreadCount);
-                        // Refresh unread count after notification changes
-                        fetchUnreadCount();
+                        // Don't call fetchUnreadCount here - the unreadCount is already updated from onChange
                     }}
                 />
             )}

@@ -1,13 +1,20 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "../styles/TaxSidebar.css";
-import { DashIconed, FileIconed, MesIconed, MonthIconed, AccountIcon, LogOutIcon } from "./icons";
+import {
+  DashIconed,
+  FileIconed,
+  MesIconed,
+  MonthIconed,
+  AccountIcon,
+  LogOutIcon,
+} from "./icons";
 import { Clients, Task } from "./icons";
 import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 
-export default function TaxSidebar() {
+export default function TaxSidebar({ isSidebarOpen = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -59,7 +66,10 @@ export default function TaxSidebar() {
   };
 
   return (
-    <div className="tsb-container">
+    <div
+      className={`tsb-container ${isSidebarOpen ? "" : "collapsed"}`}
+      aria-hidden={!isSidebarOpen}
+    >
       <div className="tsb-top">
         <ul className="nav flex-column px-3">
           <Link to="/taxdashboard" className={linkClass("/taxdashboard")}>

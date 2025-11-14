@@ -1,45 +1,78 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaYoutube } from "react-icons/fa";
 import { FileIcon } from "../icons";
+import { taxpayerPublicAPI } from "../../utils/apiUtils";
 
 const Resources = () => {
   const [activeCard, setActiveCard] = useState({ type: null, index: null });
+  const [taxResources, setTaxResources] = useState([]);
+  const [videoTutorials, setVideoTutorials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const taxResources = [
-    {
-      title: "2023 Tax Checklist",
-      desc: "Complete list of required documents",
-      file: "/files/2023_Tax_Checklist.pdf",
-    },
-    {
-      title: "2024 Tax Checklist",
-      desc: "Checklist for 2024 tax documents",
-      file: "/files/2024_Tax_Checklist.pdf",
-    },
-    {
-      title: "Quarterly Tax Planning",
-      desc: "Plan ahead for future processes",
-      file: "/files/Quarterly_Tax_Planning.pdf",
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
 
-  const videoTutorials = [
-    {
-      title: "How to Upload Documents",
-      duration: "5 min tutorial",
-      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    },
-    {
-      title: "Scheduling Appointments",
-      duration: "7 min tutorial",
-      url: "https://www.youtube.com/watch?v=abcd1234",
-    },
-    {
-      title: "Electronic Signatures",
-      duration: "4 min tutorial",
-      url: "https://www.youtube.com/watch?v=wxyz5678",
-    },
-  ];
+    const fetchResources = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [taxRes, videoRes] = await Promise.all([
+          taxpayerPublicAPI.getTaxResources(),
+          taxpayerPublicAPI.getVideoTutorials(),
+        ]);
+
+        if (!isMounted) return;
+
+        setTaxResources(taxRes?.data || []);
+        setVideoTutorials(videoRes?.data || []);
+      } catch (err) {
+        if (!isMounted) return;
+        setTaxResources([]);
+        setVideoTutorials([]);
+        setError(err?.message || "Unable to load public resources right now.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchResources();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const renderPlaceholderCard = (keyPrefix) => (
+    <div
+      key={keyPrefix}
+      className="d-flex justify-content-between align-items-center p-3 mb-3 rounded-3"
+      style={{
+        backgroundColor: "#F9FAFB",
+        border: "1px solid #E8F0FF",
+        minHeight: "68px",
+      }}
+    >
+      <div
+        style={{
+          width: "70%",
+          height: "14px",
+          backgroundColor: "#E5E7EB",
+          borderRadius: "8px",
+        }}
+      />
+      <div
+        style={{
+          width: "20%",
+          height: "12px",
+          backgroundColor: "#F3F4F6",
+          borderRadius: "8px",
+        }}
+      />
+    </div>
+  );
 
   return (
     <div
@@ -82,6 +115,7 @@ const Resources = () => {
         {taxResources.map((res, index) => {
           const isActive =
             activeCard.type === "tax" && activeCard.index === index;
+          const downloadLink = res.file || res.video_file || res.video_url;
           return (
             <div
               key={index}
@@ -123,24 +157,41 @@ const Resources = () => {
                 </div>
               </div>
               <a
-                href={res.file}
-                download
-                className="btn"
+                href={downloadLink || undefined}
+                download={Boolean(res.file)}
+                target={res.file ? "_self" : "_blank"}
+                rel="noopener noreferrer"
+                className={`btn${downloadLink ? "" : " disabled"}`}
                 style={{
                   backgroundColor: "#FFFFFF",
                   border: "1px solid #E8F0FF",
                   fontSize: "12px",
                   borderRadius: "8px",
-                  color: "#3B4A66",
+                  color: downloadLink ? "#3B4A66" : "#9CA3AF",
                   textDecoration: "none",
                   fontWeight: "400",
+                  pointerEvents: downloadLink ? "auto" : "none",
                 }}
               >
-                Download
+                {downloadLink ? "Open" : "Unavailable"}
               </a>
             </div>
           );
         })}
+
+        {!loading && taxResources.length === 0 && !error && (
+          <div
+            className="text-center text-muted py-2"
+            style={{ fontFamily: "BasisGrotesquePro", fontSize: "13px" }}
+          >
+            No public tax resources available yet.
+          </div>
+        )}
+
+        {loading &&
+          Array.from({ length: 3 }).map((_, idx) =>
+            renderPlaceholderCard(`tax-placeholder-${idx}`)
+          )}
       </div>
 
       {/* Video Tutorials */}
@@ -181,6 +232,7 @@ const Resources = () => {
         {videoTutorials.map((video, index) => {
           const isActive =
             activeCard.type === "video" && activeCard.index === index;
+          const watchUrl = video.video_url || video.video_file || video.file;
           return (
             <div
               key={index}
@@ -226,10 +278,10 @@ const Resources = () => {
                 </div>
               </div>
               <a
-                href={video.url}
+                href={watchUrl || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-sm"
+                className={`btn btn-sm${watchUrl ? "" : " disabled"}`}
                 style={{
                   backgroundColor: "#FFFFFF",
                   border: "1px solid #E8F0FF",
@@ -237,15 +289,39 @@ const Resources = () => {
                   borderRadius: "8px",
                   textDecoration: "none",
                   fontWeight: "400",
-                  color: "#3B4A66",
+                  color: watchUrl ? "#3B4A66" : "#9CA3AF",
+                  pointerEvents: watchUrl ? "auto" : "none",
                 }}
               >
-                Watch Video
+                {watchUrl ? "Watch Video" : "Unavailable"}
               </a>
             </div>
           );
         })}
+
+        {!loading && videoTutorials.length === 0 && !error && (
+          <div
+            className="text-center text-muted py-2"
+            style={{ fontFamily: "BasisGrotesquePro", fontSize: "13px" }}
+          >
+            No video tutorials are available right now.
+          </div>
+        )}
+
+        {loading &&
+          Array.from({ length: 3 }).map((_, idx) =>
+            renderPlaceholderCard(`video-placeholder-${idx}`)
+          )}
       </div>
+
+      {error && (
+        <div
+          className="w-100 alert alert-warning mt-2"
+          style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro" }}
+        >
+          {error}
+        </div>
+      )}
     </div>
   );
 };

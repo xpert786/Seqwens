@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder } from "react-icons/fa";
-import { UploadsIcon, CrossIcon } from "../component/icons";
+import { FaRegFileAlt, FaChevronDown, FaChevronRight, FaFolder, FaEye, FaDownload } from "react-icons/fa";
+import { UploadsIcon, CrossIcon, ViewIcon, DownloadIcon } from "../component/icons";
 import "../styles/taxupload.css";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
@@ -40,6 +40,19 @@ const getExtension = (name = "", type = "") => {
     return trimmed.split(".").pop();
   }
   return "";
+};
+
+// Check if file type is previewable (PDFs and images)
+const isPreviewable = (file) => {
+  const extension = getExtension(file.name, file.type || file.fileObject?.type);
+  const previewableExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+  const previewableMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml'];
+  
+  if (file.fileObject?.type && previewableMimeTypes.includes(file.fileObject.type.toLowerCase())) {
+    return true;
+  }
+  
+  return previewableExtensions.includes(extension.toLowerCase());
 };
 
 const createFileEntry = (file) => {
@@ -132,6 +145,10 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
   const [newCategoryName, setNewCategoryName] = useState("");
   const [creatingCategoryLoading, setCreatingCategoryLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [previewModalShow, setPreviewModalShow] = useState(false);
+  const [previewFileIndex, setPreviewFileIndex] = useState(null);
+  const previewModalRef = useRef(null);
+  const previewTriggerRef = useRef(null);
 
   const [folderTree, setFolderTree] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
@@ -245,6 +262,71 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
       return updated;
     });
   };
+
+  // Handle preview
+  const handlePreview = (index, event) => {
+    event.stopPropagation();
+    const file = files[index];
+    if (file && isPreviewable(file) && file.previewUrl) {
+      setPreviewFileIndex(index);
+      setPreviewModalShow(true);
+      previewTriggerRef.current = event.target;
+    }
+  };
+
+  // Handle download
+  const handleDownload = (index, event) => {
+    event.stopPropagation();
+    const file = files[index];
+    if (file && file.fileObject) {
+      const url = file.previewUrl || URL.createObjectURL(file.fileObject);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Only revoke if we created a new URL
+      if (!file.previewUrl) {
+        URL.revokeObjectURL(url);
+      }
+    }
+  };
+
+  // Close preview modal and return focus
+  const handleClosePreview = () => {
+    setPreviewModalShow(false);
+    // Return focus to the trigger button
+    if (previewTriggerRef.current) {
+      setTimeout(() => {
+        previewTriggerRef.current?.focus();
+        previewTriggerRef.current = null;
+      }, 100);
+    }
+    setPreviewFileIndex(null);
+  };
+
+  // Handle ESC key in preview modal
+  useEffect(() => {
+    if (!previewModalShow) return;
+
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape') {
+        handleClosePreview();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    // Focus the modal when it opens
+    setTimeout(() => {
+      previewModalRef.current?.focus();
+    }, 100);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [previewModalShow]);
 
   const handleCategoryChange = (event) => {
     const categoryName = event.target.value;
@@ -959,24 +1041,83 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                           <div className="small fw-semibold">{file.name}</div>
                           <small className="text-muted">{file.sizeLabel}</small>
                         </div>
-                        <span
-                          className="remove-icon"
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`Remove ${file.name}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            removeFile(index);
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
+                        <div className="d-flex align-items-center gap-2">
+                          {/* Preview Button */}
+                          {isPreviewable(file) && file.previewUrl ? (
+                            <button
+                              type="button"
+                              className="btn btn-sm p-1"
+                              style={{ 
+                                border: 'none', 
+                                background: 'transparent',
+                                color: '#3B4A66',
+                                padding: '4px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={(event) => handlePreview(index, event)}
+                              title="Preview"
+                              aria-label={`Preview ${file.name}`}
+                            >
+                              <FaEye size={14} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-sm p-1"
+                              style={{ 
+                                border: 'none', 
+                                background: 'transparent',
+                                color: '#9CA3AF',
+                                padding: '4px',
+                                cursor: 'not-allowed',
+                                opacity: 0.5
+                              }}
+                              disabled
+                              title="Preview not available for this file type"
+                              aria-label={`Preview not available for ${file.name}`}
+                            >
+                              <FaEye size={14} />
+                            </button>
+                          )}
+                          
+                          {/* Download Button */}
+                          <button
+                            type="button"
+                            className="btn btn-sm p-1"
+                            style={{ 
+                              border: 'none', 
+                              background: 'transparent',
+                              color: '#3B4A66',
+                              padding: '4px',
+                              cursor: 'pointer'
+                            }}
+                            onClick={(event) => handleDownload(index, event)}
+                            title="Download"
+                            aria-label={`Download ${file.name}`}
+                          >
+                            <FaDownload size={14} />
+                          </button>
+                          
+                          {/* Remove Button */}
+                          <span
+                            className="remove-icon"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Remove ${file.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
                               removeFile(index);
-                            }
-                          }}
-                        >
-                          <CrossIcon />
-                        </span>
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                removeFile(index);
+                              }
+                            }}
+                          >
+                            <CrossIcon />
+                          </span>
+                        </div>
                       </div>
 
                       <div className="d-flex align-items-center gap-2 mt-2">
@@ -1331,6 +1472,74 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
           </div>
         </div>
       </Modal.Body>
+
+      {/* Preview Modal */}
+      <Modal
+        show={previewModalShow}
+        onHide={handleClosePreview}
+        centered
+        size="xl"
+        className="preview-modal"
+        ref={previewModalRef}
+        tabIndex={-1}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {previewFileIndex !== null && files[previewFileIndex] 
+              ? `Preview: ${files[previewFileIndex].name}`
+              : 'Preview Document'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 0, minHeight: '500px' }}>
+          {previewFileIndex !== null && files[previewFileIndex] && files[previewFileIndex].previewUrl ? (
+            <div style={{ width: '100%', height: '70vh', position: 'relative' }}>
+              {files[previewFileIndex].extension === 'pdf' || 
+               files[previewFileIndex].fileObject?.type === 'application/pdf' ? (
+                <iframe
+                  src={files[previewFileIndex].previewUrl}
+                  title={`Preview of ${files[previewFileIndex].name}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none'
+                  }}
+                />
+              ) : (
+                <img
+                  src={files[previewFileIndex].previewUrl}
+                  alt={`Preview of ${files[previewFileIndex].name}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain'
+                  }}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="text-center p-5">
+              <p className="text-muted">Preview not available</p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          {previewFileIndex !== null && files[previewFileIndex] && (
+            <Button
+              variant="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                handleDownload(previewFileIndex, event);
+              }}
+            >
+              <FaDownload className="me-2" />
+              Download
+            </Button>
+          )}
+          <Button variant="secondary" onClick={handleClosePreview}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Modal>
   );
 }

@@ -49,6 +49,14 @@ const refreshAccessToken = async () => {
   return data.access;
 };
 
+const buildSearchQuery = (search) => {
+  if (!search || typeof search !== 'string') return '';
+  const trimmedSearch = search.trim();
+  if (!trimmedSearch) return '';
+  const params = new URLSearchParams({ search: trimmedSearch });
+  return `?${params.toString()}`;
+};
+
 // Public API request function (no authentication required)
 const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
@@ -98,6 +106,21 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
 
     throw error;
   }
+};
+
+export const taxpayerPublicAPI = {
+  getFAQs: async (search = '') => {
+    const query = buildSearchQuery(search);
+    return await publicApiRequest(`/taxpayer/faqs/${query}`, 'GET');
+  },
+  getTaxResources: async (search = '') => {
+    const query = buildSearchQuery(search);
+    return await publicApiRequest(`/taxpayer/tax-resources/${query}`, 'GET');
+  },
+  getVideoTutorials: async (search = '') => {
+    const query = buildSearchQuery(search);
+    return await publicApiRequest(`/taxpayer/video-tutorials/${query}`, 'GET');
+  },
 };
 
 // Generic API request function with CORS handling

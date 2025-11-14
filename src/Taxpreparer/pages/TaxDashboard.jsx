@@ -261,6 +261,10 @@ export default function Dashboard() {
   const [deadlinesPage, setDeadlinesPage] = useState(1);
   const [messagesPage, setMessagesPage] = useState(1);
   
+  // View All states - to show all items or paginated
+  const [showAllTasks, setShowAllTasks] = useState(false);
+  const [showAllDeadlines, setShowAllDeadlines] = useState(false);
+  
   // Items per page
   const ITEMS_PER_PAGE = 3;
 
@@ -313,7 +317,10 @@ export default function Dashboard() {
   };
 
   // Pagination helper functions
-  const getPaginatedData = (data, page, itemsPerPage) => {
+  const getPaginatedData = (data, page, itemsPerPage, showAll = false) => {
+    if (showAll) {
+      return data; // Return all items when showAll is true
+    }
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return data.slice(startIndex, endIndex);
@@ -409,9 +416,16 @@ export default function Dashboard() {
               </div>
               <button
                 className="view-all-btn"
-                onClick={() => navigate('/taxdashboard/tasks')}
+                onClick={() => {
+                  if (showAllTasks) {
+                    setShowAllTasks(false);
+                    setMyTasksPage(1);
+                  } else {
+                    setShowAllTasks(true);
+                  }
+                }}
               >
-                View All
+                {showAllTasks ? 'Show Less' : 'View All'}
               </button>
             </div>
             <div className="d-flex flex-column gap-3">
@@ -420,7 +434,7 @@ export default function Dashboard() {
               ) : myTasks.length === 0 ? (
                 <div className="text-center py-3">No tasks assigned</div>
               ) : (
-                getPaginatedData(myTasks, myTasksPage, ITEMS_PER_PAGE).map((task, i) => {
+                getPaginatedData(myTasks, myTasksPage, ITEMS_PER_PAGE, showAllTasks).map((task, i) => {
                   const taskTitle = task.task_title || task.title || 'Untitled Task';
                   return (
                     <TaskCard
@@ -442,21 +456,38 @@ export default function Dashboard() {
                 })
               )}
             </div>
-            <PaginationControls
-              currentPage={myTasksPage}
-              totalPages={getTotalPages(myTasks, ITEMS_PER_PAGE)}
-              onPageChange={setMyTasksPage}
-              sectionName="myTasks"
-            />
+            {!showAllTasks && myTasks.length > ITEMS_PER_PAGE && (
+              <PaginationControls
+                currentPage={myTasksPage}
+                totalPages={getTotalPages(myTasks, ITEMS_PER_PAGE)}
+                onPageChange={setMyTasksPage}
+                sectionName="myTasks"
+              />
+            )}
           </div>
         </div>
 
         {/* Upcoming Deadlines */}
         <div className="col-12 col-md-6">
           <div className="card custom-card upcoming-deadlines-card">
-            <div className="mb-3">
-              <h1 className="section-title mb-1">Upcoming Deadlines</h1>
-              <p className="section-subtitle m-0">Important dates to remember</p>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h1 className="section-title mb-1">Upcoming Deadlines</h1>
+                <p className="section-subtitle m-0">Important dates to remember</p>
+              </div>
+              <button
+                className="view-all-btn"
+                onClick={() => {
+                  if (showAllDeadlines) {
+                    setShowAllDeadlines(false);
+                    setDeadlinesPage(1);
+                  } else {
+                    setShowAllDeadlines(true);
+                  }
+                }}
+              >
+                {showAllDeadlines ? 'Show Less' : 'View All'}
+              </button>
             </div>
             <div className="upcoming-deadlines-container">
               {loading ? (
@@ -464,7 +495,7 @@ export default function Dashboard() {
               ) : upcomingDeadlines.length === 0 ? (
                 <div className="text-center py-3">No upcoming deadlines</div>
               ) : (
-                getPaginatedData(upcomingDeadlines, deadlinesPage, ITEMS_PER_PAGE).map((deadline, i) => {
+                getPaginatedData(upcomingDeadlines, deadlinesPage, ITEMS_PER_PAGE, showAllDeadlines).map((deadline, i) => {
                   const deadlineTitle = deadline.title || 'Untitled';
                   return (
                     <TaskCard
@@ -489,12 +520,14 @@ export default function Dashboard() {
                 })
               )}
             </div>
-            <PaginationControls
-              currentPage={deadlinesPage}
-              totalPages={getTotalPages(upcomingDeadlines, ITEMS_PER_PAGE)}
-              onPageChange={setDeadlinesPage}
-              sectionName="deadlines"
-            />
+            {!showAllDeadlines && upcomingDeadlines.length > ITEMS_PER_PAGE && (
+              <PaginationControls
+                currentPage={deadlinesPage}
+                totalPages={getTotalPages(upcomingDeadlines, ITEMS_PER_PAGE)}
+                onPageChange={setDeadlinesPage}
+                sectionName="deadlines"
+              />
+            )}
           </div>
 
         </div>
