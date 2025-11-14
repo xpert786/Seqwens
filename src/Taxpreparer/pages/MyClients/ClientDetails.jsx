@@ -4,8 +4,56 @@ import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon, MiniClock, WhiteEd
 import { FaChevronDown, FaChevronRight, FaFolder } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI, firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+
+const FILING_STATUS_OPTIONS = [
+  { value: "single", label: "Single" },
+  { value: "married_filing_jointly", label: "Married Filing Jointly" },
+  { value: "married_filing_separately", label: "Married Filing Separately" },
+  { value: "head_of_household", label: "Head of Household" },
+  { value: "qualifying_widow", label: "Qualifying Widow" },
+];
+
+const normalizeFilingStatus = (value) => {
+  if (!value) return "";
+  const raw = value.toString().trim().toLowerCase();
+  const normalized = raw.replace(/\s+/g, "_").replace(/-/g, "_");
+
+  const directMatch = FILING_STATUS_OPTIONS.find((option) => option.value === normalized);
+  if (directMatch) return directMatch.value;
+
+  const labelMatch = FILING_STATUS_OPTIONS.find(
+    (option) =>
+      option.label.toLowerCase() === raw ||
+      option.label.toLowerCase() === normalized.replace(/_/g, " ")
+  );
+  if (labelMatch) return labelMatch.value;
+
+  const aliasMap = {
+    married_joint: "married_filing_jointly",
+    married_jointly: "married_filing_jointly",
+    married_filing_joint: "married_filing_jointly",
+    married_filing_jointly: "married_filing_jointly",
+    married_separate: "married_filing_separately",
+    married_filing_sep: "married_filing_separately",
+    qualifying_widower: "qualifying_widow",
+    qualifying_widow_er: "qualifying_widow",
+  };
+
+  if (aliasMap[normalized]) {
+    return aliasMap[normalized];
+  }
+
+  return normalized;
+};
+
+const getFilingStatusLabel = (value) => {
+  const normalized = normalizeFilingStatus(value);
+  const match = FILING_STATUS_OPTIONS.find((option) => option.value === normalized);
+  if (match) return match.label;
+  return value || "";
+};
 
 export default function ClientDetails() {
   const { clientId } = useParams();
@@ -30,7 +78,58 @@ export default function ClientDetails() {
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
+  const [originalFormData, setOriginalFormData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [canEditClient, setCanEditClient] = useState(false);
+  const [customTags, setCustomTags] = useState([]);
+  const [originalCustomTags, setOriginalCustomTags] = useState([]);
+  const [newTagInput, setNewTagInput] = useState("");
+  const [lockedFields, setLockedFields] = useState(new Set());
+
+  const isFieldLocked = (fieldName) => lockedFields.has(fieldName);
+  const renderLockedHelperText = (fieldName) =>
+    isFieldLocked(fieldName) ? (
+      <small className="text-danger d-block mt-1">Locked by admin</small>
+    ) : null;
+
+  const handleAddCustomTag = () => {
+    if (isFieldLocked('tags')) {
+      toast.error('Tags are locked by your administrator.');
+      return;
+    }
+    const value = newTagInput.trim();
+    if (!value) {
+      return;
+    }
+    const exists = customTags.some((tag) => tag.toLowerCase() === value.toLowerCase());
+    if (exists) {
+      toast.info('Tag already added.');
+      return;
+    }
+    setCustomTags((prev) => [...prev, value]);
+    setNewTagInput("");
+  };
+
+  const handleRemoveCustomTag = (tagToRemove) => {
+    if (isFieldLocked('tags')) {
+      toast.error('Tags are locked by your administrator.');
+      return;
+    }
+    setCustomTags((prev) => prev.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleTagInputKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleAddCustomTag();
+    }
+  };
+
+  useEffect(() => {
+    if (!canEditClient && isEditMode) {
+      setIsEditMode(false);
+    }
+  }, [canEditClient, isEditMode]);
 
   // Create Task Modal state
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -60,142 +159,156 @@ export default function ClientDetails() {
 
   // Fetch client details from API
   const fetchClientDetails = async () => {
+    if (!clientId) return;
     try {
       setLoading(true);
       setError(null);
 
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const url = `${API_BASE_URL}/taxpayer/tax-preparer/clients/${clientId}/`;
-
-      const config = {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      };
-
-      console.log('Fetching client details from:', url);
-
-      const response = await fetchWithCors(url, config);
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('You do not have permission to view this client');
-        } else if (response.status === 404) {
-          throw new Error('Client not found');
-        }
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Client details API response:', result);
-
-      if (result.success && result.data) {
-        // Map API response to component structure
-        const apiData = result.data;
-        
-        // Build spouse name from available fields
-        const spouseName = apiData.spouse_information?.name || 
-          (apiData.spouse_information?.first_name || apiData.spouse_information?.last_name
-            ? `${apiData.spouse_information.first_name || ''} ${apiData.spouse_information.middle_name || ''} ${apiData.spouse_information.last_name || ''}`.trim()
-            : '');
-        
-        // Map statistics with new structure
-        const statistics = apiData.statistics ? {
-          total_billed: apiData.statistics.total_billed || 0,
-          total_billed_formatted: apiData.statistics.total_billed_formatted || '$0.00',
-          documents: apiData.statistics.documents || 0,
-          appointments: apiData.statistics.appointments || 0,
-          last_activity: apiData.statistics.last_activity || apiData.last_activity?.last_active_relative || '',
-          // Maintain backward compatibility for old structure
-          tasks: apiData.statistics.tasks || { total: 0, pending: 0, completed: 0, high_priority: 0 },
-          invoices: apiData.statistics.invoices || { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 }
-        } : {
-          tasks: { total: 0, pending: 0, completed: 0, high_priority: 0 },
-          documents: { total: 0, archived: 0 },
-          invoices: { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 },
-          appointments: { total: 0, upcoming: 0 },
-          total_billed: 0,
-          total_billed_formatted: '$0.00',
-          last_activity: ''
-        };
-        
-        const mappedClient = {
-          id: apiData.id,
-          first_name: apiData.first_name || '',
-          last_name: apiData.last_name || '',
-          middle_name: apiData.middle_name || '',
-          name: apiData.full_name || `${apiData.first_name || ''} ${apiData.last_name || ''}`.trim(),
-          email: apiData.email || apiData.contact_details?.email || '',
-          phone: apiData.phone_number_formatted || apiData.phone_number || apiData.contact_details?.phone || '',
-          ssn: apiData.personal_information?.ssn || '',
-          status: apiData.status || apiData.account_details?.status || 'active',
-          priority: apiData.priority || 'medium',
-          filingStatus: apiData.filing_status || apiData.personal_information?.filing_status || apiData.personal_information?.filing_status_value || '',
-          dob: apiData.personal_information?.date_of_birth || apiData.personal_information?.date_of_birth_value || '',
-          gender: apiData.personal_information?.gender || apiData.personal_information?.gender_value || '',
-          address: {
-            line: apiData.address?.address_line || '',
-            city: apiData.address?.city || '',
-            state: apiData.address?.state || '',
-            zip: apiData.address?.zip_code || '',
-          },
-          spouse: {
-            name: spouseName,
-            first_name: apiData.spouse_information?.first_name || '',
-            middle_name: apiData.spouse_information?.middle_name || '',
-            last_name: apiData.spouse_information?.last_name || '',
-            ssn: apiData.spouse_information?.ssn || '',
-            phone: apiData.spouse_contact_details?.phone || '',
-            email: apiData.spouse_contact_details?.email || '',
-            gender: apiData.spouse_information?.gender || apiData.spouse_information?.gender_value || '',
-            dob: apiData.spouse_information?.date_of_birth || apiData.spouse_information?.date_of_birth_value || '',
-            filing_status: apiData.spouse_information?.filing_status || apiData.spouse_information?.filing_status_value || '',
-          },
-          statistics: statistics,
-          account_details: apiData.account_details ? {
-            assigned_staff: apiData.account_details.assigned_staff || null,
-            assigned_staff_name: apiData.account_details.assigned_staff_name || '',
-            join_date: apiData.account_details.join_date || '',
-            join_date_value: apiData.account_details.join_date_value || '',
-            status: apiData.account_details.status || 'active',
-            status_display: apiData.account_details.status_display || 'Active'
-          } : null,
-          last_activity: apiData.last_activity ? {
-            last_active: apiData.last_activity.last_active || '',
-            last_active_display: apiData.last_activity.last_active_display || '',
-            last_active_relative: apiData.last_activity.last_active_relative || ''
-          } : null,
-          date_joined: apiData.date_joined || apiData.account_details?.join_date_value || '',
-          initials: apiData.initials || `${apiData.first_name?.[0] || ''}${apiData.last_name?.[0] || ''}`.toUpperCase(),
-          client_tags: apiData.client_tags || []
-        };
-        setClient(mappedClient);
-        // Initialize edit form data
-        setEditFormData({
-          first_name: apiData.first_name || '',
-          last_name: apiData.last_name || '',
-          middle_name: apiData.middle_name || '',
-          email: apiData.email || apiData.contact_details?.email || '',
-          phone_number: apiData.phone_number || apiData.contact_details?.phone || '',
-          filing_status: apiData.filing_status || apiData.personal_information?.filing_status || '',
-          address_line: apiData.address?.address_line || '',
-          city: apiData.address?.city || '',
-          state: apiData.address?.state || '',
-          zip_code: apiData.address?.zip_code || '',
-          client_tags: apiData.client_tags || []
-        });
-      } else {
+      const result = await firmAdminClientsAPI.getClientDetails(clientId);
+      if (!result.success || !result.data) {
         throw new Error(result.message || 'Failed to fetch client details');
       }
+
+      const apiData = result.data;
+      const normalizedFilingStatus = normalizeFilingStatus(
+        apiData.personal_information?.filing_status_value ||
+        apiData.filing_status ||
+        ''
+      );
+      const normalizedSpouseFilingStatus = normalizeFilingStatus(
+        apiData.spouse_information?.filing_status ||
+        apiData.spouse_information?.filing_status_value ||
+        ''
+      );
+
+      const spouseName = apiData.spouse_information?.name ||
+        (apiData.spouse_information?.first_name || apiData.spouse_information?.last_name
+          ? `${apiData.spouse_information.first_name || ''} ${apiData.spouse_information.middle_name || ''} ${apiData.spouse_information.last_name || ''}`.trim()
+          : '');
+
+      const statistics = apiData.statistics ? {
+        total_billed: apiData.statistics.total_billed || 0,
+        total_billed_formatted: apiData.statistics.total_billed_formatted || '$0.00',
+        documents: apiData.statistics.documents || 0,
+        appointments: apiData.statistics.appointments || 0,
+        last_activity: apiData.statistics.last_activity || apiData.last_activity?.last_active_relative || '',
+        tasks: apiData.statistics.tasks || { total: 0, pending: 0, completed: 0, high_priority: 0 },
+        invoices: apiData.statistics.invoices || { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 }
+      } : {
+        tasks: { total: 0, pending: 0, completed: 0, high_priority: 0 },
+        documents: { total: 0, archived: 0 },
+        invoices: { total: 0, pending: 0, overdue: 0, outstanding_balance: 0, total_invoiced: 0, total_paid: 0 },
+        appointments: { total: 0, upcoming: 0 },
+        total_billed: 0,
+        total_billed_formatted: '$0.00',
+        last_activity: ''
+      };
+
+      const profileInfo = apiData.profile || {};
+      const contactInfo = apiData.contact_details || {};
+      const addressInfo = apiData.address_information || apiData.address || {};
+      const personalInfo = apiData.personal_information || {};
+      const spouseInfo = apiData.spouse_information || {};
+      const spouseContactInfo = apiData.spouse_contact_details || {};
+
+      const profilePictureUrl =
+        profileInfo.profile_picture_url ||
+        profileInfo.profile_picture ||
+        apiData.profile_picture_url ||
+        apiData.profile_picture ||
+        personalInfo.profile_picture_url ||
+        null;
+
+      const mappedClient = {
+        id: apiData.id || profileInfo.id || clientId,
+        first_name: profileInfo.first_name || apiData.first_name || '',
+        last_name: profileInfo.last_name || apiData.last_name || '',
+        middle_name: profileInfo.middle_name || apiData.middle_name || '',
+        name:
+          profileInfo.name ||
+          apiData.full_name ||
+          `${profileInfo.first_name || apiData.first_name || ''} ${profileInfo.last_name || apiData.last_name || ''}`.trim(),
+        email: profileInfo.email || apiData.email || contactInfo.email || '',
+        phone: profileInfo.phone_formatted || profileInfo.phone || contactInfo.phone_formatted || contactInfo.phone || '',
+        ssn: personalInfo.ssn || personalInfo.ssn_value || '',
+        status: apiData.account_details?.status || apiData.status || 'active',
+        priority: apiData.priority || 'medium',
+        filingStatus: getFilingStatusLabel(normalizedFilingStatus),
+        dob: personalInfo.date_of_birth || personalInfo.date_of_birth_value || '',
+        gender: personalInfo.gender || personalInfo.gender_value || '',
+        initials:
+          profileInfo.initials ||
+          apiData.initials ||
+          `${(profileInfo.first_name || apiData.first_name || '').charAt(0)}${(profileInfo.last_name || apiData.last_name || '').charAt(0)}`.toUpperCase(),
+        profile_picture: profilePictureUrl,
+        address: {
+          line: addressInfo.address_line || '',
+          city: addressInfo.city || '',
+          state: addressInfo.state || '',
+          zip: addressInfo.zip_code || '',
+        },
+        spouse: {
+          name: spouseInfo.name || '',
+          first_name: spouseInfo.first_name || '',
+          middle_name: spouseInfo.middle_name || '',
+          last_name: spouseInfo.last_name || '',
+          ssn: spouseInfo.ssn || spouseInfo.ssn_value || '',
+          phone: spouseContactInfo.phone || '',
+          email: spouseContactInfo.email || '',
+          gender: spouseInfo.gender || spouseInfo.gender_value || '',
+          dob: spouseInfo.date_of_birth || spouseInfo.date_of_birth_value || '',
+          filing_status: getFilingStatusLabel(normalizedSpouseFilingStatus),
+        },
+        statistics,
+        account_details: apiData.account_details ? {
+          assigned_staff: apiData.account_details.assigned_staff || null,
+          assigned_staff_name: apiData.account_details.assigned_staff_name || '',
+          join_date: apiData.account_details.join_date || '',
+          join_date_value: apiData.account_details.join_date_value || '',
+          status: apiData.account_details.status || 'active',
+          status_display: apiData.account_details.status_display || 'Active'
+        } : null,
+        last_activity: apiData.last_activity ? {
+          last_active: apiData.last_activity.last_active || '',
+          last_active_display: apiData.last_activity.last_active_display || '',
+          last_active_relative: apiData.last_activity.last_active_relative || ''
+        } : null,
+        date_joined: apiData.date_joined || apiData.account_details?.join_date_value || '',
+        client_tags: apiData.tags || [],
+        tags: apiData.tags || [],
+        custom_tags: apiData.custom_tags || [],
+      };
+      setClient(mappedClient);
+      setCanEditClient(
+        apiData.permissions && typeof apiData.permissions.can_edit === 'boolean'
+          ? !!apiData.permissions.can_edit
+          : true
+      );
+
+      const formState = {
+        first_name: profileInfo.first_name || apiData.first_name || '',
+        last_name: profileInfo.last_name || apiData.last_name || '',
+        middle_name: profileInfo.middle_name || apiData.middle_name || '',
+        email: profileInfo.email || apiData.email || contactInfo.email || '',
+        phone_number: profileInfo.phone || contactInfo.phone || apiData.phone_number || '',
+        filing_status: normalizedFilingStatus,
+        address_line: addressInfo.address_line || '',
+        city: addressInfo.city || '',
+        state: addressInfo.state || '',
+        zip_code: addressInfo.zip_code || '',
+        spouse_first_name: spouseInfo.first_name || '',
+        spouse_last_name: spouseInfo.last_name || '',
+        spouse_date_of_birth: spouseInfo.date_of_birth_value || '',
+      };
+      setEditFormData(formState);
+      setOriginalFormData({ ...formState });
+
+      const editableTags = apiData.custom_tags ? [...apiData.custom_tags] : [];
+      setCustomTags(editableTags);
+      setOriginalCustomTags([...editableTags]);
+      setNewTagInput("");
+
+      setLockedFields(new Set(apiData.locked_fields || []));
     } catch (error) {
       console.error('Error fetching client details:', error);
       setError(handleAPIError(error));
@@ -399,34 +512,95 @@ export default function ClientDetails() {
     }));
   };
 
+  const arraysEqualIgnoreCase = (a = [], b = []) => {
+    const normalize = (arr) =>
+      arr
+        .map((item) => item?.toString().trim())
+        .filter(Boolean)
+        .map((item) => item.toLowerCase())
+        .sort();
+    return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
+  };
+
   // Save taxpayer updates
   const handleSaveTaxpayer = async () => {
-    if (!editFormData || !clientId) {
+    if (!editFormData || !originalFormData || !clientId) {
       toast.error('Invalid client data');
+      return;
+    }
+
+    const fieldMap = [
+      { form: 'first_name', api: 'first_name' },
+      { form: 'last_name', api: 'last_name' },
+      { form: 'middle_name', api: 'middle_name' },
+      { form: 'email', api: 'email' },
+      { form: 'phone_number', api: 'phone' },
+      { form: 'filing_status', api: 'filing_status' },
+      { form: 'address_line', api: 'address' },
+      { form: 'city', api: 'city' },
+      { form: 'state', api: 'state' },
+      { form: 'zip_code', api: 'zip_code' },
+      { form: 'spouse_first_name', api: 'spouse_first_name' },
+      { form: 'spouse_last_name', api: 'spouse_last_name' },
+      { form: 'spouse_date_of_birth', api: 'spouse_date_of_birth' },
+    ];
+
+    const payload = {};
+
+    fieldMap.forEach(({ form, api }) => {
+      const nextValue = editFormData[form] ?? '';
+      const prevValue = originalFormData[form] ?? '';
+      const sanitizedNext = typeof nextValue === 'string' ? nextValue.trim() : nextValue;
+      const sanitizedPrev = typeof prevValue === 'string' ? prevValue.trim() : prevValue;
+      if (sanitizedNext !== sanitizedPrev) {
+        payload[api] = sanitizedNext || '';
+      }
+    });
+
+    if (!arraysEqualIgnoreCase(customTags, originalCustomTags)) {
+      payload.tags = customTags;
+    }
+
+    if (Object.keys(payload).length === 0) {
+      toast.info('No changes to save.');
+      setIsEditMode(false);
       return;
     }
 
     try {
       setSaving(true);
-      const response = await taxPreparerClientAPI.updateTaxpayer(clientId, editFormData);
-      
+      const response = await taxPreparerClientAPI.updateTaxpayer(clientId, payload);
+
       if (response.success) {
-        toast.success('Taxpayer information updated successfully!', {
+        toast.success(response.message || 'Client profile updated successfully!', {
           position: "top-right",
           autoClose: 3000
         });
         setIsEditMode(false);
-        // Refresh client details
+        setOriginalFormData({ ...editFormData });
+        setOriginalCustomTags([...customTags]);
+        if (response.data?.locked_fields) {
+          setLockedFields(new Set(response.data.locked_fields));
+        }
         fetchClientDetails();
       } else {
-        throw new Error(response.message || 'Failed to update taxpayer');
+        throw new Error(response.message || 'Failed to update client profile');
       }
     } catch (error) {
       console.error('Error updating taxpayer:', error);
-      toast.error(handleAPIError(error), {
-        position: "top-right",
-        autoClose: 3000
-      });
+      const lockedFromError = error?.data?.errors?.locked_fields || error?.data?.locked_fields;
+      if (lockedFromError && Array.isArray(lockedFromError) && lockedFromError.length > 0) {
+        setLockedFields((prev) => new Set([...prev, ...lockedFromError]));
+        toast.error('Some fields are locked by your firm administrator and cannot be edited.', {
+          position: "top-right",
+          autoClose: 4000
+        });
+      } else {
+        toast.error(handleAPIError(error), {
+          position: "top-right",
+          autoClose: 3000
+        });
+      }
     } finally {
       setSaving(false);
     }
@@ -435,10 +609,11 @@ export default function ClientDetails() {
   // Cancel edit mode
   const handleCancelEdit = () => {
     setIsEditMode(false);
-    // Reset form data to original client data by re-fetching
-    if (clientId) {
-      fetchClientDetails();
+    if (originalFormData) {
+      setEditFormData({ ...originalFormData });
     }
+    setCustomTags(originalCustomTags);
+    setNewTagInput("");
   };
 
   // Create new folder
@@ -785,11 +960,13 @@ export default function ClientDetails() {
       statuses.push(priorityLabel);
     }
     // Add client tags
-    if (client.client_tags && Array.isArray(client.client_tags)) {
-      statuses.push(...client.client_tags);
+    if (client.tags && Array.isArray(client.tags)) {
+      statuses.push(...client.tags);
     }
     return statuses;
   })();
+
+  const tagsAreLocked = isFieldLocked('tags');
 
   return (
     <div className="p-4 font-['BasisGrotesquePro']">
@@ -803,13 +980,25 @@ export default function ClientDetails() {
         <div className="flex items-center justify-between">
           <div className="flex items-start gap-4">
             <div
-              className="w-16 aspect-square rounded-full flex items-center justify-center text-xl font-bold"
+              className="w-16 aspect-square rounded-full overflow-hidden flex items-center justify-center text-xl font-bold"
               style={{
                 backgroundColor: "var(--Palette2-Dark-blue-100, #E8F0FF)",
                 color: "var(--Palette2-Dark-blue-900, #3B4A66)",
               }}
             >
-              {initials}
+              {client.profile_picture ? (
+                <img
+                  src={client.profile_picture}
+                  alt={client.name || "Client avatar"}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                initials
+              )}
             </div>
 
             <div>
@@ -879,7 +1068,7 @@ export default function ClientDetails() {
 
           {/* Buttons: visible only on client page */}
           {!isDocuments && (
-            <div className="flex gap-3">
+            <div className="flex gap-3 align-items-center flex-wrap">
               {/* Add Task Button */}
               {/* Send Message Button */}
               <button
@@ -935,6 +1124,59 @@ export default function ClientDetails() {
                 Add Task
               </button>
 
+              {canEditClient && (
+                <div className="d-flex gap-2">
+                  {!isEditMode ? (
+                    <button
+                      className="rounded-md text-sm"
+                      style={{
+                        fontSize: "15px",
+                        borderRadius: "6px",
+                        border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                        backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                        color: "#fff",
+                        padding: "5px 12px",
+                        opacity: 1,
+                        cursor: "pointer"
+                      }}
+                      onClick={() => setIsEditMode(true)}
+                    >
+                      <WhiteEdit />
+                      Edit Details
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="btn btn-light"
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        style={{
+                          borderRadius: "6px",
+                          padding: "5px 12px",
+                          fontSize: "15px",
+                          border: "1px solid #E5E7EB"
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleSaveTaxpayer}
+                        disabled={saving}
+                        style={{
+                          borderRadius: "6px",
+                          padding: "5px 12px",
+                          fontSize: "15px",
+                          backgroundColor: "#FF7A2F",
+                          borderColor: "#FF7A2F"
+                        }}
+                      >
+                        {saving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
 
             </div>
           )}
@@ -1086,55 +1328,7 @@ export default function ClientDetails() {
                 </div>
                 <div className="text-gray-500 text-xs mt-1">Your basic personal and contact information</div>
               </div>
-              {!isEditMode ? (
-                <button
-                  className="flex items-center gap-2 rounded-md text-sm"
-                  onClick={() => setIsEditMode(true)}
-                  style={{
-                    fontSize: "15px",
-                    borderRadius: "6px",
-                    border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                    backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                    color: "#fff",
-                    padding: "5px 12px",
-                    opacity: 1,
-                    cursor: "pointer"
-                  }}
-                >
-                  <WhiteEdit />
-                  Edit
-                </button>
-              ) : (
-                <div className="d-flex gap-2">
-                  <button
-                    className="btn btn-light"
-                    onClick={handleCancelEdit}
-                    disabled={saving}
-                    style={{
-                      borderRadius: "6px",
-                      padding: "5px 12px",
-                      fontSize: "15px",
-                      border: "1px solid #E5E7EB"
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSaveTaxpayer}
-                    disabled={saving}
-                    style={{
-                      borderRadius: "6px",
-                      padding: "5px 12px",
-                      fontSize: "15px",
-                      backgroundColor: "#FF7A2F",
-                      borderColor: "#FF7A2F"
-                    }}
-                  >
-                    {saving ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              )}
+              <div />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
@@ -1143,23 +1337,31 @@ export default function ClientDetails() {
                     color: "var(--Palette2-Dark-blue-100, #3B4A66)",
                   }}>Name</div>
                 {isEditMode && editFormData ? (
-                  <div className="d-flex gap-2">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={editFormData.first_name}
-                      onChange={(e) => handleEditFormChange('first_name', e.target.value)}
-                      placeholder="First Name"
-                      style={{ borderRadius: "6px", fontSize: "14px" }}
-                    />
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={editFormData.last_name}
-                      onChange={(e) => handleEditFormChange('last_name', e.target.value)}
-                      placeholder="Last Name"
-                      style={{ borderRadius: "6px", fontSize: "14px" }}
-                    />
+                  <div className="d-flex gap-2 w-100">
+                    <div className="flex-grow-1">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editFormData.first_name}
+                        onChange={(e) => handleEditFormChange('first_name', e.target.value)}
+                        placeholder="First Name"
+                        style={{ borderRadius: "6px", fontSize: "14px" }}
+                        disabled={isFieldLocked('first_name')}
+                      />
+                      {renderLockedHelperText('first_name')}
+                    </div>
+                    <div className="flex-grow-1">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editFormData.last_name}
+                        onChange={(e) => handleEditFormChange('last_name', e.target.value)}
+                        placeholder="Last Name"
+                        style={{ borderRadius: "6px", fontSize: "14px" }}
+                        disabled={isFieldLocked('last_name')}
+                      />
+                      {renderLockedHelperText('last_name')}
+                    </div>
                   </div>
                 ) : (
                   <div className="font-medium" style={{
@@ -1183,19 +1385,23 @@ export default function ClientDetails() {
                 <div>
                   <div className="text-xs text-gray-500 mt-3">Filing Status</div>
                   {isEditMode && editFormData ? (
-                    <select
-                      className="form-select"
-                      value={editFormData.filing_status}
-                      onChange={(e) => handleEditFormChange('filing_status', e.target.value)}
-                      style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "200px" }}
-                    >
-                      <option value="">Select filing status</option>
-                      <option value="single">Single</option>
-                      <option value="married_joint">Married Filing Jointly</option>
-                      <option value="married_separate">Married Filing Separately</option>
-                      <option value="head_of_household">Head of Household</option>
-                      <option value="qualifying_widow">Qualifying Widow(er)</option>
-                    </select>
+                    <>
+                      <select
+                        className="form-select"
+                        value={editFormData.filing_status}
+                        onChange={(e) => handleEditFormChange('filing_status', e.target.value)}
+                        style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "220px" }}
+                        disabled={isFieldLocked('filing_status')}
+                      >
+                        <option value="">Select filing status</option>
+                        {FILING_STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {renderLockedHelperText('filing_status')}
+                    </>
                   ) : (
                     <div className="font-medium " style={{
                       color: "var(--Palette2-Dark-blue-100, #3B4A66)",
@@ -1223,39 +1429,55 @@ export default function ClientDetails() {
               <div className="mt-4">
                 {isEditMode && editFormData ? (
                   <div className="d-flex flex-column gap-3">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={editFormData.address_line}
-                      onChange={(e) => handleEditFormChange('address_line', e.target.value)}
-                      placeholder="Address Line"
-                      style={{ borderRadius: "6px", fontSize: "14px" }}
-                    />
-                    <div className="d-flex gap-2">
+                    <div>
                       <input
                         type="text"
                         className="form-control"
-                        value={editFormData.city}
-                        onChange={(e) => handleEditFormChange('city', e.target.value)}
-                        placeholder="City"
+                        value={editFormData.address_line}
+                        onChange={(e) => handleEditFormChange('address_line', e.target.value)}
+                        placeholder="Address Line"
                         style={{ borderRadius: "6px", fontSize: "14px" }}
+                        disabled={isFieldLocked('address')}
                       />
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editFormData.state}
-                        onChange={(e) => handleEditFormChange('state', e.target.value)}
-                        placeholder="State"
-                        style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "100px" }}
-                      />
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editFormData.zip_code}
-                        onChange={(e) => handleEditFormChange('zip_code', e.target.value)}
-                        placeholder="ZIP Code"
-                        style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "120px" }}
-                      />
+                      {renderLockedHelperText('address')}
+                    </div>
+                    <div className="d-flex gap-2">
+                      <div className="flex-grow-1">
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={editFormData.city}
+                          onChange={(e) => handleEditFormChange('city', e.target.value)}
+                          placeholder="City"
+                          style={{ borderRadius: "6px", fontSize: "14px" }}
+                          disabled={isFieldLocked('city')}
+                        />
+                        {renderLockedHelperText('city')}
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={editFormData.state}
+                          onChange={(e) => handleEditFormChange('state', e.target.value)}
+                          placeholder="State"
+                          style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "100px" }}
+                          disabled={isFieldLocked('state')}
+                        />
+                        {renderLockedHelperText('state')}
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={editFormData.zip_code}
+                          onChange={(e) => handleEditFormChange('zip_code', e.target.value)}
+                          placeholder="ZIP Code"
+                          style={{ borderRadius: "6px", fontSize: "14px", maxWidth: "120px" }}
+                          disabled={isFieldLocked('zip_code')}
+                        />
+                        {renderLockedHelperText('zip_code')}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -1305,12 +1527,14 @@ export default function ClientDetails() {
                       onChange={(e) => handleEditFormChange('phone_number', e.target.value)}
                       placeholder="Phone Number"
                       style={{ borderRadius: "6px", fontSize: "14px" }}
+                      disabled={isFieldLocked('phone')}
                     />
                   ) : (
                     <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
                       {client.phone}
                     </div>
                   )}
+                  {isEditMode && renderLockedHelperText('phone')}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-xs" style={{ color: "var(--Palette2-Dark-blue-100, #4B5563)" }}>
@@ -1325,15 +1549,96 @@ export default function ClientDetails() {
                       onChange={(e) => handleEditFormChange('email', e.target.value)}
                       placeholder="Email Address"
                       style={{ borderRadius: "6px", fontSize: "14px" }}
+                      disabled={isFieldLocked('email')}
                     />
                   ) : (
                     <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>
                       {client.email}
                     </div>
                   )}
+                  {isEditMode && renderLockedHelperText('email')}
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Tags */}
+          <div className="bg-white rounded-xl p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-semibold text-gray-900">Tags</div>
+                <div className="text-gray-500 text-xs">Labels shared across your firm for this client</div>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="text-xs text-gray-500 mb-2">Active Tags</div>
+              <div className="flex flex-wrap gap-2">
+                {(client.tags && client.tags.length > 0) ? (
+                  client.tags.map((tag, index) => (
+                    <span
+                      key={`${tag}-${index}`}
+                      className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs capitalize"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500 text-sm">No tags assigned</span>
+                )}
+              </div>
+            </div>
+            {isEditMode && (
+              <div className="mt-4">
+                <div className="text-xs text-gray-500 mb-2">Custom Tags (editable)</div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {customTags.length > 0 ? (
+                    customTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs d-inline-flex align-items-center gap-1"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          className="border-0 bg-transparent text-indigo-700"
+                          onClick={() => handleRemoveCustomTag(tag)}
+                          aria-label={`Remove ${tag}`}
+                          disabled={tagsAreLocked}
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-sm">No custom tags yet.</span>
+                  )}
+                </div>
+                <div className="d-flex gap-2">
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                    placeholder="Add tag (e.g., VIP, Priority)"
+                    style={{ borderRadius: "6px", fontSize: "14px" }}
+                    disabled={tagsAreLocked}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleAddCustomTag}
+                    style={{ borderRadius: "6px", backgroundColor: "#00C0C6", borderColor: "#00C0C6" }}
+                    disabled={tagsAreLocked}
+                  >
+                    Add Tag
+                  </button>
+                </div>
+                {tagsAreLocked && (
+                  <small className="text-danger d-block mt-2">Tags are locked by your administrator.</small>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Spouse Information */}
@@ -1359,7 +1664,48 @@ export default function ClientDetails() {
                 Edit
               </button> */}
             </div>
-            {client.spouse.name ? (
+            {isEditMode && editFormData ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <div className="text-xs text-gray-500">First Name</div>
+                  <input
+                    type="text"
+                    className="form-control mt-1"
+                    value={editFormData.spouse_first_name || ''}
+                    onChange={(e) => handleEditFormChange('spouse_first_name', e.target.value)}
+                    placeholder="First Name"
+                    style={{ borderRadius: "6px", fontSize: "14px" }}
+                    disabled={isFieldLocked('spouse_first_name')}
+                  />
+                  {renderLockedHelperText('spouse_first_name')}
+                  <div className="text-xs text-gray-500 mt-3">Last Name</div>
+                  <input
+                    type="text"
+                    className="form-control mt-1"
+                    value={editFormData.spouse_last_name || ''}
+                    onChange={(e) => handleEditFormChange('spouse_last_name', e.target.value)}
+                    placeholder="Last Name"
+                    style={{ borderRadius: "6px", fontSize: "14px" }}
+                    disabled={isFieldLocked('spouse_last_name')}
+                  />
+                  {renderLockedHelperText('spouse_last_name')}
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Date of Birth</div>
+                  <input
+                    type="date"
+                    className="form-control mt-1"
+                    value={editFormData.spouse_date_of_birth || ''}
+                    onChange={(e) => handleEditFormChange('spouse_date_of_birth', e.target.value)}
+                    style={{ borderRadius: "6px", fontSize: "14px" }}
+                    disabled={isFieldLocked('spouse_date_of_birth')}
+                  />
+                  {renderLockedHelperText('spouse_date_of_birth')}
+                  <div className="text-xs text-gray-500 mt-3">Filed With Client</div>
+                  <div className="font-medium text-gray-900">{client.spouse.filing_status || client.filingStatus || "N/A"}</div>
+                </div>
+              </div>
+            ) : client.spouse.name ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <div className="text-xs text-gray-500">Name</div>

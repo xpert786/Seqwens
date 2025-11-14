@@ -1706,6 +1706,64 @@ export const firmAdminClientsAPI = {
     const queryString = queryParams.toString();
     const endpoint = `/firm/clients/list/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
+  },
+
+  // Invite existing taxpayer
+  inviteClient: async (inviteData) => {
+    return await apiRequest('/user/firm-admin/clients/invite/', 'POST', inviteData);
+  },
+
+  // Get client details
+  getClientDetails: async (clientId) => {
+    return await apiRequest(`/user/firm-admin/clients/${clientId}/`, 'GET');
+  },
+
+  // Update client details
+  updateClient: async (clientId, payload) => {
+    try {
+      const endpoint = `${API_BASE_URL}/user/firm-admin/clients/${clientId}/`;
+      let headers = getHeaders();
+
+      const makeRequest = async () => {
+        return await fetchWithCors(endpoint, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload || {}),
+        });
+      };
+
+      let response = await makeRequest();
+
+      if (response.status === 401) {
+        await refreshAccessToken();
+        headers = getHeaders();
+        response = await makeRequest();
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const error = new Error(data.message || 'Failed to update client profile');
+        error.data = data;
+        error.status = response.status;
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating client profile:', error);
+      throw error;
+    }
+  },
+
+  // Get shareable invite link
+  getInviteLink: async (inviteId) => {
+    return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/link/`, 'GET');
+  },
+
+  // Send invite notifications
+  sendInvite: async (inviteId, payload) => {
+    return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/send/`, 'POST', payload);
   }
 };
 
@@ -2569,9 +2627,12 @@ export const invitationAPI = {
     return await publicApiRequest('/user/staff-invite/accept/', 'POST', payload);
   },
 
-  // Deny/decline invitation with token (public endpoint, no auth required)
-  // Note: This endpoint may not exist in the new API, keeping for backward compatibility
-  denyInvitation: async (token) => {
-    return await publicApiRequest('/user/staff/invites/deny/', 'POST', { token });
+  // Decline invitation with token and optional invite type
+  declineInvitation: async (token, inviteType = 'client') => {
+    const payload = {
+      token,
+      invite_type: inviteType || 'client'
+    };
+    return await publicApiRequest('/user/staff-invite/decline/', 'POST', payload);
   }
 };

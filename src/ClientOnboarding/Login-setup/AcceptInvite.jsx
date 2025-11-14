@@ -289,23 +289,6 @@ export default function AcceptInvite() {
     };
 
     const handleDenyInvitation = async () => {
-        // For testing - just show success message
-        setIsDenying(true);
-        setErrors({});
-
-        // Simulate API call delay
-        setTimeout(() => {
-            setIsDenied(true);
-            toast.success("Invitation declined successfully. (Testing Mode)", {
-                position: "top-right",
-                autoClose: 3000,
-            });
-            setIsDenying(false);
-        }, 1500);
-        return;
-
-        // Uncomment below code when you want to use real API
-        /*
         if (!token) {
             setErrors({ general: "Invalid invitation token." });
             return;
@@ -315,16 +298,16 @@ export default function AcceptInvite() {
         setErrors({});
 
         try {
-            const response = await invitationAPI.denyInvitation(token);
+            const inviteType = invitationData?.invite_type || 'client';
+            const response = await invitationAPI.declineInvitation(token, inviteType);
 
             if (response.success) {
                 setIsDenied(true);
-                toast.success("Invitation declined successfully.", {
+                toast.success(response.message || "Invitation declined successfully.", {
                     position: "top-right",
                     autoClose: 3000,
                 });
 
-                // Redirect to login after a short delay
                 setTimeout(() => {
                     navigate("/login");
                 }, 2000);
@@ -337,7 +320,6 @@ export default function AcceptInvite() {
         } finally {
             setIsDenying(false);
         }
-        */
     };
 
     const formatDate = (dateString) => {
@@ -394,7 +376,7 @@ export default function AcceptInvite() {
                     <div className="accept-invite-card">
                         <div className="accept-invite-header">
                             <h5 className="accept-invite-title">Invitation Declined</h5>
-                            <p className="accept-invite-subtitle">You have declined this invitation. Redirecting to login...</p>
+                            <p className="accept-invite-subtitle">You have declined this invitation.</p>
                         </div>
                     </div>
                 </div>

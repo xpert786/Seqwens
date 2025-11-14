@@ -359,7 +359,7 @@ export default function Topbar() {
                                         setShowProfileMenu(!showProfileMenu);
                                     }
                                 }}
-                                aria-label="User menu"
+                                aria-label={profilePicture ? "User menu" : `User menu${profileInitials ? ` for ${profileInitials}` : ''}`}
                                 aria-expanded={showProfileMenu}
                                 aria-haspopup="true"
                                 style={{
@@ -384,11 +384,7 @@ export default function Topbar() {
                                         onLoad={() => console.log('✅ Topbar profile picture loaded successfully')}
                                         onError={() => console.log('❌ Topbar profile picture failed to load')}
                                     />
-                                ) : (
-                                    <div className="topbar-user-initials">
-                                        {profileInitials}
-                                    </div>
-                                )}
+                                ) : null}
                                 <FiChevronDown 
                                     size={18} 
                                     className="text-muted"
