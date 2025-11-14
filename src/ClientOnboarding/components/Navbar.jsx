@@ -170,22 +170,20 @@ export default function Navbar() {
                 />
               </>
             ) : (
-              <>
-                {console.log('👤 Rendering default avatar - no profile picture')}
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center"
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    backgroundColor: "#F56D2D",
-                    color: "white",
-                    fontSize: "16px",
-                    fontWeight: "600"
-                  }}
-                >
-                  <i className="bi bi-person-fill"></i>
-                </div>
-              </>
+              <button
+                type="button"
+                className="btn border-0 p-0 d-flex align-items-center justify-content-center"
+                onClick={() => window.refreshNavbarProfilePicture?.()}
+                aria-label="Profile options"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  backgroundColor: "transparent"
+                }}
+              >
+                <i className="bi bi-chevron-down fs-4 text-muted"></i>
+              </button>
             )}
             <span className="text-muted" style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
               {userInfo ? `${userInfo.first_name} ${userInfo.last_name}` : 'Profile'}

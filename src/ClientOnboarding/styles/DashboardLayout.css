@@ -1,21 +1,26 @@
 .dashboard-layout {
   display: flex;
+  --client-sidebar-width: 280px;
 }
 
 .dashboard-main {
-  margin-left: 280px !important; 
-  margin-top: 70px; 
+  margin-left: var(--client-sidebar-width);
+  margin-top: 70px;
   height: calc(100vh - 70px);
   overflow-y: auto;
   background-color: rgb(243, 247, 255);
   padding: 20px;
-  width: calc(100% - 280px);
+  width: calc(100% - var(--client-sidebar-width));
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
+.dashboard-layout.dashboard-collapsed .dashboard-main {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
 
 @media (max-width: 1366px) {
-  .dashboard-main {
-    margin-left: 240px !important;
-    width: calc(100% - 240px) !important;
+  .dashboard-layout {
+    --client-sidebar-width: 240px;
   }
 }

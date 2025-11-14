@@ -4,7 +4,7 @@ import { FaSearch, FaPlus, FaUserPlus, FaEnvelope, FaSms, FaLink, FaCopy } from 
 import { AwaitingIcon, CompletedIcon, Dot, DoubleUserIcon, FaildIcon, FiltIcon, Phone } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI, firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import "../../styles/MyClients.css";
 
@@ -33,10 +33,14 @@ export default function MyClients() {
   // Create/Invite taxpayer modals state
   const [showCreateTaxpayerModal, setShowCreateTaxpayerModal] = useState(false);
   const [showInviteTaxpayerModal, setShowInviteTaxpayerModal] = useState(false);
-  const [showInviteConfirmationModal, setShowInviteConfirmationModal] = useState(false);
-  const [newlyCreatedTaxpayerId, setNewlyCreatedTaxpayerId] = useState(null);
+  const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
   const [createTaxpayerLoading, setCreateTaxpayerLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteActionLoading, setInviteActionLoading] = useState(false);
+  const [inviteActionMethod, setInviteActionMethod] = useState(null);
+  const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
+  const [activeInviteDetails, setActiveInviteDetails] = useState(null);
+  const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
   
   // Create taxpayer form state
   const [createTaxpayerForm, setCreateTaxpayerForm] = useState({
@@ -48,11 +52,32 @@ export default function MyClients() {
     tags: []
   });
 
-  // Invite taxpayer state
-  const [inviteMethod, setInviteMethod] = useState("email"); // "email", "sms", "link"
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [invitePhone, setInvitePhone] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
+  // Invite existing taxpayer form state
+  const [inviteExistingForm, setInviteExistingForm] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone_number: ""
+  });
+
+  useEffect(() => {
+    if (activeInviteDetails?.phone_number) {
+      setSmsPhoneOverride(activeInviteDetails.phone_number);
+    } else if (!showInviteActionsModal) {
+      setSmsPhoneOverride("");
+    }
+  }, [activeInviteDetails, showInviteActionsModal]);
+
+  const openInviteActionsModal = (inviteData) => {
+    setActiveInviteDetails(inviteData);
+    setShowInviteActionsModal(true);
+  };
+
+  const closeInviteActionsModal = () => {
+    setShowInviteActionsModal(false);
+    setActiveInviteDetails(null);
+    setSmsPhoneOverride("");
+  };
 
   // Fetch clients from API
   const fetchClients = async () => {
@@ -257,10 +282,7 @@ export default function MyClients() {
       const response = await taxPreparerClientAPI.createTaxpayer(createTaxpayerForm);
       
       if (response.success && response.data) {
-        const newClientId = response.data.id || response.data.client_id;
-        setNewlyCreatedTaxpayerId(newClientId);
         setShowCreateTaxpayerModal(false);
-        setShowInviteConfirmationModal(true);
         
         // Reset form
         setCreateTaxpayerForm({
@@ -279,6 +301,36 @@ export default function MyClients() {
           position: "top-right",
           autoClose: 3000
         });
+
+        const createdProfile = {
+          first_name: response.data.first_name || createTaxpayerForm.first_name,
+          last_name: response.data.last_name || createTaxpayerForm.last_name,
+          email: response.data.email || createTaxpayerForm.email,
+          phone_number: response.data.phone_number || createTaxpayerForm.phone_number
+        };
+
+        try {
+          const inviteResponse = await firmAdminClientsAPI.inviteClient({
+            ...createdProfile,
+            delivery_methods: ["link"]
+          });
+
+          if (inviteResponse.success && inviteResponse.data) {
+            openInviteActionsModal(inviteResponse.data);
+            toast.info("Invite link created. Share or send it below.", {
+              position: "top-right",
+              autoClose: 3000
+            });
+          } else {
+            throw new Error(inviteResponse.message || "Failed to create invite");
+          }
+        } catch (inviteError) {
+          console.error("Error creating invite for taxpayer:", inviteError);
+          toast.error(handleAPIError(inviteError) || "Failed to create invite. You can send it later from Invite Taxpayer.", {
+            position: "top-right",
+            autoClose: 4000
+          });
+        }
       } else {
         throw new Error(response.message || "Failed to create taxpayer");
       }
@@ -293,118 +345,190 @@ export default function MyClients() {
     }
   };
 
-  // Generate invite link
-  const handleGenerateInviteLink = async (clientId) => {
-    try {
-      setInviteLoading(true);
-      const response = await taxPreparerClientAPI.generateInviteLink(clientId);
-      
-      if (response.success && response.data) {
-        const link = response.data.invite_link || response.data.link;
-        setInviteLink(link);
-        setInviteMethod("link");
-        
-        // Copy to clipboard
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(link);
-          toast.success("Invite link copied to clipboard!", {
-            position: "top-right",
-            autoClose: 2000
-          });
-        }
-      } else {
-        throw new Error(response.message || "Failed to generate invite link");
-      }
-    } catch (error) {
-      console.error("Error generating invite link:", error);
-      toast.error(handleAPIError(error), {
+  // Handle invite existing taxpayer
+  const handleInviteExistingTaxpayer = async (e) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!inviteExistingForm.first_name.trim()) {
+      toast.error("First name is required", {
         position: "top-right",
         autoClose: 3000
       });
-    } finally {
-      setInviteLoading(false);
+      return;
     }
-  };
-
-  // Send email invite
-  const handleSendEmailInvite = async (clientId, email) => {
-    try {
-      setInviteLoading(true);
-      const response = await taxPreparerClientAPI.inviteTaxpayerEmail(clientId, {
-        email: email || inviteEmail
-      });
-      
-      if (response.success) {
-        toast.success("Email invite sent successfully!", {
-          position: "top-right",
-          autoClose: 3000
-        });
-        setShowInviteTaxpayerModal(false);
-        setShowInviteConfirmationModal(false);
-        setInviteEmail("");
-      } else {
-        throw new Error(response.message || "Failed to send email invite");
-      }
-    } catch (error) {
-      console.error("Error sending email invite:", error);
-      toast.error(handleAPIError(error), {
+    
+    if (!inviteExistingForm.last_name.trim()) {
+      toast.error("Last name is required", {
         position: "top-right",
         autoClose: 3000
       });
-    } finally {
-      setInviteLoading(false);
+      return;
     }
-  };
-
-  // Send SMS invite
-  const handleSendSMSInvite = async (clientId, phone) => {
-    try {
-      setInviteLoading(true);
-      const response = await taxPreparerClientAPI.inviteTaxpayerSMS(clientId, {
-        phone_number: phone || invitePhone
-      });
-      
-      if (response.success) {
-        toast.success("SMS invite sent successfully!", {
-          position: "top-right",
-          autoClose: 3000
-        });
-        setShowInviteTaxpayerModal(false);
-        setShowInviteConfirmationModal(false);
-        setInvitePhone("");
-      } else {
-        throw new Error(response.message || "Failed to send SMS invite");
-      }
-    } catch (error) {
-      console.error("Error sending SMS invite:", error);
-      toast.error(handleAPIError(error), {
+    
+    if (!inviteExistingForm.email.trim()) {
+      toast.error("Email is required", {
         position: "top-right",
         autoClose: 3000
       });
-    } finally {
-      setInviteLoading(false);
-    }
-  };
-
-  // Handle invite confirmation (send now or later)
-  const handleInviteConfirmation = async (sendNow, method) => {
-    if (!newlyCreatedTaxpayerId) {
-      setShowInviteConfirmationModal(false);
       return;
     }
 
-    if (sendNow) {
-      // Show invite modal with selected method
-      setInviteMethod(method || "email");
-      setShowInviteConfirmationModal(false);
-      setShowInviteTaxpayerModal(true);
-    } else {
-      // Just close the modal
-      setShowInviteConfirmationModal(false);
-      setNewlyCreatedTaxpayerId(null);
+    try {
+      setInviteLoading(true);
+      
+      // Prepare payload - only include phone_number if provided
+      const payload = {
+        first_name: inviteExistingForm.first_name.trim(),
+        last_name: inviteExistingForm.last_name.trim(),
+        email: inviteExistingForm.email.trim()
+      };
+      
+      if (inviteExistingForm.phone_number && inviteExistingForm.phone_number.trim()) {
+        payload.phone_number = inviteExistingForm.phone_number.trim();
+      }
+
+      const response = await firmAdminClientsAPI.inviteClient({
+        ...payload,
+        delivery_methods: ["link"]
+      });
+      
+      if (response.success && response.data) {
+        toast.success("Invite created successfully!", {
+          position: "top-right",
+          autoClose: 3000
+        });
+        // Reset form and close modal
+        setInviteExistingForm({
+          first_name: "",
+          last_name: "",
+          email: "",
+          phone_number: ""
+        });
+        setShowInviteTaxpayerModal(false);
+        openInviteActionsModal(response.data);
+        fetchClients();
+      } else {
+        throw new Error(response.message || "Failed to invite taxpayer");
+      }
+    } catch (error) {
+      console.error("Error inviting existing taxpayer:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setInviteLoading(false);
     }
   };
 
+  const handleCopyInviteLink = async () => {
+    if (!activeInviteDetails?.invite_link) return;
+    try {
+      await navigator.clipboard.writeText(activeInviteDetails.invite_link);
+      toast.success("Invite link copied to clipboard!", {
+        position: "top-right",
+        autoClose: 2000
+      });
+    } catch (error) {
+      console.error("Error copying invite link:", error);
+      toast.error("Failed to copy invite link. Please try again.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+    }
+  };
+
+  const handleRefreshInviteLink = async () => {
+    if (!activeInviteDetails?.id) return;
+    try {
+      setInviteLinkRefreshing(true);
+      const response = await firmAdminClientsAPI.getInviteLink(activeInviteDetails.id);
+      if (response.success && response.data?.invite_link) {
+        setActiveInviteDetails((prev) => ({
+          ...prev,
+          invite_link: response.data.invite_link,
+          expires_at: response.data.expires_at
+        }));
+        toast.success("Invite link refreshed successfully.", {
+          position: "top-right",
+          autoClose: 3000
+        });
+      } else {
+        throw new Error(response.message || "Failed to refresh invite link");
+      }
+    } catch (error) {
+      console.error("Error refreshing invite link:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setInviteLinkRefreshing(false);
+    }
+  };
+
+  const handleSendInviteNotifications = async (methods, options = {}) => {
+    if (!activeInviteDetails?.id || !methods?.length) return;
+    try {
+      setInviteActionLoading(true);
+      setInviteActionMethod(methods.join(","));
+      const payload = { methods };
+      if (options.phone_number) {
+        payload.phone_number = options.phone_number;
+      }
+      const response = await firmAdminClientsAPI.sendInvite(activeInviteDetails.id, payload);
+      if (response.success && response.data) {
+        setActiveInviteDetails((prev) => ({
+          ...prev,
+          ...response.data
+        }));
+        toast.success(response.message || "Invite notifications processed.", {
+          position: "top-right",
+          autoClose: 3000
+        });
+      } else {
+        throw new Error(response.message || "Failed to send invite notifications");
+      }
+    } catch (error) {
+      console.error("Error sending invite notifications:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setInviteActionLoading(false);
+      setInviteActionMethod(null);
+    }
+  };
+
+  const handleSendEmailInviteNow = () => {
+    handleSendInviteNotifications(["email"]);
+  };
+
+  const handleSendSmsInviteNow = () => {
+    const trimmedPhone = smsPhoneOverride?.trim();
+    if (!trimmedPhone) {
+      toast.error("Please enter a phone number to send the SMS invite.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
+    handleSendInviteNotifications(["sms"], { phone_number: trimmedPhone });
+  };
+
+  const inviteExpiresOn = activeInviteDetails?.expires_at
+    ? new Date(activeInviteDetails.expires_at).toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric"
+      })
+    : null;
+
+  // Handle invite confirmation (send now or later)
   const openClientDetails = (client, options = {}) => {
     setOpenDropdown(null);
     navigate(`/taxdashboard/clients/${client.id}`, { state: { client, ...options } });
@@ -473,7 +597,6 @@ export default function MyClients() {
           <small className="text-muted">Manage your assigned clients</small>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <span className="badge bg-light text-dark p-2">{overview.total_clients} clients</span>
           <button
             className="btn btn-primary d-flex align-items-center gap-2"
             onClick={() => setShowInviteTaxpayerModal(true)}
@@ -487,21 +610,6 @@ export default function MyClients() {
             }}
           >
             <FaUserPlus size={14} />
-            Invite Taxpayer
-          </button>
-          <button
-            className="btn btn-primary d-flex align-items-center gap-2"
-            onClick={() => setShowCreateTaxpayerModal(true)}
-            style={{
-              backgroundColor: "#FF7A2F",
-              borderColor: "#FF7A2F",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              fontSize: "14px",
-              fontWeight: "600"
-            }}
-          >
-            <FaPlus size={14} />
             Create Taxpayer
           </button>
         </div>
@@ -972,256 +1080,245 @@ export default function MyClients() {
         </div>
       )}
 
-      {/* Invite Confirmation Modal (after creating taxpayer) */}
-      {showInviteConfirmationModal && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+      {/* Invite actions modal */}
+      {showInviteActionsModal && activeInviteDetails && (
+        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '400px' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
-                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Taxpayer Created Successfully</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setShowInviteConfirmationModal(false);
-                    setNewlyCreatedTaxpayerId(null);
-                  }}
-                  aria-label="Close"
-                ></button>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
+                <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
               </div>
               <div className="modal-body" style={{ padding: '24px' }}>
-                <p className="mb-4">Would you like to send an invite to this taxpayer now?</p>
-                <div className="d-flex flex-column gap-2">
-                  <button
-                    className="btn btn-primary d-flex align-items-center justify-content-center gap-2"
-                    onClick={() => handleInviteConfirmation(true, 'email')}
-                    style={{
-                      backgroundColor: '#00C0C6',
-                      borderColor: '#00C0C6',
-                      borderRadius: '8px',
-                      padding: '10px'
-                    }}
-                  >
-                    <FaEnvelope size={14} />
-                    Send Email Invite
-                  </button>
-                  <button
-                    className="btn btn-primary d-flex align-items-center justify-content-center gap-2"
-                    onClick={() => handleInviteConfirmation(true, 'sms')}
-                    style={{
-                      backgroundColor: '#00C0C6',
-                      borderColor: '#00C0C6',
-                      borderRadius: '8px',
-                      padding: '10px'
-                    }}
-                  >
-                    <FaSms size={14} />
-                    Send SMS Invite
-                  </button>
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={() => handleInviteConfirmation(false)}
-                    style={{ borderRadius: '8px', padding: '10px' }}
-                  >
-                    Invite Later
-                  </button>
+                <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
+                  <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
+                    {activeInviteDetails.first_name} {activeInviteDetails.last_name}
+                  </p>
+                  <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.email}</p>
+                  {activeInviteDetails.phone_number && (
+                    <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.phone_number}</p>
+                  )}
+                  {inviteExpiresOn && (
+                    <small className="text-muted">Expires {inviteExpiresOn}</small>
+                  )}
                 </div>
+
+                <div className="mb-4">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                    <FaLink size={14} /> Shareable Link
+                  </label>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={activeInviteDetails.invite_link || ""}
+                      readOnly
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={handleCopyInviteLink}
+                      disabled={!activeInviteDetails.invite_link}
+                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                    >
+                      <FaCopy size={12} className="me-1" />
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary"
+                      onClick={handleRefreshInviteLink}
+                      disabled={inviteLinkRefreshing}
+                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                    >
+                      {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                  </div>
+                  <small className="text-muted d-block mt-1">
+                    Share this link with the taxpayer. They can use it anytime before it expires.
+                  </small>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                    <FaEnvelope size={14} /> Send Email Invite
+                  </label>
+                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
+                    We'll email {activeInviteDetails.email} a secure link to join Seqwens.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleSendEmailInviteNow}
+                    disabled={inviteActionLoading}
+                    style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6' }}
+                  >
+                    {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
+                  </button>
+                  {activeInviteDetails.delivery_summary && (
+                    <div className="mt-2 text-muted small">
+                      Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-1">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                    <FaSms size={14} /> Send SMS Invite
+                  </label>
+                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
+                    We'll text the invite link to the phone number you provide.
+                  </p>
+                  <div className="d-flex gap-2 mb-2">
+                    <input
+                      type="tel"
+                      className="form-control"
+                      value={smsPhoneOverride}
+                      onChange={(e) => setSmsPhoneOverride(e.target.value)}
+                      placeholder="Enter phone number"
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleSendSmsInviteNow}
+                      disabled={inviteActionLoading}
+                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                    >
+                      {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
+                    </button>
+                  </div>
+                  {activeInviteDetails.delivery_summary && (
+                    <div className="text-muted small">
+                      SMS sent: {activeInviteDetails.delivery_summary.sms_sent ? "Yes" : "No"}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
+                <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
+                  Done
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Invite Taxpayer Modal */}
+      {/* Invite Taxpayer Modal (existing clients) */}
       {showInviteTaxpayerModal && (
         <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
-                  {newlyCreatedTaxpayerId ? 'Invite Taxpayer' : 'Invite Existing Taxpayer'}
+                  Invite Taxpayer
                 </h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => {
                     setShowInviteTaxpayerModal(false);
-                    setInviteMethod('email');
-                    setInviteEmail('');
-                    setInvitePhone('');
-                    setInviteLink('');
-                    setNewlyCreatedTaxpayerId(null);
+                    setInviteExistingForm({
+                      first_name: "",
+                      last_name: "",
+                      email: "",
+                      phone_number: ""
+                    });
                   }}
                   aria-label="Close"
                 ></button>
               </div>
               <div className="modal-body" style={{ padding: '24px' }}>
-                {!newlyCreatedTaxpayerId && (
+                <form onSubmit={handleInviteExistingTaxpayer}>
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Select Client</label>
-                    <select
-                      className="form-select"
-                      onChange={(e) => setNewlyCreatedTaxpayerId(e.target.value)}
+                    <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
+                      First Name <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={inviteExistingForm.first_name}
+                      onChange={(e) => setInviteExistingForm(prev => ({ ...prev, first_name: e.target.value }))}
+                      placeholder="Enter first name"
+                      required
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
+                      Last Name <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={inviteExistingForm.last_name}
+                      onChange={(e) => setInviteExistingForm(prev => ({ ...prev, last_name: e.target.value }))}
+                      placeholder="Enter last name"
+                      required
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
+                      Email <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={inviteExistingForm.email}
+                      onChange={(e) => setInviteExistingForm(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter email address"
+                      required
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
+                      Phone Number <span className="text-muted" style={{ fontSize: '12px' }}>(Optional)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      value={inviteExistingForm.phone_number}
+                      onChange={(e) => setInviteExistingForm(prev => ({ ...prev, phone_number: e.target.value }))}
+                      placeholder="Enter phone number"
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                  </div>
+                  <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 0 0 0', marginTop: '16px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-light"
+                      onClick={() => {
+                        setShowInviteTaxpayerModal(false);
+                        setInviteExistingForm({
+                          first_name: "",
+                          last_name: "",
+                          email: "",
+                          phone_number: ""
+                        });
+                      }}
                       style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
                     >
-                      <option value="">Select a client to invite</option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.full_name || `${client.first_name} ${client.last_name}`} - {client.email}
-                        </option>
-                      ))}
-                    </select>
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={inviteLoading}
+                      style={{
+                        backgroundColor: '#00C0C6',
+                        borderColor: '#00C0C6',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      {inviteLoading ? 'Creating Invite...' : 'Create Invite'}
+                    </button>
                   </div>
-                )}
-
-                {newlyCreatedTaxpayerId && (
-                  <>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">Invite Method</label>
-                      <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className={`btn ${inviteMethod === 'email' ? 'btn-primary' : 'btn-outline-primary'}`}
-                          onClick={() => setInviteMethod('email')}
-                          style={{ borderRadius: '8px', flex: 1 }}
-                        >
-                          <FaEnvelope size={14} className="me-2" />
-                          Email
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn ${inviteMethod === 'sms' ? 'btn-primary' : 'btn-outline-primary'}`}
-                          onClick={() => setInviteMethod('sms')}
-                          style={{ borderRadius: '8px', flex: 1 }}
-                        >
-                          <FaSms size={14} className="me-2" />
-                          SMS
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn ${inviteMethod === 'link' ? 'btn-primary' : 'btn-outline-primary'}`}
-                          onClick={() => {
-                            setInviteMethod('link');
-                            handleGenerateInviteLink(newlyCreatedTaxpayerId);
-                          }}
-                          disabled={inviteLoading}
-                          style={{ borderRadius: '8px', flex: 1 }}
-                        >
-                          <FaLink size={14} className="me-2" />
-                          Link
-                        </button>
-                      </div>
-                    </div>
-
-                    {inviteMethod === 'email' && (
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold">Email Address</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          placeholder="Enter email address"
-                          style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                        />
-                      </div>
-                    )}
-
-                    {inviteMethod === 'sms' && (
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold">Phone Number</label>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          value={invitePhone}
-                          onChange={(e) => setInvitePhone(e.target.value)}
-                          placeholder="Enter phone number"
-                          style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                        />
-                      </div>
-                    )}
-
-                    {inviteMethod === 'link' && inviteLink && (
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold">Invite Link</label>
-                        <div className="d-flex gap-2">
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={inviteLink}
-                            readOnly
-                            style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                          />
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            onClick={() => {
-                              navigator.clipboard.writeText(inviteLink);
-                              toast.success("Link copied to clipboard!", {
-                                position: "top-right",
-                                autoClose: 2000
-                              });
-                            }}
-                            style={{ borderRadius: '8px' }}
-                          >
-                            <FaCopy size={14} />
-                          </button>
-                        </div>
-                        <small className="text-muted">Link copied to clipboard. Share this link with the taxpayer.</small>
-                      </div>
-                    )}
-                  </>
-                )}
+                </form>
               </div>
-              {newlyCreatedTaxpayerId && (
-                <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    onClick={() => {
-                      setShowInviteTaxpayerModal(false);
-                      setInviteMethod('email');
-                      setInviteEmail('');
-                      setInvitePhone('');
-                      setInviteLink('');
-                      setNewlyCreatedTaxpayerId(null);
-                    }}
-                    style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                  >
-                    Cancel
-                  </button>
-                  {inviteMethod === 'email' && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => handleSendEmailInvite(newlyCreatedTaxpayerId)}
-                      disabled={inviteLoading || !inviteEmail}
-                      style={{
-                        backgroundColor: '#00C0C6',
-                        borderColor: '#00C0C6',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      {inviteLoading ? 'Sending...' : 'Send Email Invite'}
-                    </button>
-                  )}
-                  {inviteMethod === 'sms' && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => handleSendSMSInvite(newlyCreatedTaxpayerId)}
-                      disabled={inviteLoading || !invitePhone}
-                      style={{
-                        backgroundColor: '#00C0C6',
-                        borderColor: '#00C0C6',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      {inviteLoading ? 'Sending...' : 'Send SMS Invite'}
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>

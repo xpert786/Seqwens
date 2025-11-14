@@ -32,7 +32,7 @@ export default function Analytics() {
       </div>
 
       {/* Key Metrics Cards - Only show on Overview tab */}
-      {selectedTab === 'Overview' && <MetricsCards />}
+      {/* {selectedTab === 'Overview' && <MetricsCards />} */}
 
       {/* Navigation Tabs */}
       <div className="flex gap-1 mb-8 bg-white p-2 w-fit transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>

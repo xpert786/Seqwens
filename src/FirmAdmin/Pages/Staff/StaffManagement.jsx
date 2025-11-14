@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon } from "../../Components/icons";
+import { FaLink, FaEnvelope, FaSms, FaCopy } from 'react-icons/fa';
+import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon, CrossesIcon } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
@@ -42,6 +43,40 @@ export default function StaffManagement() {
     training_pending: 0
   });
   const dropdownRefs = useRef({});
+  const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
+  const [activeInviteDetails, setActiveInviteDetails] = useState(null);
+  const [inviteActionLoading, setInviteActionLoading] = useState(false);
+  const [inviteActionMethod, setInviteActionMethod] = useState(null);
+  const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
+  const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
+
+  const handleInviteCreated = (inviteData) => {
+    fetchPendingInvites();
+    if (inviteData) {
+      openInviteActionsModal(inviteData);
+    }
+  };
+
+  const openInviteActionsModal = (inviteData) => {
+    if (!inviteData) return;
+    setActiveInviteDetails(inviteData);
+    setSmsPhoneOverride(
+      inviteData.phone_number ||
+      inviteData.phone ||
+      inviteData.contact_details?.phone ||
+      ""
+    );
+    setShowInviteActionsModal(true);
+  };
+
+  const closeInviteActionsModal = () => {
+    setShowInviteActionsModal(false);
+    setActiveInviteDetails(null);
+    setInviteActionLoading(false);
+    setInviteActionMethod(null);
+    setInviteLinkRefreshing(false);
+    setSmsPhoneOverride("");
+  };
 
   // Fetch staff members from API
   const fetchStaffMembers = useCallback(async () => {
@@ -149,7 +184,7 @@ export default function StaffManagement() {
       queryParams.append('page', pendingInvitesPage.toString());
       queryParams.append('page_size', '20');
 
-      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/pending${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/pending/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
       const response = await fetchWithCors(url, {
         method: 'GET',
@@ -215,18 +250,15 @@ export default function StaffManagement() {
     }
   }, [activeFilter]);
 
-  // Handle resend invite
-  const handleResendInvite = async (inviteId) => {
+  const sendInviteNotifications = async (inviteId, payload = {}) => {
     try {
       setProcessingInviteId(inviteId);
-      setShowDropdown(null); // Close dropdown
-
       const token = getAccessToken();
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/${inviteId}/resend/`;
+      const url = `${API_BASE_URL}/firm-admin/staff/invites/${inviteId}/send/`;
 
       const response = await fetchWithCors(url, {
         method: 'POST',
@@ -234,6 +266,7 @@ export default function StaffManagement() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -248,21 +281,43 @@ export default function StaffManagement() {
           position: "top-right",
           autoClose: 3000,
         });
-        // Refresh the pending invites list
         fetchPendingInvites();
+        return result;
       } else {
         throw new Error(result.message || 'Failed to resend invitation');
       }
     } catch (err) {
-      console.error('Error resending invite:', err);
+      console.error('Error sending invite notifications:', err);
       const errorMsg = handleAPIError(err);
-      toast.error(errorMsg || 'Failed to resend invitation. Please try again.', {
+      toast.error(errorMsg || 'Failed to send invitation notifications. Please try again.', {
         position: "top-right",
         autoClose: 4000,
       });
+      throw err;
     } finally {
       setProcessingInviteId(null);
     }
+  };
+
+  // Handle resend invite
+  const handleResendInvite = async (invite) => {
+    if (!invite) return;
+    setShowDropdown(null);
+    const methods = [];
+    if (invite.email || invite.email_address) {
+      methods.push('email');
+    }
+    if (invite.phone_number || invite.phone) {
+      methods.push('sms');
+    }
+    if (methods.length === 0) {
+      methods.push('email');
+    }
+    const payload = { methods };
+    if (methods.includes('sms')) {
+      payload.phone_number = invite.phone_number || invite.phone || '';
+    }
+    await sendInviteNotifications(invite.id, payload);
   };
 
   // Handle cancel invite
@@ -276,7 +331,7 @@ export default function StaffManagement() {
         throw new Error('No authentication token found');
       }
 
-      const url = `${API_BASE_URL}/user/firm-admin/staff/invites/${inviteId}/cancel/`;
+      const url = `${API_BASE_URL}/firm-admin/staff/invites/${inviteId}/cancel/`;
 
       const response = await fetchWithCors(url, {
         method: 'POST',
@@ -313,6 +368,133 @@ export default function StaffManagement() {
     } finally {
       setProcessingInviteId(null);
     }
+  };
+
+  const handleCopyInviteLink = async () => {
+    if (!activeInviteDetails?.invite_link) return;
+    try {
+      await navigator.clipboard.writeText(activeInviteDetails.invite_link);
+      toast.success("Invite link copied to clipboard!", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+    } catch (err) {
+      console.error('Error copying invite link:', err);
+      toast.error("Failed to copy link. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const fetchInviteLinkDetails = async (inviteId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+    const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/staff/invites/${inviteId}/link/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  };
+
+  const handleRefreshInviteLink = async () => {
+    if (!activeInviteDetails?.id) return;
+    try {
+      setInviteLinkRefreshing(true);
+      const result = await fetchInviteLinkDetails(activeInviteDetails.id);
+      if (result.success && result.data) {
+        setActiveInviteDetails((prev) => ({
+          ...prev,
+          invite_link: result.data.invite_link,
+          expires_at: result.data.expires_at || prev?.expires_at,
+          expires_at_formatted: result.data.expires_at_formatted || prev?.expires_at_formatted,
+        }));
+        toast.success("Invite link refreshed successfully.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      } else {
+        throw new Error(result.message || "Failed to refresh invite link");
+      }
+    } catch (error) {
+      console.error('Error refreshing invite link:', error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setInviteLinkRefreshing(false);
+    }
+  };
+
+  const handleOpenShareInvite = async (invite) => {
+    if (!invite?.id) return;
+    try {
+      const result = await fetchInviteLinkDetails(invite.id);
+      if (result.success && result.data) {
+        openInviteActionsModal({
+          ...invite,
+          ...result.data,
+          invite_link: result.data.invite_link,
+        });
+      } else {
+        throw new Error(result.message || "Failed to fetch invite link");
+      }
+    } catch (error) {
+      console.error('Error opening invite share modal:', error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const handleSendInviteNotificationsModal = async (methods, options = {}) => {
+    if (!activeInviteDetails?.id) return;
+    try {
+      setInviteActionLoading(true);
+      setInviteActionMethod(methods.join(","));
+      const result = await sendInviteNotifications(activeInviteDetails.id, {
+        methods,
+        ...options,
+      });
+      if (result?.data) {
+        setActiveInviteDetails((prev) => ({
+          ...prev,
+          ...result.data,
+        }));
+      }
+    } catch (error) {
+      // handled by sendInviteNotifications
+    } finally {
+      setInviteActionLoading(false);
+      setInviteActionMethod(null);
+    }
+  };
+
+  const handleSendEmailInviteNow = () => {
+    handleSendInviteNotificationsModal(['email']);
+  };
+
+  const handleSendSmsInviteNow = () => {
+    const phone = smsPhoneOverride?.trim();
+    if (!phone) {
+      toast.error("Please enter a phone number to send SMS.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+    handleSendInviteNotificationsModal(['sms'], { phone_number: phone });
   };
 
   // Fetch staff members on mount and when filters change
@@ -424,6 +606,16 @@ export default function StaffManagement() {
     }
   };
 
+  const inviteExpiresOn = activeInviteDetails?.expires_at || activeInviteDetails?.expires_at_formatted
+    ? new Date(activeInviteDetails.expires_at || activeInviteDetails.expires_at_formatted).toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
+
   return (
     <>
       <BulkImportModal
@@ -432,7 +624,12 @@ export default function StaffManagement() {
         onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
       />
       <DownloadModal isOpen={isDownloadModalOpen} onClose={() => setIsDownloadModalOpen(false)} />
-      <AddStaffModal isOpen={isAddStaffModalOpen} onClose={() => setIsAddStaffModalOpen(false)} />
+      <AddStaffModal
+        isOpen={isAddStaffModalOpen}
+        onClose={() => setIsAddStaffModalOpen(false)}
+        onInviteCreated={handleInviteCreated}
+        onRefresh={fetchPendingInvites}
+      />
       <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
         {/* Header and Action Buttons */}
         <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4">
@@ -668,7 +865,7 @@ export default function StaffManagement() {
                               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200" style={{ zIndex: 9999 }}>
                                 <div className="py-1">
                                   <button
-                                    onClick={() => handleResendInvite(invite.id)}
+                                    onClick={() => handleResendInvite(invite)}
                                     disabled={processingInviteId === invite.id || invite.is_expired}
                                     className={`block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] transition-colors ${processingInviteId === invite.id || invite.is_expired
                                       ? 'text-gray-400 cursor-not-allowed'
@@ -676,6 +873,12 @@ export default function StaffManagement() {
                                       }`}
                                   >
                                     {processingInviteId === invite.id ? 'Processing...' : 'Resend Invite'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenShareInvite(invite)}
+                                    className="block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] text-gray-700 hover:bg-gray-100 transition-colors"
+                                  >
+                                    Share Invite
                                   </button>
                                   <button
                                     onClick={() => {
@@ -869,7 +1072,7 @@ export default function StaffManagement() {
                             <td className="px-4 py-4 w-[80px]">
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <TwouserIcon />
+                                  <TwouserIcon /> 
                                 </div>
                                 <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.clients}</span>
                               </div>
@@ -952,12 +1155,12 @@ export default function StaffManagement() {
               >
                 Send Message
               </button>
-              <button
+              {/* <button
                 onClick={() => setShowDropdown(null)}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
               >
                 Reassign Clients
-              </button>
+              </button> */}
               <button
                 onClick={() => setShowDropdown(null)}
                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
@@ -967,6 +1170,144 @@ export default function StaffManagement() {
             </div>
           </div>
         )}
+
+      {showInviteActionsModal && activeInviteDetails && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+          style={{ zIndex: 10000 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeInviteActionsModal();
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                  Share Staff Invitation
+                </h4>
+                <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  Send or share the invite link with {activeInviteDetails.first_name || activeInviteDetails.name}
+                </p>
+              </div>
+              <button
+                onClick={closeInviteActionsModal}
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close"
+              >
+                <CrossesIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <p className="text-sm font-semibold text-gray-800 font-[BasisGrotesquePro]">
+                {activeInviteDetails.first_name || activeInviteDetails.name} {activeInviteDetails.last_name || ""}
+              </p>
+              <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">{activeInviteDetails.email}</p>
+              {inviteExpiresOn && (
+                <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                  Expires {inviteExpiresOn}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">
+                  <FaLink size={14} /> Shareable Link
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={activeInviteDetails.invite_link || ""}
+                    readOnly
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={handleCopyInviteLink}
+                    disabled={!activeInviteDetails.invite_link}
+                  >
+                    <FaCopy size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={handleRefreshInviteLink}
+                    disabled={inviteLinkRefreshing}
+                  >
+                    {inviteLinkRefreshing ? "Refreshing..." : "Refresh"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">
+                    <FaEnvelope size={14} /> Send Email Invite
+                  </label>
+                  <p className="text-sm text-gray-500 font-[BasisGrotesquePro] mb-3">
+                    We'll send the invite link to {activeInviteDetails.email}.
+                  </p>
+                  <button
+                    type="button"
+                    className="w-full btn btn-primary"
+                    disabled={inviteActionLoading}
+                    onClick={handleSendEmailInviteNow}
+                  >
+                    {inviteActionLoading && inviteActionMethod === "email"
+                      ? "Sending..."
+                      : "Send Email"}
+                  </button>
+                </div>
+
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] mb-2">
+                    <FaSms size={14} /> Send SMS Invite
+                  </label>
+                  <p className="text-sm text-gray-500 font-[BasisGrotesquePro] mb-2">
+                    We'll text the invite link to the number you provide.
+                  </p>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="tel"
+                      value={smsPhoneOverride}
+                      onChange={(e) => setSmsPhoneOverride(e.target.value)}
+                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      placeholder="+1 408 555 0123"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="w-full btn btn-primary"
+                    disabled={inviteActionLoading}
+                    onClick={handleSendSmsInviteNow}
+                  >
+                    {inviteActionLoading && inviteActionMethod === "sms"
+                      ? "Sending..."
+                      : "Send SMS"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 text-right">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={closeInviteActionsModal}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,37 +1,85 @@
-import React, { useState } from "react";
-import { FaSearch,FaChevronDown } from "react-icons/fa";
-
+import React, { useEffect, useState } from "react";
+import { FaSearch, FaChevronDown } from "react-icons/fa";
+import { taxpayerPublicAPI } from "../../utils/apiUtils";
 
 export default function Faq() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [openIndex, setOpenIndex] = useState(null);
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const faqs = [
-    {
-      q: "How do I upload my tax documents?",
-      a: "You can upload documents by going to the ‘My Documents’ section and clicking the ‘Upload Documents’ button. Supported formats include PDF, JPG, PNG, and common document formats.",
-    },
-    {
-      q: "When will my tax return be completed?",
-      a: "Tax return completion times vary based on complexity. Simple returns typically take 3-5 business days, while more complex returns may take 7-10 business days. You’ll receive notifications as your return progresses.",
-    },
-    {
-      q: "How do I make a payment for my invoice?",
-      a: "You can pay invoices online through the ‘Invoices & Payments’ section. We accept credit cards, debit cards, and bank transfers. All payments are processed securely.",
-    },
-    {
-      q: "Can I schedule an appointment with my tax professional?",
-      a: "Yes! Go to the ‘Appointments’ section to view available time slots and schedule meetings. You can choose between in-person, phone, or video consultations.",
-    },
-    {
-      q: "How do I sign documents electronically?",
-      a: "Electronic signatures are handled through the ‘E-Signatures’ section. You’ll receive notifications when documents need your signature, and you can sign them directly in your browser.",
-    },
-    {
-      q: "Is my personal information secure?",
-      a: "Yes, we use bank-level encryption and security measures to protect your data. All information is stored securely and access is strictly controlled.",
-    },
-  ];
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchFaqs = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await taxpayerPublicAPI.getFAQs(debouncedSearch);
+        if (!isMounted) return;
+        setFaqs(response?.data || []);
+      } catch (err) {
+        if (!isMounted) return;
+        setFaqs([]);
+        setError(err?.message || "Failed to load FAQs. Please try again.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchFaqs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedSearch]);
+
+  const renderSkeleton = () => (
+    <div className="w-100">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="mb-3"
+          style={{
+            border: "1px solid #E8F0FF",
+            borderRadius: "10px",
+            padding: "16px",
+            backgroundColor: "#F9FAFB",
+          }}
+        >
+          <div
+            style={{
+              height: "14px",
+              width: "60%",
+              backgroundColor: "#E5E7EB",
+              borderRadius: "6px",
+              marginBottom: "10px",
+            }}
+          />
+          <div
+            style={{
+              height: "10px",
+              width: "80%",
+              backgroundColor: "#F3F4F6",
+              borderRadius: "6px",
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div >
@@ -59,39 +107,59 @@ export default function Faq() {
         />
       </div>
 
-      {/* Accordion */}
-      {faqs.map((faq, index) => (
+      {error && (
         <div
-          key={index}
-          className="rounded mb-2"
-          style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "10px" }}
+          className="alert alert-warning py-2 px-3"
+          style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro" }}
         >
-
-          <button
-            className="w-100 text-start d-flex justify-content-between align-items-center px-3 py-2 border-0 bg-white fw-semibold"
-            onClick={() => setOpenIndex(openIndex === index ? null : index)}
-            style={{ fontSize: "16px", color: "#3B4A66", border: "1px solid #E8F0FF", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}
-          >
-            {faq.q}
-            <FaChevronDown
-              className={`transition-transform ${openIndex === index ? "rotate-180" : ""
-                }`}
-              style={{
-                fontSize: "12px",
-                color: "#3B4A66",
-                transition: "transform 0.3s ease",
-              }}
-            />
-          </button>
-
-
-          {openIndex === index && (
-            <div className="px-3 pb-3" style={{ color: "#4B5563", fontWeight: "500", fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
-              {faq.a}
-            </div>
-          )}
+          {error}
         </div>
-      ))}
+      )}
+
+      {loading && renderSkeleton()}
+
+      {!loading && faqs.length === 0 && !error && (
+        <div
+          className="text-center py-4"
+          style={{ fontSize: "14px", color: "#6B7280", fontFamily: "BasisGrotesquePro" }}
+        >
+          No FAQs found.
+        </div>
+      )}
+
+      {/* Accordion */}
+      {!loading &&
+        faqs.map((faq, index) => (
+          <div
+            key={faq.id || index}
+            className="rounded mb-2"
+            style={{ border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "10px" }}
+          >
+            <button
+              className="w-100 text-start d-flex justify-content-between align-items-center px-3 py-2 border-0 bg-white fw-semibold"
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
+              style={{ fontSize: "16px", color: "#3B4A66", border: "1px solid #E8F0FF", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}
+            >
+              {faq.title || faq.q}
+              <FaChevronDown
+                className={`transition-transform ${openIndex === index ? "rotate-180" : ""
+                  }`}
+                style={{
+                  fontSize: "12px",
+                  color: "#3B4A66",
+                  transition: "transform 0.3s ease",
+                }}
+              />
+            </button>
+
+
+            {openIndex === index && (
+              <div className="px-3 pb-3" style={{ color: "#4B5563", fontWeight: "500", fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                {faq.answer || faq.a || faq.description}
+              </div>
+            )}
+          </div>
+        ))}
     </div>
 
   );

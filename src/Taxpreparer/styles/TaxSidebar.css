@@ -1,5 +1,5 @@
 .tsb-container {
-  width: 280px !important;
+  width: var(--td-sidebar-width, 280px) !important;
   height: calc(100vh - 70px) !important;
   position: fixed !important;
   top: 70px !important;
@@ -11,6 +11,11 @@
   flex-direction: column !important;
   justify-content: space-between !important;
   overflow: hidden !important;
+  transition: transform 0.3s ease;
+}
+
+.tsb-container.collapsed {
+  transform: translateX(-100%);
 }
 
 /* Remove underline from all links inside sidebar */

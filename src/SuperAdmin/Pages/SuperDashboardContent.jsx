@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   AreaChart,
   Area,
@@ -43,7 +43,6 @@ const FALLBACK_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#06B6D4', '#8B5CF6', 
 
 export default function SuperDashboardContent() {
   // State management
-  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,13 +67,13 @@ export default function SuperDashboardContent() {
     return numericValue.toLocaleString();
   };
 
-  const getQuickActionIcon = (label = '') => {
-    const normalized = label.toLowerCase();
-    if (normalized.includes('user')) return <UserManage />;
-    if (normalized.includes('subscription')) return <SubscriptionIcon />;
-    if (normalized.includes('analytic')) return <MesIcon />;
-    if (normalized.includes('system')) return <SystemSettingsIcon />;
-    if (normalized.includes('support')) return <HelpsIcon />;
+  const getQuickActionIcon = (labelOrIcon = '') => {
+    const normalized = (labelOrIcon || '').toLowerCase();
+    if (normalized.includes('user') || normalized === 'user') return <UserManage />;
+    if (normalized.includes('subscription') || normalized === 'subscription') return <SubscriptionIcon />;
+    if (normalized.includes('analytic') || normalized === 'analytic' || normalized === 'analytics') return <MesIcon />;
+    if (normalized.includes('system') || normalized === 'system' || normalized.includes('setting')) return <SystemSettingsIcon />;
+    if (normalized.includes('support') || normalized === 'support') return <HelpsIcon />;
     return <UserManage />;
   };
 
@@ -189,7 +188,142 @@ export default function SuperDashboardContent() {
   const performanceData = processPerformanceData();
   const recentFirms = dashboardData?.recent_firms || [];
   const securityStatus = dashboardData?.security || {};
-  const quickActions = dashboardData?.quick_actions || [];
+
+  // Default Quick Actions - Common administrative tasks
+  const getActionLabelText = (action = {}) => {
+    return (
+      action.label ||
+      action.name ||
+      action.title ||
+      action.text ||
+      action.icon ||
+      ''
+    );
+  };
+
+  const defaultQuickActions = [
+    {
+      label: 'User Management',
+      route: '/superadmin/users',
+      icon: 'user'
+    },
+    {
+      label: 'Subscriptions',
+      route: '/superadmin/subscriptions',
+      icon: 'subscription'
+    },
+    {
+      label: 'Analytics',
+      route: '/superadmin/analytics',
+      icon: 'analytic'
+    },
+    {
+      label: 'Support Center',
+      route: '/superadmin/support',
+      icon: 'support'
+    },
+    {
+      label: 'System Settings',
+      route: '/superadmin/settings',
+      icon: 'system'
+    }
+  ];
+
+  const normalizeRoute = (route = '') => {
+    if (!route || typeof route !== 'string') return null;
+    let cleaned = route.trim();
+
+    // Handle absolute URLs
+    if (/^https?:\/\//i.test(cleaned)) {
+      try {
+        const url = new URL(cleaned);
+        cleaned = `${url.pathname}${url.search}${url.hash}`;
+      } catch (error) {
+        // fallback: strip protocol manually
+        cleaned = cleaned.replace(/^https?:\/\//i, '');
+        const slashIndex = cleaned.indexOf('/');
+        cleaned = slashIndex >= 0 ? cleaned.slice(slashIndex) : `/${cleaned}`;
+      }
+    }
+
+    // Separate query/hash if present
+    let suffix = '';
+    const queryIndex = cleaned.indexOf('?');
+    const hashIndex = cleaned.indexOf('#');
+    const splitIndex =
+      queryIndex >= 0 && hashIndex >= 0
+        ? Math.min(queryIndex, hashIndex)
+        : queryIndex >= 0
+          ? queryIndex
+          : hashIndex >= 0
+            ? hashIndex
+            : -1;
+    if (splitIndex >= 0) {
+      suffix = cleaned.slice(splitIndex);
+      cleaned = cleaned.slice(0, splitIndex);
+    }
+
+    if (!cleaned.startsWith('/')) {
+      cleaned = `/${cleaned}`;
+    }
+
+    if (cleaned.startsWith('/admin/')) {
+      cleaned = cleaned.replace('/admin/', '/superadmin/');
+    } else if (cleaned === '/admin') {
+      cleaned = '/superadmin';
+    }
+
+    if (!cleaned.startsWith('/superadmin')) {
+      cleaned = cleaned === '/' ? '/superadmin' : `/superadmin${cleaned}`;
+    }
+
+    return `${cleaned}${suffix}`;
+  };
+
+  const QUICK_ACTION_KEYWORDS = [
+    {
+      route: '/superadmin/users',
+      keywords: ['user management', 'user', 'users']
+    },
+    {
+      route: '/superadmin/subscriptions',
+      keywords: ['subscription', 'subscriptions', 'billing', 'plans']
+    },
+    {
+      route: '/superadmin/analytics',
+      keywords: ['analytic', 'analytics', 'reports', 'reporting']
+    },
+    {
+      route: '/superadmin/system-settings',
+      keywords: ['system settings', 'settings', 'setting', 'system', 'configuration', 'platform control', 'platform controls', 'platform']
+    },
+    {
+      route: '/superadmin/support',
+      keywords: ['support', 'support center', 'help', 'helpdesk']
+    }
+  ];
+
+  const resolveQuickActionRoute = (action = {}) => {
+    if (action.route && typeof action.route === 'string' && action.route.trim().length > 0) {
+      return normalizeRoute(action.route);
+    }
+
+    const baseLabel = getActionLabelText(action).toLowerCase().replace(/[_-]+/g, ' ').trim();
+    if (!baseLabel) return null;
+
+    for (const mapping of QUICK_ACTION_KEYWORDS) {
+      const match = mapping.keywords.some(keyword => baseLabel.includes(keyword));
+      if (match) return normalizeRoute(mapping.route);
+    }
+
+    return null;
+  };
+
+  // Use API quick actions if available, otherwise use defaults
+  const quickActions = (dashboardData?.quick_actions && dashboardData.quick_actions.length > 0)
+    ? dashboardData.quick_actions
+    : defaultQuickActions;
+
   const showRecentFirmsSection = (recentFirms || []).length > 0;
   const maxRevenueValue = revenueData.reduce((max, item) => Math.max(max, item.revenue || 0), 0);
   const maxSubscriberValue = revenueData.reduce((max, item) => Math.max(max, item.subscribers || 0), 0);
@@ -223,7 +357,7 @@ export default function SuperDashboardContent() {
       const revenueEntry = payload.find(item => item.dataKey === 'revenue');
       const subscribersEntry = payload.find(item => item.dataKey === 'subscribers');
       return (
-        <div className="bg-white rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
+        <div className="bg-white rounded-lg p-3 border" style={{ minWidth: '140px' }}>
           <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
           {revenueEntry && (
             <div className="text-sm" style={{ color: '#10B981' }}>
@@ -658,22 +792,46 @@ export default function SuperDashboardContent() {
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
           <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
           <p className="text-sm text-gray-500 mb-3">Common administrative tasks</p>
-          <div className={`${quickActions.length > 2 ? 'grid grid-cols-2 gap-3' : 'flex flex-wrap gap-3'}`}>
-            {quickActions.map((action, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => action.route && navigate(action.route)}
-                className="flex flex-col items-center p-6 border border-[#E8F0FF] transition-colors hover:border-[#3B4A66]"
-                style={{ borderRadius: '1rem' }}
-              >
-                <div className="mb-2 w-6 h-6 text-gray-600">{getQuickActionIcon(action.label)}</div>
-                <span className="text-xs font-medium text-gray-700 text-center">{action.label}</span>
-              </button>
-            ))}
-            {quickActions.length === 0 && (
-              <p className="text-xs text-gray-500">No quick actions available.</p>
-            )}
+          <div className="grid grid-cols-2 gap-3">
+            {quickActions.map((action, index) => {
+              const actionLabel = getActionLabelText(action).trim();
+              const targetRoute = resolveQuickActionRoute(action);
+
+              const cardContent = (
+                <>
+                  <div className={`mb-2 w-8 h-8 flex items-center justify-center ${targetRoute ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {getQuickActionIcon(actionLabel)}
+                  </div>
+                  <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+                    {action.label}
+                  </span>
+                </>
+              );
+
+              if (targetRoute) {
+                return (
+                  <Link
+                    key={index}
+                    to={targetRoute}
+                    className="flex flex-col items-center justify-center p-4 border border-[#E8F0FF] rounded-lg transition-all hover:border-[#3B4A66] hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                    style={{ borderRadius: '0.5rem', minHeight: '100px' }}
+                  >
+                    {cardContent}
+                  </Link>
+                );
+              }
+
+              return (
+                <div
+                  key={index}
+                  className="flex flex-col items-center justify-center p-4 border border-dashed border-[#E5E7EB] rounded-lg text-gray-400 cursor-not-allowed"
+                  style={{ borderRadius: '0.5rem', minHeight: '100px' }}
+                  title="This action is not available."
+                >
+                  {cardContent}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

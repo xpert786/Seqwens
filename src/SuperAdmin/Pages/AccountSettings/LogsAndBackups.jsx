@@ -1,11 +1,70 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ExportIcon, EyeOffIcon, TrashIcon1} from "../../Components/icons";
+import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
+import { toast } from "react-toastify";
+import { superToastOptions } from "../../utils/toastConfig";
 
 export default function LogsAndBackups() {
     const [selectedLevel, setSelectedLevel] = useState("All Levels");
     const [selectedUsers, setSelectedUsers] = useState("Active Users");
+    const [systemLogs, setSystemLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        page_size: 20,
+        total_count: 0,
+        total_pages: 1
+    });
 
-    const systemLogs = [
+    // Fetch audit logs from API
+    useEffect(() => {
+        fetchAuditLogs();
+    }, [selectedLevel, currentPage]);
+
+    const fetchAuditLogs = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await superAdminAPI.getAuditLogs({
+                page: currentPage,
+                pageSize: 20,
+                level: selectedLevel
+            });
+
+            if (response.success && response.data) {
+                const logs = response.data.logs || response.data || [];
+                // Map API response to UI format
+                const mappedLogs = logs.map(log => ({
+                    timestamp: log.timestamp || log.created_at || 'N/A',
+                    level: log.level || log.log_level || 'Info',
+                    service: log.service || log.module || 'System',
+                    message: log.message || log.description || 'No message',
+                    levelColor: "bg-white",
+                    borderColor: getLevelBorderColor(log.level || log.log_level || 'Info'),
+                    textColor: getLevelTextColor(log.level || log.log_level || 'Info')
+                }));
+                setSystemLogs(mappedLogs);
+                
+                if (response.data.pagination) {
+                    setPagination(response.data.pagination);
+                }
+            } else {
+                // Fallback to sample data if API doesn't return data
+                setSystemLogs(getDefaultLogs());
+            }
+        } catch (err) {
+            console.error('Error fetching audit logs:', err);
+            setError(handleAPIError(err));
+            // Fallback to sample data on error
+            setSystemLogs(getDefaultLogs());
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getDefaultLogs = () => [
         {
             timestamp: "2024-01-15 14:30:25",
             level: "Info",
@@ -43,6 +102,40 @@ export default function LogsAndBackups() {
             textColor: "text-[#1E40AF]"
         }
     ];
+
+    const getLevelBorderColor = (level) => {
+        const normalized = (level || '').toLowerCase();
+        if (normalized.includes('error')) return "border-[#EF4444]";
+        if (normalized.includes('warn')) return "border-[#FBBF24]";
+        return "border-[#1E40AF]";
+    };
+
+    const getLevelTextColor = (level) => {
+        const normalized = (level || '').toLowerCase();
+        if (normalized.includes('error')) return "text-[#EF4444]";
+        if (normalized.includes('warn')) return "text-[#FBBF24]";
+        return "text-[#1E40AF]";
+    };
+
+    const handleExportLogs = async () => {
+        try {
+            const response = await superAdminAPI.exportAuditLogs({
+                level: selectedLevel !== 'All Levels' ? selectedLevel : '',
+            });
+            
+            if (response.success && response.data && response.data.download_url) {
+                // Open download URL
+                window.open(response.data.download_url, '_blank');
+                toast.success('Audit logs exported successfully', superToastOptions);
+            } else {
+                toast.info('Export functionality - implement download', superToastOptions);
+            }
+        } catch (err) {
+            console.error('Error exporting logs:', err);
+            const errorMsg = handleAPIError(err);
+            toast.error(errorMsg || 'Failed to export logs', superToastOptions);
+        }
+    };
 
     const backupHistory = [
         {
@@ -129,11 +222,29 @@ export default function LogsAndBackups() {
                         </div>
                     </div>
 
-                    <button className="flex items-center gap-2  text-[#4B5563] px-4 py-2 rounded-lg text-sm font-[BasisGrotesquePro] border border-[#E8F0FF]" style={{borderRadius: "7px"}}>
+                    <button 
+                        onClick={handleExportLogs}
+                        disabled={loading}
+                        className="flex items-center gap-2 text-[#4B5563] px-4 py-2 rounded-lg text-sm font-[BasisGrotesquePro] border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                        style={{borderRadius: "7px"}}
+                    >
                          <ExportIcon />
-                        Export Logs
+                        {loading ? 'Loading...' : 'Export Logs'}
                     </button>
                 </div>
+
+                 {/* Error Message */}
+                 {error && (
+                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                         <p className="text-sm text-red-700 font-[BasisGrotesquePro]">{error}</p>
+                         <button
+                             onClick={fetchAuditLogs}
+                             className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                         >
+                             Retry
+                         </button>
+                     </div>
+                 )}
 
                  {/* Logs Table */}
                  <div className="space-y-3">
@@ -146,8 +257,23 @@ export default function LogsAndBackups() {
                          <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Actions</div>
                      </div>
                      
+                     {/* Loading State */}
+                     {loading && (
+                         <div className="text-center py-8">
+                             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                             <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading audit logs...</p>
+                         </div>
+                     )}
+
+                     {/* Empty State */}
+                     {!loading && systemLogs.length === 0 && (
+                         <div className="text-center py-8">
+                             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No audit logs found</p>
+                         </div>
+                     )}
+                     
                      {/* Rows */}
-                     {systemLogs.map((log, index) => (
+                     {!loading && systemLogs.map((log, index) => (
                          <div key={index} className="grid grid-cols-5 gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg">
                              <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{log.timestamp}</div>
                              <div>
@@ -158,7 +284,7 @@ export default function LogsAndBackups() {
                              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{log.service}</div>
                              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{log.message}</div>
                              <div>
-                                 <button className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                                 <button className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors" title="View details">
                                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -167,6 +293,34 @@ export default function LogsAndBackups() {
                              </div>
                          </div>
                      ))}
+
+                     {/* Pagination */}
+                     {!loading && pagination.total_pages > 1 && (
+                         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                             <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                                 Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} logs
+                             </div>
+                             <div className="flex items-center gap-2">
+                                 <button
+                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                     disabled={currentPage === 1}
+                                     className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                 >
+                                     Previous
+                                 </button>
+                                 <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                                     Page {pagination.page} of {pagination.total_pages}
+                                 </span>
+                                 <button
+                                     onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
+                                     disabled={currentPage >= pagination.total_pages}
+                                     className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                                 >
+                                     Next
+                                 </button>
+                             </div>
+                         </div>
+                     )}
                  </div>
             </div>
 

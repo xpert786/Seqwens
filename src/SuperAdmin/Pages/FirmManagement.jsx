@@ -55,6 +55,17 @@ export default function FirmManagement() {
     const [unsuspendError, setUnsuspendError] = useState(null);
     const [unsuspendSuccess, setUnsuspendSuccess] = useState(false);
 
+    // Assign clients modal state
+    const [showAssignClientsModal, setShowAssignClientsModal] = useState(false);
+    const [assignClientsFirm, setAssignClientsFirm] = useState(null);
+    const [assignClientOptions, setAssignClientOptions] = useState([]);
+    const [assignClientsSummary, setAssignClientsSummary] = useState(null);
+    const [loadingAssignClients, setLoadingAssignClients] = useState(false);
+    const [selectedClientId, setSelectedClientId] = useState('');
+    const [assigningClient, setAssigningClient] = useState(false);
+    const [assignClientError, setAssignClientError] = useState(null);
+    const [assignClientSuccess, setAssignClientSuccess] = useState(false);
+
     // Fetch firms data from API
     const fetchFirms = async () => {
         try {
@@ -256,6 +267,100 @@ export default function FirmManagement() {
         }
     };
 
+    const loadUnassignedTaxpayers = async (page = 1) => {
+        try {
+            setLoadingAssignClients(true);
+            setAssignClientError(null);
+
+            const response = await superAdminAPI.getUnassignedTaxpayers(page, 20, '');
+
+            if (response.success && response.data) {
+                const taxpayers = response.data.taxpayers || [];
+                const formattedOptions = taxpayers.map((taxpayer) => ({
+                    id: taxpayer.id,
+                    label: taxpayer.full_name || `${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || taxpayer.email || `Taxpayer ${taxpayer.id}`,
+                    email: taxpayer.email,
+                }));
+
+                setAssignClientOptions(formattedOptions);
+                setSelectedClientId((prev) => {
+                    if (prev && formattedOptions.some((option) => option.id?.toString() === prev.toString())) {
+                        return prev.toString();
+                    }
+                    return formattedOptions[0]?.id?.toString() || '';
+                });
+                setAssignClientsSummary(response.data.summary || null);
+            } else {
+                throw new Error(response.message || 'Failed to load unassigned taxpayers');
+            }
+        } catch (error) {
+            console.error('Error fetching unassigned taxpayers:', error);
+            setAssignClientError(handleAPIError(error));
+            setAssignClientOptions([]);
+            setSelectedClientId('');
+        } finally {
+            setLoadingAssignClients(false);
+        }
+    };
+
+    const openAssignClientsModal = (firm) => {
+        setAssignClientsFirm(firm);
+        setAssignClientError(null);
+        setAssignClientSuccess(false);
+        setShowAssignClientsModal(true);
+        loadUnassignedTaxpayers();
+    };
+
+    const closeAssignClientsModal = () => {
+        setShowAssignClientsModal(false);
+        setAssignClientsFirm(null);
+        setAssignClientOptions([]);
+        setSelectedClientId('');
+        setAssignClientsSummary(null);
+        setAssignClientError(null);
+        setAssignClientSuccess(false);
+        setAssigningClient(false);
+        setLoadingAssignClients(false);
+    };
+
+    const handleAssignClient = async () => {
+        if (!selectedClientId) {
+            setAssignClientError('Please select a taxpayer to assign.');
+            return;
+        }
+
+        try {
+            setAssigningClient(true);
+            setAssignClientError(null);
+
+            const firmId = assignClientsFirm?.id || assignClientsFirm?.firm_id;
+            if (!firmId) {
+                throw new Error('Firm information missing. Please reopen the modal.');
+            }
+
+            const response = await superAdminAPI.assignTaxpayerToFirm({
+                taxpayerId: Number(selectedClientId),
+                firmId: Number(firmId),
+            });
+
+            if (response.success) {
+                setAssignClientSuccess(true);
+                await fetchFirms();
+                await loadUnassignedTaxpayers();
+                setTimeout(() => {
+                    closeAssignClientsModal();
+                }, 1200);
+            } else {
+                throw new Error(response.message || 'Failed to assign client. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error assigning client:', error);
+            setAssignClientError(handleAPIError(error));
+        } finally {
+            setAssigningClient(false);
+        }
+    };
+
     const handleAction = (action, firmId) => {
         console.log(`${action} for firm ${firmId}`);
         setActiveDropdown(null);
@@ -276,6 +381,9 @@ export default function FirmManagement() {
             const firm = firms.find(f => f.id === firmId);
             setFirmToUnsuspend(firm);
             setShowUnsuspendModal(true);
+        } else if (action === 'Assign Clients') {
+            const firm = firms.find(f => f.id === firmId);
+            openAssignClientsModal(firm);
         } else if (action === 'Delete') {
             // TODO: Implement delete functionality
             console.log('Delete firm:', firmId);
@@ -600,6 +708,12 @@ export default function FirmManagement() {
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                                                     >
                                                         Manage Billing
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction('Assign Clients', firm.id)}
+                                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                                    >
+                                                        Assign Clients
                                                     </button>
                                                     <button
 
@@ -1182,6 +1296,115 @@ export default function FirmManagement() {
                                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {unsuspendingFirm ? 'Unsuspending...' : 'Unsuspend Firm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Assign Clients Modal */}
+            {showAssignClientsModal && assignClientsFirm && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8 px-4">
+                    <div
+                        className="absolute inset-0"
+                        style={{ backgroundColor: "color-mix(in oklab, var(--color-black) 50%, transparent)" }}
+                        onClick={closeAssignClientsModal}
+                    ></div>
+                    <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-auto" style={{ borderRadius: '12px' }}>
+                        <div className="flex justify-between items-start p-4 border-b border-gray-200">
+                            <div>
+                                <h3 className="text-xl font-semibold text-gray-900">Assign Clients</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Assign a client to {assignClientsFirm.name || assignClientsFirm.firm_name || 'this firm'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeAssignClientsModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                            {assignClientError && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                                    {assignClientError}
+                                </div>
+                            )}
+
+                            {assignClientSuccess && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
+                                    Taxpayer assigned successfully!
+                                </div>
+                            )}
+
+                            {assignClientsSummary?.total_unassigned !== undefined && (
+                                <p className="text-xs text-gray-500 -mt-1">
+                                    {assignClientOptions.length} of {assignClientsSummary.total_unassigned} unassigned taxpayers shown
+                                </p>
+                            )}
+
+                            {loadingAssignClients && (
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <span className="h-4 w-4 border-b-2 border-orange-500 rounded-full animate-spin"></span>
+                                    Loading unassigned taxpayers...
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Taxpayer
+                                </label>
+                                <select
+                                    value={selectedClientId}
+                                    onChange={(e) => setSelectedClientId(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    disabled={loadingAssignClients || assignClientOptions.length === 0}
+                                >
+                                    {assignClientOptions.length > 0 ? (
+                                        <>
+                                            <option value="" disabled>
+                                                Choose a taxpayer
+                                            </option>
+                                            {assignClientOptions.map((client) => (
+                                                <option key={client.id} value={client.id}>
+                                                    {client.label}
+                                                </option>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <option value="">
+                                            No taxpayers available for assignment
+                                        </option>
+                                    )}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Only taxpayers not yet assigned to any firm are listed.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div className="flex justify-end gap-3 p-4 border-t border-gray-200">
+                            <button
+                                onClick={closeAssignClientsModal}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                                style={{ borderRadius: '10px' }}
+                                disabled={assigningClient}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAssignClient}
+                                disabled={assigningClient || loadingAssignClients || !selectedClientId || assignClientOptions.length === 0}
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ borderRadius: '10px' }}
+                            >
+                                {assigningClient ? 'Assigning...' : 'Assign Client'}
                             </button>
                         </div>
                     </div>

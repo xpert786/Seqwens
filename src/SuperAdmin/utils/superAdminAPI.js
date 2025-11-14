@@ -401,6 +401,34 @@ export const superAdminAPI = {
     return await apiRequest('/user/superadmin/firms/create/', 'POST', firmData);
   },
 
+  // Get unassigned taxpayers list
+  getUnassignedTaxpayers: async (page = 1, pageSize = 20, search = '') => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+
+    if (search) {
+      params.append('search', search);
+    }
+
+    return await apiRequest(`/user/superadmin/taxpayers/unassigned/?${params.toString()}`, 'GET');
+  },
+
+  // Assign taxpayer to firm
+  assignTaxpayerToFirm: async ({ taxpayerId, firmId, taxPreparerId = null }) => {
+    const payload = {
+      taxpayer_id: taxpayerId,
+      firm_id: firmId,
+    };
+
+    if (taxPreparerId) {
+      payload.assigned_tax_preparer_id = taxPreparerId;
+    }
+
+    return await apiRequest('/user/superadmin/taxpayers/assign/', 'POST', payload);
+  },
+
   // Suspend firm
   suspendFirm: async (firmId, reason) => {
     const suspendData = {
@@ -646,6 +674,63 @@ export const superAdminAPI = {
   // Delete resource
   deleteResource: async (resourceId) => {
     return await apiRequest(`/user/admin/resources/${resourceId}/`, 'DELETE');
+  },
+
+  // Role Management API functions
+  // Get all roles
+  getRoles: async (page = 1, pageSize = 20) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+    return await apiRequest(`/user/superadmin/roles/?${params}`, 'GET');
+  },
+
+  // Create new role
+  createRole: async (roleData) => {
+    return await apiRequest('/user/superadmin/roles/', 'POST', roleData);
+  },
+
+  // Update role
+  updateRole: async (roleId, roleData) => {
+    return await apiRequest(`/user/superadmin/roles/${roleId}/`, 'PATCH', roleData);
+  },
+
+  // Delete role
+  deleteRole: async (roleId) => {
+    return await apiRequest(`/user/superadmin/roles/${roleId}/`, 'DELETE');
+  },
+
+  // Assign role to user
+  assignRoleToUser: async (userId, roleId) => {
+    return await apiRequest(`/user/superadmin/users/${userId}/assign-role/`, 'POST', { role_id: roleId });
+  },
+
+  // Audit Logs API functions
+  // Get audit logs
+  getAuditLogs: async ({ page = 1, pageSize = 20, level = '', service = '', userId = '', startDate = '', endDate = '' } = {}) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+
+    if (level && level !== 'All Levels') params.append('level', level.toLowerCase());
+    if (service) params.append('service', service);
+    if (userId) params.append('user_id', userId);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    return await apiRequest(`/user/superadmin/audit-logs/?${params}`, 'GET');
+  },
+
+  // Export audit logs
+  exportAuditLogs: async (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) params.append(key, filters[key]);
+    });
+    const query = params.toString();
+    return await apiRequest(`/user/superadmin/audit-logs/export/${query ? `?${query}` : ''}`, 'GET');
   }
 };
 

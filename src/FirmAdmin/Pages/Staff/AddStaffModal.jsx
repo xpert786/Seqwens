@@ -5,14 +5,18 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
-export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
+export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefresh }) {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
-    phone: "",
-    role: "",
-    hire_date: "",
+    phone_number: "",
+    role: "tax_preparer",
+  });
+  const [deliveryMethods, setDeliveryMethods] = useState({
+    email: true,
+    sms: false,
+    link: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -40,13 +44,24 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
         throw new Error("No authentication token found");
       }
 
-      // Prepare data for API - only send fields that are in the API
+      const selectedMethods = Object.entries(deliveryMethods)
+        .filter(([, checked]) => checked)
+        .map(([method]) => method);
+
       const apiData = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        hire_date: formData.hire_date,
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        email: formData.email.trim(),
+        role: formData.role || "tax_preparer",
       };
+
+      if (formData.phone_number?.trim()) {
+        apiData.phone_number = formData.phone_number.trim();
+      }
+
+      if (selectedMethods.length > 0) {
+        apiData.delivery_methods = selectedMethods;
+      }
 
       const config = {
         method: "POST",
@@ -79,16 +94,23 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
         first_name: "",
         last_name: "",
         email: "",
-        phone: "",
-        role: "",
-        hire_date: "",
+        phone_number: "",
+        role: "tax_preparer",
+      });
+      setDeliveryMethods({
+        email: true,
+        sms: false,
+        link: false,
       });
 
-      // Close modal and refresh list
-      if (onSuccess) {
-        onSuccess();
+      if (typeof onRefresh === "function") {
+        onRefresh();
       }
       onClose();
+
+      if (typeof onInviteCreated === "function" && result.data) {
+        onInviteCreated(result.data);
+      }
 
       // Show success toast
       toast.success("Staff member added successfully!", {
@@ -129,9 +151,13 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
       first_name: "",
       last_name: "",
       email: "",
-      phone: "",
-      role: "",
-      hire_date: "",
+      phone_number: "",
+      role: "tax_preparer",
+    });
+    setDeliveryMethods({
+      email: true,
+      sms: false,
+      link: false,
     });
     setError(null);
     onClose();
@@ -163,10 +189,10 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h4 className="text-base font-semibold text-gray-800 font-[BasisGrotesquePro]">
-              Add New Staff Member
+              Invite New Staff Member
             </h4>
             <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-0.5">
-              Create a new staff profile and set their role
+              Send an invitation email/SMS to add a preparer to your firm
             </p>
           </div>
           <button
@@ -244,8 +270,8 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
             </label>
             <input
               type="tel"
-              name="phone"
-              value={formData.phone}
+              name="phone_number"
+              value={formData.phone_number}
               onChange={handleChange}
               placeholder="(555) 123-4567"
               className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
@@ -264,11 +290,11 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
                 onChange={handleChange}
                 className="w-full !border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 bg-white font-[BasisGrotesquePro] appearance-none"
               >
-                <option value="">Select role...</option>
-                <option value="tax-preparer">Tax Preparer</option>
-                <option value="tax-manager">Tax Manager</option>
+                <option value="tax_preparer">Tax Preparer</option>
+                <option value="senior_tax_preparer">Senior Tax Preparer</option>
+                <option value="team_leader">Team Leader</option>
+                <option value="mentor">Mentor</option>
                 <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
               </select>
               <svg
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400"
@@ -286,22 +312,38 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Hire Date */}
+          {/* Delivery Methods */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
-              Hire Date <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+              Delivery Methods
             </label>
-            <div className="relative">
-              <input
-                type="date"
-                name="hire_date"
-                value={formData.hire_date}
-                onChange={handleChange}
-                placeholder="mm/dd/yyyy"
-                required
-                className="w-full !border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { key: "email", label: "Email" },
+                { key: "sms", label: "SMS" },
+                { key: "link", label: "Shareable Link" },
+              ].map(({ key, label }) => (
+                <label
+                  key={key}
+                  className="flex items-center gap-2 text-sm text-gray-700 font-[BasisGrotesquePro]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={deliveryMethods[key]}
+                    onChange={(e) =>
+                      setDeliveryMethods((prev) => ({
+                        ...prev,
+                        [key]: e.target.checked,
+                      }))
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
+            <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
+              If no delivery method is selected, we will send email and SMS (when a phone number is provided).
+            </p>
           </div>
 
           {/* Footer Buttons */}
@@ -319,7 +361,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }) {
               disabled={loading}
               className="px-4 py-1.5 bg-[#F56D2D] text-white !rounded-md hover:bg-orange-600 transition font-[BasisGrotesquePro] font-medium text-sm disabled:opacity-50"
             >
-              {loading ? "Adding..." : "Add Staff Member"}
+              {loading ? "Sending Invite..." : "Send Invite"}
             </button>
           </div>
         </form>

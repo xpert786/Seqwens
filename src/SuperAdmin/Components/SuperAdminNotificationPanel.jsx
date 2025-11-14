@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { superAdminNotificationAPI, handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
@@ -9,6 +9,8 @@ const TABS = [
   { label: "Unread", key: "unread" },
   { label: "Read", key: "read" },
 ];
+
+const READ_TAB_LIMIT = 5;
 
 const PRIORITY_COLOR = {
   urgent: "#DC2626",
@@ -128,6 +130,32 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
     }
   }, []);
 
+  const sortByRecent = useCallback(
+    (items = []) =>
+      [...items].sort(
+        (a, b) =>
+          new Date(b.created_at || b.time_ago || 0) - new Date(a.created_at || a.time_ago || 0)
+      ),
+    []
+  );
+
+  const filteredNotifications = useMemo(() => {
+    if (selectedTab === "unread") {
+      return sortByRecent(notifications.filter((notification) => !notification.is_read));
+    }
+    if (selectedTab === "read") {
+      return sortByRecent(notifications.filter((notification) => notification.is_read)).slice(
+        0,
+        READ_TAB_LIMIT
+      );
+    }
+    // All tab shows recent message notifications
+    const messageNotifications = notifications.filter((notification) =>
+      (notification.notification_type || "").toLowerCase().includes("message")
+    );
+    return sortByRecent(messageNotifications);
+  }, [notifications, selectedTab, sortByRecent]);
+
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
@@ -233,7 +261,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         top: "70px",
         right: "20px",
         width: "400px",
-        maxHeight: "calc(100vh - 80px)",
+      maxHeight: "calc(100vh - 80px)",
         backgroundColor: "#FFFFFF",
         borderRadius: "12px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
@@ -241,6 +269,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         display: "flex",
         flexDirection: "column",
         border: "1px solid #E5E7EB",
+      paddingBottom: "16px",
       }}
     >
       {/* Header */}
@@ -342,7 +371,8 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         style={{
           overflowY: "auto",
           flex: 1,
-          maxHeight: "calc(100vh - 200px)",
+          maxHeight: "calc(100vh - 220px)",
+          paddingBottom: "16px",
         }}
       >
         {loading ? (
@@ -355,7 +385,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           <div className="alert alert-danger m-3" role="alert">
             {error}
           </div>
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <div className="text-center py-5">
             <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
               No notifications found
@@ -363,7 +393,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
           </div>
         ) : (
           <div className="p-2">
-            {notifications.map((notification) => (
+            {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
                 className="d-flex align-items-start gap-2 p-2 rounded mb-2"
@@ -464,7 +494,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
       </div>
 
       {/* Footer */}
-      {notifications.length > 0 && (
+      {filteredNotifications.length > 0 && (
         <div
           className="text-center p-2"
           style={{

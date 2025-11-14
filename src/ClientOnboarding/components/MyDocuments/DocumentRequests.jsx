@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileIcon, BlackDateIcon, OverIcon, UpIcon } from "../icons";
+import { FileIcon, BlackDateIcon, UpIcon } from "../icons";
 import "../../styles/MyDocuments.css";
 import { documentsAPI, handleAPIError } from "../../utils/apiUtils";
 import { toast } from "react-toastify";
@@ -436,7 +436,7 @@ export default function DocumentRequests() {
 
                     {overdueDays > 0 && (
                       <div className="mydocs-overdue">
-                        <OverIcon /> Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
+                        Overdue by {overdueDays} day{overdueDays !== 1 ? 's' : ''}
                       </div>
                     )}
 
