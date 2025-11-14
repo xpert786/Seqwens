@@ -54,10 +54,19 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarColl
             <button
               type="button"
               onClick={onToggleSidebar}
-              className="flex items-center justify-center p-2 rounded-md transition-colors duration-200 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="flex items-center justify-center p-2 rounded-md transition-transform duration-200 focus:outline-none"
+              style={{ background: "transparent", border: "none" }}
               aria-label={isSidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
             >
-              <LogoIcond />
+              <span
+                style={{
+                  display: "inline-flex",
+                  transition: "transform 0.3s ease",
+                  transform: isSidebarCollapsed ? "rotate(180deg)" : "rotate(0deg)"
+                }}
+              >
+                <LogoIcond />
+              </span>
             </button>
             <div className="flex items-center justify-between w-full h-full px-[14px] rounded-lg bg-white m-0 gap-5">
               {/* Search */}

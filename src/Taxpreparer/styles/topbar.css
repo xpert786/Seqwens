@@ -163,6 +163,33 @@
   align-items: center;
 }
 
+.sidebar-toggle-btn {
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: transparent;
+}
+
+.sidebar-toggle-btn:focus-visible {
+  outline: none;
+}
+
+.sidebar-toggle-icon {
+  display: inline-flex;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-toggle-icon.collapsed {
+  transform: rotate(180deg);
+}
+
 /* SD div (search + right section) with border */
 .sd {
   display: flex;

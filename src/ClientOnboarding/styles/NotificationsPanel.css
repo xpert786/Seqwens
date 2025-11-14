@@ -4,13 +4,14 @@
     right: 20px;
     width: 540px;
     max-width: 95%;
-    height: 90vh;
-    max-height: 90vh;
+    max-height: calc(100vh - 120px);
     background: white;
     overflow-y: auto;
     z-index: 1050;
     padding: 16px;
+    padding-bottom: 32px;
     font-family: "BasisGrotesquePro";
+    border-radius: 16px;
 }
 
 .active-tab {

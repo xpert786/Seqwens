@@ -1,21 +1,26 @@
 .tdl-layout {
   display: flex;
+  --td-sidebar-width: 280px;
 }
 
 .tdl-main {
-  margin-left: 280px !important; 
-  margin-top: 70px; 
+  margin-left: var(--td-sidebar-width);
+  margin-top: 70px;
   height: calc(100vh - 70px);
   overflow-y: auto;
   background-color: rgb(243, 247, 255);
   padding: 20px;
-  width: calc(100% - 280px);
+  width: calc(100% - var(--td-sidebar-width));
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
+.tdl-layout.tdl-collapsed .tdl-main {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
 
 @media (max-width: 1366px) {
-  .tdl-main {
-    margin-left: 240px !important;
-    width: calc(100% - 240px) !important;
+  .tdl-layout {
+    --td-sidebar-width: 240px;
   }
 }

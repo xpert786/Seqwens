@@ -401,6 +401,34 @@ export const superAdminAPI = {
     return await apiRequest('/user/superadmin/firms/create/', 'POST', firmData);
   },
 
+  // Get unassigned taxpayers list
+  getUnassignedTaxpayers: async (page = 1, pageSize = 20, search = '') => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+
+    if (search) {
+      params.append('search', search);
+    }
+
+    return await apiRequest(`/user/superadmin/taxpayers/unassigned/?${params.toString()}`, 'GET');
+  },
+
+  // Assign taxpayer to firm
+  assignTaxpayerToFirm: async ({ taxpayerId, firmId, taxPreparerId = null }) => {
+    const payload = {
+      taxpayer_id: taxpayerId,
+      firm_id: firmId,
+    };
+
+    if (taxPreparerId) {
+      payload.assigned_tax_preparer_id = taxPreparerId;
+    }
+
+    return await apiRequest('/user/superadmin/taxpayers/assign/', 'POST', payload);
+  },
+
   // Suspend firm
   suspendFirm: async (firmId, reason) => {
     const suspendData = {

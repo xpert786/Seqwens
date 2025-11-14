@@ -58,6 +58,17 @@ export default function Appointments() {
   const [editModalTimeSlots, setEditModalTimeSlots] = useState([]);
   const [loadingEditTimeSlots, setLoadingEditTimeSlots] = useState(false);
 
+  // Track current time to re-evaluate join button visibility
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60 * 1000); // refresh every minute
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   // Time slots and availability state
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
@@ -162,16 +173,13 @@ export default function Appointments() {
         client_email: appointment.client_email,
         created_at: appointment.created_at,
         updated_at: appointment.updated_at,
-        appointment_date_time: startTime // Store full datetime for comparison
+        appointment_date_time: startTime, // Store start datetime for comparison
+        appointment_end_time: endTime
       };
 
-      // For upcoming appointments, mark as joinable if they have a meeting link
-      // For past appointments, only mark as joinable if status is scheduled and has link
       if (isUpcoming) {
-        formattedAppointment.joinable = !!meetingLink;
         upcoming.push(formattedAppointment);
       } else {
-        formattedAppointment.joinable = appointment.appointment_status === 'scheduled' && !!meetingLink;
         past.push(formattedAppointment);
       }
     });
@@ -182,6 +190,22 @@ export default function Appointments() {
     past.sort((a, b) => b.appointment_date_time - a.appointment_date_time);
 
     return { upcoming, past };
+  };
+
+  const canJoinAppointment = (appointment) => {
+    if (!appointment || !appointment.meeting_link || !appointment.appointment_date_time) {
+      return false;
+    }
+
+    const startTime = new Date(appointment.appointment_date_time);
+    const endTime = appointment.appointment_end_time
+      ? new Date(appointment.appointment_end_time)
+      : new Date(startTime.getTime() + 30 * 60 * 1000);
+
+    const joinWindowStart = new Date(startTime.getTime() - 10 * 60 * 1000);
+    const now = new Date(currentTime);
+
+    return now >= joinWindowStart && now <= endTime;
   };
 
   // Function to fetch appointments from API
@@ -1068,7 +1092,7 @@ export default function Appointments() {
                       </div>
 
                       {/* Join button for upcoming meetings with meeting link */}
-                      {appt.joinable && appt.meeting_link && (
+                      {canJoinAppointment(appt) && (
                         <div className="d-flex justify-content-center mt-2">
                           <button
                             className="btn d-inline-flex align-items-center justify-content-center"

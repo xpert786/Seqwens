@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 
 const SchedulingCalendar = () => {
     const location = useLocation();
-    const activeTab = location.pathname.includes('/appointments') ? 'Appointments' : 
-                     location.pathname.includes('/features') ? 'Features' :
-                     location.pathname.includes('/staff') ? 'Staff' : 'Calendar';
+    const navigate = useNavigate();
+    const activeTab = location.pathname.includes('/appointments') ? 'Appointments' :
+        location.pathname.includes('/features') ? 'Features' :
+            location.pathname.includes('/staff') ? 'Staff' : 'Calendar';
     const [viewMode, setViewMode] = useState('Monthly');
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // July 2025
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [eventId, setEventId] = useState('');
     const [calendarType, setCalendarType] = useState('Firm Calendar');
     const [provider, setProvider] = useState('Google Calendar');
     const [direction, setDirection] = useState('One-way (Pull)');
-    
     // Calendar data from API
     const [calendarData, setCalendarData] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -28,6 +28,8 @@ const SchedulingCalendar = () => {
     });
     const [todayEvents, setTodayEvents] = useState({ date: '', date_display: '', events: [], count: 0 });
     const [upcomingEvents, setUpcomingEvents] = useState({ period: '', date_from: '', date_to: '', events: [], count: 0 });
+    const [highlightDate, setHighlightDate] = useState(null);
+    const [userAdjustedDate, setUserAdjustedDate] = useState(false);
 
     // Add Event Modal State - matching tax preparer modal structure
     const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
@@ -43,25 +45,95 @@ const SchedulingCalendar = () => {
     const [staffMembers, setStaffMembers] = useState([]);
     const [loadingStaff, setLoadingStaff] = useState(false);
     const [assignedStaffId, setAssignedStaffId] = useState('');
-    
+
+    // Helpers to normalize appointment dates without UTC shifts
+    const formatDateKey = (dateObj) => {
+        if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return '';
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const convertAppointmentToEvent = (appointment = {}) => {
+        const dateParts = (appointment.appointment_date || '').split('-').map(Number);
+        const year = dateParts[0] || new Date().getFullYear();
+        const monthIndex = (dateParts[1] || 1) - 1;
+        const day = dateParts[2] || 1;
+
+        const timeStr = appointment.appointment_time || '00:00:00';
+        const [hours = 0, minutes = 0] = timeStr.split(':').map(Number);
+
+        const appointmentDate = new Date(year, monthIndex, day, hours || 0, minutes || 0);
+
+        return {
+            ...appointment,
+            date: appointmentDate,
+            dateKey: formatDateKey(appointmentDate),
+            timeSort: (hours || 0) * 60 + (minutes || 0),
+        };
+    };
+
+    const normalizeAppointmentsByDate = (appsMap = {}) => {
+        const normalized = {};
+        Object.entries(appsMap).forEach(([dateKey, appointments = []]) => {
+            appointments.forEach((appointment) => {
+                const event = convertAppointmentToEvent(appointment);
+                const targetKey = event.dateKey || dateKey;
+                if (!normalized[targetKey]) {
+                    normalized[targetKey] = [];
+                }
+                normalized[targetKey].push(event);
+            });
+        });
+        return normalized;
+    };
+
+    const mergeEventListIntoMap = (baseMap = {}, events = []) => {
+        const merged = { ...baseMap };
+        events.forEach((appointment = {}) => {
+            const event = convertAppointmentToEvent(appointment);
+            if (!event.dateKey) return;
+            if (!merged[event.dateKey]) {
+                merged[event.dateKey] = [];
+            }
+            const alreadyExists = merged[event.dateKey].some((existing) => {
+                if (existing.id && event.id) {
+                    return existing.id === event.id;
+                }
+                return (
+                    existing.appointment_time === event.appointment_time &&
+                    existing.appointment_with === event.appointment_with &&
+                    existing.subject === event.subject
+                );
+            });
+            if (!alreadyExists) {
+                merged[event.dateKey].push(event);
+            }
+        });
+        return merged;
+    };
+
     // Overlap warning modal state
     const [showOverlapModal, setShowOverlapModal] = useState(false);
     const [overlappingAppointments, setOverlappingAppointments] = useState([]);
     const [newAppointmentDetails, setNewAppointmentDetails] = useState(null);
     const [creatingMeeting, setCreatingMeeting] = useState(false);
     const [confirmingOverwrite, setConfirmingOverwrite] = useState(false);
+    const [eventsModal, setEventsModal] = useState({
+        open: false,
+        dateLabel: '',
+        events: []
+    });
 
     // Fetch calendar data from API
     const fetchCalendarData = async () => {
         try {
             setLoading(true);
-            
+
             // Format date as YYYY-MM-DD
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth() + 1;
             const day = currentDate.getDate();
             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
+
             // Map viewMode to API view parameter
             const viewMap = {
                 'Day': 'day',
@@ -79,11 +151,11 @@ const SchedulingCalendar = () => {
 
             if (response.success && response.data) {
                 setCalendarData(response.data);
-                
+
                 // Set appointments by date
                 const appsByDate = response.data.calendar?.appointments_by_date || {};
-                setAppointmentsByDate(appsByDate);
-                
+                let normalizedApps = normalizeAppointmentsByDate(appsByDate);
+
                 // Set statistics
                 if (response.data.statistics) {
                     setStatistics({
@@ -93,7 +165,7 @@ const SchedulingCalendar = () => {
                         avg_duration_display: response.data.statistics.avg_duration_display || '0m'
                     });
                 }
-                
+
                 // Set today's events
                 if (response.data.today_events) {
                     setTodayEvents({
@@ -102,8 +174,11 @@ const SchedulingCalendar = () => {
                         events: response.data.today_events.events || [],
                         count: response.data.today_events.count || 0
                     });
+                    if (Array.isArray(response.data.today_events.events) && response.data.today_events.events.length > 0) {
+                        normalizedApps = mergeEventListIntoMap(normalizedApps, response.data.today_events.events);
+                    }
                 }
-                
+
                 // Set upcoming events
                 if (response.data.upcoming_events) {
                     setUpcomingEvents({
@@ -113,6 +188,33 @@ const SchedulingCalendar = () => {
                         events: response.data.upcoming_events.events || [],
                         count: response.data.upcoming_events.count || 0
                     });
+                    if (Array.isArray(response.data.upcoming_events.events) && response.data.upcoming_events.events.length > 0) {
+                        normalizedApps = mergeEventListIntoMap(normalizedApps, response.data.upcoming_events.events);
+                    }
+                }
+
+                setAppointmentsByDate(normalizedApps);
+
+                const highlightDateStr =
+                    response.data.today_events?.date ||
+                    response.data.upcoming_events?.events?.[0]?.appointment_date ||
+                    response.data.calendar?.target_date ||
+                    null;
+
+                if (highlightDateStr) {
+                    const parsedHighlight = new Date(highlightDateStr);
+                    if (!Number.isNaN(parsedHighlight.getTime())) {
+                        setHighlightDate(parsedHighlight);
+                        const sameDay =
+                            currentDate.getFullYear() === parsedHighlight.getFullYear() &&
+                            currentDate.getMonth() === parsedHighlight.getMonth() &&
+                            currentDate.getDate() === parsedHighlight.getDate();
+                        if (!userAdjustedDate && !sameDay) {
+                            setCurrentDate(parsedHighlight);
+                        }
+                    }
+                } else {
+                    setHighlightDate(null);
                 }
             }
         } catch (error) {
@@ -145,7 +247,7 @@ const SchedulingCalendar = () => {
         try {
             setLoadingClients(true);
             const response = await firmAdminClientsAPI.listClients({ page_size: 100 });
-            
+
             if (response.success && response.data) {
                 const clientsList = response.data.clients || [];
                 setClients(clientsList);
@@ -169,7 +271,7 @@ const SchedulingCalendar = () => {
         try {
             setLoadingStaff(true);
             const response = await firmAdminStaffAPI.listStaff({ status: 'active' });
-            
+
             if (response.success && response.data) {
                 const staffList = response.data.staff_members || [];
                 setStaffMembers(staffList);
@@ -198,10 +300,140 @@ const SchedulingCalendar = () => {
         return `${hour12}:${minutes} ${ampm}`;
     };
 
+    const getEventTimeRange = (event = {}) => {
+        if (!event || !event.appointment_time) return '';
+        const start = formatTime(event.appointment_time);
+        if (event.end_time) {
+            return `${start} - ${formatTime(event.end_time)}`;
+        }
+        if (event.appointment_duration) {
+            const [hours, minutes] = event.appointment_time.split(':').map(Number);
+            const duration = Number(event.appointment_duration) || 0;
+            const startMinutes = (hours || 0) * 60 + (minutes || 0);
+            const endMinutes = startMinutes + duration;
+            const endHours = Math.floor(endMinutes / 60) % 24;
+            const endMins = endMinutes % 60;
+            const endTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
+            return `${start} - ${formatTime(endTime)}`;
+        }
+        return start;
+    };
+
+    const getEventChipClasses = (status = '') => {
+        const normalized = status?.toLowerCase();
+        if (normalized === 'pending') {
+            return 'bg-yellow-500 text-white';
+        }
+        if (normalized === 'cancelled' || normalized === 'canceled') {
+            return 'bg-gray-300 text-gray-700';
+        }
+        if (normalized === 'completed' || normalized === 'confirmed') {
+            return 'bg-green-500 text-white';
+        }
+        return 'bg-[#F56D2D] text-white';
+    };
+
+    const getEventParticipants = (event = {}) => {
+        const client = event.user_name || event.user || '';
+        const staff = event.appointment_with_name || '';
+        if (client && staff) return `${client} with ${staff}`;
+        return client || staff || '';
+    };
+
+    const handleNavigateToClient = (event = {}) => {
+        const clientId = event.user || event.user_id;
+        if (clientId) {
+            navigate(`/firmadmin/clients/${clientId}`);
+        } else {
+            navigate('/firmadmin/clients');
+        }
+    };
+
+    const handleNavigateToStaff = (event = {}) => {
+        const staffId = event.appointment_with || event.staff_id;
+        if (staffId) {
+            navigate(`/firmadmin/staff/${staffId}`);
+        } else {
+            navigate('/firmadmin/staff');
+        }
+    };
+
+    const renderParticipantButtons = (event = {}) => {
+        const hasClient = Boolean(event.user_name);
+        const hasStaff = Boolean(event.appointment_with_name);
+        if (!hasClient && !hasStaff) return null;
+
+        return (
+            <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
+                {hasClient && (
+                    <button
+                        type="button"
+                        className="text-blue-600 hover:underline"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigateToClient(event);
+                        }}
+                    >
+                        {event.user_name}
+                    </button>
+                )}
+                {hasClient && hasStaff && <span> with </span>}
+                {hasStaff && (
+                    <button
+                        type="button"
+                        className="text-blue-600 hover:underline"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigateToStaff(event);
+                        }}
+                    >
+                        {event.appointment_with_name}
+                    </button>
+                )}
+            </div>
+        );
+    };
+
+    const isSameCalendarDay = (dateA, dateB) => {
+        if (!dateA || !dateB) return false;
+        return (
+            dateA.getFullYear() === dateB.getFullYear() &&
+            dateA.getMonth() === dateB.getMonth() &&
+            dateA.getDate() === dateB.getDate()
+        );
+    };
+
+    const formatReadableDate = (dateObj) => {
+        if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return '';
+        return dateObj.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
+    const openEventsModal = (dateObj, events = []) => {
+        setEventsModal({
+            open: true,
+            dateLabel: formatReadableDate(dateObj),
+            events
+        });
+    };
+
+    const closeEventsModal = () => {
+        setEventsModal((prev) => ({ ...prev, open: false }));
+    };
+
     // Helper function to get appointments for a specific date
-    const getAppointmentsForDate = (date) => {
-        const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-        return appointmentsByDate[dateStr] || [];
+    const getAppointmentsForDate = (dateInput) => {
+        if (!dateInput) return [];
+        const dateObj = dateInput instanceof Date
+            ? dateInput
+            : new Date(currentDate.getFullYear(), currentDate.getMonth(), Number(dateInput));
+        const dateStr = formatDateKey(dateObj);
+        const events = appointmentsByDate[dateStr] || [];
+        return [...events].sort((a, b) => (a.timeSort || 0) - (b.timeSort || 0));
     };
 
     // Format date to YYYY-MM-DD format
@@ -213,7 +445,7 @@ const SchedulingCalendar = () => {
             /^(\d{2})-(\d{2})-(\d{4})$/,   // DD-MM-YYYY
             /^(\d{4})-(\d{2})-(\d{2})$/    // YYYY-MM-DD
         ];
-        
+
         for (const format of formats) {
             const match = dateStr.match(format);
             if (match) {
@@ -238,27 +470,27 @@ const SchedulingCalendar = () => {
         // Remove AM/PM if present and convert to 24-hour
         const isPM = timeStr.toUpperCase().includes('PM');
         const isAM = timeStr.toUpperCase().includes('AM');
-        
+
         let time = timeStr.replace(/\s*(AM|PM)\s*/i, '').trim();
         const parts = time.split(':');
-        
+
         if (parts.length >= 2) {
             let hours = parseInt(parts[0], 10);
             const minutes = parts[1];
-            
+
             if (isPM && hours !== 12) hours += 12;
             if (isAM && hours === 12) hours = 0;
-            
+
             return `${String(hours).padStart(2, '0')}:${minutes.padStart(2, '0')}`;
         }
-        
+
         return timeStr;
     };
 
     // Handle time slot changes
     const handleTimeSlotChange = (id, field, value) => {
         setSlots(prev => prev.map(slot =>
-            slot.id === id 
+            slot.id === id
                 ? { ...slot, [field]: field === 'client_id' ? parseInt(value) || '' : value }
                 : slot
         ));
@@ -362,11 +594,11 @@ const SchedulingCalendar = () => {
                     position: 'top-right',
                     autoClose: 3000
                 });
-                
+
                 // Reset form and close modal
                 resetEventForm();
                 setIsAddEventModalOpen(false);
-                
+
                 // Refresh calendar data
                 await fetchCalendarData();
             } else if (response.status === 409 && response.has_overlap) {
@@ -381,7 +613,7 @@ const SchedulingCalendar = () => {
                 const errorDetails = Object.entries(errors)
                     .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
                     .join('; ');
-                
+
                 toast.error(`${errorMsg}. ${errorDetails}`, {
                     position: 'top-right',
                     autoClose: 5000
@@ -426,12 +658,12 @@ const SchedulingCalendar = () => {
                     position: 'top-right',
                     autoClose: 4000
                 });
-                
+
                 // Close modals and reset form
                 setShowOverlapModal(false);
                 resetEventForm();
                 setIsAddEventModalOpen(false);
-                
+
                 // Refresh calendar data
                 await fetchCalendarData();
             } else {
@@ -504,45 +736,25 @@ const SchedulingCalendar = () => {
     // View mode tabs
     const viewTabs = ['Day', 'Week', 'Monthly', 'Years', 'Agenda'];
 
-    // Get days in month
+    // Get days in month (returns Date objects for 6-week grid)
     const getDaysInMonth = (date) => {
         const year = date.getFullYear();
         const month = date.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
-
         const days = [];
 
-        // Previous month's days
-        const prevMonthLastDay = new Date(year, month, 0).getDate();
-        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-            days.push({
-                date: prevMonthLastDay - i,
-                isCurrentMonth: false,
-                isToday: false
-            });
+        const firstDayOfWeek = new Date(year, month, 1).getDay();
+        for (let i = firstDayOfWeek; i > 0; i--) {
+            days.push(new Date(year, month, 1 - i));
         }
 
-        // Current month's days
-        const today = new Date();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
         for (let i = 1; i <= daysInMonth; i++) {
-            days.push({
-                date: i,
-                isCurrentMonth: true,
-                isToday: today.getDate() === i && today.getMonth() === month && today.getFullYear() === year
-            });
+            days.push(new Date(year, month, i));
         }
 
-        // Next month's days to fill the grid
-        const remainingDays = 42 - days.length;
-        for (let i = 1; i <= remainingDays; i++) {
-            days.push({
-                date: i,
-                isCurrentMonth: false,
-                isToday: false
-            });
+        while (days.length < 42) {
+            const lastDate = days[days.length - 1];
+            days.push(new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate() + 1));
         }
 
         return days;
@@ -552,23 +764,32 @@ const SchedulingCalendar = () => {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     const navigateMonth = (direction) => {
+        setUserAdjustedDate(true);
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
     };
 
     const navigateDay = (direction) => {
+        setUserAdjustedDate(true);
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + direction));
     };
 
     const navigateWeek = (direction) => {
+        setUserAdjustedDate(true);
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + (direction * 7)));
     };
 
     const navigateYear = (direction) => {
+        setUserAdjustedDate(true);
         setCurrentDate(new Date(currentDate.getFullYear() + direction, currentDate.getMonth(), 1));
     };
 
     const goToToday = () => {
-        setCurrentDate(new Date());
+        setUserAdjustedDate(false);
+        if (highlightDate) {
+            setCurrentDate(new Date(highlightDate));
+        } else {
+            setCurrentDate(new Date());
+        }
     };
 
     // Get week days
@@ -656,17 +877,16 @@ const SchedulingCalendar = () => {
                                 {navTabs.map((tab) => {
                                     const isNavigable = tab === 'Calendar' || tab === 'Appointments';
                                     const tabPath = tab === 'Calendar' ? '/firmadmin/calendar' : `/firmadmin/calendar/${tab.toLowerCase()}`;
-                                    
+
                                     if (isNavigable) {
                                         return (
                                             <Link
                                                 key={tab}
                                                 to={tabPath}
-                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${
-                                                    activeTab === tab
-                                                        ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                        : 'bg-transparent hover:bg-gray-50 !text-black'
-                                                }`}
+                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg ${activeTab === tab
+                                                    ? 'bg-[#3AD6F2] !text-white font-semibold'
+                                                    : 'bg-transparent hover:bg-gray-50 !text-black'
+                                                    }`}
                                             >
                                                 {tab}
                                             </Link>
@@ -676,11 +896,10 @@ const SchedulingCalendar = () => {
                                             <button
                                                 key={tab}
                                                 type="button"
-                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${
-                                                    activeTab === tab
-                                                        ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                        : 'bg-transparent hover:bg-gray-50 !text-black'
-                                                }`}
+                                                className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${activeTab === tab
+                                                    ? 'bg-[#3AD6F2] !text-white font-semibold'
+                                                    : 'bg-transparent hover:bg-gray-50 !text-black'
+                                                    }`}
                                             >
                                                 {tab}
                                             </button>
@@ -790,7 +1009,6 @@ const SchedulingCalendar = () => {
                                 </button>
                             ))}
                         </div>
-
                         {/* Dynamic Navigation */}
                         <div className="sm:p-4 mb-4">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -874,29 +1092,71 @@ const SchedulingCalendar = () => {
                                             {day}
                                         </div>
                                     ))}
-                                    {weekDays.map((day, index) => (
-                                        <div key={index} className={`min-h-[300px] p-2 border border-[#E8F0FF] rounded-lg ${day.isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
-                                            <div className={`text-sm font-[BasisGrotesquePro] mb-2 text-right ${day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'}`}>
-                                                {day.date}
-                                            </div>
-                                            {(() => {
-                                                const dateStr = `${day.year}-${String(day.month + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
-                                                const dayAppointments = appointmentsByDate[dateStr] || [];
-                                                
-                                                return dayAppointments.length > 0 && dayAppointments.slice(0, 3).map((appointment, idx) => (
-                                                    <div key={idx} className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 mb-1">
-                                                        <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-xs text-gray-900 font-[BasisGrotesquePro]">{appointment.subject || 'Appointment'}</div>
-                                                            <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
-                                                                {formatTime(appointment.appointment_time)} {appointment.end_time ? `- ${formatTime(appointment.end_time)}` : (appointment.appointment_duration ? `(${appointment.appointment_duration}m)` : '')}
+                                    {weekDays.map((day, index) => {
+                                        const dateObj = new Date(day.year, day.month, day.date);
+                                        const dayAppointments = getAppointmentsForDate(dateObj);
+                                        const hasAppointments = dayAppointments.length > 0;
+                                        const isHighlighted =
+                                            highlightDate ? isSameCalendarDay(dateObj, highlightDate) : day.isToday;
+                                        const weekCellClasses = [
+                                            'min-h-[300px] p-2 border rounded-lg transition-colors duration-150',
+                                            isHighlighted ? 'bg-blue-50 border-blue-300' : 'border-[#E8F0FF]',
+                                            hasAppointments && !day.isToday ? 'bg-[#FFF7ED] border-[#F56D2D]' : '',
+                                        ].join(' ');
+
+                                        const topEventTime = hasAppointments ? getEventTimeRange(dayAppointments[0]) : '';
+
+                                        return (
+                                            <div key={index} className={weekCellClasses}>
+                                                <div className="mb-2 flex justify-end">
+                                                    <span
+                                                        className={[
+                                                            'w-6 h-6 flex items-center justify-center rounded-full text-sm font-[BasisGrotesquePro]',
+                                                            isHighlighted
+                                                                ? 'bg-blue-100 text-blue-700 font-bold'
+                                                                : hasAppointments
+                                                                    ? 'bg-[#F56D2D] text-white font-semibold'
+                                                                    : 'text-gray-900',
+                                                        ].join(' ')}
+                                                    >
+                                                        {day.date}
+                                                    </span>
+                                                </div>
+                                                {topEventTime && (
+                                                    <div className="text-[11px] text-[#00C0C6] font-[BasisGrotesquePro] text-right mb-1 whitespace-nowrap">
+                                                        {topEventTime}
+                                                    </div>
+                                                )}
+                                                {hasAppointments &&
+                                                    dayAppointments.slice(0, 3).map((appointment, idx) => (
+                                                        <div key={idx} className="bg-white/80 border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 mb-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                                                            <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-xs text-gray-900 font-[BasisGrotesquePro]">{appointment.subject || 'Appointment'}</div>
+                                                                <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
+                                                                    {formatTime(appointment.appointment_time)}{' '}
+                                                                    {appointment.end_time ? `- ${formatTime(appointment.end_time)}` : appointment.appointment_duration ? `(${appointment.appointment_duration}m)` : ''}
+                                                                </div>
+                                                                {getEventParticipants(appointment) && (
+                                                                    <div className="text-[11px] text-gray-500 font-[BasisGrotesquePro]">
+                                                                        {getEventParticipants(appointment)}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                ));
-                                            })()}
-                                        </div>
-                                    ))}
+                                                    ))}
+                                                {dayAppointments.length > 3 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openEventsModal(dateObj, dayAppointments)}
+                                                        className="w-full mt-1 text-xs text-[#F56D2D] font-[BasisGrotesquePro] text-center flex items-center justify-center gap-1 hover:underline"
+                                                    >
+                                                        View {dayAppointments.length - 3} more <span aria-hidden="true">➔</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -904,63 +1164,68 @@ const SchedulingCalendar = () => {
                                 <div className="border border-[#E8F0FF] rounded-lg overflow-hidden min-w-[600px]">
                                     <div className="grid grid-cols-7">
                                         {dayNames.map((day) => (
-                                            <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF] border-r border-[#E8F0FF] last:border-r-0 bg-white">
+                                            <div
+                                                key={day}
+                                                className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-1 sm:py-2 font-[BasisGrotesquePro] border-b border-[#E8F0FF] border-r border-[#E8F0FF] last:border-r-0 bg-white"
+                                            >
                                                 {day}
                                             </div>
                                         ))}
                                     </div>
                                     <div className="grid grid-cols-7">
-                                        {calendarDays.map((day, index) => (
-                                            <div
-                                                key={index}
-                                                className={`min-h-[60px] sm:min-h-[70px] lg:min-h-[80px] p-1 sm:p-2 border-r border-b border-[#E8F0FF] relative ${!day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
-                                                    } ${day.isToday ? 'bg-blue-50' : ''} ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
-                                            >
-                                            {(() => {
-                                                const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
-                                                const dayAppointments = getAppointmentsForDate(day.date);
-                                                const hasAppointments = day.isCurrentMonth && dayAppointments.length > 0;
-                                                
-                                                return (
-                                                    <>
-                                                        {!hasAppointments && (
-                                                            <div className={`text-xs sm:text-sm font-[BasisGrotesquePro] mb-1 text-right ${!day.isCurrentMonth ? 'text-gray-400' : day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'
-                                                                }`}>
-                                                                {day.date}
+                                        {calendarDays.map((day, index) => {
+                                            const dayAppointments = getAppointmentsForDate(day);
+                                            const isCurrentMonth =
+                                                day.getMonth() === currentDate.getMonth() &&
+                                                day.getFullYear() === currentDate.getFullYear();
+                                            const isHighlighted = highlightDate
+                                                ? isSameCalendarDay(day, highlightDate)
+                                                : isSameCalendarDay(day, new Date());
+
+                                            return (
+                                                <div
+                                                    key={index}
+                                                    className={`min-h-[100px] p-2 sm:p-3 border-r border-b border-[#E8F0FF] transition-colors ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                                                        } ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
+                                                >
+                                                    <div
+                                                        className={`text-sm font-medium mb-1 ${isHighlighted
+                                                            ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center'
+                                                            : ''
+                                                            }`}
+                                                    >
+                                                        {day.getDate()}
+                                                    </div>
+                                                    {dayAppointments.map((event, idx) => (
+                                                        <div
+                                                            key={`${event.id || idx}-${event.appointment_time || idx}`}
+                                                            className={`${getEventChipClasses(
+                                                                event.appointment_status
+                                                            )} text-xs p-1 rounded mb-1 shadow-sm cursor-pointer hover:opacity-90`}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openEventsModal(day, dayAppointments);
+                                                            }}
+                                                        >
+                                                            <div className="flex items-center gap-1">
+                                                                <div className="w-1 h-1 bg-white rounded-full"></div>
+                                                                <span className="truncate">
+                                                                    {event.subject || event.title || 'Meeting'}
+                                                                </span>
                                                             </div>
-                                                        )}
-                                                        {hasAppointments && (
-                                                            <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                                                <span className="text-[10px] sm:text-xs font-bold text-white font-[BasisGrotesquePro]">{day.date}</span>
+                                                            <div className="text-[10px] opacity-90">
+                                                                {getEventTimeRange(event)}
                                                             </div>
-                                                        )}
-                                                        {hasAppointments && (
-                                                            <div className="mt-4 sm:mt-6 space-y-1">
-                                                                {dayAppointments.slice(0, 2).map((appointment, idx) => (
-                                                                    <div key={idx} className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 flex items-start gap-1.5 sm:gap-2">
-                                                                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#F56D2D] rounded-full mt-1 sm:mt-1.5 flex-shrink-0"></div>
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <div className="text-[10px] sm:text-xs text-gray-900 font-[BasisGrotesquePro] break-words leading-tight">
-                                                                                {appointment.subject || 'Appointment'}
-                                                                            </div>
-                                                                            <div className="text-[10px] sm:text-xs font-[BasisGrotesquePro] leading-tight mt-0.5" style={{ color: '#00C0C6' }}>
-                                                                                {formatTime(appointment.appointment_time)} {appointment.end_time ? `- ${formatTime(appointment.end_time)}` : (appointment.appointment_duration ? `(${appointment.appointment_duration}m)` : '')}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                                {dayAppointments.length > 2 && (
-                                                                    <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] text-center">
-                                                                        +{dayAppointments.length - 2} more
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                    ))}
+                                                            {getEventParticipants(event) && (
+                                                                <div className="text-[10px] opacity-80">
+                                                                    {getEventParticipants(event)}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
@@ -987,7 +1252,7 @@ const SchedulingCalendar = () => {
                                             const monthAppointments = [];
                                             const year = currentDate.getFullYear();
                                             const month = currentDate.getMonth() + 1;
-                                            
+
                                             Object.keys(appointmentsByDate).forEach(dateStr => {
                                                 const [y, m] = dateStr.split('-').map(Number);
                                                 if (y === year && m === month) {
@@ -999,13 +1264,13 @@ const SchedulingCalendar = () => {
                                                     });
                                                 }
                                             });
-                                            
+
                                             // Sort by date and time
                                             monthAppointments.sort((a, b) => {
                                                 if (a.date !== b.date) return a.date.localeCompare(b.date);
                                                 return (a.appointment_time || '').localeCompare(b.appointment_time || '');
                                             });
-                                            
+
                                             if (monthAppointments.length === 0) {
                                                 return (
                                                     <div className="text-sm text-gray-500 font-[BasisGrotesquePro] text-center py-4">
@@ -1013,7 +1278,7 @@ const SchedulingCalendar = () => {
                                                     </div>
                                                 );
                                             }
-                                            
+
                                             // Group by date
                                             const groupedByDate = {};
                                             monthAppointments.forEach(apt => {
@@ -1022,12 +1287,12 @@ const SchedulingCalendar = () => {
                                                 }
                                                 groupedByDate[apt.date].push(apt);
                                             });
-                                            
+
                                             return Object.keys(groupedByDate).map(dateStr => {
                                                 const [y, m, d] = dateStr.split('-').map(Number);
                                                 const monthName = monthNames[m - 1].substring(0, 3);
                                                 const appointments = groupedByDate[dateStr];
-                                                
+
                                                 return (
                                                     <div key={dateStr}>
                                                         {appointments.map((appointment, idx) => (
@@ -1080,6 +1345,11 @@ const SchedulingCalendar = () => {
                                                     return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
                                                 })()))}
                                             </div>
+                                            {getEventParticipants(event) && (
+                                                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-0.5">
+                                                    {getEventParticipants(event)}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -1114,6 +1384,11 @@ const SchedulingCalendar = () => {
                                                     return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
                                                 })()))}
                                             </div>
+                                            {getEventParticipants(event) && (
+                                                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-0.5">
+                                                    {getEventParticipants(event)}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -1122,6 +1397,82 @@ const SchedulingCalendar = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Events modal for viewing all meetings on a date */}
+            {eventsModal.open && (
+                <div
+                    className="fixed inset-0 z-[1100] bg-black bg-opacity-50 flex items-center justify-center p-4"
+                    onClick={closeEventsModal}
+                >
+                    <div
+                        className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between p-4 border-b border-[#E8F0FF]">
+                            <div>
+                                <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">Scheduled Meetings</h5>
+                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">{eventsModal.dateLabel}</p>
+                            </div>
+                            <button
+                                onClick={closeEventsModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Close"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                                    <path
+                                        d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z"
+                                        fill="#3B4A66"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-3 overflow-y-auto">
+                            {eventsModal.events.length === 0 ? (
+                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center py-4">No meetings scheduled.</p>
+                            ) : (
+                                eventsModal.events.map((event, idx) => (
+                                    <div key={`${event.id || idx}-${event.appointment_time || idx}`} className="border border-[#E8F0FF] rounded-lg p-3">
+                                        <div className="flex items-start justify-between mb-1">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                                                    {event.subject || 'Meeting'}
+                                                </p>
+                                                {renderParticipantButtons(event)}
+                                            </div>
+                                            <span
+                                                className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] ${event.appointment_status === 'cancelled'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : event.appointment_status === 'pending'
+                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                        : 'bg-green-100 text-green-700'
+                                                    }`}
+                                            >
+                                                {event.status_display || event.appointment_status || 'Scheduled'}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs font-[BasisGrotesquePro]" style={{ color: '#00C0C6' }}>
+                                            {formatTime(event.appointment_time)}{' '}
+                                            {event.end_time ? `- ${formatTime(event.end_time)}` : event.appointment_duration ? `(${event.appointment_duration}m)` : ''}
+                                        </div>
+                                        {event.description && (
+                                            <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-2 line-clamp-3">{event.description}</p>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <div className="flex items-center justify-end gap-2 p-4 border-t border-[#E8F0FF]">
+                            <button
+                                onClick={closeEventsModal}
+                                className="px-4 py-2 text-sm bg-white !border border-[#E8F0FF] rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Overlap Warning Modal */}
             {showOverlapModal && (
@@ -1162,8 +1513,8 @@ const SchedulingCalendar = () => {
                                     <p><span className="font-medium">Duration:</span> {newAppointmentDetails?.duration || appointmentDuration} minutes</p>
                                     {slots.length > 0 && slots[0].client_id && (
                                         <p><span className="font-medium">Client:</span> {
-                                            clients.find(c => c.id === slots[0].client_id) 
-                                                ? `${clients.find(c => c.id === slots[0].client_id).first_name || ''} ${clients.find(c => c.id === slots[0].client_id).last_name || ''}`.trim() 
+                                            clients.find(c => c.id === slots[0].client_id)
+                                                ? `${clients.find(c => c.id === slots[0].client_id).first_name || ''} ${clients.find(c => c.id === slots[0].client_id).last_name || ''}`.trim()
                                                 : `Client #${slots[0].client_id}`
                                         }</p>
                                     )}
@@ -1189,13 +1540,12 @@ const SchedulingCalendar = () => {
                                                         </p>
                                                     )}
                                                 </div>
-                                                <span className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${
-                                                    appointment.appointment_status === 'confirmed' 
-                                                        ? 'bg-green-100 text-green-800' 
-                                                        : appointment.appointment_status === 'scheduled'
+                                                <span className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${appointment.appointment_status === 'confirmed'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : appointment.appointment_status === 'scheduled'
                                                         ? 'bg-blue-100 text-blue-800'
                                                         : 'bg-gray-100 text-gray-800'
-                                                }`}>
+                                                    }`}>
                                                     {appointment.appointment_status || 'scheduled'}
                                                 </span>
                                             </div>
@@ -1366,7 +1716,7 @@ const SchedulingCalendar = () => {
                                                 <option value="">Select Client</option>
                                                 {clients.map((client) => (
                                                     <option key={client.id} value={client.id}>
-                                                        {client.first_name && client.last_name 
+                                                        {client.first_name && client.last_name
                                                             ? `${client.first_name} ${client.last_name}`
                                                             : client.email || `Client #${client.id}`}
                                                     </option>
@@ -1379,7 +1729,7 @@ const SchedulingCalendar = () => {
                                                     className="w-8 h-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
                                                 </button>
                                             )}
@@ -1392,7 +1742,7 @@ const SchedulingCalendar = () => {
                                         style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)', borderRadius: '8px' }}
                                     >
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                         Add Time Slot
                                     </button>
@@ -1434,10 +1784,10 @@ const SchedulingCalendar = () => {
                                     <option value="">Select Staff Member</option>
                                     {staffMembers.map((staff) => (
                                         <option key={staff.id} value={staff.id}>
-                                            {staff.full_name || 
-                                             (staff.first_name && staff.last_name 
-                                                ? `${staff.first_name} ${staff.last_name}` 
-                                                : staff.email || `Staff #${staff.id}`)}
+                                            {staff.full_name ||
+                                                (staff.first_name && staff.last_name
+                                                    ? `${staff.first_name} ${staff.last_name}`
+                                                    : staff.email || `Staff #${staff.id}`)}
                                         </option>
                                     ))}
                                 </select>

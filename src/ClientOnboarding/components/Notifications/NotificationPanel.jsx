@@ -20,6 +20,8 @@ const TABS = [
   { label: "Read", key: "read" },
 ];
 
+const READ_TAB_LIMIT = 5;
+
 const PRIORITY_COLOR = {
   high: "#EF4444",
   medium: "#FBBF24",
@@ -250,30 +252,32 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
     } finally {
       setLoading(false);
     }
-  }, [selectedTab, onChange]);
+  }, [selectedTab, notificationAPI, onChange]);
 
   // Fetch notifications on mount and when tab changes
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]); // Refetch when fetchNotifications changes (which includes selectedTab)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTab]); // Only refetch when selectedTab changes
 
-  // Fetch unread count
+  // Fetch unread count - memoized to prevent unnecessary re-renders
   const fetchUnreadCount = useCallback(async () => {
     try {
       const response = await notificationAPI.getUnreadCount();
       if (response.success && response.data) {
-        setUnreadCount(response.data.unread_count || 0);
+        const newUnreadCount = response.data.unread_count || 0;
+        setUnreadCount(newUnreadCount);
         if (typeof onChange === "function") {
           onChange({
             notifications,
-            unreadCount: response.data.unread_count || 0,
+            unreadCount: newUnreadCount,
           });
         }
       }
     } catch (err) {
       console.error("Error fetching unread count:", err);
     }
-  }, [notifications, onChange]);
+  }, [notificationAPI, onChange]);
 
   // WebSocket connection for real-time notifications
   const handleNewNotification = useCallback((notification) => {
@@ -303,10 +307,28 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
 
   if (!onClose) return null;
 
+  const sortByRecent = (items = []) =>
+    [...items].sort(
+      (a, b) =>
+        new Date(b.created_at || b.time || 0) - new Date(a.created_at || a.time || 0)
+    );
+
+  // Apply tab filter to notifications
   const filteredNotifications = useMemo(() => {
-    // Already filtered by API based on selectedTab
-    return notifications;
-  }, [notifications]);
+    if (selectedTab === "unread") {
+      return sortByRecent(notifications.filter((notification) => !notification.read));
+    } else if (selectedTab === "read") {
+      return sortByRecent(
+        notifications.filter((notification) => notification.read)
+      ).slice(0, READ_TAB_LIMIT);
+    }
+    // "all" tab shows only recent messages
+    return sortByRecent(
+      notifications.filter((notification) =>
+        (notification.notification_type || "").toLowerCase().includes("message")
+      )
+    );
+  }, [notifications, selectedTab]);
 
   const groupedNotifications = useMemo(() => {
     return groupNotificationsByDate(filteredNotifications);
@@ -323,24 +345,52 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
               : notification
           )
         );
-        fetchUnreadCount();
+        // Update unread count
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        // Notify parent component
+        if (typeof onChange === "function") {
+          const updatedNotifications = notifications.map((n) =>
+            n.id === notificationId ? { ...n, read: true } : n
+          );
+          const newUnreadCount = Math.max(0, unreadCount - 1);
+          onChange({
+            notifications: updatedNotifications,
+            unreadCount: newUnreadCount,
+          });
+        }
       }
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
-  }, [fetchUnreadCount]);
+  }, [notifications, unreadCount, onChange]);
 
   const removeNotification = useCallback(async (notificationId) => {
     try {
+      const notificationToRemove = notifications.find((n) => n.id === notificationId);
+      const wasUnread = notificationToRemove && !notificationToRemove.read;
+      
       const response = await notificationAPI.deleteNotification(notificationId);
       if (response.success) {
         setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
-        fetchUnreadCount();
+        
+        // Update unread count if removed notification was unread
+        if (wasUnread) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+          // Notify parent component
+          if (typeof onChange === "function") {
+            const updatedNotifications = notifications.filter((n) => n.id !== notificationId);
+            const newUnreadCount = Math.max(0, unreadCount - 1);
+            onChange({
+              notifications: updatedNotifications,
+              unreadCount: newUnreadCount,
+            });
+          }
+        }
       }
     } catch (err) {
       console.error("Error deleting notification:", err);
     }
-  }, [fetchUnreadCount]);
+  }, [notifications, unreadCount, onChange]);
 
   const markAllRead = useCallback(async () => {
     try {
@@ -356,11 +406,13 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
             unreadCount: 0,
           });
         }
+        // Refetch notifications to get updated state
+        fetchNotifications();
       }
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
     }
-  }, [notifications, onChange]);
+  }, [notifications, onChange, fetchNotifications]);
 
   const handleNotificationAction = useCallback((notification) => {
     // Mark as read when clicked
@@ -456,16 +508,11 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
               <button
                 key={tab.key}
                 onClick={() => setSelectedTab(tab.key)}
-                className={`btn btn-sm ${selectedTab === tab.key ? "active-tab" : "inactive-tab"
-                  }`}
+                className={`btn btn-sm ${
+                  selectedTab === tab.key ? "active-tab" : "inactive-tab"
+                }`}
               >
-                {tab.label} (
-                {tab.key === "all"
-                  ? notifications.length
-                  : tab.key === "unread"
-                    ? unreadCount
-                    : notifications.filter((notification) => notification.read).length}
-                )
+                {tab.label}
               </button>
             ))}
           </div>

@@ -151,8 +151,8 @@ export default function SuperSidebar({ collapsed = false }) {
             {expandedSections.systemAdministration && (
               <ul className="flex flex-col px-0 mt-2">
                 <li className="mb-2">
-                  <Link to="/superadmin/settings" className={linkClass("/superadmin/settings")}>
-                    <span className={iconWrapperClass("/superadmin/settings")}>
+                  <Link to="/superadmin/system-settings" className={linkClass("/superadmin/system-settings")}>
+                    <span className={iconWrapperClass("/superadmin/system-settings")}>
                       <IntakeIcon />
                     </span>
                     System Settings

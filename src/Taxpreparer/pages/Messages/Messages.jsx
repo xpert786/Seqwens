@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { AddTask, Cliented, Clocking, Completed, Message3Icon, Overdue, Progressing, Stared, LogoIcond, Linked, Crossing, Sendingg, DeleteIcon, Cut2 } from "../../component/icons";
 import { FaSearch, FaChevronDown, FaPaperPlane } from "react-icons/fa";
@@ -20,6 +20,7 @@ export default function MessagePage() {
   const [activeTab, setActiveTab] = useState("Messages");
   const [showOptions, setShowOptions] = useState(false);
   const [conversations, setConversations] = useState([]);
+  const threadsFetchInitialRef = useRef(true);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [showTaskPopup, setShowTaskPopup] = useState(false);
   const [loadingThreads, setLoadingThreads] = useState(true);
@@ -65,11 +66,134 @@ export default function MessagePage() {
     "Archived"
   ];
 
-  // Fetch messages for active conversation (initial load and periodic polling)
-  useEffect(() => {
-    let isInitialFetch = true;
+  const fetchThreads = useCallback(
+    async (isPolling = false) => {
+      try {
+        if (threadsFetchInitialRef.current && !isPolling) {
+          setLoadingThreads(true);
+          threadsFetchInitialRef.current = false;
+        }
+        setThreadsError(null);
 
-    const fetchMessages = async (isPolling = false) => {
+        const response = await taxPreparerThreadsAPI.getThreads();
+
+        if (response.success && response.data && response.data.threads) {
+          const transformedThreads = response.data.threads.map(thread => {
+            const lastTimestamp =
+              thread.last_message_at ||
+              thread.updated_at ||
+              thread.created_at ||
+              new Date().toISOString();
+
+            let formattedTime = "N/A";
+            if (lastTimestamp) {
+              const date = new Date(lastTimestamp);
+              const now = new Date();
+              const diffMs = now - date;
+              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+              if (diffHours < 1) {
+                formattedTime = "Just now";
+              } else if (diffHours < 24) {
+                formattedTime = `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+              } else if (diffDays < 7) {
+                formattedTime = `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+              } else {
+                formattedTime = date.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                });
+              }
+            } else if (thread.created_at) {
+              const date = new Date(thread.created_at);
+              formattedTime = date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              });
+            }
+
+            const clientName = thread.client_name || "Unknown Client";
+            const lastMessageText = thread.last_message_preview
+              ? thread.last_message_preview.content || "No message"
+              : "No message";
+            const truncatedMessage =
+              lastMessageText.length > 50 ? lastMessageText.substring(0, 50) + "..." : lastMessageText;
+
+            return {
+              id: thread.id,
+              name: clientName,
+              lastMessage: truncatedMessage,
+              time: formattedTime,
+              lastMessageAt: lastTimestamp,
+              status: thread.status,
+              unreadCount: thread.unread_count || 0,
+              createdAt: thread.created_at,
+              subject: thread.subject,
+              assignedStaff: thread.assigned_staff,
+              assignedStaffNames: thread.assigned_staff_names,
+              clientName: thread.client_name,
+              clientEmail: thread.client_email,
+              clientId: thread.client || thread.client_id || null,
+              firmName: thread.firm_name,
+              lastMessagePreview: thread.last_message_preview,
+              messages: [],
+            };
+          });
+
+          const sortedThreads = transformedThreads.sort((a, b) => {
+            const dateA = new Date(a.lastMessageAt || 0);
+            const dateB = new Date(b.lastMessageAt || 0);
+            return dateB - dateA;
+          });
+
+          setConversations(sortedThreads);
+
+          if (clientIdFromUrl || threadIdFromUrl) {
+            let targetThread = null;
+
+            if (threadIdFromUrl) {
+              targetThread = sortedThreads.find(
+                conv => conv.id.toString() === threadIdFromUrl.toString()
+              );
+            } else if (clientIdFromUrl) {
+              targetThread = sortedThreads.find(conv => {
+                if (conv.clientId && conv.clientId.toString() === clientIdFromUrl.toString()) {
+                  return true;
+                }
+                return false;
+              });
+            }
+
+            if (targetThread) {
+              setActiveConversationId(targetThread.id);
+              navigate(location.pathname, { replace: true });
+            } else if (sortedThreads.length > 0 && !activeConversationId) {
+              setActiveConversationId(sortedThreads[0].id);
+            }
+          } else if (sortedThreads.length > 0 && !activeConversationId) {
+            setActiveConversationId(sortedThreads[0].id);
+          }
+        } else {
+          setConversations([]);
+        }
+      } catch (err) {
+        console.error("Error fetching threads:", err);
+        if (!isPolling) {
+          setThreadsError(err.message || "Failed to load conversations");
+        }
+      } finally {
+        if (!isPolling) {
+          setLoadingThreads(false);
+        }
+      }
+    },
+    [clientIdFromUrl, threadIdFromUrl, activeConversationId, navigate, location.pathname]
+  );
+
+  // Fetch messages for active conversation (initial load and periodic polling)
+  const fetchMessages = useCallback(
+    async (isPolling = false) => {
       if (!activeConversationId) {
         setActiveChatMessages([]);
         setLoadingMessages(false);
@@ -77,10 +201,8 @@ export default function MessagePage() {
       }
 
       try {
-        // Only show loading on initial fetch, not on periodic updates
-        if (isInitialFetch && !isPolling) {
+        if (!isPolling) {
           setLoadingMessages(true);
-          isInitialFetch = false;
         }
 
         const response = await taxPreparerThreadsAPI.getThreadDetails(activeConversationId);
@@ -90,21 +212,19 @@ export default function MessagePage() {
 
           if (messagesArray.length > 0) {
             const transformedMessages = messagesArray.map(msg => {
-              // Tax preparer's sent messages appear on RIGHT, client's received messages appear on LEFT
-              // Check if sender is client - if yes, type "admin" (left side), else type "user" (right side)
               const isClient = msg.sender_role === "Client" || msg.sender_role === "client";
-              let messageType = isClient ? "admin" : "user";
+              const messageType = isClient ? "admin" : "user";
 
               return {
                 id: msg.id,
                 type: messageType,
-                text: msg.content || '',
+                text: msg.content || "",
                 date: msg.created_at,
-                sender: msg.sender_name || '',
-                senderRole: msg.sender_role || '',
+                sender: msg.sender_name || "",
+                senderRole: msg.sender_role || "",
                 isRead: msg.is_read || false,
                 isEdited: msg.is_edited || false,
-                messageType: msg.message_type || 'text',
+                messageType: msg.message_type || "text",
                 isInternal: msg.is_internal || false,
                 attachment: msg.attachment || null,
                 attachmentName: msg.attachment_name || null,
@@ -112,30 +232,27 @@ export default function MessagePage() {
               };
             });
 
-            // Update messages - will merge with existing if polling
             setActiveChatMessages(prev => {
-              // Check if messages have changed
               const prevIds = new Set(prev.map(m => m.id));
               const newIds = new Set(transformedMessages.map(m => m.id));
 
-              // If same messages, don't update
-              if (prevIds.size === newIds.size &&
+              if (
+                prevIds.size === newIds.size &&
                 [...prevIds].every(id => newIds.has(id)) &&
-                [...newIds].every(id => prevIds.has(id))) {
+                [...newIds].every(id => prevIds.has(id))
+              ) {
                 return prev;
               }
 
               return transformedMessages;
             });
 
-            // Mark client messages as read via WebSocket (client messages are type "admin" now, appearing on left)
             transformedMessages.forEach(msg => {
               if (!msg.isRead && msg.type === "admin") {
                 wsMarkAsRead(msg.id);
               }
             });
 
-            // Auto-scroll to bottom after initial load
             setTimeout(() => {
               if (messagesEndRef.current) {
                 messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -146,31 +263,25 @@ export default function MessagePage() {
           }
         }
       } catch (err) {
-        console.error('Error fetching messages:', err);
-        // Don't clear messages on error during polling
+        console.error("Error fetching messages:", err);
       } finally {
         if (!isPolling) {
           setLoadingMessages(false);
         }
       }
-    };
+    },
+    [activeConversationId, wsMarkAsRead]
+  );
 
-    // Initial fetch
+  useEffect(() => {
     fetchMessages(false);
-
-    // Set up periodic polling every 5 seconds to fetch new messages
     const intervalId = setInterval(() => {
       if (activeConversationId) {
-        fetchMessages(true); // Pass true to indicate this is a polling call
+        fetchMessages(true);
       }
-    }, 5000); // Poll every 5 seconds
-
-    // Cleanup interval on unmount or when activeConversationId changes
-    return () => {
-      clearInterval(intervalId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConversationId]);
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [activeConversationId, fetchMessages]);
 
   // Sync WebSocket messages with local state - INSTANT display
   useEffect(() => {
@@ -238,27 +349,29 @@ export default function MessagePage() {
             ? lastMessage.text.substring(0, 50) + '...'
             : lastMessage.text;
 
-          setConversations(prevConvs => {
-            const updated = prevConvs.map(conv => {
-              if (conv.id === activeConversationId) {
-                return {
-                  ...conv,
-                  lastMessage: truncatedMessage,
-                  time: 'Just now',
-                  unreadCount: lastMessage.type === "admin" && !lastMessage.isRead
+        setConversations(prevConvs => {
+          const updated = prevConvs.map(conv => {
+            if (conv.id === activeConversationId) {
+              return {
+                ...conv,
+                lastMessage: truncatedMessage,
+                time: 'Just now',
+                lastMessageAt: lastMessage.date || new Date().toISOString(),
+                unreadCount:
+                  lastMessage.type === "admin" && !lastMessage.isRead
                     ? (conv.unreadCount || 0) + 1
-                    : conv.unreadCount || 0
-                };
-              }
-              return conv;
-            });
-            // Sort conversations by last message time (most recent first)
-            return updated.sort((a, b) => {
-              const dateA = new Date(a.createdAt || 0);
-              const dateB = new Date(b.createdAt || 0);
-              return dateB - dateA;
-            });
+                    : conv.unreadCount || 0,
+              };
+            }
+            return conv;
           });
+          return updated.sort((a, b) => {
+            const dateA = new Date(a.lastMessageAt || 0);
+            const dateB = new Date(b.lastMessageAt || 0);
+            return dateB - dateA;
+          });
+        });
+        fetchThreads(true);
         }
 
         // Mark client messages as read (client messages are type "admin" now, appearing on left)
@@ -330,14 +443,15 @@ export default function MessagePage() {
             return {
               ...conv,
               lastMessage: truncatedMessage,
-              time: 'Just now'
+              time: 'Just now',
+              lastMessageAt: new Date().toISOString(),
             };
           }
           return conv;
         });
         return updated.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0);
-          const dateB = new Date(b.createdAt || 0);
+          const dateA = new Date(a.lastMessageAt || 0);
+          const dateB = new Date(b.lastMessageAt || 0);
           return dateB - dateA;
         });
       });
@@ -403,18 +517,19 @@ export default function MessagePage() {
               return {
                 ...conv,
                 lastMessage: truncatedMessage,
-                time: 'Just now'
+                time: 'Just now',
+                lastMessageAt: realMsg.date || new Date().toISOString(),
               };
             }
             return conv;
           });
-          // Sort conversations by last message time (most recent first)
           return updated.sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0);
-            const dateB = new Date(b.createdAt || 0);
+            const dateA = new Date(a.lastMessageAt || 0);
+            const dateB = new Date(b.lastMessageAt || 0);
             return dateB - dateA;
           });
         });
+        fetchThreads(true);
       } else {
         throw new Error(response.message || 'Failed to send message');
       }
@@ -477,165 +592,14 @@ export default function MessagePage() {
   };
 
   // Fetch threads from API (initial load and periodic polling)
+
   useEffect(() => {
-    let isInitialFetch = true;
-
-    const fetchThreads = async (isPolling = false) => {
-      try {
-        // Only show loading on initial fetch, not on periodic updates
-        if (isInitialFetch && !isPolling) {
-          setLoadingThreads(true);
-          isInitialFetch = false;
-        }
-        setThreadsError(null);
-
-        console.log('Fetching threads from API...');
-
-        const response = await taxPreparerThreadsAPI.getThreads();
-
-        console.log('Threads API Response:', response);
-
-        if (response.success && response.data && response.data.threads) {
-          // Transform API data to match component structure
-          const transformedThreads = response.data.threads.map(thread => {
-            // Format the time - use last_message_at if available, otherwise created_at
-            let formattedTime = 'N/A';
-            if (thread.last_message_at) {
-              const date = new Date(thread.last_message_at);
-              const now = new Date();
-              const diffMs = now - date;
-              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-              if (diffHours < 1) {
-                formattedTime = 'Just now';
-              } else if (diffHours < 24) {
-                formattedTime = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-              } else if (diffDays < 7) {
-                formattedTime = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
-              } else {
-                formattedTime = date.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-                });
-              }
-            } else if (thread.created_at) {
-              const date = new Date(thread.created_at);
-              formattedTime = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-              });
-            }
-
-            // Get client name
-            const clientName = thread.client_name || 'Unknown Client';
-
-            // Get last message preview text
-            const lastMessageText = thread.last_message_preview
-              ? (thread.last_message_preview.content || 'No message')
-              : 'No message';
-
-            // Truncate message if too long
-            const truncatedMessage = lastMessageText.length > 50
-              ? lastMessageText.substring(0, 50) + '...'
-              : lastMessageText;
-
-            return {
-              id: thread.id,
-              name: clientName,
-              lastMessage: truncatedMessage,
-              time: formattedTime,
-              status: thread.status,
-              unreadCount: thread.unread_count || 0,
-              createdAt: thread.created_at,
-              subject: thread.subject,
-              // Store additional data
-              assignedStaff: thread.assigned_staff,
-              assignedStaffNames: thread.assigned_staff_names,
-              clientName: thread.client_name,
-              clientEmail: thread.client_email,
-              clientId: thread.client || thread.client_id || null, // Store client ID for matching
-              firmName: thread.firm_name,
-              lastMessagePreview: thread.last_message_preview,
-              // Initialize messages array for each chat
-              messages: [],
-            };
-          });
-
-          console.log('Transformed threads:', transformedThreads);
-
-          // Sort threads by last_message_at (most recent first)
-          const sortedThreads = transformedThreads.sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0);
-            const dateB = new Date(b.createdAt || 0);
-            return dateB - dateA;
-          });
-
-          setConversations(sortedThreads);
-
-          // Handle URL parameters to open specific thread or client conversation
-          if (clientIdFromUrl || threadIdFromUrl) {
-            let targetThread = null;
-
-            if (threadIdFromUrl) {
-              // Find thread by ID
-              targetThread = sortedThreads.find(conv => conv.id.toString() === threadIdFromUrl.toString());
-            } else if (clientIdFromUrl) {
-              // Find thread by client ID
-              targetThread = sortedThreads.find(conv => {
-                // Match by client ID if available
-                if (conv.clientId && conv.clientId.toString() === clientIdFromUrl.toString()) {
-                  return true;
-                }
-                // Fallback: if client ID is not available, we can't reliably match
-                return false;
-              });
-            }
-
-            if (targetThread) {
-              setActiveConversationId(targetThread.id);
-              // Clear URL parameters after setting active conversation
-              navigate(location.pathname, { replace: true });
-            } else if (sortedThreads.length > 0 && !activeConversationId) {
-              // Fallback to first thread if no match found
-              setActiveConversationId(sortedThreads[0].id);
-            }
-          } else {
-            // Set first thread as active if available and no active conversation
-            if (sortedThreads.length > 0 && !activeConversationId) {
-              setActiveConversationId(sortedThreads[0].id);
-            }
-          }
-        } else {
-          console.log('No threads in response');
-          setConversations([]);
-        }
-      } catch (err) {
-        console.error('Error fetching threads:', err);
-        if (!isPolling) {
-          setThreadsError(err.message || 'Failed to load conversations');
-        }
-      } finally {
-        if (!isPolling) {
-          setLoadingThreads(false);
-        }
-      }
-    };
-
-    // Initial fetch
     fetchThreads(false);
-
-    // Set up periodic polling every 10 seconds to fetch new conversations
     const intervalId = setInterval(() => {
-      fetchThreads(true); // Pass true to indicate this is a polling call
-    }, 10000); // Poll every 10 seconds
-
-    // Cleanup interval on unmount
-    return () => {
-      clearInterval(intervalId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      fetchThreads(true);
+    }, 10000);
+    return () => clearInterval(intervalId);
+  }, [fetchThreads]);
 
   // Handle click outside dropdown
   useEffect(() => {
@@ -1480,6 +1444,7 @@ export default function MessagePage() {
                         : lastMessageText;
 
                       // Transform the created thread to match component structure
+                      const threadTimestamp = thread.last_message_at || thread.created_at || new Date().toISOString();
                       const newThread = {
                         id: thread.id,
                         name: clientName,
@@ -1487,7 +1452,8 @@ export default function MessagePage() {
                         time: formattedTime,
                         status: thread.status,
                         unreadCount: thread.unread_count || 0,
-                        createdAt: thread.created_at || thread.last_message_at || new Date().toISOString(),
+                        createdAt: threadTimestamp,
+                        lastMessageAt: threadTimestamp,
                         subject: thread.subject,
                         assignedStaff: thread.assigned_staff,
                         assignedStaffNames: thread.assigned_staff_names,
@@ -1499,7 +1465,13 @@ export default function MessagePage() {
                       };
 
                       // Add the new thread to the beginning of conversations list
-                      setConversations(prev => [newThread, ...prev]);
+                      setConversations(prev =>
+                        [newThread, ...prev].sort((a, b) => {
+                          const dateA = new Date(a.lastMessageAt || 0);
+                          const dateB = new Date(b.lastMessageAt || 0);
+                          return dateB - dateA;
+                        })
+                      );
                       setActiveConversationId(newThread.id);
 
                       toast.success('Thread created successfully', {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaPaperPlane, FaSearch } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
@@ -33,6 +33,7 @@ export default function Messages() {
   const [superadmins, setSuperadmins] = useState([]);
   const [loadingSuperadmins, setLoadingSuperadmins] = useState(false);
   const typingTimeoutRef = useRef(null);
+  const threadsFetchInitialRef = useRef(true);
 
   const API_BASE_URL = getApiBaseUrl();
 
@@ -47,6 +48,28 @@ export default function Messages() {
     markAsRead: wsMarkAsRead,
     markAllAsRead: wsMarkAllAsRead,
   } = useThreadWebSocket(activeConversationId, true);
+
+  const formatRelativeTime = (timestamp) => {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const sortConversationsByRecent = (items = []) =>
+    [...items].sort(
+      (a, b) =>
+        new Date(b.lastMessageAt || b.createdAt || 0) - new Date(a.lastMessageAt || a.createdAt || 0)
+    );
 
   // Fetch superadmins from API
   const fetchSuperadmins = async () => {
@@ -94,147 +117,102 @@ export default function Messages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal]);
 
-  // Fetch chats from API (initial load and periodic polling)
-  useEffect(() => {
-    let isInitialFetch = true;
-
-    const fetchChats = async (isPolling = false) => {
+  const fetchChats = useCallback(
+    async (isPolling = false) => {
       try {
-        // Only show loading on initial fetch, not on periodic updates
-        if (isInitialFetch && !isPolling) {
+        if (threadsFetchInitialRef.current && !isPolling) {
           setLoading(true);
-          isInitialFetch = false;
+          threadsFetchInitialRef.current = false;
         }
         setError(null);
 
-        console.log('Fetching threads from API...');
-
         const response = await threadsAPI.getThreads();
 
-        console.log('Threads API Response:', response);
-
         if (response.success && response.data && response.data.threads) {
-          // Transform API data to match component structure
           const transformedChats = response.data.threads.map(thread => {
-            // Format the time - use last_message_at if available, otherwise created_at
-            let formattedTime = 'N/A';
-            if (thread.last_message_at) {
-              const date = new Date(thread.last_message_at);
-              formattedTime = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              });
-            } else if (thread.created_at) {
-              const date = new Date(thread.created_at);
-              formattedTime = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              });
-            }
+            const lastTimestamp =
+              thread.last_message_at ||
+              thread.updated_at ||
+              thread.created_at ||
+              new Date().toISOString();
 
-            // Get staff names as a string
-            const staffNames = thread.assigned_staff_names && thread.assigned_staff_names.length > 0
-              ? thread.assigned_staff_names.join(', ')
-              : 'Tax Professional';
+            const staffNames =
+              thread.assigned_staff_names && thread.assigned_staff_names.length > 0
+                ? thread.assigned_staff_names.join(", ")
+                : "Tax Professional";
 
-            // Get last message preview text
             const lastMessageText = thread.last_message_preview
-              ? thread.last_message_preview.content || 'No message'
-              : 'No message';
+              ? thread.last_message_preview.content || "No message"
+              : "No message";
 
             return {
               id: thread.id,
               name: staffNames,
               lastMessage: lastMessageText,
-              time: formattedTime,
+              time: formatRelativeTime(lastTimestamp),
+              lastMessageAt: lastTimestamp,
               status: thread.status,
               unreadCount: thread.unread_count || 0,
               createdAt: thread.created_at,
               subject: thread.subject,
-              // Store additional data
               assignedStaff: thread.assigned_staff,
               assignedStaffNames: thread.assigned_staff_names,
               clientName: thread.client_name,
               firmName: thread.firm_name,
+              clientId: thread.client || thread.client_id || null,
               lastMessagePreview: thread.last_message_preview,
-              // Initialize messages array for each chat
               messages: [],
             };
           });
 
-          console.log('Transformed chats:', transformedChats);
-          console.log('Number of conversations:', transformedChats.length);
+          const sortedChats = sortConversationsByRecent(transformedChats);
+          setConversations(sortedChats);
 
-          setConversations(transformedChats);
-          console.log('✅ Conversations state set');
-
-          // Handle URL parameters to open specific thread
           if (threadIdFromUrl || clientIdFromUrl) {
             let targetThread = null;
-
             if (threadIdFromUrl) {
-              // Find thread by ID
-              targetThread = transformedChats.find(conv => conv.id.toString() === threadIdFromUrl.toString());
+              targetThread = sortedChats.find(
+                conv => conv.id.toString() === threadIdFromUrl.toString()
+              );
             } else if (clientIdFromUrl) {
-              // Find thread by client ID (if available in data)
-              targetThread = transformedChats.find(conv => {
-                // Try to match by client ID if stored
-                return conv.clientId && conv.clientId.toString() === clientIdFromUrl.toString();
-              });
+              targetThread = sortedChats.find(
+                conv => conv.clientId && conv.clientId.toString() === clientIdFromUrl.toString()
+              );
             }
 
             if (targetThread) {
               setActiveConversationId(targetThread.id);
-              // Clear URL parameters after setting active conversation
               navigate(location.pathname, { replace: true });
-            } else if (transformedChats.length > 0 && !activeConversationId) {
-              // Fallback to first thread if no match found
-              setActiveConversationId(transformedChats[0].id);
+            } else if (sortedChats.length > 0 && !activeConversationId) {
+              setActiveConversationId(sortedChats[0].id);
             }
-          } else {
-            // Set first chat as active if available and no active conversation
-            if (transformedChats.length > 0 && !activeConversationId) {
-              console.log('Setting active conversation ID:', transformedChats[0].id);
-              console.log('First conversation data:', transformedChats[0]);
-              setActiveConversationId(transformedChats[0].id);
-            }
+          } else if (sortedChats.length > 0 && !activeConversationId) {
+            setActiveConversationId(sortedChats[0].id);
           }
         } else {
-          console.log('No threads in response');
           setConversations([]);
         }
       } catch (err) {
-        console.error('Error fetching threads:', err);
+        console.error("Error fetching threads:", err);
         if (!isPolling) {
-          setError(err.message || 'Failed to load chats');
+          setError(err.message || "Failed to load chats");
         }
       } finally {
         if (!isPolling) {
           setLoading(false);
         }
       }
-    };
+    },
+    [threadIdFromUrl, clientIdFromUrl, activeConversationId, navigate, location.pathname]
+  );
 
-    // Initial fetch
+  useEffect(() => {
     fetchChats(false);
-
-    // Set up periodic polling every 5 seconds to fetch new conversations
     const intervalId = setInterval(() => {
-      fetchChats(true); // Pass true to indicate this is a polling call
-    }, 5000); // Poll every 5 seconds
-
-    // Cleanup interval on unmount
-    return () => {
-      clearInterval(intervalId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      fetchChats(true);
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [fetchChats]);
 
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId
@@ -312,13 +290,21 @@ export default function Messages() {
           // Update conversation's last message in the list
           if (transformedMessages.length > 0) {
             const lastMessage = transformedMessages[transformedMessages.length - 1];
-            setConversations(prevConvs =>
-              prevConvs.map(conv =>
+            const lastTimestamp = lastMessage.date || new Date().toISOString();
+            setConversations(prevConvs => {
+              const updated = prevConvs.map(conv =>
                 conv.id === activeConversationId
-                  ? { ...conv, lastMessage: lastMessage.text, messages: transformedMessages }
+                  ? {
+                      ...conv,
+                      lastMessage: lastMessage.text,
+                      time: formatRelativeTime(lastTimestamp),
+                      lastMessageAt: lastTimestamp,
+                      messages: transformedMessages,
+                    }
                   : conv
-              )
-            );
+              );
+              return sortConversationsByRecent(updated);
+            });
           }
 
           // Mark messages as read via WebSocket
@@ -444,13 +430,20 @@ export default function Messages() {
         // Update conversation's last message instantly
         if (transformedMessages.length > 0) {
           const lastMessage = transformedMessages[transformedMessages.length - 1];
-          setConversations(prevConvs =>
-            prevConvs.map(conv =>
-              conv.id === activeConversationId
-                ? { ...conv, lastMessage: lastMessage.text, time: 'Just now' }
-                : conv
-            )
+        setConversations(prevConvs => {
+          const updated = prevConvs.map(conv =>
+            conv.id === activeConversationId
+              ? {
+                  ...conv,
+                  lastMessage: lastMessage.text,
+                  time: "Just now",
+                  lastMessageAt: lastMessage.date || new Date().toISOString(),
+                }
+              : conv
           );
+          return sortConversationsByRecent(updated);
+        });
+        fetchChats(true);
         }
 
         // Mark new messages as read
@@ -468,7 +461,7 @@ export default function Messages() {
         }, 50);
       }
     }
-  }, [wsMessages, activeConversationId, wsMarkAsRead]);
+  }, [wsMessages, activeConversationId, wsMarkAsRead, fetchChats]);
 
 
   const handleSend = async () => {
@@ -499,13 +492,20 @@ export default function Messages() {
       setActiveChatMessages(prev => [...prev, optimisticMsg].sort((a, b) => new Date(a.date) - new Date(b.date)));
       
       // Update conversation list instantly
-      setConversations(prevConvs =>
-        prevConvs.map(conv =>
+      const optimisticTimestamp = new Date().toISOString();
+      setConversations(prevConvs => {
+        const updated = prevConvs.map(conv =>
           conv.id === activeConversationId
-            ? { ...conv, lastMessage: messageText, time: 'Just now' }
+            ? {
+                ...conv,
+                lastMessage: messageText,
+                time: "Just now",
+                lastMessageAt: optimisticTimestamp,
+              }
             : conv
-        )
-      );
+        );
+        return sortConversationsByRecent(updated);
+      });
 
       // Auto-scroll to bottom instantly
       setTimeout(() => {
@@ -552,6 +552,7 @@ export default function Messages() {
           const filtered = prev.filter(m => m.id !== optimisticMsg.id);
           return [...filtered, realMsg].sort((a, b) => new Date(a.date) - new Date(b.date));
         });
+        fetchChats(true);
       } else {
         // Remove optimistic message on error
         setActiveChatMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
@@ -668,12 +669,14 @@ export default function Messages() {
           ? thread.last_message_preview.content || 'No message'
           : 'No message';
 
+        const timestamp = thread.last_message_at || thread.created_at || new Date().toISOString();
         // Transform the created thread to match component structure
         const newChat = {
           id: thread.id,
           name: staffNames,
           lastMessage: lastMessageText,
-          time: formattedTime,
+          time: formatRelativeTime(timestamp),
+          lastMessageAt: timestamp,
           status: thread.status,
           unreadCount: thread.unread_count || 0,
           createdAt: thread.created_at,
@@ -688,7 +691,7 @@ export default function Messages() {
         };
 
         // Add the new chat to the beginning of conversations list
-        setConversations([newChat, ...conversations]);
+        setConversations(prev => sortConversationsByRecent([newChat, ...prev]));
         setActiveConversationId(newChat.id);
 
         // Reset form
