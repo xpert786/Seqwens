@@ -9,13 +9,13 @@ const TabNavigation = ({
   activeTabClassName = "",
   inactiveTabClassName = ""
 }) => {
-  const defaultTabClassName = "px-1 py-1 text-[6px] sm:text-[4px] md:text-[6px] text-center flex-shrink-0 min-w-0 h-8 sm:h-10 md:h-12 flex items-center justify-center gap-1";
-  const defaultActiveTabClassName = "bg-[#3AD6F2] text-white";
-  const defaultInactiveTabClassName = "text-black hover:text-black";
+  const defaultTabClassName = "px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-center flex-shrink-0 whitespace-nowrap flex items-center justify-center transition-all duration-200 font-[BasisGrotesquePro]";
+  const defaultActiveTabClassName = "bg-[#3AD6F2] text-white !rounded-lg";
+  const defaultInactiveTabClassName = "text-[#1F2A55]";
 
   return (
-    <div className={`border-2 border-[#E8F0FF] bg-white rounded-lg p-0.5 sm:p-1 ${className}`}>
-      <nav className="flex gap-0.5 overflow-x-auto scrollbar-hide">
+    <div className={`bg-white !rounded-lg p-1 sm:p-2 border border-[#E8F0FF] w-full ${className}`}>
+      <nav className="flex gap-1 overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -25,9 +25,8 @@ const TabNavigation = ({
                 ? `${defaultActiveTabClassName} ${activeTabClassName}`
                 : `${defaultInactiveTabClassName} ${inactiveTabClassName}`
             }`}
-            style={{borderRadius: '7px'}}
           >
-            <div dangerouslySetInnerHTML={{ __html: tab.replace(/\n/g, '<br/>') }} />
+            {tab}
           </button>
         ))}
       </nav>
@@ -36,3 +35,4 @@ const TabNavigation = ({
 };
 
 export default TabNavigation;
+

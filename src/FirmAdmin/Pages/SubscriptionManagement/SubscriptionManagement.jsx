@@ -8,12 +8,18 @@ import Billing from './Billing';
 import AdminControls from './AdminControls';
 import Security from './Security';
 import Automation from './Automation';
+import EnterpriseOverview from './Enterprise/EnterpriseOverview';
+import EnterpriseOfficeManagement from './Enterprise/EnterpriseOfficeManagement';
+import EnterpriseConsolidatedBilling from './Enterprise/EnterpriseConsolidatedBilling';
+import EnterpriseCostAllocation from './Enterprise/EnterpriseCostAllocation';
+import EnterpriseContracts from './Enterprise/EnterpriseContracts';
 
 const API_BASE_URL = getApiBaseUrl();
 
 const SubscriptionManagement = () => {
     const [activeTab, setActiveTab] = useState('Overview');
-    const [isFailoverEnabled, setIsFailoverEnabled] = useState(false);
+    const [isFailoverEnabled, setIsFailoverEnabled] = useState(true);
+    const [activeEnterpriseTab, setActiveEnterpriseTab] = useState('Overview');
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -40,6 +46,13 @@ const SubscriptionManagement = () => {
     });
 
     const tabs = ['Overview', 'All Plan', 'Add-ons', 'Billing', 'Admin', 'Security', 'Automation', 'Enterprise'];
+    const enterpriseTabs = [
+        'Overview',
+        'Office Management',
+        'Consolidated Billing',
+        'Cost Allocation Rules',
+        'Enterprise Contracts',
+    ];
 
     // Fetch payment methods from API
     const fetchPaymentMethods = useCallback(async () => {
@@ -367,6 +380,23 @@ const SubscriptionManagement = () => {
             isPrimary,
             type: 'credit_card'
         };
+    };
+
+    const renderEnterpriseTab = () => {
+        switch (activeEnterpriseTab) {
+            case 'Overview':
+                return <EnterpriseOverview />;
+            case 'Office Management':
+                return <EnterpriseOfficeManagement />;
+            case 'Consolidated Billing':
+                return <EnterpriseConsolidatedBilling />;
+            case 'Cost Allocation Rules':
+                return <EnterpriseCostAllocation />;
+            case 'Enterprise Contracts':
+                return <EnterpriseContracts />;
+            default:
+                return null;
+        }
     };
 
     return (
@@ -937,6 +967,48 @@ const SubscriptionManagement = () => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Enterprise Tab Content */}
+                {activeTab === 'Enterprise' && (
+                    <div className="space-y-6 rounded-lg border border-[#E8F0FF] bg-white p-4 sm:p-6">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                    Multi-Office Enterprise Support
+                                </h3>
+                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                                    Revenue and cost analysis across all offices
+                                </p>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-full bg-[#F0FAFD] px-3 py-1.5 text-sm text-[#0690AC] font-[BasisGrotesquePro]">
+                                <span className="inline-flex h-2 w-2 rounded-full bg-[#3AD6F2]" />
+                                Enterprise
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <div className="inline-flex w-max rounded-lg border border-[#E8F0FF] bg-white p-1.5 sm:p-2">
+                                <div className="flex gap-2 sm:gap-3">
+                                {enterpriseTabs.map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveEnterpriseTab(tab)}
+                                            className={`whitespace-nowrap px-3 py-1.5 text-xs font-[BasisGrotesquePro] font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm !rounded-lg ${
+                                            activeEnterpriseTab === tab
+                                                    ? 'bg-[#3AD6F2] text-white'
+                                                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">{renderEnterpriseTab()}</div>
                     </div>
                 )}
 
