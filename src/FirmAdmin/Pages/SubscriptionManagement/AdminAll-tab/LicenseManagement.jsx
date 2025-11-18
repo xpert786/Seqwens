@@ -36,7 +36,7 @@ const LicenseManagement = () => {
             const token = getAccessToken();
             // Using superadmin endpoint as provided, but with firm admin auth
             // If there's a firm-admin specific endpoint, it can be changed here
-            const url = `${API_BASE_URL}/superadmin/subscriptions/licenses/`;
+            const url = `${API_BASE_URL}/user/superadmin/subscriptions/licenses/`;
 
             const response = await fetchWithCors(url, {
                 method: 'GET',
@@ -89,7 +89,7 @@ const LicenseManagement = () => {
         try {
             setAssigning(true);
             const token = getAccessToken();
-            const url = `${API_BASE_URL}/superadmin/subscriptions/licenses/`;
+            const url = `${API_BASE_URL}/user/superadmin/subscriptions/licenses/`;
 
             const payload = isBulkMode
                 ? {
@@ -142,7 +142,7 @@ const LicenseManagement = () => {
         try {
             setAssigning(true);
             const token = getAccessToken();
-            const url = `${API_BASE_URL}/superadmin/subscriptions/licenses/`;
+            const url = `${API_BASE_URL}/user/superadmin/subscriptions/licenses/`;
 
             const response = await fetchWithCors(url, {
                 method: 'PATCH',
@@ -194,7 +194,7 @@ const LicenseManagement = () => {
         try {
             setAssigning(true);
             const token = getAccessToken();
-            let url = `${API_BASE_URL}/superadmin/subscriptions/licenses/`;
+            let url = `${API_BASE_URL}/user/superadmin/subscriptions/licenses/`;
 
             const payload = {
                 staff_id: staffId

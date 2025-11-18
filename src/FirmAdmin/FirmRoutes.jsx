@@ -30,6 +30,9 @@ import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
 import Offices from './Pages/Offices';
 import OfficeOverview from './Pages/Offices/OfficeOverview';
+import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
+import OfficeComparison from './Pages/Offices/OfficeComparison';
+import SecurityCompliance from './Pages/SecurityCompliance';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -102,12 +105,15 @@ export default function FirmRoutes() {
         <Route path="subscription" element={<SubscriptionManagement />} />
 
         {/* System Administration routes */}
+        <Route path="security" element={<SecurityCompliance />} />
         <Route path="settings" element={<FirmSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="account-settings" element={<AccountSettings />} />
         <Route path="offices" element={<Offices />} />
         <Route path="offices/:officeId" element={<OfficeOverview />} />
-
+        <Route path="offices/:officeId/dashboard-view" element={<OfficeDashboardView />} />
+        <Route path="offices/:officeId/compare" element={<OfficeComparison />} />
+        
         {/* Add more routes here as needed */}
 
         {/* 404 - Not Found */}

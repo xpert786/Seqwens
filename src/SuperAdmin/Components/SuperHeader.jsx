@@ -7,7 +7,7 @@ import { UserIconBuild } from "./icons";
 import SuperAdminNotificationPanel from "./SuperAdminNotificationPanel";
 import { superAdminNotificationAPI } from "../../ClientOnboarding/utils/apiUtils";
 
-export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarCollapsed = false }) {
+export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen = true }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationButtonRef = useRef(null);
@@ -43,6 +43,7 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarColl
     // Refresh unread count when closing
     fetchUnreadCount();
   };
+
   return (
     <>
       <nav className="bg-white fixed top-0 left-0 right-0 border-b border-gray-200 h-[70px] z-[1030] px-0">
@@ -56,13 +57,13 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarColl
               onClick={onToggleSidebar}
               className="flex items-center justify-center p-2 rounded-md transition-transform duration-200 focus:outline-none"
               style={{ background: "transparent", border: "none" }}
-              aria-label={isSidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+              aria-label={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
             >
               <span
                 style={{
                   display: "inline-flex",
                   transition: "transform 0.3s ease",
-                  transform: isSidebarCollapsed ? "rotate(180deg)" : "rotate(0deg)"
+                  transform: isSidebarOpen ? "rotate(0deg)" : "rotate(180deg)"
                 }}
               >
                 <LogoIcond />
@@ -115,14 +116,9 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarColl
                 <UserIconBuild />
               </div>
             </div>
-
-
           </div>
-
         </div>
       </nav>
-
     </>
   );
 }
-
