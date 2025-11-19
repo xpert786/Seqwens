@@ -1,12 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 export default function IntegrationsTab() {
   const [preferences, setPreferences] = useState({
-    clientPortal: true,
-    emailNotifications: true,
-    workflowAutomation: true,
-    advancedReporting: true
+    client_portal_access: true,
+    email_notifications: true,
+    workflow_automation: true,
+    advanced_reporting: true
   });
+
+  const [dataManagement, setDataManagement] = useState({
+    data_retention_years: 7,
+    backup_frequency: 'Daily'
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // Fetch integrations information on mount
+  useEffect(() => {
+    const fetchIntegrationsInfo = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const response = await firmAdminSettingsAPI.getIntegrationsInfo();
+        
+        if (response.success && response.data) {
+          setPreferences({
+            client_portal_access: response.data.client_portal_access !== undefined ? response.data.client_portal_access : true,
+            email_notifications: response.data.email_notifications !== undefined ? response.data.email_notifications : true,
+            workflow_automation: response.data.workflow_automation !== undefined ? response.data.workflow_automation : true,
+            advanced_reporting: response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true
+          });
+          setDataManagement({
+            data_retention_years: response.data.data_retention_years || 7,
+            backup_frequency: response.data.backup_frequency || 'Daily'
+          });
+        } else {
+          throw new Error(response.message || 'Failed to load integrations information');
+        }
+      } catch (err) {
+        console.error('Error fetching integrations info:', err);
+        const errorMsg = handleAPIError(err);
+        setError(errorMsg || 'Failed to load integrations information');
+        toast.error(errorMsg || 'Failed to load integrations information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIntegrationsInfo();
+  }, []);
 
   const togglePreference = (key) => {
     setPreferences(prev => ({
@@ -15,8 +62,73 @@ export default function IntegrationsTab() {
     }));
   };
 
+  const handleDataManagementChange = (field, value) => {
+    setDataManagement(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError('');
+
+      const integrationsData = {
+        ...preferences,
+        data_retention_years: parseInt(dataManagement.data_retention_years, 10),
+        backup_frequency: dataManagement.backup_frequency
+      };
+
+      const response = await firmAdminSettingsAPI.updateIntegrationsInfo(integrationsData, 'POST');
+      
+      if (response.success) {
+        toast.success('Integrations settings updated successfully');
+        // Update with response data if needed
+        if (response.data) {
+          setPreferences({
+            client_portal_access: response.data.client_portal_access !== undefined ? response.data.client_portal_access : true,
+            email_notifications: response.data.email_notifications !== undefined ? response.data.email_notifications : true,
+            workflow_automation: response.data.workflow_automation !== undefined ? response.data.workflow_automation : true,
+            advanced_reporting: response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true
+          });
+          setDataManagement({
+            data_retention_years: response.data.data_retention_years || 7,
+            backup_frequency: response.data.backup_frequency || 'Daily'
+          });
+        }
+      } else {
+        throw new Error(response.message || 'Failed to update integrations settings');
+      }
+    } catch (err) {
+      console.error('Error updating integrations info:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to update integrations settings');
+      toast.error(errorMsg || 'Failed to update integrations settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-sm text-gray-600">Loading integrations settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* System Preferences */}
       <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
         <div className="mb-5">
@@ -42,12 +154,12 @@ export default function IntegrationsTab() {
               <input
                 type="checkbox"
                 className="peer sr-only"
-                checked={preferences.clientPortal}
-                onChange={() => togglePreference('clientPortal')}
+                checked={preferences.client_portal_access}
+                onChange={() => togglePreference('client_portal_access')}
               />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.clientPortal ? 'bg-[#F56D2D]' : 'bg-gray-300'
+              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.client_portal_access ? 'bg-[#F56D2D]' : 'bg-gray-300'
                 }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.clientPortal ? 'translate-x-5' : 'translate-x-0'
+                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.client_portal_access ? 'translate-x-5' : 'translate-x-0'
                   }`} />
               </div>
             </label>
@@ -66,12 +178,12 @@ export default function IntegrationsTab() {
               <input
                 type="checkbox"
                 className="peer sr-only"
-                checked={preferences.emailNotifications}
-                onChange={() => togglePreference('emailNotifications')}
+                checked={preferences.email_notifications}
+                onChange={() => togglePreference('email_notifications')}
               />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.emailNotifications ? 'bg-[#F56D2D]' : 'bg-gray-300'
+              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.email_notifications ? 'bg-[#F56D2D]' : 'bg-gray-300'
                 }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.emailNotifications ? 'translate-x-5' : 'translate-x-0'
+                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.email_notifications ? 'translate-x-5' : 'translate-x-0'
                   }`} />
               </div>
             </label>
@@ -90,12 +202,12 @@ export default function IntegrationsTab() {
               <input
                 type="checkbox"
                 className="peer sr-only"
-                checked={preferences.workflowAutomation}
-                onChange={() => togglePreference('workflowAutomation')}
+                checked={preferences.workflow_automation}
+                onChange={() => togglePreference('workflow_automation')}
               />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.workflowAutomation ? 'bg-[#F56D2D]' : 'bg-gray-300'
+              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.workflow_automation ? 'bg-[#F56D2D]' : 'bg-gray-300'
                 }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.workflowAutomation ? 'translate-x-5' : 'translate-x-0'
+                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.workflow_automation ? 'translate-x-5' : 'translate-x-0'
                   }`} />
               </div>
             </label>
@@ -114,12 +226,12 @@ export default function IntegrationsTab() {
               <input
                 type="checkbox"
                 className="peer sr-only"
-                checked={preferences.advancedReporting}
-                onChange={() => togglePreference('advancedReporting')}
+                checked={preferences.advanced_reporting}
+                onChange={() => togglePreference('advanced_reporting')}
               />
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.advancedReporting ? 'bg-[#F56D2D]' : 'bg-gray-300'
+              <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${preferences.advanced_reporting ? 'bg-[#F56D2D]' : 'bg-gray-300'
                 }`}>
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.advancedReporting ? 'translate-x-5' : 'translate-x-0'
+                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${preferences.advanced_reporting ? 'translate-x-5' : 'translate-x-0'
                   }`} />
               </div>
             </label>
@@ -143,11 +255,17 @@ export default function IntegrationsTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Data Retention (years)
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>7 years</option>
-              <option>5 years</option>
-              <option>10 years</option>
-              <option>15 years</option>
+            <select 
+              value={dataManagement.data_retention_years}
+              onChange={(e) => handleDataManagementChange('data_retention_years', parseInt(e.target.value, 10))}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              {Array.from({ length: 100 }, (_, i) => {
+                const year = i + 1;
+                return (
+                  <option key={year} value={year}>{year} {year === 1 ? 'year' : 'years'}</option>
+                );
+              })}
             </select>
           </div>
 
@@ -155,10 +273,17 @@ export default function IntegrationsTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Backup Frequency
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>Daily</option>
-              <option>Weekly</option>
-              <option>Monthly</option>
+            <select 
+              value={dataManagement.backup_frequency}
+              onChange={(e) => handleDataManagementChange('backup_frequency', e.target.value)}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="Yearly">Yearly</option>
+              <option value="Never">Never</option>
             </select>
           </div>
 
@@ -181,6 +306,30 @@ export default function IntegrationsTab() {
             </button>
           </div>
         </div>
+      </div>
+      </div>
+      
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button 
+          onClick={handleSave}
+          disabled={saving}
+          className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {saving ? (
+            <>
+              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Save Changes</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

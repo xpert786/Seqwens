@@ -257,22 +257,52 @@ export default function ClientManage() {
 
           // Map API response to match the expected structure
           if (result.data.clients) {
-            const mappedClients = result.data.clients.map(client => ({
-              id: client.id,
-              name: client.full_name || `${client.first_name} ${client.last_name}`,
-              company: client.client_type || 'Individual',
-              type: client.client_type || 'Individual',
-              email: client.email || '',
-              phone: client.phone_number || '',
-              status: client.status || 'new',
-              lastActivity: client.next_due_date || 'N/A',
-              lastActivityType: 'N/A',
-              lastActivityIcon: 'DocumentIcon',
-              totalBilled: '$0', // Can be calculated from invoices if available
-              compliance: client.status === 'active' ? 'Active' : client.status === 'pending' ? 'Pending' : 'New',
-              pendingTasks: client.pending_tasks_count || 0,
-              documentsCount: client.documents_count || 0
-            }));
+            const mappedClients = result.data.clients.map(client => {
+              // Handle different API response structures
+              const profile = client.profile || client;
+              const firstName = profile.first_name || client.first_name || '';
+              const lastName = profile.last_name || client.last_name || '';
+              
+              // Construct name from first_name and last_name, prioritizing first_name + last_name
+              let fullName = '';
+              if (firstName || lastName) {
+                // Always construct from first_name and last_name if available
+                fullName = `${firstName} ${lastName}`.trim();
+              } else if (profile.name || client.name) {
+                // Fallback to name field if first_name/last_name not available
+                fullName = profile.name || client.name;
+              } else if (profile.full_name || client.full_name) {
+                // Fallback to full_name field
+                fullName = profile.full_name || client.full_name;
+              } else {
+                // Last resort: use email
+                fullName = profile.email || client.email || 'Unknown Client';
+              }
+              
+              console.log('Client mapping:', {
+                original: client,
+                firstName,
+                lastName,
+                fullName
+              });
+              
+              return {
+                id: client.id || profile.id,
+                name: fullName,
+                company: client.client_type || profile.client_type || 'Individual',
+                type: client.client_type || profile.client_type || 'Individual',
+                email: profile.email || client.email || '',
+                phone: profile.phone || profile.phone_formatted || client.phone_number || client.phone || '',
+                status: client.status || profile.account_status?.toLowerCase() || 'new',
+                lastActivity: client.next_due_date || 'N/A',
+                lastActivityType: 'N/A',
+                lastActivityIcon: 'DocumentIcon',
+                totalBilled: '$0', // Can be calculated from invoices if available
+                compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+                pendingTasks: client.pending_tasks_count || 0,
+                documentsCount: client.documents_count || 0
+              };
+            });
             setClients(mappedClients);
             console.log('Clients loaded:', mappedClients);
           } else {

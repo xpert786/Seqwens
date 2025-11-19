@@ -34,14 +34,20 @@ export default function MyClients() {
   const [showCreateTaxpayerModal, setShowCreateTaxpayerModal] = useState(false);
   const [showInviteTaxpayerModal, setShowInviteTaxpayerModal] = useState(false);
   const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
+  const [showSendInviteModal, setShowSendInviteModal] = useState(false);
+  const [selectedClientForInvite, setSelectedClientForInvite] = useState(null);
+  const [inviteLinkForClient, setInviteLinkForClient] = useState(null);
+  const [loadingInviteLink, setLoadingInviteLink] = useState(false);
   const [createTaxpayerLoading, setCreateTaxpayerLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
+  const [sendInviteLoading, setSendInviteLoading] = useState(false);
+  const [sendInviteMethod, setSendInviteMethod] = useState(null);
   const [inviteActionMethod, setInviteActionMethod] = useState(null);
   const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
   const [activeInviteDetails, setActiveInviteDetails] = useState(null);
   const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
-  
+
   // Create taxpayer form state
   const [createTaxpayerForm, setCreateTaxpayerForm] = useState({
     first_name: "",
@@ -268,7 +274,7 @@ export default function MyClients() {
   // Create taxpayer
   const handleCreateTaxpayer = async (e) => {
     e.preventDefault();
-    
+
     if (!createTaxpayerForm.first_name || !createTaxpayerForm.last_name || !createTaxpayerForm.email) {
       toast.error("Please fill in all required fields (First Name, Last Name, Email)", {
         position: "top-right",
@@ -280,10 +286,10 @@ export default function MyClients() {
     try {
       setCreateTaxpayerLoading(true);
       const response = await taxPreparerClientAPI.createTaxpayer(createTaxpayerForm);
-      
+
       if (response.success && response.data) {
         setShowCreateTaxpayerModal(false);
-        
+
         // Reset form
         setCreateTaxpayerForm({
           first_name: "",
@@ -293,10 +299,10 @@ export default function MyClients() {
           filing_status: "",
           tags: []
         });
-        
+
         // Refresh clients list
         fetchClients();
-        
+
         toast.success("Taxpayer created successfully!", {
           position: "top-right",
           autoClose: 3000
@@ -348,7 +354,7 @@ export default function MyClients() {
   // Handle invite existing taxpayer
   const handleInviteExistingTaxpayer = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!inviteExistingForm.first_name.trim()) {
       toast.error("First name is required", {
@@ -357,7 +363,7 @@ export default function MyClients() {
       });
       return;
     }
-    
+
     if (!inviteExistingForm.last_name.trim()) {
       toast.error("Last name is required", {
         position: "top-right",
@@ -365,7 +371,7 @@ export default function MyClients() {
       });
       return;
     }
-    
+
     if (!inviteExistingForm.email.trim()) {
       toast.error("Email is required", {
         position: "top-right",
@@ -376,14 +382,14 @@ export default function MyClients() {
 
     try {
       setInviteLoading(true);
-      
+
       // Prepare payload - only include phone_number if provided
       const payload = {
         first_name: inviteExistingForm.first_name.trim(),
         last_name: inviteExistingForm.last_name.trim(),
         email: inviteExistingForm.email.trim()
       };
-      
+
       if (inviteExistingForm.phone_number && inviteExistingForm.phone_number.trim()) {
         payload.phone_number = inviteExistingForm.phone_number.trim();
       }
@@ -392,7 +398,7 @@ export default function MyClients() {
         ...payload,
         delivery_methods: ["link"]
       });
-      
+
       if (response.success && response.data) {
         toast.success("Invite created successfully!", {
           position: "top-right",
@@ -518,14 +524,181 @@ export default function MyClients() {
     handleSendInviteNotifications(["sms"], { phone_number: trimmedPhone });
   };
 
+  // Fetch or create invite link for the selected client
+  const fetchInviteLinkForClient = async (client) => {
+    if (!client || !client.id) return;
+
+    try {
+      setLoadingInviteLink(true);
+
+      // Use the new tax preparer API to get invite link by client_id
+      const linkResponse = await taxPreparerClientAPI.getInviteLink({ client_id: client.id });
+
+      if (linkResponse.success) {
+        // The API returns invite_link directly in the response
+        if (linkResponse.invite_link) {
+          setInviteLinkForClient(linkResponse.invite_link);
+        } else if (linkResponse.data?.invite_link) {
+          setInviteLinkForClient(linkResponse.data.invite_link);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching invite link:", error);
+      // Don't show error toast here, just silently fail
+    } finally {
+      setLoadingInviteLink(false);
+    }
+  };
+
+  // Copy invite link to clipboard
+  const handleCopyInviteLinkForClient = async () => {
+    if (!inviteLinkForClient) return;
+    try {
+      await navigator.clipboard.writeText(inviteLinkForClient);
+      toast.success("Invite link copied to clipboard!", {
+        position: "top-right",
+        autoClose: 2000
+      });
+    } catch (error) {
+      console.error("Error copying invite link:", error);
+      toast.error("Failed to copy invite link. Please try again.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+    }
+  };
+
+  // Handle sending invite via email from Send Invite modal
+  const handleSendInviteEmail = async () => {
+    if (!selectedClientForInvite) return;
+
+    const client = selectedClientForInvite;
+    if (!client.id) {
+      toast.error("Invalid client data.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
+
+    if (!client.email) {
+      toast.error("This client does not have an email address.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
+
+    try {
+      setSendInviteLoading(true);
+      setSendInviteMethod("email");
+
+      // Use the new tax preparer API to send invite via email
+      const sendPayload = {
+        client_id: client.id,
+        delivery_method: "email"
+      };
+
+      const sendResponse = await taxPreparerClientAPI.sendInvite(sendPayload);
+
+      if (sendResponse.success) {
+        // Update invite link if available in response
+        if (sendResponse.invite_link) {
+          setInviteLinkForClient(sendResponse.invite_link);
+        } else if (sendResponse.data?.invite_link) {
+          setInviteLinkForClient(sendResponse.data.invite_link);
+        }
+
+        toast.success("Invite email sent successfully!", {
+          position: "top-right",
+          autoClose: 3000
+        });
+      } else {
+        throw new Error(sendResponse.message || "Failed to send invite email");
+      }
+    } catch (error) {
+      console.error("Error sending invite email:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setSendInviteLoading(false);
+      setSendInviteMethod(null);
+    }
+  };
+
+  // Handle sending invite via SMS from Send Invite modal
+  const handleSendInviteSms = async () => {
+    if (!selectedClientForInvite) return;
+
+    const client = selectedClientForInvite;
+    if (!client.id) {
+      toast.error("Invalid client data.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
+
+    const phoneNumber = client.phone_number || client.phone;
+
+    if (!phoneNumber) {
+      toast.error("This client does not have a phone number.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
+
+    try {
+      setSendInviteLoading(true);
+      setSendInviteMethod("sms");
+
+      // Use the new tax preparer API to send invite via SMS
+      const sendPayload = {
+        client_id: client.id,
+        delivery_method: "sms",
+        phone_number: phoneNumber
+      };
+
+      const sendResponse = await taxPreparerClientAPI.sendInvite(sendPayload);
+
+      if (sendResponse.success) {
+        // Update invite link if available in response
+        if (sendResponse.invite_link) {
+          setInviteLinkForClient(sendResponse.invite_link);
+        } else if (sendResponse.data?.invite_link) {
+          setInviteLinkForClient(sendResponse.data.invite_link);
+        }
+
+        toast.success("Invite SMS sent successfully!", {
+          position: "top-right",
+          autoClose: 3000
+        });
+      } else {
+        throw new Error(sendResponse.message || "Failed to send invite SMS");
+      }
+    } catch (error) {
+      console.error("Error sending invite SMS:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setSendInviteLoading(false);
+      setSendInviteMethod(null);
+    }
+  };
+
   const inviteExpiresOn = activeInviteDetails?.expires_at
     ? new Date(activeInviteDetails.expires_at).toLocaleString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric"
-      })
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric"
+    })
     : null;
 
   // Handle invite confirmation (send now or later)
@@ -542,6 +715,13 @@ export default function MyClients() {
     setOpenDropdown(null);
 
     switch (action) {
+      case "invite":
+        setSelectedClientForInvite(client);
+        setInviteLinkForClient(null);
+        setShowSendInviteModal(true);
+        // Fetch invite link when modal opens
+        fetchInviteLinkForClient(client);
+        break;
       case "details":
         openClientDetails(client);
         break;
@@ -799,7 +979,10 @@ export default function MyClients() {
         ) : (
           <div className="row g-3">
             {processedClients.map((client) => (
-              <div key={client.id} className="col-md-6 col-12">
+              <div
+                key={client.id}
+                className={processedClients.length === 1 ? "col-12" : "col-md-6 col-12"}
+              >
                 <div
                   className="card client-card"
                   style={{
@@ -897,6 +1080,14 @@ export default function MyClients() {
                           <Dot />
                           {openDropdown === client.id && (
                             <ul className="dot-dropdown" style={{ position: 'absolute', top: '100%', right: '0', marginTop: '8px' }}>
+                              <li
+                                onMouseDown={(e) => handleMenuSelect(e, "invite", client)}
+                                onClick={(e) => handleMenuSelect(e, "invite", client)}
+                                tabIndex={0}
+                                role="button"
+                              >
+                                Send Invite
+                              </li>
                               <li
                                 onMouseDown={(e) => handleMenuSelect(e, "details", client)}
                                 onClick={(e) => handleMenuSelect(e, "details", client)}
@@ -1318,6 +1509,161 @@ export default function MyClients() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Invite Modal - Simple modal with Email and SMS buttons */}
+      {showSendInviteModal && selectedClientForInvite && (
+        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '450px' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF', padding: '20px 24px' }}>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', margin: 0 }}>
+                  Send Invite
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowSendInviteModal(false);
+                    setSelectedClientForInvite(null);
+                    setInviteLinkForClient(null);
+                    setSendInviteMethod(null);
+                  }}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body" style={{ padding: '24px' }}>
+                <div className="mb-4">
+                  <p className="mb-2 fw-semibold" style={{ color: '#3B4A66', fontSize: '16px' }}>
+                    {selectedClientForInvite.first_name} {selectedClientForInvite.last_name}
+                  </p>
+                  {selectedClientForInvite.email && (
+                    <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>
+                      {selectedClientForInvite.email}
+                    </p>
+                  )}
+                  {selectedClientForInvite.phone_number && (
+                    <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>
+                      {selectedClientForInvite.phone_number}
+                    </p>
+                  )}
+                </div>
+
+                {/* Invite Link Section */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66', marginBottom: '8px' }}>
+                    <FaLink size={14} /> Shareable Link
+                  </label>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={inviteLinkForClient || ""}
+                      readOnly
+                      placeholder={loadingInviteLink ? "Loading invite link..." : "No invite link available"}
+                      disabled={!inviteLinkForClient}
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #E5E7EB',
+                        fontSize: '14px',
+                        backgroundColor: inviteLinkForClient ? '#fff' : '#F3F4F6',
+                        cursor: 'not-allowed'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                      onClick={handleCopyInviteLinkForClient}
+                      disabled={!inviteLinkForClient || loadingInviteLink}
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #E5E7EB',
+                        padding: '8px 12px',
+                        whiteSpace: 'nowrap',
+                        minWidth: '45px'
+                      }}
+                      title="Copy invite link"
+                    >
+                      <FaCopy size={14} />
+                    </button>
+                  </div>
+                  {loadingInviteLink && (
+                    <small className="text-muted d-block mt-1" style={{ fontSize: '12px' }}>
+                      Generating invite link...
+                    </small>
+                  )}
+                </div>
+
+                <div className="d-flex flex-column gap-3">
+                  {/* Send Email Button */}
+                  <button
+                    type="button"
+                    className="btn btn-primary d-flex align-items-center justify-content-center gap-2"
+                    onClick={handleSendInviteEmail}
+                    disabled={sendInviteLoading || !selectedClientForInvite.email}
+                    style={{
+                      borderRadius: '8px',
+                      backgroundColor: '#00C0C6',
+                      borderColor: '#00C0C6',
+                      padding: '12px 20px',
+                      fontSize: '15px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    <FaEnvelope size={16} />
+                    {sendInviteLoading && sendInviteMethod === "email" ? "Sending..." : "Send Email"}
+                  </button>
+
+                  {/* Send SMS Button */}
+                  <button
+                    type="button"
+                    className="btn btn-primary d-flex align-items-center justify-content-center gap-2"
+                    onClick={handleSendInviteSms}
+                    disabled={sendInviteLoading || (!selectedClientForInvite.phone_number && !selectedClientForInvite.phone)}
+                    style={{
+                      borderRadius: '8px',
+                      backgroundColor: '#00C0C6',
+                      borderColor: '#00C0C6',
+                      padding: '12px 20px',
+                      fontSize: '15px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    <FaSms size={16} />
+                    {sendInviteLoading && sendInviteMethod === "sms" ? "Sending..." : "Send SMS"}
+                  </button>
+                </div>
+
+                {(!selectedClientForInvite.email || (!selectedClientForInvite.phone_number && !selectedClientForInvite.phone)) && (
+                  <div className="mt-3">
+                    <small className="text-muted" style={{ fontSize: '12px' }}>
+                      {!selectedClientForInvite.email && !selectedClientForInvite.phone_number && !selectedClientForInvite.phone
+                        ? "This client does not have an email or phone number."
+                        : !selectedClientForInvite.email
+                          ? "This client does not have an email address."
+                          : "This client does not have a phone number."}
+                    </small>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={() => {
+                    setShowSendInviteModal(false);
+                    setSelectedClientForInvite(null);
+                    setInviteLinkForClient(null);
+                    setSendInviteMethod(null);
+                  }}
+                  style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
