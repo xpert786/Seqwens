@@ -919,8 +919,8 @@ export default function FirmAdminDashboard() {
                   <button
                     onClick={() => setActiveTab('trend')}
                     className={`px-4 py-2 text-sm !rounded-lg font-[BasisGrotesquePro] font-medium transition-colors ${activeTab === 'trend'
-                        ? 'bg-[#3AD6F2] text-white'
-                        : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#3AD6F2] text-white'
+                      : 'text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     Trend
@@ -928,8 +928,8 @@ export default function FirmAdminDashboard() {
                   <button
                     onClick={() => setActiveTab('breakdown')}
                     className={`px-4 py-2 text-sm !rounded-lg font-[BasisGrotesquePro] font-medium transition-colors ${activeTab === 'breakdown'
-                        ? 'bg-[#3AD6F2] text-white'
-                        : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#3AD6F2] text-white'
+                      : 'text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     Breakdown
@@ -937,8 +937,8 @@ export default function FirmAdminDashboard() {
                   <button
                     onClick={() => setActiveTab('arap')}
                     className={`px-4 py-2 text-sm !rounded-lg font-[BasisGrotesquePro] font-medium transition-colors ${activeTab === 'arap'
-                        ? 'bg-[#3AD6F2] text-white'
-                        : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#3AD6F2] text-white'
+                      : 'text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     AR/AP
@@ -1309,8 +1309,8 @@ export default function FirmAdminDashboard() {
                       <div className="flex items-center gap-2">
                         <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.score}</div>
                         <div className={`px-2 py-1 rounded text-xs font-medium ${item.badge === 'Low' ? 'bg-blue-100 text-blue-800' :
-                            item.badge === 'Medium' ? 'bg-gray-100 text-gray-800' :
-                              'bg-red-100 text-red-800'
+                          item.badge === 'Medium' ? 'bg-gray-100 text-gray-800' :
+                            'bg-red-100 text-red-800'
                           }`}>
                           {item.badge}
                         </div>
