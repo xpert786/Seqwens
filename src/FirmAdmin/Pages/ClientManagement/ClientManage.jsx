@@ -644,20 +644,20 @@ export default function ClientManage() {
               : '',
             contentColor: "gray"
           },
-          {
-            label: "Revenue by Type",
-            value: "",
-            content: dashboardLoading
-              ? 'Loading...'
-              : `Individual: $${dashboardStats.revenue_by_type?.individual?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nBusiness: $${dashboardStats.revenue_by_type?.business?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
-          },
-          {
-            label: "Revenue by Segment",
-            value: "",
-            content: dashboardLoading
-              ? 'Loading...'
-              : `Recurring: $${dashboardStats.revenue_by_segment?.recurring?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nSeasonal: $${dashboardStats.revenue_by_segment?.seasonal?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
-          },
+          // {
+          //   label: "Revenue by Type",
+          //   value: "",
+          //   content: dashboardLoading
+          //     ? 'Loading...'
+          //     : `Individual: $${dashboardStats.revenue_by_type?.individual?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nBusiness: $${dashboardStats.revenue_by_type?.business?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
+          // },
+          // {
+            // label: "Revenue by Segment",
+            // value: "",
+            // content: dashboardLoading
+            //   ? 'Loading...'
+            //   : `Recurring: $${dashboardStats.revenue_by_segment?.recurring?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nSeasonal: $${dashboardStats.revenue_by_segment?.seasonal?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
+          // },
         ].map((card, index) => (
           <div className="w-full h-full" key={index}>
             <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col">
@@ -720,34 +720,34 @@ export default function ClientManage() {
                 </button>
               )}
             </div>
-            <button
+            {/* <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
               onClick={() => setShowFiltersModal(true)}
-            >
-              <Filter />
-              Filter
-            </button>
-            <button
+            > */}
+              {/* <Filter />
+              Filter */}
+            {/* </button> */}
+            {/* <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
               onClick={() => setShowBulkActionModal(true)}
-            >
-              <BulkAction />
-              Bulk Action ({selectedClients.length})
-            </button>
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+            > */}
+              {/* <BulkAction />
+              Bulk Action ({selectedClients.length}) */}
+            {/* </button> */}
+            {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
               <Archived className="w-4 h-4" />
               Archived Clients
-            </button>
+            </button> */}
           </div>
         </div>
 
         {/* Client Table */}
         <div className="overflow-x-auto px-6">
-          <table className="min-w-full" style={{ minWidth: '1200px' }}>
+          <table className="min-w-full" style={{ minWidth: '940px' }}>
             <thead className="">
-              <tr className="flex gap-8" style={{ minWidth: '1200px' }}>
+              <tr className="flex gap-8" style={{ minWidth: '940px' }}>
                 <th className="w-[60px] flex justify-center py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <input
                     type="checkbox"
@@ -767,9 +767,7 @@ export default function ClientManage() {
                 </th>
                 <th className="flex-1 min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                 <th className="w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
-                <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Billed</th>
                 <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
                 <th className="w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -778,28 +776,28 @@ export default function ClientManage() {
             <tbody className="bg-white">
               {clientsLoading ? (
                 <tr>
-                  <td colSpan="8" className="p-6 text-center text-gray-500">
+                  <td colSpan="6" className="p-6 text-center text-gray-500">
                     Loading clients...
                   </td>
                 </tr>
               ) : clientsError ? (
                 <tr>
-                  <td colSpan="8" className="p-6 text-center text-red-500">
+                  <td colSpan="6" className="p-6 text-center text-red-500">
                     {clientsError}
                   </td>
                 </tr>
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="p-6 text-center text-gray-500">
+                  <td colSpan="6" className="p-6 text-center text-gray-500">
                     No clients found
                   </td>
                 </tr>
               ) : (
                 clients.map((client) => (
                   <tr key={client.id}>
-                    <td colSpan="8" className="p-0">
+                    <td colSpan="6" className="p-0">
                       <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
-                        <div className="flex items-center gap-8" style={{ minWidth: '1200px' }}>
+                        <div className="flex items-center gap-8" style={{ minWidth: '940px' }}>
                           {/* Checkbox Column */}
                           <div className="w-[60px] flex justify-center">
                             <input
@@ -863,25 +861,6 @@ export default function ClientManage() {
                             </div>
                           </div>
 
-                          {/* Status Column */}
-                          <div className="w-[120px] flex justify-start">
-                            <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}
-                              style={client.status === 'active' || client.status === 'Active' ? {
-                                background: '#22C55E',
-                                border: '0.5px solid #22C55E'
-                              } : client.status === 'pending' || client.status === 'Pending' ? {
-                                background: 'var(--color-yellow-400, #FBBF24)',
-                                border: '0.5px solid var(--color-yellow-400, #FBBF24)'
-                              } : client.status === 'new' ? {
-                                background: '#3B82F6',
-                                border: '0.5px solid #3B82F6'
-                              } : {}}
-                            >
-                              {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-                            </span>
-                          </div>
-
                           {/* Last Activity Column */}
                           <div className="w-[140px]">
                             <div className="flex items-center space-x-2">
@@ -891,11 +870,6 @@ export default function ClientManage() {
                                 <div className="text-xs text-gray-400">{client.lastActivityType}</div>
                               </div>
                             </div>
-                          </div>
-
-                          {/* Total Billed Column */}
-                          <div className="w-[120px]">
-                            <span className="font-semibold text-gray-900 text-sm">{client.totalBilled}</span>
                           </div>
 
                           {/* Compliance Column */}

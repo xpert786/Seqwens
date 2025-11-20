@@ -1,34 +1,272 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { taskDetailAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const TaskDetails = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [showEditModal, setShowEditModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [taskData, setTaskData] = useState(null);
+    const [timeTrackingStatus, setTimeTrackingStatus] = useState(null);
+    const [relatedItems, setRelatedItems] = useState(null);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [timeTrackingLoading, setTimeTrackingLoading] = useState(false);
+    const [currentTime, setCurrentTime] = useState(null);
 
-    // Mock task data - in real app, fetch based on id
-    const taskData = {
-        id: 1,
-        task: 'Complete 2023 Tax Return - John Smith',
-        description: 'Prepare and file individual tax return for John Smith including Schedule C for business income',
-        category: 'Tax Preparation',
-        tags: ['Individual', 'Schedule C', 'Business'],
-        assignedTo: { initials: 'MC', name: 'Michael Chen' },
-        client: 'John Smith',
-        priority: 'High',
-        status: 'In progress',
-        progress: 75,
-        dueDate: '2024-03-20',
-        hours: '6h / 8h',
-        timeSpent: '6h / 8h',
-        created: '2024-03-10',
-        assignedBy: 'Sarah Martinez',
-        relatedItems: [
-            { name: '2023 Tax Documents', icon: 'document' },
-            { name: 'Client Messages', icon: 'message' },
-            { name: 'Review Meeting', icon: 'calendar' }
-        ]
+    // Fetch task details
+    const fetchTaskDetails = useCallback(async () => {
+        if (!id) return;
+
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await taskDetailAPI.getTaskDetails(id);
+            
+            if (response.success && response.data) {
+                setTaskData(response.data);
+            } else {
+                setError(response.message || 'Failed to fetch task details');
+            }
+        } catch (err) {
+            console.error('Error fetching task details:', err);
+            const errorMessage = handleAPIError(err);
+            setError(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to fetch task details'));
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
+    // Fetch time tracking status
+    const fetchTimeTrackingStatus = useCallback(async () => {
+        if (!id) return;
+
+        try {
+            const response = await taskDetailAPI.getTimeTrackingStatus(id);
+            if (response.success && response.data) {
+                setTimeTrackingStatus(response.data);
+            }
+        } catch (err) {
+            console.error('Error fetching time tracking status:', err);
+        }
+    }, [id]);
+
+    // Fetch related items
+    const fetchRelatedItems = useCallback(async () => {
+        if (!id) return;
+
+        try {
+            const response = await taskDetailAPI.getRelatedItems(id);
+            if (response.success && response.data) {
+                setRelatedItems(response.data);
+            }
+        } catch (err) {
+            console.error('Error fetching related items:', err);
+        }
+    }, [id]);
+
+    // Update time display for active tracking
+    useEffect(() => {
+        if (timeTrackingStatus?.is_tracking_active && timeTrackingStatus?.active_tracking) {
+            const interval = setInterval(() => {
+                const startTime = new Date(timeTrackingStatus.active_tracking.started_at).getTime();
+                const now = Date.now();
+                const elapsed = Math.floor((now - startTime) / 1000);
+                const hours = Math.floor(elapsed / 3600);
+                const minutes = Math.floor((elapsed % 3600) / 60);
+                const seconds = elapsed % 60;
+                setCurrentTime(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            }, 1000);
+
+            return () => clearInterval(interval);
+        } else {
+            setCurrentTime(null);
+        }
+    }, [timeTrackingStatus]);
+
+    useEffect(() => {
+        if (id) {
+            fetchTaskDetails();
+            fetchTimeTrackingStatus();
+            fetchRelatedItems();
+        }
+    }, [id, fetchTaskDetails, fetchTimeTrackingStatus, fetchRelatedItems]);
+
+    // Handle status update
+    const handleStatusUpdate = async (newStatus) => {
+        if (!id) return;
+
+        try {
+            setUpdatingStatus(true);
+            const response = await taskDetailAPI.updateTaskStatus(id, newStatus);
+            
+            if (response.success) {
+                toast.success(response.message || 'Task status updated successfully');
+                fetchTaskDetails(); // Refresh task data
+            } else {
+                throw new Error(response.message || 'Failed to update task status');
+            }
+        } catch (err) {
+            console.error('Error updating task status:', err);
+            const errorMessage = handleAPIError(err);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to update task status'));
+        } finally {
+            setUpdatingStatus(false);
+        }
     };
+
+    // Handle start timer
+    const handleStartTimer = async () => {
+        if (!id) return;
+
+        try {
+            setTimeTrackingLoading(true);
+            const response = await taskDetailAPI.startTimeTracking(id);
+            
+            if (response.success) {
+                toast.success(response.message || 'Time tracking started');
+                fetchTaskDetails(); // Refresh to get updated status
+                fetchTimeTrackingStatus(); // Refresh time tracking status
+            } else {
+                throw new Error(response.message || 'Failed to start time tracking');
+            }
+        } catch (err) {
+            console.error('Error starting time tracking:', err);
+            const errorMessage = handleAPIError(err);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to start time tracking'));
+        } finally {
+            setTimeTrackingLoading(false);
+        }
+    };
+
+    // Handle pause/stop timer
+    const handlePauseTimer = async () => {
+        if (!id) return;
+
+        try {
+            setTimeTrackingLoading(true);
+            const response = await taskDetailAPI.pauseTimeTracking(id);
+            
+            if (response.success) {
+                toast.success(response.message || 'Time tracking stopped');
+                fetchTaskDetails(); // Refresh task data
+                fetchTimeTrackingStatus(); // Refresh time tracking status
+            } else {
+                throw new Error(response.message || 'Failed to stop time tracking');
+            }
+        } catch (err) {
+            console.error('Error stopping time tracking:', err);
+            const errorMessage = handleAPIError(err);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to stop time tracking'));
+        } finally {
+            setTimeTrackingLoading(false);
+        }
+    };
+
+    // Handle reset timer
+    const handleResetTimer = async () => {
+        if (!id) return;
+
+        if (!window.confirm('Are you sure you want to reset all time tracking records? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            setTimeTrackingLoading(true);
+            const response = await taskDetailAPI.resetTimeTracking(id);
+            
+            if (response.success) {
+                toast.success(response.message || 'Time tracking reset successfully');
+                fetchTaskDetails(); // Refresh task data
+                fetchTimeTrackingStatus(); // Refresh time tracking status
+            } else {
+                throw new Error(response.message || 'Failed to reset time tracking');
+            }
+        } catch (err) {
+            console.error('Error resetting time tracking:', err);
+            const errorMessage = handleAPIError(err);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to reset time tracking'));
+        } finally {
+            setTimeTrackingLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#F6F7FF] p-6 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Loading task details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-[#F6F7FF] p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h5 className="text-red-800 font-[BasisGrotesquePro] mb-2">Error</h5>
+                    <p className="text-red-600 font-[BasisGrotesquePro]">{error}</p>
+                    <button
+                        onClick={fetchTaskDetails}
+                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!taskData) {
+        return (
+            <div className="min-h-screen bg-[#F6F7FF] p-6">
+                <div className="text-center">
+                    <p className="font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>No task data available</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Transform API data to component format
+    const transformedTaskData = {
+        id: taskData.id,
+        task: taskData.title || '',
+        description: taskData.description || '',
+        category: taskData.category || taskData.task_type_display || '',
+        tags: taskData.tags || [],
+        assignedTo: taskData.assigned_to ? {
+            initials: taskData.assigned_to.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '',
+            name: taskData.assigned_to.name || ''
+        } : { initials: '', name: '' },
+        client: taskData.client?.name || '',
+        priority: taskData.priority_display || taskData.priority || 'Medium',
+        status: taskData.status_display || taskData.status || 'pending',
+        progress: taskData.progress?.percentage || 0,
+        dueDate: taskData.due_date_formatted || taskData.due_date || '',
+        hours: taskData.time_spent?.formatted || taskData.time_tracking?.total_hours_formatted || '0h / 0h',
+        timeSpent: taskData.time_spent?.formatted || taskData.time_tracking?.total_hours_formatted || '0h / 0h',
+        created: taskData.created_at || '',
+        assignedBy: taskData.created_by?.name || '',
+        taskType: taskData.task_type_display || taskData.task_type || '',
+        folder: taskData.folder?.title || '',
+        estimatedHours: taskData.estimated_hours || taskData.time_tracking?.estimated_hours || null,
+        filesCount: taskData.files_count || 0,
+        checklistItemsCount: taskData.checklist_items_count || 0,
+        commentsCount: taskData.comments_count || 0
+    };
+
+    // Transform related items
+    const transformedRelatedItems = relatedItems ? [
+        ...(relatedItems.documents || []).map(doc => ({ name: doc.title, icon: doc.icon || 'document', url: doc.url })),
+        ...(relatedItems.messages || []).map(msg => ({ name: msg.title, icon: msg.icon || 'message', url: msg.url })),
+        ...(relatedItems.appointments || []).map(apt => ({ name: apt.title, icon: apt.icon || 'calendar', url: apt.url, date: apt.date, time: apt.time }))
+    ] : [];
 
     const getPriorityColor = (priority) => {
         switch (priority) {
@@ -40,11 +278,15 @@ const TaskDetails = () => {
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'In progress': return 'bg-[#1E40AF] text-white';
-            case 'Pending': return 'bg-[#FBBF24] text-white';
-            case 'Review': return 'bg-[#854D0E] text-white';
-            case 'Overdue': return 'bg-[#EF4444] text-white';
+        const statusLower = (status || '').toLowerCase();
+        switch (statusLower) {
+            case 'in progress': return 'bg-[#1E40AF] text-white';
+            case 'pending': return 'bg-[#FBBF24] text-white';
+            case 'to do': return 'bg-[#6B7280] text-white';
+            case 'review': return 'bg-[#854D0E] text-white';
+            case 'completed': return 'bg-[#10B981] text-white';
+            case 'cancelled': return 'bg-[#EF4444] text-white';
+            case 'overdue': return 'bg-[#EF4444] text-white';
             default: return 'bg-[#6B7280] text-white';
         }
     };
@@ -103,24 +345,39 @@ const TaskDetails = () => {
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 space-y-4 lg:space-y-0">
                     <div className="flex-1">
-                        <h4 className="text-xl font-bold text-gray-900 mb-3 font-[BasisGrotesquePro]">{taskData.task}</h4>
+                        <h4 className="text-xl font-bold text-gray-900 mb-3 font-[BasisGrotesquePro]">{transformedTaskData.task}</h4>
                         <div className="flex flex-wrap items-center gap-3">
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getPriorityColor(taskData.priority)}`}>
-                                {taskData.priority}
+                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getPriorityColor(transformedTaskData.priority)}`}>
+                                {transformedTaskData.priority}
                             </span>
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getStatusColor(taskData.status)}`}>
-                                {taskData.status}
+                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getStatusColor(transformedTaskData.status)}`}>
+                                {transformedTaskData.status}
                             </span>
-                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Due: {taskData.dueDate}</span>
+                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Due: {transformedTaskData.dueDate}</span>
                         </div>
                     </div>
                     <div className="flex space-x-3">
-                        <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro]">
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4.5 2.25L15 9L4.5 15.75V2.25Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-
-                            Start Timer
+                        <button
+                            onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
+                            disabled={timeTrackingLoading}
+                            className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro] disabled:opacity-50"
+                        >
+                            {timeTrackingStatus?.is_tracking_active ? (
+                                <>
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5.25 3.75H7.5C7.91421 3.75 8.25 4.08579 8.25 4.5V13.5C8.25 13.9142 7.91421 14.25 7.5 14.25H5.25C4.83579 14.25 4.5 13.9142 4.5 13.5V4.5C4.5 4.08579 4.83579 3.75 5.25 3.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M10.5 3.75H12.75C13.1642 3.75 13.5 4.08579 13.5 4.5V13.5C13.5 13.9142 13.1642 14.25 12.75 14.25H10.5C10.0858 14.25 9.75 13.9142 9.75 13.5V4.5C9.75 4.08579 10.0858 3.75 10.5 3.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    {currentTime ? `Stop (${currentTime})` : 'Stop Timer'}
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4.5 2.25L15 9L4.5 15.75V2.25Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Start Timer
+                                </>
+                            )}
                         </button>
                         <button
                             onClick={() => setShowEditModal(true)}
@@ -148,7 +405,7 @@ const TaskDetails = () => {
 
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{taskData.assignedTo.name}</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.assignedTo.name}</p>
                     </div>
                     {/* Time Spent */}
                     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
@@ -162,7 +419,7 @@ const TaskDetails = () => {
 
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{taskData.timeSpent}</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.timeSpent}</p>
                     </div>
                     {/* Progress */}
                     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
@@ -175,7 +432,7 @@ const TaskDetails = () => {
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{taskData.progress}%</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.progress}%</p>
                     </div>
                     {/* Client */}
                     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
@@ -191,7 +448,7 @@ const TaskDetails = () => {
 
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{taskData.client}</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.client}</p>
                     </div>
                 </div>
 
@@ -207,7 +464,7 @@ const TaskDetails = () => {
                                 {/* Description */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Description</label>
-                                    <p className="text-sm text-gray-900 font-[BasisGrotesquePro]">{taskData.description}</p>
+                                    <p className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.description}</p>
                                 </div>
 
                                 {/* Category and Tags - Same Line */}
@@ -216,7 +473,7 @@ const TaskDetails = () => {
                                         <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Category</label>
                                         <div>
                                             <span className="inline-flex px-3 py-1 text-xs font-medium bg-[#E8F0FF] !border border-[#E8F0FF] text-[#3B4A66] rounded-full font-[BasisGrotesquePro]">
-                                                {taskData.category}
+                                                {transformedTaskData.category}
                                             </span>
                                         </div>
                                     </div>
@@ -224,7 +481,7 @@ const TaskDetails = () => {
                                     <div className="flex-1">
                                         <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Tags</label>
                                         <div className="flex flex-wrap gap-2">
-                                            {taskData.tags.map((tag, index) => (
+                                            {transformedTaskData.tags.map((tag, index) => (
                                                 <span key={index} className="inline-flex px-3 py-1 text-xs font-medium bg-[#FFFFFF] text-[#3B4A66] !border border-[#E8F0FF] !rounded-full font-[BasisGrotesquePro]">
                                                     {tag}
                                                 </span>
@@ -234,18 +491,18 @@ const TaskDetails = () => {
                                 </div>
 
                                 {/* Progress Bar */}
-                                <div>
+                                {/* <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Progress</label>
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 bg-gray-200 rounded-full h-2">
                                             <div
                                                 className="bg-[#3AD6F2] h-2 rounded-full"
-                                                style={{ width: `${taskData.progress}%` }}
+                                                style={{ width: `${transformedTaskData.progress}%` }}
                                             ></div>
                                         </div>
-                                        <span className="text-sm text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">{taskData.progress}% complete</span>
+                                        <span className="text-sm text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">{transformedTaskData.progress}% complete</span>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
@@ -256,20 +513,20 @@ const TaskDetails = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Created:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{taskData.created}</span>
+                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.created}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Assigned By:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{taskData.assignedBy}</span>
+                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.assignedBy}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Due Date:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{taskData.dueDate}</span>
+                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.dueDate}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Priority:</span>
-                                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getPriorityColor(taskData.priority)}`}>
-                                        {taskData.priority}
+                                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getPriorityColor(transformedTaskData.priority)}`}>
+                                        {transformedTaskData.priority}
                                     </span>
                                 </div>
                             </div>
@@ -285,13 +542,19 @@ const TaskDetails = () => {
                             <div className="space-y-4">
                                 {/* Status Dropdown */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Description</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Status</label>
                                     <div className="relative">
-                                        <select className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer">
-                                            <option>In Progress</option>
-                                            <option>Pending</option>
-                                            <option>Review</option>
-                                            <option>Completed</option>
+                                        <select
+                                            value={taskData.status || 'to_do'}
+                                            onChange={(e) => handleStatusUpdate(e.target.value)}
+                                            disabled={updatingStatus}
+                                            className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer disabled:opacity-50"
+                                        >
+                                            <option value="to_do">To Do</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="cancelled">Cancelled</option>
                                         </select>
                                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                             <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -303,26 +566,51 @@ const TaskDetails = () => {
 
                                 {/* Timer Controls */}
                                 <div className="space-y-2">
+                                    {/* Timer Display */}
+                                    {timeTrackingStatus && (
+                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+                                            <div className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1">Total Time</div>
+                                            <div className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                                {currentTime || timeTrackingStatus.total_time_formatted || '0:00:00'}
+                                            </div>
+                                            {timeTrackingStatus.is_tracking_active && timeTrackingStatus.active_tracking && (
+                                                <div className="text-xs text-green-600 font-[BasisGrotesquePro] mt-1">
+                                                    Active • Started by {timeTrackingStatus.active_tracking.started_by}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     {/* Start and Pause - Same Line */}
                                     <div className="flex gap-2">
-                                        <button className="flex-1 px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm">
-                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M3.5 1.75L11.6667 7L3.5 12.25V1.75Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                            Start
-                                        </button>
-                                        <button className="flex-1 px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm">
-                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M9.9165 2.33203H8.74984C8.42767 2.33203 8.1665 2.5932 8.1665 2.91536V11.082C8.1665 11.4042 8.42767 11.6654 8.74984 11.6654H9.9165C10.2387 11.6654 10.4998 11.4042 10.4998 11.082V2.91536C10.4998 2.5932 10.2387 2.33203 9.9165 2.33203Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M5.25 2.33203H4.08333C3.76117 2.33203 3.5 2.5932 3.5 2.91536V11.082C3.5 11.4042 3.76117 11.6654 4.08333 11.6654H5.25C5.57217 11.6654 5.83333 11.4042 5.83333 11.082V2.91536C5.83333 2.5932 5.57217 2.33203 5.25 2.33203Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                            Pause
+                                        <button
+                                            onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
+                                            disabled={timeTrackingLoading}
+                                            className="flex-1 px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50"
+                                        >
+                                            {timeTrackingStatus?.is_tracking_active ? (
+                                                <>
+                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M9.9165 2.33203H8.74984C8.42767 2.33203 8.1665 2.5932 8.1665 2.91536V11.082C8.1665 11.4042 8.42767 11.6654 8.74984 11.6654H9.9165C10.2387 11.6654 10.4998 11.4042 10.4998 11.082V2.91536C10.4998 2.5932 10.2387 2.33203 9.9165 2.33203Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                                        <path d="M5.25 2.33203H4.08333C3.76117 2.33203 3.5 2.5932 3.5 2.91536V11.082C3.5 11.4042 3.76117 11.6654 4.08333 11.6654H5.25C5.57217 11.6654 5.83333 11.4042 5.83333 11.082V2.91536C5.83333 2.5932 5.57217 2.33203 5.25 2.33203Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Pause
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M3.5 1.75L11.6667 7L3.5 12.25V1.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Start
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                     {/* Reset Timer - New Line */}
-                                    <button className="w-full px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm">
+                                    <button
+                                        onClick={handleResetTimer}
+                                        disabled={timeTrackingLoading || !timeTrackingStatus || timeTrackingStatus.total_sessions === 0}
+                                        className="w-full px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50"
+                                    >
                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
@@ -333,20 +621,35 @@ const TaskDetails = () => {
                         </div>
 
                         {/* Related Items Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
+                        {/* <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
                             <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Related Items</h4>
 
                             <div className="space-y-3">
-                                {taskData.relatedItems.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                                        <div className=" flex items-center justify-center flex-shrink-0">
-                                            {getIcon(item.icon)}
+                                {transformedRelatedItems.length > 0 ? (
+                                    transformedRelatedItems.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            onClick={() => item.url && navigate(item.url)}
+                                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                                        >
+                                            <div className="flex items-center justify-center flex-shrink-0">
+                                                {getIcon(item.icon)}
+                                            </div>
+                                            <div className="flex-1">
+                                                <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{item.name}</span>
+                                                {item.date && (
+                                                    <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                                                        {item.date} {item.time && `• ${item.time}`}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{item.name}</span>
-                                    </div>
-                                ))}
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">No related items found</p>
+                                )}
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

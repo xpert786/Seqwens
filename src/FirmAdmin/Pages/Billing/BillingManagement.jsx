@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -22,13 +22,11 @@ export default function BillingManagement() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [openDropdown, setOpenDropdown] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
     client_id: ""
   });
-  const dropdownRefs = useRef({});
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -103,26 +101,6 @@ export default function BillingManagement() {
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (openDropdown !== null) {
-        const dropdownElement = dropdownRefs.current[openDropdown];
-        if (dropdownElement && !dropdownElement.contains(event.target)) {
-          setOpenDropdown(null);
-        }
-      }
-    };
-
-    if (openDropdown !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openDropdown]);
 
   // Format date helper
   const formatDate = (dateString) => {
@@ -549,42 +527,16 @@ export default function BillingManagement() {
                         {dueDate}
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <div
-                          className="relative inline-block"
-                          ref={(el) => { dropdownRefs.current[invoice.id] = el; }}
+                        <button
+                          onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
+                          className="p-2 hover:bg-gray-100 !rounded-lg transition"
+                          title="View Details"
                         >
-                          <button
-                            onClick={() => setOpenDropdown(openDropdown === invoice.id ? null : invoice.id)}
-                            className="p-2 hover:bg-gray-100 !rounded-lg transition"
-                          >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                            </svg>
-                          </button>
-                          {openDropdown === invoice.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50" style={{ borderColor: '#E5E7EB' }}>
-                              <div className="py-1">
-                                <button
-                                  onClick={() => {
-                                    navigate(`/firmadmin/billing/${invoice.id}`);
-                                    setOpenDropdown(null);
-                                  }}
-                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition"
-                                  style={{ color: '#3B82F6' }}
-                                >
-                                  View Details
-                                </button>
-                                <button
-                                  onClick={() => setOpenDropdown(null)}
-                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition"
-                                  style={{ color: '#EF4444' }}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#3B82F6' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
                       </td>
                     </tr>
                   );
