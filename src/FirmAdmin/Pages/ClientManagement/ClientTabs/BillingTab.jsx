@@ -1,10 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { firmAdminBillingHistoryAPI, handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
-export default function BillingTab({ client, billingHistory = [] }) {
+export default function BillingTab({ client, billingHistory: propBillingHistory = [] }) {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(null);
   const dropdownRefs = useRef({});
+  const [billingHistory, setBillingHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1
+  });
+  const [filters, setFilters] = useState({
+    status: '',
+    start_date: '',
+    end_date: '',
+    search: ''
+  });
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -51,14 +68,131 @@ export default function BillingTab({ client, billingHistory = [] }) {
     setShowDropdown(showDropdown === invoiceId ? null : invoiceId);
   };
 
+  // Fetch billing history from API
+  useEffect(() => {
+    const fetchBillingHistory = async () => {
+      if (!client?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = {
+          client_id: client.id,
+          page: pagination.page,
+          page_size: pagination.page_size,
+          sort_by: '-issue_date',
+          include_payments: true
+        };
+
+        if (filters.status) params.status = filters.status;
+        if (filters.start_date) params.start_date = filters.start_date;
+        if (filters.end_date) params.end_date = filters.end_date;
+        if (filters.search) params.search = filters.search;
+
+        const response = await firmAdminBillingHistoryAPI.getBillingHistory(params);
+        
+        // Handle different response structures
+        if (response?.success && response?.data) {
+          // New API structure with data wrapper
+          setBillingHistory(response.data.invoices || []);
+          if (response.data.pagination) {
+            setPagination(response.data.pagination);
+          }
+        } else if (response?.invoices) {
+          // Direct response with invoices
+          setBillingHistory(response.invoices || []);
+          if (response.pagination) {
+            setPagination(response.pagination);
+          }
+        } else if (Array.isArray(response)) {
+          // Array of invoices
+          setBillingHistory(response);
+        } else {
+          setBillingHistory([]);
+        }
+      } catch (err) {
+        console.error('Error fetching billing history:', err);
+        setError(handleAPIError(err));
+        toast.error(handleAPIError(err));
+        setBillingHistory([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBillingHistory();
+  }, [client?.id, pagination.page, pagination.page_size, filters.status, filters.start_date, filters.end_date, filters.search]);
+
+  // Format currency helper
+  const formatCurrency = (amount) => {
+    if (typeof amount === 'string') {
+      amount = parseFloat(amount);
+    }
+    return amount ? `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00';
+  };
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF]">
       <div className="mb-6">
-        <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">Billing History</h5>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">All invoices and payments for this client</p>
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">Billing History</h5>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">All invoices and payments for this client</p>
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-[BasisGrotesquePro]"
+            >
+              <option value="">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+              <option value="partial">Partial</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-[BasisGrotesquePro]"
+            />
+          </div>
+        </div>
       </div>
 
-      {billingHistory.length === 0 ? (
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading billing history...</p>
+        </div>
+      ) : billingHistory.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No billing history available</p>
         </div>
@@ -77,21 +211,32 @@ export default function BillingTab({ client, billingHistory = [] }) {
 
           {/* Invoice Rows */}
           <div className="space-y-3">
-            {billingHistory.map((invoice) => (
-              <div
-                key={invoice.id}
-                className="grid grid-cols-7 gap-4 items-center bg-white !rounded-lg p-4 !border border-[#E8F0FF] font-[BasisGrotesquePro]"
-              >
-                <div className="text-sm font-medium text-gray-900">{invoice.invoice_id || `INV-${invoice.id}`}</div>
-                <div className="text-sm text-gray-900">{invoice.description || 'N/A'}</div>
-                <div className="text-sm font-medium text-gray-900">{invoice.formatted_amount || `$${invoice.amount || '0.00'}`}</div>
-                <div className="text-sm text-gray-900">{invoice.formatted_date || invoice.issue_date || 'N/A'}</div>
-                <div className="text-sm text-gray-900">{invoice.formatted_due_date || invoice.due_date || 'N/A'}</div>
-                <div>
-                  <span className={`px-3 py-1 text-xs font-medium !rounded-[20px] ${getStatusColor(invoice.status)} font-[BasisGrotesquePro]`}>
-                    {invoice.status_display || invoice.status || 'N/A'}
-                  </span>
-                </div>
+            {billingHistory.map((invoice) => {
+              // Map API response fields to display fields
+              const invoiceNumber = invoice.invoice_number || invoice.invoice_id || `INV-${invoice.id}`;
+              const description = invoice.description || invoice.notes || 'N/A';
+              const amount = parseFloat(invoice.amount || invoice.total_amount || 0);
+              const formattedAmount = invoice.formatted_amount || formatCurrency(amount);
+              const issueDate = invoice.formatted_issue_date || invoice.formatted_date || formatDate(invoice.issue_date);
+              const dueDate = invoice.formatted_due_date || formatDate(invoice.due_date);
+              const status = invoice.status || 'draft';
+              const statusDisplay = invoice.status_display || status.charAt(0).toUpperCase() + status.slice(1);
+
+              return (
+                <div
+                  key={invoice.id}
+                  className="grid grid-cols-7 gap-4 items-center bg-white !rounded-lg p-4 !border border-[#E8F0FF] font-[BasisGrotesquePro]"
+                >
+                  <div className="text-sm font-medium text-gray-900">{invoiceNumber}</div>
+                  <div className="text-sm text-gray-900">{description}</div>
+                  <div className="text-sm font-medium text-gray-900">{formattedAmount}</div>
+                  <div className="text-sm text-gray-900">{issueDate}</div>
+                  <div className="text-sm text-gray-900">{dueDate}</div>
+                  <div>
+                    <span className={`px-3 py-1 text-xs font-medium !rounded-[20px] ${getStatusColor(status)} font-[BasisGrotesquePro]`}>
+                      {statusDisplay}
+                    </span>
+                  </div>
                 <div className="flex justify-center relative">
                   <div
                     ref={(el) => { dropdownRefs.current[invoice.id] = el; }}
@@ -145,8 +290,42 @@ export default function BillingTab({ client, billingHistory = [] }) {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+
+          {/* Pagination Controls */}
+          {pagination.total_pages > 1 && (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+              <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} invoices
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
+                  disabled={!pagination.has_previous}
+                  className={`px-3 py-2 text-sm border rounded-lg font-[BasisGrotesquePro] ${
+                    !pagination.has_previous
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
+                  disabled={!pagination.has_next}
+                  className={`px-3 py-2 text-sm border rounded-lg font-[BasisGrotesquePro] ${
+                    !pagination.has_next
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

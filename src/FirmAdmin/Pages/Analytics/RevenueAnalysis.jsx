@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ComposedChart } from 'recharts';
-import TabNavigation from '../../Components/TabNavigation';
+import TabNavigation from '../Integrations/TabNavigation';
 
 export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
 
@@ -147,8 +147,8 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
 
       {/* Tab Navigation */}
       <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
-          <div className="flex-1 lg:flex-none">
+        <div className="flex flex-col 2xl:flex-row 2xl:justify-between 2xl:items-center space-y-4 2xl:space-y-0">
+          <div className="w-full 2xl:w-auto 2xl:flex-none">
             <TabNavigation
               tabs={tabs}
               activeTab={activeTab}
@@ -157,9 +157,9 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
           </div>
 
           {/* Tab-specific filters */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 lg:ml-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full 2xl:w-auto 2xl:ml-4">
             <div className="relative w-full sm:w-40">
-              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-8 text-sm focus:outline-none">
                 <option>Tax Year 2024</option>
                 <option>Tax Year 2023</option>
                 <option>Tax Year 2022</option>
@@ -172,7 +172,7 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs }) {
             </div>
 
             <div className="relative w-full sm:w-32">
-              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-8 text-sm focus:outline-none">
                 <option>All Office</option>
                 <option>Office A</option>
                 <option>Office B</option>

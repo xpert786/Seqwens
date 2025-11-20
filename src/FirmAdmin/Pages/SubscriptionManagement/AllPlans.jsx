@@ -5,7 +5,7 @@ import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
-const AllPlans = () => {
+const AllPlans = ({ currentPlanName }) => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -74,6 +74,16 @@ const AllPlans = () => {
     const formatPlanType = (type) => {
         if (!type) return 'Plan';
         return type.charAt(0).toUpperCase() + type.slice(1);
+    };
+
+    // Check if a plan is the current plan
+    const isCurrentPlan = (plan) => {
+        if (!currentPlanName) return false;
+        // Normalize both names for comparison (case-insensitive)
+        const planType = formatPlanType(plan.subscription_type).toLowerCase();
+        const currentPlan = currentPlanName.toLowerCase();
+        // Check if plan type matches current plan name
+        return planType === currentPlan;
     };
 
     // Get plan description based on subscription type
@@ -199,24 +209,34 @@ const AllPlans = () => {
                             const isMostPopular = plan.most_popular || false;
                             const discountPercentage = plan.discount_percentage_yearly || 0;
                             const availableAddons = getAvailableAddons(plan);
+                            const isCurrent = isCurrentPlan(plan);
 
                             return (
                                 <div
                                     key={plan.id}
-                                    className={`bg-white !rounded-lg !border p-4 sm:p-5 lg:p-6 relative shadow-sm ${isMostPopular
-                                        ? '!border-2 border-[#F56D2D]'
-                                        : 'border-[#E8F0FF]'
+                                    className={`bg-white !rounded-lg !border p-4 sm:p-5 lg:p-6 relative shadow-sm ${
+                                        isCurrent
+                                            ? '!border-2 border-[#3AD6F2] ring-2 ring-[#3AD6F2] ring-opacity-20'
+                                            : isMostPopular
+                                            ? '!border-2 border-[#F56D2D]'
+                                            : 'border-[#E8F0FF]'
                                         }`}
                                 >
+                                    {/* Current Plan Badge */}
+                                    {isCurrent && (
+                                        <span className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#3AD6F2] text-white !rounded-full text-[10px] sm:text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap z-10">
+                                            Current Plan
+                                        </span>
+                                    )}
                                     {/* Most Popular Badge */}
-                                    {isMostPopular && (
+                                    {isMostPopular && !isCurrent && (
                                         <span className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#F56D2D] text-white !rounded-full text-[10px] sm:text-xs font-medium font-[BasisGrotesquePro] whitespace-nowrap">
                                             Most Popular
                                         </span>
                                     )}
 
                                     {/* Plan Header */}
-                                    <div className={isMostPopular ? 'mt-2' : ''}>
+                                    <div className={(isMostPopular || isCurrent) ? 'mt-2' : ''}>
                                         <h5 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
                                             {formatPlanType(plan.subscription_type)}
                                         </h5>
@@ -351,14 +371,18 @@ const AllPlans = () => {
 
                                     {/* Action Button */}
                                     <button
-                                        className={`w-full px-3 sm:px-4 py-2 !rounded-lg transition-colors font-[BasisGrotesquePro] text-xs sm:text-sm font-medium ${isMostPopular
-                                            ? 'bg-[#F56D2D] text-white hover:bg-[#EA580C]'
-                                            : isCustomPricing
+                                        className={`w-full px-3 sm:px-4 py-2 !rounded-lg transition-colors font-[BasisGrotesquePro] text-xs sm:text-sm font-medium ${
+                                            isCurrent
+                                                ? 'bg-[#3AD6F2] text-white hover:bg-[#2BC5E0] cursor-default'
+                                                : isMostPopular
+                                                ? 'bg-[#F56D2D] text-white hover:bg-[#EA580C]'
+                                                : isCustomPricing
                                                 ? 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
                                                 : 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
                                             }`}
+                                        disabled={isCurrent}
                                     >
-                                        {isCustomPricing ? 'Contact Sales' : isMostPopular ? 'Current Plan' : 'Upgrade'}
+                                        {isCurrent ? 'Current Plan' : isCustomPricing ? 'Contact Sales' : isMostPopular ? 'Upgrade' : 'Upgrade'}
                                     </button>
                                 </div>
                             );

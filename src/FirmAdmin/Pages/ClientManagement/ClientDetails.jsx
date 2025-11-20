@@ -9,7 +9,6 @@ import DocumentsTab from './ClientTabs/DocumentsTab';
 import BillingTab from './ClientTabs/BillingTab';
 import TimelineTab from './ClientTabs/TimelineTab';
 import AppointmentsTab from './ClientTabs/AppointmentsTab';
-import DueDiligenceTab from './ClientTabs/DueDiligenceTab';
 import NotesTab from './ClientTabs/NotesTab';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -88,28 +87,28 @@ export default function ClientDetails() {
 
   // Map API data to component format
   const clientData = client ? {
-    id: client.id,
-    initials: client.initials || '',
-    name: client.full_name || `${client.first_name} ${client.last_name}`,
-    firstName: client.first_name || '',
-    lastName: client.last_name || '',
-    profilePicture: client.profile_picture || null,
-    email: client.email || client.contact_details?.email || '',
-    phone: client.phone_number_formatted || client.phone_number || client.contact_details?.phone_formatted || client.contact_details?.phone || '',
-    phoneRaw: client.phone_number || client.contact_details?.phone || '',
-    ssn: client.ssn || client.personal_information?.ssn || '',
+    id: client.profile?.id || client.id,
+    initials: client.profile?.initials || '',
+    name: client.profile?.name || client.personal_information?.name || (client.profile?.first_name && client.profile?.last_name ? `${client.profile.first_name} ${client.profile.last_name}` : '') || 'Unknown Client',
+    firstName: client.profile?.first_name || client.personal_information?.first_name || '',
+    lastName: client.profile?.last_name || client.personal_information?.last_name || '',
+    profilePicture: client.profile?.profile_picture_url || null,
+    email: client.profile?.email || client.contact_details?.email || '',
+    phone: client.profile?.phone_formatted || client.contact_details?.phone_formatted || client.profile?.phone || client.contact_details?.phone || '',
+    phoneRaw: client.profile?.phone || client.contact_details?.phone || '',
+    ssn: client.personal_information?.ssn || '',
     ssnValue: client.personal_information?.ssn_value || '',
-    status: client.status || client.account_details?.status || 'active',
-    filingStatus: client.filing_status || client.personal_information?.filing_status || '',
+    status: client.account_details?.status || client.profile?.account_status?.toLowerCase() || 'active',
+    filingStatus: client.personal_information?.filing_status || '',
     filingStatusValue: client.personal_information?.filing_status_value || '',
-
+    gender: client.personal_information?.gender || client.personal_information?.gender_value || null,
     dob: client.personal_information?.date_of_birth || '',
     dobValue: client.personal_information?.date_of_birth_value || '',
     address: {
-      line: client.address?.address_line || '',
-      city: client.address?.city || '',
-      state: client.address?.state || '',
-      zip: client.address?.zip_code || ''
+      line: client.address_information?.address_line || '',
+      city: client.address_information?.city || '',
+      state: client.address_information?.state || '',
+      zip: client.address_information?.zip_code || ''
     },
     spouse: {
       name: client.spouse_information?.name || '',
@@ -134,21 +133,21 @@ export default function ClientDetails() {
       email: client.account_details?.assigned_staff?.email || ''
     },
     joinDate: client.account_details?.join_date || '',
-    joinDateValue: client.account_details?.join_date_value || client.date_joined || '',
-    accountStatus: client.account_details?.status || 'active',
-    accountStatusDisplay: client.account_details?.status_display || 'Active',
-    totalBilled: client.statistics?.total_billed_formatted || '$0.00',
-    totalBilledRaw: client.statistics?.total_billed || 0,
-    documents: client.statistics?.documents || 0,
-    appointments: client.statistics?.appointments || 0,
-    lastActivity: client.statistics?.last_activity || client.last_activity?.last_active_relative || '',
+    joinDateValue: client.account_details?.join_date_value || '',
+    accountStatus: client.account_details?.status || client.profile?.account_status?.toLowerCase() || 'active',
+    accountStatusDisplay: client.account_details?.status_display || client.profile?.account_status || 'Active',
+    totalBilled: client.summary_cards?.total_billed || client.engagement_metrics?.outstanding_balance || '$0.00',
+    totalBilledRaw: 0, // Parse if needed from total_billed string
+    documents: client.summary_cards?.documents_uploaded || client.engagement_metrics?.documents_uploaded || 0,
+    appointments: client.engagement_metrics?.total_appointments || client.summary_cards?.appointments_scheduled || 0,
+    lastActivity: client.summary_cards?.last_activity || client.summary_cards?.last_activity_relative || '',
     lastActivityDetails: {
-      lastActive: client.last_activity?.last_active || '',
-      lastActiveDisplay: client.last_activity?.last_active_display || '',
-      lastActiveRelative: client.last_activity?.last_active_relative || ''
+      lastActive: client.summary_cards?.last_activity_value || '',
+      lastActiveDisplay: client.summary_cards?.last_activity || '',
+      lastActiveRelative: client.summary_cards?.last_activity_relative || ''
     },
     billingHistory: client.billing_history || [],
-    dateJoined: client.date_joined || ''
+    dateJoined: client.account_details?.join_date_value || ''
   } : null;
 
   const tabs = [
@@ -157,7 +156,6 @@ export default function ClientDetails() {
     'Billing',
     'Timeline',
     'Appointments',
-    'Due-Diligence',
     'Notes'
   ];
 
@@ -299,7 +297,7 @@ export default function ClientDetails() {
 
               Send Message
             </button>
-            <div className="relative dropdown-container">
+            {/* <div className="relative dropdown-container">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -327,7 +325,7 @@ export default function ClientDetails() {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -390,10 +388,6 @@ export default function ClientDetails() {
 
       {activeTab === 'Appointments' && (
         <AppointmentsTab client={clientData} />
-      )}
-
-      {activeTab === 'Due-Diligence' && (
-        <DueDiligenceTab client={clientData} />
       )}
 
       {activeTab === 'Notes' && (

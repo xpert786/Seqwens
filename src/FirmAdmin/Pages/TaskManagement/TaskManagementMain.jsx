@@ -1,22 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TableView from './TableView';
-import KanbanView from './KanbanView';
-import CalendarView from './CalendarView';
-import GanttView from './GanttView';
-import ReportingView from './ReportingView';
 import CreateTaskModal from './CreateTaskModal';
 import { firmAdminTasksAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 
 const TaskManagementMain = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('Table View');
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('All Priorities');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [taskData, setTaskData] = useState([]);
@@ -34,8 +32,6 @@ const TaskManagementMain = () => {
     total_pages: 1
   });
   const [currentPage, setCurrentPage] = useState(1);
-
-  const tabs = ['Table View', 'Kanban', 'Calendar', 'Gantt', 'Reporting'];
 
   // Fetch tasks from API
   const fetchTasks = useCallback(async () => {
@@ -87,7 +83,7 @@ const TaskManagementMain = () => {
           status: task.status_display || task.status || 'Pending',
           progress: task.progress_percentage || 0,
           dueDate: task.due_date_formatted || task.due_date || '',
-          hours: task.hours_display || `${task.hours_spent || 0}h / ${task.estimated_hours || 0}h`,
+          // hours: task.hours_display || `${task.hours_spent || 0}h / ${task.estimated_hours || 0}h`,
           category: task.category || task.task_type_display || '',
           is_overdue: task.is_overdue || false
         }));
@@ -217,6 +213,35 @@ const TaskManagementMain = () => {
     setOpenDropdown(null);
     if (action === 'View Details') {
       navigate(`/firmadmin/tasks/${taskId}`);
+    } else if (action === 'Delete Task') {
+      const task = taskData.find(t => t.id === taskId);
+      setTaskToDelete({ id: taskId, title: task?.task || 'Task' });
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      setDeleting(true);
+      const response = await firmAdminTasksAPI.deleteTask(taskToDelete.id);
+      
+      if (response.success) {
+        toast.success(response.message || 'Task deleted successfully');
+        setShowDeleteConfirm(false);
+        setTaskToDelete(null);
+        // Refresh task list
+        fetchTasks();
+      } else {
+        throw new Error(response.message || 'Failed to delete task');
+      }
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to delete task. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -264,8 +289,13 @@ const TaskManagementMain = () => {
             </button>
 
             <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowCreateTaskModal(true);
+              }}
               className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]"
-              onClick={() => setShowCreateTaskModal(true)}
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -351,119 +381,63 @@ const TaskManagementMain = () => {
               </div>
             </div>
           </div>
-
-          {/* Summary Statistics and Trigger Buttons */}
-          {(activeTab === 'Kanban' || activeTab === 'Calendar') && (
-            <div className="flex items-center gap-3 mb-4 overflow-x-auto">
-              <div className="flex items-center gap-3 text-sm font-[BasisGrotesquePro] flex-shrink-0">
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
-                  All: {taskData.length}
-                </span>
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
-                  To Do: {summary.pending}
-                </span>
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
-                  In Progress: {summary.in_progress}
-                </span>
-                <span className="bg-white text-gray-700 !border border-[#E8F0FF] !rounded-full px-3 py-1 whitespace-nowrap">
-                  Done: {summary.completed}
-                </span>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm whitespace-nowrap">
-                  Trigger: New Client Onboarded
-                </button>
-                <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm whitespace-nowrap">
-                  Trigger: IRS Rejection
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Tab Navigation */}
-          <div className="w-fit">
-            <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-3">
-              <div className="flex gap-2">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 text-sm font-medium !rounded-lg transition-colors font-[BasisGrotesquePro] whitespace-nowrap ${activeTab === tab
-                      ? 'bg-[#3AD6F2] text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-50'
-                      }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Table View Content */}
         {!loading && !error && (
           <>
-            {activeTab === 'Table View' && (
-              <>
-                <TableView
-                  taskData={taskData}
-                  getPriorityColor={getPriorityColor}
-                  getStatusColor={getStatusColor}
-                  handleActionClick={handleActionClick}
-                  openDropdown={openDropdown}
-                  handleActionSelect={handleActionSelect}
-                />
-                {/* Pagination Controls */}
-                {pagination.total_pages > 1 && (
-                  <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      style={{
-                        backgroundColor: currentPage === 1 ? '#E5E7EB' : '#F56D2D',
-                        color: currentPage === 1 ? '#9CA3AF' : '#FFFFFF',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '6px 12px',
-                        fontSize: '14px',
-                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                        opacity: currentPage === 1 ? 0.6 : 1,
-                        fontFamily: 'BasisGrotesquePro'
-                      }}
-                    >
-                      Previous
-                    </button>
-                    <span style={{ fontSize: '14px', color: '#4B5563', minWidth: '100px', textAlign: 'center', fontFamily: 'BasisGrotesquePro' }}>
-                      Page {currentPage} of {pagination.total_pages}
-                    </span>
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage >= pagination.total_pages}
-                      style={{
-                        backgroundColor: currentPage >= pagination.total_pages ? '#E5E7EB' : '#F56D2D',
-                        color: currentPage >= pagination.total_pages ? '#9CA3AF' : '#FFFFFF',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '6px 12px',
-                        fontSize: '14px',
-                        cursor: currentPage >= pagination.total_pages ? 'not-allowed' : 'pointer',
-                        opacity: currentPage >= pagination.total_pages ? 0.6 : 1,
-                        fontFamily: 'BasisGrotesquePro'
-                      }}
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </>
+            <TableView
+              taskData={taskData}
+              getPriorityColor={getPriorityColor}
+              getStatusColor={getStatusColor}
+              handleActionClick={handleActionClick}
+              openDropdown={openDropdown}
+              handleActionSelect={handleActionSelect}
+            />
+            {/* Pagination Controls */}
+            {pagination.total_pages > 1 && (
+              <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
+                <button
+                  className="btn btn-sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    backgroundColor: currentPage === 1 ? '#E5E7EB' : '#F56D2D',
+                    color: currentPage === 1 ? '#9CA3AF' : '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '14px',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === 1 ? 0.6 : 1,
+                    fontFamily: 'BasisGrotesquePro'
+                  }}
+                >
+                  Previous
+                </button>
+                <span style={{ fontSize: '14px', color: '#4B5563', minWidth: '100px', textAlign: 'center', fontFamily: 'BasisGrotesquePro' }}>
+                  Page {currentPage} of {pagination.total_pages}
+                </span>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= pagination.total_pages}
+                  style={{
+                    backgroundColor: currentPage >= pagination.total_pages ? '#E5E7EB' : '#F56D2D',
+                    color: currentPage >= pagination.total_pages ? '#9CA3AF' : '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '14px',
+                    cursor: currentPage >= pagination.total_pages ? 'not-allowed' : 'pointer',
+                    opacity: currentPage >= pagination.total_pages ? 0.6 : 1,
+                    fontFamily: 'BasisGrotesquePro'
+                  }}
+                >
+                  Next
+                </button>
+              </div>
             )}
-            {activeTab === 'Kanban' && <KanbanView />}
-            {activeTab === 'Calendar' && <CalendarView />}
-            {activeTab === 'Gantt' && <GanttView />}
-            {activeTab === 'Reporting' && <ReportingView />}
           </>
         )}
 
@@ -498,6 +472,54 @@ const TaskManagementMain = () => {
             fetchTasks(); // Refresh task list after creating
           }}
         />
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !deleting) {
+                setShowDeleteConfirm(false);
+                setTaskToDelete(null);
+              }
+            }}
+          >
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
+                Delete Task
+              </h3>
+              <p className="text-sm mb-6 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                Are you sure you want to delete "{taskToDelete?.title}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setTaskToDelete(null);
+                  }}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 !rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteTask}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg hover:bg-[#DC2626] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

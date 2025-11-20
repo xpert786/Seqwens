@@ -1,17 +1,275 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { firmAdminMessagingAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const Messages = () => {
-  const [selectedConversation, setSelectedConversation] = useState(0);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [conversationSearch, setConversationSearch] = useState('');
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
   const [messageType, setMessageType] = useState('');
-  const [priority, setPriority] = useState('');
+  const [priority, setPriority] = useState('medium');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [recipientInput, setRecipientInput] = useState('');
-  const [recipients, setRecipients] = useState(['@everyone', '@smithjohnson', '@everyone']);
+  const [recipients, setRecipients] = useState([]);
   const [schedule, setSchedule] = useState('');
+  const [attachment, setAttachment] = useState(null);
+  
+  // API state
+  const [conversations, setConversations] = useState([]);
+  const [threadMessages, setThreadMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const [recipientSearchResults, setRecipientSearchResults] = useState([]);
+  const [showRecipientDropdown, setShowRecipientDropdown] = useState(false);
+  const [messageFilter, setMessageFilter] = useState('all');
+  
+  const recipientInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // Fetch conversations
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const params = {};
+        if (searchTerm) params.search = searchTerm;
+        if (messageFilter !== 'all') {
+          params.type = messageFilter === 'client' ? 'client' : 'staff';
+        }
+        
+        const response = await firmAdminMessagingAPI.listConversations(params);
+        
+        if (response.success && response.data) {
+          setConversations(response.data.conversations || []);
+        } else {
+          throw new Error(response.message || 'Failed to load conversations');
+        }
+      } catch (err) {
+        console.error('Error fetching conversations:', err);
+        const errorMsg = handleAPIError(err);
+        setError(errorMsg || 'Failed to load conversations');
+        toast.error(errorMsg || 'Failed to load conversations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, [searchTerm, messageFilter]);
+
+  // Fetch thread details when conversation is selected
+  useEffect(() => {
+    const fetchThreadDetails = async () => {
+      if (!selectedThreadId) {
+        setThreadMessages([]);
+        return;
+      }
+
+      try {
+        setMessagesLoading(true);
+        const response = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
+        
+        if (response.success && response.data) {
+          setThreadMessages(response.data.messages || []);
+        } else {
+          throw new Error(response.message || 'Failed to load messages');
+        }
+      } catch (err) {
+        console.error('Error fetching thread details:', err);
+        const errorMsg = handleAPIError(err);
+        toast.error(errorMsg || 'Failed to load messages');
+        setThreadMessages([]);
+      } finally {
+        setMessagesLoading(false);
+      }
+    };
+
+    fetchThreadDetails();
+  }, [selectedThreadId]);
+
+  // Search recipients
+  const searchRecipients = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setRecipientSearchResults([]);
+      setShowRecipientDropdown(false);
+      return;
+    }
+
+    try {
+      const response = await firmAdminMessagingAPI.searchRecipients({ q: query, type: 'staff' });
+      
+      if (response.success && response.data) {
+        setRecipientSearchResults(response.data.recipients || []);
+        setShowRecipientDropdown(true);
+      }
+    } catch (err) {
+      console.error('Error searching recipients:', err);
+      setRecipientSearchResults([]);
+    }
+  };
+
+  // Handle recipient input change
+  useEffect(() => {
+    if (recipientInput.trim()) {
+      const timeoutId = setTimeout(() => {
+        searchRecipients(recipientInput);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setRecipientSearchResults([]);
+      setShowRecipientDropdown(false);
+    }
+  }, [recipientInput]);
+
+  // Handle conversation selection
+  const handleConversationSelect = (conversation) => {
+    setSelectedConversation(conversation);
+    setSelectedThreadId(conversation.id);
+  };
+
+  // Handle compose message
+  const handleComposeMessage = async () => {
+    if (!subject.trim() || !message.trim() || recipients.length === 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSending(true);
+      
+      // Convert recipients to proper format (user IDs or @everyone)
+      const formattedRecipients = recipients.map(recipient => {
+        if (recipient === '@everyone') {
+          return '@everyone';
+        }
+        // If it's already a user ID number, return as is
+        if (typeof recipient === 'number') {
+          return recipient;
+        }
+        // If it's a string starting with @, return as is
+        if (typeof recipient === 'string' && recipient.startsWith('@')) {
+          return recipient;
+        }
+        // Otherwise, try to extract ID from recipient object or return as string
+        return recipient.id || recipient;
+      });
+      
+      const messageData = {
+        recipients: formattedRecipients,
+        subject: subject.trim(),
+        message: message.trim(),
+        priority: priority || 'medium'
+      };
+
+      const response = await firmAdminMessagingAPI.composeMessage(messageData, attachment);
+      
+      if (response.success) {
+        toast.success('Message sent successfully');
+        setIsComposeModalOpen(false);
+        // Reset form
+        setSubject('');
+        setMessage('');
+        setRecipients([]);
+        setRecipientInput('');
+        setPriority('medium');
+        setAttachment(null);
+        // Refresh conversations
+        const conversationsResponse = await firmAdminMessagingAPI.listConversations({});
+        if (conversationsResponse.success && conversationsResponse.data) {
+          setConversations(conversationsResponse.data.conversations || []);
+        }
+      } else {
+        throw new Error(response.message || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Add recipient
+  const addRecipient = (recipient) => {
+    if (recipient === '@everyone') {
+      // If @everyone is selected, replace all recipients with just @everyone
+      setRecipients(['@everyone']);
+    } else {
+      // Handle recipient object from search or string
+      let recipientToAdd;
+      if (typeof recipient === 'string') {
+        recipientToAdd = recipient;
+      } else if (recipient && typeof recipient === 'object') {
+        // Use display_name or construct from username
+        recipientToAdd = recipient.display_name || `@${recipient.username}`;
+      } else {
+        recipientToAdd = recipient;
+      }
+      
+      // Check if already added
+      const isAlreadyAdded = recipients.some(r => {
+        if (typeof r === 'string' && typeof recipientToAdd === 'string') {
+          return r === recipientToAdd;
+        }
+        if (typeof r === 'object' && typeof recipient === 'object') {
+          return r.id === recipient.id;
+        }
+        return false;
+      });
+      
+      if (!isAlreadyAdded) {
+        // If @everyone is in recipients, remove it first
+        const filteredRecipients = recipients.filter(r => r !== '@everyone');
+        setRecipients([...filteredRecipients, recipientToAdd]);
+      }
+    }
+    setRecipientInput('');
+    setShowRecipientDropdown(false);
+    setRecipientSearchResults([]);
+  };
+
+  // Handle file attachment
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAttachment(file);
+    }
+  };
+
+  // Format time ago
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Get initials from name
+  const getInitials = (name) => {
+    if (!name) return '??';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   // Summary cards data
   const summaryCards = [
@@ -59,79 +317,26 @@ const Messages = () => {
     }
   ];
 
-  // Conversations data
-  const conversations = [
+  // Calculate summary stats
+  const unreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+  const clientConversations = conversations.filter(conv => !conv.is_staff_conversation).length;
+  const internalConversations = conversations.filter(conv => conv.is_staff_conversation).length;
+  
+  const updatedSummaryCards = [
     {
-      id: 0,
-      initials: 'MC',
-      name: 'Michael Chen',
-      company: 'Johnson & Associates LLC',
-      message: 'The quarterly filing documents are ready for review.',
-      status: 'Client',
-      time: '2 hours ago',
-      unreadCount: 2
+      ...summaryCards[0],
+      value: unreadCount.toString()
     },
     {
-      id: 1,
-      initials: 'SM',
-      name: 'Sarah Martinez',
-      company: 'David Rodriguez',
-      message: 'Can you help me with the Smith Corp tax calculations?',
-      status: 'Internal',
-      time: '4 hours ago',
-      unreadCount: 0
+      ...summaryCards[1],
+      value: clientConversations.toString()
     },
     {
-      id: 2,
-      initials: 'LT',
-      name: 'Lisa Thompson',
-      company: 'Wilson Enterprises',
-      message: 'Thank you for the quick turnaround on our documents.',
-      status: 'Client',
-      time: '1 day ago',
-      unreadCount: 1
+      ...summaryCards[2],
+      value: internalConversations.toString()
     },
-    {
-      id: 3,
-      initials: 'AS',
-      name: 'All Staff',
-      company: '',
-      message: 'Team meeting scheduled for Monday at 9 AM.',
-      status: 'Internal',
-      time: '2 days ago',
-      unreadCount: 0
-    }
+    summaryCards[3] // Keep avg response time as is for now
   ];
-
-  // Messages for selected conversation
-  const messages = [
-    {
-      id: 1,
-      initials: 'MC',
-      name: 'Michael Chen',
-      role: 'Client',
-      time: '2 hours ago',
-      content: 'Conversation with Michael Chen, Johnson & Associates LLC'
-    },
-    {
-      id: 2,
-      initials: 'SM',
-      name: 'Sarah Martinez',
-      role: 'Internal',
-      time: '4 hours ago',
-      content: 'Can you help me with the Smith Corp tax calculations? I\'m having trouble with the depreciation schedule.'
-    },
-    {
-      id: 3,
-      initials: 'SM',
-      name: 'Wilson Enterprises',
-      role: 'Client',
-      time: '1 day ago',
-      content: 'Thank you for the quick turnaround on our documents. Everything looks perfect.'
-    }
-  ];
-
-  const selectedConv = conversations[selectedConversation];
 
   return (
     <div className="min-h-screen bg-[#F3F7FF] p-6">
@@ -170,7 +375,7 @@ const Messages = () => {
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {summaryCards.map((card, index) => (
+            {updatedSummaryCards.map((card, index) => (
               <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] pt-6 px-4 pb-4">
                 <div className="flex items-start justify-between">
                   {/* Left Side - Icon and Label */}
@@ -204,10 +409,14 @@ const Messages = () => {
               </div>
             </div>
             <div className="relative">
-              <select className="appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none  font-[BasisGrotesquePro] cursor-pointer min-w-[160px]">
-                <option>All Messages</option>
-                <option>Client Messages</option>
-                <option>Internal Messages</option>
+              <select 
+                value={messageFilter}
+                onChange={(e) => setMessageFilter(e.target.value)}
+                className="appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none  font-[BasisGrotesquePro] cursor-pointer min-w-[160px]"
+              >
+                <option value="all">All Messages</option>
+                <option value="client">Client Messages</option>
+                <option value="staff">Internal Messages</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,44 +451,71 @@ const Messages = () => {
 
             {/* Conversation List */}
             <div className="flex-1 overflow-y-auto space-y-2">
-              {conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => setSelectedConversation(conv.id)}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedConversation === conv.id
-                    ? 'bg-[#FFF4E6] !border border-[#E8F0FF]'
-                    : 'bg-white hover:bg-gray-50'
-                    }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
-                      {conv.initials}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] truncate flex-1 min-w-0">
-                          {conv.name}
-                          {conv.company && `, ${conv.company}`}
-                        </p>
-                        {conv.unreadCount > 0 && (
-                          <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 leading-none">
-                            {conv.unreadCount}
-                          </span>
-                        )}
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] flex-shrink-0 whitespace-nowrap !border border-[#E8F0FF] bg-white text-gray-700`}>
-                          {conv.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-1 line-clamp-2 font-[BasisGrotesquePro]">
-                        {conv.message}
-                      </p>
-                      {conv.time && (
-                        <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">{conv.time}</span>
-                      )}
-                    </div>
-                  </div>
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-gray-500">Loading conversations...</div>
                 </div>
-              ))}
+              ) : error ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-red-500 text-sm">{error}</div>
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-gray-500 text-sm">No conversations found</div>
+                </div>
+              ) : (
+                conversations
+                  .filter(conv => {
+                    if (conversationSearch) {
+                      const searchLower = conversationSearch.toLowerCase();
+                      return (
+                        conv.subject?.toLowerCase().includes(searchLower) ||
+                        conv.client_name?.toLowerCase().includes(searchLower) ||
+                        conv.last_message_preview?.content?.toLowerCase().includes(searchLower)
+                      );
+                    }
+                    return true;
+                  })
+                  .map((conv) => (
+                    <div
+                      key={conv.id}
+                      onClick={() => handleConversationSelect(conv)}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedThreadId === conv.id
+                        ? 'bg-[#FFF4E6] !border border-[#E8F0FF]'
+                        : 'bg-white hover:bg-gray-50'
+                        }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
+                          {getInitials(conv.client_name || conv.assigned_staff_names?.[0] || 'All Staff')}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] truncate flex-1 min-w-0">
+                              {conv.client_name || conv.assigned_staff_names?.join(', ') || 'All Staff'}
+                            </p>
+                            {conv.unread_count > 0 && (
+                              <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 leading-none">
+                                {conv.unread_count}
+                              </span>
+                            )}
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] flex-shrink-0 whitespace-nowrap !border border-[#E8F0FF] bg-white text-gray-700`}>
+                              {conv.is_staff_conversation ? 'Internal' : 'Client'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mb-1 line-clamp-2 font-[BasisGrotesquePro]">
+                            {conv.last_message_preview?.content || conv.subject || 'No messages'}
+                          </p>
+                          {conv.last_message_at && (
+                            <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                              {formatTimeAgo(conv.last_message_at)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
 
@@ -288,35 +524,66 @@ const Messages = () => {
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Message Thread</h3>
               <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                Conversation with {selectedConv.name}{selectedConv.company && `, ${selectedConv.company}`}
+                {selectedConversation 
+                  ? `Conversation: ${selectedConversation.subject || 'Untitled'}`
+                  : 'Select a conversation to view messages'}
               </p>
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto space-y-4 mb-4 hide-scrollbar">
-              {messages.map((msg) => (
-                <div key={msg.id} className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
-                    {msg.initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {/* Sender Info - NO background color */}
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] leading-none">{msg.name}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] !border border-[#E8F0FF] bg-white text-gray-700 leading-none flex-shrink-0`}>
-                        {msg.role}
-                      </span>
-                      <span className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap leading-none">{msg.time}</span>
-                    </div>
-                    {/* Message Content - ALL messages have background color */}
-                    <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
-                      <p className="text-sm text-gray-700 font-[BasisGrotesquePro] leading-relaxed">
-                        {msg.content}
-                      </p>
-                    </div>
-                  </div>
+              {messagesLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-gray-500">Loading messages...</div>
                 </div>
-              ))}
+              ) : threadMessages.length === 0 ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-gray-500 text-sm">No messages yet</div>
+                </div>
+              ) : (
+                threadMessages.map((msg) => (
+                  <div key={msg.id} className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
+                      {getInitials(msg.sender_name || 'User')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {/* Sender Info - NO background color */}
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] leading-none">
+                          {msg.sender_name || 'Unknown'}
+                        </p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] !border border-[#E8F0FF] bg-white text-gray-700 leading-none flex-shrink-0`}>
+                          {msg.sender_role || 'User'}
+                        </span>
+                        <span className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap leading-none">
+                          {formatTimeAgo(msg.created_at)}
+                        </span>
+                      </div>
+                      {/* Message Content - ALL messages have background color */}
+                      <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
+                        <p className="text-sm text-gray-700 font-[BasisGrotesquePro] leading-relaxed">
+                          {msg.content}
+                        </p>
+                        {msg.attachment && (
+                          <div className="mt-2">
+                            <a 
+                              href={msg.attachment} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                              </svg>
+                              {msg.attachment_name || 'Attachment'}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Message Input */}
@@ -388,7 +655,7 @@ const Messages = () => {
               </div>
 
               {/* Enter Recipients */}
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Enter Recipients</label>
                 <div className="min-h-[80px] !border border-[#E8F0FF] rounded-lg px-2 py-2 relative flex flex-col">
                   {/* Tags at top */}
@@ -412,30 +679,52 @@ const Messages = () => {
                   </div>
                   {/* Input Field */}
                   <input
+                    ref={recipientInputRef}
                     type="text"
                     value={recipientInput}
                     onChange={(e) => setRecipientInput(e.target.value)}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && recipientInput.trim()) {
-                        setRecipients([...recipients, recipientInput.trim()]);
-                        setRecipientInput('');
+                        addRecipient(recipientInput.trim());
                       }
                     }}
-                    placeholder={recipients.length === 0 ? "Enter recipients..." : ""}
+                    placeholder={recipients.length === 0 ? "Type @ to search or enter username..." : ""}
                     className="flex-1 outline-none font-[BasisGrotesquePro] mb-8"
                   />
                   {/* Orange @ Button - Bottom Left */}
                   <button
                     onClick={() => {
                       if (recipientInput.trim()) {
-                        setRecipients([...recipients, recipientInput.trim()]);
-                        setRecipientInput('');
+                        addRecipient(recipientInput.trim());
+                      } else {
+                        addRecipient('@everyone');
                       }
                     }}
                     className="absolute bottom-2 left-2 w-7 h-6 !rounded-lg bg-[#F56D2D] mt-3 flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0"
                   >
                     <span className="text-white font-bold text-sm">@</span>
                   </button>
+                  
+                  {/* Recipient Search Dropdown */}
+                  {showRecipientDropdown && recipientSearchResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                      {recipientSearchResults.map((recipient) => (
+                        <button
+                          key={recipient.id}
+                          onClick={() => addRecipient(recipient)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-xs">
+                            {getInitials(recipient.name)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{recipient.name}</p>
+                            <p className="text-xs text-gray-500">{recipient.display_name || recipient.email}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -460,10 +749,10 @@ const Messages = () => {
                     onChange={(e) => setPriority(e.target.value)}
                     className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-1.5 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
                   >
-                    <option value="">Select priority</option>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -508,13 +797,30 @@ const Messages = () => {
             {/* Modal Footer */}
             <div className="flex flex-col gap-3 p-3 border-t border-[#E8F0FF] flex-shrink-0">
               {/* Attach file button - First line */}
-              <div className="flex">
-                <button className="flex items-center gap-2 px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors"
+                >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
-                  Attach file
+                  {attachment ? attachment.name : 'Attach file'}
                 </button>
+                {attachment && (
+                  <button
+                    onClick={() => setAttachment(null)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
               {/* Cancel and Send buttons - Second line, right aligned */}
               <div className="flex items-center justify-end gap-3">
@@ -524,13 +830,16 @@ const Messages = () => {
                 >
                   Cancel
                 </button>
-                <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro]">
+                <button 
+                  onClick={handleComposeMessage}
+                  disabled={sending || !subject.trim() || !message.trim() || recipients.length === 0}
+                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M16.5 1.5L8.25 9.75" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M16.5 1.5L8.25 9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-
-                  Send
+                  {sending ? 'Sending...' : 'Send'}
                 </button>
               </div>
             </div>

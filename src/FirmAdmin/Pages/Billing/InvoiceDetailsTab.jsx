@@ -30,14 +30,29 @@ export default function InvoiceDetailsTab({ invoiceData }) {
     return icons[iconName] || null;
   };
 
-  const getStatusBadge = (status) => {
-    const configs = {
-      paid: { color: 'bg-green-500', text: 'Paid' },
-      sent: { color: 'bg-blue-500', text: 'Sent' },
-      overdue: { color: 'bg-red-500', text: 'Overdue' },
-      draft: { color: 'bg-gray-500', text: 'Draft' }
+  const getStatusBadge = (status, statusColor) => {
+    const statusLower = (status || '').toLowerCase();
+    // Use API status_color if available, otherwise fallback to default colors
+    const colorMap = {
+      green: 'bg-green-500',
+      orange: 'bg-orange-500',
+      red: 'bg-red-500',
+      yellow: 'bg-yellow-500',
+      blue: 'bg-blue-500',
+      gray: 'bg-gray-500'
     };
-    const config = configs[status] || configs.draft;
+    
+    const configs = {
+      paid: { color: statusColor === 'green' ? colorMap.green : 'bg-green-500', text: 'Paid' },
+      sent: { color: statusColor === 'blue' ? colorMap.blue : 'bg-blue-500', text: 'Sent' },
+      overdue: { color: statusColor === 'red' ? colorMap.red : 'bg-red-500', text: 'Overdue' },
+      draft: { color: statusColor === 'gray' ? colorMap.gray : 'bg-gray-500', text: 'Draft' },
+      pending: { color: statusColor === 'yellow' ? colorMap.yellow : 'bg-yellow-500', text: 'Pending' },
+      partial: { color: statusColor === 'orange' ? colorMap.orange : 'bg-orange-500', text: 'Partially Paid' },
+      cancelled: { color: statusColor === 'gray' ? colorMap.gray : 'bg-gray-500', text: 'Cancelled' }
+    };
+    
+    const config = configs[statusLower] || { color: colorMap[statusColor] || 'bg-gray-500', text: status };
     return (
       <span className={`${config.color} text-white px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium`}>
         {config.text}
@@ -55,36 +70,37 @@ export default function InvoiceDetailsTab({ invoiceData }) {
             <thead>
               <tr className="border-b" style={{ borderColor: '#E5E7EB' }}>
                 <th className="text-left py-3 px-4 text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Description</th>
-                <th className="text-center py-3 px-4 text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Qty</th>
-                <th className="text-right py-3 px-4 text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Rate</th>
                 <th className="text-right py-3 px-4 text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
-              {invoiceData.items.map((item, idx) => (
-                <tr key={idx} className="border-b" style={{ borderColor: '#F3F4F6' }}>
-                  <td className="py-4 px-4 text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{item.description}</td>
-                  <td className="py-4 px-4 text-center text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{item.qty}</td>
-                  <td className="py-4 px-4 text-right text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${item.rate}</td>
-                  <td className="py-4 px-4 text-right text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${item.amount}</td>
+              {invoiceData.items && invoiceData.items.length > 0 ? (
+                invoiceData.items.map((item, idx) => (
+                  <tr key={idx} className="border-b" style={{ borderColor: '#F3F4F6' }}>
+                    <td className="py-4 px-4 text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{item.description}</td>
+                    <td className="py-4 px-4 text-right text-sm font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${item.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="2" className="py-4 px-4 text-center text-sm text-gray-500 font-[BasisGrotesquePro]">No items found</td>
                 </tr>
-              ))}
+              )}
             </tbody>
             <tfoot>
               <tr className="border-t-2" style={{ borderColor: '#E5E7EB' }}>
                 <td className="py-4 px-4 text-left text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Subtotal:</td>
-                <td colSpan="2"></td>
-                <td className="py-4 px-4 text-right text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.subtotal}</td>
+                <td className="py-4 px-4 text-right text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
               </tr>
-              <tr className="border-t" style={{ borderColor: '#E5E7EB' }}>
-                <td className="py-4 px-4 text-left text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Subtotal:</td>
-                <td colSpan="2"></td>
-                <td className="py-4 px-4 text-right text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.subtotal}</td>
-              </tr>
+              {invoiceData.tax > 0 && (
+                <tr className="border-t" style={{ borderColor: '#E5E7EB' }}>
+                  <td className="py-4 px-4 text-left text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Tax:</td>
+                  <td className="py-4 px-4 text-right text-sm font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.tax?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+                </tr>
+              )}
               <tr>
                 <td className="py-4 px-4 text-left text-lg font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Total:</td>
-                <td colSpan="2"></td>
-                <td className="py-4 px-4 text-right text-lg font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.total}</td>
+                <td className="py-4 px-4 text-right text-lg font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>${invoiceData.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
               </tr>
             </tfoot>
           </table>
@@ -98,30 +114,30 @@ export default function InvoiceDetailsTab({ invoiceData }) {
           <h6 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Client Information</h6>
           <div className="space-y-3">
             <p className="text-lg font-bold font-[BasisGrotesquePro] mb-3" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.name}</p>
-            <div className="flex items-center gap-3">
-              <div style={{ color: '#3AD6F2' }}>
-                {getIcon('building')}
+            {invoiceData.clientInfo.address && (
+              <div className="flex items-center gap-3">
+                <div style={{ color: '#3AD6F2' }}>
+                  {getIcon('location')}
+                </div>
+                <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.address}</p>
               </div>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.company}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div style={{ color: '#3AD6F2' }}>
-                {getIcon('location')}
+            )}
+            {invoiceData.clientInfo.email && (
+              <div className="flex items-center gap-3">
+                <div style={{ color: '#3AD6F2' }}>
+                  {getIcon('email')}
+                </div>
+                <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.email}</p>
               </div>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.address}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div style={{ color: '#3AD6F2' }}>
-                {getIcon('email')}
+            )}
+            {invoiceData.clientInfo.phone && (
+              <div className="flex items-center gap-3">
+                <div style={{ color: '#3AD6F2' }}>
+                  {getIcon('phone')}
+                </div>
+                <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.phone}</p>
               </div>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.email}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div style={{ color: '#3AD6F2' }}>
-                {getIcon('phone')}
-              </div>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.clientInfo.phone}</p>
-            </div>
+            )}
           </div>
         </div>
 
@@ -138,16 +154,38 @@ export default function InvoiceDetailsTab({ invoiceData }) {
               <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.invoiceDetails.assignedTo}</p>
             </div>
             <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Office:</p>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.invoiceDetails.office}</p>
+              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Firm:</p>
+              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.rawData?.firm_name || 'N/A'}</p>
             </div>
+            {/* Partial Payment Information */}
             <div className="flex justify-between items-center">
-              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Payment Terms:</p>
-              <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>{invoiceData.invoiceDetails.paymentTerms}</p>
+              <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Partial Payment:</p>
+              <div className="text-right">
+                {invoiceData.paidAmount > 0 ? (
+                  <>
+                    <p className="text-base font-bold font-[BasisGrotesquePro]" style={{ color: '#10B981' }}>
+                      Paid: {invoiceData.formattedPaidAmount || `$${invoiceData.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    </p>
+                    {invoiceData.remainingAmount > 0 && (
+                      <p className="text-sm font-[BasisGrotesquePro]" style={{ color: '#EF4444' }}>
+                        Remaining: ${invoiceData.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-base font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>No payment received</p>
+                )}
+              </div>
             </div>
+            {invoiceData.rawData?.notes && (
+              <div className="flex justify-between items-start">
+                <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Notes:</p>
+                <p className="text-base font-[BasisGrotesquePro] text-right flex-1 ml-4" style={{ color: '#1F2937' }}>{invoiceData.rawData.notes}</p>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <p className="text-sm font-medium font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>Status:</p>
-              {getStatusBadge(invoiceData.invoiceDetails.status.toLowerCase())}
+              {getStatusBadge(invoiceData.invoiceDetails.status.toLowerCase(), invoiceData.statusColor)}
             </div>
           </div>
         </div>

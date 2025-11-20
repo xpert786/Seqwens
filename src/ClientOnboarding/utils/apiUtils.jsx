@@ -1443,42 +1443,66 @@ export const taxPreparerNotificationAPI = {
   }
 };
 
+// Firm Admin Dashboard API functions
+export const firmAdminDashboardAPI = {
+  // Get firm dashboard data
+  // Returns dashboard data including system alerts, key metrics, revenue analytics, 
+  // client engagement, staff performance, compliance, subscription, and clients overview
+  getDashboard: async (params = {}) => {
+    const { date_range = '30d', period = 'monthly', recent_clients_limit = 10 } = params;
+    const queryParams = new URLSearchParams();
+    
+    if (date_range) queryParams.append('date_range', date_range);
+    if (period) queryParams.append('period', period);
+    if (recent_clients_limit) queryParams.append('recent_clients_limit', recent_clients_limit.toString());
+    
+    const queryString = queryParams.toString();
+    const endpoint = `/user/firm-admin/dashboard/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  }
+};
+
 // Firm Admin Tasks API functions
 export const firmAdminTasksAPI = {
-  // Create task
+  // Create task - Firm Admin API
   createTask: async (taskData, files = []) => {
     const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
     const formData = new FormData();
 
-    // Add all task fields to FormData
+    // Required fields
     formData.append('task_type', taskData.task_type);
     formData.append('task_title', taskData.task_title);
     formData.append('tax_preparer_id', taskData.tax_preparer_id);
     formData.append('folder_id', taskData.folder_id);
     formData.append('due_date', taskData.due_date);
-    formData.append('priority', taskData.priority);
-    formData.append('description', taskData.description);
-    formData.append('estimated_hours', taskData.estimated_hours);
-    formData.append('status', taskData.status);
 
-    // Add client_ids as JSON string (backend will parse it)
-    if (Array.isArray(taskData.client_ids)) {
+    // Add client_ids as JSON array string (e.g., "[6]" or "[6,7,8]")
+    if (Array.isArray(taskData.client_ids) && taskData.client_ids.length > 0) {
       formData.append('client_ids', JSON.stringify(taskData.client_ids));
+    } else {
+      throw new Error('At least one client is required');
     }
 
-    // Add files
+    // Optional fields
+    if (taskData.priority) {
+      formData.append('priority', taskData.priority);
+    }
+    if (taskData.estimated_hours !== undefined && taskData.estimated_hours !== null && taskData.estimated_hours !== '') {
+      formData.append('estimated_hours', taskData.estimated_hours);
+    }
+    if (taskData.description) {
+      formData.append('description', taskData.description);
+    }
+
+    // Add files (optional for all task types)
     if (files && files.length > 0) {
       files.forEach((file) => {
         formData.append('files', file);
       });
-    }
-
-    // Add optional fields
-    if (taskData.signature_fields) {
-      formData.append('signature_fields', JSON.stringify(taskData.signature_fields));
-    }
-    if (taskData.spouse_sign !== undefined) {
-      formData.append('spouse_sign', taskData.spouse_sign);
     }
 
     const config = {
@@ -1494,7 +1518,25 @@ export const firmAdminTasksAPI = {
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+          
+          // Handle validation errors
+          if (response.status === 400 && errorData.errors) {
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, errors]) => {
+                const fieldErrors = Array.isArray(errors) ? errors.join(', ') : errors;
+                return `${field}: ${fieldErrors}`;
+              })
+              .join('; ');
+            const error = new Error(errorMessages || errorData.message || 'Validation failed');
+            // Attach original errors object to error for field-specific display
+            error.fieldErrors = errorData.errors;
+            error.status = response.status;
+            throw error;
+          }
+          
+          const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+          error.status = response.status;
+          throw error;
         }
         return response.json();
       });
@@ -1516,6 +1558,217 @@ export const firmAdminTasksAPI = {
   // Get task details (if needed in future)
   getTaskDetails: async (taskId) => {
     return await apiRequest(`/taxpayer/firm-admin/tasks/${taskId}/`, 'GET');
+  },
+
+  // Delete task
+  deleteTask: async (taskId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/tasks/${taskId}/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  }
+};
+
+// Task Detail APIs (for viewing and managing individual tasks)
+export const taskDetailAPI = {
+  // Get task details
+  getTaskDetails: async (taskId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/detail/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Update task status
+  updateTaskStatus: async (taskId, status) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/detail/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Start time tracking
+  startTimeTracking: async (taskId, notes = '') => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ notes })
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/time-tracking/start/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Pause/Stop time tracking
+  pauseTimeTracking: async (taskId, notes = '') => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ notes })
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/time-tracking/pause/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Stop time tracking (alias for pause)
+  stopTimeTracking: async (taskId, notes = '') => {
+    return taskDetailAPI.pauseTimeTracking(taskId, notes);
+  },
+
+  // Reset time tracking
+  resetTimeTracking: async (taskId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/time-tracking/reset/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Get time tracking status
+  getTimeTrackingStatus: async (taskId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/time-tracking/status/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Get related items
+  getRelatedItems: async (taskId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/related-items/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
   }
 };
 
@@ -1574,6 +1827,11 @@ export const firmAdminNotificationAPI = {
 export const firmAdminDocumentsAPI = {
   // Browse documents (root level or within a folder)
   browseDocuments: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
     const { folder_id, show_archived, search, category_id, sort_by } = params;
     const queryParams = new URLSearchParams();
 
@@ -1594,8 +1852,24 @@ export const firmAdminDocumentsAPI = {
     }
 
     const queryString = queryParams.toString();
-    const endpoint = `/taxpayer/firm-admin/documents/browse/${queryString ? `?${queryString}` : ''}`;
-    return await apiRequest(endpoint, 'GET');
+    const url = `${API_BASE_URL}/firm/documents/browse${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
   },
 
   // List documents in a specific folder
@@ -1706,6 +1980,7 @@ export const firmAdminCalendarAPI = {
 // Firm Admin Clients API functions
 export const firmAdminClientsAPI = {
   // List all clients for firm admin
+  // Returns: { success: true, data: { overview: {...}, clients: [...], pagination: {...} }, message: "..." }
   listClients: async (params = {}) => {
     const { page = 1, page_size = 20, search, status, priority } = params;
     const queryParams = new URLSearchParams();
@@ -1790,6 +2065,55 @@ export const firmAdminClientsAPI = {
   }
 };
 
+// Firm Admin Email Templates API functions
+export const firmAdminEmailTemplatesAPI = {
+  // Create email template
+  createTemplate: async (templateData) => {
+    return await apiRequest('/user/firm-admin/email-templates/', 'POST', templateData);
+  },
+
+  // List email templates
+  listTemplates: async (params = {}) => {
+    const { page = 1, page_size = 20, search, category, status } = params;
+    const queryParams = new URLSearchParams();
+
+    if (page) {
+      queryParams.append('page', page.toString());
+    }
+    if (page_size) {
+      queryParams.append('page_size', page_size.toString());
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (category) {
+      queryParams.append('category', category);
+    }
+    if (status) {
+      queryParams.append('status', status);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/user/firm-admin/email-templates/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get template details
+  getTemplate: async (templateId) => {
+    return await apiRequest(`/user/firm-admin/email-templates/${templateId}/`, 'GET');
+  },
+
+  // Update template
+  updateTemplate: async (templateId, templateData) => {
+    return await apiRequest(`/user/firm-admin/email-templates/${templateId}/`, 'PATCH', templateData);
+  },
+
+  // Delete template
+  deleteTemplate: async (templateId) => {
+    return await apiRequest(`/user/firm-admin/email-templates/${templateId}/`, 'DELETE');
+  }
+};
+
 // Firm Admin Staff API functions
 export const firmAdminStaffAPI = {
   // List all staff members (tax preparers) for firm admin
@@ -1833,11 +2157,82 @@ export const firmOfficeAPI = {
     const queryString = queryParams.toString();
     return await apiRequest(`/firm/office-locations/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
-  createOffice: async (officeData) => {
-    return await apiRequest('/firm/office-locations/', 'POST', officeData);
+  createOffice: async (officeData, files = {}) => {
+    // Check if there are file uploads (logo, signature)
+    const hasFiles = files.logo || files.signature;
+
+    if (hasFiles) {
+      // Use FormData for multipart/form-data when files are present
+      const formData = new FormData();
+      const token = getAccessToken() || AUTH_TOKEN;
+
+      // Add all form fields to FormData
+      Object.keys(officeData).forEach(key => {
+        const value = officeData[key];
+        if (value !== null && value !== undefined && value !== '') {
+          if (typeof value === 'object' && !(value instanceof File)) {
+            // Handle JSON objects (operation_hours, custom_service_rates)
+            formData.append(key, JSON.stringify(value));
+          } else if (typeof value === 'boolean') {
+            // Handle boolean values
+            formData.append(key, value ? 'true' : 'false');
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      // Add files
+      if (files.logo) {
+        formData.append('logo', files.logo);
+      }
+      if (files.signature) {
+        formData.append('signature', files.signature);
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/office-locations/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.errors) {
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('; ');
+            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          } else {
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without files
+      return await apiRequest('/firm/office-locations/', 'POST', officeData);
+    }
   },
   getOffice: async (officeId) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'GET');
+  },
+  getOfficeStaff: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/staff/`, 'GET');
+  },
+  getOfficeClients: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/clients/`, 'GET');
   },
   updateOffice: async (officeId, officeData) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', officeData);
@@ -2112,6 +2507,28 @@ export const taxPreparerClientAPI = {
   // Invite taxpayer via SMS
   inviteTaxpayerSMS: async (clientId, smsData) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invite/sms/`, 'POST', smsData);
+  },
+
+  // Get invite link for existing client (new API)
+  getInviteLink: async (params = {}) => {
+    const { invite_id, client_id } = params;
+    const queryParams = new URLSearchParams();
+
+    if (invite_id) {
+      queryParams.append('invite_id', invite_id);
+    }
+    if (client_id) {
+      queryParams.append('client_id', client_id);
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/user/tax-preparer/clients/invite/link/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Send invite to client (new API)
+  sendInvite: async (payload) => {
+    return await apiRequest('/user/tax-preparer/clients/invite/send/', 'POST', payload);
   }
 };
 
@@ -2729,5 +3146,371 @@ export const invitationAPI = {
       invite_type: inviteType || 'client'
     };
     return await publicApiRequest('/user/staff-invite/decline/', 'POST', payload);
+  }
+};
+
+// Firm Admin Messaging API functions
+export const firmAdminMessagingAPI = {
+  // List all conversations
+  listConversations: async (params = {}) => {
+    const { status, search, type } = params;
+    const queryParams = new URLSearchParams();
+
+    if (status) queryParams.append('status', status);
+    if (search) queryParams.append('search', search);
+    if (type) queryParams.append('type', type);
+
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/firm-admin/messages/conversations/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get thread details
+  getThreadDetails: async (threadId) => {
+    return await apiRequest(`/taxpayer/firm-admin/messages/threads/${threadId}/`, 'GET');
+  },
+
+  // Compose and send message
+  composeMessage: async (messageData, attachment = null) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+
+    // Check if there's an attachment
+    if (attachment) {
+      // Use FormData for multipart/form-data when attachment is present
+      const formData = new FormData();
+
+      // Add all form fields to FormData
+      if (messageData.recipients) {
+        // recipients should be an array, convert to JSON string
+        formData.append('recipients', JSON.stringify(messageData.recipients));
+      }
+      if (messageData.subject) {
+        formData.append('subject', messageData.subject);
+      }
+      if (messageData.message) {
+        formData.append('message', messageData.message);
+      }
+      if (messageData.priority) {
+        formData.append('priority', messageData.priority);
+      }
+
+      // Add attachment
+      formData.append('attachment', attachment);
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/messages/compose/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.errors) {
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('; ');
+            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          } else {
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without attachments
+      return await apiRequest('/firm-admin/messages/compose/', 'POST', messageData);
+    }
+  },
+
+  // Search recipients
+  searchRecipients: async (params = {}) => {
+    const { q, type } = params;
+    const queryParams = new URLSearchParams();
+
+    if (q) queryParams.append('q', q);
+    if (type) queryParams.append('type', type);
+
+    const queryString = queryParams.toString();
+    return await apiRequest(`/firm-admin/messages/recipients/search/${queryString ? `?${queryString}` : ''}`, 'GET');
+  }
+};
+
+// Firm Admin Settings API functions
+export const firmAdminSettingsAPI = {
+  // Get firm general information
+  getGeneralInfo: async () => {
+    return await apiRequest('/user/firm-admin/settings/general/', 'GET');
+  },
+
+  // Update firm general information
+  updateGeneralInfo: async (settingsData, method = 'PATCH') => {
+    return await apiRequest('/user/firm-admin/settings/general/', method, settingsData);
+  },
+
+  // Get firm branding information
+  getBrandingInfo: async () => {
+    return await apiRequest('/user/firm-admin/settings/branding/', 'GET');
+  },
+
+  // Update firm branding information
+  updateBrandingInfo: async (brandingData, files = {}) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const hasFiles = files.logo || files.favicon;
+
+    if (hasFiles) {
+      // Use FormData for multipart/form-data when files are present
+      const formData = new FormData();
+
+      // Add all form fields to FormData
+      Object.keys(brandingData).forEach(key => {
+        const value = brandingData[key];
+        if (value !== null && value !== undefined && value !== '') {
+          if (typeof value === 'boolean') {
+            formData.append(key, value ? 'true' : 'false');
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      // Add files
+      if (files.logo) {
+        formData.append('logo', files.logo);
+      }
+      if (files.favicon) {
+        formData.append('favicon', files.favicon);
+      }
+
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/user/firm-admin/settings/branding/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.errors) {
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('; ');
+            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          } else {
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without files
+      return await apiRequest('/user/firm-admin/settings/branding/', 'PATCH', brandingData);
+    }
+  },
+
+  // Get firm business information
+  getBusinessInfo: async () => {
+    return await apiRequest('/user/firm-admin/settings/business/', 'GET');
+  },
+
+  // Update firm business information
+  updateBusinessInfo: async (businessData, method = 'PATCH') => {
+    return await apiRequest('/user/firm-admin/settings/business/', method, businessData);
+  },
+
+  // Get firm services information
+  getServicesInfo: async () => {
+    return await apiRequest('/user/firm-admin/settings/services/', 'GET');
+  },
+
+  // Update firm services information
+  updateServicesInfo: async (servicesData, method = 'PATCH') => {
+    return await apiRequest('/user/firm-admin/settings/services/', method, servicesData);
+  },
+
+  // Get firm integrations information
+  getIntegrationsInfo: async () => {
+    return await apiRequest('/user/firm-admin/settings/integrations/', 'GET');
+  },
+
+  // Update firm integrations information
+  updateIntegrationsInfo: async (integrationsData, method = 'POST') => {
+    return await apiRequest('/user/firm-admin/settings/integrations/', method, integrationsData);
+  },
+
+  // Get firm advanced information
+  getAdvancedInfo: async () => {
+    return await apiRequest('/user/firm-admin/settings/advanced/', 'GET');
+  },
+
+  // Update firm advanced information
+  updateAdvancedInfo: async (advancedData, method = 'POST') => {
+    return await apiRequest('/user/firm-admin/settings/advanced/', method, advancedData);
+  }
+};
+
+// Firm Admin Invoice Management API functions
+export const firmAdminInvoiceAPI = {
+  // Get invoice details
+  getInvoiceDetails: async (invoiceId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/invoices/${invoiceId}/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Update invoice
+  updateInvoice: async (invoiceId, updateData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updateData)
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/invoices/${invoiceId}/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          
+          // Handle validation errors
+          if (response.status === 400 && errorData.errors) {
+            const error = new Error(errorData.message || 'Validation failed');
+            error.fieldErrors = errorData.errors;
+            error.status = response.status;
+            throw error;
+          }
+          
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Send invoice to client via email
+  sendInvoice: async (invoiceId, message = '') => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message })
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/invoices/${invoiceId}/send/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  }
+};
+
+// Firm Admin Billing History API functions
+export const firmAdminBillingHistoryAPI = {
+  // Get billing history with optional filters
+  // Returns all invoices for tax preparer's assigned tax payers within the firm
+  getBillingHistory: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const {
+      tax_preparer_id,
+      client_id,
+      status,
+      start_date,
+      end_date,
+      search,
+      page = 1,
+      page_size = 20,
+      sort_by = '-issue_date',
+      include_payments = false
+    } = params;
+
+    const queryParams = new URLSearchParams();
+    
+    if (tax_preparer_id) queryParams.append('tax_preparer_id', tax_preparer_id.toString());
+    if (client_id) queryParams.append('client_id', client_id.toString());
+    if (status) queryParams.append('status', status);
+    if (start_date) queryParams.append('start_date', start_date);
+    if (end_date) queryParams.append('end_date', end_date);
+    if (search) queryParams.append('search', search);
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (include_payments) queryParams.append('include_payments', 'true');
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/user/firm-admin/billing-history/${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
   }
 };

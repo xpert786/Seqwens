@@ -12,7 +12,9 @@ import "../styles/FirmHeader.css";
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const [showSearch, setShowSearch] = useState(false);
     const notificationButtonRef = useRef(null);
+    const searchRef = useRef(null);
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
@@ -58,11 +60,11 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
     return (
         <>
-            <nav className="navbar bg-white fixed-top border-bottom firm-custom-topbar px-3 py-2">
-                <div className="container-fluid d-flex justify-content-between align-items-center flex-wrap">
+            <nav className="navbar bg-white fixed-top border-bottom firm-custom-topbar px-2 px-md-3 py-2">
+                <div className="container-fluid d-flex justify-content-between align-items-center flex-wrap w-100">
 
                     {/* Left Section */}
-                    <div className="d-flex align-items-center gap-3 flex-grow-1 flex-wrap">
+                    <div className="d-flex align-items-center gap-2 gap-md-3 flex-grow-1 flex-wrap">
                         {/* Logo */}
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img
@@ -86,9 +88,9 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                             <LogoIcon />
                         </div>
 
-                        {/* Search Box */}
+                        {/* Search Box - Desktop */}
                         <div
-                            className="firm-topbar-search d-flex align-items-center position-relative flex-grow-1"
+                            className="firm-topbar-search d-none d-md-flex align-items-center position-relative flex-grow-1"
                             style={{ maxWidth: "300px", minWidth: "180px" }}
                         >
                             <i className="bi bi-search position-absolute ms-2 text-muted"></i>
@@ -102,11 +104,27 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                 }}
                             />
                         </div>
+
+                        {/* Search Icon - Mobile (Toggle) */}
+                        <div
+                            className="d-md-none d-flex align-items-center justify-content-center"
+                            onClick={() => setShowSearch(!showSearch)}
+                            style={{
+                                width: "34px",
+                                height: "34px",
+                                borderRadius: "50%",
+                                backgroundColor: "#f3f4f6",
+                                cursor: "pointer",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <i className="bi bi-search text-muted" style={{ fontSize: "16px" }}></i>
+                        </div>
                     </div>
 
                     {/* Right Section */}
                     <div
-                        className="d-flex align-items-center gap-3 mt-2 mt-md-0 ms-auto flex-shrink-0 flex-nowrap"
+                        className="d-flex align-items-center gap-2 gap-md-3 ms-auto flex-shrink-0 flex-nowrap"
                         style={{ minWidth: "fit-content" }}
                     >
                         {/* Notification Bell */}
@@ -142,7 +160,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
                         {/* User Profile */}
                         <div
-                            className="d-flex align-items-center gap-2 firm-topbar-user cursor-pointer"
+                            className="d-flex align-items-center gap-1 gap-md-2 firm-topbar-user cursor-pointer"
                             style={{ flexShrink: 0 }}
                         >
                             <div
@@ -158,10 +176,38 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                             >
                                 <i className="bi bi-person-fill"></i>
                             </div>
-                            <FiChevronDown size={18} className="text-muted" />
+                            <FiChevronDown size={18} className="text-muted d-none d-sm-block" />
                         </div>
                     </div>
                 </div>
+
+                {/* Mobile Search Bar - Expandable */}
+                {showSearch && (
+                    <div ref={searchRef} className="d-md-none w-100 px-2 pb-2">
+                        <div className="firm-topbar-search d-flex align-items-center position-relative w-100">
+                            <i className="bi bi-search position-absolute ms-2 text-muted"></i>
+                            <input
+                                type="text"
+                                className="form-control ps-4 w-100"
+                                placeholder="Search..."
+                                style={{
+                                    fontSize: "0.9rem",
+                                    borderRadius: "8px",
+                                    height: "40px",
+                                }}
+                                autoFocus
+                            />
+                            <button
+                                onClick={() => setShowSearch(false)}
+                                className="btn btn-link text-muted p-0 ms-2"
+                                style={{ border: "none", background: "none" }}
+                                aria-label="Close search"
+                            >
+                                <i className="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </nav>
             
             {/* Notification Panel */}

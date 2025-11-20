@@ -70,3 +70,59 @@
     max-width: 500px;
   }
 }
+
+/* Small screen responsive styles */
+@media (max-width: 768px) {
+  .firm-custom-topbar {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .firm-custom-topbar .firm-topbar-logo {
+    height: 32px;
+    margin-right: 4px;
+  }
+
+  .firm-custom-topbar .firm-notification-bell {
+    width: 32px;
+    height: 32px;
+  }
+
+  .firm-custom-topbar .firm-notification-bell svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .firm-custom-topbar .firm-topbar-user > div {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  .firm-custom-topbar .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .firm-custom-topbar {
+    height: 60px;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .firm-custom-topbar .firm-topbar-logo {
+    height: 28px;
+  }
+
+  .firm-custom-topbar .firm-notification-bell {
+    width: 30px;
+    height: 30px;
+  }
+
+  .firm-custom-topbar .firm-topbar-user > div {
+    width: 26px !important;
+    height: 26px !important;
+  }
+}

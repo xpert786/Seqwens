@@ -58,7 +58,7 @@ export default function App() {
           </AuthRedirect>
         } />
         <Route path="/personal-info" element={<PersonalInfo />} />
-        
+
         {/* Protected Routes - Top level dashboard routes */}
         <Route path="/dataintake" element={
           <ProtectedRoute>
@@ -67,7 +67,7 @@ export default function App() {
         }>
           <Route index element={<DataIntake />} />
         </Route>
-        
+
         <Route path="/documents" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -75,7 +75,7 @@ export default function App() {
         }>
           <Route index element={<MyDocuments />} />
         </Route>
-        
+
         <Route path="/invoices" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -83,7 +83,7 @@ export default function App() {
         }>
           <Route index element={<Invoices />} />
         </Route>
-        
+
         <Route path="/messages" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -91,7 +91,7 @@ export default function App() {
         }>
           <Route index element={<Messages />} />
         </Route>
-        
+
         <Route path="/appointments" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -99,7 +99,7 @@ export default function App() {
         }>
           <Route index element={<Appointments />} />
         </Route>
-        
+
         <Route path="/accounts" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -107,7 +107,7 @@ export default function App() {
         }>
           <Route index element={<Accounts />} />
         </Route>
-        
+
         <Route path="/helpers" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -115,7 +115,7 @@ export default function App() {
         }>
           <Route index element={<Helper />} />
         </Route>
-        
+
         {/* Protected Routes */}
         {/* Dashboard First Route - for new/incomplete users */}
         <Route
@@ -128,7 +128,7 @@ export default function App() {
         >
           <Route index element={<DashboardFirst />} />
         </Route>
-        
+
         {/* Client Dashboard Routes */}
         <Route
           path="/dashboard"
@@ -152,15 +152,15 @@ export default function App() {
           <Route path="notifications" element={<NotificationPanel />} />
           <Route path="esignature" element={<ESignatureModal />} />
         </Route>
-        
+
         {/* Tax Preparer Routes - No authentication required */}
         <Route path="/taxdashboard/*" element={<TaxRoutes />} />
 
         {/* Super Admin Routes - No authentication required */}
-        <Route path="/superadmin/*" element={<SuperRoutes />} /> 
+        <Route path="/superadmin/*" element={<SuperRoutes />} />
 
         {/* Firm Admin Routes - No authentication required */}
-        <Route path="/firmadmin/*" element={<FirmRoutes />} /> 
+        <Route path="/firmadmin/*" element={<FirmRoutes />} />
       </Routes>
     </>
   );
