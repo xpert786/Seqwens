@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaSearch, FaRegCalendarAlt, FaRegShareSquare } from "react-icons/fa";
 import { Doc, UpIcon, File, AwaitingIcon, Received, FileIcon, Uplopadedd, FaildIcon, Uploaded, FiltIcon, CalenderListing, Archieve } from "../../component/icons";
 import TaxUploadModal from "../../upload/TaxUploadModal";
+import "../../styles/MyClients.css";
 
 // Mock data for demonstration
 const mockDocuments = {
@@ -193,15 +194,16 @@ export default function AllDocumentsPage() {
           <div className="col-md-3 col-sm-6" key={index}>
             
             <div className="stat-card">
-              <div className="d-flex justify-content-between align-items-center">
-                
+              <div className="d-flex justify-content-start align-items-start">
                 <div className="stat-icon" style={{ color: item.color }}>
                   {item.icon}
                 </div>
+              </div>
+              <div className="stat-count-wrapper">
                 <div className="stat-count">{item.count}</div>
               </div>
               <div className="mt-2">
-                <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                <p className="mb-0 text-muted small fw-semibold text-center">{item.label}</p>
               </div>
             </div>
           </div>

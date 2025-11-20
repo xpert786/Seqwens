@@ -12,6 +12,13 @@ const Security = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  // Initial values to track changes
+  const [initialValues, setInitialValues] = useState({
+    twoFactor: false,
+    loginAlerts: true,
+    sessionTimeout: 30,
+  });
+
   // Password update states
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -35,9 +42,20 @@ const Security = () => {
           console.log('Available fields:', Object.keys(securityData));
           console.log('Two factor value:', securityData.two_factor_authentication, securityData.two_factor_enabled);
 
-          setTwoFactor(securityData.two_factor_authentication || securityData.two_factor_enabled || false);
-          setLoginAlerts(securityData.login_alerts || false);
-          setSessionTimeout(securityData.session_timeout || 30);
+          const twoFactorValue = securityData.two_factor_authentication || securityData.two_factor_enabled || false;
+          const loginAlertsValue = securityData.login_alerts || false;
+          const sessionTimeoutValue = securityData.session_timeout || 30;
+
+          setTwoFactor(twoFactorValue);
+          setLoginAlerts(loginAlertsValue);
+          setSessionTimeout(sessionTimeoutValue);
+
+          // Store initial values for comparison
+          setInitialValues({
+            twoFactor: twoFactorValue,
+            loginAlerts: loginAlertsValue,
+            sessionTimeout: sessionTimeoutValue,
+          });
         }
       } catch (err) {
         console.error('Error fetching security preferences:', err);
@@ -53,6 +71,26 @@ const Security = () => {
     setSaving(true);
     setError(null);
 
+    // Check if any changes were made
+    const hasChanges = 
+      twoFactor !== initialValues.twoFactor ||
+      loginAlerts !== initialValues.loginAlerts ||
+      sessionTimeout !== initialValues.sessionTimeout;
+
+    if (!hasChanges) {
+      // No changes made, show info message
+      toast.info("No changes to save. All settings are up to date.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setSaving(false);
+      return;
+    }
+
     try {
       const apiData = {
         two_factor_authentication: twoFactor,
@@ -63,6 +101,13 @@ const Security = () => {
       console.log('Saving security preferences:', apiData);
 
       await securityAPI.updateSecurityPreferences(apiData);
+
+      // Update initial values after successful save
+      setInitialValues({
+        twoFactor,
+        loginAlerts,
+        sessionTimeout,
+      });
 
       // Show success toast
       toast.success("Security settings saved successfully!", {

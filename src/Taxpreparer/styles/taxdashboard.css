@@ -35,14 +35,17 @@
   background-color: #ffffff !important;
   color: #3B4A66 !important;
 }
+
 .btn-contacted:hover {
   background-color: #fff4ec;
 }
+
 .btn-uploaded {
   background-color: #F56D2D !important;
   color: #ffffff !important;
   border: none !important;
 }
+
 .btn-uploaded:hover {
   background-color: #e85c1c;
 }
@@ -67,13 +70,16 @@
 }
 
 .dashboarded-carded-valued {
-  border-radius: 27px;
-  padding: 5px 12px;
-  font-size: 20px;
-  font-family: "BasisGrotesquePro", sans-serif;
-  font-weight: 400;
-  margin: 0;
-  color: #3B4A66;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  font-size: 27px !important;
+  font-family: "BasisGrotesquePro", sans-serif !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  text-align: center !important;
+  color: #3B4A66 !important;
+  line-height: 1.2 !important;
 }
 
 .dashboarded-carded-btned {
@@ -102,16 +108,18 @@ p.card-contented {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding-bottom: 0.5rem; /* remove extra space */
+  padding-bottom: 0.5rem;
+  /* remove extra space */
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .bother {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start; /* align left */
+  justify-content: flex-start;
+  /* align left */
   gap: 12px;
   align-items: center;
 }
@@ -156,47 +164,125 @@ p.card-contented {
 
 .db-user-icon-wrapper {
   display: inline-flex;
-  width: 16px;  
-  height: 16px;  
+  width: 16px;
+  height: 16px;
   transform: scale(1);
   transform-origin: center;
 }
 
-.msg-role{
+.msg-role {
   font-family: "BasisGrotesquePro", sans-serif;
 }
 
 /* -------------------- Responsive -------------------- */
 @media (max-width: 1366px) {
-  .taxdashboard-title { font-size: 24px; }
-  .taxdashboard-subtitle { font-size: 14px; }
-  .taxdashboard-btn { font-size: 13px; padding: 7px 12px; }
-  .card.dashboard-card { min-height: 180px; padding: 16px; }
+  .taxdashboard-title {
+    font-size: 24px;
+  }
+
+  .taxdashboard-subtitle {
+    font-size: 14px;
+  }
+
+  .taxdashboard-btn {
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+
+  .card.dashboard-card {
+    min-height: 180px;
+    padding: 16px;
+  }
 }
 
 @media (max-width: 1280px) {
-  .taxdashboard-title { font-size: 22px; }
-  .taxdashboard-subtitle { font-size: 13px; }
-  .taxdashboard-btn { font-size: 12px; padding: 6px 10px; }
-  .card.dashboard-card { min-height: 170px; padding: 14px; }
-  .dashboarded-carded-valued { font-size: 13px; padding: 4px 10px; }
-  .dashboarded-carded-btned { font-size: 13px; padding: 5px 12px; }
-  
+  .taxdashboard-title {
+    font-size: 22px;
+  }
+
+  .taxdashboard-subtitle {
+    font-size: 13px;
+  }
+
+  .taxdashboard-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .card.dashboard-card {
+    min-height: 170px;
+    padding: 14px;
+  }
+
+  .dashboarded-carded-valued {
+    font-size: 28px;
+    padding: 4px 10px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .dashboarded-carded-btned {
+    font-size: 13px;
+    padding: 5px 12px;
+  }
+
 }
+
 @media (max-width: 1280px) {
-  .taxdashboardr-titler { font-size: 15px; }
-  .taxdashboard-subtitle { font-size: 13px; }
-  .taxdashboard-btn { font-size: 12px; padding: 6px 10px; }
-  .card.dashboard-card { min-height: 170px; padding: 14px; }
-  .dashboarded-carded-valued { font-size: 13px; padding: 4px 10px; }
-  .dashboarded-carded-btned { font-size: 13px; padding: 5px 12px; }
-  
+  .taxdashboardr-titler {
+    font-size: 15px;
+  }
+
+  .taxdashboard-subtitle {
+    font-size: 13px;
+  }
+
+  .taxdashboard-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .card.dashboard-card {
+    min-height: 170px;
+    padding: 14px;
+  }
+
+  .dashboarded-carded-valued {
+    font-size: 28px;
+    padding: 4px 10px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .dashboarded-carded-btned {
+    font-size: 13px;
+    padding: 5px 12px;
+  }
+
 }
 
 @media (max-width: 768px) {
-  .bother { flex-direction: column; align-items: flex-start; gap: 4px; }
-  .car { flex-direction: column; gap: 0.5rem; }
-  .icon-circle { width: 24px; height: 24px; }
+  .bother {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .car {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .icon-circle {
+    width: 24px;
+    height: 24px;
+  }
 
 }
 
@@ -229,9 +315,11 @@ p.card-contented {
   background: var(--White-900, #FFFFFF);
   color: black;
 }
-.msg-content{
+
+.msg-content {
   font-family: "BasisGrotesquePro", sans-serif;
 }
+
 .name-role-circle {
   width: 6px;
   height: 6px;
@@ -243,9 +331,11 @@ p.card-contented {
 /* -------------------- Quick Action Cards -------------------- */
 .quick-action-container {
   display: flex;
-  justify-content: center; /* center horizontally */
+  justify-content: center;
+  /* center horizontally */
   flex-wrap: wrap;
-  gap: 40px; /* increased spacing */
+  gap: 40px;
+  /* increased spacing */
   margin-top: 12px;
 }
 
@@ -255,8 +345,10 @@ p.card-contented {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 130px;  /* slightly bigger */
-  height: auto;  /* height adjusts to icon + label */
+  width: 130px;
+  /* slightly bigger */
+  height: auto;
+  /* height adjusts to icon + label */
   background: var(--White-900, #FFFFFF);
   border: 0.5px solid var(--Palette2-Dark-blue-100, #E8F0FF);
   border-radius: 8px;
@@ -279,27 +371,34 @@ p.card-contented {
 
 /* Ensure parent card wraps tightly around quick-action cards */
 .card.custom-card {
-  height: auto;  /* dynamic height */
+  height: auto;
+  /* dynamic height */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* align top */
-  padding: 16px; /* reduce vertical padding */
+  justify-content: flex-start;
+  /* align top */
+  padding: 16px;
+  /* reduce vertical padding */
 }
 
 /* Upcoming Deadlines card wrapper */
 .upcoming-deadlines-card {
-  height: auto;              /* wrap tightly */
+  height: auto;
+  /* wrap tightly */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* align top */
-  padding: 16px;             /* optional padding */
+  justify-content: flex-start;
+  /* align top */
+  padding: 16px;
+  /* optional padding */
 }
 
 /* Container for all tasks inside Upcoming Deadlines */
 .upcoming-deadlines-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;                 /* spacing between tasks */
+  gap: 12px;
+  /* spacing between tasks */
 }
 
 /* Each task card inside Upcoming Deadlines */
@@ -309,8 +408,21 @@ p.card-contented {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding-bottom: 0.5rem;   /* minimal space inside task */
+  padding-bottom: 0.5rem;
+  /* minimal space inside task */
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Dashboard card value - smaller font size for dates */
+.dashboard-card-value {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #3B4A66 !important;
+  font-family: "BasisGrotesquePro", sans-serif;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }

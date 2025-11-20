@@ -12,6 +12,7 @@
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .stat-icon {
@@ -23,9 +24,27 @@
   justify-content: center;
 }
 
+.stat-count-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  flex: 1;
+  margin: 8px 0 !important;
+  text-align: center !important;
+  position: relative;
+}
+
 .stat-count {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 27px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  color: #3B4A66 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  line-height: 1.2 !important;
 }
 
 /* Search */

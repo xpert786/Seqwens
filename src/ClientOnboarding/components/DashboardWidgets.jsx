@@ -110,9 +110,13 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
         {summaryCards.map((card, index) => (
           <div className="col-sm-6 col-md-3 px-4" key={index}>
             <div className="card dashboard-card">
-              <div className="d-flex justify-content-between align-items-start">
+              <div className="d-flex justify-content-start align-items-start mb-3">
                 {card.icon}
-                <h5 className="dashboard-card-value">{card.value}</h5>
+              </div>
+              <div className="d-flex justify-content-center align-items-center mb-3">
+                <p className="dashboarder-card-value">
+                  {card.value}
+                </p>
               </div>
               <div>
                 <div className="dashboard-card-label">{card.label}</div>
