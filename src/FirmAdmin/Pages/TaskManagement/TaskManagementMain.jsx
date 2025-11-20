@@ -58,14 +58,15 @@ const TaskManagementMain = () => {
       const response = await firmAdminTasksAPI.listTasks(params);
 
       if (response.success && response.data) {
-        // Update summary
-        if (response.data.summary) {
+        // Update summary from statistics (new API) or summary (old API) for backward compatibility
+        const stats = response.data.statistics || response.data.summary;
+        if (stats) {
           setSummary({
-            completed: response.data.summary.completed || 0,
-            in_progress: response.data.summary.in_progress || 0,
-            pending: response.data.summary.pending || 0,
-            overdue: response.data.summary.overdue || 0,
-            total_hours: response.data.summary.total_hours || 0
+            completed: stats.completed || 0,
+            in_progress: stats.in_progress || 0,
+            pending: stats.pending || 0,
+            overdue: stats.overdue || 0,
+            total_hours: stats.total_hours || 0
           });
         }
 
@@ -173,16 +174,16 @@ const TaskManagementMain = () => {
         </svg>
       )
     },
-    {
-      title: 'Total Hours',
-      value: summary.total_hours.toString(),
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    }
+    // {
+    //   title: 'Total Hours',
+    //   value: summary.total_hours.toString(),
+    //   icon: (
+    //     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //       <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //       <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //     </svg>
+    //   )
+    // }
   ];
 
   const getPriorityColor = (priority) => {
@@ -306,7 +307,7 @@ const TaskManagementMain = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {kpiData.map((kpi, index) => (
             <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] p-3">
               <div className="flex items-center justify-between mb-1">

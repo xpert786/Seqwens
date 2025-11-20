@@ -1542,7 +1542,7 @@ export const firmAdminTasksAPI = {
       });
   },
 
-  // List tasks (if needed in future)
+  // List tasks - GET /firm/tasks/
   listTasks: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.keys(params).forEach(key => {
@@ -1551,7 +1551,7 @@ export const firmAdminTasksAPI = {
       }
     });
     const queryString = queryParams.toString();
-    const endpoint = `/taxpayer/firm-admin/tasks/${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/firm/tasks/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
   },
 
@@ -1825,8 +1825,362 @@ export const firmAdminNotificationAPI = {
 
 // Firm Admin Documents API functions
 export const firmAdminDocumentsAPI = {
+  // ========== Document Folders Management ==========
+  
+  // List all folders (Firm's File Manager)
+  // GET /firm/document-folders/
+  listFolders: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const { search, is_template } = params;
+    const queryParams = new URLSearchParams();
+
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (is_template !== undefined) {
+      queryParams.append('is_template', is_template.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/firm/document-folders/${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Create new folder
+  // POST /firm/document-folders/
+  createFolder: async (folderData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/document-folders/`;
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(folderData)
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Get folder details
+  // GET /firm/document-folders/{folder_id}/
+  getFolderDetails: async (folderId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/document-folders/${folderId}/`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Update folder (Full Update)
+  // PUT /firm/document-folders/{folder_id}/
+  updateFolder: async (folderId, folderData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/document-folders/${folderId}/`;
+
+    const config = {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(folderData)
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Update folder (Partial Update)
+  // PATCH /firm/document-folders/{folder_id}/
+  patchFolder: async (folderId, folderData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/document-folders/${folderId}/`;
+
+    const config = {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(folderData)
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Delete folder
+  // DELETE /firm/document-folders/{folder_id}/
+  deleteFolder: async (folderId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/document-folders/${folderId}/`;
+
+    const config = {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // ========== Document Categories Management ==========
+  
+  // List all categories
+  // GET /firm/document-categories/
+  listCategories: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const { search } = params;
+    const queryParams = new URLSearchParams();
+
+    if (search) {
+      queryParams.append('search', search);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/firm/document-categories/${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Create new category
+  // POST /firm/document-categories/
+  createCategory: async (categoryData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/document-categories/`;
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(categoryData)
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // ========== Bulk Document Upload ==========
+  
+  // Upload multiple documents
+  // POST /firm/documents/upload/
+  // Note: This endpoint requires multipart/form-data
+  uploadDocuments: async (files, documentsMetadata) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/documents/upload/`;
+
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add files
+    if (Array.isArray(files)) {
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+    } else {
+      formData.append('files', files);
+    }
+
+    // Add metadata as JSON string
+    formData.append('documents_metadata', JSON.stringify(documentsMetadata));
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type header - browser will set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // ========== Browse Documents (Across All Clients) ==========
+  
   // Browse documents (root level or within a folder)
+  // GET /firm/documents/browse/
   browseDocuments: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const { folder_id, show_archived, search, category_id, client_id, sort_by } = params;
+    const queryParams = new URLSearchParams();
+
+    if (folder_id !== undefined && folder_id !== null) {
+      queryParams.append('folder_id', folder_id);
+    }
+    if (show_archived !== undefined) {
+      queryParams.append('show_archived', show_archived);
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (category_id !== undefined && category_id !== null) {
+      queryParams.append('category_id', category_id);
+    }
+    if (client_id !== undefined && client_id !== null) {
+      queryParams.append('client_id', client_id);
+    }
+    if (sort_by) {
+      queryParams.append('sort_by', sort_by);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/firm/documents/browse${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // ========== Browse Client Documents ==========
+  
+  // Browse specific client's documents
+  // GET /taxpayer/firm-admin/clients/{client_id}/documents/browse/
+  browseClientDocuments: async (clientId, params = {}) => {
     const token = getAccessToken();
     if (!token) {
       throw new Error('No authentication token found');
@@ -1852,7 +2206,57 @@ export const firmAdminDocumentsAPI = {
     }
 
     const queryString = queryParams.toString();
-    const url = `${API_BASE_URL}/firm/documents/browse${queryString ? `?${queryString}` : ''}`;
+    const url = `${API_BASE_URL}/taxpayer/firm-admin/clients/${clientId}/documents/browse/${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // ========== Browse Own Documents (Firm Admin's Personal Documents) ==========
+  
+  // Browse firm admin's own documents
+  // GET /taxpayer/firm-admin/documents/browse/
+  browseOwnDocuments: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const { folder_id, show_archived, search, category_id, sort_by } = params;
+    const queryParams = new URLSearchParams();
+
+    if (folder_id !== undefined && folder_id !== null) {
+      queryParams.append('folder_id', folder_id);
+    }
+    if (show_archived !== undefined) {
+      queryParams.append('show_archived', show_archived);
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (category_id !== undefined && category_id !== null) {
+      queryParams.append('category_id', category_id);
+    }
+    if (sort_by) {
+      queryParams.append('sort_by', sort_by);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/taxpayer/firm-admin/documents/browse/${queryString ? `?${queryString}` : ''}`;
 
     const config = {
       method: 'GET',
@@ -2302,11 +2706,9 @@ export const firmSignatureDocumentRequestsAPI = {
       formData.append('type', requestData.type); // "signature_request" or "document_request"
       formData.append('task_title', requestData.task_title);
       formData.append('client_id', requestData.client_id.toString());
-
-      // Optional fields
-      if (requestData.spouse_sign !== undefined) {
-        formData.append('spouse_sign', requestData.spouse_sign ? 'true' : 'false');
-      }
+      
+      // spouse_sign field - always send, default to false if not provided
+      formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
 
       // Add files (multiple files)
       if (requestData.files && Array.isArray(requestData.files)) {
@@ -2316,10 +2718,16 @@ export const firmSignatureDocumentRequestsAPI = {
       }
 
       // Add documents_metadata or documents (JSON string array)
+      // IMPORTANT: documents_metadata MUST be provided and match the number of files
       if (requestData.documents_metadata && Array.isArray(requestData.documents_metadata)) {
         formData.append('documents_metadata', JSON.stringify(requestData.documents_metadata));
       } else if (requestData.documents && Array.isArray(requestData.documents)) {
         formData.append('documents_metadata', JSON.stringify(requestData.documents));
+      } else if (requestData.files && Array.isArray(requestData.files) && requestData.files.length > 0) {
+        // If documents_metadata is not provided, create an array of empty objects matching the number of files
+        // This ensures the API receives the correct number of document configurations
+        const defaultMetadata = requestData.files.map(() => ({}));
+        formData.append('documents_metadata', JSON.stringify(defaultMetadata));
       }
 
       const config = {

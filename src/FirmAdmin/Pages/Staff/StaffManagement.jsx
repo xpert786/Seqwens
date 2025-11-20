@@ -995,7 +995,7 @@ export default function StaffManagement() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[120px]">Role</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Clients</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Performance</th>
+                        {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Performance</th> */}
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Hire Date</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Revenue</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Action</th>
@@ -1091,7 +1091,7 @@ export default function StaffManagement() {
                             </td>
 
                             {/* Performance */}
-                            <td className="px-4 py-4 w-[150px]">
+                            {/* <td className="px-4 py-4 w-[150px]">
                               <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">Efficiency {mappedStaff.efficiency}%</div>
                               <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                 <div
@@ -1100,7 +1100,7 @@ export default function StaffManagement() {
                                 ></div>
                               </div>
                               <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">{mappedStaff.tasksCompleted} Tasks Completed</div>
-                            </td>
+                            </td> */}
 
                             {/* Hire Date */}
                             <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">

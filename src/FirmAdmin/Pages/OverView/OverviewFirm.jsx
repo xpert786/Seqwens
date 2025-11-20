@@ -120,16 +120,12 @@ export default function FirmAdminDashboard() {
   const RevenueTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const revenueValue = payload[0]?.value || 0;
-      const targetValue = payload[1]?.value || 0;
       
       return (
         <div className="bg-white rounded-lg  p-3 border border-blue-200" style={{minWidth: '140px'}}>
           <div className="text-sm font-semibold mb-2" style={{color: '#374151'}}>{label}</div>
-          <div className="text-sm mb-1" style={{color: '#3B82F6'}}>
-            Target : {targetValue.toLocaleString()}
-          </div>
-          <div className="text-sm" style={{color: '#EF4444'}}>
-            Revenue : {revenueValue.toLocaleString()}
+          <div className="text-sm" style={{color: '#3AD6F2'}}>
+            Revenue : ${revenueValue.toLocaleString()}
           </div>
         </div>
       );
@@ -169,7 +165,7 @@ export default function FirmAdminDashboard() {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-32">
         <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[70vh] overflow-y-auto mt-[100px]">
           {/* Modal Header */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-200">
+          {/* <div className="flex justify-between items-center p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800 font-[BasisGrotesquePro]">Customize</h2>
             <button 
               onClick={() => setIsCustomizeModalOpen(false)}
@@ -177,7 +173,7 @@ export default function FirmAdminDashboard() {
             >
              <CrossesIcon />
             </button>
-          </div>
+          </div> */}
 
           {/* Modal Content */}
           <div className="p-6 space-y-6">
@@ -413,14 +409,13 @@ export default function FirmAdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1 min-w-0 pr-4 xl:pr-2">
-          <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm Admin Dashboard</h4>
+          <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm Dashboard</h4>
           <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base xl:whitespace-nowrap leading-tight">
-            <span className="block xl:inline">Welcome Back, Firm Administrator -</span>
-            <span className="block xl:inline">Tax Practice Management</span>
+            <span className="block xl:inline">Welcome Back</span>
           </p>
         </div>
         <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
-          <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+          {/* <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
             Admin View
             <svg className="w-2 h-2 xl:w-3 xl:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -431,7 +426,7 @@ export default function FirmAdminDashboard() {
             className="px-1 xl:px-4 py-1 xl:py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 whitespace-nowrap"
           >
             Customize
-          </button>
+          </button> */}
           <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
             <DownsIcon />
             Export Report
@@ -633,7 +628,7 @@ export default function FirmAdminDashboard() {
                 {loading ? '...' : (dashboardData?.key_metrics?.tasks?.current || 0)}
               </p>
               <div className="flex items-center gap-1 mt-1">
-                <Checks2Icon />
+                {dashboardData?.key_metrics?.tasks?.change_type === 'increase' || (dashboardData?.key_metrics?.tasks?.percentage_change && dashboardData.key_metrics.tasks.percentage_change > 0) ? <ChecksIcon /> : <Checks2Icon />}
                 <p className="text-xs text-black font-[BasisGrotesquePro]">
                   {loading ? '...' : dashboardData?.key_metrics?.tasks?.percentage_change 
                     ? `${dashboardData.key_metrics.tasks.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.tasks.percentage_change} vs Last Month`
@@ -771,36 +766,8 @@ export default function FirmAdminDashboard() {
         <div className="flex justify-between items-center mb-6">
           <div className="bg-white rounded-lg p-1 border border-gray-200">
             <div className="flex gap-0">
-              <button 
-                onClick={() => setActiveTab('trend')}
-                className={`px-4 py-2 text-sm !rounded-lg font-[BasisGrotesquePro] font-medium transition-colors ${
-                  activeTab === 'trend' 
-                    ? 'bg-[#3AD6F2] text-white' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Trend
-              </button>
-              <button 
-                onClick={() => setActiveTab('breakdown')}
-                className={`px-4 py-2 text-sm !rounded-lg font-[BasisGrotesquePro] font-medium transition-colors ${
-                  activeTab === 'breakdown' 
-                    ? 'bg-[#3AD6F2] text-white' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Breakdown
-              </button>
-              <button 
-                onClick={() => setActiveTab('arap')}
-                className={`px-4 py-2 text-sm !rounded-lg font-[BasisGrotesquePro] font-medium transition-colors ${
-                  activeTab === 'arap' 
-                    ? 'bg-[#3AD6F2] text-white' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                AR/AP
-              </button>
+              
+              
             </div>
           </div>
           <select className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
@@ -812,15 +779,8 @@ export default function FirmAdminDashboard() {
         </div>
         
         <div className="h-80">
-          {activeTab === 'trend' && (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={getRevenueData(dashboardData)}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3AD6F299"/>
-                    <stop offset="95%" stopColor="#3AD6F299"/>
-                  </linearGradient>
-                </defs>
+              <LineChart data={getRevenueData(dashboardData)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
                 <XAxis 
                   dataKey="month" 
@@ -832,155 +792,18 @@ export default function FirmAdminDashboard() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, 14000]}
-                  ticks={[0, 3500, 7000, 10500, 14000]}
                 />
                 <Tooltip content={<RevenueTooltip />} />
-                <Area
+                <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="#3AD6F2"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  dot={{ fill: 'white', stroke: '#3AD6F2', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#3AD6F2', strokeWidth: 2, fill: 'white' }}
+                  strokeWidth={3}
+                  dot={{ fill: '#3AD6F2', stroke: '#3AD6F2', strokeWidth: 2, r: 5 }}
+                  activeDot={{ r: 7, stroke: '#3AD6F2', strokeWidth: 2, fill: '#3AD6F2' }}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="target"
-                  stroke="#EF4444"
-                  strokeWidth={2}
-                  dot={{ fill: 'white', stroke: '#EF4444', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#EF4444', strokeWidth: 2, fill: '#EF4444' }}
-                />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
-          )}
-
-          {activeTab === 'breakdown' && (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={getBreakdownData(dashboardData)}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                barCategoryGap="20%"
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
-                <XAxis 
-                  dataKey="category" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, 60000]}
-                  ticks={[0, 15000, 30000, 45000, 60000]}
-                />
-                <Tooltip content={<BreakdownTooltip />} />
-                <Bar 
-                  dataKey="amount" 
-                  fill="#3B82F6"
-                  radius={[2, 2, 0, 0]}
-                  maxBarSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-
-          {activeTab === 'arap' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Account Receivable Card */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-1">Account Receivable</h3>
-                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro] mb-4">Outstanding invoices</p>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Open invoices</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.open_invoices || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Outstanding Balance</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {loading ? '...' : dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.outstanding_balance 
-                        ? `$${dashboardData.revenue_analytics.ar_ap.accounts_receivable.outstanding_balance.toLocaleString()}`
-                        : '$0'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Avg Days Outstanding</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.avg_days_outstanding || 0)}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full" 
-                      style={{
-                        width: `${dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.collection_percentage || 0}%`, 
-                        backgroundColor: '#3AD6F2'
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-2">
-                    {dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.collection_percentage || 0}% collected for current period
-                  </p>
-                </div>
-              </div>
-
-              {/* Account Payable Card */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-1">Account Payable</h3>
-                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro] mb-4">Outstanding Payable</p>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Opens Bill</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.open_bills || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Outstanding Payable</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {loading ? '...' : dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.outstanding_payable 
-                        ? `$${dashboardData.revenue_analytics.ar_ap.accounts_payable.outstanding_payable.toLocaleString()}`
-                        : '$0'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Average Days to Pay</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.avg_days_to_pay || 0)}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full" 
-                      style={{
-                        width: `${dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.paid_percentage || 0}%`, 
-                        backgroundColor: '#3AD6F2'
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-2">
-                    {dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.paid_percentage || 0}% Paid For Current Period
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         </div>
       )}
@@ -1060,7 +883,7 @@ export default function FirmAdminDashboard() {
             <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Top performer this month</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2 text-gray-500 hover:text-gray-700">
+            {/* <button className="p-2 text-gray-500 hover:text-gray-700">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
@@ -1070,7 +893,7 @@ export default function FirmAdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-            </button>
+            </button> */}
           </div>
         </div>
         
@@ -1091,7 +914,7 @@ export default function FirmAdminDashboard() {
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue?.toLocaleString() || '0'}</div>
-                  <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.performance_percentage}%</div>
+                  {/* <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.performance_percentage}%</div> */}
                 </div>
               </div>
             ))

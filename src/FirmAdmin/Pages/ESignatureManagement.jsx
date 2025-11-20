@@ -1,7 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { PDFDocument } from 'pdf-lib';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
+import { firmAdminClientsAPI, firmAdminDocumentsAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
+import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
+import { toast } from 'react-toastify';
 
 // Set up PDF.js worker
 if (typeof window !== 'undefined') {
@@ -34,12 +38,30 @@ export default function ESignatureManagement() {
   const [euEidasCompliant, setEuEidasCompliant] = useState(false);
 
   // Create Signature Request Modal state
-  const [signatureType, setSignatureType] = useState('Signature Required');
+  const [signatureType, setSignatureType] = useState('signature_request');
   const [taskTitle, setTaskTitle] = useState('');
-  const [selectedClient, setSelectedClient] = useState('@johndoe');
-  const [spouseAlso, setSpouseAlso] = useState(true);
+  const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [spouseAlso, setSpouseAlso] = useState(false);
   const [documentCategory, setDocumentCategory] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [folderId, setFolderId] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [priority, setPriority] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  // Client and folder selection state
+  const [clients, setClients] = useState([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const clientDropdownRef = useRef(null);
+  const [folderTree, setFolderTree] = useState([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [showFolderDropdown, setShowFolderDropdown] = useState(false);
+  const folderDropdownRef = useRef(null);
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const [selectedFolderPath, setSelectedFolderPath] = useState('');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedPage, setSelectedPage] = useState(0);
   const [selectedSigner, setSelectedSigner] = useState('@johndoe');
@@ -157,6 +179,7 @@ export default function ESignatureManagement() {
   const resetAllState = () => {
     // Reset file and PDF related state
     setUploadedFile(null);
+    setUploadedFiles([]);
     setPdfFileData(null);
     if (pdfFileUrl) {
       URL.revokeObjectURL(pdfFileUrl);
@@ -176,6 +199,21 @@ export default function ESignatureManagement() {
     setPageNumber(1);
     setNumPages(null);
     setTotalPages(5);
+
+    // Reset signature request form state
+    setTaskTitle('');
+    setSelectedClientIds([]);
+    setSpouseAlso(false);
+    setDocumentCategory('');
+    setFolderId('');
+    setDueDate('');
+    setPriority('');
+    setDescription('');
+    setSelectedFolderPath('');
+    setShowClientDropdown(false);
+    setShowFolderDropdown(false);
+    setExpandedFolders(new Set());
+    setSignatureType('signature_request');
 
     // Clear any text selection
     window.getSelection().removeAllRanges();
@@ -310,6 +348,376 @@ export default function ESignatureManagement() {
   useEffect(() => {
     setPageNumber(selectedPage + 1);
   }, [selectedPage]);
+
+  // Handle click outside for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showClientDropdown && clientDropdownRef.current && !clientDropdownRef.current.contains(event.target)) {
+        setShowClientDropdown(false);
+      }
+      if (showFolderDropdown && folderDropdownRef.current && !folderDropdownRef.current.contains(event.target)) {
+        setShowFolderDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showClientDropdown, showFolderDropdown]);
+
+  // Fetch clients from API
+  const fetchClients = useCallback(async () => {
+    try {
+      setLoadingClients(true);
+      const response = await firmAdminClientsAPI.listClients({ page: 1, page_size: 100 });
+      if (response.success && response.data) {
+        setClients(response.data.clients || []);
+      } else if (Array.isArray(response)) {
+        setClients(response);
+      } else {
+        setClients([]);
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      toast.error(handleAPIError(error));
+      setClients([]);
+    } finally {
+      setLoadingClients(false);
+    }
+  }, []);
+
+  // Fetch clients when modal opens
+  useEffect(() => {
+    if (showCreateModal && clients.length === 0 && !loadingClients) {
+      fetchClients();
+    }
+  }, [showCreateModal, clients.length, loadingClients, fetchClients]);
+
+  // Fetch root folders from API
+  useEffect(() => {
+    const fetchRootFolders = async () => {
+      if (!showCreateModal) return;
+
+      try {
+        setLoadingFolders(true);
+        const response = await firmAdminDocumentsAPI.listFolders();
+        if (response.success && response.data) {
+          const folders = response.data.folders || response.data || [];
+          setFolderTree(folders);
+        } else if (Array.isArray(response)) {
+          setFolderTree(response);
+        } else {
+          setFolderTree([]);
+        }
+      } catch (error) {
+        console.error('Error fetching folders:', error);
+        setFolderTree([]);
+      } finally {
+        setLoadingFolders(false);
+      }
+    };
+
+    if (showCreateModal) {
+      fetchRootFolders();
+    }
+  }, [showCreateModal]);
+
+  // Handle spouse signature toggle with validation
+  const handleSpouseSignatureToggle = async (checked) => {
+    if (!checked) {
+      setSpouseAlso(false);
+      return;
+    }
+
+    if (!selectedClientIds || selectedClientIds.length === 0) {
+      toast.error('Please select at least one client first.');
+      return;
+    }
+
+    try {
+      // Check spouse for all selected clients
+      const spouseChecks = await Promise.all(
+        selectedClientIds.map(async (clientId) => {
+          try {
+            const response = await firmAdminClientsAPI.getClientDetails(clientId);
+            if (response.success && response.data) {
+              const hasSpouse = response.data.personal_information?.spouse_information || 
+                               response.data.spouse_information ||
+                               response.data.has_spouse;
+              return {
+                clientId,
+                hasSpouse: !!hasSpouse,
+                clientName: response.data.profile?.name || 
+                           `${response.data.profile?.first_name || ''} ${response.data.profile?.last_name || ''}`.trim() ||
+                           `Client ${clientId}`
+              };
+            }
+            return { clientId, hasSpouse: false, clientName: `Client ${clientId}` };
+          } catch (error) {
+            console.error(`Error checking spouse for client ${clientId}:`, error);
+            return { clientId, hasSpouse: false, clientName: `Client ${clientId}` };
+          }
+        })
+      );
+
+      const clientsWithoutSpouse = spouseChecks.filter(check => !check.hasSpouse);
+      if (clientsWithoutSpouse.length > 0) {
+        const clientNames = clientsWithoutSpouse.map(c => c.clientName).join(', ');
+        toast.error(`The following client(s) do not have a partner/spouse: ${clientNames}. Spouse signature cannot be required.`);
+        return;
+      }
+
+      setSpouseAlso(true);
+    } catch (error) {
+      console.error('Error checking spouse:', error);
+      toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
+    }
+  };
+
+  // Handle folder selection
+  const handleFolderSelect = (folder) => {
+    setFolderId(folder.id);
+    setSelectedFolderPath(folder.title || folder.name);
+    setShowFolderDropdown(false);
+  };
+
+  // Toggle folder expansion
+  const toggleFolderExpansion = (folderId) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId);
+      } else {
+        newSet.add(folderId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle file upload (multiple files)
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setUploadedFiles(prev => [...prev, ...files]);
+      if (files.length === 1) {
+        setUploadedFile(files[0]);
+        if (files[0].type === 'application/pdf') {
+          const url = URL.createObjectURL(files[0]);
+          setPdfFileUrl(url);
+        }
+      }
+    }
+    // Reset input
+    e.target.value = '';
+  };
+
+  // Remove file from list
+  const removeFile = (index) => {
+    setUploadedFiles(prev => {
+      const newFiles = prev.filter((_, i) => i !== index);
+      if (index === 0 && newFiles.length > 0) {
+        setUploadedFile(newFiles[0]);
+      } else if (newFiles.length === 0) {
+        setUploadedFile(null);
+      }
+      return newFiles;
+    });
+  };
+
+  // Create signature request
+  const createSignatureRequest = async () => {
+    if (!taskTitle.trim()) {
+      toast.error('Please enter a task title');
+      return;
+    }
+
+    if (!selectedClientIds || selectedClientIds.length === 0) {
+      toast.error('Please select at least one client');
+      return;
+    }
+
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      toast.error('Please upload at least one file');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Create documents_metadata array - one object per file
+      // This is REQUIRED by the API and must match the number of files exactly
+      // Each metadata object should have category_id and folder_id
+      const documentsMetadata = uploadedFiles.map((file) => {
+        const metadata = {};
+        
+        // Add category_id if document category is selected
+        // Note: If documentCategory is a string, we need to fetch the actual category ID
+        // For now, if it's a number, use it; otherwise, we'll need to fetch categories
+        if (documentCategory) {
+          const categoryId = parseInt(documentCategory);
+          if (!isNaN(categoryId)) {
+            metadata.category_id = categoryId;
+          }
+          // If documentCategory is a string, we might need to fetch categories first
+          // For now, we'll skip category_id if it's not a valid number
+        }
+        
+        // Add folder_id if folder is selected (must be an integer)
+        if (folderId) {
+          const folderIdInt = parseInt(folderId);
+          if (!isNaN(folderIdInt)) {
+            metadata.folder_id = folderIdInt;
+          }
+        }
+        
+        // Ensure at least an empty object is returned (API requires metadata for each file)
+        return metadata;
+      });
+
+      console.log('Creating signature request with:', {
+        filesCount: uploadedFiles.length,
+        metadataCount: documentsMetadata.length,
+        documentsMetadata: documentsMetadata
+      });
+
+      // Create signature requests for all selected clients
+      // Note: The API accepts one client_id per request, so we create one request per client
+      const requests = selectedClientIds.map(async (clientId) => {
+        const requestData = {
+          type: signatureType || 'signature_request',
+          task_title: taskTitle,
+          client_id: clientId,
+          spouse_sign: spouseAlso || false,
+          files: uploadedFiles,
+          documents_metadata: documentsMetadata // Required: must match number of files exactly
+        };
+
+        // Add optional fields if provided
+        if (dueDate) {
+          requestData.due_date = dueDate;
+        }
+        if (description) {
+          requestData.description = description;
+        }
+        if (priority) {
+          requestData.priority = priority;
+        }
+
+        console.log('Request data for client', clientId, ':', {
+          ...requestData,
+          files: `${requestData.files.length} file(s)`,
+          documents_metadata: requestData.documents_metadata
+        });
+
+        // Create signature/document request directly
+        const token = getAccessToken();
+        if (!token) {
+          throw new Error('No authentication token found. Please login again.');
+        }
+
+        const formData = new FormData();
+
+        // Required fields
+        formData.append('type', requestData.type); // "signature_request" or "document_request"
+        formData.append('task_title', requestData.task_title);
+        formData.append('client_id', requestData.client_id.toString());
+        
+        // spouse_sign field - always send, default to false if not provided
+        formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
+
+        // Add files (multiple files)
+        if (requestData.files && Array.isArray(requestData.files)) {
+          requestData.files.forEach((file) => {
+            formData.append('files', file);
+          });
+        }
+
+        // Add documents_metadata or documents (JSON string array)
+        if (requestData.documents_metadata && Array.isArray(requestData.documents_metadata)) {
+          formData.append('documents_metadata', JSON.stringify(requestData.documents_metadata));
+        } else if (requestData.documents && Array.isArray(requestData.documents)) {
+          formData.append('documents_metadata', JSON.stringify(requestData.documents));
+        } else if (requestData.files && Array.isArray(requestData.files) && requestData.files.length > 0) {
+          // If documents_metadata is not provided, create an array of empty objects matching the number of files
+          const defaultMetadata = requestData.files.map(() => ({}));
+          formData.append('documents_metadata', JSON.stringify(defaultMetadata));
+        }
+
+        const config = {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // Don't set Content-Type for FormData - let browser set it with boundary
+          },
+          body: formData
+        };
+
+        let response = await fetchWithCors(`${getApiBaseUrl()}/firm/signature-document-requests/create/`, config);
+
+        // Handle 401 Unauthorized - try to refresh token
+        if (response.status === 401) {
+          try {
+            await refreshAccessToken();
+
+            // Retry the original request with new token
+            config.headers = {
+              'Authorization': `Bearer ${getAccessToken()}`,
+            };
+            response = await fetchWithCors(`${getApiBaseUrl()}/firm/signature-document-requests/create/`, config);
+
+            if (response.status === 401) {
+              // Refresh failed, redirect to login
+              clearUserData();
+              window.location.href = getLoginUrl();
+              throw new Error('Session expired. Please login again.');
+            }
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+            clearUserData();
+            window.location.href = getLoginUrl();
+            throw new Error('Session expired. Please login again.');
+          }
+        }
+
+        if (!response.ok) {
+          let errorMessage = `HTTP error! status: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            if (errorData.errors) {
+              const fieldErrors = Object.entries(errorData.errors)
+                .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+                .join('; ');
+              errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+            } else {
+              errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+            }
+          } catch (parseError) {
+            console.error('Error parsing signature/document request response:', parseError);
+          }
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+        return result;
+      });
+
+      // Wait for all requests to complete
+      await Promise.all(requests);
+
+      toast.success(`Signature request${selectedClientIds.length > 1 ? 's' : ''} created successfully!`);
+      setShowCreateModal(false);
+      resetAllState();
+      
+      // Optionally refresh signature requests list here
+      // fetchSignatureRequests();
+    } catch (error) {
+      console.error('Error creating signature request:', error);
+      toast.error(handleAPIError(error) || 'Failed to create signature request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calculate PDF page width based on container size
   useEffect(() => {
@@ -1444,18 +1852,16 @@ export default function ESignatureManagement() {
               {/* Type */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Type
+                  Type <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select
-                    value={signatureType}
-                    onChange={(e) => setSignatureType(e.target.value)}
-                    className="w-full px-4 py-2.5  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
+                    value="signature_request"
+                    disabled
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-gray-100 cursor-not-allowed opacity-75"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
                   >
-                    <option>Signature Required</option>
-                    <option>Initial Required</option>
-                    <option>Date Required</option>
+                    <option value="signature_request">Signature Request</option>
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1468,40 +1874,75 @@ export default function ESignatureManagement() {
               {/* Task Title */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Task Title
+                  Task Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
-                  placeholder="Sign Your Document"
+                  placeholder="Enter task title"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter description (optional)"
+                  rows="3"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm resize-none"
                   style={{ fontFamily: 'BasisGrotesquePro' }}
                 />
               </div>
 
-              {/* Client */}
+              {/* Client Multi-Select */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Client
+                  Clients <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <div className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg bg-white min-h-[42px]">
-                    {selectedClient && (
-                      <div className="flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-                        <span style={{ fontFamily: 'BasisGrotesquePro' }}>{selectedClient}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedClient('');
-                          }}
-                          className="text-blue-700 hover:text-blue-900 ml-1"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
+                <div ref={clientDropdownRef} className="relative">
+                  <div
+                    onClick={() => setShowClientDropdown(!showClientDropdown)}
+                    className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg bg-white min-h-[42px] cursor-pointer"
+                  >
+                    {selectedClientIds.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 flex-1">
+                        {selectedClientIds.map((clientId) => {
+                          const client = clients.find(c => c.id?.toString() === clientId.toString() || c.profile?.id?.toString() === clientId.toString());
+                          if (!client) return null;
+                          const clientName = client.profile?.name || 
+                                           client.name ||
+                                           `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
+                                           `Client ${clientId}`;
+                          return (
+                            <div key={clientId} className="flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                              <span style={{ fontFamily: 'BasisGrotesquePro' }}>{clientName}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClientIds(prev => prev.filter(id => id !== clientId));
+                                }}
+                                className="text-blue-700 hover:text-blue-900 ml-1"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        {loadingClients ? 'Loading clients...' : 'Select one or more clients'}
+                      </span>
                     )}
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1509,48 +1950,110 @@ export default function ESignatureManagement() {
                       </svg>
                     </div>
                   </div>
+
+                  {/* Client Dropdown Menu */}
+                  {showClientDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {loadingClients ? (
+                        <div className="p-4 text-center text-sm text-gray-500">Loading clients...</div>
+                      ) : clients.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-500">No clients available</div>
+                      ) : (
+                        clients.map((client) => {
+                          const clientId = client.id || client.profile?.id;
+                          const clientName = client.profile?.name || 
+                                           client.name ||
+                                           `${client.profile?.first_name || client.first_name || ''} ${client.profile?.last_name || client.last_name || ''}`.trim() ||
+                                           `Client ${clientId}`;
+                          const isSelected = selectedClientIds.includes(clientId?.toString());
+                          return (
+                            <div
+                              key={clientId}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedClientIds(prev => prev.filter(id => id !== clientId.toString()));
+                                } else {
+                                  setSelectedClientIds(prev => [...prev, clientId.toString()]);
+                                }
+                              }}
+                              className={`p-3 cursor-pointer hover:bg-gray-50 flex items-center gap-2 ${
+                                isSelected ? 'bg-blue-50' : ''
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {}}
+                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                {clientName}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Spouse Also */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700  " style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Spouse Also
-                </label>
-                <button
-                  onClick={() => setSpouseAlso(!spouseAlso)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${spouseAlso ? 'bg-orange-500' : 'bg-gray-300'}`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${spouseAlso ? 'translate-x-6' : 'translate-x-1'}`}
-                  />
-                </button>
-              </div>
+              {/* Spouse Signature Toggle - Only for signature requests */}
+              {signatureType === 'signature_request' && (
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Spouse's signature required
+                  </label>
+                  <button
+                    onClick={() => handleSpouseSignatureToggle(!spouseAlso)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${spouseAlso ? 'bg-orange-500' : 'bg-gray-300'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${spouseAlso ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+              )}
 
               {/* Add Files */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Add Files
+                  Add Files <span className="text-red-500">*</span>
                 </label>
                 <div
                   className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer relative"
                   onClick={() => document.getElementById('file-upload').click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = '#3AD6F2';
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) {
+                      setUploadedFiles(prev => [...prev, ...files]);
+                      if (files.length === 1) {
+                        setUploadedFile(files[0]);
+                        if (files[0].type === 'application/pdf') {
+                          const url = URL.createObjectURL(files[0]);
+                          setPdfFileUrl(url);
+                        }
+                      }
+                    }
+                  }}
                 >
                   <input
                     id="file-upload"
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                    multiple
                     className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setUploadedFile(file);
-                        if (file.type === 'application/pdf') {
-                          const url = URL.createObjectURL(file);
-                          setPdfFileUrl(url);
-                        }
-                      }
-                    }}
+                    onChange={handleFileChange}
                   />
                   <div className="flex flex-col items-center">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1562,13 +2065,37 @@ export default function ESignatureManagement() {
                     <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Max 10MB per file)
                     </p>
-                    {uploadedFile && (
-                      <p className="text-xs text-green-600 mt-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        ✓ {uploadedFile.name}
-                      </p>
-                    )}
                   </div>
                 </div>
+                
+                {/* Uploaded Files List */}
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 11V13.3333C14 13.687 13.8595 14.0261 13.6095 14.2761C13.3594 14.5262 13.0203 14.6667 12.6667 14.6667H3.33333C2.97971 14.6667 2.64057 14.5262 2.39052 14.2761C2.14048 14.0261 2 13.687 2 13.3333V11M5.33333 8L8 10.6667M8 10.6667L10.6667 8M8 10.6667V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span className="text-sm text-gray-700 truncate" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            {file.name}
+                          </span>
+                          <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Document category */}
@@ -1583,11 +2110,11 @@ export default function ESignatureManagement() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
                   >
-                    <option value="">Select a Category</option>
-                    <option>Tax Documents</option>
-                    <option>Legal Documents</option>
-                    <option>Financial Documents</option>
-                    <option>Other</option>
+                    <option value="">Select a Category (Optional)</option>
+                    <option value="tax_documents">Tax Documents</option>
+                    <option value="legal_documents">Legal Documents</option>
+                    <option value="financial_documents">Financial Documents</option>
+                    <option value="other">Other</option>
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1597,36 +2124,108 @@ export default function ESignatureManagement() {
                 </div>
               </div>
 
-              {/* Due Date */}
+              {/* Folder Selection */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Due Date
+                  Folder (Optional)
                 </label>
-                <div className="border rounded-lg p-4 bg-white" style={{ borderColor: '#3AD6F2' }}>
-                  <p className="text-xs text-gray-600 mb-3" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Selected Folder:
-                  </p>
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-2 flex-wrap text-sm text-gray-700">
-                      {/* Home Icon */}
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#3AD6F2' }}>
-                        <path d="M8 2L2 6.5V14H6.5V10H9.5V14H14V6.5L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <div ref={folderDropdownRef} className="relative">
+                  <div
+                    onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                    className="flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg bg-white min-h-[42px] cursor-pointer"
+                  >
+                    <span className={`text-sm ${selectedFolderPath ? 'text-gray-700' : 'text-gray-400'}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      {selectedFolderPath || (loadingFolders ? 'Loading folders...' : 'Select a folder (optional)')}
+                    </span>
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                      <span style={{ fontFamily: 'BasisGrotesquePro' }}>Tax Year 2023</span>
-                      {/* Arrow Icon */}
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#3AD6F2' }}>
-                        <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span style={{ fontFamily: 'BasisGrotesquePro' }}>Income Documents</span>
-                      {/* Arrow Icon */}
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#3AD6F2' }}>
-                        <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span style={{ fontFamily: 'BasisGrotesquePro' }}>W-2 Forms</span>
                     </div>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-shrink-0" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}>
-                      Change
-                    </button>
+                  </div>
+
+                  {/* Folder Dropdown Menu */}
+                  {showFolderDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {loadingFolders ? (
+                        <div className="p-4 text-center text-sm text-gray-500">Loading folders...</div>
+                      ) : folderTree.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-500">No folders available</div>
+                      ) : (
+                        <div className="p-2">
+                          <div
+                            onClick={() => {
+                              setFolderId('');
+                              setSelectedFolderPath('Root');
+                              setShowFolderDropdown(false);
+                            }}
+                            className={`p-2 cursor-pointer hover:bg-gray-50 rounded ${!folderId ? 'bg-blue-50' : ''}`}
+                          >
+                            <span className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Root</span>
+                          </div>
+                          {folderTree.map((folder) => {
+                            const folderTitle = folder.title || folder.name;
+                            return (
+                              <div key={folder.id} className="mt-1">
+                                <div
+                                  onClick={() => handleFolderSelect(folder)}
+                                  className={`p-2 cursor-pointer hover:bg-gray-50 rounded flex items-center gap-2 ${folderId === folder.id ? 'bg-blue-50' : ''}`}
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H6.66667C7.02029 2 7.35943 2.14048 7.60948 2.39052C7.85952 2.64057 8 2.97971 8 3.33333V6.66667C8 7.02029 7.85952 7.35943 7.60948 7.60948C7.35943 7.85952 7.02029 8 6.66667 8H3.33333C2.97971 8 2.64057 7.85952 2.39052 7.60948C2.14048 7.35943 2 7.02029 2 6.66667V3.33333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                    <path d="M2 9.33333C2 8.97971 2.14048 8.64057 2.39052 8.39052C2.64057 8.14048 2.97971 8 3.33333 8H6.66667C7.02029 8 7.35943 8.14048 7.60948 8.39052C7.85952 8.64057 8 8.97971 8 9.33333V12.6667C8 13.0203 7.85952 13.3594 7.60948 13.6095C7.35943 13.8595 7.02029 14 6.66667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V9.33333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                  </svg>
+                                  <span className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{folderTitle}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Due Date and Priority - Side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Due Date */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
+                    style={{ fontFamily: 'BasisGrotesquePro' }}
+                  />
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Priority
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
+                      style={{ fontFamily: 'BasisGrotesquePro' }}
+                    >
+                      <option value="">Select Priority</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1639,26 +2238,33 @@ export default function ESignatureManagement() {
                   setShowCreateModal(false);
                   resetAllState();
                 }}
-                className="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={loading}
+                className="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  if (uploadedFile) {
-                    setShowCreateModal(false);
-                    setShowPreviewModal(true);
-                  }
-                }}
-                disabled={!uploadedFile}
-                className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors ${uploadedFile
-                  ? 'text-white bg-orange-500 hover:bg-orange-600'
-                  : 'text-gray-400 bg-gray-200 cursor-not-allowed'
-                  }`}
+                onClick={createSignatureRequest}
+                disabled={loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0}
+                className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0
+                    ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                    : 'text-white bg-orange-500 hover:bg-orange-600'
+                }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
-                Next
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <ESignatureUpload />
+                    <span>Create Signature Request</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
