@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaCog, FaEdit } from 'react-icons/fa';
+import { FaCog, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { firmOfficeAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 import {
     LineChart,
     Line,
@@ -212,8 +214,161 @@ export default function OfficeOverview() {
         customDomain: 'sub.myfirm.com'
     });
 
-    // Get office data - in real app, fetch from API based on officeId
-    const office = sampleOffices[officeId] || sampleOffices['1'];
+    // Office data state
+    const [office, setOffice] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    // Staff members state
+    const [staffMembers, setStaffMembers] = useState([]);
+    const [staffLoading, setStaffLoading] = useState(false);
+    const [staffError, setStaffError] = useState('');
+    const [staffCount, setStaffCount] = useState(0);
+
+    // Clients state
+    const [clients, setClients] = useState([]);
+    const [clientsLoading, setClientsLoading] = useState(false);
+    const [clientsError, setClientsError] = useState('');
+    const [clientsCount, setClientsCount] = useState(0);
+
+    // Performance state
+    const [performanceData, setPerformanceData] = useState(null);
+    const [performanceLoading, setPerformanceLoading] = useState(false);
+    const [performanceError, setPerformanceError] = useState('');
+
+    // Fetch office details from API
+    useEffect(() => {
+        const fetchOfficeDetails = async () => {
+            if (!officeId) {
+                setError('Office ID is required');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError('');
+
+                const response = await firmOfficeAPI.getOffice(officeId);
+
+                if (response.success && response.data) {
+                    setOffice(response.data);
+                } else {
+                    throw new Error(response.message || 'Failed to load office details');
+                }
+            } catch (err) {
+                console.error('Error fetching office details:', err);
+                const errorMsg = handleAPIError(err);
+                setError(errorMsg || 'Failed to load office details. Please try again.');
+                toast.error(errorMsg || 'Failed to load office details', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOfficeDetails();
+    }, [officeId]);
+
+    // Fetch staff members when Staff tab is active
+    useEffect(() => {
+        const fetchStaffMembers = async () => {
+            if (activeTab !== 'Staff' || !officeId) {
+                return;
+            }
+
+            try {
+                setStaffLoading(true);
+                setStaffError('');
+
+                const response = await firmOfficeAPI.getOfficeStaff(officeId);
+
+                if (response.success && response.data) {
+                    setStaffMembers(response.data.staff_members || []);
+                    setStaffCount(response.data.staff_count || response.data.staff_members?.length || 0);
+                } else {
+                    throw new Error(response.message || 'Failed to load staff members');
+                }
+            } catch (err) {
+                console.error('Error fetching staff members:', err);
+                const errorMsg = handleAPIError(err);
+                setStaffError(errorMsg || 'Failed to load staff members');
+                setStaffMembers([]);
+            } finally {
+                setStaffLoading(false);
+            }
+        };
+
+        fetchStaffMembers();
+    }, [activeTab, officeId]);
+
+    // Fetch clients when Clients tab is active
+    useEffect(() => {
+        const fetchClients = async () => {
+            if (activeTab !== 'Clients' || !officeId) {
+                return;
+            }
+
+            try {
+                setClientsLoading(true);
+                setClientsError('');
+
+                const response = await firmOfficeAPI.getOfficeClients(officeId);
+
+                if (response.success && response.data) {
+                    setClients(response.data.clients || []);
+                    setClientsCount(response.data.clients_count || response.data.clients?.length || 0);
+                } else {
+                    throw new Error(response.message || 'Failed to load clients');
+                }
+            } catch (err) {
+                console.error('Error fetching clients:', err);
+                const errorMsg = handleAPIError(err);
+                setClientsError(errorMsg || 'Failed to load clients');
+                setClients([]);
+            } finally {
+                setClientsLoading(false);
+            }
+        };
+
+        fetchClients();
+    }, [activeTab, officeId]);
+
+    // Fetch performance data when Performance tab is active
+    useEffect(() => {
+        const fetchPerformance = async () => {
+            if (activeTab !== 'Performance' || !officeId) {
+                return;
+            }
+
+            try {
+                setPerformanceLoading(true);
+                setPerformanceError('');
+
+                const response = await firmOfficeAPI.getOfficePerformance(officeId);
+
+                if (response.success && response.data) {
+                    setPerformanceData(response.data);
+                } else {
+                    throw new Error(response.message || 'Failed to load performance data');
+                }
+            } catch (err) {
+                console.error('Error fetching performance data:', err);
+                const errorMsg = handleAPIError(err);
+                setPerformanceError(errorMsg || 'Failed to load performance data');
+                setPerformanceData(null);
+            } finally {
+                setPerformanceLoading(false);
+            }
+        };
+
+        fetchPerformance();
+    }, [activeTab, officeId]);
+
+    // Fallback to sample data if API fails (for development)
+    const officeData = office || sampleOffices[officeId] || sampleOffices['1'] || {};
 
     const formatCurrency = (amount) => {
         if (amount >= 1000) {
@@ -224,8 +379,8 @@ export default function OfficeOverview() {
 
     const tabs = [
         { id: 'Overview', label: 'Overview' },
-        { id: 'Staff', label: `Staff (${office.staffMembers?.length || 0})` },
-        { id: 'Clients', label: `Clients (${office.officeClients?.length || 0})` },
+        { id: 'Staff', label: `Staff (${staffCount || officeData?.staff_count || officeData?.staffMembers?.length || 0})` },
+        { id: 'Clients', label: `Clients (${clientsCount || officeData?.clients_count || officeData?.officeClients?.length || 0})` },
         { id: 'Performance', label: 'Performance' },
         { id: 'Resource Management', label: 'Resource Management' },
         { id: 'Scheduling & Coordination', label: 'Scheduling & Coordination' },
@@ -234,7 +389,7 @@ export default function OfficeOverview() {
     ];
 
     const efinStatusData = useMemo(() => {
-        const status = office.efinStatus || { active: 0, pending: 0, revoked: 0 };
+        const status = officeData?.efinStatus || { active: 0, pending: 0, revoked: 0 };
         const definitions = [
             { key: 'active', label: 'Active', color: '#10B981' },
             { key: 'pending', label: 'Pending', color: '#FACC15' },
@@ -245,7 +400,7 @@ export default function OfficeOverview() {
             ...definition,
             value: status[definition.key] ?? 0
         }));
-    }, [office]);
+    }, [officeData]);
 
     const totalEfin = useMemo(
         () => efinStatusData.reduce((total, status) => total + status.value, 0),
@@ -253,20 +408,20 @@ export default function OfficeOverview() {
     );
 
     const bankPartners = useMemo(() => {
-        return office.bankPartners || [
+        return officeData?.bankPartners || officeData?.bank_partners || [
             { id: 'default-1', name: 'Chase Bank', status: 'Active' },
             { id: 'default-2', name: 'Wells Fargo', status: 'Pending' },
             { id: 'default-3', name: 'Bank of America', status: 'Rejected' }
         ];
-    }, [office]);
+    }, [officeData]);
 
     const auditTrail = useMemo(() => {
-        return office.auditTrail || [
+        return officeData?.auditTrail || officeData?.audit_trail || [
             { id: 'default-log-1', user: 'John D.', office: 'NYC', action: 'Filed Return', ip: '192.168.1.12', timestamp: '2025-07-21 14:32' },
             { id: 'default-log-2', user: 'Maria P.', office: 'LA', action: 'Bank Enrollment', ip: '192.168.2.45', timestamp: '2025-07-21 13:10' },
             { id: 'default-log-3', user: 'Alex K.', office: 'Chicago', action: 'Filed Return', ip: '10.0.0.22', timestamp: '2025-07-20 18:55' }
         ];
-    }, [office]);
+    }, [officeData]);
 
     const partnerStatusStyles = {
         Active: 'bg-[#22C55E] text-[#FFFFFF]',
@@ -274,25 +429,25 @@ export default function OfficeOverview() {
         Rejected: 'bg-[#EF4444] text-[#FFFFFF]'
     };
 
-    const timezone = office.timezone || 'America/New_York';
-    const officeManager = office.officeManager || office.staffMembers?.[0]?.name || 'Sarah Martinez';
+    const timezone = officeData?.timezone || 'America/New_York';
+    const officeManager = officeData?.manager_name || officeData?.officeManager || officeData?.staffMembers?.[0]?.name || 'N/A';
 
     const defaultBranding = useMemo(
         () => ({
-            loginUrl: office.branding?.loginUrl || 'https://www.logo.com/',
-            faviconUrl: office.branding?.faviconUrl || 'https://www.favicon.com/',
-            primaryColor: office.branding?.primaryColor || '#3AD6F2',
-            secondaryColor: office.branding?.secondaryColor || '#F56D2D',
-            customDomain: office.branding?.customDomain || 'sub.myfirm.com'
+            loginUrl: officeData?.branding?.loginUrl || 'https://www.logo.com/',
+            faviconUrl: officeData?.branding?.faviconUrl || 'https://www.favicon.com/',
+            primaryColor: officeData?.primary_color || officeData?.branding?.primaryColor || '#3AD6F2',
+            secondaryColor: officeData?.secondary_color || officeData?.branding?.secondaryColor || '#F56D2D',
+            customDomain: officeData?.custom_domain || officeData?.branding?.customDomain || 'sub.myfirm.com'
         }),
-        [office]
+        [officeData]
     );
 
     useEffect(() => {
         setBranding(defaultBranding);
-        setWhiteLabelEnabled(Boolean(office.branding?.whiteLabelEnabled));
-        setTaxPrepUrl(office.taxPrepUrl || 'https://www.grammarly.com/');
-    }, [defaultBranding, office]);
+        setWhiteLabelEnabled(Boolean(officeData?.branding?.whiteLabelEnabled));
+        setTaxPrepUrl(officeData?.taxPrepUrl || 'https://www.grammarly.com/');
+    }, [defaultBranding, officeData]);
 
     const resourceLookup = useMemo(() => {
         return schedulingResources.reduce((accumulator, resource) => {
@@ -443,7 +598,7 @@ export default function OfficeOverview() {
 
     const handleResetBranding = () => {
         setBranding(defaultBranding);
-        setWhiteLabelEnabled(Boolean(office.branding?.whiteLabelEnabled));
+        setWhiteLabelEnabled(Boolean(officeData?.branding?.whiteLabelEnabled));
     };
 
     const handleSaveBranding = () => {
@@ -460,9 +615,50 @@ export default function OfficeOverview() {
         }
     };
 
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
+                <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-sm text-gray-600">Loading office details...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error && !officeData) {
+        return (
+            <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
+                <button
+                    onClick={() => navigate('/firmadmin/offices')}
+                    className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                    <FaArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back to Offices</span>
+                </button>
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {error}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="p-6 bg-[rgb(243,247,255)]">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate('/firmadmin/offices')}
+                    className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                    <FaArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back to Offices</span>
+                </button>
+
                 {/* Top Header Bar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div className="flex items-center gap-4">
@@ -479,11 +675,14 @@ export default function OfficeOverview() {
 
                         </div>
                         <div>
-                            <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{office.name}</h4>
+                            <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{officeData.name || 'Office Details'}</h4>
                             <div className="flex items-center gap-2">
-                                <p className="text-sm text-gray-600 mb-0">{office.location}</p>
-                                <span className="px-2 py-1 text-xs font-medium text-white bg-green-500 rounded-full">
-                                    {office.status}
+                                <p className="text-sm text-gray-600 mb-0">{officeData.full_address || officeData.location || 'N/A'}</p>
+                                <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${(officeData.status || '').toLowerCase() === 'active' ? 'bg-green-500' :
+                                    (officeData.status || '').toLowerCase().includes('opening') ? 'bg-blue-500' :
+                                        'bg-gray-500'
+                                    }`}>
+                                    {officeData.status_display || officeData.status || 'N/A'}
                                 </span>
                             </div>
                         </div>
@@ -517,7 +716,7 @@ export default function OfficeOverview() {
 
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{office.staff}</p>
+                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{officeData.staff_count || officeData.staff || 0}</p>
 
                             </div>
 
@@ -536,7 +735,7 @@ export default function OfficeOverview() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{office.clients}</p>
+                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{officeData.clients_count || officeData.clients || 0}</p>
 
                             </div>
 
@@ -555,7 +754,9 @@ export default function OfficeOverview() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">{formatCurrency(office.monthlyRevenue)}</p>
+                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">
+                                    {officeData.monthly_revenue?.formatted || formatCurrency(officeData.monthly_revenue?.value || officeData.monthlyRevenue || 0)}
+                                </p>
 
                             </div>
 
@@ -576,7 +777,9 @@ export default function OfficeOverview() {
 
                             </div>
                             <div>
-                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">+{office.growthRate}%</p>
+                                <p className="text-xl font-bold text-gray-900 leading-none mb-0">
+                                    {officeData.growth_rate?.display || (officeData.growth_rate?.percentage ? `+${officeData.growth_rate.percentage}%` : officeData.growthRate ? `+${officeData.growthRate}%` : 'N/A')}
+                                </p>
 
                             </div>
 
@@ -624,32 +827,32 @@ export default function OfficeOverview() {
                                             </svg>
 
                                             <div>
-                                                <p className="font-medium text-sm text-gray-700 mb-0">{office.address}</p>
-                                                <p className="text-sm text-gray-700 mb-0">{office.city}</p>
+                                                <p className="font-medium text-sm text-gray-700 mb-0">{officeData?.street_address || officeData?.address || 'N/A'}</p>
+                                                <p className="text-sm text-gray-700 mb-0">{officeData?.city || 'N/A'}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M11.0007 8.46005V9.96005C11.0013 10.0993 10.9727 10.2371 10.917 10.3647C10.8612 10.4923 10.7793 10.6068 10.6767 10.701C10.5741 10.7951 10.453 10.8668 10.3211 10.9114C10.1892 10.956 10.0494 10.9726 9.9107 10.96C8.37212 10.7929 6.8942 10.2671 5.5957 9.42505C4.38761 8.65738 3.36337 7.63313 2.5957 6.42505C1.75069 5.12065 1.22482 3.63555 1.0607 2.09005C1.0482 1.95178 1.06464 1.81243 1.10895 1.68086C1.15326 1.54929 1.22448 1.42839 1.31808 1.32586C1.41168 1.22332 1.5256 1.1414 1.65259 1.08531C1.77959 1.02922 1.91687 1.00018 2.0557 1.00005H3.5557C3.79835 0.99766 4.03359 1.08359 4.21758 1.24181C4.40156 1.40004 4.52174 1.61977 4.5557 1.86005C4.61901 2.34008 4.73642 2.81141 4.9057 3.26505C4.97297 3.44401 4.98753 3.63851 4.94765 3.82549C4.90777 4.01247 4.81513 4.1841 4.6807 4.32005L4.0457 4.95505C4.75748 6.20682 5.79393 7.24327 7.0457 7.95505L7.6807 7.32005C7.81664 7.18562 7.98828 7.09297 8.17526 7.0531C8.36224 7.01322 8.55674 7.02778 8.7357 7.09505C9.18934 7.26432 9.66067 7.38174 10.1407 7.44505C10.3836 7.47931 10.6054 7.60165 10.764 7.7888C10.9225 7.97594 11.0068 8.21484 11.0007 8.46005Z" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M11.0007 8.46005V9.96005C11.0013 10.0993 10.9727 10.2371 10.917 10.3647C10.8612 10.4923 10.7793 10.6068 10.6767 10.701C10.5741 10.7951 10.453 10.8668 10.3211 10.9114C10.1892 10.956 10.0494 10.9726 9.9107 10.96C8.37212 10.7929 6.8942 10.2671 5.5957 9.42505C4.38761 8.65738 3.36337 7.63313 2.5957 6.42505C1.75069 5.12065 1.22482 3.63555 1.0607 2.09005C1.0482 1.95178 1.06464 1.81243 1.10895 1.68086C1.15326 1.54929 1.22448 1.42839 1.31808 1.32586C1.41168 1.22332 1.5256 1.1414 1.65259 1.08531C1.77959 1.02922 1.91687 1.00018 2.0557 1.00005H3.5557C3.79835 0.99766 4.03359 1.08359 4.21758 1.24181C4.40156 1.40004 4.52174 1.61977 4.5557 1.86005C4.61901 2.34008 4.73642 2.81141 4.9057 3.26505C4.97297 3.44401 4.98753 3.63851 4.94765 3.82549C4.90777 4.01247 4.81513 4.1841 4.6807 4.32005L4.0457 4.95505C4.75748 6.20682 5.79393 7.24327 7.0457 7.95505L7.6807 7.32005C7.81664 7.18562 7.98828 7.09297 8.17526 7.0531C8.36224 7.01322 8.55674 7.02778 8.7357 7.09505C9.18934 7.26432 9.66067 7.38174 10.1407 7.44505C10.3836 7.47931 10.6054 7.60165 10.764 7.7888C10.9225 7.97594 11.0068 8.21484 11.0007 8.46005Z" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
 
-                                            <p className="text-sm text-gray-700 mb-0">{office.phone}</p>
+                                            <p className="text-sm text-gray-700 mb-0">{officeData?.phone_number || officeData?.phone || 'N/A'}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 2H2C1.44772 2 1 2.44772 1 3V9C1 9.55228 1.44772 10 2 10H10C10.5523 10 11 9.55228 11 9V3C11 2.44772 10.5523 2 10 2Z" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M11 3.5L6.515 6.35C6.36064 6.44671 6.18216 6.49801 6 6.49801C5.81784 6.49801 5.63936 6.44671 5.485 6.35L1 3.5" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M10 2H2C1.44772 2 1 2.44772 1 3V9C1 9.55228 1.44772 10 2 10H10C10.5523 10 11 9.55228 11 9V3C11 2.44772 10.5523 2 10 2Z" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                                                <path d="M11 3.5L6.515 6.35C6.36064 6.44671 6.18216 6.49801 6 6.49801C5.81784 6.49801 5.63936 6.44671 5.485 6.35L1 3.5" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
 
 
-                                            <p className="text-sm text-gray-700 mb-0">{office.email}</p>
+                                            <p className="text-sm text-gray-700 mb-0">{officeData?.email || 'N/A'}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333ZM8 13.3333C5.05933 13.3333 2.66667 10.9407 2.66667 8C2.66667 5.05933 5.05933 2.66667 8 2.66667C10.9407 2.66667 13.3333 5.05933 13.3333 8C13.3333 10.9407 10.9407 13.3333 8 13.3333Z" fill="#6B7280" />
                                                 <path d="M8.66667 4.66667V8.66667L11.3333 10.1333" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
-                                            <p className="text-sm text-gray-700 mb-0">{office.hours}</p>
+                                            <p className="text-sm text-gray-700 mb-0">{officeData?.operation_hours_display || officeData?.hours || 'N/A'}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -658,7 +861,7 @@ export default function OfficeOverview() {
                                                 <path d="M5.33333 1.33333V4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                 <path d="M2 6.66667H14" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
-                                            <p className="text-sm text-gray-700 mb-0">Established: {office.established}</p>
+                                            <p className="text-sm text-gray-700 mb-0">Established: {officeData?.established_date || officeData?.established || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -696,12 +899,14 @@ export default function OfficeOverview() {
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm font-medium text-gray-700">Client Satisfaction</span>
-                                                <span className="text-sm font-semibold text-gray-900">{office.clientSatisfaction}/5.0</span>
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    {officeData?.client_satisfaction?.display || officeData?.client_satisfaction?.rating || officeData?.clientSatisfaction || '0'}/5.0
+                                                </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2">
                                                 <div
                                                     className="bg-[#3AD6F2] h-2 rounded-full"
-                                                    style={{ width: `${(office.clientSatisfaction / 5.0) * 100}%` }}
+                                                    style={{ width: `${((officeData?.client_satisfaction?.rating || officeData?.clientSatisfaction || 0) / 5.0) * 100}%` }}
                                                 ></div>
                                             </div>
                                         </div>
@@ -710,12 +915,14 @@ export default function OfficeOverview() {
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm font-medium text-gray-700">Task Completion Rate</span>
-                                                <span className="text-sm font-semibold text-gray-900">{office.taskCompletionRate}%</span>
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    {officeData?.task_completion_rate?.display || officeData?.task_completion_rate?.rate || officeData?.taskCompletionRate || '0'}%
+                                                </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2">
                                                 <div
                                                     className="bg-[#3AD6F2] h-2 rounded-full"
-                                                    style={{ width: `${office.taskCompletionRate}%` }}
+                                                    style={{ width: `${parseFloat(officeData?.task_completion_rate?.rate || officeData?.taskCompletionRate || 0)}%` }}
                                                 ></div>
                                             </div>
                                         </div>
@@ -724,7 +931,11 @@ export default function OfficeOverview() {
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm font-medium text-gray-700">Average Revenue per Client</span>
-                                                <span className="text-sm font-semibold text-gray-900">${office.avgRevenuePerClient}</span>
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    {officeData?.average_revenue_per_client?.display ||
+                                                        (officeData?.average_revenue_per_client?.value ? `$${officeData.average_revenue_per_client.value}` : '') ||
+                                                        (officeData?.avgRevenuePerClient ? `$${officeData.avgRevenuePerClient}` : '$0')}
+                                                </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2">
                                                 <div
@@ -741,7 +952,7 @@ export default function OfficeOverview() {
                         {/* Office Description Section */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h6 className="text-lg font-semibold text-gray-900 mb-3">Office Description</h6>
-                            <p className="text-sm text-gray-700">{office.description}</p>
+                            <p className="text-sm text-gray-700">{officeData?.description || 'No description available'}</p>
                         </div>
                     </>
                 )}
@@ -750,8 +961,19 @@ export default function OfficeOverview() {
                 {activeTab === 'Staff' && (
                     <div className="bg-white rounded-lg p-6 shadow-sm">
                         <div className="mb-6">
-                            <p className="text-lg font-medium text-gray-600 mb-2">Office Staff</p>
-                            <p className="text-sm text-gray-600">All staff members assigned to this office location</p>
+                            <div className="flex items-center justify-between mb-2">
+                                <div>
+                                    <p className="text-lg font-medium text-gray-600">Office Staff</p>
+                                    <p className="text-sm text-gray-600">All staff members assigned to this office location</p>
+                                </div>
+                                {!staffLoading && !staffError && (
+                                    <div className="bg-[#F3F7FF] px-4 py-2 rounded-lg">
+                                        <span className="text-sm font-semibold text-gray-700">
+                                            Total: {staffCount} {staffCount === 1 ? 'Staff Member' : 'Staff Members'}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Table Header - Desktop */}
@@ -778,86 +1000,110 @@ export default function OfficeOverview() {
 
                         {/* Staff Members List */}
                         <div className="space-y-3">
-                            {office.staffMembers && office.staffMembers.map((staff) => (
-                                <div key={staff.id} className="bg-white border border-gray-100 rounded-lg p-4 ">
-                                    {/* Mobile Layout */}
-                                    <div className="md:hidden space-y-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                                                <span className="text-sm font-medium text-gray-500">{getInitials(staff.name)}</span>
+                            {staffLoading ? (
+                                <div className="text-center py-8">
+                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+                                    <p className="text-sm text-gray-600">Loading staff members...</p>
+                                </div>
+                            ) : staffError ? (
+                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                                    {staffError}
+                                </div>
+                            ) : staffMembers.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-gray-600">No staff members found</p>
+                                </div>
+                            ) : (
+                                staffMembers.map((staff) => (
+                                    <div key={staff.id} className="bg-white border border-gray-100 rounded-lg p-4 ">
+                                        {/* Mobile Layout */}
+                                        <div className="md:hidden space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                    {staff.profile_picture_url ? (
+                                                        <img src={staff.profile_picture_url} alt={staff.full_name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-sm font-medium text-gray-500">{staff.initials || getInitials(staff.full_name || staff.name)}</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm text-gray-700">{staff.full_name || staff.name}</div>
+                                                    <div className="text-sm text-gray-600">{staff.role_display || staff.role}</div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${(staff.status || '').toLowerCase() === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                                                        }`}>
+                                                        {staff.status || 'N/A'}
+                                                    </span>
+                                                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            <path d="M2 12V14C2 14.5304 2.21071 15.0391 2.58579 15.4142C2.96086 15.7893 3.46957 16 4 16H12C12.5304 16 13.0391 15.7893 13.4142 15.4142C13.7893 15.0391 14 14.5304 14 14V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                                <div className="font-medium text-sm text-gray-700">{staff.name}</div>
-                                                <div className="text-sm text-gray-600">{staff.role}</div>
+                                            <div className="pl-[52px] space-y-1">
+                                                <div className="text-sm text-gray-700">{staff.email}</div>
+                                                <div className="text-sm text-gray-700">{staff.phone_number || staff.phone}</div>
+                                                <div className="text-sm font-medium text-gray-700">Clients: {staff.client_count || staff.clients || 0}</div>
                                             </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <span className="px-2 py-1 text-xs font-medium text-white bg-green-500 rounded-full">
-                                                    {staff.status}
+                                        </div>
+
+                                        {/* Desktop Layout */}
+                                        <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                                            {/* Staff Member */}
+                                            <div className="col-span-3 flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                    {staff.profile_picture_url ? (
+                                                        <img src={staff.profile_picture_url} alt={staff.full_name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-sm font-medium text-gray-700">{staff.initials || getInitials(staff.full_name || staff.name)}</span>
+                                                    )}
+                                                </div>
+                                                <span className="text-sm font-medium text-gray-700">{staff.full_name || staff.name}</span>
+                                            </div>
+
+                                            {/* Role */}
+                                            <div className="col-span-2">
+                                                <span className="text-sm font-medium text-gray-700">{staff.role_display || staff.role}</span>
+                                            </div>
+
+                                            {/* Contact */}
+                                            <div className="col-span-3">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-gray-700">{staff.email}</span>
+                                                    <span className="text-sm text-gray-700">{staff.phone_number || staff.phone}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Clients */}
+                                            <div className="col-span-1 text-center">
+                                                <span className="text-sm font-medium text-gray-700">{staff.client_count || staff.clients || 0}</span>
+                                            </div>
+
+                                            {/* Status */}
+                                            <div className="col-span-2 flex justify-center">
+                                                <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${(staff.status || '').toLowerCase() === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                                                    }`}>
+                                                    {staff.status || 'N/A'}
                                                 </span>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="col-span-1 flex justify-center">
                                                 <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        <path d="M2 12V14C2 14.5304 2.21071 15.0391 2.58579 15.4142C2.96086 15.7893 3.46957 16 4 16H12C12.5304 16 13.0391 15.7893 13.4142 15.4142C13.7893 15.0391 14 14.5304 14 14V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
+                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
+                                                        <path d="M3 12.003V12.75C3 13.3467 3.23705 13.919 3.65901 14.341C4.08097 14.7629 4.65326 15 5.25 15H12.75C13.3467 15 13.919 14.7629 14.341 14.341C14.7629 13.919 15 13.3467 15 12.75V12M9 3.375V11.625M9 11.625L11.625 9M9 11.625L6.375 9" stroke="#131323" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="pl-[52px] space-y-1">
-                                            <div className="text-sm text-gray-700">{staff.email}</div>
-                                            <div className="text-sm text-gray-700">{staff.phone}</div>
-                                            <div className="text-sm font-medium text-gray-700">Clients: {staff.clients}</div>
-                                        </div>
                                     </div>
-
-                                    {/* Desktop Layout */}
-                                    <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                                        {/* Staff Member */}
-                                        <div className="col-span-3 flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                                                <span className="text-sm font-medium text-gray-700">{getInitials(staff.name)}</span>
-                                            </div>
-                                            <span className="text-sm font-medium text-gray-700">{staff.name}</span>
-                                        </div>
-
-                                        {/* Role */}
-                                        <div className="col-span-2">
-                                            <span className="text-sm font-medium text-gray-700">{staff.role}</span>
-                                        </div>
-
-                                        {/* Contact */}
-                                        <div className="col-span-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-gray-700">{staff.email}</span>
-                                                <span className="text-sm text-gray-700">{staff.phone}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Clients */}
-                                        <div className="col-span-1 text-center">
-                                            <span className="text-sm font-medium text-gray-700">{staff.clients}</span>
-                                        </div>
-
-                                        {/* Status */}
-                                        <div className="col-span-2 flex justify-center">
-                                            <span className="px-2 py-1 text-xs font-medium text-white bg-green-500 rounded-full">
-                                                {staff.status}
-                                            </span>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="col-span-1 flex justify-center">
-                                            <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
-                                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" stroke-width="0.5" />
-                                                    <path d="M3 12.003V12.75C3 13.3467 3.23705 13.919 3.65901 14.341C4.08097 14.7629 4.65326 15 5.25 15H12.75C13.3467 15 13.919 14.7629 14.341 14.341C14.7629 13.919 15 13.3467 15 12.75V12M9 3.375V11.625M9 11.625L11.625 9M9 11.625L6.375 9" stroke="#131323" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 )}
@@ -870,99 +1116,129 @@ export default function OfficeOverview() {
                             <p className="text-sm text-gray-600">Clients served by this office location</p>
                         </div>
 
-                        {/* Table Header - Desktop */}
-                        <div className="hidden md:grid grid-cols-12 gap-4 pb-3 mb-4">
-                            <div className="col-span-3">
-                                <span className="text-sm font-semibold text-gray-500">Client</span>
+                        {/* Loading State */}
+                        {clientsLoading && (
+                            <div className="flex justify-center items-center py-12">
+                                <div className="text-gray-500">Loading clients...</div>
                             </div>
-                            <div className="col-span-2">
-                                <span className="text-sm font-semibold text-gray-500">Type</span>
+                        )}
+
+                        {/* Error State */}
+                        {clientsError && !clientsLoading && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                <p className="text-sm text-red-600">{clientsError}</p>
                             </div>
-                            <div className="col-span-2">
-                                <span className="text-sm font-semibold text-gray-500">Assigned To</span>
+                        )}
+
+                        {/* Empty State */}
+                        {!clientsLoading && !clientsError && clients.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-12">
+                                <p className="text-gray-500 text-sm mb-2">No clients found</p>
+                                <p className="text-gray-400 text-xs">This office location has no active clients assigned.</p>
                             </div>
-                            <div className="col-span-2">
-                                <span className="text-sm font-semibold text-gray-500">Last Service</span>
-                            </div>
-                            <div className="col-span-1 text-center">
-                                <span className="text-sm font-semibold text-gray-500">Revenue</span>
-                            </div>
-                            <div className="col-span-2 text-center">
-                                <span className="text-sm font-semibold text-gray-500">Status</span>
-                            </div>
-                        </div>
+                        )}
 
                         {/* Clients List */}
-                        <div className="space-y-3">
-                            {office.officeClients && office.officeClients.map((client) => (
-                                <div key={client.id} className="bg-white border border-gray-100 rounded-lg p-4">
-                                    {/* Mobile Layout */}
-                                    <div className="md:hidden space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex-1">
-                                                <div className="font-medium text-sm text-gray-700 mb-1">{client.name}</div>
-                                                <div className="flex items-center gap-2 mb-2">
+                        {!clientsLoading && clients.length > 0 && (
+                            <>
+                                {/* Table Header - Desktop */}
+                                <div className="hidden md:grid grid-cols-12 gap-4 pb-3 mb-4">
+                                    <div className="col-span-3">
+                                        <span className="text-sm font-semibold text-gray-500">Client</span>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <span className="text-sm font-semibold text-gray-500">Type</span>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <span className="text-sm font-semibold text-gray-500">Assigned To</span>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <span className="text-sm font-semibold text-gray-500">Last Service</span>
+                                    </div>
+                                    <div className="col-span-1 text-center">
+                                        <span className="text-sm font-semibold text-gray-500">Revenue</span>
+                                    </div>
+                                    <div className="col-span-2 text-center">
+                                        <span className="text-sm font-semibold text-gray-500">Status</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {clients.map((client) => (
+                                        <div key={client.id} className="bg-white border border-gray-100 rounded-lg p-4">
+                                            {/* Mobile Layout */}
+                                            <div className="md:hidden space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-sm text-gray-700 mb-1">{client.client_name}</div>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
+                                                                {client.client_type}
+                                                            </span>
+                                                            <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${client.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'
+                                                                }`}>
+                                                                {client.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <div className="text-sm text-gray-700">
+                                                        <span className="font-medium">Assigned To:</span> {client.assigned_to || 'Unassigned'}
+                                                    </div>
+                                                    <div className="text-sm text-gray-700">
+                                                        <span className="font-medium">Last Service:</span> {client.last_service || 'N/A'}
+                                                    </div>
+                                                    <div className="text-sm font-medium text-gray-700">
+                                                        <span className="font-medium">Revenue:</span> {client.revenue?.formatted || `$${client.revenue?.value?.toLocaleString() || '0'}`}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Desktop Layout */}
+                                            <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                                                {/* Client */}
+                                                <div className="col-span-3">
+                                                    <span className="text-sm font-medium text-gray-700">{client.client_name}</span>
+                                                </div>
+
+                                                {/* Type */}
+                                                <div className="col-span-2">
                                                     <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
-                                                        {client.type}
+                                                        {client.client_type}
                                                     </span>
-                                                    <span className="px-2 py-1 text-xs font-medium text-white bg-green-500 rounded-full">
+                                                </div>
+
+                                                {/* Assigned To */}
+                                                <div className="col-span-2">
+                                                    <span className="text-sm font-medium text-gray-700">{client.assigned_to || 'Unassigned'}</span>
+                                                </div>
+
+                                                {/* Last Service */}
+                                                <div className="col-span-2">
+                                                    <span className="text-sm text-gray-700">{client.last_service || 'N/A'}</span>
+                                                </div>
+
+                                                {/* Revenue */}
+                                                <div className="col-span-1 text-center">
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {client.revenue?.formatted || `$${client.revenue?.value?.toLocaleString() || '0'}`}
+                                                    </span>
+                                                </div>
+
+                                                {/* Status */}
+                                                <div className="col-span-2 flex justify-center">
+                                                    <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${client.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'
+                                                        }`}>
                                                         {client.status}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <div className="text-sm text-gray-700">
-                                                <span className="font-medium">Assigned To:</span> {client.assignedTo}
-                                            </div>
-                                            <div className="text-sm text-gray-700">
-                                                <span className="font-medium">Last Service:</span> {client.lastService}
-                                            </div>
-                                            <div className="text-sm font-medium text-gray-700">
-                                                <span className="font-medium">Revenue:</span> ${client.revenue.toLocaleString()}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Desktop Layout */}
-                                    <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                                        {/* Client */}
-                                        <div className="col-span-3">
-                                            <span className="text-sm font-medium text-gray-700">{client.name}</span>
-                                        </div>
-
-                                        {/* Type */}
-                                        <div className="col-span-2">
-                                            <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
-                                                {client.type}
-                                            </span>
-                                        </div>
-
-                                        {/* Assigned To */}
-                                        <div className="col-span-2">
-                                            <span className="text-sm font-medium text-gray-700">{client.assignedTo}</span>
-                                        </div>
-
-                                        {/* Last Service */}
-                                        <div className="col-span-2">
-                                            <span className="text-sm text-gray-700">{client.lastService}</span>
-                                        </div>
-
-                                        {/* Revenue */}
-                                        <div className="col-span-1 text-center">
-                                            <span className="text-sm font-medium text-gray-700">${client.revenue.toLocaleString()}</span>
-                                        </div>
-
-                                        {/* Status */}
-                                        <div className="col-span-2 flex justify-center">
-                                            <span className="px-2 py-1 text-xs font-medium text-white bg-green-500 rounded-full">
-                                                {client.status}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -972,88 +1248,175 @@ export default function OfficeOverview() {
                         {/* Monthly Performance Chart */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <p className="text-lg font-medium text-gray-600 mb-6">Monthly Performance</p>
-                            <div className="relative" style={{ height: '300px', width: '100%' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart
-                                        data={office.monthlyPerformanceData}
-                                        margin={{ top: 20, right: 80, left: 0, bottom: 20 }}
-                                    >
-                                        <CartesianGrid
-                                            strokeDasharray="3 3"
-                                            stroke="#E5E7EB"
-                                            vertical={false}
-                                            horizontal={true}
-                                        />
-                                        <XAxis
-                                            dataKey="month"
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 400 }}
-                                            interval={0}
-                                            padding={{ left: 0, right: 0 }}
-                                        />
-                                        <YAxis
-                                            domain={[0, 16]}
-                                            ticks={[0, 4, 8, 12, 16]}
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 400 }}
-                                            width={30}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="value"
-                                            stroke="#3B82F6"
-                                            strokeWidth={2.5}
-                                            dot={{
-                                                fill: '#ffffff',
-                                                r: 5,
-                                                strokeWidth: 2,
-                                                stroke: '#3B82F6',
-                                                cursor: 'pointer'
-                                            }}
-                                            activeDot={{ r: 6, strokeWidth: 2 }}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                                {/* Growth Label for August - positioned near the last data point */}
-                                <div className="absolute top-16 right-8">
-                                    <div className="bg-white border border-[#3AD6F2] rounded px-3 py-2 shadow-sm">
-                                        <div className="text-xs font-medium text-gray-700">Aug</div>
-                                        <div className="text-xs font-semibold text-[#3AD6F2]">Growth: 12.5</div>
-                                    </div>
+
+                            {/* Loading State */}
+                            {performanceLoading && (
+                                <div className="flex justify-center items-center" style={{ height: '300px' }}>
+                                    <div className="text-gray-500">Loading performance data...</div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Error State */}
+                            {performanceError && !performanceLoading && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                    <p className="text-sm text-red-600">{performanceError}</p>
+                                </div>
+                            )}
+
+                            {/* Chart */}
+                            {!performanceLoading && !performanceError && (
+                                <div className="relative" style={{ height: '300px', width: '100%' }}>
+                                    {performanceData?.monthly_performance && performanceData.monthly_performance.length > 0 ? (
+                                        <>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart
+                                                    data={performanceData.monthly_performance}
+                                                    margin={{ top: 20, right: 80, left: 0, bottom: 20 }}
+                                                >
+                                                    <CartesianGrid
+                                                        strokeDasharray="3 3"
+                                                        stroke="#E5E7EB"
+                                                        vertical={false}
+                                                        horizontal={true}
+                                                    />
+                                                    <XAxis
+                                                        dataKey="month"
+                                                        axisLine={false}
+                                                        tickLine={false}
+                                                        tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 400 }}
+                                                        interval={0}
+                                                        padding={{ left: 0, right: 0 }}
+                                                    />
+                                                    <YAxis
+                                                        domain={[0, 'dataMax + 2']}
+                                                        axisLine={false}
+                                                        tickLine={false}
+                                                        tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 400 }}
+                                                        width={30}
+                                                    />
+                                                    <Tooltip
+                                                        content={({ active, payload }) => {
+                                                            if (active && payload && payload.length) {
+                                                                const data = payload[0].payload;
+                                                                return (
+                                                                    <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
+                                                                        <p className="text-sm font-semibold text-gray-700">
+                                                                            {data.month_full} {data.year}
+                                                                        </p>
+                                                                        <p className="text-sm text-gray-600">
+                                                                            Revenue: ${data.revenue?.toLocaleString() || '0'}
+                                                                        </p>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        }}
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="value"
+                                                        stroke="#3B82F6"
+                                                        strokeWidth={2.5}
+                                                        dot={{
+                                                            fill: '#ffffff',
+                                                            r: 5,
+                                                            strokeWidth: 2,
+                                                            stroke: '#3B82F6',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        activeDot={{ r: 6, strokeWidth: 2 }}
+                                                    />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                            {/* Growth Label for last month - positioned near the last data point */}
+                                            {performanceData.monthly_performance.length > 0 && (
+                                                <div className="absolute top-16 right-8">
+                                                    <div className="bg-white border border-[#3AD6F2] rounded px-3 py-2 shadow-sm">
+                                                        <div className="text-xs font-medium text-gray-700">
+                                                            {performanceData.monthly_performance[performanceData.monthly_performance.length - 1].month}
+                                                        </div>
+                                                        <div className="text-xs font-semibold text-[#3AD6F2]">
+                                                            Growth: {performanceData.monthly_performance[performanceData.monthly_performance.length - 1].value}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="flex justify-center items-center h-full">
+                                            <p className="text-gray-500 text-sm">No performance data available</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Key Metrics */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <p className="text-lg font-medium text-gray-600 mb-6">Key Metrics</p>
-                            <div className="space-y-6">
-                                {/* Average Revenue per Client */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-gray-600">Average Revenue per Client:</span>
-                                    <span className="text-sm font-semibold text-gray-600">${office.avgRevenuePerClient}</span>
-                                </div>
 
-                                {/* Task Completion Rate */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-gray-600">Task Completion Rate:</span>
-                                    <span className="text-sm font-semibold text-gray-600">{office.taskCompletionRate}%</span>
+                            {/* Loading State */}
+                            {performanceLoading && (
+                                <div className="flex justify-center items-center py-12">
+                                    <div className="text-gray-500">Loading metrics...</div>
                                 </div>
+                            )}
 
-                                {/* Staff Utilization */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-gray-600">Staff Utilization:</span>
-                                    <span className="text-sm font-semibold text-gray-600">{office.staffUtilization}%</span>
+                            {/* Error State */}
+                            {performanceError && !performanceLoading && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                    <p className="text-sm text-red-600">{performanceError}</p>
                                 </div>
+                            )}
 
-                                {/* Client Retention */}
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-gray-600">Client Retention:</span>
-                                    <span className="text-sm font-semibold text-gray-600">{office.clientRetention}%</span>
+                            {/* Metrics */}
+                            {!performanceLoading && !performanceError && (
+                                <div className="space-y-6">
+                                    {/* Average Revenue per Client */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-600">Average Revenue per Client:</span>
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            {performanceData?.key_metrics?.average_revenue_per_client?.formatted ||
+                                                (performanceData?.key_metrics?.average_revenue_per_client?.value ?
+                                                    `$${performanceData.key_metrics.average_revenue_per_client.value.toFixed(0)}` :
+                                                    'N/A')}
+                                        </span>
+                                    </div>
+
+                                    {/* Task Completion Rate */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-600">Task Completion Rate:</span>
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            {performanceData?.key_metrics?.task_completion_rate?.formatted ||
+                                                (performanceData?.key_metrics?.task_completion_rate?.value !== undefined ?
+                                                    `${performanceData.key_metrics.task_completion_rate.value.toFixed(0)}%` :
+                                                    'N/A')}
+                                        </span>
+                                    </div>
+
+                                    {/* Staff Utilization */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-600">Staff Utilization:</span>
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            {performanceData?.key_metrics?.staff_utilization?.formatted ||
+                                                (performanceData?.key_metrics?.staff_utilization?.value !== undefined ?
+                                                    `${performanceData.key_metrics.staff_utilization.value.toFixed(0)}%` :
+                                                    'N/A')}
+                                        </span>
+                                    </div>
+
+                                    {/* Client Retention */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-600">Client Retention:</span>
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            {performanceData?.key_metrics?.client_retention?.formatted ||
+                                                (performanceData?.key_metrics?.client_retention?.value !== undefined ?
+                                                    `${performanceData.key_metrics.client_retention.value.toFixed(0)}%` :
+                                                    'N/A')}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -1925,7 +2288,7 @@ export default function OfficeOverview() {
                                 {/* Second Column (6/12 width on md screens) - White-Label Toggle */}
                                 <div className="flex flex-col gap-2 justify-center">
                                     <div className="flex items-center gap-3">
-                                       
+
                                         <button
                                             type="button"
                                             onClick={handleToggleWhiteLabel}

@@ -34,16 +34,6 @@ export default function Subscriptions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // If edit plan is open, show the edit plan screen
-  if (showEditPlan) {
-    return (
-      <EditSubscriptionPlan
-        planType={selectedPlan}
-        onClose={() => setShowEditPlan(false)}
-      />
-    );
-  }
-
   const PLAN_CONFIG = [
     { key: 'solo', label: 'Solo' },
     { key: 'team', label: 'Team' },
@@ -278,7 +268,17 @@ export default function Subscriptions() {
     };
   }, [searchTerm, filtersInitialized, fetchSubscriptionsData]);
 
-  // If add plan is open, show the add plan screen
+  // If edit plan is open, show the edit plan screen (moved after all hooks)
+  if (showEditPlan) {
+    return (
+      <EditSubscriptionPlan
+        planType={selectedPlan}
+        onClose={() => setShowEditPlan(false)}
+      />
+    );
+  }
+
+  // If add plan is open, show the add plan screen (moved after all hooks)
   if (showAddPlan) {
     return (
       <AddSubscription

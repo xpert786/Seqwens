@@ -1,50 +1,318 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { CrossesIcon } from '../../Components/icons';
 import { firmOfficeAPI, handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
+const steps = [
+    { id: 1, name: 'Basic Information' },
+    { id: 2, name: 'Operating Hours' },
+    { id: 3, name: 'Branding & Identity' },
+    { id: 4, name: 'Service Pricing' },
+    { id: 5, name: 'Compliance & Licensing' },
+    { id: 6, name: 'Review & Finalize' }
+];
+
 const initialFormState = {
+    // Basic Information
     name: '',
-    phone_number: '',
+    manager_id: '',
+    description: '',
     street_address: '',
     city: '',
-        state: '',
+    state: '',
     zip_code: '',
-    country: 'USA',
-    manager_id: '',
+    country: 'US',
+    phone_number: '',
+    email: '',
+    timezone: '',
     status: 'active',
+    
+    // Operating Hours
+    operation_hours: {
+        Monday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
+        Tuesday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
+        Wednesday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
+        Thursday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
+        Friday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
+        Saturday: { isOpen: true, startTime: '09:00 AM', endTime: '01:00 PM' },
+        Sunday: { isOpen: false, startTime: '', endTime: '' }
+    },
+    
+    // Branding & Identity
+    logo: null,
+    primary_color: '#3AD6F2',
+    secondary_color: '#F56D2D',
+    custom_domain: '',
+    letterhead_template_id: '',
+    digital_signature: null,
+    
+    // Service Pricing
+    individual_tax_return: '',
+    business_tax_return: '',
+    quarterly_tax_return: '',
+    payroll_processing: '',
+    custom_service_rates: {
+        tax_preparation: '',
+        bookkeeping: '',
+        consultation: ''
+    },
+    
+    // Compliance & Licensing
+    efin_number: '',
+    efin_status: '',
+    refund_advance_products: false,
+    refund_transfer_products: false,
+    state_taxpreparer_license: '',
+    ea_license_number: '',
+    cpa_license_number: '',
+    eo_policy_number: '',
+    eo_policy_expiry_date: '',
+    general_liability_policy_number: ''
 };
 
 export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
+    const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState(initialFormState);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [staffOptions, setStaffOptions] = useState([]);
     const [staffLoading, setStaffLoading] = useState(false);
     const [staffError, setStaffError] = useState(null);
+    const [signatureTab, setSignatureTab] = useState('draw');
+    const signatureCanvasRef = useRef(null);
+    const [signatureImage, setSignatureImage] = useState(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [typedSignature, setTypedSignature] = useState('');
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
+    const handleInputChange = (e) => {
+        const { name, value, type, checked, files } = e.target;
+        
+        if (type === 'file') {
+            const file = files[0] || null;
+            setFormData(prev => ({
+                ...prev,
+                [name]: file
+            }));
+        } else if (type === 'checkbox') {
+            setFormData(prev => ({
+                ...prev,
+                [name]: checked
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const handleDayToggle = (day) => {
+        setFormData(prev => ({
             ...prev,
-            [name]: value,
+            operation_hours: {
+                ...prev.operation_hours,
+                [day]: {
+                    ...prev.operation_hours[day],
+                    isOpen: !prev.operation_hours[day].isOpen
+                }
+            }
+        }));
+    };
+
+    const handleTimeChange = (day, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            operation_hours: {
+                ...prev.operation_hours,
+                [day]: {
+                    ...prev.operation_hours[day],
+                    [field]: value
+                }
+            }
+        }));
+    };
+
+    const formatTimeForAPI = (timeString) => {
+        // Convert "09:00 AM" to "09:00" format
+        if (!timeString) return '';
+        const match = timeString.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!match) return timeString;
+        
+        let hours = parseInt(match[1]);
+        const minutes = match[2];
+        const period = match[3].toUpperCase();
+        
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes}`;
+    };
+
+    const handleCustomServiceRateChange = (field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            custom_service_rates: {
+                ...prev.custom_service_rates,
+                [field]: value
+            }
         }));
     };
 
     const resetForm = () => {
         setFormData(initialFormState);
+        setCurrentStep(1);
         setError(null);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleClose = () => {
+        resetForm();
+        onClose();
+    };
+
+    const validateCurrentStep = () => {
+        if (currentStep === 1) {
+            // Validate Basic Information
+            if (!formData.name.trim()) {
+                setError('Office Name is required');
+                return false;
+            }
+            if (!formData.street_address.trim()) {
+                setError('Street Address is required');
+                return false;
+            }
+            if (!formData.city.trim()) {
+                setError('City is required');
+                return false;
+            }
+            if (!formData.state.trim()) {
+                setError('State is required');
+                return false;
+            }
+            if (!formData.zip_code.trim()) {
+                setError('Zip Code is required');
+                return false;
+            }
+            if (!formData.country.trim()) {
+                setError('Country is required');
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const handleContinue = () => {
+        if (!validateCurrentStep()) {
+            return;
+        }
+
+        if (currentStep < steps.length) {
+            setCurrentStep(currentStep + 1);
+            setError(null);
+        } else {
+            // Last step - submit the form
+            handleSubmit();
+        }
+    };
+
+    const handlePrevious = () => {
+        if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+            setError(null);
+        }
+    };
+
+    // Signature drawing handlers
+    useEffect(() => {
+        if (signatureTab === 'draw' && signatureCanvasRef.current) {
+            const canvas = signatureCanvasRef.current;
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+    }, [signatureTab]);
+
+    const startDrawing = (e) => {
+        if (signatureTab !== 'draw' || !signatureCanvasRef.current) return;
+        setIsDrawing(true);
+        const canvas = signatureCanvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    };
+
+    const draw = (e) => {
+        if (!isDrawing || signatureTab !== 'draw' || !signatureCanvasRef.current) return;
+        const canvas = signatureCanvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const ctx = canvas.getContext('2d');
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+    };
+
+    const stopDrawing = () => {
+        setIsDrawing(false);
+    };
+
+    const clearSignature = () => {
+        if (signatureCanvasRef.current) {
+            const ctx = signatureCanvasRef.current.getContext('2d');
+            ctx.clearRect(0, 0, signatureCanvasRef.current.width, signatureCanvasRef.current.height);
+            setSignatureImage(null);
+        }
+        setTypedSignature('');
+    };
+
+    const applySignature = () => {
+        if (signatureTab === 'draw' && signatureCanvasRef.current) {
+            const dataURL = signatureCanvasRef.current.toDataURL('image/png');
+            setSignatureImage(dataURL);
+            // Convert to blob for file upload
+            fetch(dataURL)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'signature.png', { type: 'image/png' });
+                    setFormData(prev => ({ ...prev, digital_signature: file }));
+                });
+        } else if (signatureTab === 'type' && typedSignature) {
+            // For typed signature, we could create an image from text
+            // For now, just store the text
+            setFormData(prev => ({ ...prev, typed_signature: typedSignature }));
+        } else if (signatureTab === 'upload' && formData.digital_signature) {
+            // Already set in formData
+            setSignatureImage(URL.createObjectURL(formData.digital_signature));
+        }
+    };
+
+    const handleSignatureFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData(prev => ({ ...prev, digital_signature: file }));
+            setSignatureImage(URL.createObjectURL(file));
+        }
+    };
+
+    const checkComplianceStatus = () => {
+        const checks = {
+            profile: !!(formData.name && formData.street_address && formData.city && formData.state && formData.phone_number && formData.timezone),
+            branding: !!(formData.logo || formData.digital_signature || formData.letterhead_template_id),
+            pricing: !!(formData.individual_tax_return || formData.business_tax_return || formData.quarterly_tax_return || formData.payroll_processing),
+            efin: !!(formData.efin_number && formData.efin_status),
+            bankProducts: !!(formData.refund_advance_products || formData.refund_transfer_products)
+        };
+        return checks;
+    };
+
+    const handleSubmit = async () => {
         setError(null);
         setLoading(true);
 
         try {
+            // Build payload according to API specification
             const payload = {
                 name: formData.name.trim(),
-                phone_number: formData.phone_number.trim(),
                 street_address: formData.street_address.trim(),
                 city: formData.city.trim(),
                 state: formData.state.trim(),
@@ -53,11 +321,115 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                 status: formData.status,
             };
 
+            // Optional fields
+            if (formData.phone_number.trim()) {
+                payload.phone_number = formData.phone_number.trim();
+            }
             if (formData.manager_id) {
                 payload.manager_id = Number(formData.manager_id);
             }
+            if (formData.timezone) {
+                payload.timezone = formData.timezone;
+            }
+            if (formData.description) {
+                payload.description = formData.description.trim();
+            }
 
-            const response = await firmOfficeAPI.createOffice(payload);
+            // Operation hours - format for API (null for closed days)
+            const operationHours = {};
+            Object.keys(formData.operation_hours).forEach(day => {
+                const dayData = formData.operation_hours[day];
+                if (dayData && dayData.isOpen && dayData.startTime && dayData.endTime) {
+                    operationHours[day] = `${formatTimeForAPI(dayData.startTime)}-${formatTimeForAPI(dayData.endTime)}`;
+                } else {
+                    operationHours[day] = null;
+                }
+            });
+            if (Object.keys(operationHours).length > 0) {
+                payload.operation_hours = operationHours;
+            }
+
+            // Branding
+            if (formData.primary_color) {
+                payload.primary_color = formData.primary_color;
+            }
+            if (formData.secondary_color) {
+                payload.secondary_color = formData.secondary_color;
+            }
+            if (formData.custom_domain) {
+                payload.custom_domain = formData.custom_domain;
+            }
+            if (formData.letterhead_template_id) {
+                payload.letterhead_template_id = Number(formData.letterhead_template_id);
+            }
+
+            // Service pricing - these are strings in the API
+            if (formData.individual_tax_return) {
+                payload.individual_tax_return = formData.individual_tax_return.trim();
+            }
+            if (formData.business_tax_return) {
+                payload.business_tax_return = formData.business_tax_return.trim();
+            }
+            if (formData.quarterly_tax_return) {
+                payload.quarterly_tax_return = formData.quarterly_tax_return.trim();
+            }
+            if (formData.payroll_processing) {
+                payload.payroll_processing = formData.payroll_processing.trim();
+            }
+            
+            // Custom service rates - format as object with numeric values
+            const customRates = {};
+            if (formData.custom_service_rates.tax_preparation) {
+                customRates.tax_preparation = parseFloat(formData.custom_service_rates.tax_preparation) || 0;
+            }
+            if (formData.custom_service_rates.bookkeeping) {
+                customRates.bookkeeping = parseFloat(formData.custom_service_rates.bookkeeping) || 0;
+            }
+            if (formData.custom_service_rates.consultation) {
+                customRates.consultation = parseFloat(formData.custom_service_rates.consultation) || 0;
+            }
+            if (Object.keys(customRates).length > 0) {
+                payload.custom_service_rates = customRates;
+            }
+
+            // Compliance & Licensing
+            if (formData.efin_number) {
+                payload.efin_number = formData.efin_number;
+            }
+            if (formData.efin_status) {
+                payload.efin_status = formData.efin_status;
+            }
+            payload.refund_advance_products = formData.refund_advance_products;
+            payload.refund_transfer_products = formData.refund_transfer_products;
+            if (formData.state_taxpreparer_license) {
+                payload.state_taxpreparer_license = formData.state_taxpreparer_license;
+            }
+            if (formData.ea_license_number) {
+                payload.ea_license_number = formData.ea_license_number;
+            }
+            if (formData.cpa_license_number) {
+                payload.cpa_license_number = formData.cpa_license_number;
+            }
+            if (formData.eo_policy_number) {
+                payload.eo_policy_number = formData.eo_policy_number;
+            }
+            if (formData.eo_policy_expiry_date) {
+                payload.eo_policy_expiry_date = formData.eo_policy_expiry_date;
+            }
+            if (formData.general_liability_policy_number) {
+                payload.general_liability_policy_number = formData.general_liability_policy_number;
+            }
+
+            // Prepare files (only logo and signature, letterhead_template_id is sent as ID)
+            const files = {};
+            if (formData.logo) {
+                files.logo = formData.logo;
+            }
+            if (formData.digital_signature) {
+                files.signature = formData.digital_signature;
+            }
+
+            const response = await firmOfficeAPI.createOffice(payload, files);
 
             if (response.success) {
                 toast.success(response.message || 'Office location created successfully', {
@@ -82,11 +454,6 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleClose = () => {
-        resetForm();
-        onClose();
     };
 
     const fetchStaffOptions = useCallback(async () => {
@@ -120,261 +487,6 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
         }
     }, [isOpen, fetchStaffOptions]);
 
-    if (!isOpen) {
-        return null;
-    }
-
-    return (
-        <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
-            style={{ zIndex: 9999 }}
-            onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                    handleClose();
-                }
-            }}
-        >
-            <div
-                className="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6 relative"
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <h3 className="text-xl font-semibold text-gray-900">Add Office Location</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Create a new office for your firm and assign a manager.
-                        </p>
-                    </div>
-                    <button
-                        onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label="Close"
-                    >
-                        <CrossesIcon className="w-4 h-4" />
-                    </button>
-                </div>
-
-                {error && (
-                    <div className="mb-4 p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200">
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Office Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="Enter office name"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone Number <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="tel"
-                                name="phone_number"
-                                value={formData.phone_number}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="+1 408 555 0123"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Street Address <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="street_address"
-                            value={formData.street_address}
-                            onChange={handleChange}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                            placeholder="123 Main St, Suite 100"
-                            required
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                City <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="San Francisco"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                State <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="state"
-                                value={formData.state}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="CA"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Zip Code <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="zip_code"
-                                value={formData.zip_code}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="94105"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Country
-                            </label>
-                            <input
-                                type="text"
-                                name="country"
-                                value={formData.country}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#3AD6F2]"
-                                placeholder="USA"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Office Manager (optional)
-                            </label>
-                            <div className="flex flex-col gap-2">
-                                <select
-                                    name="manager_id"
-                                    value={formData.manager_id}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#3AD6F2]"
-                                    disabled={staffLoading || staffOptions.length === 0}
-                                >
-                                    <option value="">Select a manager</option>
-                                    {staffOptions.map((staff) => (
-                                        <option key={staff.id} value={staff.id}>
-                                            {staff.name || staff.email || `Staff #${staff.id}`}
-                                            {staff.role_display ? ` (${staff.role_display})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="flex items-center gap-3 text-xs text-gray-500">
-                                    <button
-                                        type="button"
-                                        onClick={fetchStaffOptions}
-                                        className="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm"
-                                        disabled={staffLoading}
-                                    >
-                                        {staffLoading ? 'Loading...' : 'Refresh Staff'}
-                                    </button>
-                                    {staffError && <span className="text-red-500">{staffError}</span>}
-                                    {!staffLoading && !staffError && staffOptions.length === 0 && (
-                                        <span>No staff members found.</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Status
-                            </label>
-                            <select
-                                name="status"
-                                value={formData.status}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#3AD6F2]"
-                            >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-2">
-                        <button
-                            type="button"
-                            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                            onClick={handleClose}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
-                            disabled={loading}
-                        >
-                            {loading ? 'Saving...' : 'Save Office'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-
-    const handleClearSignature = () => {
-        setFormData(prev => ({
-            ...prev,
-            signature: {
-                ...prev.signature,
-                signatureData: null,
-                signatureImage: null
-            }
-        }));
-    };
-
-    const handleContinue = () => {
-        if (currentStep < steps.length) {
-            setCurrentStep(currentStep + 1);
-        } else {
-            // Handle form submission
-            console.log('Form submitted:', formData);
-            onClose();
-            // Call the callback to refresh offices if provided
-            if (onOfficeCreated) {
-                onOfficeCreated();
-            }
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentStep > 1) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
     if (!isOpen) return null;
 
     return (
@@ -382,7 +494,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
-                    onClose();
+                    handleClose();
                 }
             }}
         >
@@ -392,30 +504,33 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                 style={{ fontFamily: 'BasisGrotesquePro' }}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white  px-6 py-4 flex justify-between items-start">
+                <div className="sticky top-0 bg-white px-6 py-4 flex justify-between items-start border-b border-gray-200">
                     <div>
-                        <h4  className="text-2xl font-bold text-gray-900 mb-1">Add New Office Location</h4>
+                        <h4 className="text-2xl font-bold text-gray-900 mb-1">Add New Office Location</h4>
                         <p className="text-sm text-gray-600">Create a new office location for your firm</p>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors"
                         aria-label="Close modal"
                     >
-                        <FaTimes className="w-5 h-5" />
+                        <CrossesIcon className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Step Navigation */}
-                <div className="m-2 px-6 py-4 bg-[#E8F0FF] rounded-lg">
-                    <div className="flex items-center py-2 flex-wrap gap-2" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                <div className="px-6 py-4 bg-[#E8F0FF]">
+                    <div className="flex items-center flex-wrap gap-2">
                         {steps.map((step, index) => (
                             <React.Fragment key={step.id}>
                                 <span
-                                    className={`text-sm font-medium ${currentStep === step.id || currentStep > step.id
-                                        ? 'text-[#F56D2D]'
-                                        : 'text-gray-500'
-                                        }`}
+                                    className={`text-sm font-medium ${
+                                        currentStep === step.id
+                                            ? 'text-[#F56D2D]'
+                                            : currentStep > step.id
+                                            ? 'text-[#F56D2D]'
+                                            : 'text-gray-500'
+                                    }`}
                                 >
                                     {step.name}
                                 </span>
@@ -426,6 +541,13 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                         ))}
                     </div>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="mx-6 mt-4 p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200">
+                        {error}
+                    </div>
+                )}
 
                 {/* Form Content */}
                 <div className="px-6 py-6">
@@ -439,39 +561,33 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </label>
                                     <input
                                         type="text"
-                                        name="officeName"
-                                        value={formData.officeName}
+                                        name="name"
+                                        value={formData.name}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="Enter office name"
+                                        required
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Office Manager
                                     </label>
-                                    <div className="relative">
-                                        <select
-                                            name="officeManager"
-                                            value={formData.officeManager}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
-                                        >
-                                            <option value="">Select manager</option>
-                                            <option value="michael-chen">Michael Chen</option>
-                                            <option value="sarah-martinez">Sarah Martinez</option>
-                                            <option value="david-rodriguez">David Rodriguez</option>
-                                            <option value="lisa-thompson">Lisa Thompson</option>
-                                        </select>
-                                        <svg
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
+                                    <select
+                                        name="manager_id"
+                                        value={formData.manager_id}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
+                                        disabled={staffLoading}
+                                    >
+                                        <option value="">Select manager</option>
+                                        {staffOptions.map((staff) => (
+                                            <option key={staff.id} value={staff.id}>
+                                                {staff.name || staff.email || `Staff #${staff.id}`}
+                                                {staff.role_display ? ` (${staff.role_display})` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
@@ -497,11 +613,12 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                 </label>
                                 <input
                                     type="text"
-                                    name="streetAddress"
-                                    value={formData.streetAddress}
+                                    name="street_address"
+                                    value={formData.street_address}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                     placeholder="Enter street address"
+                                    required
                                 />
                             </div>
 
@@ -518,34 +635,22 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="Enter city"
+                                        required
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         State
                                     </label>
-                                    <div className="relative">
-                                        <select
-                                            name="state"
-                                            value={formData.state}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
-                                        >
-                                            <option value="">State</option>
-                                            <option value="NY">New York</option>
-                                            <option value="CA">California</option>
-                                            <option value="TX">Texas</option>
-                                            <option value="FL">Florida</option>
-                                        </select>
-                                        <svg
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
+                                    <input
+                                        type="text"
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                        placeholder="State"
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -553,11 +658,12 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </label>
                                     <input
                                         type="text"
-                                        name="zipCode"
-                                        value={formData.zipCode}
+                                        name="zip_code"
+                                        value={formData.zip_code}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="Enter zip code"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -570,8 +676,8 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </label>
                                     <input
                                         type="tel"
-                                        name="phoneNumber"
-                                        value={formData.phoneNumber}
+                                        name="phone_number"
+                                        value={formData.phone_number}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="(555) 123-4567"
@@ -583,8 +689,8 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </label>
                                     <input
                                         type="email"
-                                        name="emailAddress"
-                                        value={formData.emailAddress}
+                                        name="email"
+                                        value={formData.email}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="office@taxfirm.com"
@@ -597,94 +703,110 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Timezone
                                 </label>
-                                <div className="relative">
-                                    <select
-                                        name="timezone"
-                                        value={formData.timezone}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
-                                    >
-                                        <option value="">Select timezone</option>
-                                        <option value="EST">Eastern Standard Time (EST)</option>
-                                        <option value="CST">Central Standard Time (CST)</option>
-                                        <option value="MST">Mountain Standard Time (MST)</option>
-                                        <option value="PST">Pacific Standard Time (PST)</option>
-                                    </select>
-                                    <svg
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
+                                <select
+                                    name="timezone"
+                                    value={formData.timezone}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
+                                >
+                                    <option value="">Select timezone</option>
+                                    <option value="America/New_York">Eastern Time</option>
+                                    <option value="America/Chicago">Central Time</option>
+                                    <option value="America/Denver">Mountain Time</option>
+                                    <option value="America/Los_Angeles">Pacific Time</option>
+                                    <option value="America/Phoenix">Mountain Time (Arizona)</option>
+                                    <option value="America/Alaska">Alaska Time</option>
+                                </select>
                             </div>
                         </div>
                     )}
 
                     {currentStep === 2 && (
                         <div className="space-y-4">
-                            {[
-                                { key: 'monday', label: 'Monday' },
-                                { key: 'tuesday', label: 'Tuesday' },
-                                { key: 'wednesday', label: 'Wednesday' },
-                                { key: 'thursday', label: 'Thursday' },
-                                { key: 'friday', label: 'Friday' },
-                                { key: 'saturday', label: 'Saturday' },
-                                { key: 'sunday', label: 'Sunday' }
-                            ].map((day) => {
-                                const dayData = formData.operatingHours[day.key];
+                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                                const dayData = formData.operation_hours[day] || { isOpen: false, startTime: '', endTime: '' };
                                 return (
-                                    <div key={day.key} className="flex flex-col sm:flex-row sm:items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
-                                        {/* Day Name */}
+                                    <div key={day} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
                                         <div className="w-24 flex-shrink-0">
-                                            <span className="text-sm font-medium text-gray-500">{day.label}</span>
+                                            <span className="text-sm font-medium text-gray-700">{day}</span>
                                         </div>
-
-                                        {/* Toggle and Status */}
                                         <div className="flex items-center gap-3 flex-1">
                                             <button
                                                 type="button"
-                                                onClick={() => handleDayToggle(day.key)}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${dayData.isOpen ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                                    }`}
+                                                onClick={() => handleDayToggle(day)}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                    dayData.isOpen ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                                }`}
                                             >
                                                 <span
-                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${dayData.isOpen ? 'translate-x-6' : 'translate-x-1'
-                                                        }`}
-
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                        dayData.isOpen ? 'translate-x-6' : 'translate-x-1'
+                                                    }`}
                                                 />
                                             </button>
-                                            <span className={`text-sm font-medium ${dayData.isOpen ? 'text-gray-500' : 'text-gray-500'}`} >
+                                            <span className="text-sm text-gray-600 min-w-[50px]">
                                                 {dayData.isOpen ? 'Open' : 'Closed'}
                                             </span>
+                                            {dayData.isOpen && (
+                                                <>
+                                                    <input
+                                                        type="time"
+                                                        value={dayData.startTime ? (() => {
+                                                            const match = dayData.startTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                                                            if (!match) return '';
+                                                            let hours = parseInt(match[1]);
+                                                            const minutes = match[2];
+                                                            const period = match[3].toUpperCase();
+                                                            if (period === 'PM' && hours !== 12) hours += 12;
+                                                            if (period === 'AM' && hours === 12) hours = 0;
+                                                            return `${hours.toString().padStart(2, '0')}:${minutes}`;
+                                                        })() : ''}
+                                                        onChange={(e) => {
+                                                            const time24 = e.target.value;
+                                                            if (!time24) {
+                                                                handleTimeChange(day, 'startTime', '');
+                                                                return;
+                                                            }
+                                                            const [hours, minutes] = time24.split(':');
+                                                            let hour12 = parseInt(hours);
+                                                            const period = hour12 >= 12 ? 'PM' : 'AM';
+                                                            if (hour12 > 12) hour12 -= 12;
+                                                            if (hour12 === 0) hour12 = 12;
+                                                            handleTimeChange(day, 'startTime', `${hour12}:${minutes} ${period}`);
+                                                        }}
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                    />
+                                                    <span className="text-gray-400">to</span>
+                                                    <input
+                                                        type="time"
+                                                        value={dayData.endTime ? (() => {
+                                                            const match = dayData.endTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                                                            if (!match) return '';
+                                                            let hours = parseInt(match[1]);
+                                                            const minutes = match[2];
+                                                            const period = match[3].toUpperCase();
+                                                            if (period === 'PM' && hours !== 12) hours += 12;
+                                                            if (period === 'AM' && hours === 12) hours = 0;
+                                                            return `${hours.toString().padStart(2, '0')}:${minutes}`;
+                                                        })() : ''}
+                                                        onChange={(e) => {
+                                                            const time24 = e.target.value;
+                                                            if (!time24) {
+                                                                handleTimeChange(day, 'endTime', '');
+                                                                return;
+                                                            }
+                                                            const [hours, minutes] = time24.split(':');
+                                                            let hour12 = parseInt(hours);
+                                                            const period = hour12 >= 12 ? 'PM' : 'AM';
+                                                            if (hour12 > 12) hour12 -= 12;
+                                                            if (hour12 === 0) hour12 = 12;
+                                                            handleTimeChange(day, 'endTime', `${hour12}:${minutes} ${period}`);
+                                                        }}
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                    />
+                                                </>
+                                            )}
                                         </div>
-
-                                        {/* Time Inputs */}
-                                        {dayData.isOpen && (
-                                            <div className="flex items-center gap-2 flex-1 sm:flex-shrink-0 sm:w-auto">
-                                                <input
-                                                    type="text"
-                                                    value={dayData.startTime}
-                                                    onChange={(e) => handleTimeChange(day.key, 'startTime', e.target.value)}
-                                                    className="px-3 py-2 text-sm font-medium text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm w-full sm:w-32"
-                                                    placeholder="09:00 AM"
-
-                                                    readOnly
-                                                />
-                                                <span className="text-sm text-gray-500">to</span>
-                                                <input
-                                                    type="text"
-                                                    value={dayData.endTime}
-                                                    onChange={(e) => handleTimeChange(day.key, 'endTime', e.target.value)}
-                                                    className="px-3 py-2 text-sm font-medium text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm w-full sm:w-32"
-                                                    placeholder="05:00 PM"
-
-                                                    readOnly
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -693,77 +815,21 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
 
                     {currentStep === 3 && (
                         <div className="space-y-6">
-                            {/* Row 1: Logo URL and Favicon URL */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Logo URL
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={formData.branding.logoUrl}
-                                            onChange={(e) => handleBrandingChange('logoUrl', e.target.value)}
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                            placeholder="https://example.com/logo.png"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
-                                            style={{ borderRadius: '8px' }}
-                                        >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M17 8L12 3L7 8" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M12 3V15" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Favicon URL
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={formData.branding.faviconUrl}
-                                            onChange={(e) => handleBrandingChange('faviconUrl', e.target.value)}
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                            placeholder="https://example.com/favicon.ico"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
-                                            style={{ borderRadius: '8px' }}
-                                        >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M17 8L12 3L7 8" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M12 3V15" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Row 2: Primary Color and Secondary Color */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Primary Color
                                     </label>
-                                    <div className="flex gap-2 items-center">
+                                    <div className="flex items-center gap-2">
                                         <div
-                                            className="w-12 h-5 border border-gray-300 flex-shrink-0"
-                                            style={{ backgroundColor: formData.branding.primaryColor }}
+                                            className="w-8 h-8 rounded border border-gray-300"
+                                            style={{ backgroundColor: formData.primary_color || '#3AD6F2' }}
                                         />
                                         <input
                                             type="text"
-                                            value={formData.branding.primaryColor}
-                                            onChange={(e) => handleBrandingChange('primaryColor', e.target.value)}
+                                            name="primary_color"
+                                            value={formData.primary_color || '#3AD6F2'}
+                                            onChange={handleInputChange}
                                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                             placeholder="#3AD6F2"
                                         />
@@ -773,474 +839,247 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Secondary Color
                                     </label>
-                                    <div className="flex gap-2 items-center">
+                                    <div className="flex items-center gap-2">
                                         <div
-                                            className="w-12 h-5 border border-gray-300 flex-shrink-0"
-                                            style={{ backgroundColor: formData.branding.secondaryColor }}
+                                            className="w-8 h-8 rounded border border-gray-300"
+                                            style={{ backgroundColor: formData.secondary_color || '#F56D2D' }}
                                         />
                                         <input
                                             type="text"
-                                            value={formData.branding.secondaryColor}
-                                            onChange={(e) => handleBrandingChange('secondaryColor', e.target.value)}
+                                            name="secondary_color"
+                                            value={formData.secondary_color || '#F56D2D'}
+                                            onChange={handleInputChange}
                                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                             placeholder="#F56D2D"
                                         />
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Row 3: Custom Domain */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Custom Domain (Optional)
                                 </label>
                                 <input
                                     type="text"
-                                    value={formData.branding.customDomain}
-                                    onChange={(e) => handleBrandingChange('customDomain', e.target.value)}
+                                    name="custom_domain"
+                                    value={formData.custom_domain}
+                                    onChange={handleInputChange}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                     placeholder="downtown.taxfirm.com"
                                 />
                             </div>
-
-                            {/* Row 4: White-Label Branding Toggle */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Enable White-Label Branding
+                                    Letterhead Template ID (Optional)
                                 </label>
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="text-xs text-gray-500 mb-0">
-                                        Remove main firm branding and use office-specific branding only
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleBrandingChange('whiteLabelBranding', !formData.branding.whiteLabelBranding)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${formData.branding.whiteLabelBranding ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                            }`}
-                                    >
-                                        <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.branding.whiteLabelBranding ? 'translate-x-6' : 'translate-x-1'
-                                                }`}
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Row 5: Letterhead Template and Digital Signature */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Letterhead Template */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Letterhead Template
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={formData.branding.letterheadTemplate}
-                                            onChange={(e) => handleBrandingChange('letterheadTemplate', e.target.value)}
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm bg-white"
-                                            placeholder="Upload letterhead template"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center bg-white flex-shrink-0"
-                                            style={{ minWidth: '44px', borderRadius: '8px' }}
-                                        >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M14 2V6C14 6.53043 14.2107 7.03914 14.5858 7.41421C14.9609 7.78929 15.4696 8 16 8H20M10 9H8M16 13H8M16 17H8M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Digital Signature */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Digital Signature
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={formData.branding.digitalSignature}
-                                            onChange={(e) => handleBrandingChange('digitalSignature', e.target.value)}
-                                            className="flex-1 px-4 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm bg-white"
-                                            placeholder="Upload signature image"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center bg-white flex-shrink-0"
-                                            style={{ minWidth: '44px', borderRadius: '8px' }}
-                                        >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M14.5 4H9.5L7 7H4C3.46957 7 2.96086 7.21071 2.58579 7.58579C2.21071 7.96086 2 8.46957 2 9V18C2 18.5304 2.21071 19.0391 2.58579 19.4142C2.96086 19.7893 3.46957 20 4 20H20C20.5304 20 21.0391 19.7893 21.4142 19.4142C21.7893 19.0391 22 18.5304 22 18V9C22 8.46957 21.7893 7.96086 21.4142 7.58579C21.0391 7.21071 20.5304 7 20 7H17L14.5 4Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M12 16C13.6569 16 15 14.6569 15 13C15 11.3431 13.6569 10 12 10C10.3431 10 9 11.3431 9 13C9 14.6569 10.3431 16 12 16Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-
-                                        </button>
-                                    </div>
-                                </div>
+                                <input
+                                    type="number"
+                                    name="letterhead_template_id"
+                                    value={formData.letterhead_template_id}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    placeholder="Enter letterhead template ID"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Enter the ID of an existing letterhead template</p>
                             </div>
                         </div>
                     )}
 
                     {currentStep === 4 && (
                         <div className="space-y-6">
-                            {/* Predefined Service Pricing */}
+                            {/* EFIN Section */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Left Column */}
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Individual Tax Return
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                            <input
-                                                type="text"
-                                                value={formData.servicePricing.individualTaxReturn}
-                                                onChange={(e) => handleServicePricingChange('individualTaxReturn', e.target.value)}
-                                                className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                placeholder="250"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Quarterly Bookkeeping
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                            <input
-                                                type="text"
-                                                value={formData.servicePricing.quarterlyBookkeeping}
-                                                onChange={(e) => handleServicePricingChange('quarterlyBookkeeping', e.target.value)}
-                                                className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                placeholder="500"
-                                            />
-                                        </div>
-                                    </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        EFIN Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="efin_number"
+                                        value={formData.efin_number}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                        placeholder="123456"
+                                    />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        EFIN Status
+                                    </label>
+                                    <select
+                                        name="efin_status"
+                                        value={formData.efin_status}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    >
+                                        <option value="">Select status</option>
+                                        <option value="Not Applied">Not Applied</option>
+                                        <option value="Applied">Applied</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Expired">Expired</option>
+                                        <option value="Suspended">Suspended</option>
+                                        <option value="Revoked">Revoked</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
 
-                                {/* Right Column */}
-                                <div className="space-y-4">
+                            {/* Service Pricing */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Individual Tax Return
+                                </label>
+                                <input
+                                    type="text"
+                                    name="individual_tax_return"
+                                    value={formData.individual_tax_return}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    placeholder="Form 1040"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Business Tax Return
+                                </label>
+                                <input
+                                    type="text"
+                                    name="business_tax_return"
+                                    value={formData.business_tax_return}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    placeholder="Form 1120"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Quarterly Tax Return
+                                </label>
+                                <input
+                                    type="text"
+                                    name="quarterly_tax_return"
+                                    value={formData.quarterly_tax_return}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    placeholder="Form 941"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Payroll Processing
+                                </label>
+                                <input
+                                    type="text"
+                                    name="payroll_processing"
+                                    value={formData.payroll_processing}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                    placeholder="Bi-weekly"
+                                />
+                            </div>
+
+                            {/* Custom Service Rates */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">
+                                    Custom Service Rates
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Business Tax Return
-                                        </label>
+                                        <label className="block text-xs text-gray-500 mb-1">Tax Preparation</label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                                             <input
-                                                type="text"
-                                                value={formData.servicePricing.businessTaxReturn}
-                                                onChange={(e) => handleServicePricingChange('businessTaxReturn', e.target.value)}
-                                                className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                placeholder="750"
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.custom_service_rates.tax_preparation}
+                                                onChange={(e) => handleCustomServiceRateChange('tax_preparation', e.target.value)}
+                                                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                placeholder="150.00"
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Payroll Processing
-                                        </label>
+                                        <label className="block text-xs text-gray-500 mb-1">Bookkeeping</label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                                             <input
-                                                type="text"
-                                                value={formData.servicePricing.payrollProcessing}
-                                                onChange={(e) => handleServicePricingChange('payrollProcessing', e.target.value)}
-                                                className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                placeholder="150"
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.custom_service_rates.bookkeeping}
+                                                onChange={(e) => handleCustomServiceRateChange('bookkeeping', e.target.value)}
+                                                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                placeholder="75.00"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-500 mb-1">Consultation</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.custom_service_rates.consultation}
+                                                onChange={(e) => handleCustomServiceRateChange('consultation', e.target.value)}
+                                                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                                placeholder="200.00"
                                             />
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Custom Service Rates */}
-                            <div className="mt-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <p className="text-sm font-medium text-gray-700 mb-0">Custom Service Rates</p>
+                            {/* Refund Products */}
+                            <div className="space-y-4 pt-2">
+                                <div className="flex items-center justify-between py-2">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Refund Advance Products
+                                        </label>
+                                        <p className="text-xs text-gray-500">Enable refund advance loans</p>
+                                    </div>
                                     <button
                                         type="button"
-                                        onClick={handleAddCustomService}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                        style={{ borderRadius: '8px', fontSize: '14px' }}
+                                        onClick={() => setFormData(prev => ({ ...prev, refund_advance_products: !prev.refund_advance_products }))}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                            formData.refund_advance_products ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        }`}
                                     >
-                                        Add Custom Rate
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                formData.refund_advance_products ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                        />
                                     </button>
                                 </div>
-
-                                {/* Custom Service Entries */}
-                                {formData.customServices.length > 0 && (
-                                    <div className="space-y-4">
-                                        {formData.customServices.map((service) => (
-                                            <div key={service.id} className="space-y-2">
-                                                <label className="block text-sm font-medium text-gray-500">
-                                                    {service.name || 'Service name'}
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={service.name}
-                                                        onChange={(e) => handleCustomServiceChange(service.id, 'name', e.target.value)}
-                                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                        placeholder="Service name"
-                                                    />
-                                                    <div className="relative flex-shrink-0" style={{ width: '400px' }}>
-                                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                                        <input
-                                                            type="text"
-                                                            value={service.price}
-                                                            onChange={(e) => handleCustomServiceChange(service.id, 'price', e.target.value)}
-                                                            className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                            placeholder="0"
-                                                        />
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveCustomService(service.id)}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex-shrink-0"
-                                                    >
-                                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M9 3L3 9M3 3L9 9" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                <div className="flex items-center justify-between py-2">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Refund Transfer
+                                        </label>
+                                        <p className="text-xs text-gray-500">Enable refund transfer services</p>
                                     </div>
-                                )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, refund_transfer_products: !prev.refund_transfer_products }))}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                            formData.refund_transfer_products ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                formData.refund_transfer_products ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {currentStep === 5 && (
                         <div className="space-y-6">
-                            {/* EFIN Number and EFIN Status */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        EFIN Number
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.compliance.efinNumber}
-                                        onChange={(e) => handleComplianceChange('efinNumber', e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                        placeholder="123456"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        EFIN Status
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.compliance.efinStatus}
-                                            onChange={(e) => handleComplianceChange('efinStatus', e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
-                                        >
-                                            <option value="Not Applied">Not Applied</option>
-                                            <option value="Applied">Applied</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Approved">Approved</option>
-                                            <option value="Rejected">Rejected</option>
-                                        </select>
-                                        <svg
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Quarterly Bookkeeping and Payroll Processing */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Quarterly Bookkeeping
-                                    </label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                        <input
-                                            type="text"
-                                            value={formData.servicePricing.quarterlyBookkeeping}
-                                            onChange={(e) => handleServicePricingChange('quarterlyBookkeeping', e.target.value)}
-                                            className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                            placeholder="500"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Payroll Processing
-                                    </label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                        <input
-                                            type="text"
-                                            value={formData.servicePricing.payrollProcessing}
-                                            onChange={(e) => handleServicePricingChange('payrollProcessing', e.target.value)}
-                                            className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                            placeholder="150"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Custom Service Rates */}
-                            <div className="mt-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <p className="text-sm font-medium text-gray-700 mb-0">Custom Service Rates</p>
-                                    <button
-                                        type="button"
-                                        onClick={handleAddCustomService}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                        style={{ borderRadius: '8px', fontSize: '14px' }}
-                                    >
-                                        Add Custom Rate
-                                    </button>
-                                </div>
-
-                                {/* Custom Service Entries */}
-                                {formData.customServices.length > 0 && (
-                                    <div className="space-y-4">
-                                        {formData.customServices.map((service) => (
-                                            <div key={service.id} className="space-y-2">
-                                                <label className="block text-sm font-medium text-gray-500">
-                                                    {service.name || 'Service name'}
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={service.name}
-                                                        onChange={(e) => handleCustomServiceChange(service.id, 'name', e.target.value)}
-                                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                        placeholder="Service name"
-                                                    />
-                                                    <div className="relative flex-shrink-0" style={{ width: '400px' }}>
-                                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                                        <input
-                                                            type="text"
-                                                            value={service.price}
-                                                            onChange={(e) => handleCustomServiceChange(service.id, 'price', e.target.value)}
-                                                            className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                            placeholder="0"
-                                                        />
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveCustomService(service.id)}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex-shrink-0"
-                                                    >
-                                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M9 3L3 9M3 3L9 9" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Refund Advance Products */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Refund Advance Products
-                                </label>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xs text-gray-500 mb-0">
-                                        Enable refund advance loans
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleComplianceChange('refundAdvanceProducts', !formData.compliance.refundAdvanceProducts)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${formData.compliance.refundAdvanceProducts ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                            }`}
-                                    >
-                                        <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.compliance.refundAdvanceProducts ? 'translate-x-6' : 'translate-x-1'
-                                                }`}
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Refund Transfer */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Refund Transfer
-                                </label>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xs text-gray-500 mb-0">
-                                        Enable refund transfer services
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleComplianceChange('refundTransfer', !formData.compliance.refundTransfer)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${formData.compliance.refundTransfer ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                            }`}
-                                    >
-                                        <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.compliance.refundTransfer ? 'translate-x-6' : 'translate-x-1'
-                                                }`}
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* EFIN Number and EFIN Status (Bottom) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        EFIN Number
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.compliance.efinNumber}
-                                        onChange={(e) => handleComplianceChange('efinNumber', e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                        placeholder="123456"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        EFIN Status
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.compliance.efinStatus}
-                                            onChange={(e) => handleComplianceChange('efinStatus', e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm appearance-none bg-white cursor-pointer"
-                                        >
-                                            <option value="Not Applied">Not Applied</option>
-                                            <option value="Applied">Applied</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Approved">Approved</option>
-                                            <option value="Rejected">Rejected</option>
-                                        </select>
-                                        <svg
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {currentStep === 6 && (
-                        <div className="space-y-6">
-                            {/* State Tax Preparer License and EA License Number */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1248,8 +1087,9 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </label>
                                     <input
                                         type="text"
-                                        value={formData.compliance.stateTaxPreparerLicense}
-                                        onChange={(e) => handleComplianceChange('stateTaxPreparerLicense', e.target.value)}
+                                        name="state_taxpreparer_license"
+                                        value={formData.state_taxpreparer_license}
+                                        onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="License number"
                                     />
@@ -1260,356 +1100,351 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </label>
                                     <input
                                         type="text"
-                                        value={formData.compliance.eaLicenseNumber}
-                                        onChange={(e) => handleComplianceChange('eaLicenseNumber', e.target.value)}
+                                        name="ea_license_number"
+                                        value={formData.ea_license_number}
+                                        onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="EA License number"
                                     />
                                 </div>
                             </div>
-
-                            {/* CPA License Number */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    CPA License Number
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.compliance.cpaLicenseNumber}
-                                    onChange={(e) => handleComplianceChange('cpaLicenseNumber', e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                    placeholder="CPA license number"
-                                />
-                            </div>
-
-                            {/* E&O Policy Number and E&O Policy Expiry */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        CPA License Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="cpa_license_number"
+                                        value={formData.cpa_license_number}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                        placeholder="CPA license number"
+                                    />
+                                </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         E&O Policy Number
                                     </label>
                                     <input
                                         type="text"
-                                        value={formData.compliance.eoPolicyNumber}
-                                        onChange={(e) => handleComplianceChange('eoPolicyNumber', e.target.value)}
+                                        name="eo_policy_number"
+                                        value={formData.eo_policy_number}
+                                        onChange={handleInputChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                         placeholder="Policy number"
                                     />
                                 </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         E&O Policy Expiry
                                     </label>
                                     <div className="relative">
                                         <input
-                                            type="text"
-                                            value={formData.compliance.eoPolicyExpiry}
-                                            onChange={(e) => handleComplianceChange('eoPolicyExpiry', e.target.value)}
+                                            type="date"
+                                            name="eo_policy_expiry_date"
+                                            value={formData.eo_policy_expiry_date}
+                                            onChange={handleInputChange}
                                             className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
                                             placeholder="dd/mm/yyyy"
                                         />
-                                        <svg
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
+                                        <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* General Liability Policy */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    General Liability Policy
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.compliance.generalLiabilityPolicy}
-                                    onChange={(e) => handleComplianceChange('generalLiabilityPolicy', e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                    placeholder="Policy number"
-                                />
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        General Liability Policy
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="general_liability_policy_number"
+                                        value={formData.general_liability_policy_number}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                        placeholder="Policy number"
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {currentStep === 7 && (
+                    {currentStep === 6 && (
                         <div className="space-y-6">
-                            {/* Upload Signature and Upload Logo Section */}
+                            {/* Upload Signature and Logo Section */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Upload Signature Section */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                                        Upload Signature
-                                    </label>
-
-                                    {/* Tabs */}
-                                    <div className="flex gap-2 mb-4">
+                                {/* Upload Signature */}
+                                <div className="border border-gray-200 rounded-lg p-4">
+                                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Upload Signature</h3>
+                                    
+                                    {/* Signature Tabs */}
+                                    <div className="flex border-b border-gray-200 mb-4">
                                         <button
                                             type="button"
-                                            onClick={() => handleSignatureTabChange('draw')}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${formData.signature.tab === 'draw'
-                                                    ? 'bg-[#3AD6F2] text-white'
-                                                    : 'bg-[#F3F7FF] text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                            style={{ borderRadius: '8px', fontSize: '14px' }}
+                                            onClick={() => setSignatureTab('draw')}
+                                            className={`px-4 py-2 text-sm font-medium ${
+                                                signatureTab === 'draw'
+                                                    ? 'text-[#3AD6F2] border-b-2 border-[#3AD6F2]'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                            }`}
                                         >
                                             Draw
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleSignatureTabChange('type')}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${formData.signature.tab === 'type'
-                                                    ? 'bg-[#3AD6F2] text-white'
-                                                    : 'bg-[#F3F7FF] text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                            style={{ borderRadius: '8px', fontSize: '14px' }}
+                                            onClick={() => setSignatureTab('type')}
+                                            className={`px-4 py-2 text-sm font-medium ${
+                                                signatureTab === 'type'
+                                                    ? 'text-[#3AD6F2] border-b-2 border-[#3AD6F2]'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                            }`}
                                         >
                                             Type
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleSignatureTabChange('upload')}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${formData.signature.tab === 'upload'
-                                                    ? 'bg-[#3AD6F2] text-white'
-                                                    : 'bg-[#F3F7FF] text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                            style={{ borderRadius: '8px', fontSize: '14px' }}
+                                            onClick={() => setSignatureTab('upload')}
+                                            className={`px-4 py-2 text-sm font-medium ${
+                                                signatureTab === 'upload'
+                                                    ? 'text-[#3AD6F2] border-b-2 border-[#3AD6F2]'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                            }`}
                                         >
                                             Upload
                                         </button>
                                     </div>
 
-                                    {/* Signature Canvas Area */}
-                                    <div className=" rounded-lg bg-[#F3F7FF]" style={{ minHeight: '200px' }}>
-                                        {formData.signature.tab === 'draw' && (
-                                            <div className="p-4">
-                                                {formData.signature.signatureImage ? (
-                                                    <img
-                                                        src={formData.signature.signatureImage}
-                                                        alt="Signature"
-                                                        className="w-full h-auto"
-                                                        style={{ maxHeight: '180px' }}
-                                                    />
-                                                ) : (
-                                                    <div className="flex items-center justify-center h-48 text-gray-400 ">
-                                                        <p className="text-sm">Draw your signature here</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                        {formData.signature.tab === 'type' && (
-                                            <div className="p-4">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Type your signature"
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                />
-                                            </div>
-                                        )}
-                                        {formData.signature.tab === 'upload' && (
-                                            <div className="p-4">
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) => {
-                                                        const file = e.target.files[0];
-                                                        if (file) {
-                                                            const reader = new FileReader();
-                                                            reader.onloadend = () => {
-                                                                setFormData(prev => ({
-                                                                    ...prev,
-                                                                    signature: {
-                                                                        ...prev.signature,
-                                                                        signatureImage: reader.result
-                                                                    }
-                                                                }));
-                                                            };
-                                                            reader.readAsDataURL(file);
-                                                        }
-                                                    }}
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Signature Action Buttons */}
-                                    <div className="flex gap-3 mt-4">
-                                        <button
-                                            type="button"
-                                            onClick={handleClearSignature}
-                                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                            style={{ borderRadius: '8px', fontSize: '14px' }}
-                                        >
-                                            Clear
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors"
-                                            style={{ borderRadius: '8px', fontSize: '14px' }}
-                                        >
-                                            Apply Signature
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Upload Logo Section */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                                        Upload Logo
-                                    </label>
-
-                                    {/* Logo Upload Area */}
-                                    <div
-                                        className=" border-gray-300 rounded-lg bg-[#F3F7FF] p-8 text-center cursor-pointer"
-                                        onClick={() => document.getElementById('logo-upload').click()}
-                                    >
-                                        <input
-                                            id="logo-upload"
-                                            type="file"
-                                            accept="image/png,image/jpeg,image/jpg"
-                                            onChange={handleLogoUpload}
-                                            className="hidden"
-                                        />
-                                        {formData.logo.preview ? (
-                                            <div className="space-y-2">
-                                                <img
-                                                    src={formData.logo.preview}
-                                                    alt="Logo preview"
-                                                    className="mx-auto max-h-32 object-contain"
-                                                />
+                                    {/* Signature Content */}
+                                    {signatureTab === 'draw' && (
+                                        <div>
+                                            <canvas
+                                                ref={signatureCanvasRef}
+                                                width={400}
+                                                height={200}
+                                                className="w-full border border-gray-300 rounded-lg cursor-crosshair"
+                                                onMouseDown={startDrawing}
+                                                onMouseMove={draw}
+                                                onMouseUp={stopDrawing}
+                                                onMouseLeave={stopDrawing}
+                                                style={{ touchAction: 'none' }}
+                                            />
+                                            <div className="flex gap-2 mt-4">
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setFormData(prev => ({
-                                                            ...prev,
-                                                            logo: { file: null, preview: null }
-                                                        }));
-                                                    }}
-                                                    className="text-sm text-gray-600 hover:text-gray-800"
+                                                    onClick={clearSignature}
+                                                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                                                 >
-                                                    Remove
+                                                    Clear
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={applySignature}
+                                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600"
+                                                >
+                                                    Apply Signature
                                                 </button>
                                             </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-center">
-                                                <svg className="text-gray-400" width="20" height="20" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M9.91634 4.66667L6.99967 1.75L4.08301 4.66667" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M7 1.75V8.75" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
+                                        </div>
+                                    )}
 
-                                                <p className="text-sm font-medium text-gray-700 mb-0">Upload Logo</p>
-                                                </div>
-                                                <p className="text-xs text-gray-500">PNG, JPG up to 2MB</p>
+                                    {signatureTab === 'type' && (
+                                        <div>
+                                            <input
+                                                type="text"
+                                                value={typedSignature}
+                                                onChange={(e) => setTypedSignature(e.target.value)}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm mb-4"
+                                                placeholder="Type your signature"
+                                            />
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={clearSignature}
+                                                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                                                >
+                                                    Clear
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={applySignature}
+                                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600"
+                                                >
+                                                    Apply Signature
+                                                </button>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
+
+                                    {signatureTab === 'upload' && (
+                                        <div>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleSignatureFileUpload}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm mb-4"
+                                            />
+                                            {signatureImage && (
+                                                <img src={signatureImage} alt="Signature" className="w-full border border-gray-300 rounded-lg mb-4" />
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={applySignature}
+                                                className="w-full px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600"
+                                            >
+                                                Apply Signature
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Upload Logo */}
+                                <div className="border border-gray-200 rounded-lg p-4">
+                                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Upload Logo</h3>
+                                    <label className="block">
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-[#3AD6F2] transition-colors">
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/jpg"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setFormData(prev => ({ ...prev, logo: file }));
+                                                    }
+                                                }}
+                                                className="hidden"
+                                                id="logo-upload"
+                                            />
+                                            <div className="flex flex-col items-center">
+                                                <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                </svg>
+                                                <span className="text-sm font-medium text-gray-700">Upload Logo</span>
+                                                <span className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    {formData.logo && (
+                                        <div className="mt-4">
+                                            <img src={URL.createObjectURL(formData.logo)} alt="Logo preview" className="max-h-32 mx-auto rounded" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Office Compliance & Setup Checklist */}
-                            <div>
-                                <h5 className="text-lg font-semibold text-gray-900 mb-2">
-                                    Office Compliance & Setup Checklist
-                                </h5>
-                                <p className="text-sm text-gray-600 mb-6">
-                                    Complete all required steps to activate a new office.
-                                </p>
-
-                                {/* Checklist Items */}
-                                <div className="space-y-4">
-                                    {/* Profile */}
-                                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-5 h-5 rounded border-2 border-[#3AD6F2] bg-[#3AD6F2] flex items-center justify-center flex-shrink-0">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
+                            <div className="border border-gray-200 rounded-lg p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-1">Office Compliance & Setup Checklist</h3>
+                                <p className="text-sm text-gray-600 mb-6">Complete all required steps to activate a new office.</p>
+                                
+                                {(() => {
+                                    const compliance = checkComplianceStatus();
+                                    return (
+                                        <div className="space-y-4">
+                                            {/* Profile */}
+                                            <div className="flex items-start gap-3">
+                                                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                                                    compliance.profile ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-300'
+                                                }`}>
+                                                    {compliance.profile && (
+                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium text-gray-700">Profile</span>
+                                                        <span className="px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 rounded-full">Required</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">Complete Custom Office Profile (Address, Phone, Hours, Timezone)</p>
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">
-                                                Complete Custom Office Profile (Address, Phone, Hours, Timezone)
-                                            </span>
-                                        </div>
-                                        <span className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-                                            Required
-                                        </span>
-                                    </div>
 
-                                    {/* Branding */}
-                                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-5 h-5 rounded border-2 border-[#3AD6F2] bg-[#3AD6F2] flex items-center justify-center flex-shrink-0">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
+                                            {/* Branding */}
+                                            <div className="flex items-start gap-3">
+                                                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                                                    compliance.branding ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-300'
+                                                }`}>
+                                                    {compliance.branding && (
+                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium text-gray-700">Branding</span>
+                                                        <span className="px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 rounded-full">Required</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">Upload Office Branding (Logos, Signatures)</p>
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">
-                                                Upload Office Branding (Logos, Signatures)
-                                            </span>
-                                        </div>
-                                        <span className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-                                            Required
-                                        </span>
-                                    </div>
 
-                                    {/* Pricing */}
-                                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-5 h-5 rounded border-2 border-[#3AD6F2] bg-[#3AD6F2] flex items-center justify-center flex-shrink-0">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
+                                            {/* Pricing */}
+                                            <div className="flex items-start gap-3">
+                                                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                                                    compliance.pricing ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-300'
+                                                }`}>
+                                                    {compliance.pricing && (
+                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium text-gray-700">Pricing</span>
+                                                        <span className="px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 rounded-full">Required</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">Define Office-Specific Pricing For Services</p>
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">
-                                                Define Office-Specific Pricing For Services
-                                            </span>
-                                        </div>
-                                        <span className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-                                            Required
-                                        </span>
-                                    </div>
 
-                                    {/* Compliance - EFIN */}
-                                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-5 h-5 rounded border-2 border-[#3AD6F2] bg-[#3AD6F2] flex items-center justify-center flex-shrink-0">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
+                                            {/* Compliance - EFIN */}
+                                            <div className="flex items-start gap-3">
+                                                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                                                    compliance.efin ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-300'
+                                                }`}>
+                                                    {compliance.efin && (
+                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium text-gray-700">Compliance</span>
+                                                        <span className="px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 rounded-full">Required</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">Verify EFIN Registration For This Office</p>
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">
-                                                Verify EFIN Registration For This Office
-                                            </span>
-                                        </div>
-                                        <span className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-                                            Required
-                                        </span>
-                                    </div>
 
-                                    {/* Compliance - Bank Products */}
-                                    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-5 h-5 rounded border-2 border-[#3AD6F2] bg-[#3AD6F2] flex items-center justify-center flex-shrink-0">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
+                                            {/* Compliance - Bank Products */}
+                                            <div className="flex items-start gap-3">
+                                                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                                                    compliance.bankProducts ? 'bg-[#3AD6F2] border-[#3AD6F2]' : 'border-gray-300'
+                                                }`}>
+                                                    {compliance.bankProducts && (
+                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium text-gray-700">Compliance</span>
+                                                        <span className="px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 rounded-full">Required</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">Confirm Bank Product Enrollment (Refund Transfers, Advances)</p>
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">
-                                                Confirm Bank Product Enrollment (Refund Transfers, Advances)
-                                            </span>
                                         </div>
-                                        <span className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-                                            Required
-                                        </span>
-                                    </div>
-                                </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}
@@ -1617,36 +1452,35 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
 
                 {/* Footer Buttons */}
                 <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-                    {currentStep !== 7 && (
+                    {currentStep > 1 && (
                         <button
+                            type="button"
                             onClick={handlePrevious}
-                            disabled={currentStep === 1}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${currentStep === 1
-                                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                }`}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             style={{ borderRadius: '8px' }}
                         >
                             Previous
                         </button>
                     )}
                     <button
-                        onClick={onClose}
+                        type="button"
+                        onClick={handleClose}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                         style={{ borderRadius: '8px' }}
                     >
                         Cancel
                     </button>
                     <button
+                        type="button"
                         onClick={handleContinue}
-                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors"
+                        disabled={loading}
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
                         style={{ borderRadius: '8px' }}
                     >
-                        {currentStep === 7 ? 'Add Office' : 'Continue'}
+                        {loading ? 'Saving...' : currentStep === steps.length ? 'Add Office' : 'Continue'}
                     </button>
                 </div>
             </div>
         </div>
     );
 }
-

@@ -7,6 +7,7 @@ import TabNavigation from '../Integrations/TabNavigation';
 import FoldersAndTagsView from './FoldersAndTagsView';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
+import CreateTemplateModal from './CreateTemplateModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -310,6 +311,7 @@ export default function EmailTemplate() {
             return false;
         }
     };
+    const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
 
     return (
         <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
@@ -317,20 +319,30 @@ export default function EmailTemplate() {
                 <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h4 className="text-2xl font-semibold text-[#1F2A55]">
-                            Email Templates
+                            Templates
                         </h4>
                         <p className="mt-1 text-sm text-[#6E7DAE]">
                             Create and manage email templates for client communication
                         </p>
                     </div>
-                    <button className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#F56D2D] px-4 font-semibold text-white">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16.5 5.25L10.125 11.625L6.375 7.875L1.5 12.75" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M12 5.25H16.5V9.75" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-
-                        Upgrade Plan
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setShowCreateTemplateModal(true)}
+                            className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#3AD6F2] px-4 font-semibold text-white hover:bg-[#2BC5E0] transition-colors"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 3.75V14.25M3.75 9H14.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Create Template
+                        </button>
+                        <button className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#F56D2D] px-4 font-semibold text-white hover:bg-[#E55A1D] transition-colors">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.5 5.25L10.125 11.625L6.375 7.875L1.5 12.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12 5.25H16.5V9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Upgrade Plan
+                        </button>
+                    </div>
                 </header>
 
                 <TabNavigation
@@ -367,6 +379,17 @@ export default function EmailTemplate() {
                     )}
                 </section>
             </div>
+
+            {/* Create Template Modal */}
+            <CreateTemplateModal
+                isOpen={showCreateTemplateModal}
+                onClose={() => setShowCreateTemplateModal(false)}
+                onTemplateCreated={() => {
+                    // Refresh templates list if needed
+                    console.log('Template created, refresh list');
+                    // You can add logic here to refresh the templates list
+                }}
+            />
         </div>
     );
 }

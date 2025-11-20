@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useParams, useNavigate, Outlet } from "react-router-dom";
 import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon, MiniClock, WhiteEdit, Cut } from "../../component/icons";
-import { FaChevronDown, FaChevronRight, FaFolder } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaFolder, FaArrowLeft } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError, taxPreparerClientAPI, firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
@@ -86,6 +86,10 @@ export default function ClientDetails() {
   const [newTagInput, setNewTagInput] = useState("");
   const [lockedFields, setLockedFields] = useState(new Set());
 
+  // Unsaved changes protection
+  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+
   const isFieldLocked = (fieldName) => lockedFields.has(fieldName);
   const renderLockedHelperText = (fieldName) =>
     isFieldLocked(fieldName) ? (
@@ -130,6 +134,59 @@ export default function ClientDetails() {
       setIsEditMode(false);
     }
   }, [canEditClient, isEditMode]);
+
+  // Handle browser navigation (back/forward/close) with unsaved changes
+  useEffect(() => {
+    const checkUnsavedChanges = () => {
+      if (!isEditMode || !editFormData || !originalFormData) {
+        return false;
+      }
+
+      // Check form data changes
+      const fieldMap = [
+        'first_name', 'last_name', 'middle_name', 'email', 'phone_number',
+        'filing_status', 'address_line', 'city', 'state', 'zip_code',
+        'spouse_first_name', 'spouse_last_name', 'spouse_date_of_birth'
+      ];
+
+      for (const field of fieldMap) {
+        const nextValue = editFormData[field] ?? '';
+        const prevValue = originalFormData[field] ?? '';
+        const sanitizedNext = typeof nextValue === 'string' ? nextValue.trim() : nextValue;
+        const sanitizedPrev = typeof prevValue === 'string' ? prevValue.trim() : prevValue;
+        if (sanitizedNext !== sanitizedPrev) {
+          return true;
+        }
+      }
+
+      // Check tags changes
+      const normalizeTags = (arr) =>
+        arr
+          .map((item) => item?.toString().trim())
+          .filter(Boolean)
+          .map((item) => item.toLowerCase())
+          .sort();
+      if (JSON.stringify(normalizeTags(customTags)) !== JSON.stringify(normalizeTags(originalCustomTags))) {
+        return true;
+      }
+
+      return false;
+    };
+
+    const handleBeforeUnload = (e) => {
+      if (checkUnsavedChanges()) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for Chrome
+        return ''; // Required for some browsers
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isEditMode, editFormData, originalFormData, customTags, originalCustomTags]);
 
   // Create Task Modal state
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -522,11 +579,75 @@ export default function ClientDetails() {
     return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
   };
 
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    if (!isEditMode || !editFormData || !originalFormData) {
+      return false;
+    }
+
+    // Check form data changes
+    const fieldMap = [
+      'first_name', 'last_name', 'middle_name', 'email', 'phone_number',
+      'filing_status', 'address_line', 'city', 'state', 'zip_code',
+      'spouse_first_name', 'spouse_last_name', 'spouse_date_of_birth'
+    ];
+
+    for (const field of fieldMap) {
+      const nextValue = editFormData[field] ?? '';
+      const prevValue = originalFormData[field] ?? '';
+      const sanitizedNext = typeof nextValue === 'string' ? nextValue.trim() : nextValue;
+      const sanitizedPrev = typeof prevValue === 'string' ? prevValue.trim() : prevValue;
+      if (sanitizedNext !== sanitizedPrev) {
+        return true;
+      }
+    }
+
+    // Check tags changes
+    if (!arraysEqualIgnoreCase(customTags, originalCustomTags)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Handle navigation with unsaved changes check
+  const handleNavigation = (targetPath) => {
+    if (hasUnsavedChanges()) {
+      setPendingNavigation(targetPath);
+      setShowUnsavedChangesModal(true);
+    } else {
+      navigate(targetPath);
+    }
+  };
+
+  // Handle save and proceed
+  const handleSaveAndProceed = async () => {
+    try {
+      await handleSaveTaxpayer();
+      // Check if save was successful (no errors thrown)
+      if (pendingNavigation) {
+        setShowUnsavedChangesModal(false);
+        const targetPath = pendingNavigation;
+        setPendingNavigation(null);
+        navigate(targetPath);
+      }
+    } catch (error) {
+      // If save failed, don't navigate - user can try again or cancel
+      console.error('Error saving before navigation:', error);
+    }
+  };
+
+  // Handle cancel navigation
+  const handleCancelNavigation = () => {
+    setShowUnsavedChangesModal(false);
+    setPendingNavigation(null);
+  };
+
   // Save taxpayer updates
   const handleSaveTaxpayer = async () => {
     if (!editFormData || !originalFormData || !clientId) {
       toast.error('Invalid client data');
-      return;
+      throw new Error('Invalid client data');
     }
 
     const fieldMap = [
@@ -583,6 +704,7 @@ export default function ClientDetails() {
           setLockedFields(new Set(response.data.locked_fields));
         }
         fetchClientDetails();
+        return true; // Indicate success
       } else {
         throw new Error(response.message || 'Failed to update client profile');
       }
@@ -601,6 +723,7 @@ export default function ClientDetails() {
           autoClose: 3000
         });
       }
+      throw error; // Re-throw to allow caller to handle
     } finally {
       setSaving(false);
     }
@@ -953,9 +1076,8 @@ export default function ClientDetails() {
     if (client.status) {
       statuses.push(client.status.charAt(0).toUpperCase() + client.status.slice(1));
     }
-    if (client.priority) {
+    if (client.priority && client.priority !== 'medium') {
       const priorityLabel = client.priority === 'high' ? 'High Priority' :
-        client.priority === 'medium' ? 'Medium' :
           client.priority;
       statuses.push(priorityLabel);
     }
@@ -968,8 +1090,38 @@ export default function ClientDetails() {
 
   const tagsAreLocked = isFieldLocked('tags');
 
+  // Handle back navigation
+  const handleBack = () => {
+    if (hasUnsavedChanges()) {
+      setPendingNavigation('/taxdashboard/clients');
+      setShowUnsavedChangesModal(true);
+    } else {
+      navigate('/taxdashboard/clients');
+    }
+  };
+
   return (
     <div className="p-4 font-['BasisGrotesquePro']">
+      {/* Back Button */}
+      <div className="mb-4">
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+          style={{
+            fontFamily: 'BasisGrotesquePro',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: 'var(--Palette2-Dark-blue-900, #3B4A66)',
+            border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
+            cursor: 'pointer'
+          }}
+        >
+          <FaArrowLeft size={16} />
+          <span>Back to Clients</span>
+        </button>
+      </div>
+
       <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="font-semibold font-grotesque">Client Details</h3>
@@ -1021,55 +1173,37 @@ export default function ClientDetails() {
                 ))}
               </div>
 
-              {(isDocuments || isInvoices || isSchedule) ? (
-                <div className="mt-3">
-                  <div className="text-xs mb-2" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>Contact Information</div>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center gap-1 text-gray-700 text-sm">
-                      <BlackEmail />
-                      <span className="font-medium">{client.email}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-gray-700 text-sm">
-                      <BlackPhone />
-                      <span className="font-medium">{client.phone}</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
                 <div className="mt-2">
                   <div className="flex items-start gap-8">
                     <div className="flex flex-col">
                       <span className="text-gray-400 text-xs mb-1">Email</span>
                       <div className="flex items-center gap-2">
                         <MailMiniIcon />
-                        <span className="text-gray-700 text-sm font-medium">{client.email}</span>
+                      <span className="text-gray-700 text-xs font-medium">{client.email}</span>
                       </div>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-gray-400 text-xs mb-1"> Phone</span>
                       <div className="flex items-center gap-2">
                         <PhoneMiniIcon />
-                        <span className="text-gray-700 text-sm font-medium">{client.phone}</span>
+                      <span className="text-gray-700 text-xs font-medium">{client.phone}</span>
                       </div>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-gray-400 text-xs mb-1">Filing Status</span>
-                      <span className="text-gray-700 text-sm font-medium">{client.filingStatus || "N/A"}</span>
+                    <span className="text-gray-700 text-xs font-medium">{client.filingStatus || "N/A"}</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-gray-400 text-xs mb-1">SSN</span>
-                      <span className="text-gray-700 text-sm font-medium">{client.ssn || "N/A"}</span>
+                    <span className="text-gray-700 text-xs font-medium">{client.ssn || "N/A"}</span>
                     </div>
                   </div>
                 </div>
-              )}
             </div>
           </div>
 
-          {/* Buttons: visible only on client page */}
-          {!isDocuments && (
-            <div className="flex gap-3 align-items-center flex-wrap">
-              {/* Add Task Button */}
+          {/* Buttons: visible on all tabs */}
+          <div className="flex gap-3 align-items-center" style={{ flexWrap: "nowrap" }}>
               {/* Send Message Button */}
               <button
                 className="rounded-md text-sm"
@@ -1083,7 +1217,8 @@ export default function ClientDetails() {
                   color: "#fff",
                   padding: "5px 12px",
                   opacity: 1,
-                  cursor: "pointer"
+                cursor: "pointer",
+                whiteSpace: "nowrap"
                 }}
                 onClick={() => {
                   // Navigate to messages page with clientId parameter
@@ -1096,6 +1231,7 @@ export default function ClientDetails() {
               >
                 Send Message
               </button>
+            {/* Add Task Button */}
               <button
                 className="rounded-md text-sm"
                 style={{
@@ -1108,7 +1244,8 @@ export default function ClientDetails() {
                   color: "var(--Palette2-Dark-blue-900, #3B4A66)",
                   padding: "5px 12px",
                   opacity: 1,
-                  cursor: "pointer"
+                cursor: "pointer",
+                whiteSpace: "nowrap"
                 }}
                 onClick={() => {
                   // Pre-fill client ID when opening modal
@@ -1124,11 +1261,12 @@ export default function ClientDetails() {
                 Add Task
               </button>
 
+            {/* Edit Details Button */}
               {canEditClient && (
                 <div className="d-flex gap-2">
                   {!isEditMode ? (
                     <button
-                      className="rounded-md text-sm"
+                    className="rounded-md text-sm d-flex align-items-center gap-2"
                       style={{
                         fontSize: "15px",
                         borderRadius: "6px",
@@ -1137,7 +1275,8 @@ export default function ClientDetails() {
                         color: "#fff",
                         padding: "5px 12px",
                         opacity: 1,
-                        cursor: "pointer"
+                      cursor: "pointer",
+                      whiteSpace: "nowrap"
                       }}
                       onClick={() => setIsEditMode(true)}
                     >
@@ -1154,7 +1293,8 @@ export default function ClientDetails() {
                           borderRadius: "6px",
                           padding: "5px 12px",
                           fontSize: "15px",
-                          border: "1px solid #E5E7EB"
+                        border: "1px solid #E5E7EB",
+                        whiteSpace: "nowrap"
                         }}
                       >
                         Cancel
@@ -1168,7 +1308,8 @@ export default function ClientDetails() {
                           padding: "5px 12px",
                           fontSize: "15px",
                           backgroundColor: "#FF7A2F",
-                          borderColor: "#FF7A2F"
+                        borderColor: "#FF7A2F",
+                        whiteSpace: "nowrap"
                         }}
                       >
                         {saving ? 'Saving...' : 'Save Changes'}
@@ -1177,9 +1318,7 @@ export default function ClientDetails() {
                   )}
                 </div>
               )}
-
             </div>
-          )}
 
         </div>
       </div>
@@ -1203,25 +1342,25 @@ export default function ClientDetails() {
                 ? "var(--Palette2-TealBlue-900, #00C0C6)"
                 : "#fff",
               color: currentPath === `/taxdashboard/clients/${clientId}`
-                ? "black"
+                ? "#ffffff"
                 : "var(--Palette2-Dark-blue-900, #3B4A66)",
               borderRadius: "7px",
             }}
             onClick={() => {
               if (currentPath !== `/taxdashboard/clients/${clientId}`) {
-                navigate(`/taxdashboard/clients/${clientId}`);
+                handleNavigation(`/taxdashboard/clients/${clientId}`);
               }
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--Palette2-TealBlue-900, #00C0C6)";
-              e.currentTarget.style.color = "#000000";
+              e.currentTarget.style.color = "#ffffff";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor =
                 currentPath === `/taxdashboard/clients/${clientId}`
                   ? "var(--Palette2-TealBlue-900, #00C0C6)"
                   : "#fff";
-              e.currentTarget.style.color = currentPath === `/taxdashboard/clients/${clientId}` ? "#000000" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+              e.currentTarget.style.color = currentPath === `/taxdashboard/clients/${clientId}` ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
           >
             Info
@@ -1251,7 +1390,7 @@ export default function ClientDetails() {
                 : "#fff";
               e.currentTarget.style.color = isDocuments ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => navigate(`/taxdashboard/clients/${clientId}/documents`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/documents`)}
 
           >
             Documents
@@ -1280,7 +1419,7 @@ export default function ClientDetails() {
                 ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff";
               e.currentTarget.style.color = isInvoicesActive ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => navigate(`/taxdashboard/clients/${clientId}/invoices`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/invoices`)}
           >
             Invoices
           </button>
@@ -1309,7 +1448,7 @@ export default function ClientDetails() {
                 : "#fff";
               e.currentTarget.style.color = isSchedule ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => navigate(`/taxdashboard/clients/${clientId}/schedule`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/schedule`)}
           >
             Schedules
           </button>
@@ -2470,6 +2609,58 @@ export default function ClientDetails() {
               >
                 {loadingTask ? 'Creating...' : 'Create Task'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsaved Changes Modal */}
+      {showUnsavedChangesModal && (
+        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '450px' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF', padding: '20px 24px' }}>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', margin: 0 }}>
+                  Unsaved Changes
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCancelNavigation}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body" style={{ padding: '24px' }}>
+                <p style={{ color: '#3B4A66', fontSize: '15px', marginBottom: 0 }}>
+                  You have unsaved changes to this taxpayer's profile. Please save your changes before navigating away, or cancel to remain on this page.
+                </p>
+              </div>
+              <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={handleCancelNavigation}
+                  disabled={saving}
+                  style={{ borderRadius: '8px', border: '1px solid #E5E7EB', padding: '10px 16px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleSaveAndProceed}
+                  disabled={saving}
+                  style={{
+                    borderRadius: '8px',
+                    backgroundColor: saving ? '#9CA3AF' : '#00C0C6',
+                    borderColor: saving ? '#9CA3AF' : '#00C0C6',
+                    padding: '10px 16px',
+                    color: 'white'
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Save & Continue'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

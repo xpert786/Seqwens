@@ -1,42 +1,185 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 export default function BusinessTab() {
   const [businessHours, setBusinessHours] = useState({
     monday: { enabled: true, open: '09:00', close: '17:00' },
-    tuesday: { enabled: true, open: '09:00', close: '18:00' },
+    tuesday: { enabled: true, open: '09:00', close: '17:00' },
     wednesday: { enabled: true, open: '09:00', close: '17:00' },
     thursday: { enabled: true, open: '09:00', close: '17:00' },
-    friday: { enabled: true, open: '09:00', close: '18:00' },
-    saturday: { enabled: true, open: '09:00', close: '18:00' },
+    friday: { enabled: true, open: '09:00', close: '17:00' },
+    saturday: { enabled: false, open: '09:00', close: '17:00' },
     sunday: { enabled: false, open: '09:00', close: '17:00' }
   });
+
+  const [regionalSettings, setRegionalSettings] = useState({
+    timezone: 'UTC',
+    currency: 'USD',
+    date_format: 'mm/dd/yyyy',
+    number_format: '1,234.56',
+    current_tax_year: new Date().getFullYear()
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // Timezone mapping
+  const timezoneMap = {
+    'America/New_York': 'Eastern Time',
+    'America/Chicago': 'Central Time',
+    'America/Denver': 'Mountain Time',
+    'America/Los_Angeles': 'Pacific Time',
+    'UTC': 'UTC'
+  };
+
+  const timezoneReverseMap = {
+    'Eastern Time': 'America/New_York',
+    'Central Time': 'America/Chicago',
+    'Mountain Time': 'America/Denver',
+    'Pacific Time': 'America/Los_Angeles',
+    'UTC': 'UTC'
+  };
 
   const formatTime12Hour = (time24) => {
     if (!time24) return '';
     const [hours, minutes] = time24.split(':');
     const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'pm' : 'am';
+    const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
     return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
   const parseTime12Hour = (time12) => {
     if (!time12) return '';
-    const match = time12.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
+    // Handle both "09:00 AM" and "09:00" formats
+    const match = time12.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
     if (!match) return '';
     let hour = parseInt(match[1], 10);
     const minutes = match[2];
-    const ampm = match[3].toLowerCase();
+    const ampm = match[3] ? match[3].toLowerCase() : null;
+    
+    // If no AM/PM, assume 24-hour format
+    if (!ampm) {
+      return `${hour.toString().padStart(2, '0')}:${minutes}`;
+    }
+    
+    // Convert 12-hour to 24-hour
     if (ampm === 'pm' && hour !== 12) hour += 12;
     if (ampm === 'am' && hour === 12) hour = 0;
     return `${hour.toString().padStart(2, '0')}:${minutes}`;
   };
+
+  // Fetch business information on mount
+  useEffect(() => {
+    const fetchBusinessInfo = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const response = await firmAdminSettingsAPI.getBusinessInfo();
+        
+        if (response.success && response.data) {
+          // Convert business hours from API format (12-hour) to internal format (24-hour)
+          if (response.data.business_hours) {
+            const convertedHours = {};
+            Object.keys(response.data.business_hours).forEach(day => {
+              const dayData = response.data.business_hours[day];
+              convertedHours[day] = {
+                enabled: dayData.enabled || false,
+                open: dayData.start_time ? parseTime12Hour(dayData.start_time) : '09:00',
+                close: dayData.end_time ? parseTime12Hour(dayData.end_time) : '17:00'
+              };
+            });
+            setBusinessHours(convertedHours);
+          }
+
+          // Set regional settings
+          if (response.data.timezone || response.data.currency || response.data.date_format) {
+            setRegionalSettings({
+              timezone: timezoneMap[response.data.timezone] || response.data.timezone || 'UTC',
+              currency: response.data.currency || 'USD',
+              date_format: response.data.date_format || 'mm/dd/yyyy',
+              number_format: response.data.number_format || '1,234.56',
+              current_tax_year: response.data.current_tax_year || new Date().getFullYear()
+            });
+          }
+        } else {
+          throw new Error(response.message || 'Failed to load business information');
+        }
+      } catch (err) {
+        console.error('Error fetching business info:', err);
+        const errorMsg = handleAPIError(err);
+        setError(errorMsg || 'Failed to load business information');
+        toast.error(errorMsg || 'Failed to load business information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBusinessInfo();
+  }, []);
 
   const toggleDay = (day) => {
     setBusinessHours(prev => ({
       ...prev,
       [day]: { ...prev[day], enabled: !prev[day].enabled }
     }));
+  };
+
+  // Handle regional settings change
+  const handleRegionalChange = (field, value) => {
+    setRegionalSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle save
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError('');
+
+      // Convert business hours from internal format (24-hour) to API format (12-hour)
+      const businessHoursForAPI = {};
+      Object.keys(businessHours).forEach(day => {
+        const dayData = businessHours[day];
+        businessHoursForAPI[day] = {
+          enabled: dayData.enabled,
+          start_time: dayData.enabled ? formatTime12Hour(dayData.open) : null,
+          end_time: dayData.enabled ? formatTime12Hour(dayData.close) : null
+        };
+      });
+
+      // Convert timezone display name to timezone identifier
+      const timezoneId = timezoneReverseMap[regionalSettings.timezone] || regionalSettings.timezone;
+
+      const businessData = {
+        business_hours: businessHoursForAPI,
+        timezone: timezoneId,
+        currency: regionalSettings.currency,
+        date_format: regionalSettings.date_format,
+        number_format: regionalSettings.number_format,
+        current_tax_year: parseInt(regionalSettings.current_tax_year, 10)
+      };
+
+      const response = await firmAdminSettingsAPI.updateBusinessInfo(businessData, 'PATCH');
+      
+      if (response.success) {
+        toast.success('Business settings updated successfully');
+      } else {
+        throw new Error(response.message || 'Failed to update business settings');
+      }
+    } catch (err) {
+      console.error('Error updating business info:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to update business settings');
+      toast.error(errorMsg || 'Failed to update business settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const days = [
@@ -49,8 +192,25 @@ export default function BusinessTab() {
     { key: 'sunday', label: 'Sunday' }
   ];
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-sm text-gray-600">Loading business settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Business Hours */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 !border border-[#E8F0FF] overflow-hidden">
         <div className="mb-4 sm:mb-5">
@@ -143,11 +303,16 @@ export default function BusinessTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Timezone
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>Eastern Time</option>
-              <option>Central Time</option>
-              <option>Mountain Time</option>
-              <option>Pacific Time</option>
+            <select 
+              value={regionalSettings.timezone}
+              onChange={(e) => handleRegionalChange('timezone', e.target.value)}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              <option value="UTC">UTC</option>
+              <option value="Eastern Time">Eastern Time</option>
+              <option value="Central Time">Central Time</option>
+              <option value="Mountain Time">Mountain Time</option>
+              <option value="Pacific Time">Pacific Time</option>
             </select>
           </div>
 
@@ -155,11 +320,15 @@ export default function BusinessTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Currency
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>USD ($)</option>
-              <option>EUR (€)</option>
-              <option>GBP (£)</option>
-              <option>CAD (C$)</option>
+            <select 
+              value={regionalSettings.currency}
+              onChange={(e) => handleRegionalChange('currency', e.target.value)}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="CAD">CAD (C$)</option>
             </select>
           </div>
 
@@ -167,10 +336,16 @@ export default function BusinessTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Date Format
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>mm/dd/yyyy</option>
-              <option>dd/mm/yyyy</option>
-              <option>yyyy-mm-dd</option>
+            <select 
+              value={regionalSettings.date_format}
+              onChange={(e) => handleRegionalChange('date_format', e.target.value)}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              <option value="mm/dd/yyyy">mm/dd/yyyy</option>
+              <option value="dd/mm/yyyy">dd/mm/yyyy</option>
+              <option value="yyyy-mm-dd">yyyy-mm-dd</option>
+              <option value="dd-mm-yyyy">dd-mm-yyyy</option>
+              <option value="yyyy/mm/dd">yyyy/mm/dd</option>
             </select>
           </div>
 
@@ -178,10 +353,15 @@ export default function BusinessTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Number Format
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>1,234.56</option>
-              <option>1.234,56</option>
-              <option>1 234,56</option>
+            <select 
+              value={regionalSettings.number_format}
+              onChange={(e) => handleRegionalChange('number_format', e.target.value)}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              <option value="1,234.56">1,234.56</option>
+              <option value="1.234,56">1.234,56</option>
+              <option value="1234.56">1234.56</option>
+              <option value="1234,56">1234,56</option>
             </select>
           </div>
 
@@ -189,13 +369,44 @@ export default function BusinessTab() {
             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
               Current Tax Year
             </label>
-            <select className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white">
-              <option>2024</option>
-              <option>2023</option>
-              <option>2025</option>
+            <select 
+              value={regionalSettings.current_tax_year}
+              onChange={(e) => handleRegionalChange('current_tax_year', parseInt(e.target.value, 10))}
+              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
+            >
+              {Array.from({ length: 26 }, (_, i) => {
+                const year = 2000 + i;
+                return (
+                  <option key={year} value={year}>{year}</option>
+                );
+              })}
             </select>
           </div>
         </div>
+      </div>
+      </div>
+      
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button 
+          onClick={handleSave}
+          disabled={saving}
+          className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {saving ? (
+            <>
+              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Save Changes</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
