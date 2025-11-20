@@ -130,7 +130,7 @@ export default function BillingManagement() {
       }
 
       console.log("Starting PDF export...", invoices.length, "invoices");
-      
+
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
@@ -332,6 +332,36 @@ export default function BillingManagement() {
         iconColor: 'text-gray-500',
         icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
       },
+      partial: {
+        color: "bg-[#F59E0B]",
+        text: "Partially Paid",
+        iconColor: 'text-yellow-500',
+        icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clipPath="url(#clip0_2312_2064)">
+            <path d="M7.00008 4.66797V7.0013M7.00008 9.33464H7.00592M12.8334 7.0013C12.8334 10.223 10.2217 12.8346 7.00008 12.8346C3.77842 12.8346 1.16675 10.223 1.16675 7.0013C1.16675 3.77964 3.77842 1.16797 7.00008 1.16797C10.2217 1.16797 12.8334 3.77964 12.8334 7.0013Z" stroke="#F59E0B" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <defs>
+            <clipPath id="clip0_2312_2064">
+              <rect width="14" height="14" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      },
+      partially_paid: {
+        color: "bg-[#F59E0B]",
+        text: "Partially Paid",
+        iconColor: 'text-yellow-500',
+        icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clipPath="url(#clip0_2312_2064)">
+            <path d="M7.00008 4.66797V7.0013M7.00008 9.33464H7.00592M12.8334 7.0013C12.8334 10.223 10.2217 12.8346 7.00008 12.8346C3.77842 12.8346 1.16675 10.223 1.16675 7.0013C1.16675 3.77964 3.77842 1.16797 7.00008 1.16797C10.2217 1.16797 12.8334 3.77964 12.8334 7.0013Z" stroke="#F59E0B" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <defs>
+            <clipPath id="clip0_2312_2064">
+              <rect width="14" height="14" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      },
       yellow: {
         color: "bg-[#F59E0B]",
         text: "Pending",
@@ -349,20 +379,18 @@ export default function BillingManagement() {
       }
     };
 
+    // Normalize status keys for lookup
+    const normalizedStatus = (statusColor || status || '').toLowerCase().replace(/\s+/g, '_');
+
     // Use status_color from API if available, otherwise use status
-    const config = configs[statusColor] || configs[status] || configs.draft;
+    const config = configs[normalizedStatus] || configs[statusColor] || configs[status] || configs.draft;
     // Use status_display from API if available, otherwise use config text
     const displayText = statusDisplay || config.text;
 
     return (
-      <div className="flex items-center gap-2">
-        <div className={config.iconColor}>
-          {config.icon}
-        </div>
-        <span className={`${config.color} text-white px-2 py-0.5 !rounded-[10px] text-xs font-medium whitespace-nowrap`}>
-          {displayText}
-        </span>
-      </div>
+      <span className={`${config.color} text-white px-2 py-0.5 !rounded-[10px] text-xs font-medium whitespace-nowrap`}>
+        {displayText}
+      </span>
     );
   };
 
@@ -379,7 +407,7 @@ export default function BillingManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={exportInvoicesToPDF}
             className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
           >
