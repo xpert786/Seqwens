@@ -10,7 +10,7 @@ import BulkImportModal from './BulkImportModal';
 import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const API_BASE_URL = getApiBaseUrl();
 

@@ -5,7 +5,7 @@ import CreateTaskModal from './CreateTaskModal';
 import { firmAdminTasksAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const TaskManagementMain = () => {
   const navigate = useNavigate();

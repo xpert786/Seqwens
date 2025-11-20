@@ -18,7 +18,7 @@ const getHeaders = () => {
 };
 
 // Token refresh function
-const refreshAccessToken = async () => {
+export const refreshAccessToken = async () => {
   const refreshToken = getRefreshToken();
   if (!refreshToken) {
     throw new Error('No refresh token available');
@@ -3922,3 +3922,7 @@ export const firmAdminBillingHistoryAPI = {
       });
   }
 };
+
+// Re-export utility functions for convenience
+export { clearUserData } from './userUtils';
+export { getLoginUrl } from './urlUtils';

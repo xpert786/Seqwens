@@ -6,7 +6,7 @@ import ServicePerformance from './ServicePerformance';
 import ComplianceReporting from './ComplianceReporting';
 import TabNavigation from '../Integrations/TabNavigation';
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 export default function AnalyticsMain() {
   const [activeTab, setActiveTab] = useState('Overview');
