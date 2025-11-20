@@ -42,6 +42,7 @@ export default function StaffManagement() {
     avg_performance: 0,
     training_pending: 0
   });
+  const isSummaryInitializedRef = useRef(false);
   const dropdownRefs = useRef({});
   const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
   const [activeInviteDetails, setActiveInviteDetails] = useState(null);
@@ -132,34 +133,42 @@ export default function StaffManagement() {
       if (result.success && result.data) {
         setStaffData(result.data.staff_members || []);
 
-        // Calculate summary from staff data
-        const activeCount = result.data.staff_members?.filter(
-          (staff) => staff.status?.value === 'active'
-        ).length || 0;
+        // Only update summary statistics on first load (when activeFilter is 'all' and no filters are applied)
+        // This keeps the statistics static when switching tabs
+        if (!isSummaryInitializedRef.current && activeFilter === 'all' && !searchTerm && roleFilter === 'all' && performanceFilter === 'all') {
+          // Calculate summary from staff data
+          const activeCount = result.data.staff_members?.filter(
+            (staff) => staff.status?.value === 'active'
+          ).length || 0;
 
-        // Pending invites count will be updated from fetchPendingInvites
+          const performances = result.data.staff_members
+            ?.map((staff) => staff.performance?.efficiency_percentage || 0)
+            .filter((p) => p > 0) || [];
+          const avgPerformance = performances.length > 0
+            ? (performances.reduce((a, b) => a + b, 0) / performances.length).toFixed(1)
+            : 0;
 
-        const performances = result.data.staff_members
-          ?.map((staff) => staff.performance?.efficiency_percentage || 0)
-          .filter((p) => p > 0) || [];
-        const avgPerformance = performances.length > 0
-          ? (performances.reduce((a, b) => a + b, 0) / performances.length).toFixed(1)
-          : 0;
-
-        setSummary({
-          active_staff: activeCount,
-          pending_invites: summary.pending_invites, // Will be updated from fetchPendingInvites
-          avg_performance: avgPerformance,
-          training_pending: 0 // This might need to come from API in future
-        });
+          setSummary(prev => ({
+            active_staff: activeCount,
+            pending_invites: prev.pending_invites, // Will be updated from fetchPendingInvites on first load
+            avg_performance: avgPerformance,
+            training_pending: prev.training_pending || 0 // Preserve existing value
+          }));
+          
+          // Mark as initialized only after we have the staff data
+          isSummaryInitializedRef.current = true;
+        }
       } else {
         setStaffData([]);
-        setSummary({
-          active_staff: 0,
-          pending_invites: 0,
-          avg_performance: 0,
-          training_pending: 0
-        });
+        // Only reset summary if it hasn't been initialized yet
+        if (!isSummaryInitializedRef.current) {
+          setSummary({
+            active_staff: 0,
+            pending_invites: 0,
+            avg_performance: 0,
+            training_pending: 0
+          });
+        }
       }
     } catch (err) {
       console.error('Error fetching staff members:', err);
@@ -209,11 +218,18 @@ export default function StaffManagement() {
           page_size: result.data.page_size || 20
         });
 
-        // Update summary with pending invites count
-        setSummary(prev => ({
-          ...prev,
-          pending_invites: result.data.total_count || 0
-        }));
+        // Update summary with pending invites count only on first load
+        // This keeps the statistics static when switching tabs
+        // Only update if summary hasn't been initialized OR if pending_invites is still 0 (initial state)
+        setSummary(prev => {
+          if (!isSummaryInitializedRef.current || prev.pending_invites === 0) {
+            return {
+              ...prev,
+              pending_invites: result.data.total_count || 0
+            };
+          }
+          return prev; // Keep existing value after initialization
+        });
       } else {
         setPendingInvites([]);
         setPendingInvitesPagination({
@@ -676,7 +692,7 @@ export default function StaffManagement() {
         </div>
 
         {/* Key Metrics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-lg p-4 text-left">
             <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Active Staff</div>
             <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.active_staff}</div>
@@ -688,10 +704,6 @@ export default function StaffManagement() {
           <div className="bg-white rounded-lg p-4 text-left">
             <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Avg Performance</div>
             <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.avg_performance}%</div>
-          </div>
-          <div className="bg-white rounded-lg p-4 text-left">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Training Pending</div>
-            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.training_pending}</div>
           </div>
         </div>
 

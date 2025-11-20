@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Icon, DownsIcon,SceheIcon,CrossesIcon} from "../../Components/icons";
+import { firmAdminDashboardAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 import {
   AreaChart,
   Area,
@@ -14,40 +16,42 @@ import {
   Bar
 } from 'recharts';
 
-// Mock data for charts
-const revenueData = [
-  { month: 'Jan', revenue: 8000, target: 10000 },
-  { month: 'Feb', revenue: 9500, target: 10000 },
-  { month: 'Mar', revenue: 11000, target: 10000 },
-  { month: 'Apr', revenue: 12000, target: 10000 },
-  { month: 'May', revenue: 10100, target: 10000 },
-  { month: 'Jun', revenue: 13000, target: 10000 }
-];
+// Helper function to get revenue data from API
+const getRevenueData = (dashboardData) => {
+  if (!dashboardData?.revenue_analytics?.trend?.data) {
+    return [];
+  }
+  return dashboardData.revenue_analytics.trend.data;
+};
 
-const clientEngagementData = [
-  { stage: 'Leads', percentage: 100, value: 150 },
-  { stage: 'Consultations', percentage: 80, value: 120 },
-  { stage: 'Proposals', percentage: 63, value: 95 },
-  { stage: 'Signed', percentage: 52, value: 78 },
-  { stage: 'Completed', percentage: 48, value: 72 }
-];
+// Helper function to get client engagement data from API
+const getClientEngagementData = (dashboardData) => {
+  if (!dashboardData?.client_engagement?.funnel) {
+    return [];
+  }
+  return dashboardData.client_engagement.funnel;
+};
 
-const complianceData = [
-  { status: 'Due Diligence', score: '85/100', percentage: 85, badge: 'Low' },
-  { status: 'E-Signature', score: '92/100', percentage: 92, badge: 'Low' },
-  { status: 'Document Review', score: '78/100', percentage: 78, badge: 'Medium' },
-  { status: 'Quality Control', score: '88/100', percentage: 88, badge: 'Low' },
-  { status: 'Audit Prep', score: '65/100', percentage: 65, badge: 'High' }
-];
+// Helper function to get compliance data from API
+const getComplianceData = (dashboardData) => {
+  if (!dashboardData?.compliance_risk?.statuses) {
+    return [];
+  }
+  return dashboardData.compliance_risk.statuses.map(item => ({
+    status: item.status,
+    score: item.score_display,
+    percentage: item.percentage,
+    badge: item.risk_level === 'low' ? 'Low' : item.risk_level === 'medium' ? 'Medium' : 'High'
+  }));
+};
 
-// Breakdown data for bar chart
-const breakdownData = [
-  { category: 'Prep Fees', amount: 52000 },
-  { category: 'Add-ons', amount: 16000 },
-  { category: 'Refund Transfers', amount: 21800 },
-  { category: 'Training Courses', amount: 8000 },
-  { category: 'Consulting', amount: 10000 }
-];
+// Helper function to get breakdown data from API
+const getBreakdownData = (dashboardData) => {
+  if (!dashboardData?.revenue_analytics?.breakdown?.data) {
+    return [];
+  }
+  return dashboardData.revenue_analytics.breakdown.data;
+};
 
 export default function FirmAdminDashboard() {
   const [activeTab, setActiveTab] = useState('trend');
@@ -71,6 +75,46 @@ export default function FirmAdminDashboard() {
   });
   const [scheduleFrequency, setScheduleFrequency] = useState('Weekly');
   const [recipients, setRecipients] = useState('admins@firm.com');
+  
+  // Dashboard data state
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Map date range to API format
+        const dateRangeMap = {
+          'Last 7 days': '7d',
+          'Last 30 days': '30d',
+          'Last 90 days': '90d',
+          'Last 6 months': '6m',
+          'Last year': '1y'
+        };
+        
+        const apiDateRange = dateRangeMap[dateRange] || '30d';
+        const response = await firmAdminDashboardAPI.getDashboard({
+          date_range: apiDateRange,
+          period: 'monthly',
+          recent_clients_limit: 10
+        });
+        // Extract data from response if it's wrapped in a 'data' property
+        setDashboardData(response?.data || response);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(handleAPIError(err));
+        toast.error(handleAPIError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [dateRange]);
 
   // Custom tooltip for revenue chart
   const RevenueTooltip = ({ active, payload, label }) => {
@@ -403,248 +447,298 @@ export default function FirmAdminDashboard() {
       </div>
 
       {/* System Alerts Section */}
-      <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">System Alerts</h4>
-          <div className="px-3 py-1 bg-orange-100 border border-orange-300 rounded-full">
-            <span className="text-xs font-medium text-orange-600 font-[BasisGrotesquePro]">3 Active</span>
+      {widgetVisibility.Alerts && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">System Alerts</h4>
+            <div className="px-3 py-1 bg-orange-100 border border-orange-300 rounded-full">
+              <span className="text-xs font-medium text-orange-600 font-[BasisGrotesquePro]">
+                {loading ? '...' : (dashboardData?.system_alerts?.active_count || 0)} Active
+              </span>
+            </div>
           </div>
+          
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading alerts...</div>
+          ) : dashboardData?.system_alerts?.alerts?.length > 0 ? (
+            <div className="space-y-0">
+              {dashboardData.system_alerts.alerts.map((alert, index) => (
+                <div 
+                  key={alert.id || index} 
+                  className={`flex items-center justify-between py-4 ${index < dashboardData.system_alerts.alerts.length - 1 ? 'border-b border-[#E5E7EB]' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">{alert.title}</h6>
+                      <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">{alert.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-xs text-blue-500 font-[BasisGrotesquePro]">{alert.time_ago || 'Recently'}</span>
+                    </div>
+                    {alert.action && (
+                      <button 
+                        onClick={() => {
+                          if (alert.action?.endpoint) {
+                            window.location.href = alert.action.endpoint;
+                          }
+                        }}
+                        className="px-3 py-1 border border-[#D1D5DB] text-[#3B4A66] text-xs rounded font-[BasisGrotesquePro] hover:bg-gray-50"
+                      >
+                        {alert.action.label}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">No active alerts</div>
+          )}
         </div>
-        
-        <div className="space-y-0">
-          {/* EFIN Expiring Soon */}
-          <div className="flex items-center justify-between py-4 border-b border-[#E5E7EB]">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div>
-                <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">EFIN Expiring Soon</h6>
-                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Quarterly Tax Filing</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-xs text-blue-500 font-[BasisGrotesquePro]">2 hours ago</span>
-              </div>
-              <button className="px-3 py-1 border border-[#D1D5DB] text-[#3B4A66] text-xs rounded font-[BasisGrotesquePro] hover:bg-gray-50">
-                Renew Now
-              </button>
-            </div>
-          </div>
-
-          {/* Missing Compliance Docs */}
-          <div className="flex items-center justify-between py-4 border-b border-[#E5E7EB]">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">Missing Compliance Docs</h6>
-                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">5 Client Missing required Documents</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-xs text-blue-500 font-[BasisGrotesquePro]">4 hours ago</span>
-              </div>
-              <button className="px-3 py-1 border border-[#D1D5DB] text-[#3B4A66] text-xs rounded font-[BasisGrotesquePro] hover:bg-gray-50">
-                Review
-              </button>
-            </div>
-          </div>
-
-          {/* Failed E Signatures */}
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <div>
-                <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">Failed E Signatures</h6>
-                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">3 Signature Request Need Attention</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-xs text-blue-500 font-[BasisGrotesquePro]">6 hours ago</span>
-              </div>
-              <button className="px-3 py-1 border border-[#D1D5DB] text-[#3B4A66] text-xs rounded font-[BasisGrotesquePro] hover:bg-gray-50">
-                Resend
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Key Metrics Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        {/* My Revenue */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-          <div className="absolute top-3 right-3">
-            <DolersIcon />
-          </div>
-          <div className="mb-3">
-            <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Revenue</h3>
-            <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">$42,200</p>
-            <div className="flex items-center gap-1 mt-1">
-              <ChecksIcon />
-              <p className="text-xs text-black font-[BasisGrotesquePro]">+12.5% vs last month</p>
+      {widgetVisibility.Kpi && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          {/* My Revenue */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="absolute top-3 right-3">
+              <DolersIcon />
             </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-[#6B7280]">
-              <span>Target $400,000</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-[#3AD6F2] h-2 rounded-full" style={{width: '10.5%'}}></div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">$280,000</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Prep Fees</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">$50,000</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Add Ons</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">$30,000</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Training</div>
+            <div className="mb-3">
+              <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Revenue</h3>
+              <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {loading ? '...' : (dashboardData?.key_metrics?.revenue?.formatted || '$0')}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                {dashboardData?.key_metrics?.revenue?.change_type === 'increase' ? <ChecksIcon /> : <Checks2Icon />}
+                <p className="text-xs text-black font-[BasisGrotesquePro]">
+                  {loading ? '...' : dashboardData?.key_metrics?.revenue?.percentage_change 
+                    ? `${dashboardData.key_metrics.revenue.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.revenue.percentage_change}% vs last month`
+                    : 'No change'}
+                </p>
               </div>
             </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-[#6B7280]">
+                <span>Target {dashboardData?.key_metrics?.revenue?.target ? `$${dashboardData.key_metrics.revenue.target.toLocaleString()}` : '$0'}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-[#3AD6F2] h-2 rounded-full" 
+                  style={{
+                    width: dashboardData?.key_metrics?.revenue?.target 
+                      ? `${Math.min((dashboardData.key_metrics.revenue.current / dashboardData.key_metrics.revenue.target) * 100, 100)}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    ${dashboardData?.key_metrics?.revenue?.breakdown?.prep_fees?.toLocaleString() || '0'}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Prep Fees</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    ${dashboardData?.key_metrics?.revenue?.breakdown?.add_ons?.toLocaleString() || '0'}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Add Ons</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    ${dashboardData?.key_metrics?.revenue?.breakdown?.training?.toLocaleString() || '0'}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Training</div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* My Clients */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-          <div className="absolute top-3 right-3">
-            <DoublesIcon />
-          </div>
-          <div className="mb-3">
-            <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Clients</h3>
-            <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">24</p>
-            <div className="flex items-center gap-1 mt-1">
-              <ChecksIcon />
-              <p className="text-xs text-black font-[BasisGrotesquePro]">+12 this month</p>
+          {/* My Clients */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="absolute top-3 right-3">
+              <DoublesIcon />
             </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-[#6B7280]">
-              <span>Target 30</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-[#3AD6F2] h-2 rounded-full" style={{width: '80%'}}></div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">18</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Individual</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">5</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Business</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">2</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Estate</div>
+            <div className="mb-3">
+              <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Clients</h3>
+              <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {loading ? '...' : (dashboardData?.key_metrics?.clients?.current || 0)}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                {dashboardData?.key_metrics?.clients?.change_type === 'increase' ? <ChecksIcon /> : <Checks2Icon />}
+                <p className="text-xs text-black font-[BasisGrotesquePro]">
+                  {loading ? '...' : dashboardData?.key_metrics?.clients?.percentage_change 
+                    ? `${dashboardData.key_metrics.clients.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.clients.percentage_change} this month`
+                    : 'No change'}
+                </p>
               </div>
             </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-[#6B7280]">
+                <span>Target {dashboardData?.key_metrics?.clients?.target || 0}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-[#3AD6F2] h-2 rounded-full" 
+                  style={{
+                    width: dashboardData?.key_metrics?.clients?.target 
+                      ? `${Math.min((dashboardData.key_metrics.clients.current / dashboardData.key_metrics.clients.target) * 100, 100)}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+              {/* <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.clients?.breakdown?.individual || 0}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Individual</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.clients?.breakdown?.business || 0}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Business</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.clients?.breakdown?.estate || 0}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Estate</div>
+                </div>
+              </div> */}
+            </div>
           </div>
-        </div>
 
-        {/* My Tasks */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-          <div className="absolute top-3 right-3">
-            <FilessIcon />
-          </div>
-          <div className="mb-3">
-            <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Tasks</h3>
-            <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">12</p>
-            <div className="flex items-center gap-1 mt-1">
-              <Checks2Icon />
-              <p className="text-xs text-black font-[BasisGrotesquePro]">5 vs Last Month</p>
+          {/* My Tasks */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="absolute top-3 right-3">
+              <FilessIcon />
             </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-[#6B7280]">
-              <span>Target 8</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-[#3AD6F2] h-2 rounded-full" style={{width: '100%'}}></div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">8</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Tax Prep</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">2</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Review</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">2</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
+            <div className="mb-3">
+              <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Tasks</h3>
+              <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {loading ? '...' : (dashboardData?.key_metrics?.tasks?.current || 0)}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                <Checks2Icon />
+                <p className="text-xs text-black font-[BasisGrotesquePro]">
+                  {loading ? '...' : dashboardData?.key_metrics?.tasks?.percentage_change 
+                    ? `${dashboardData.key_metrics.tasks.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.tasks.percentage_change} vs Last Month`
+                    : 'No change'}
+                </p>
               </div>
             </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-[#6B7280]">
+                <span>Target {dashboardData?.key_metrics?.tasks?.target || 0}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-[#3AD6F2] h-2 rounded-full" 
+                  style={{
+                    width: dashboardData?.key_metrics?.tasks?.target 
+                      ? `${Math.min((dashboardData.key_metrics.tasks.current / dashboardData.key_metrics.tasks.target) * 100, 100)}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.tasks?.breakdown?.tax_prep || 0}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Tax Prep</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.tasks?.breakdown?.review || 0}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Review</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* My Response Time */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-          <div className="absolute top-3 right-3">
-            <WatchesIcon />
-          </div>
-          <div className="mb-3">
-            <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Response Time</h3>
-            <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">24</p>
-            <div className="flex items-center gap-1 mt-1">
-              <ChecksIcon />
-              <p className="text-xs text-black font-[BasisGrotesquePro]">+18 vs Last Week</p>
+          {/* My Response Time */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="absolute top-3 right-3">
+              <WatchesIcon />
             </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-[#6B7280]">
-              <span>Target 2</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-[#3AD6F2] h-2 rounded-full" style={{width: '100%'}}></div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">1.8</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Email</div>
+            <div className="mb-3">
+              <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Response Time</h3>
+              <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {loading ? '...' : (dashboardData?.key_metrics?.response_time?.current || 0)}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                <ChecksIcon />
+                <p className="text-xs text-black font-[BasisGrotesquePro]">
+                  {loading ? '...' : dashboardData?.key_metrics?.response_time?.percentage_change 
+                    ? `${dashboardData.key_metrics.response_time.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.response_time.percentage_change} vs Last Week`
+                    : 'No change'}
+                </p>
               </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">0.5</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Phone</div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-[#6B7280]">
+                <span>Target {dashboardData?.key_metrics?.response_time?.target || 0}</span>
               </div>
-              <div>
-                <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">1.5</div>
-                <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Portal</div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-[#3AD6F2] h-2 rounded-full" 
+                  style={{
+                    width: dashboardData?.key_metrics?.response_time?.target 
+                      ? `${Math.min((dashboardData.key_metrics.response_time.current / dashboardData.key_metrics.response_time.target) * 100, 100)}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.response_time?.breakdown?.email || '0'}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Email</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.response_time?.breakdown?.phone || '0'}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Phone</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                    {dashboardData?.key_metrics?.response_time?.breakdown?.portal || '0'}
+                  </div>
+                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Portal</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Revenue Analytics Section */}
-      <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+      {widgetVisibility.Revenue && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -720,7 +814,7 @@ export default function FirmAdminDashboard() {
         <div className="h-80">
           {activeTab === 'trend' && (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData}>
+              <AreaChart data={getRevenueData(dashboardData)}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3AD6F299"/>
@@ -767,7 +861,7 @@ export default function FirmAdminDashboard() {
           {activeTab === 'breakdown' && (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
-                data={breakdownData}
+                data={getBreakdownData(dashboardData)}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 barCategoryGap="20%"
               >
@@ -806,23 +900,39 @@ export default function FirmAdminDashboard() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Open invoices</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">42</span>
+                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.open_invoices || 0)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Outstanding Balance</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">$68,450</span>
+                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {loading ? '...' : dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.outstanding_balance 
+                        ? `$${dashboardData.revenue_analytics.ar_ap.accounts_receivable.outstanding_balance.toLocaleString()}`
+                        : '$0'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Avg Days Outstanding</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">18.2</span>
+                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.avg_days_outstanding || 0)}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="mt-4">
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="h-2 rounded-full" style={{width: '62%', backgroundColor: '#3AD6F2'}}></div>
+                    <div 
+                      className="h-2 rounded-full" 
+                      style={{
+                        width: `${dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.collection_percentage || 0}%`, 
+                        backgroundColor: '#3AD6F2'
+                      }}
+                    ></div>
                   </div>
-                  <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-2">62% collected for current period</p>
+                  <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-2">
+                    {dashboardData?.revenue_analytics?.ar_ap?.accounts_receivable?.collection_percentage || 0}% collected for current period
+                  </p>
                 </div>
               </div>
 
@@ -834,31 +944,49 @@ export default function FirmAdminDashboard() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Opens Bill</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">27</span>
+                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.open_bills || 0)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Outstanding Payable</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">$24,000</span>
+                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {loading ? '...' : dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.outstanding_payable 
+                        ? `$${dashboardData.revenue_analytics.ar_ap.accounts_payable.outstanding_payable.toLocaleString()}`
+                        : '$0'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Average Days to Pay</span>
-                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">12.7</span>
+                    <span className="text-sm font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {loading ? '...' : (dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.avg_days_to_pay || 0)}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="mt-4">
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="h-2 rounded-full" style={{width: '54%', backgroundColor: '#3AD6F2'}}></div>
+                    <div 
+                      className="h-2 rounded-full" 
+                      style={{
+                        width: `${dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.paid_percentage || 0}%`, 
+                        backgroundColor: '#3AD6F2'
+                      }}
+                    ></div>
                   </div>
-                  <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-2">54% Paid For Current Period</p>
+                  <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-2">
+                    {dashboardData?.revenue_analytics?.ar_ap?.accounts_payable?.paid_percentage || 0}% Paid For Current Period
+                  </p>
                 </div>
               </div>
             </div>
           )}
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Client Engagement Funnel Section */}
+      {widgetVisibility.Engagement && (
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -881,38 +1009,50 @@ export default function FirmAdminDashboard() {
         </div>
         
         <div className="space-y-4">
-          {clientEngagementData.map((item, index) => (
-            <div key={index} className="space-y-1">
-              <div className="flex justify-between items-center">
-                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
-                <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.value} {item.percentage}%</div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 relative">
-                <div 
-                  className="h-3 rounded-full"
-                  style={{width: `${item.percentage}%`, backgroundColor: '#3AD6F2'}}
-                >
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading engagement data...</div>
+          ) : getClientEngagementData(dashboardData).length > 0 ? (
+            getClientEngagementData(dashboardData).map((item, index) => (
+              <div key={index} className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
+                  <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.value} {item.percentage}%</div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 relative">
+                  <div 
+                    className="h-3 rounded-full"
+                    style={{width: `${item.percentage}%`, backgroundColor: '#3AD6F2'}}
+                  >
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">No engagement data available</div>
+          )}
         </div>
         
         <div className="mt-6 bg-orange-50 rounded-lg p-4">
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Conversion Rate</div>
-              <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">48%</div>
+              <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {loading ? '...' : `${dashboardData?.client_engagement?.metrics?.conversion_rate || 0}%`}
+              </div>
             </div>
             <div className="flex justify-between items-center">
               <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Avg. Response Time</div>
-              <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">2.4h</div>
+              <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {loading ? '...' : `${dashboardData?.client_engagement?.metrics?.avg_response_time || 0}${dashboardData?.client_engagement?.metrics?.avg_response_time_unit || 'h'}`}
+              </div>
             </div>
           </div>
         </div>
       </div>
+      )}
 
       {/* Staff Performance Leaderboard Section */}
+      {widgetVisibility.Staff && (
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -935,60 +1075,67 @@ export default function FirmAdminDashboard() {
         </div>
         
         <div className="space-y-3">
-          {[
-            { rank: 1, name: 'Sarah J', tasks: 45, avgDays: 1.5, revenue: 12000, percentage: 94 },
-            { rank: 2, name: 'Mike R', tasks: 35, avgDays: 1.6, revenue: 11000, percentage: 91 },
-            { rank: 3, name: 'John J', tasks: 42, avgDays: 1.5, revenue: 10000, percentage: 87 },
-            { rank: 4, name: 'Raul J', tasks: 46, avgDays: 2.5, revenue: 9000, percentage: 83 }
-          ].map((staff, index) => (
-            <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#FEF3C7] rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold text-[#FBBF24]">{staff.rank}</span>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading staff performance...</div>
+          ) : dashboardData?.staff_performance?.leaderboard?.length > 0 ? (
+            dashboardData.staff_performance.leaderboard.map((staff, index) => (
+              <div key={staff.staff_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FEF3C7] rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-[#FBBF24]">{staff.rank}</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{staff.name}</div>
+                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">{staff.tasks_completed} Task. {staff.avg_days} days Avg</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{staff.name}</div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">{staff.tasks} Task. {staff.avgDays} days Avg</div>
+                <div className="text-right">
+                  <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue?.toLocaleString() || '0'}</div>
+                  <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.performance_percentage}%</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue.toLocaleString()}</div>
-                <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.percentage}%</div>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">No staff performance data available</div>
+          )}
         </div>
       </div>
+      )}
 
       {/* Top Preparers Section */}
-      <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+      {widgetVisibility.Performance && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Top Prepares (This Month)</h2>
         </div>
         
         <div className="space-y-3">
-          {[
-            { name: 'Alex R', returns: 58, revenue: 21000 },
-            { name: 'Priya S', returns: 52, revenue: 19800 },
-            { name: 'Alex R', returns: 47, revenue: 18200 }
-          ].map((preparer, index) => (
-            <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-              <div>
-                <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{preparer.name}</div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">{preparer.returns} Returns</div>
-                  <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${preparer.revenue.toLocaleString()}</div>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading top preparers...</div>
+          ) : dashboardData?.top_preparers?.data?.length > 0 ? (
+            dashboardData.top_preparers.data.map((preparer, index) => (
+              <div key={preparer.preparer_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                <div>
+                  <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{preparer.name}</div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">{preparer.returns} Returns</div>
+                    <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${preparer.revenue?.toLocaleString() || '0'}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">No preparer data available</div>
+          )}
         </div>
       </div>
+      )}
 
       {/* Compliance & Risk Status Section */}
-      <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+      {widgetVisibility.Compliance && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Status</h2>
@@ -1010,7 +1157,10 @@ export default function FirmAdminDashboard() {
         </div>
         
         <div className="space-y-4">
-          {complianceData.map((item, index) => (
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading compliance data...</div>
+          ) : getComplianceData(dashboardData).length > 0 ? (
+            getComplianceData(dashboardData).map((item, index) => (
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-center">
                 <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.status}</div>
@@ -1033,40 +1183,64 @@ export default function FirmAdminDashboard() {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">No compliance data available</div>
+          )}
           
-          <div className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-orange-50 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">KPA Completion Rate</div>
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">76%</div>
+          {dashboardData?.compliance_risk?.metrics && (
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">KPA Completion Rate</div>
+                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                      {dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="h-3 rounded-full" 
+                      style={{
+                        width: `${dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%`, 
+                        backgroundColor: '#3AD6F2'
+                      }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="h-3 rounded-full" style={{width: '76%', backgroundColor: '#3AD6F2'}}></div>
+                
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Flagged Returns (Active)</div>
+                    <div className="text-2xl font-bold text-red-600 font-[BasisGrotesquePro]">
+                      {dashboardData.compliance_risk.metrics.flagged_returns_active || 0}
+                    </div>
+                  </div>
                 </div>
               </div>
               
               <div className="bg-orange-50 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Flagged Returns (Active)</div>
-                  <div className="text-2xl font-bold text-red-600 font-[BasisGrotesquePro]">9</div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Overall compliance Score</div>
+                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                    {dashboardData.compliance_risk.metrics.overall_compliance_score || 0}%
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="h-3 rounded-full" 
+                    style={{
+                      width: `${dashboardData.compliance_risk.metrics.overall_compliance_score || 0}%`, 
+                      backgroundColor: '#3AD6F2'
+                    }}
+                  ></div>
                 </div>
               </div>
             </div>
-            
-            <div className="bg-orange-50 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Overall compliance Score</div>
-                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">82%</div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div className="h-3 rounded-full" style={{width: '82%', backgroundColor: '#3AD6F2'}}></div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
+      )}
 
       {/* Subscription Status Section */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
@@ -1080,18 +1254,31 @@ export default function FirmAdminDashboard() {
             <div className="flex items-center space-x-8">
               <div>
                 <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Current Plan</div>
-                <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">Professional</div>
+                <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                  {loading ? '...' : (dashboardData?.subscription?.current_plan || 'N/A')}
+                </div>
               </div>
               <div>
-                <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Current Plan</div>
-                <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">$299</div>
+                <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Price</div>
+                <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                  {loading ? '...' : (dashboardData?.subscription?.price_formatted || '$0')}
+                </div>
               </div>
               <div>
                 <div className="text-sm text-[#343a40] font-[BasisGrotesquePro] mb-1">Next Billing</div>
-                <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">Mar 15, 2024</div>
+                <div className="text-lg font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                  {loading ? '...' : (dashboardData?.subscription?.next_billing_date_formatted || 'N/A')}
+                </div>
               </div>
             </div>
-            <button className="px-4 py-2 bg-white border border-[#dee2e6] text-[#343a40] rounded text-sm font-[BasisGrotesquePro] hover:bg-gray-50">
+            <button 
+              onClick={() => {
+                if (dashboardData?.subscription?.manage_endpoint) {
+                  window.location.href = dashboardData.subscription.manage_endpoint;
+                }
+              }}
+              className="px-4 py-2 bg-white border border-[#dee2e6] text-[#343a40] rounded text-sm font-[BasisGrotesquePro] hover:bg-gray-50"
+            >
               Manage Subscription
             </button>
           </div>

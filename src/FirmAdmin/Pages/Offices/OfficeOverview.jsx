@@ -852,7 +852,7 @@ export default function OfficeOverview() {
                                                 <path d="M8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333ZM8 13.3333C5.05933 13.3333 2.66667 10.9407 2.66667 8C2.66667 5.05933 5.05933 2.66667 8 2.66667C10.9407 2.66667 13.3333 5.05933 13.3333 8C13.3333 10.9407 10.9407 13.3333 8 13.3333Z" fill="#6B7280" />
                                                 <path d="M8.66667 4.66667V8.66667L11.3333 10.1333" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
-                                            <p className="text-sm text-gray-700 mb-0">{officeData?.operation_hours_display || officeData?.hours || 'N/A'}</p>
+                                            {/* <p className="text-sm text-gray-700 mb-0">{officeData?.operation_hours_display || officeData?.hours || 'N/A'}</p> */}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
