@@ -1,62 +1,209 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 import TabNavigation from '../Integrations/TabNavigation';
 import FoldersAndTagsView from './FoldersAndTagsView';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
 
-const templatesData = [
-    {
-        id: 'appointment-confirmation',
-        title: 'Appointment Confirmation',
-        description: 'Confirm scheduled appointments with clients',
-        category: {
-            label: 'Tax Preparation',
-            pill: 'border border-[#C8D5FF] bg-white text-[#32406B]',
-            icon: FolderIcon
-        },
-        subject: 'Payment Reminder - Invoice #[Invoice Number]',
-        usage: '45 times',
-        lastUsed: '2024-01-15',
-        status: {
-            label: 'Active',
-            variant: 'active'
+const API_BASE_URL = getApiBaseUrl();
+
+// API Functions for Email Templates
+const emailTemplateAPI = {
+    // List Templates
+    listTemplates: async () => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching email templates:', error);
+            throw error;
         }
     },
-    {
-        id: 'welcome-email',
-        title: 'Welcome Email',
-        description: 'Initial welcome email for new clients',
-        category: {
-            label: 'Onboarding',
-            pill: 'border border-[#C8D5FF] bg-white text-[#32406B]',
-            icon: PeopleIcon
-        },
-        subject: 'Welcome to [Firm Name] - Let\'s Get Started!',
-        usage: '25 times',
-        lastUsed: '2024-02-15',
-        status: {
-            label: 'Active',
-            variant: 'active'
+
+    // Create Template
+    createTemplate: async (templateData) => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(templateData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating email template:', error);
+            throw error;
         }
     },
-    {
-        id: 'document-request',
-        title: 'Document Request',
-        description: 'Request missing documents from clients',
-        category: {
-            label: 'Scheduling',
-            pill: 'border border-[#C8D5FF] bg-white text-[#32406B]',
-            icon: ClockIcon
-        },
-        subject: 'Appointment Confirmed - [Date] at [Time]',
-        usage: '35 times',
-        lastUsed: '2024-03-15',
-        status: {
-            label: 'Draft',
-            variant: 'draft'
+
+    // Get Template Details
+    getTemplate: async (templateId) => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching email template:', error);
+            throw error;
+        }
+    },
+
+    // Update Template
+    updateTemplate: async (templateId, updateData) => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(updateData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating email template:', error);
+            throw error;
+        }
+    },
+
+    // Delete Template
+    deleteTemplate: async (templateId) => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error deleting email template:', error);
+            throw error;
+        }
+    },
+
+    // Duplicate Template
+    duplicateTemplate: async (templateId, newName) => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    action: 'duplicate',
+                    name: newName
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error duplicating email template:', error);
+            throw error;
+        }
+    },
+
+    // Send Email
+    sendEmail: async (templateId, emailData) => {
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
+            
+            const response = await fetchWithCors(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    action: 'send',
+                    ...emailData
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error sending email:', error);
+            throw error;
         }
     }
-];
+};
 
 const statusClasses = {
     active: '!border border-[#22C55E] bg-transparent text-[#198754]',
@@ -70,6 +217,99 @@ export default function EmailTemplate() {
         []
     );
     const [activeTab, setActiveTab] = useState(tabs[0]);
+    const [templates, setTemplates] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch templates from API
+    const fetchTemplates = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await emailTemplateAPI.listTemplates();
+            setTemplates(Array.isArray(data) ? data : (data.results || data.templates || []));
+        } catch (err) {
+            setError(err.message);
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to fetch email templates');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'Templates') {
+            fetchTemplates();
+        }
+    }, [activeTab, fetchTemplates]);
+
+    // Handler functions
+    const handleCreateTemplate = async (templateData) => {
+        try {
+            await emailTemplateAPI.createTemplate(templateData);
+            toast.success('Template created successfully');
+            fetchTemplates();
+            return true;
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to create template');
+            return false;
+        }
+    };
+
+    const handleUpdateTemplate = async (templateId, updateData) => {
+        try {
+            await emailTemplateAPI.updateTemplate(templateId, updateData);
+            toast.success('Template updated successfully');
+            fetchTemplates();
+            return true;
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to update template');
+            return false;
+        }
+    };
+
+    const handleDeleteTemplate = async (templateId) => {
+        if (!window.confirm('Are you sure you want to delete this template?')) {
+            return false;
+        }
+        try {
+            await emailTemplateAPI.deleteTemplate(templateId);
+            toast.success('Template deleted successfully');
+            fetchTemplates();
+            return true;
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to delete template');
+            return false;
+        }
+    };
+
+    const handleDuplicateTemplate = async (templateId, newName) => {
+        try {
+            await emailTemplateAPI.duplicateTemplate(templateId, newName);
+            toast.success('Template duplicated successfully');
+            fetchTemplates();
+            return true;
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to duplicate template');
+            return false;
+        }
+    };
+
+    const handleSendEmail = async (templateId, emailData) => {
+        try {
+            await emailTemplateAPI.sendEmail(templateId, emailData);
+            toast.success('Email sent successfully');
+            return true;
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to send email');
+            return false;
+        }
+    };
 
     return (
         <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
@@ -105,7 +345,19 @@ export default function EmailTemplate() {
 
                 <section className="space-y-6">
                     {activeTab === 'Templates' && (
-                        <TemplatesView templates={templatesData} statusClasses={statusClasses} />
+                        <TemplatesView 
+                            templates={templates} 
+                            statusClasses={statusClasses}
+                            loading={loading}
+                            error={error}
+                            onRefresh={fetchTemplates}
+                            onCreate={handleCreateTemplate}
+                            onUpdate={handleUpdateTemplate}
+                            onDelete={handleDeleteTemplate}
+                            onDuplicate={handleDuplicateTemplate}
+                            onSend={handleSendEmail}
+                            onGetTemplate={emailTemplateAPI.getTemplate}
+                        />
                     )}
                     {activeTab === 'Folders and tags' && <FoldersAndTagsView />}
                     {activeTab === 'Analytics' && <AnalyticsView />}
@@ -119,14 +371,269 @@ export default function EmailTemplate() {
     );
 }
 
-const IconButton = ({ children, ariaLabel }) => (
+const IconButton = ({ children, ariaLabel, onClick }) => (
     <button
         aria-label={ariaLabel}
+        onClick={onClick}
         className=" text-[#4254A0] transition hover:bg-white hover:text-[#1F2A55]"
     >
         {children}
     </button>
 );
+
+// Simple Modal Components
+const DuplicateModal = ({ template, onClose, onSubmit }) => {
+    const [newName, setNewName] = useState(template?.name ? `${template.name} (Copy)` : '');
+    
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Duplicate Template</h3>
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-[#3B4A66] mb-2">New Template Name</label>
+                    <input
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                        placeholder="Enter template name"
+                    />
+                </div>
+                <div className="flex justify-end gap-3">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => onSubmit(newName)}
+                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D]"
+                    >
+                        Duplicate
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SendEmailModal = ({ template, onClose, onSend }) => {
+    const [recipientEmail, setRecipientEmail] = useState('');
+    const [recipientName, setRecipientName] = useState('');
+    const [variables, setVariables] = useState({});
+    
+    const handleSubmit = () => {
+        if (!recipientEmail || !recipientEmail.trim()) {
+            toast.error('Please enter recipient email');
+            return;
+        }
+        onSend({
+            recipient_email: recipientEmail.trim(),
+            recipient_name: recipientName.trim() || undefined,
+            variables: variables
+        });
+    };
+    
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Send Email</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Email *</label>
+                        <input
+                            type="email"
+                            value={recipientEmail}
+                            onChange={(e) => setRecipientEmail(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            placeholder="client@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Name</label>
+                        <input
+                            type="text"
+                            value={recipientName}
+                            onChange={(e) => setRecipientName(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            placeholder="Jane Smith"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Variables (JSON)</label>
+                        <textarea
+                            value={JSON.stringify(variables, null, 2)}
+                            onChange={(e) => {
+                                try {
+                                    setVariables(JSON.parse(e.target.value));
+                                } catch {
+                                    // Invalid JSON, ignore
+                                }
+                            }}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-32 font-mono text-xs"
+                            placeholder='{"Date": "2024-03-25", "Time": "2:00 PM"}'
+                        />
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D]"
+                    >
+                        Send Email
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const PreviewModal = ({ template, onClose }) => {
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-[#1F2A55]">Template Preview</h3>
+                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-1">Subject</label>
+                        <p className="text-sm text-[#1F2A55]">{template.subject || 'No subject'}</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-1">Body</label>
+                        <div 
+                            className="text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg p-4 bg-gray-50"
+                            dangerouslySetInnerHTML={{ __html: template.body_html || template.body || '<p>No content</p>' }}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const TemplateFormModal = ({ template, onClose, onSubmit }) => {
+    const [formData, setFormData] = useState({
+        name: template?.name || '',
+        category: template?.category || 'document',
+        subject: template?.subject || '',
+        body_html: template?.body_html || template?.body || '',
+        status: template?.status || 'draft'
+    });
+    
+    const handleSubmit = () => {
+        if (!formData.name || !formData.name.trim()) {
+            toast.error('Please enter template name');
+            return;
+        }
+        if (!formData.subject || !formData.subject.trim()) {
+            toast.error('Please enter subject');
+            return;
+        }
+        onSubmit(formData);
+    };
+    
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-[#1F2A55]">
+                        {template ? 'Edit Template' : 'Create Template'}
+                    </h3>
+                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Name *</label>
+                        <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            placeholder="Payment Reminder"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Category</label>
+                        <select
+                            value={formData.category}
+                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                        >
+                            <option value="payment">Payment</option>
+                            <option value="tax_preparation">Tax Preparation</option>
+                            <option value="onboarding">Onboarding</option>
+                            <option value="scheduling">Scheduling</option>
+                            <option value="document">Document</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Subject *</label>
+                        <input
+                            type="text"
+                            value={formData.subject}
+                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                            placeholder="Payment Reminder - Invoice # [Invoice Number]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Body HTML</label>
+                        <textarea
+                            value={formData.body_html}
+                            onChange={(e) => setFormData({ ...formData, body_html: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-48 font-mono text-xs"
+                            placeholder="<html><body><p>Dear [Client Name],</p></body></html>"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Status</label>
+                        <select
+                            value={formData.status}
+                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="active">Active</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D]"
+                    >
+                        {template ? 'Update' : 'Create'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const EmptyTabState = ({ tab }) => (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center text-[#6E7DAE]">
@@ -153,12 +660,153 @@ const InfoStack = ({ label, value }) => (
     </div>
 );
 
-function TemplatesView({ templates, statusClasses }) {
+// Helper function to transform API data to display format
+const transformTemplateData = (template) => {
+    // Map API status to display format
+    const statusMap = {
+        'active': { label: 'Active', variant: 'active' },
+        'draft': { label: 'Draft', variant: 'draft' },
+        'archived': { label: 'Archived', variant: 'archived' },
+        'inactive': { label: 'Inactive', variant: 'archived' }
+    };
+
+    // Map category to icon
+    const categoryIconMap = {
+        'tax_preparation': FolderIcon,
+        'onboarding': PeopleIcon,
+        'scheduling': ClockIcon,
+        'payment': FolderIcon,
+        'document': FolderIcon
+    };
+
+    const category = template.category || 'document';
+    const categoryLabel = category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const status = statusMap[template.status?.toLowerCase()] || statusMap['draft'];
+
+    return {
+        id: template.id || template.template_id,
+        title: template.name || template.title || 'Untitled Template',
+        description: template.description || '',
+        category: {
+            label: categoryLabel,
+            pill: 'border border-[#C8D5FF] bg-white text-[#32406B]',
+            icon: categoryIconMap[category.toLowerCase()] || FolderIcon
+        },
+        subject: template.subject || 'No subject',
+        usage: template.usage_count ? `${template.usage_count} times` : '0 times',
+        lastUsed: template.last_used ? new Date(template.last_used).toLocaleDateString() : 'Never',
+        status: status,
+        rawData: template // Keep original data for API calls
+    };
+};
+
+function TemplatesView({ 
+    templates, 
+    statusClasses, 
+    loading, 
+    error, 
+    onRefresh,
+    onCreate,
+    onUpdate,
+    onDelete,
+    onDuplicate,
+    onSend,
+    onGetTemplate
+}) {
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showSendModal, setShowSendModal] = useState(false);
+    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+
+    const transformedTemplates = templates.map(transformTemplateData);
+
+    const handlePreview = async (template) => {
+        try {
+            const fullTemplate = await onGetTemplate(template.id);
+            setSelectedTemplate(fullTemplate);
+            setShowPreviewModal(true);
+        } catch (err) {
+            toast.error('Failed to load template details');
+        }
+    };
+
+    const handleEdit = async (template) => {
+        try {
+            const fullTemplate = await onGetTemplate(template.id);
+            setSelectedTemplate(fullTemplate);
+            setShowEditModal(true);
+        } catch (err) {
+            toast.error('Failed to load template details');
+        }
+    };
+
+    const handleDelete = async (template) => {
+        await onDelete(template.id);
+    };
+
+    const handleDuplicate = (template) => {
+        setSelectedTemplate(template);
+        setShowDuplicateModal(true);
+    };
+
+    const handleSend = async (template) => {
+        try {
+            const fullTemplate = await onGetTemplate(template.id);
+            setSelectedTemplate(fullTemplate);
+            setShowSendModal(true);
+        } catch (err) {
+            toast.error('Failed to load template details');
+        }
+    };
+
+    const handleDuplicateSubmit = async (newName) => {
+        if (!newName || !newName.trim()) {
+            toast.error('Please enter a name for the duplicate');
+            return;
+        }
+        const success = await onDuplicate(selectedTemplate.id, newName.trim());
+        if (success) {
+            setShowDuplicateModal(false);
+            setSelectedTemplate(null);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF] p-8 text-center">
+                <p className="text-[#7B8AB2]">Loading templates...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF] p-8 text-center">
+                <p className="text-red-600 mb-4">{error}</p>
+                <button 
+                    onClick={onRefresh}
+                    className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0]"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF]">
-            <div className="border-b border-[#E8F0FF] px-5 py-5 sm:px-6 lg:px-8">
-                <h3 className="text-lg font-semibold text-[#1F2A55]">Email Templates</h3>
-                <p className="mt-1 text-sm text-[#7B8AB2]">Manage your email templates and their usage</p>
+            <div className="border-b border-[#E8F0FF] px-5 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div>
+                    <h3 className="text-lg font-semibold text-[#1F2A55]">Email Templates</h3>
+                    <p className="mt-1 text-sm text-[#7B8AB2]">Manage your email templates and their usage</p>
+                </div>
+                <button 
+                    onClick={() => setShowEditModal(true)}
+                    className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] text-sm font-medium"
+                >
+                    + Create Template
+                </button>
             </div>
 
             <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 text-sm font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8">
@@ -170,65 +818,74 @@ function TemplatesView({ templates, statusClasses }) {
                 <span>Status</span>
                 <span className="text-right">Actions</span>
             </div>
-            <div className="hidden xl:block">
-                {templates.map((template, index) => (
-                    <div
-                        key={template.id}
-                        className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-6 sm:px-6 lg:px-8 text-sm ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
-                    >
-                        <div>
-                            <p className="font-semibold text-[#1F2A55]">{template.title}</p>
-                            <p className="mt-1 text-xs font-medium text-[#7B8AB2]">{template.description}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="flex h-8 w-8 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
-                                {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
-                            </span>
-                            <span
-                                className={`inline-flex items-center gap-1.5 !rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
+            {transformedTemplates.length === 0 ? (
+                <div className="p-8 text-center text-[#7B8AB2]">
+                    <p>No templates found. Create your first template to get started.</p>
+                </div>
+            ) : (
+                <>
+                    <div className="hidden xl:block">
+                        {transformedTemplates.map((template, index) => (
+                            <div
+                                key={template.id}
+                                className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-6 sm:px-6 lg:px-8 text-sm ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
                             >
-                                <span>{template.category.label}</span>
-                            </span>
-                        </div>
-                        <p className="text-sm font-medium text-[#3D4C70]">{template.subject}</p>
-                        <p className="font-medium text-[#1F2A55]">{template.usage}</p>
-                        <p className="ml-3 text-[#3D4C70] font-medium">{template.lastUsed}</p>
-                        <span
-                            className={`inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
-                        >
-                            {template.status.label}
-                        </span>
-                        <div className="flex items-center justify-end gap-2 text-[#5061A4]">
-                            <IconButton ariaLabel="Preview template">
-                                <EyeIcon />
-                            </IconButton>
-                            <IconButton ariaLabel="Edit template">
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
-                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" stroke-width="0.5" />
-                                    <path d="M8.70947 4.03906H4.62614C4.31672 4.03906 4.01997 4.16198 3.80118 4.38077C3.58239 4.59956 3.45947 4.89631 3.45947 5.20573V13.3724C3.45947 13.6818 3.58239 13.9786 3.80118 14.1974C4.01997 14.4161 4.31672 14.5391 4.62614 14.5391H12.7928C13.1022 14.5391 13.399 14.4161 13.6178 14.1974C13.8366 13.9786 13.9595 13.6818 13.9595 13.3724V9.28906" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M12.4284 3.82337C12.6605 3.59131 12.9753 3.46094 13.3034 3.46094C13.6316 3.46094 13.9464 3.59131 14.1784 3.82337C14.4105 4.05544 14.5409 4.37019 14.5409 4.69837C14.5409 5.02656 14.4105 5.34131 14.1784 5.57337L8.92086 10.8315C8.78234 10.9699 8.61123 11.0712 8.42327 11.1261L6.74736 11.6161C6.69716 11.6308 6.64395 11.6316 6.5933 11.6187C6.54265 11.6057 6.49642 11.5793 6.45945 11.5424C6.42248 11.5054 6.39613 11.4592 6.38315 11.4085C6.37017 11.3579 6.37105 11.3047 6.38569 11.2545L6.87569 9.57854C6.93083 9.39074 7.03234 9.21982 7.17086 9.08154L12.4284 3.82337Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-
-                            </IconButton>
-                            <IconButton ariaLabel="Duplicate template">
-                                <DuplicateIcon />
-                            </IconButton>
-                            <IconButton ariaLabel="Send template">
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
-                                    <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" stroke-width="0.5" />
-                                    <path d="M13.9582 4.03906L4.0415 7.2474L7.83317 8.9974L11.9165 6.08073L8.99984 10.1641L10.7498 13.9557L13.9582 4.03906Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-
-                            </IconButton>
-                        </div>
+                                <div>
+                                    <p className="font-semibold text-[#1F2A55]">{template.title}</p>
+                                    <p className="mt-1 text-xs font-medium text-[#7B8AB2]">{template.description}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="flex h-8 w-8 items-center justify-center !rounded-full border border-[#C8D5FF] bg-white text-[#32406B]">
+                                        {React.createElement(template.category.icon, { className: 'h-4 w-4' })}
+                                    </span>
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 !rounded-full px-3 py-[6px] text-[12px] font-semibold ${template.category.pill}`}
+                                    >
+                                        <span>{template.category.label}</span>
+                                    </span>
+                                </div>
+                                <p className="text-sm font-medium text-[#3D4C70]">{template.subject}</p>
+                                <p className="font-medium text-[#1F2A55]">{template.usage}</p>
+                                <p className="ml-3 text-[#3D4C70] font-medium">{template.lastUsed}</p>
+                                <span
+                                    className={`inline-flex items-center justify-center rounded-full px-2 py-[6px] text-[11px] font-medium leading-tight ${statusClasses[template.status.variant] || statusClasses.archived}`}
+                                >
+                                    {template.status.label}
+                                </span>
+                                <div className="flex items-center justify-end gap-2 text-[#5061A4]">
+                                    <IconButton ariaLabel="Preview template" onClick={() => handlePreview(template)}>
+                                        <EyeIcon />
+                                    </IconButton>
+                                    <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
+                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
+                                            <path d="M8.70947 4.03906H4.62614C4.31672 4.03906 4.01997 4.16198 3.80118 4.38077C3.58239 4.59956 3.45947 4.89631 3.45947 5.20573V13.3724C3.45947 13.6818 3.58239 13.9786 3.80118 14.1974C4.01997 14.4161 4.31672 14.5391 4.62614 14.5391H12.7928C13.1022 14.5391 13.399 14.4161 13.6178 14.1974C13.8366 13.9786 13.9595 13.6818 13.9595 13.3724V9.28906" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M12.4284 3.82337C12.6605 3.59131 12.9753 3.46094 13.3034 3.46094C13.6316 3.46094 13.9464 3.59131 14.1784 3.82337C14.4105 4.05544 14.5409 4.37019 14.5409 4.69837C14.5409 5.02656 14.4105 5.34131 14.1784 5.57337L8.92086 10.8315C8.78234 10.9699 8.61123 11.0712 8.42327 11.1261L6.74736 11.6161C6.69716 11.6308 6.64395 11.6316 6.5933 11.6187C6.54265 11.6057 6.49642 11.5793 6.45945 11.5424C6.42248 11.5054 6.39613 11.4592 6.38315 11.4085C6.37017 11.3579 6.37105 11.3047 6.38569 11.2545L6.87569 9.57854C6.93083 9.39074 7.03234 9.21982 7.17086 9.08154L12.4284 3.82337Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </IconButton>
+                                    <IconButton ariaLabel="Duplicate template" onClick={() => handleDuplicate(template)}>
+                                        <DuplicateIcon />
+                                    </IconButton>
+                                    <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
+                                            <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
+                                            <path d="M13.9582 4.03906L4.0415 7.2474L7.83317 8.9974L11.9165 6.08073L8.99984 10.1641L10.7498 13.9557L13.9582 4.03906Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </IconButton>
+                                    <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+                                        </svg>
+                                    </IconButton>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            <div className="divide-y divide-[#E8F0FF] xl:hidden">
-                {templates.map((template) => (
+                    <div className="divide-y divide-[#E8F0FF] xl:hidden">
+                        {transformedTemplates.map((template) => (
                     <div key={template.id} className="space-y-4 px-5 py-6 sm:px-6">
                         <div className="space-y-2">
                             <div>
@@ -262,23 +919,94 @@ function TemplatesView({ templates, statusClasses }) {
                         <div className="flex items-center justify-between border-t border-[#E8F0FF] pt-4">
                             <span className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">Actions</span>
                             <div className="flex items-center gap-2 text-[#5061A4]">
-                                <IconButton ariaLabel="Preview template">
+                                <IconButton ariaLabel="Preview template" onClick={() => handlePreview(template)}>
                                     <EyeIcon />
                                 </IconButton>
-                                <IconButton ariaLabel="Edit template">
+                                <IconButton ariaLabel="Edit template" onClick={() => handleEdit(template)}>
                                     <EditIcon />
                                 </IconButton>
-                                <IconButton ariaLabel="Duplicate template">
+                                <IconButton ariaLabel="Duplicate template" onClick={() => handleDuplicate(template)}>
                                     <DuplicateIcon />
                                 </IconButton>
-                                <IconButton ariaLabel="Send template">
+                                <IconButton ariaLabel="Send template" onClick={() => handleSend(template)}>
                                     <SendIcon />
+                                </IconButton>
+                                <IconButton ariaLabel="Delete template" onClick={() => handleDelete(template)}>
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+                                    </svg>
                                 </IconButton>
                             </div>
                         </div>
                     </div>
-                ))}
-            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* Duplicate Modal */}
+            {showDuplicateModal && (
+                <DuplicateModal
+                    template={selectedTemplate}
+                    onClose={() => {
+                        setShowDuplicateModal(false);
+                        setSelectedTemplate(null);
+                    }}
+                    onSubmit={handleDuplicateSubmit}
+                />
+            )}
+
+            {/* Send Email Modal */}
+            {showSendModal && selectedTemplate && (
+                <SendEmailModal
+                    template={selectedTemplate}
+                    onClose={() => {
+                        setShowSendModal(false);
+                        setSelectedTemplate(null);
+                    }}
+                    onSend={async (emailData) => {
+                        const success = await onSend(selectedTemplate.id, emailData);
+                        if (success) {
+                            setShowSendModal(false);
+                            setSelectedTemplate(null);
+                        }
+                    }}
+                />
+            )}
+
+            {/* Preview Modal */}
+            {showPreviewModal && selectedTemplate && (
+                <PreviewModal
+                    template={selectedTemplate}
+                    onClose={() => {
+                        setShowPreviewModal(false);
+                        setSelectedTemplate(null);
+                    }}
+                />
+            )}
+
+            {/* Create/Edit Modal */}
+            {showEditModal && (
+                <TemplateFormModal
+                    template={selectedTemplate}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        setSelectedTemplate(null);
+                    }}
+                    onSubmit={async (templateData) => {
+                        let success = false;
+                        if (selectedTemplate) {
+                            success = await onUpdate(selectedTemplate.id, templateData);
+                        } else {
+                            success = await onCreate(templateData);
+                        }
+                        if (success) {
+                            setShowEditModal(false);
+                            setSelectedTemplate(null);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }
