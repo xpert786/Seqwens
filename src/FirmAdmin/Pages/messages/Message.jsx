@@ -271,6 +271,14 @@ const Messages = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
+  // Get first character from name
+  const getFirstChar = (name) => {
+    if (!name) return '?';
+    const trimmed = name.trim();
+    if (trimmed.length === 0) return '?';
+    return trimmed[0].toUpperCase();
+  };
+
   // Summary cards data
   const summaryCards = [
     {
@@ -487,7 +495,7 @@ const Messages = () => {
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
-                          {getInitials(conv.client_name || conv.assigned_staff_names?.[0] || 'All Staff')}
+                          {getFirstChar(conv.client_name || conv.assigned_staff_names?.[0] || 'All Staff')}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function FirmManagement() {
     const PAGE_SIZE = 5;
@@ -65,6 +67,7 @@ export default function FirmManagement() {
     const [assigningClient, setAssigningClient] = useState(false);
     const [assignClientError, setAssignClientError] = useState(null);
     const [assignClientSuccess, setAssignClientSuccess] = useState(false);
+    const pdfRef = useRef(null);
 
     // Fetch firms data from API
     const fetchFirms = async () => {
@@ -178,6 +181,61 @@ export default function FirmManagement() {
             hour: 'numeric',
             minute: '2-digit'
         });
+    };
+
+    const handleExportReport = async () => {
+        if (!pdfRef.current) {
+            alert('No data available to export.');
+            return;
+        }
+        
+        if (firms.length === 0) {
+            alert('No firms available to export.');
+            return;
+        }
+        
+        try {
+            const canvas = await html2canvas(pdfRef.current, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+            });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+            const imgX = (pdfWidth - imgWidth * ratio) / 2;
+            const imgY = 0;
+            
+            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            
+            // Generate PDF blob
+            const pdfBlob = pdf.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            
+            // Open PDF in new window first
+            window.open(pdfUrl, '_blank');
+            
+            // Then trigger download
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = `firms-report-${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up the blob URL after a delay
+            setTimeout(() => {
+                URL.revokeObjectURL(pdfUrl);
+            }, 100);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Failed to generate PDF. Please try again.');
+        }
     };
 
     const toggleDropdown = (firmId) => {
@@ -474,6 +532,58 @@ export default function FirmManagement() {
 
     return (
         <div className="min-h-screen bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
+            {/* Hidden PDF Content */}
+            <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
+                <div style={{ marginBottom: '20px' }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#3B4A66', marginBottom: '10px' }}>
+                        Firms Report
+                    </h1>
+                    <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '5px' }}>
+                        Generated on: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#6B7280' }}>
+                        Total Firms: {firms.length}
+                    </p>
+                </div>
+                
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+                    <thead>
+                        <tr style={{ backgroundColor: '#F3F4F6', borderBottom: '2px solid #E5E7EB' }}>
+                            <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Firm</th>
+                            <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Plan</th>
+                            <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Status</th>
+                            <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Staff</th>
+                            <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Revenue</th>
+                            <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {firms.map((firm, index) => (
+                            <tr key={`${firm.id}-${index}`} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                                    <div style={{ fontWeight: '600' }}>{firm.name || firm.firm_name || firm.admin_user_name || 'Unnamed Firm'}</div>
+                                    <div style={{ fontSize: '10px', color: '#6B7280' }}>{firm.admin_user_email || firm.owner_email || 'No contact email'}</div>
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                                    {formatPlan(firm.subscription_plan)}
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                                    {formatStatus(firm.status)}
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                                    {firm.staff_count ?? 0}
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                                    {formatCurrency(firm.monthly_fee)}/month
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                                    {formatDate(firm.created_at) || '—'}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
             <div className="mx-auto flex w-full flex-col gap-6">
                 {/* Header Section with Action Buttons */}
                 <div className="flex flex-col items-start justify-between gap-3 rounded-2xl  px-6 py-5 sm:flex-row sm:items-center">
@@ -495,6 +605,7 @@ export default function FirmManagement() {
                             Import Report
                         </button>
                         <button
+                            onClick={handleExportReport}
                             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             style={{ borderRadius: '8px' }}
                         >
@@ -962,8 +1073,16 @@ export default function FirmManagement() {
             {/* Add New Firm Modal */}
             {showAddFirmModal && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                    <div className="absolute inset-0 bg-transparent"></div>
-                    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 my-12" style={{ borderRadius: '12px' }}>
+                    <div 
+                        className="absolute inset-0" 
+                        style={{ backgroundColor: 'var(--Color-overlay, #00000099)' }}
+                        onClick={handleCloseModal}
+                    ></div>
+                    <div 
+                        className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 my-12" 
+                        style={{ borderRadius: '12px' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         {/* Modal Header */}
                         <div className="flex justify-between items-start p-3">
                             <div>

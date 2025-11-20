@@ -232,11 +232,11 @@ export default function DashboardFirst() {
   // Show loading state
   if (loading) {
     return (
-      <div className="p-4 d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+      <div className="p-4 sm:p-6 flex justify-center items-center min-h-[400px]">
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <span className="ms-2">Loading dashboard...</span>
+        <span className="ml-2">Loading dashboard...</span>
       </div>
     );
   }
@@ -244,12 +244,12 @@ export default function DashboardFirst() {
   // Show error state
   if (error) {
     return (
-      <div className="p-4">
-        <div className="alert alert-danger" role="alert">
-          <h5>Error Loading Dashboard</h5>
-          <p>{error}</p>
+      <div className="p-4 sm:p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert">
+          <h5 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h5>
+          <p className="text-red-700 mb-3">{error}</p>
           <button
-            className="btn btn-outline-danger"
+            className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -260,93 +260,47 @@ export default function DashboardFirst() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 sm:p-6 lg:p-8">
 
-      <div
-        className="p-4 rounded mb-4 position-relative"
-        style={{ backgroundColor: "#FFF3E1", border: "1px solid #FFD6A5" }}
-      >
-
-        <div
-          className="position-absolute top-0 end-0 m-3 text-end"
-          style={{ lineHeight: 1.1 }}
-        >
-          <div
-            style={{
-              color: "#3B4A66",
-              fontSize: "18px",
-              fontWeight: 600,
-            }}
-          >
+      <div className="p-4 sm:p-6 rounded-lg mb-4 sm:mb-6 relative bg-[#FFF3E1] border border-[#FFD6A5]">
+        <div className="absolute top-0 right-0 m-3 sm:m-4 text-right leading-tight">
+          <div className="text-[#3B4A66] text-base sm:text-lg font-semibold">
             {completionPercentage}%
           </div>
-          <div
-            style={{
-              fontSize: "15px",
-              color: "#6B7280",
-            }}
-          >
+          <div className="text-sm sm:text-base text-[#6B7280]">
             Complete
           </div>
         </div>
 
-        <h5
-          className="mb-1"
-          style={{ color: "#3B4A66", fontSize: "28px", fontWeight: 500, fontFamily: "BasisGrotesquePro" }}
-        >
+        <h5 className="mb-2 sm:mb-3 text-[#3B4A66] text-xl sm:text-2xl lg:text-[28px] font-medium font-[BasisGrotesquePro] pr-16 sm:pr-20">
           Welcome, {dashboardData?.data?.user_info?.first_name || 'User'}! 👋
         </h5>
-        <p className="text-muted" style={{ fontSize: "18px", fontFamily: "BasisGrotesquePro" }}>
+        <p className="text-gray-600 text-base sm:text-lg font-[BasisGrotesquePro] mb-3 sm:mb-4">
           Let's get your tax dashboard set up. You're making great progress!
         </p>
-        <div className="progress" style={{ height: "8px" }}>
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-2 sm:mb-3">
           <div
-            className="progress-bar"
+            className="bg-[#F56D2D] h-2 rounded-full transition-all duration-300"
             role="progressbar"
-            style={{
-              width: `${completionPercentage}%`,
-              backgroundColor: "#F56D2D",
-            }}
+            style={{ width: `${completionPercentage}%` }}
           ></div>
         </div>
 
-        <div
-          className="mt-2 text-end"
-          style={{
-            color: "#3B4A66",
-            fontSize: "16px",
-            fontWeight: 500,
-            fontFamily: "BasisGrotesquePro"
-          }}
-        >
+        <div className="mt-2 text-right text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro]">
           {dashboardData?.data?.profile_completion?.completed_steps || completedCount} of {dashboardData?.data?.profile_completion?.total_steps || setupTasks.length} setup tasks completed
         </div>
       </div>
 
       {/* Setup Tasks */}
-      <div className="bg-white rounded  p-4 mb-4">
-        <h6
-          style={{
-            color: "#3B4A66",
-            fontSize: "25px",
-            fontWeight: 500,
-            fontFamily: "BasisGrotesquePro"
-          }}
-        >
+      <div className="bg-white rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <h6 className="text-[#3B4A66] text-xl sm:text-2xl font-medium font-[BasisGrotesquePro] mb-2">
           Setup Tasks
         </h6>
-        <p
-          style={{
-            color: "#4B5563",
-            fontSize: "16px",
-            fontWeight: 400,
-            fontFamily: "BasisGrotesquePro"
-          }}
-        >
+        <p className="text-[#4B5563] text-sm sm:text-base font-normal font-[BasisGrotesquePro] mb-4">
           Complete these steps to get the most out of your dashboard
         </p>
 
-        <ul className="list-group">
+        <ul className="space-y-0">
           {setupTasks.map((task, idx) => {
             const status = task.status;
             const buttonText = getButtonText(task);
@@ -354,41 +308,24 @@ export default function DashboardFirst() {
             return (
               <li
                 key={idx}
-                className="list-group-item border-0 px-0 py-3 d-flex align-items-start justify-content-between"
-                style={{
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  if (status !== "complete") {
-                    e.currentTarget.style.backgroundColor = '#f8f9fa';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
+                className={`border-0 px-0 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer transition-colors ${status !== "complete" ? "hover:bg-gray-50" : ""
+                  } ${idx !== setupTasks.length - 1 ? "border-b border-gray-200" : ""}`}
                 onClick={() => handleTaskClick(task)}
               >
-                <div
-                  className="d-flex gap-3 flex-grow-1"
-                  style={{ cursor: 'pointer' }}
-                >
-                  {getTaskIcon(task.title)}
-                  <div className="flex-grow-1">
-                    <h6 className="mb-1" style={{ color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
+                <div className="flex gap-3 flex-grow-1 w-full sm:w-auto">
+                  <div className="flex-shrink-0">
+                    {getTaskIcon(task.title)}
+                  </div>
+                  <div className="flex-grow-1 min-w-0">
+                    <h6 className="mb-1 text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro]">
                       {task.title}
                     </h6>
-                    <small className="text-muted" style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66" }}>{task.description}</small>
+                    <small className="text-[#3B4A66] text-xs sm:text-sm font-[BasisGrotesquePro]">{task.description}</small>
                   </div>
                 </div>
                 <button
-                  className={buttonClass}
+                  className={`${buttonClass} min-w-[100px] sm:min-w-[120px] font-medium font-[BasisGrotesquePro] flex-shrink-0`}
                   onClick={(e) => handleButtonClick(e, task)}
-                  style={{
-                    minWidth: '100px',
-                    fontWeight: 500,
-                    fontFamily: "BasisGrotesquePro"
-                  }}
                   disabled={status === "complete"}
                 >
                   {buttonText}
@@ -400,36 +337,32 @@ export default function DashboardFirst() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded  p-4 mt-4">
-        <h6
-          className="mb-1"
-          style={{ color: "#3B4A66", fontSize: "18px", fontWeight: 600, fontFamily: "BasisGrotesquePro" }}
-        >
+      <div className="bg-white rounded-lg p-4 sm:p-6 mt-4 sm:mt-6">
+        <h6 className="mb-1 text-[#3B4A66] text-base sm:text-lg font-semibold font-[BasisGrotesquePro]">
           Quick Actions
         </h6>
-        <p className="text-muted" style={{ fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+        <p className="text-gray-600 text-xs sm:text-sm font-[BasisGrotesquePro] mb-4">
           Common tasks you can do right now
         </p>
-        <div className="row">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActions.map((action, idx) => (
-            <div key={idx} className="col-md-3 col-sm-6 mb-3">
-              <div className="quick-card p-3 rounded border h-100">
+            <div key={idx} className="mb-3 sm:mb-0">
+              <div className="p-3 sm:p-4 rounded-lg border border-[#E0E6ED] bg-[#F9FBFF] h-full flex flex-col justify-between">
                 <div>
-                  <div className="quick-icon-wrapper text-info">
+                  <div className="text-[40px] text-cyan-500 mb-4 sm:mb-6 font-[BasisGrotesquePro]">
                     {action.icon}
                   </div>
-
-                  <h6 className="quick-card-title">{action.title}</h6>
+                  <h6 className="text-sm sm:text-base text-[#3B4A66] font-medium font-[BasisGrotesquePro] mb-2">
+                    {action.title}
+                  </h6>
                 </div>
-
-                <button 
-                  className="btn btn-sm w-100 quick-card-btn"
+                <button
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-[#E0E6ED] text-[#3B4A66] font-medium font-[BasisGrotesquePro] rounded hover:bg-gray-50 transition-colors"
                   onClick={() => navigate(action.route)}
                 >
                   {action.button}
                 </button>
               </div>
-
             </div>
           ))}
         </div>

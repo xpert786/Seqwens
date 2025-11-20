@@ -22,53 +22,38 @@ const priorityBadgeClass = {
 
 // ------------------- Helper Function ------------------------
 const getIconByType = (iconType, priority = "low") => {
-  const iconWrapperStyle = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: "100%"
-  };
-
-  // Consistent icon size style for all icons
-  const iconSvgStyle = {
-    width: "28px",
-    height: "28px",
-    minWidth: "28px",
-    minHeight: "28px",
-    flexShrink: 0
-  };
+  const iconClasses = "flex items-center justify-center w-full h-full";
+  const iconSvgClasses = "w-7 h-7 min-w-[28px] min-h-[28px] flex-shrink-0";
 
   switch (iconType) {
     case "document":
       return (
-        <div style={iconWrapperStyle}>
-          <FileIcon style={iconSvgStyle} />
+        <div className={iconClasses}>
+          <FileIcon className={iconSvgClasses} />
         </div>
       );
     case "signature":
       return (
-        <div style={iconWrapperStyle}>
-          <SignatureIcon style={iconSvgStyle} />
+        <div className={iconClasses}>
+          <SignatureIcon className={iconSvgClasses} />
         </div>
       );
     case "message":
       return (
-        <div style={iconWrapperStyle}>
-          <MessageIcon style={iconSvgStyle} />
+        <div className={iconClasses}>
+          <MessageIcon className={iconSvgClasses} />
         </div>
       );
     case "completed":
       return (
-        <div style={iconWrapperStyle}>
-          <CompletedIcon style={iconSvgStyle} />
+        <div className={iconClasses}>
+          <CompletedIcon className={iconSvgClasses} />
         </div>
       );
     default:
       return (
-        <div style={iconWrapperStyle}>
-
-          <DateIcon style={iconSvgStyle} />
+        <div className={iconClasses}>
+          <DateIcon className={iconSvgClasses} />
         </div>
       );
   }
@@ -78,29 +63,34 @@ const getIconByType = (iconType, priority = "low") => {
 const TaskCard = ({ title, due, status, icon, iconType, priority, isRecentActivity = false }) => {
   // Use provided icon or generate from iconType - same size for both sections
   const iconElement = icon || (
-    <span className="icon-circle">
+    <span className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
       {getIconByType(iconType, priority)}
     </span>
   );
 
   // Use priority for badge if status is not provided
   const badgeStatus = status || priority || "low";
+  const badgeColorMap = {
+    high: "bg-red-500",
+    medium: "bg-yellow-400",
+    low: "bg-green-500"
+  };
 
   return (
-    <div className="rounded-3 p-3 car">
-      <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-        <div className="d-flex align-items-start gap-2" style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ flexShrink: 0 }}>
+    <div className="rounded-xl p-3 border border-[#E8F0FF] bg-white">
+      <div className="flex justify-between items-start gap-2 flex-wrap">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          <div className="flex-shrink-0">
             {iconElement}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="task-title">{title}</div>
-            <div className="task-due">{due}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm sm:text-base font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-1">{title}</div>
+            <div className="text-xs sm:text-sm text-[#4B5563] font-[BasisGrotesquePro]">{due}</div>
           </div>
         </div>
         {!isRecentActivity && (
           <span
-            className={`badge bg-${priorityBadgeClass[badgeStatus] || priorityBadgeClass.low} rounded-pill text-capitalize task-badge`}
+            className={`px-2 py-1 text-xs rounded-full text-white capitalize ${badgeColorMap[badgeStatus] || badgeColorMap.low}`}
           >
             {badgeStatus}
           </span>
@@ -206,28 +196,28 @@ export default function Dashboard() {
   const paginatedActivity = recentActivityTasks.slice(activityStartIndex, activityEndIndex);
 
   return (
-    <div className="container-fluid px-2 px-md-2">
+    <div className="w-full px-2 sm:px-4 lg:px-6">
       <DashboardWidgets dashboardData={dashboardData} loading={loading} />
 
-      <div className="row mt-1 g-3 px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mt-2 px-2 sm:px-4">
         {/* What's Due Section */}
-        <div className="col-12 col-md-6 ">
-          <div className="card custom-card p-3 p-md-4 rounded-3">
-            <div className="mb-3">
-              <h1 className="section-title mb-1">Tasks</h1>
-              <p className="section-subtitle m-0">Your latest interactions</p>
+        <div className="w-full">
+          <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm">
+            <div className="mb-3 sm:mb-4">
+              <h3 className="text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro] mb-1">Tasks</h3>
+              <p className="text-[#4B5563] text-xs sm:text-sm font-normal font-[BasisGrotesquePro] m-0">Your latest interactions</p>
             </div>
             {loading ? (
-              <div className="text-center py-4">
-                <p>Loading...</p>
+              <div className="text-center py-8">
+                <p className="text-gray-600">Loading...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-4">
-                <p className="text-danger">{error}</p>
+              <div className="text-center py-8">
+                <p className="text-red-600">{error}</p>
               </div>
             ) : whatsDueTasks.length > 0 ? (
               <>
-                <div className="d-flex flex-column gap-3">
+                <div className="flex flex-col gap-3">
                   {paginatedTasks.map((task, i) => (
                     <TaskCard key={task.id || i} {...task} />
                   ))}
@@ -245,31 +235,31 @@ export default function Dashboard() {
                 )}
               </>
             ) : (
-              <div className="text-center py-4">
-                <p className="text-muted">No tasks due at this time</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">No tasks due at this time</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Recent Activity Section */}
-        <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-4">
-            <div className="mb-3">
-              <h1 className="section-title mb-1">Recent Activity</h1>
-              <p className="section-subtitle m-0">Your latest interactions</p>
+        <div className="w-full">
+          <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm">
+            <div className="mb-3 sm:mb-4">
+              <h3 className="text-[#3B4A66] text-sm sm:text-base font-medium font-[BasisGrotesquePro] mb-1">Recent Activity</h3>
+              <p className="text-[#4B5563] text-xs sm:text-sm font-normal font-[BasisGrotesquePro] m-0">Your latest interactions</p>
             </div>
             {loading ? (
-              <div className="text-center py-4">
-                <p>Loading...</p>
+              <div className="text-center py-8">
+                <p className="text-gray-600">Loading...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-4">
-                <p className="text-danger">{error}</p>
+              <div className="text-center py-8">
+                <p className="text-red-600">{error}</p>
               </div>
             ) : recentActivityTasks.length > 0 ? (
               <>
-                <div className="d-flex flex-column gap-3">
+                <div className="flex flex-col gap-3">
                   {paginatedActivity.map((activity, i) => (
                     <TaskCard key={activity.id || i} {...activity} isRecentActivity={true} />
                   ))}
@@ -287,13 +277,13 @@ export default function Dashboard() {
                 )}
               </>
             ) : (
-              <div className="text-center py-4">
-                <p className="text-muted">No recent activity</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">No recent activity</p>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

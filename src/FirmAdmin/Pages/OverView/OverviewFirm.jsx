@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Icon, DownsIcon,SceheIcon,CrossesIcon} from "../../Components/icons";
+import jsPDF from "jspdf";
+import { autoTable } from "jspdf-autotable";
 import {
   AreaChart,
   Area,
@@ -71,6 +73,150 @@ export default function FirmAdminDashboard() {
   });
   const [scheduleFrequency, setScheduleFrequency] = useState('Weekly');
   const [recipients, setRecipients] = useState('admins@firm.com');
+
+  // Export Dashboard Report to PDF
+  const exportDashboardToPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Firm Admin Dashboard Report", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 10;
+
+      // Report Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const reportDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      doc.text(`Generated on: ${reportDate}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 5;
+      doc.text(`Date Range: ${dateRange}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 15;
+
+      // Revenue Summary
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Revenue Summary", 14, yPosition);
+      yPosition += 8;
+
+      const revenueSummary = revenueData.map(item => [
+        item.month,
+        `$${item.revenue.toLocaleString()}`,
+        `$${item.target.toLocaleString()}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Month", "Revenue", "Target"]],
+        body: revenueSummary,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Revenue Breakdown
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Revenue Breakdown by Category", 14, yPosition);
+      yPosition += 8;
+
+      const breakdownSummary = breakdownData.map(item => [
+        item.category,
+        `$${item.amount.toLocaleString()}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Category", "Amount"]],
+        body: breakdownSummary,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Client Engagement
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Client Engagement Funnel", 14, yPosition);
+      yPosition += 8;
+
+      const engagementSummary = clientEngagementData.map(item => [
+        item.stage,
+        `${item.percentage}%`,
+        item.value.toString()
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Stage", "Percentage", "Value"]],
+        body: engagementSummary,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Compliance Status
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Compliance Status", 14, yPosition);
+      yPosition += 8;
+
+      const complianceSummary = complianceData.map(item => [
+        item.status,
+        item.score,
+        item.badge
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Status", "Score", "Risk Level"]],
+        body: complianceSummary,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 }
+      });
+
+      // Save the PDF
+      const fileName = `Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert(`Error generating PDF: ${error.message}`);
+    }
+  };
 
   // Custom tooltip for revenue chart
   const RevenueTooltip = ({ active, payload, label }) => {
@@ -388,7 +534,10 @@ export default function FirmAdminDashboard() {
           >
             Customize
           </button>
-          <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+          <button 
+            onClick={exportDashboardToPDF}
+            className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
+          >
             <DownsIcon />
             Export Report
           </button>

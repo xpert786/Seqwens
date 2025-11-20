@@ -53,14 +53,16 @@ export default function ArchivedFilesPage() {
         {cardData.map((item, index) => (
           <div className="col-md-3 col-sm-6" key={index}>
             <div className="stat-card">
-              <div className="d-flex justify-content-between align-items-start">
+              <div className="d-flex justify-content-start align-items-start">
                 <div className="stat-icon" style={{ color: item.color, fontSize: 18 }}>
                   {item.icon}
                 </div>
-                <div className="stat-count" style={{ color: "#3B4A66", fontWeight: 600 }}>{item.count}</div>
+              </div>
+              <div className="stat-count-wrapper">
+                <div className="stat-count">{item.count}</div>
               </div>
               <div className="mt-2">
-                <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                <p className="mb-0 text-muted small fw-semibold text-center">{item.label}</p>
               </div>
             </div>
           </div>

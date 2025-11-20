@@ -868,23 +868,67 @@ export default function OfficeOverview() {
 
                                 {/* Office Performance - Map */}
                                 <div className="bg-white rounded-lg p-6 shadow-sm">
-                                    <h6 className="text-base font-semibold text-gray-900 mb-4">Office Performance</h6>
+                                    <h6 className="text-base font-semibold text-gray-900 mb-4">Office Performance Map</h6>
                                     <div className="relative h-64 bg-gray-100 rounded-lg overflow-hidden">
-                                        {/* Placeholder for map - in real app, use a map library like Google Maps or Mapbox */}
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="text-center">
-                                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-2 text-gray-400">
-                                                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#9CA3AF" />
-                                                </svg>
-                                                <p className="text-sm text-gray-500">Map View</p>
-                                                <p className="text-xs text-gray-400 mt-1">New York Area</p>
-                                            </div>
-                                        </div>
-                                        {/* Map legend */}
-                                        <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                            <span className="text-xs text-gray-700">Offices</span>
-                                        </div>
+                                        {(() => {
+                                            const address = officeData?.full_address || 
+                                                (officeData?.street_address || officeData?.city || officeData?.state || officeData?.zip_code
+                                                    ? `${officeData.street_address || ''}, ${officeData.city || ''}, ${officeData.state || ''} ${officeData.zip_code || ''}`.trim().replace(/^,\s*|,\s*$/g, '')
+                                                    : null);
+                                            
+                                            if (address) {
+                                                // Construct Google Maps embed URL
+                                                // Note: For production, add VITE_GOOGLE_MAPS_API_KEY to your .env file
+                                                const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+                                                const mapsUrl = googleMapsApiKey
+                                                    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${encodeURIComponent(address)}`
+                                                    : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+                                                
+                                                return (
+                                                    <>
+                                                        <iframe
+                                                            width="100%"
+                                                            height="100%"
+                                                            style={{ border: 0 }}
+                                                            loading="lazy"
+                                                            allowFullScreen
+                                                            referrerPolicy="no-referrer-when-downgrade"
+                                                            src={mapsUrl}
+                                                            title="Office Location Map"
+                                                        />
+                                                        <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-[#3AD6F2]"></div>
+                                                            <span className="text-xs text-gray-700 font-medium">
+                                                                {officeData.name || 'Office Location'}
+                                                            </span>
+                                                        </div>
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="absolute top-4 right-4 bg-white px-3 py-2 rounded-lg shadow-md text-xs text-[#3AD6F2] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                                                        >
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#3AD6F2" />
+                                                            </svg>
+                                                            Open in Maps
+                                                        </a>
+                                                    </>
+                                                );
+                                            }
+                                            
+                                            return (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="text-center">
+                                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-2 text-gray-400">
+                                                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#9CA3AF" />
+                                                        </svg>
+                                                        <p className="text-sm text-gray-500">Map View</p>
+                                                        <p className="text-xs text-gray-400 mt-1">Address not available</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>

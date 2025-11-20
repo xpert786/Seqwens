@@ -207,7 +207,7 @@ const InvoicesMain = () => {
 
 
       <div>
-        {!loading && (activeTab === 'outstanding' ? <OutstandingTab invoices={invoices} /> : <PaymentHistoryTab invoices={invoices} />)}
+        {!loading && (activeTab === 'outstanding' ? <OutstandingTab invoices={invoices} summary={summary} /> : <PaymentHistoryTab invoices={invoices} />)}
       </div>
     </div>
   );

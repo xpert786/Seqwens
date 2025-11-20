@@ -9,6 +9,8 @@ import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import BulkImportModal from './BulkImportModal';
 import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
+import jsPDF from "jspdf";
+import { autoTable } from "jspdf-autotable";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -616,6 +618,195 @@ export default function StaffManagement() {
       })
     : null;
 
+  // Export Staff List to PDF
+  const exportStaffToPDF = async () => {
+    try {
+      if (staffData.length === 0 && activeFilter !== 'pending_invites') {
+        toast.info("No staff members to export", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      // Fetch all staff members (not just current page)
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+      
+      if (activeFilter && activeFilter !== 'all') {
+        queryParams.append('status', activeFilter);
+      } else {
+        queryParams.append('status', 'all');
+      }
+
+      if (searchTerm.trim()) {
+        queryParams.append('search', searchTerm.trim());
+      }
+
+      if (roleFilter && roleFilter !== 'all') {
+        queryParams.append('role', roleFilter);
+      }
+
+      if (performanceFilter && performanceFilter !== 'all') {
+        queryParams.append('performance', performanceFilter);
+      }
+
+      const url = `${API_BASE_URL}/user/firm-admin/staff/tax-preparers/?${queryParams.toString()}`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      let allStaff = staffData;
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data && result.data.staff_members) {
+          allStaff = result.data.staff_members;
+        }
+      }
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Staff Management Report", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 10;
+
+      // Report Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const reportDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      doc.text(`Generated on: ${reportDate}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 15;
+
+      // Summary
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Summary", 14, yPosition);
+      yPosition += 8;
+
+      const activeCount = allStaff.filter(s => s.status?.value === 'active').length;
+      const inactiveCount = allStaff.filter(s => s.status?.value === 'inactive').length;
+      const performances = allStaff
+        .map((staff) => staff.performance?.efficiency_percentage || 0)
+        .filter((p) => p > 0);
+      const avgPerformance = performances.length > 0
+        ? (performances.reduce((a, b) => a + b, 0) / performances.length).toFixed(1)
+        : 0;
+
+      const summaryData = [
+        ["Total Staff", allStaff.length.toString()],
+        ["Active Staff", activeCount.toString()],
+        ["Inactive Staff", inactiveCount.toString()],
+        ["Average Performance", `${avgPerformance}%`],
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Metric", "Value"]],
+        body: summaryData,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+          0: { cellWidth: 100 },
+          1: { cellWidth: 80 }
+        }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Staff Table
+      if (yPosition > pageHeight - 40) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`All Staff Members (${allStaff.length})`, 14, yPosition);
+      yPosition += 8;
+
+      // Prepare table data
+      const tableData = allStaff.map((staff) => {
+        const mapped = mapStaffData(staff);
+        return [
+          mapped.name || 'N/A',
+          mapped.email || 'N/A',
+          mapped.phone || 'N/A',
+          mapped.role || 'N/A',
+          mapped.status || 'N/A',
+          mapped.clients?.toString() || '0',
+          `${mapped.efficiency}%`,
+          mapped.hireDate || 'N/A',
+          mapped.revenue || '$0',
+        ];
+      });
+
+      // Create table
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Name", "Email", "Phone", "Role", "Status", "Clients", "Performance", "Hire Date", "Revenue"]],
+        body: tableData,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 7 },
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 15 },
+          6: { cellWidth: 20 },
+          7: { cellWidth: 25 },
+          8: { cellWidth: 20 }
+        },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        didDrawPage: (data) => {
+          // Add page numbers
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: "center" }
+          );
+        }
+      });
+
+      // Open PDF in new window for preview/download
+      const fileName = `Staff_Management_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.output('dataurlnewwindow', { filename: fileName });
+      toast.success("PDF opened in new window. You can download it from there.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error(`Error generating PDF: ${error.message}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   return (
     <>
       <BulkImportModal
@@ -643,7 +834,7 @@ export default function StaffManagement() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             {/* Top Row - 3 buttons */}
             <div className="flex flex-wrap items-center gap-2">
-              <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+              <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
                 <PowersIcon />
                 Performance Report
               </button>
@@ -667,7 +858,10 @@ export default function StaffManagement() {
 
             {/* Bottom Row - 1 button */}
             <div className="flex items-center">
-              <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+              <button 
+                onClick={exportStaffToPDF}
+                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+              >
                 <DownsIcon />
                 Export Report
               </button>

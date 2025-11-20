@@ -194,7 +194,7 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
               </span>
             ))}
 
-            {value && <h5 className="dashboard-card-value m-0">{value}</h5>}
+            {value && <span className="dashboard-card-value m-0" style={{ fontSize: '12px', fontWeight: '500', color: '#3B4A66' }}>{value}</span>}
           </div>
 
         </div>
