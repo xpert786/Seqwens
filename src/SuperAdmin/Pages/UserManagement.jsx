@@ -37,6 +37,11 @@ export default function UserManagement() {
     sendWelcomeEmail: true,
   });
 
+  // Client-side pagination for displaying user cards
+  const [userCardsCurrentPage, setUserCardsCurrentPage] = useState(1);
+  const [showAllUserCards, setShowAllUserCards] = useState(false);
+  const USER_CARDS_PER_PAGE = 3;
+
   const pageSize = 10;
   const getStatusBadgeClass = (status) => {
     const normalized = (status || '').toLowerCase();
@@ -57,6 +62,26 @@ export default function UserManagement() {
   const endItem = pagination.total_count
     ? Math.min(pagination.page * pagination.page_size, pagination.total_count)
     : 0;
+
+  // Client-side pagination logic for user cards
+  const totalUserCards = users.length;
+  const totalUserCardsPages = Math.ceil(totalUserCards / USER_CARDS_PER_PAGE);
+  const shouldShowUserCardsPagination = totalUserCards > USER_CARDS_PER_PAGE && !showAllUserCards;
+  const displayedUserCards = showAllUserCards
+    ? users
+    : users.slice((userCardsCurrentPage - 1) * USER_CARDS_PER_PAGE, userCardsCurrentPage * USER_CARDS_PER_PAGE);
+
+  const handleViewAllUserCards = (e) => {
+    e.preventDefault();
+    setShowAllUserCards(!showAllUserCards);
+    if (showAllUserCards) {
+      setUserCardsCurrentPage(1);
+    }
+  };
+
+  const handleUserCardsPageChange = (newPage) => {
+    setUserCardsCurrentPage(newPage);
+  };
 
   // Fetch users from API
   useEffect(() => {
@@ -100,6 +125,9 @@ export default function UserManagement() {
           ) {
             setCurrentPage(incomingPagination.page);
           }
+          // Reset client-side pagination when data changes
+          setUserCardsCurrentPage(1);
+          setShowAllUserCards(false);
         } else {
           throw new Error(response.message || 'Failed to fetch platform users');
         }
@@ -322,13 +350,26 @@ export default function UserManagement() {
       {!loading && !error && users.length > 0 && (
         <div className="bg-white rounded-lg border border-[#E8F0FF]">
           {/* Section Header */}
-          <div className="p-2  border-[#E8F0FF]">
-            <h6 className="text-xs font-semibold text-gray-800 mb-0 uppercase tracking-wide">
-              Platform Users ({pagination.total_count})
-            </h6>
-            <p className="text-xs text-gray-600" style={{ fontSize: '11px' }}>
-              Internal administrators and support staff with access to the Seqwens platform.
-            </p>
+          <div className="p-2 border-[#E8F0FF]">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h6 className="text-xs font-semibold text-gray-800 mb-0 uppercase tracking-wide">
+                  Platform Users ({pagination.total_count})
+                </h6>
+                <p className="text-xs text-gray-600 mt-1" style={{ fontSize: '11px' }}>
+                  Internal administrators and support staff with access to the Seqwens platform.
+                </p>
+              </div>
+              {totalUserCards > USER_CARDS_PER_PAGE && (
+                <button
+                  onClick={handleViewAllUserCards}
+                  className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                  style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                >
+                  {showAllUserCards ? 'Show Less' : 'View All'}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Table Headers */}
@@ -344,7 +385,7 @@ export default function UserManagement() {
 
           {/* Users List */}
           <div className="space-y-2 p-2">
-            {users.map((user) => (
+            {displayedUserCards.map((user) => (
               <div
                 key={user.id}
                 role="button"
@@ -395,30 +436,32 @@ export default function UserManagement() {
             ))}
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 border-t border-[#E8F0FF]">
-            <p className="text-xs text-gray-500">
-              Showing {startItem} to {endItem} of {pagination.total_count ?? users.length} users
-            </p>
-            <div className="flex items-center gap-2">
+          {/* Client-side Pagination Controls */}
+          {shouldShowUserCardsPagination && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF]">
               <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage <= 1}
-                className="px-3 py-1 text-sm border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => handleUserCardsPageChange(userCardsCurrentPage - 1)}
+                disabled={userCardsCurrentPage === 1}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderRadius: '8px' }}
               >
                 Previous
               </button>
-              <span className="text-sm text-gray-600">
-                Page {pagination.page || currentPage} of {pagination.total_pages || 1}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  Page {userCardsCurrentPage} of {totalUserCardsPages}
+                </span>
+              </div>
               <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage >= (pagination.total_pages || 1)}
-                className="px-3 py-1 text-sm border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => handleUserCardsPageChange(userCardsCurrentPage + 1)}
+                disabled={userCardsCurrentPage === totalUserCardsPages}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderRadius: '8px' }}
               >
                 Next
               </button>
             </div>
-          </div>
+          )}
         </div>
       )}
 

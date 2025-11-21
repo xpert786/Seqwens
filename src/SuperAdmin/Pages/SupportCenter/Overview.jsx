@@ -146,6 +146,11 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
     const [assignError, setAssignError] = useState(null);
     const [hasFetchedAssignableAdmins, setHasFetchedAssignableAdmins] = useState(false);
 
+    // Client-side pagination for displaying ticket cards
+    const [ticketCardsCurrentPage, setTicketCardsCurrentPage] = useState(1);
+    const [showAllTicketCards, setShowAllTicketCards] = useState(false);
+    const TICKET_CARDS_PER_PAGE = 3;
+
     // Overview/analytics data from API
     const [overviewData, setOverviewData] = useState(() => createInitialOverviewData());
     const [overviewLoading, setOverviewLoading] = useState(true);
@@ -196,6 +201,12 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
         }
     }, [overviewData.charts?.category_distribution, selectedCategory]);
 
+    // Reset pagination when category changes
+    useEffect(() => {
+        setTicketCardsCurrentPage(1);
+        setShowAllTicketCards(false);
+    }, [selectedCategory]);
+
     useEffect(() => {
         const handleDocumentClick = (event) => {
             if (!event.target.closest('[data-ticket-action-menu="true"]')) {
@@ -223,12 +234,16 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     ? statusFilter.toLowerCase().replace(/\s+/g, "_")
                     : '';
 
+                const normalizedPriorityFilter = priorityFilter !== "All Priority"
+                    ? priorityFilter.toLowerCase()
+                    : '';
+
                 const response = await superAdminAPI.getSupportTickets(
                     1,
                     100, // Get a large number of tickets
                     searchTerm,
                     normalizedStatusFilter,
-                    priorityFilter !== "All Priority" ? priorityFilter : '',
+                    normalizedPriorityFilter,
                     categoryFilter
                 );
 
@@ -277,10 +292,16 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     });
 
                     setAllTickets(mappedTickets);
+                    // Reset client-side pagination when data changes
+                    setTicketCardsCurrentPage(1);
+                    setShowAllTicketCards(false);
                 } else {
                     console.log('❌ Failed to fetch support tickets:', response.message);
                     setError(response.message || 'Failed to fetch support tickets');
                     setAllTickets([]);
+                    // Reset pagination on error
+                    setTicketCardsCurrentPage(1);
+                    setShowAllTicketCards(false);
                 }
             } catch (err) {
                 console.error('💥 Error fetching support tickets:', err);
@@ -298,6 +319,9 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     bodyClassName: "custom-toast-body",
                 });
                 setAllTickets([]);
+                // Reset pagination on error
+                setTicketCardsCurrentPage(1);
+                setShowAllTicketCards(false);
             } finally {
                 setLoading(false);
                 console.log('🏁 Finished fetching support tickets');
@@ -315,6 +339,26 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
             const ticketCategory = ticket.categoryKey || ticket.rawData?.category?.toLowerCase() || ticket.category?.toLowerCase() || '';
             return ticketCategory === normalizedSelectedCategory;
         });
+
+    // Client-side pagination logic for ticket cards
+    const totalTicketCards = tickets.length;
+    const totalTicketCardsPages = Math.ceil(totalTicketCards / TICKET_CARDS_PER_PAGE);
+    const shouldShowTicketCardsPagination = totalTicketCards > TICKET_CARDS_PER_PAGE && !showAllTicketCards;
+    const displayedTicketCards = showAllTicketCards
+        ? tickets
+        : tickets.slice((ticketCardsCurrentPage - 1) * TICKET_CARDS_PER_PAGE, ticketCardsCurrentPage * TICKET_CARDS_PER_PAGE);
+
+    const handleViewAllTicketCards = (e) => {
+        e.preventDefault();
+        setShowAllTicketCards(!showAllTicketCards);
+        if (showAllTicketCards) {
+            setTicketCardsCurrentPage(1);
+        }
+    };
+
+    const handleTicketCardsPageChange = (newPage) => {
+        setTicketCardsCurrentPage(newPage);
+    };
 
     // Categories from API category_distribution
     const categoryDistribution = overviewData.charts?.category_distribution || [];
@@ -959,12 +1003,25 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
             <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
-                        Support Tickets ({tickets.length})
-                    </h4>
-                    <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
-                        All customer support requests and their current status
-                    </p>
+                    <div className="flex justify-between items-start mb-1">
+                        <div>
+                            <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
+                                Support Tickets ({tickets.length})
+                            </h4>
+                            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
+                                All customer support requests and their current status
+                            </p>
+                        </div>
+                        {totalTicketCards > TICKET_CARDS_PER_PAGE && (
+                            <button
+                                onClick={handleViewAllTicketCards}
+                                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                                style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                            >
+                                {showAllTicketCards ? 'Show Less' : 'View All'}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Category Filters */}
@@ -1059,14 +1116,14 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                         </div>
 
                         {/* Empty State */}
-                        {tickets.length === 0 && (
+                        {displayedTicketCards.length === 0 && (
                             <div className="text-center py-8">
                                 <p className="text-gray-500 font-[BasisGrotesquePro]">No tickets found</p>
                             </div>
                         )}
 
                         {/* Ticket Rows */}
-                        {tickets.map((ticket) => (
+                        {displayedTicketCards.map((ticket) => (
                             <div
                                 key={ticket.id}
                                 className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-shadow focus-within:ring-2 focus-within:ring-[#3B4A66]/40 focus-within:ring-offset-2"
@@ -1188,6 +1245,33 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Client-side Pagination Controls */}
+                {shouldShowTicketCardsPagination && (
+                    <div className="flex items-center justify-between px-4 py-3 mt-4 border-t border-[#E8F0FF]">
+                        <button
+                            onClick={() => handleTicketCardsPageChange(ticketCardsCurrentPage - 1)}
+                            disabled={ticketCardsCurrentPage === 1}
+                            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            Previous
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">
+                                Page {ticketCardsCurrentPage} of {totalTicketCardsPages}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => handleTicketCardsPageChange(ticketCardsCurrentPage + 1)}
+                            disabled={ticketCardsCurrentPage === totalTicketCardsPages}
+                            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            Next
+                        </button>
                     </div>
                 )}
             </div>

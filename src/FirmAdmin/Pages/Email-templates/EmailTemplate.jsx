@@ -4,7 +4,6 @@ import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import TabNavigation from '../Integrations/TabNavigation';
-import FoldersAndTagsView from './FoldersAndTagsView';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
 import CreateTemplateModal from './CreateTemplateModal';
@@ -214,7 +213,7 @@ const statusClasses = {
 
 export default function EmailTemplate() {
     const tabs = useMemo(
-        () => ['Templates', 'Folders and tags', 'Analytics', 'Email Settings'],
+        () => ['Email Templates', 'Analytics', 'Email Settings'],
         []
     );
     const [activeTab, setActiveTab] = useState(tabs[0]);
@@ -239,7 +238,7 @@ export default function EmailTemplate() {
     }, []);
 
     useEffect(() => {
-        if (activeTab === 'Templates') {
+        if (activeTab === 'Email Templates') {
             fetchTemplates();
         }
     }, [activeTab, fetchTemplates]);
@@ -319,7 +318,7 @@ export default function EmailTemplate() {
                 <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h4 className="text-2xl font-semibold text-[#1F2A55]">
-                            Templates
+                            Email Templates
                         </h4>
                         <p className="mt-1 text-sm text-[#6E7DAE]">
                             Create and manage email templates for client communication
@@ -356,7 +355,7 @@ export default function EmailTemplate() {
                 />
 
                 <section className="space-y-6">
-                    {activeTab === 'Templates' && (
+                    {activeTab === 'Email Templates' && (
                         <TemplatesView 
                             templates={templates} 
                             statusClasses={statusClasses}
@@ -371,10 +370,9 @@ export default function EmailTemplate() {
                             onGetTemplate={emailTemplateAPI.getTemplate}
                         />
                     )}
-                    {activeTab === 'Folders and tags' && <FoldersAndTagsView />}
                     {activeTab === 'Analytics' && <AnalyticsView />}
                     {activeTab === 'Email Settings' && <EmailSettingsView />}
-                    {!['Templates', 'Folders and tags', 'Analytics', 'Email Settings'].includes(activeTab) && (
+                    {!['Email Templates', 'Analytics', 'Email Settings'].includes(activeTab) && (
                         <EmptyTabState tab={activeTab} />
                     )}
                 </section>

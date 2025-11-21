@@ -1050,10 +1050,14 @@ export default function StaffManagement() {
                           </div>
                         </td>
                         <td className="px-4 py-4 w-[100px]">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${invite.is_expired
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-full ${invite.is_expired
                             ? 'bg-red-100 text-red-700'
                             : 'bg-[#F59E0B] text-white'
                             }`}>
+                            <span className={`w-2 h-2 rounded-full ${invite.is_expired
+                              ? 'bg-red-700'
+                              : 'bg-white'
+                              }`}></span>
                             {invite.is_expired ? 'Expired' : (invite.status_display || invite.status)}
                           </span>
                         </td>

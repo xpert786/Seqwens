@@ -1459,6 +1459,79 @@ export const firmAdminDashboardAPI = {
     const queryString = queryParams.toString();
     const endpoint = `/user/firm-admin/dashboard/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get account settings
+  // GET /seqwens/api/firm/account-settings/
+  getAccountSettings: async () => {
+    const endpoint = `/firm/account-settings/`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Update account settings
+  // PUT /seqwens/api/firm/account-settings/
+  // Accepts: { first_name, last_name, email, phone_number, profile_picture (file) }
+  updateAccountSettings: async (data) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+
+    // Add text fields
+    if (data.first_name !== undefined) {
+      formData.append('first_name', data.first_name);
+    }
+    if (data.last_name !== undefined) {
+      formData.append('last_name', data.last_name);
+    }
+    if (data.email !== undefined) {
+      formData.append('email', data.email);
+    }
+    if (data.phone_number !== undefined) {
+      formData.append('phone_number', data.phone_number);
+    }
+
+    // Add profile picture file if provided
+    if (data.profile_picture && data.profile_picture instanceof File) {
+      formData.append('profile_picture', data.profile_picture);
+    }
+
+    const config = {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - let browser set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/account-settings/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+
+          // Handle validation errors
+          if (response.status === 400 && errorData.errors) {
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, errors]) => {
+                const fieldErrors = Array.isArray(errors) ? errors.join(', ') : errors;
+                return `${field}: ${fieldErrors}`;
+              })
+              .join('; ');
+            const error = new Error(errorMessages || errorData.message || 'Validation failed');
+            error.fieldErrors = errorData.errors;
+            error.status = response.status;
+            throw error;
+          }
+
+          const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+          error.status = response.status;
+          throw error;
+        }
+        return response.json();
+      });
   }
 };
 

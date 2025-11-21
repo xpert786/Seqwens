@@ -35,6 +35,7 @@ export default function FolderContents() {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [searchQuery, setSearchQuery] = useState('');
+  const [openActionsMenu, setOpenActionsMenu] = useState(null);
 
   // API state
   const [documents, setDocuments] = useState([]);
@@ -110,6 +111,9 @@ export default function FolderContents() {
             statusColor: getStatusColor(doc.status),
             textColor: getStatusTextColor(doc.status),
             category: doc.category?.name || 'General',
+            client: doc.client?.name || doc.client_name || 'N/A',
+            uploaded_by: doc.uploaded_by?.name || doc.uploaded_by_name || doc.created_by?.name || 'N/A',
+            size: doc.size || doc.file_size || '—',
             created_at: doc.created_at,
             updated_at: doc.updated_at,
             is_archived: doc.is_archived || false
@@ -175,6 +179,40 @@ export default function FolderContents() {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Format file size
+  const formatFileSize = (size) => {
+    if (!size || size === '—') return '—';
+    if (typeof size === 'number') {
+      if (size < 1024) return `${size} B`;
+      if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+    return size;
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.actions-menu-container')) {
+        setOpenActionsMenu(null);
+      }
+    };
+
+    if (openActionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openActionsMenu]);
+
+  // Handle view details
+  const handleViewDetails = (doc) => {
+    navigate(`document/${doc.id}`);
+    setOpenActionsMenu(null);
   };
 
   // Fetch folder contents on mount and when filters change
@@ -365,7 +403,7 @@ export default function FolderContents() {
               </div>
               <input
                 type="text"
-                placeholder="Search documents by name..."
+                placeholder="Search documents by name, client, or uploader..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
@@ -375,8 +413,8 @@ export default function FolderContents() {
           <div className="relative">
             <button
               onClick={() => setSelectedCategory(selectedCategory === 'All Categories' ? null : 'All Categories')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              style={{ fontFamily: 'BasisGrotesquePro' }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
             >
               <span>{selectedCategory}</span>
               <ChevronDown />
@@ -385,8 +423,8 @@ export default function FolderContents() {
           <div className="relative">
             <button
               onClick={() => setSelectedStatus(selectedStatus === 'All Status' ? null : 'All Status')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              style={{ fontFamily: 'BasisGrotesquePro' }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
             >
               <span>{selectedStatus}</span>
               <ChevronDown />
@@ -400,22 +438,21 @@ export default function FolderContents() {
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Client</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Category</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Uploaded By</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Upload Date</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Status</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Size</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {documents.map((doc, index) => (
-                <tr key={doc.id} className={`border-b border-gray-100 ${index < documents.length - 1 ? '' : ''}`}>
+                <tr key={doc.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index < documents.length - 1 ? '' : ''}`}>
                   <td className="py-4 px-4">
-                    <div 
-                      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => navigate(`document/${doc.id}`)}
-                    >
+                    <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
-                        <DocumentPdfIcon />
+                        <FileIcon />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
@@ -424,28 +461,75 @@ export default function FolderContents() {
                     </div>
                   </td>
                   <td className="py-4 px-4">
+                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.client}</p>
+                  </td>
+                  <td className="py-4 px-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       {doc.category}
                     </span>
                   </td>
                   <td className="py-4 px-4">
+                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.uploaded_by}</p>
+                  </td>
+                  <td className="py-4 px-4">
                     <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatDate(doc.created_at)}</p>
                   </td>
                   <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${doc.statusColor} ${doc.textColor}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {formatStatus(doc.status)}
-                    </span>
+                    <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{formatFileSize(doc.size)}</p>
                   </td>
                   <td className="py-4 px-4">
-                    <button
-                      onClick={() => handleDownload(doc)}
-                      className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-                      title="Download document"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 12.5V2.5M10 12.5L6.25 8.75M10 12.5L13.75 8.75M2.5 15V16.25C2.5 16.913 3.03705 17.5 3.75 17.5H16.25C16.9629 17.5 17.5 16.913 17.5 16.25V15" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
+                    <div className="relative actions-menu-container">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
+                        }}
+                        className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                        title="Actions"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M10 10.8333C10.4603 10.8333 10.8333 10.4603 10.8333 10C10.8333 9.53976 10.4603 9.16667 10 9.16667C9.53976 9.16667 9.16667 9.53976 9.16667 10C9.16667 10.4603 9.53976 10.8333 10 10.8333Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M10 5.00001C10.4603 5.00001 10.8333 4.62692 10.8333 4.16667C10.8333 3.70643 10.4603 3.33334 10 3.33334C9.53976 3.33334 9.16667 3.70643 9.16667 4.16667C9.16667 4.62692 9.53976 5.00001 10 5.00001Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M10 16.6667C10.4603 16.6667 10.8333 16.2936 10.8333 15.8333C10.8333 15.3731 10.4603 15 10 15C9.53976 15 9.16667 15.3731 9.16667 15.8333C9.16667 16.2936 9.53976 16.6667 10 16.6667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      {openActionsMenu === doc.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1" style={{ borderRadius: '8px' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDetails(doc);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#F56D2D] transition-colors"
+                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                          >
+                            View Details
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(doc);
+                              setOpenActionsMenu(null);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                          >
+                            Download
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenActionsMenu(null);
+                              // TODO: Implement delete functionality
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
