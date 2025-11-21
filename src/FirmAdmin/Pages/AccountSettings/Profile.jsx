@@ -129,6 +129,10 @@ export default function Profile() {
             // Clear the file input
             setProfilePictureFile(null);
 
+            // Dispatch event to update header profile picture
+            window.dispatchEvent(new Event('profilePictureUpdated'));
+            localStorage.setItem('profilePictureUpdated', 'true');
+
             toast.success("Profile updated successfully!", {
                 position: "top-right",
                 autoClose: 3000,

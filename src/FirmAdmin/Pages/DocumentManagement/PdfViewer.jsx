@@ -12,19 +12,6 @@ const EyeIcon = () => (
     <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-
-const DownloadIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13.3333 13.6667C13.3333 11.3131 11.3536 9.33333 8.99996 9.33333C6.6463 9.33333 4.66663 11.3131 4.66663 13.6667M11.6666 4.66667C11.6666 6.13893 10.4389 7.33333 8.99996 7.33333C7.56109 7.33333 6.33329 6.13893 6.33329 4.66667C6.33329 3.1944 7.56109 2 8.99996 2C10.4389 2 11.6666 3.1944 11.6666 4.66667Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 export default function PdfViewer() {
   const { folderId, documentId } = useParams();
   const navigate = useNavigate();
