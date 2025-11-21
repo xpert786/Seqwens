@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import InvoiceDetailsTab from './InvoiceDetailsTab';
 import { firmAdminInvoiceAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
 
 export default function InvoiceDetails() {
   const { invoiceId } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [invoiceData, setInvoiceData] = useState(null);
@@ -105,7 +108,7 @@ export default function InvoiceDetails() {
       setLoading(true);
       setError(null);
       const response = await firmAdminInvoiceAPI.getInvoiceDetails(invoiceId);
-      
+
       if (response.success && response.data) {
         const transformed = transformInvoiceData(response.data);
         if (transformed) {
@@ -143,7 +146,7 @@ export default function InvoiceDetails() {
     try {
       setSending(true);
       const response = await firmAdminInvoiceAPI.sendInvoice(invoiceId, sendMessage);
-      
+
       if (response.success) {
         toast.success(response.message || 'Invoice sent successfully!');
         setShowSendModal(false);
@@ -162,13 +165,75 @@ export default function InvoiceDetails() {
     }
   };
 
+  // Handle download invoice PDF
+  const handleDownloadPDF = async () => {
+    if (!invoiceId) return;
+
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        return;
+      }
+
+      toast.info('Downloading invoice PDF...', { autoClose: 2000 });
+
+      // Construct the download URL - typically at /firm/invoices/{id}/download/ or /firm/invoices/{id}/pdf/
+      const API_BASE_URL = getApiBaseUrl();
+      const downloadUrl = `${API_BASE_URL}/firm/invoices/${invoiceId}/download/`;
+
+      // Fetch the PDF with authorization
+      const response = await fetchWithCors(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download PDF: ${response.statusText}`);
+      }
+
+      // Get the blob data
+      const blob = await response.blob();
+
+      // Determine file extension from content type or default to pdf
+      const contentType = response.headers.get('content-type') || 'application/pdf';
+      const fileName = invoiceData?.invoiceNumber
+        ? `${invoiceData.invoiceNumber}.pdf`
+        : `Invoice_${invoiceId}.pdf`;
+
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+      toast.success('Invoice PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading invoice PDF:', error);
+      toast.error(handleAPIError(error) || 'Failed to download invoice PDF');
+    }
+  };
+
   // Handle update invoice
   const handleUpdateInvoice = async () => {
     if (!invoiceId) return;
 
     try {
       setUpdating(true);
-      
+
       // Prepare update data (only include fields that have values)
       const updateData = {};
       if (editFormData.status) updateData.status = editFormData.status;
@@ -177,7 +242,7 @@ export default function InvoiceDetails() {
       if (editFormData.notes !== undefined) updateData.notes = editFormData.notes;
 
       const response = await firmAdminInvoiceAPI.updateInvoice(invoiceId, updateData);
-      
+
       if (response.success) {
         toast.success(response.message || 'Invoice updated successfully!');
         setShowEditModal(false);
@@ -207,7 +272,7 @@ export default function InvoiceDetails() {
       blue: 'bg-blue-500',
       gray: 'bg-gray-500'
     };
-    
+
     const configs = {
       paid: { color: statusColor === 'green' ? colorMap.green : 'bg-green-500', text: 'Paid' },
       sent: { color: statusColor === 'blue' ? colorMap.blue : 'bg-blue-500', text: 'Sent' },
@@ -217,7 +282,7 @@ export default function InvoiceDetails() {
       partial: { color: statusColor === 'orange' ? colorMap.orange : 'bg-orange-500', text: 'Partially Paid' },
       cancelled: { color: statusColor === 'gray' ? colorMap.gray : 'bg-gray-500', text: 'Cancelled' }
     };
-    
+
     const config = configs[statusLower] || { color: colorMap[statusColor] || 'bg-gray-500', text: status };
     return (
       <span className={`${config.color} text-white px-2 py-0.5 !rounded-[10px] text-xs font-medium whitespace-nowrap`}>
@@ -230,18 +295,18 @@ export default function InvoiceDetails() {
     const icons = {
       send: (
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16.5 1.5L11.4166 16.0239C11.3568 16.1948 11.1187 16.2045 11.0451 16.039L8.25 9.75M16.5 1.5L1.97614 6.58335C1.80518 6.64319 1.79546 6.88132 1.96099 6.95488L8.25 9.75M16.5 1.5L8.25 9.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M16.5 1.5L11.4166 16.0239C11.3568 16.1948 11.1187 16.2045 11.0451 16.039L8.25 9.75M16.5 1.5L1.97614 6.58335C1.80518 6.64319 1.79546 6.88132 1.96099 6.95488L8.25 9.75M16.5 1.5L8.25 9.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
       edit: (
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 2.25H3.75C3.35218 2.25 2.97064 2.40804 2.68934 2.68934C2.40804 2.97064 2.25 3.35218 2.25 3.75V14.25C2.25 14.6478 2.40804 15.0294 2.68934 15.3107C2.97064 15.592 3.35218 15.75 3.75 15.75H14.25C14.6478 15.75 15.0294 15.592 15.3107 15.3107C15.592 15.0294 15.75 14.6478 15.75 14.25V9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M13.7813 1.9699C14.0797 1.67153 14.4844 1.50391 14.9063 1.50391C15.3283 1.50391 15.733 1.67153 16.0313 1.9699C16.3297 2.26826 16.4973 2.67294 16.4973 3.0949C16.4973 3.51685 16.3297 3.92153 16.0313 4.2199L9.27157 10.9804C9.09348 11.1583 8.87347 11.2886 8.63182 11.3591L6.47707 11.9891C6.41253 12.008 6.34412 12.0091 6.279 11.9924C6.21388 11.9757 6.15444 11.9418 6.10691 11.8943C6.05937 11.8468 6.02549 11.7873 6.0088 11.7222C5.99212 11.6571 5.99325 11.5887 6.01207 11.5241L6.64207 9.3694C6.71297 9.12793 6.84347 8.90819 7.02157 8.7304L13.7813 1.9699Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M9 2.25H3.75C3.35218 2.25 2.97064 2.40804 2.68934 2.68934C2.40804 2.97064 2.25 3.35218 2.25 3.75V14.25C2.25 14.6478 2.40804 15.0294 2.68934 15.3107C2.97064 15.592 3.35218 15.75 3.75 15.75H14.25C14.6478 15.75 15.0294 15.592 15.3107 15.3107C15.592 15.0294 15.75 14.6478 15.75 14.25V9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M13.7813 1.9699C14.0797 1.67153 14.4844 1.50391 14.9063 1.50391C15.3283 1.50391 15.733 1.67153 16.0313 1.9699C16.3297 2.26826 16.4973 2.67294 16.4973 3.0949C16.4973 3.51685 16.3297 3.92153 16.0313 4.2199L9.27157 10.9804C9.09348 11.1583 8.87347 11.2886 8.63182 11.3591L6.47707 11.9891C6.41253 12.008 6.34412 12.0091 6.279 11.9924C6.21388 11.9757 6.15444 11.9418 6.10691 11.8943C6.05937 11.8468 6.02549 11.7873 6.0088 11.7222C5.99212 11.6571 5.99325 11.5887 6.01207 11.5241L6.64207 9.3694C6.71297 9.12793 6.84347 8.90819 7.02157 8.7304L13.7813 1.9699Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
       download: (
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )
     };
@@ -289,7 +354,21 @@ export default function InvoiceDetails() {
   }
 
   return (
-    <div className="p-6" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh' }}>
+    <div className="p-6" style={{ minHeight: '100vh' }}>
+      {/* Back Button */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate('/firmadmin/billing')}
+          className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+          style={{ fontFamily: 'BasisGrotesquePro' }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
@@ -312,7 +391,10 @@ export default function InvoiceDetails() {
               {getIcon('send')}
               Send to Client
             </button>
-            <button className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition">
+            <button
+              onClick={handleDownloadPDF}
+              className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
+            >
               {getIcon('download')}
               Download PDF
             </button>

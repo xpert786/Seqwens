@@ -32,10 +32,13 @@ export default function FolderContents() {
   const { folderId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [searchQuery, setSearchQuery] = useState('');
   const [openActionsMenu, setOpenActionsMenu] = useState(null);
+  
+  // Pagination state
+  const [documentsCurrentPage, setDocumentsCurrentPage] = useState(1);
+  const [showAllDocuments, setShowAllDocuments] = useState(false);
+  const DOCUMENTS_PER_PAGE = 3;
 
   // API state
   const [documents, setDocuments] = useState([]);
@@ -68,9 +71,6 @@ export default function FolderContents() {
 
       if (searchQuery) {
         params.search = searchQuery;
-      }
-      if (selectedCategory !== 'All Categories') {
-        params.category_id = selectedCategory; // This would need to be the actual category ID
       }
 
       const response = await firmAdminDocumentsAPI.browseDocuments(params);
@@ -143,7 +143,7 @@ export default function FolderContents() {
     } finally {
       setLoading(false);
     }
-  }, [folderId, searchQuery, selectedCategory]);
+  }, [folderId, searchQuery]);
 
   // Get status color
   const getStatusColor = (status) => {
@@ -215,6 +215,33 @@ export default function FolderContents() {
     setOpenActionsMenu(null);
   };
 
+  // Pagination handlers
+  const handleDocumentsPageChange = (newPage) => {
+    setDocumentsCurrentPage(newPage);
+    setOpenActionsMenu(null); // Close any open action menus
+  };
+
+  const handleViewAllDocuments = () => {
+    setShowAllDocuments(true);
+    setDocumentsCurrentPage(1);
+    setOpenActionsMenu(null);
+  };
+
+  const handleShowLessDocuments = () => {
+    setShowAllDocuments(false);
+    setDocumentsCurrentPage(1);
+    setOpenActionsMenu(null);
+  };
+
+  // Calculate pagination
+  const totalDocumentsPages = Math.ceil(documents.length / DOCUMENTS_PER_PAGE);
+  const displayedDocuments = showAllDocuments
+    ? documents
+    : documents.slice(
+        (documentsCurrentPage - 1) * DOCUMENTS_PER_PAGE,
+        documentsCurrentPage * DOCUMENTS_PER_PAGE
+      );
+
   // Fetch folder contents on mount and when filters change
   useEffect(() => {
     if (folderId) {
@@ -224,7 +251,7 @@ export default function FolderContents() {
 
       return () => clearTimeout(timer);
     }
-  }, [folderId, searchQuery, selectedCategory, fetchFolderContents]);
+  }, [folderId, searchQuery, fetchFolderContents]);
 
   const folderName = folderInfo?.title || 'Folder';
 
@@ -244,8 +271,21 @@ export default function FolderContents() {
         return;
       }
 
+      // Show loading message
+      toast.info('Downloading document...', { autoClose: 2000 });
+
+      // Construct the full URL if it's relative
+      let documentUrl = doc.tax_documents;
+      if (!documentUrl.startsWith('http://') && !documentUrl.startsWith('https://')) {
+        // If relative URL, construct full URL (adjust base URL as needed)
+        const baseUrl = window.location.origin;
+        documentUrl = documentUrl.startsWith('/') 
+          ? `${baseUrl}${documentUrl}` 
+          : `${baseUrl}/${documentUrl}`;
+      }
+
       // Fetch the document with authorization
-      const response = await fetch(doc.tax_documents, {
+      const response = await fetch(documentUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -259,19 +299,35 @@ export default function FolderContents() {
       // Get the blob data
       const blob = await response.blob();
       
+      // Determine file extension from content type or filename
+      const contentType = response.headers.get('content-type') || 'application/pdf';
+      const fileName = doc.name || 'document.pdf';
+      let fileExtension = 'pdf';
+      
+      if (fileName.includes('.')) {
+        fileExtension = fileName.split('.').pop();
+      } else if (contentType.includes('pdf')) {
+        fileExtension = 'pdf';
+      } else if (contentType.includes('image')) {
+        fileExtension = contentType.split('/')[1].split(';')[0];
+      }
+      
       // Create a temporary URL for the blob
       const url = window.URL.createObjectURL(blob);
       
       // Create a temporary anchor element to trigger download
       const link = document.createElement('a');
       link.href = url;
-      link.download = doc.name || 'document.pdf';
+      link.download = fileName.endsWith(`.${fileExtension}`) ? fileName : `${fileName}.${fileExtension}`;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       
       // Clean up
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
       
       toast.success('Document downloaded successfully');
     } catch (error) {
@@ -312,28 +368,56 @@ export default function FolderContents() {
             </div>
         </div> */}
 
-          {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && (
-            <div className="mb-4 flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {breadcrumbs.map((crumb, index) => (
-                <React.Fragment key={index}>
-                  {index > 0 && <span className="text-gray-400">/</span>}
-                  <button
-                    onClick={() => {
-                      if (crumb.id) {
-                        navigate(`/firmadmin/documents/folder/${crumb.id}`);
-                      } else {
-                        navigate('/firmadmin/documents');
-                      }
-                    }}
-                    className={`${index === breadcrumbs.length - 1 ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    {crumb.title}
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
-          )}
+          {/* Back Button and Breadcrumbs */}
+          <div className="mb-4 flex items-center gap-3">
+            {/* Back Button */}
+            <button
+              onClick={() => {
+                if (breadcrumbs.length > 1) {
+                  // Navigate to parent folder (second to last breadcrumb)
+                  const parentCrumb = breadcrumbs[breadcrumbs.length - 2];
+                  if (parentCrumb && parentCrumb.id) {
+                    navigate(`/firmadmin/documents/folder/${parentCrumb.id}`);
+                  } else {
+                    navigate('/firmadmin/documents');
+                  }
+                } else {
+                  // Navigate to main documents page
+                  navigate('/firmadmin/documents');
+                }
+              }}
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+              style={{ fontFamily: 'BasisGrotesquePro' }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back</span>
+            </button>
+
+            {/* Breadcrumbs */}
+            {breadcrumbs.length > 0 && (
+              <div className="flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                {breadcrumbs.map((crumb, index) => (
+                  <React.Fragment key={index}>
+                    {index > 0 && <span className="text-gray-400">/</span>}
+                    <button
+                      onClick={() => {
+                        if (crumb.id) {
+                          navigate(`/firmadmin/documents/folder/${crumb.id}`);
+                        } else {
+                          navigate('/firmadmin/documents');
+                        }
+                      }}
+                      className={`${index === breadcrumbs.length - 1 ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      {crumb.title}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Loading State */}
           {loading && (
@@ -388,14 +472,14 @@ export default function FolderContents() {
         <div className="bg-white rounded-lg p-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              All Documents ({documents.length})
+              All Documents ({showAllDocuments ? documents.length : `${displayedDocuments.length} of ${documents.length}`})
             </h2>
             <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Complete list of documents with review status and metadata
             </p>
           </div>
 
-          {/* Search and Filter Bar */}
+          {/* Search Bar */}
           <div className="flex gap-3 mb-6">
             <div className="flex relative bg-blue-50">
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -410,27 +494,7 @@ export default function FolderContents() {
                 style={{ fontFamily: 'BasisGrotesquePro' }}
               />
             </div>
-          <div className="relative">
-            <button
-              onClick={() => setSelectedCategory(selectedCategory === 'All Categories' ? null : 'All Categories')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
-              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-            >
-              <span>{selectedCategory}</span>
-              <ChevronDown />
-            </button>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setSelectedStatus(selectedStatus === 'All Status' ? null : 'All Status')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
-              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-            >
-              <span>{selectedStatus}</span>
-              <ChevronDown />
-            </button>
-          </div>
-        </div>
 
         {/* Document Table */}
         <div className="overflow-x-auto">
@@ -447,8 +511,12 @@ export default function FolderContents() {
               </tr>
             </thead>
             <tbody>
-              {documents.map((doc, index) => (
-                <tr key={doc.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index < documents.length - 1 ? '' : ''}`}>
+              {displayedDocuments.map((doc, index) => (
+                <tr 
+                  key={doc.id} 
+                  onClick={() => handleViewDetails(doc)}
+                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${index < displayedDocuments.length - 1 ? '' : ''}`}
+                >
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
@@ -539,6 +607,54 @@ export default function FolderContents() {
         {documents.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {documents.length > DOCUMENTS_PER_PAGE && (
+          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              {!showAllDocuments ? (
+                <>
+                  <button
+                    onClick={() => handleDocumentsPageChange(documentsCurrentPage - 1)}
+                    disabled={documentsCurrentPage === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                    Page {documentsCurrentPage} of {totalDocumentsPages}
+                  </span>
+                  <button
+                    onClick={() => handleDocumentsPageChange(documentsCurrentPage + 1)}
+                    disabled={documentsCurrentPage === totalDocumentsPages}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                  >
+                    Next
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleShowLessDocuments}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                >
+                  Show Less
+                </button>
+              )}
+            </div>
+            {!showAllDocuments && (
+              <button
+                onClick={handleViewAllDocuments}
+                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+              >
+                View All ({documents.length})
+              </button>
+            )}
           </div>
         )}
       </div>

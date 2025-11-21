@@ -2711,6 +2711,9 @@ export const firmOfficeAPI = {
   getOfficeClients: async (officeId) => {
     return await apiRequest(`/firm/office-locations/${officeId}/clients/`, 'GET');
   },
+  getOfficePerformance: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/performance/`, 'GET');
+  },
   updateOffice: async (officeId, officeData) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', officeData);
   },
