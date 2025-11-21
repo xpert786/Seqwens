@@ -57,7 +57,7 @@
 
 
 .card.dashboard-card {
-  min-height: 200px; 
+  min-height: 200px;
   border: 1px solid #E8F0FF;
   background-color: #FFFFFF;
   border-radius: 12px;
@@ -68,14 +68,17 @@
 }
 
 /* Value Box */
-.dashboard-card-value {
-  border: 1px solid #CED4DA;
-  border-radius: 27px;
-  padding: 5px 12px;
-  font-size: 14px;
-  font-family: "BasisGrotesquePro", sans-serif;
-  font-weight: 400;
-  margin: 0;
+.dashboarder-card-value {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  font-size: 27px !important;
+  font-family: "BasisGrotesquePro", sans-serif !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  text-align: center !important;
+  color: #3B4A66 !important;
+  line-height: 1.2 !important;
 }
 
 /* Label */
@@ -113,15 +116,18 @@
   .dashboard-title {
     font-size: 24px;
   }
+
   .dashboard-subtitle {
     font-size: 14px;
   }
+
   .dashboard-btn {
     font-size: 14px;
     padding: 8px 14px;
   }
+
   .card.dashboard-card {
-    min-height: 180px; 
+    min-height: 180px;
     padding: 16px;
   }
 }
@@ -131,24 +137,50 @@
   .dashboard-title {
     font-size: 22px;
   }
+
   .dashboard-subtitle {
     font-size: 13px;
   }
+
   .dashboard-btn {
     font-size: 13px;
     padding: 7px 12px;
   }
+
   .card.dashboard-card {
-    min-height: 170px; 
+    min-height: 170px;
     padding: 14px;
   }
-  .dashboard-card-value {
-    font-size: 13px;
-    padding: 4px 10px;
+
+  .dashboarder-card-value {
+    font-size: 34px !important;
+    padding: 0 !important;
   }
+
   .dashboard-card-btn {
     font-size: 13px;
     padding: 5px 12px;
+  }
+}
+
+/* Tablet screens (768px - 1024px) */
+@media (max-width: 1024px) {
+  .dashboarder-card-value {
+    font-size: 32px !important;
+  }
+}
+
+/* Mobile screens (max-width: 768px) */
+@media (max-width: 768px) {
+  .dashboarder-card-value {
+    font-size: 30px !important;
+  }
+}
+
+/* Small mobile screens (max-width: 480px) */
+@media (max-width: 480px) {
+  .dashboarder-card-value {
+    font-size: 28px !important;
   }
 }
 
@@ -189,7 +221,7 @@
   color: #fff !important;
 }
 
-.car{
+.car {
   border: 1px solid #E8F0FF;
 }
 
@@ -214,7 +246,7 @@
   flex-shrink: 0;
 }
 
-.icon-circle > div {
+.icon-circle>div {
   width: 100%;
   height: 100%;
   display: flex;
@@ -222,7 +254,7 @@
   justify-content: center;
 }
 
-.icon-circle > div > svg {
+.icon-circle>div>svg {
   width: 28px !important;
   height: 28px !important;
   min-width: 28px !important;
@@ -232,14 +264,14 @@
 
 /* Special handling for MessageIcon which has wide aspect ratio */
 .icon-circle svg[width="236"],
-.icon-circle > div > svg[width="236"] {
+.icon-circle>div>svg[width="236"] {
   width: 28px !important;
   height: auto !important;
   max-height: 28px !important;
   min-width: 28px !important;
 }
 
-.dashboard-card-btn{
-border: 1px solid #E8F0FF !important;
-background-color: #FFFFFF;
+.dashboard-card-btn {
+  border: 1px solid #E8F0FF !important;
+  background-color: #FFFFFF;
 }

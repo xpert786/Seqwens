@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { FileIcon, OverdueIcon, UploadIcons, CompletedIcon, AwaitingIcon } from "../icons";
 import "../../styles/Document.css";
 import { handleAPIError } from "../../utils/apiUtils";
@@ -24,6 +24,7 @@ export default function MyDocumentsContent() {
     });
     const [archivingDocumentId, setArchivingDocumentId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
     const itemsPerPage = 3;
 
     // Fetch all documents from the documents API
@@ -231,48 +232,69 @@ export default function MyDocumentsContent() {
         return 'bg-darkblue text-white';
     };
 
-    // Filter documents based on selected filter
+    // Filter documents based on selected filter and search term
     const getFilteredDocuments = () => {
-        if (!selectedFilter) {
-            return documents;
+        let filtered = documents;
+
+        // Apply status filter
+        if (selectedFilter) {
+            const filterLower = selectedFilter.toLowerCase();
+
+            if (filterLower === 'pending') {
+                filtered = filtered.filter(d => {
+                    const status = (d.status || '').toLowerCase();
+                    return status === 'pending_sign' || status === 'pending' || status === 'waiting signature';
+                });
+            } else if (filterLower === 'completed') {
+                filtered = filtered.filter(d => {
+                    const status = (d.status || '').toLowerCase();
+                    return status === 'processed' || status === 'completed';
+                });
+            } else if (filterLower === 'overdue') {
+                filtered = filtered.filter(d => {
+                    if (d.due_date || d.dueDate) {
+                        const due = new Date(d.due_date || d.dueDate);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return due < today && (d.status === 'pending_sign' || d.status === 'pending' || (d.status || '').toLowerCase() === 'pending');
+                    }
+                    return false;
+                });
+            } else if (filterLower === 'uploaded') {
+                filtered = documents; // All documents are uploaded
+            }
         }
 
-        const filterLower = selectedFilter.toLowerCase();
-
-        if (filterLower === 'pending') {
-            return documents.filter(d => {
-                const status = (d.status || '').toLowerCase();
-                return status === 'pending_sign' || status === 'pending' || status === 'waiting signature';
+        // Apply search filter
+        if (searchTerm.trim()) {
+            const searchLower = searchTerm.toLowerCase().trim();
+            filtered = filtered.filter(d => {
+                const docName = (d.file_name || d.name || d.document_name || d.filename || 'Untitled Document').toLowerCase();
+                const docType = (d.file_type || d.file_extension || d.type || d.document_type || '').toLowerCase();
+                const docFolder = (d.folder?.title || d.folder?.name || d.folder_name || '').toLowerCase();
+                const docCategory = (d.category?.name || '').toLowerCase();
+                
+                return docName.includes(searchLower) || 
+                       docType.includes(searchLower) || 
+                       docFolder.includes(searchLower) || 
+                       docCategory.includes(searchLower);
             });
-        } else if (filterLower === 'completed') {
-            return documents.filter(d => {
-                const status = (d.status || '').toLowerCase();
-                return status === 'processed' || status === 'completed';
-            });
-        } else if (filterLower === 'overdue') {
-            return documents.filter(d => {
-                if (d.due_date || d.dueDate) {
-                    const due = new Date(d.due_date || d.dueDate);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return due < today && (d.status === 'pending_sign' || d.status === 'pending' || (d.status || '').toLowerCase() === 'pending');
-                }
-                return false;
-            });
-        } else if (filterLower === 'uploaded') {
-            return documents; // All documents are uploaded
         }
 
-        return documents;
+        return filtered;
     };
 
-    // Reset to page 1 when filter changes
+    // Reset to page 1 when filter or search changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedFilter]);
+    }, [selectedFilter, searchTerm]);
+
+    // Memoize filtered documents to ensure reactivity
+    const filteredDocuments = useMemo(() => {
+        return getFilteredDocuments();
+    }, [documents, selectedFilter, searchTerm]);
 
     // Pagination for documents
-    const filteredDocuments = getFilteredDocuments();
     const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = Math.min(startIndex + itemsPerPage, filteredDocuments.length);
@@ -352,9 +374,10 @@ export default function MyDocumentsContent() {
                                         style={{
                                             width: "30px",
                                             height: "30px",
+                                            color: isSelected ? "#00C0C6" : "#3B4A66",
                                         }}
                                     >
-                                        {/* Icons hidden for now */}
+                                        {IconComponent && <IconComponent size={24} style={{ color: isSelected ? "#00C0C6" : "#3B4A66" }} />}
                                     </div>
                                     <span className="fw-semibold" style={{ color: isSelected ? "#00C0C6" : "#3B4A66", fontSize: "24px" }}>{count}</span>
                                 </div>
@@ -383,17 +406,14 @@ export default function MyDocumentsContent() {
                     <input
                         type="text"
                         className="form-control mydocs-search-input"
-                        placeholder="Search..."
+                        placeholder="Search by name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
 
                 <div className="d-flex align-items-center gap-2 flex-wrap">
-                    <select className="form-select" style={{ width: "120px" }}>
-                        <option>Date</option>
-                        <option>Name</option>
-                    </select>
-
                     <button
                         className="rounded border-0 d-flex align-items-center justify-content-center"
                         onClick={() => setView("list")}
@@ -463,16 +483,19 @@ export default function MyDocumentsContent() {
                 {filteredDocuments.length === 0 && documents.length > 0 && (
                     <div className="pt-4 pb-4 text-center">
                         <h6 className="mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
-                            No {selectedFilter ? selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1) : ''} Documents
+                            {searchTerm.trim() ? 'No Documents Found' : `No ${selectedFilter ? selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1) : ''} Documents`}
                         </h6>
                         <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
-                            {selectedFilter ? `No documents match the ${selectedFilter} filter.` : 'No documents found.'}
+                            {searchTerm.trim() 
+                                ? `No documents found matching "${searchTerm}". Try a different search term.` 
+                                : (selectedFilter ? `No documents match the ${selectedFilter} filter.` : 'No documents found.')
+                            }
                         </p>
                     </div>
                 )}
                 {filteredDocuments.length > 0 && (
                     <div className="pt-2 pb-2">
-                        <div className="row g-3">
+                        <div className={`row g-3 ${view === "grid" ? "" : ""}`}>
                             {paginatedDocuments.map((doc, index) => {
                                 const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
                                 const docSize = doc.file_size_formatted || (doc.file_size_bytes ? formatFileSize(doc.file_size_bytes) : (doc.file_size ? formatFileSize(doc.file_size) : '0 KB'));
@@ -485,7 +508,7 @@ export default function MyDocumentsContent() {
                                 const fileUrl = doc.file_url || doc.tax_documents || '';
 
                                 return (
-                                    <div className="col-12" key={doc.id || doc.document_id || index}>
+                                    <div className={view === "grid" ? "col-12 col-md-6" : "col-12"} key={doc.id || doc.document_id || index}>
                                         <div
                                             className="p-3 border rounded-4"
                                             style={{

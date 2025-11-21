@@ -24,6 +24,7 @@ export default function UploadModal({ show, handleClose }) {
     const [selectedFolderId, setSelectedFolderId] = useState(null);
     const [validationErrors, setValidationErrors] = useState([]);
     const [uploading, setUploading] = useState(false);
+    const [fileErrors, setFileErrors] = useState({}); // Store errors by file index
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
@@ -182,6 +183,50 @@ export default function UploadModal({ show, handleClose }) {
         return acc;
     }, {});
 
+    // Convert technical error messages to user-friendly messages
+    const getUserFriendlyError = (errorMessage) => {
+        if (!errorMessage || typeof errorMessage !== 'string') {
+            return errorMessage;
+        }
+
+        const lowerMessage = errorMessage.toLowerCase();
+
+        // Handle category/folder errors - check for "does not belong" first (most specific)
+        if (lowerMessage.includes('does not belong') || 
+            lowerMessage.includes('category does not belong') ||
+            (lowerMessage.includes('invalid category') && lowerMessage.includes('does not belong'))) {
+            return 'Folder does not belong to you';
+        }
+        
+        // Handle invalid category ID errors
+        if (lowerMessage.includes('invalid category id') || 
+            (lowerMessage.includes('invalid') && lowerMessage.includes('category id'))) {
+            return 'Folder does not belong to you';
+        }
+        
+        // Handle other invalid category errors
+        if (lowerMessage.includes('invalid') && lowerMessage.includes('category')) {
+            return 'Invalid folder selected';
+        }
+
+        // For any other errors, remove technical details but keep the message
+        let friendlyMessage = errorMessage;
+        
+        // Remove ID references (None, null, or numbers)
+        friendlyMessage = friendlyMessage.replace(/category\s+ID\s+(None|null|\d+)/gi, '');
+        friendlyMessage = friendlyMessage.replace(/ID\s+(None|null|\d+)/gi, '');
+        friendlyMessage = friendlyMessage.replace(/id\s+(None|null|\d+)/gi, '');
+        
+        // Remove "or" at the beginning
+        friendlyMessage = friendlyMessage.replace(/^or\s+/i, '');
+        
+        // Clean up extra spaces and punctuation
+        friendlyMessage = friendlyMessage.replace(/\s+/g, ' ').trim();
+        friendlyMessage = friendlyMessage.replace(/^\s*,\s*/, '');
+        
+        return friendlyMessage || 'An error occurred with this file';
+    };
+
 
 
     const handleFinalUpload = async () => {
@@ -261,19 +306,66 @@ export default function UploadModal({ show, handleClose }) {
 
             const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
 
+            let result;
+            try {
+                result = await response.json();
+            } catch (parseError) {
+                console.error('Error parsing upload response:', parseError);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                throw new Error('Failed to parse server response');
+            }
+
+            console.log('Upload API Response:', result);
+
+            // Check if upload was successful or has validation errors
+            if (result.success === false && result.errors && Array.isArray(result.errors)) {
+                // Handle validation errors for specific files
+                const errorsByFileIndex = {};
+                
+                result.errors.forEach((errorObj) => {
+                    const fileIndex = errorObj.file_index;
+                    if (fileIndex !== undefined && fileIndex !== null) {
+                        if (!errorsByFileIndex[fileIndex]) {
+                            errorsByFileIndex[fileIndex] = [];
+                        }
+                        const friendlyError = getUserFriendlyError(errorObj.error);
+                        errorsByFileIndex[fileIndex].push(friendlyError);
+                    }
+                });
+
+                // Set file-specific errors
+                setFileErrors(errorsByFileIndex);
+
+                // Show general error message
+                const errorMessage = result.message || 'Validation failed for some files';
+                toast.error(errorMessage, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+
+                // Scroll to first file with error
+                const firstErrorIndex = Math.min(...Object.keys(errorsByFileIndex).map(Number));
+                if (firstErrorIndex >= 0 && firstErrorIndex < files.length) {
+                    setSelectedIndex(firstErrorIndex);
+                }
+
+                setUploading(false);
+                return;
+            }
+
+            // Check if response was not ok and no specific errors array was provided
             if (!response.ok) {
                 let errorMessage = `HTTP error! status: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    console.error('Upload API Error Response:', errorData);
-                    errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-                } catch (parseError) {
-                    console.error('Error parsing upload response:', parseError);
-                }
+                errorMessage = result.message || result.detail || result.error || errorMessage;
                 throw new Error(errorMessage);
             }
 
-            const result = await response.json();
             console.log('Upload successful:', result);
 
             toast.success("Upload successful!", {
@@ -394,6 +486,13 @@ export default function UploadModal({ show, handleClose }) {
         updated[selectedIndex].category = e.target.value;
         updated[selectedIndex].categoryId = categoryMapping[e.target.value] || null;
         setFiles(updated);
+        
+        // Clear errors for this file when user makes changes
+        if (fileErrors[selectedIndex]) {
+            const newFileErrors = { ...fileErrors };
+            delete newFileErrors[selectedIndex];
+            setFileErrors(newFileErrors);
+        }
     };
 
     const handleFolderSelect = (path, folderId) => {
@@ -404,6 +503,13 @@ export default function UploadModal({ show, handleClose }) {
         setSelectedFolder(path);
         setSelectedFolderId(folderId);
         setFolderDropdownOpen(false);
+        
+        // Clear errors for this file when user makes changes
+        if (fileErrors[selectedIndex]) {
+            const newFileErrors = { ...fileErrors };
+            delete newFileErrors[selectedIndex];
+            setFileErrors(newFileErrors);
+        }
     };
 
     const proceedToConfigure = () => {
@@ -418,6 +524,7 @@ export default function UploadModal({ show, handleClose }) {
         setNewFolderName("");
         setUploading(false);
         setValidationErrors([]);
+        setFileErrors({});
         setCreatingFolderLoading(false);
         setExpandedFolders(new Set());
         handleClose();
@@ -779,9 +886,21 @@ export default function UploadModal({ show, handleClose }) {
                                                     </div>
 
 
+                                                    {/* Show validation errors */}
                                                     {selectedIndex === idx && validationErrors.length > 0 && (
                                                         <div className="mt-2">
                                                             {validationErrors.map((error, i) => (
+                                                                <div key={i} className="doc-error-box">
+                                                                    <span className="doc-error-icon">!</span>
+                                                                    {error}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {/* Show API errors for this file */}
+                                                    {fileErrors[idx] && fileErrors[idx].length > 0 && (
+                                                        <div className="mt-2">
+                                                            {fileErrors[idx].map((error, i) => (
                                                                 <div key={i} className="doc-error-box">
                                                                     <span className="doc-error-icon">!</span>
                                                                     {error}
@@ -826,7 +945,7 @@ export default function UploadModal({ show, handleClose }) {
                                             <Form.Group className="mb-3">
                                                 <h6 className="txt">Document Category</h6>
                                                 <Form.Select
-                                                    className="custom-select"
+                                                    className={`custom-select ${fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 ? 'border-danger' : ''}`}
                                                     value={files[selectedIndex]?.category || ""}
                                                     onChange={handleCategoryChange}
                                                     disabled={loadingCategories}
@@ -842,6 +961,16 @@ export default function UploadModal({ show, handleClose }) {
                                                 </Form.Select>
                                                 {categories.length === 0 && !loadingCategories && (
                                                     <small className="text-muted">No categories available</small>
+                                                )}
+                                                {/* Show category/folder related errors under the category field */}
+                                                {fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 && (
+                                                    <div className="mt-2">
+                                                        {fileErrors[selectedIndex].map((error, i) => (
+                                                            <div key={i} className="text-danger small">
+                                                                {error}
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 )}
 
                                             </Form.Group>
@@ -914,7 +1043,7 @@ export default function UploadModal({ show, handleClose }) {
 
                                                 <div ref={folderDropdownRef} style={{ position: 'relative' }}>
                                                     <div
-                                                        className="d-flex flex-column folder-dropdown-toggle border rounded px-2 py-2 bg-white cursor-pointer"
+                                                        className={`d-flex flex-column folder-dropdown-toggle border rounded px-2 py-2 bg-white cursor-pointer ${fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 ? 'border-danger' : ''}`}
                                                         onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
                                                     >
                                                         <div className="d-flex justify-content-between align-items-center mb-1">
@@ -1002,6 +1131,16 @@ export default function UploadModal({ show, handleClose }) {
                                                         </div>
                                                     )}
                                                 </div>
+                                                {/* Show folder related errors under the folder field */}
+                                                {fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 && (
+                                                    <div className="mt-2">
+                                                        {fileErrors[selectedIndex].map((error, i) => (
+                                                            <div key={i} className="text-danger small">
+                                                                {error}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </Form.Group>
 
                                         </div>

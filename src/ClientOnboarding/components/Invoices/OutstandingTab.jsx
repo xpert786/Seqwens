@@ -3,18 +3,13 @@ import { FaEye } from 'react-icons/fa';
 import { PayIcon, ViewIcon, LockIcon, CrossIcon, DownloadIcon, PrintIcon } from "../icons";
 import { Modal, Button, Form } from 'react-bootstrap';
 import { toast } from "react-toastify";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
-const OutstandingTab = ({ invoices = [] }) => {
-    const [selectedBoxes, setSelectedBoxes] = useState([]);
+const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [showModal, setShowModal] = useState(false);
     const [showInvoiceDetailsModal, setShowInvoiceDetailsModal] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
-
-    const toggleSelection = (id) => {
-        setSelectedBoxes((prev) =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
 
     const handlePayNowClick = (invoice) => {
         setSelectedInvoice(invoice);
@@ -74,9 +69,21 @@ const OutstandingTab = ({ invoices = [] }) => {
             client_name: inv.client_name,
             status_display: inv.status_display || inv.status,
             status_color: inv.status_color || (inv.status === 'overdue' ? 'red' : inv.status === 'paid' ? 'green' : 'yellow'),
-            isPaid: isPaid
+            isPaid: isPaid,
+            payment_date: inv.payment_date || inv.paid_date
         };
     });
+
+    // Use summary data from API (same as cards) or calculate as fallback
+    const outstandingBalance = summary.outstanding_balance !== undefined 
+        ? parseFloat(summary.outstanding_balance) 
+        : allInvoices.reduce((sum, inv) => sum + (parseFloat(inv.remaining_amount) || 0), 0);
+    
+    const paidThisYear = summary.paid_this_year !== undefined 
+        ? parseFloat(summary.paid_this_year) 
+        : 0;
+    
+    const currentYear = new Date().getFullYear();
 
     // Get status badge style
     const getStatusBadgeStyle = (status, statusColor, isPaid) => {
@@ -108,6 +115,154 @@ const OutstandingTab = ({ invoices = [] }) => {
             document.body.style.overflow = 'auto';
         }
     }, [showModal, showInvoiceDetailsModal]);
+
+    // Export Outstanding Invoices to PDF
+    const exportOutstandingInvoicesToPDF = () => {
+        try {
+            if (allInvoices.length === 0) {
+                toast.info("No invoices to export");
+                return;
+            }
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let yPosition = 20;
+
+            // Header
+            doc.setFontSize(20);
+            doc.setFont("helvetica", "bold");
+            doc.text("Outstanding Invoices Report", pageWidth / 2, yPosition, { align: "center" });
+            yPosition += 10;
+
+            // Report Date
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            const reportDate = new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+            doc.text(`Generated on: ${reportDate}`, pageWidth / 2, yPosition, { align: "center" });
+            yPosition += 15;
+
+            // Summary
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Summary", 14, yPosition);
+            yPosition += 8;
+
+            const totalAmount = allInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+            const totalRemaining = allInvoices.reduce((sum, inv) => sum + inv.remaining_amount, 0);
+            const totalPaid = allInvoices.reduce((sum, inv) => sum + inv.paid_amount, 0);
+            const outstandingCount = allInvoices.filter(inv => inv.remaining_amount > 0).length;
+
+            const summaryData = [
+                ["Total Invoices", allInvoices.length.toString()],
+                ["Outstanding Invoices", outstandingCount.toString()],
+                ["Total Amount", `$${totalAmount.toFixed(2)}`],
+                ["Total Paid", `$${totalPaid.toFixed(2)}`],
+                ["Total Remaining", `$${totalRemaining.toFixed(2)}`]
+            ];
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            autoTable(doc, {
+                startY: yPosition,
+                head: [["Metric", "Value"]],
+                body: summaryData,
+                theme: "grid",
+                headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+                styles: { fontSize: 9 },
+                margin: { left: 14, right: 14 },
+                columnStyles: {
+                    0: { cellWidth: 100 },
+                    1: { cellWidth: 80 }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 15;
+
+            // Invoice Table
+            if (yPosition > pageHeight - 40) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text(`All Invoices (${allInvoices.length})`, 14, yPosition);
+            yPosition += 8;
+
+            // Prepare table data
+            const tableData = allInvoices.map((invoice) => {
+                const formatCurrency = (amount) => {
+                    return `$${parseFloat(amount || 0).toFixed(2)}`;
+                };
+
+                const formatDate = (dateString) => {
+                    if (!dateString) return "N/A";
+                    try {
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+                    } catch {
+                        return dateString;
+                    }
+                };
+
+                return [
+                    invoice.invoice_number || `INV-${invoice.id}`,
+                    invoice.client_name || "N/A",
+                    formatCurrency(invoice.amount),
+                    formatCurrency(invoice.paid_amount),
+                    formatCurrency(invoice.remaining_amount),
+                    invoice.status_display || invoice.status || "Pending",
+                    formatDate(invoice.issue_date),
+                    formatDate(invoice.due_date)
+                ];
+            });
+
+            // Create table
+            autoTable(doc, {
+                startY: yPosition,
+                head: [["Invoice #", "Client", "Amount", "Paid", "Remaining", "Status", "Issue Date", "Due Date"]],
+                body: tableData,
+                theme: "grid",
+                headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+                styles: { fontSize: 8 },
+                margin: { left: 14, right: 14 },
+                columnStyles: {
+                    0: { cellWidth: 30 },
+                    1: { cellWidth: 35 },
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 25 },
+                    6: { cellWidth: 30 },
+                    7: { cellWidth: 30 }
+                },
+                alternateRowStyles: { fillColor: [249, 250, 251] },
+                didDrawPage: (data) => {
+                    // Add page numbers
+                    doc.setFontSize(8);
+                    doc.text(
+                        `Page ${data.pageNumber}`,
+                        pageWidth / 2,
+                        pageHeight - 10,
+                        { align: "center" }
+                    );
+                }
+            });
+
+            // Save the PDF
+            const fileName = `Outstanding_Invoices_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+            toast.success("PDF exported successfully!");
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            toast.error(`Error generating PDF: ${error.message}`);
+        }
+    };
 
 
     return (
@@ -145,17 +300,14 @@ const OutstandingTab = ({ invoices = [] }) => {
                 </div>
             ) : (
                 allInvoices.map((inv, idx) => {
-                    const isSelected = selectedBoxes.includes(inv.id);
                     const statusStyle = getStatusBadgeStyle(inv.status, inv.status_color, inv.isPaid);
                     return (
                         <div
                             key={inv.id || idx}
                             className="border rounded p-3 mb-3"
-                            onClick={() => toggleSelection(inv.id)}
                             style={{
-                                backgroundColor: isSelected ? '#FFF4E6' : '#ffffff',
+                                backgroundColor: '#ffffff',
                                 transition: 'background-color 0.3s ease',
-                                cursor: 'pointer',
                                 fontFamily: "BasisGrotesquePro",
                                 marginLeft: "10px"
                             }}
@@ -163,13 +315,6 @@ const OutstandingTab = ({ invoices = [] }) => {
                             <div className="d-flex justify-content-between align-items-center">
                                 {/* Left Info */}
                                 <div>
-                                    <input
-                                        type="checkbox"
-                                        className="form-check-input me-2"
-                                        checked={isSelected}
-                                        onChange={() => toggleSelection(inv.id)}
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
                                     <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                         {inv.invoice_number}
                                     </strong>
@@ -185,10 +330,10 @@ const OutstandingTab = ({ invoices = [] }) => {
                                         {inv.status_display || inv.status}
                                     </span>
 
-                                    <div className="small text-muted" style={{ marginLeft: "18px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
+                                    <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "4px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
                                         {inv.name}
                                     </div>
-                                    <div className="small text-muted" style={{ marginLeft: "18px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
+                                    <div className="small text-muted" style={{ marginLeft: "0px", marginTop: "2px", fontFamily: "BasisGrotesquePro", fontSize: "12px", fontWeight: "400", color: "#4B5563" }}>
                                         Due: {inv.due}
                                     </div>
                                 </div>
@@ -541,6 +686,43 @@ const OutstandingTab = ({ invoices = [] }) => {
 
                             <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
 
+                            {/* Outstanding Balance and Paid This Year Section */}
+                            <div className="mt-3 mb-3">
+                                <div className="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style={{ backgroundColor: "#F3F7FF", border: "1px solid #E8F0FF" }}>
+                                    <div>
+                                        <h6 style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro", marginBottom: "4px" }}>
+                                            Outstanding Balance
+                                        </h6>
+                                        <p style={{ color: "#4B5563", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro", margin: 0 }}>
+                                            Total amount due across all invoices
+                                        </p>
+                                    </div>
+                                    <div style={{ textAlign: "right" }}>
+                                        <h5 style={{ color: "#F56D2D", fontSize: "20px", fontWeight: "600", fontFamily: "BasisGrotesquePro", margin: 0 }}>
+                                            ${outstandingBalance.toFixed(2)}
+                                        </h5>
+                                    </div>
+                                </div>
+
+                                <div className="d-flex justify-content-between align-items-center p-3 rounded" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+                                    <div>
+                                        <h6 style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro", marginBottom: "4px" }}>
+                                            Paid This Year
+                                        </h6>
+                                        <p style={{ color: "#4B5563", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro", margin: 0 }}>
+                                            Total payments made in {currentYear}
+                                        </p>
+                                    </div>
+                                    <div style={{ textAlign: "right" }}>
+                                        <h5 style={{ color: "#166534", fontSize: "20px", fontWeight: "600", fontFamily: "BasisGrotesquePro", margin: 0 }}>
+                                            ${paidThisYear.toFixed(2)}
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
+
                             <p className="mt-2" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>
                                 <strong style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Payment Terms:</strong><br />
                                 Payment is due within 30 days of invoice date.<br />
@@ -572,6 +754,7 @@ const OutstandingTab = ({ invoices = [] }) => {
                                 </button>
 
                                 <button
+                                    onClick={exportOutstandingInvoicesToPDF}
                                     className="btn btn-sm"
                                     style={{
                                         backgroundColor: "#E8F0FF",

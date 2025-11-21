@@ -12,6 +12,9 @@ import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { toast } from 'react-toastify';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -393,6 +396,197 @@ export default function ClientManage() {
     }
   };
 
+  // Export Clients List to PDF
+  const exportClientsToPDF = async () => {
+    try {
+      if (clients.length === 0) {
+        toast.info("No clients to export", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      // Fetch all clients (not just current page)
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', '1');
+      queryParams.append('page_size', '1000'); // Get all clients
+
+      if (debouncedSearchTerm.trim()) {
+        queryParams.append('search', debouncedSearchTerm.trim());
+      }
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/list/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      let allClients = clients;
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data && result.data.clients) {
+          allClients = result.data.clients.map(client => {
+            const profile = client.profile || client;
+            const firstName = profile.first_name || client.first_name || '';
+            const lastName = profile.last_name || client.last_name || '';
+            let fullName = '';
+            if (firstName || lastName) {
+              fullName = `${firstName} ${lastName}`.trim();
+            } else if (profile.name || client.name) {
+              fullName = profile.name || client.name;
+            } else if (profile.full_name || client.full_name) {
+              fullName = profile.full_name || client.full_name;
+            } else {
+              fullName = profile.email || client.email || 'Unknown Client';
+            }
+            return {
+              id: client.id || profile.id,
+              name: fullName,
+              company: client.client_type || profile.client_type || 'Individual',
+              type: client.client_type || profile.client_type || 'Individual',
+              email: profile.email || client.email || '',
+              phone: profile.phone || profile.phone_formatted || client.phone_number || client.phone || '',
+              status: client.status || profile.account_status?.toLowerCase() || 'new',
+              lastActivity: client.next_due_date || 'N/A',
+              totalBilled: '$0',
+              compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+            };
+          });
+        }
+      }
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Clients List Report", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 10;
+
+      // Report Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const reportDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      doc.text(`Generated on: ${reportDate}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 15;
+
+      // Summary
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Summary", 14, yPosition);
+      yPosition += 8;
+
+      const activeCount = allClients.filter(c => (c.status || '').toLowerCase() === 'active').length;
+      const pendingCount = allClients.filter(c => (c.status || '').toLowerCase() === 'pending').length;
+      const inactiveCount = allClients.filter(c => (c.status || '').toLowerCase() === 'inactive').length;
+
+      const summaryData = [
+        ["Total Clients", allClients.length.toString()],
+        ["Active Clients", activeCount.toString()],
+        ["Pending Clients", pendingCount.toString()],
+        ["Inactive Clients", inactiveCount.toString()],
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Metric", "Value"]],
+        body: summaryData,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+          0: { cellWidth: 100 },
+          1: { cellWidth: 80 }
+        }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Clients Table
+      if (yPosition > pageHeight - 40) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`All Clients (${allClients.length})`, 14, yPosition);
+      yPosition += 8;
+
+      // Prepare table data
+      const tableData = allClients.map((client) => {
+        return [
+          client.name || 'N/A',
+          client.email || 'N/A',
+          client.phone || 'N/A',
+          client.company || client.type || 'N/A',
+          (client.status || 'N/A').charAt(0).toUpperCase() + (client.status || 'N/A').slice(1),
+          client.compliance || 'N/A',
+          client.lastActivity || 'N/A',
+        ];
+      });
+
+      // Create table
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Client Name", "Email", "Phone", "Type", "Status", "Compliance", "Last Activity"]],
+        body: tableData,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 8 },
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 25 },
+          6: { cellWidth: 25 }
+        },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        didDrawPage: (data) => {
+          // Add page numbers
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: "center" }
+          );
+        }
+      });
+
+      // Open PDF in new window for preview/download
+      const fileName = `Clients_List_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.output('dataurlnewwindow', { filename: fileName });
+      toast.success("PDF opened in new window. You can download it from there.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error(`Error generating PDF: ${error.message}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   return (
     <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
@@ -402,16 +596,20 @@ export default function ClientManage() {
           <h5 className="taxdashboard-subtitle">Manage all firm clients and assignments</h5>
         </div>
         <div className="d-flex gap-3">
-          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px" }}
+          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
+            <SettingIcon />
+            Build Intake Forms
+          </button>
+          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }}
             onClick={() => setShowBulkImportModal(true)}>
             <BulkImport />
             Bulk Import
           </button>
-          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2" style={{ fontSize: "15px" }} onClick={() => setShowAddClientModal(true)}>
+          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
             <AddClient />
             Add Client
           </button>
-          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px" }}>
+          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
             <ExportReport />
             Export Report
           </button>

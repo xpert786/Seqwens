@@ -13,6 +13,7 @@ import ClientManage from './Pages/ClientManagement/ClientManage';
 import ClientDetails from './Pages/ClientManagement/ClientDetails';
 import Analytics from './Pages/Analytics/Analytics';
 import DocumentManagement from './Pages/DocumentManagement';
+import FolderContents from './Pages/DocumentManagement/FolderContents';
 
 import Messages from './Pages/messages/Message';
 import ESignatureManagement from './Pages/ESignatureManagement';
@@ -95,7 +96,9 @@ export default function FirmRoutes() {
         <Route path="calendar/appointments" element={<Appointments />} />
         <Route path="calendar/features" element={<Feature />} />
         <Route path="calendar/staff" element={<Staff />} />
-        <Route path="documents" element={<DocumentManagement />} />
+        <Route path="documents" element={<DocumentManagement />}>
+          <Route path="folder/:folderId" element={<FolderContents />} />
+        </Route>
         <Route path="esignature" element={<ESignatureManagement />} />
         <Route path="messages" element={<Messages />} />
 

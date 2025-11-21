@@ -186,7 +186,7 @@ export default function DocumentManagement() {
   }, [searchQuery, isNestedRoute, fetchDocuments]);
 
   const handleFolderClick = (folderId) => {
-    navigate(`folder/${folderId}`);
+    navigate(`/firmadmin/documents/folder/${folderId}`);
   };
 
   const toggleActionsMenu = (folderId, event) => {

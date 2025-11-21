@@ -539,7 +539,8 @@ export default function UserManagement() {
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={closeAddAdminModal}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-[#E8F0FF] rounded-xl hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-[#E8F0FF] hover:bg-gray-50 transition-colors"
+                      style={{ borderRadius: '8px' }}
                       disabled={creatingAdmin}
                     >
                       Cancel
@@ -547,7 +548,8 @@ export default function UserManagement() {
                     <button
                       onClick={handleCreateSuperAdmin}
                       disabled={creatingAdmin}
-                      className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-xl hover:bg-[#e45622] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] hover:bg-[#e45622] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ borderRadius: '8px' }}
                     >
                       {creatingAdmin ? 'Creating...' : 'Create User'}
                     </button>

@@ -800,10 +800,12 @@ export default function MyClients() {
         {cardData.map((item, index) => (
           <div className="col-md-3 col-sm-6" key={index}>
             <div className="stat-card ">
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex justify-content-between align-items-start">
                 <div className="stat-icon" style={{ color: item.color }}>
                   {item.icon}
                 </div>
+              </div>
+              <div className="stat-count-wrapper">
                 <div className="stat-count">{item.count}</div>
               </div>
               <div className="mt-2">

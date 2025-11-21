@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { DocumentUpload, DocumentBrowseFolder, DocumentMoreIcon, DocumentPdfIcon } from '../../Components/icons';
+import { DocumentUpload, DocumentBrowseFolder, DocumentPdfIcon } from '../../Components/icons';
 import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 
 // Search icon
@@ -33,7 +34,6 @@ export default function FolderContents() {
   const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
-  const [openActionsMenu, setOpenActionsMenu] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // API state
@@ -190,26 +190,56 @@ export default function FolderContents() {
 
   const folderName = folderInfo?.title || 'Folder';
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.actions-menu-container')) {
-        setOpenActionsMenu(null);
+  // Handle document download
+  const handleDownload = async (doc) => {
+    try {
+      if (!doc.tax_documents) {
+        toast.error('Document URL not found');
+        return;
       }
-    };
 
-    if (openActionsMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // Get the access token
+      const token = getAccessToken();
+      
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        return;
+      }
+
+      // Fetch the document with authorization
+      const response = await fetch(doc.tax_documents, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download document: ${response.statusText}`);
+      }
+
+      // Get the blob data
+      const blob = await response.blob();
+      
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.name || 'document.pdf';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Document downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error(handleAPIError(error) || 'Failed to download document');
     }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openActionsMenu]);
-
-
-  const toggleActionsMenu = (id) => {
-    setOpenActionsMenu(openActionsMenu === id ? null : id);
   };
 
   return (
@@ -407,42 +437,15 @@ export default function FolderContents() {
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="relative actions-menu-container">
-                      <button
-                        onClick={() => toggleActionsMenu(doc.id)}
-                        className="p-1 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-                      >
-                        <DocumentMoreIcon />
-                      </button>
-                      {openActionsMenu === doc.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10 py-1">
-                          <button 
-                            onClick={() => {
-                              setOpenActionsMenu(null);
-                              navigate(`document/${doc.id}`);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" 
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            View Details
-                          </button>
-                          <button 
-                            onClick={() => setOpenActionsMenu(null)}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" 
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            Download
-                          </button>
-                          <button 
-                            onClick={() => setOpenActionsMenu(null)}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" 
-                            style={{ fontFamily: 'BasisGrotesquePro' }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => handleDownload(doc)}
+                      className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                      title="Download document"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 12.5V2.5M10 12.5L6.25 8.75M10 12.5L13.75 8.75M2.5 15V16.25C2.5 16.913 3.03705 17.5 3.75 17.5H16.25C16.9629 17.5 17.5 16.913 17.5 16.25V15" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               ))}

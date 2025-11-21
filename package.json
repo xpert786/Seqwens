@@ -21,6 +21,7 @@
     "classnames": "^2.5.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.394",
     "react": "^19.1.0",

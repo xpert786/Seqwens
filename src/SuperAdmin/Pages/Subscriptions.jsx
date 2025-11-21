@@ -4,6 +4,8 @@ import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIco
 import EditSubscriptionPlan from './EditSubscriptionPlan';
 import AddSubscription from './AddSubscription';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function Subscriptions() {
   const [showPlanDetails, setShowPlanDetails] = useState(true);
@@ -27,6 +29,7 @@ export default function Subscriptions() {
   const [planPerformance, setPlanPerformance] = useState(null);
   const filtersEffectInitializedRef = useRef(false);
   const searchEffectInitializedRef = useRef(false);
+  const pdfRef = useRef(null);
 
   // API data states
   const [plansData, setPlansData] = useState(null);
@@ -122,6 +125,61 @@ export default function Subscriptions() {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const handleExportReport = async () => {
+    if (!pdfRef.current) {
+      alert('No data available to export.');
+      return;
+    }
+    
+    if (subscriptions.length === 0) {
+      alert('No subscriptions available to export.');
+      return;
+    }
+    
+    try {
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+      
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      // Generate PDF blob
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Open PDF in new window first
+      window.open(pdfUrl, '_blank');
+      
+      // Then trigger download
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `subscriptions-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(pdfUrl);
+      }, 100);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
   };
 
   const fetchSubscriptionsData = useCallback(
@@ -330,6 +388,59 @@ export default function Subscriptions() {
   }
   return (
     <div className="w-full h-full p-6">
+      {/* Hidden PDF Content */}
+      <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#3B4A66', marginBottom: '10px' }}>
+            Subscriptions Report
+          </h1>
+          <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '5px' }}>
+            Generated on: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          <p style={{ fontSize: '12px', color: '#6B7280' }}>
+            Total Subscriptions: {subscriptions.length}
+          </p>
+        </div>
+        
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#F3F4F6', borderBottom: '2px solid #E5E7EB' }}>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Firm</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Plan</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Amount</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Status</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Next Billing</th>
+              <th style={{ padding: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#3B4A66', border: '1px solid #E5E7EB' }}>Total Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {subscriptions.map((subscription, index) => (
+              <tr key={`${subscription.firm_id}-${subscription.plan}-${index}`} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                  <div style={{ fontWeight: '600' }}>{subscription.firm_name || '—'}</div>
+                  <div style={{ fontSize: '10px', color: '#6B7280' }}>{subscription.firm_owner || '—'}</div>
+                </td>
+                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                  {subscription.plan_label || subscription.plan || '—'}
+                </td>
+                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                  <div style={{ fontWeight: '600' }}>{subscription.amount_formatted || formatCurrency(subscription.amount)}</div>
+                  <div style={{ fontSize: '10px', color: '#6B7280' }}>{subscription.billing_frequency || '—'}</div>
+                </td>
+                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                  {subscription.status_label || subscription.status || '—'}
+                </td>
+                <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                  {formatDateDisplay(subscription.next_billing_date)}
+                </td>
+                <td style={{ padding: '10px', fontSize: '11px', fontWeight: '600', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
+                  {subscription.total_paid_formatted || formatCurrency(subscription.total_paid)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {/* Header Section */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -337,11 +448,14 @@ export default function Subscriptions() {
           <p style={{ color: '#3B4A66' }}>Monitor and manage all platform subscriptions</p>
         </div>
         <div className="flex gap-3">
-          <button className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" style={{ borderRadius: '7px', }}>
+          <button 
+            onClick={handleExportReport}
+            className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" 
+            style={{ borderRadius: '7px' }}
+          >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-
             Export Report
           </button>
           <button

@@ -4,6 +4,8 @@ import TableView from './TableView';
 import CreateTaskModal from './CreateTaskModal';
 import { firmAdminTasksAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const TaskManagementMain = () => {
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ const TaskManagementMain = () => {
         page: currentPage,
         page_size: 3 // Show 3 tasks per page
       };
-      
+
       // Add filters if needed
       if (priorityFilter !== 'All Priorities') {
         params.priority = priorityFilter.toLowerCase();
@@ -58,14 +60,15 @@ const TaskManagementMain = () => {
       const response = await firmAdminTasksAPI.listTasks(params);
 
       if (response.success && response.data) {
-        // Update summary
-        if (response.data.summary) {
+        // Update summary from statistics (new API) or summary (old API) for backward compatibility
+        const stats = response.data.statistics || response.data.summary;
+        if (stats) {
           setSummary({
-            completed: response.data.summary.completed || 0,
-            in_progress: response.data.summary.in_progress || 0,
-            pending: response.data.summary.pending || 0,
-            overdue: response.data.summary.overdue || 0,
-            total_hours: response.data.summary.total_hours || 0
+            completed: stats.completed || 0,
+            in_progress: stats.in_progress || 0,
+            pending: stats.pending || 0,
+            overdue: stats.overdue || 0,
+            total_hours: stats.total_hours || 0
           });
         }
 
@@ -173,16 +176,16 @@ const TaskManagementMain = () => {
         </svg>
       )
     },
-    {
-      title: 'Total Hours',
-      value: summary.total_hours.toString(),
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    }
+    // {
+    //   title: 'Total Hours',
+    //   value: summary.total_hours.toString(),
+    //   icon: (
+    //     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //       <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //       <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //     </svg>
+    //   )
+    // }
   ];
 
   const getPriorityColor = (priority) => {
@@ -226,7 +229,7 @@ const TaskManagementMain = () => {
     try {
       setDeleting(true);
       const response = await firmAdminTasksAPI.deleteTask(taskToDelete.id);
-      
+
       if (response.success) {
         toast.success(response.message || 'Task deleted successfully');
         setShowDeleteConfirm(false);
@@ -259,6 +262,187 @@ const TaskManagementMain = () => {
     };
   }, []);
 
+  // Export Tasks List to PDF
+  const exportTasksToPDF = async () => {
+    try {
+      if (taskData.length === 0) {
+        toast.info("No tasks to export", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      // Fetch all tasks (not just current page)
+      const params = {
+        page: 1,
+        page_size: 1000 // Get all tasks
+      };
+
+      if (priorityFilter !== 'All Priorities') {
+        params.priority = priorityFilter.toLowerCase();
+      }
+      if (categoryFilter !== 'All Categories') {
+        params.category = categoryFilter;
+      }
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const response = await firmAdminTasksAPI.listTasks(params);
+
+      let allTasks = taskData;
+      if (response.success && response.data && response.data.tasks) {
+        allTasks = (response.data.tasks || []).map(task => ({
+          id: task.id,
+          task: task.task_title,
+          description: task.description || task.category || '',
+          assignedTo: {
+            name: task.assigned_to_name || 'Unassigned'
+          },
+          client: task.client_name || (task.clients_info && task.clients_info.length > 0 ? task.clients_info[0].name : 'No Client'),
+          priority: task.priority_display || task.priority || 'Medium',
+          status: task.status_display || task.status || 'Pending',
+          progress: task.progress_percentage || 0,
+          dueDate: task.due_date_formatted || task.due_date || '',
+          hours: task.hours_display || `${task.hours_spent || 0}h / ${task.estimated_hours || 0}h`,
+          category: task.category || task.task_type_display || '',
+          is_overdue: task.is_overdue || false
+        }));
+      }
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Task Management Report", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 10;
+
+      // Report Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const reportDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      doc.text(`Generated on: ${reportDate}`, pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 15;
+
+      // Summary
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Summary", 14, yPosition);
+      yPosition += 8;
+
+      const completedCount = allTasks.filter(t => (t.status || '').toLowerCase().includes('completed')).length;
+      const inProgressCount = allTasks.filter(t => (t.status || '').toLowerCase().includes('progress')).length;
+      const pendingCount = allTasks.filter(t => (t.status || '').toLowerCase().includes('pending')).length;
+      const overdueCount = allTasks.filter(t => t.is_overdue || (t.status || '').toLowerCase().includes('overdue')).length;
+
+      const summaryData = [
+        ["Total Tasks", allTasks.length.toString()],
+        ["Completed", completedCount.toString()],
+        ["In Progress", inProgressCount.toString()],
+        ["Pending", pendingCount.toString()],
+        ["Overdue", overdueCount.toString()],
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Metric", "Value"]],
+        body: summaryData,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+          0: { cellWidth: 100 },
+          1: { cellWidth: 80 }
+        }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Tasks Table
+      if (yPosition > pageHeight - 40) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`All Tasks (${allTasks.length})`, 14, yPosition);
+      yPosition += 8;
+
+      // Prepare table data
+      const tableData = allTasks.map((task) => {
+        return [
+          task.task || 'N/A',
+          task.assignedTo?.name || 'Unassigned',
+          task.client || 'No Client',
+          task.priority || 'Medium',
+          task.status || 'Pending',
+          `${task.progress || 0}%`,
+          task.dueDate || 'N/A',
+          task.category || 'N/A',
+        ];
+      });
+
+      // Create table
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Task", "Assigned To", "Client", "Priority", "Status", "Progress", "Due Date", "Category"]],
+        body: tableData,
+        theme: "grid",
+        headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
+        styles: { fontSize: 7 },
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 18 },
+          6: { cellWidth: 25 },
+          7: { cellWidth: 25 }
+        },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        didDrawPage: (data) => {
+          // Add page numbers
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: "center" }
+          );
+        }
+      });
+
+      // Open PDF in new window for preview/download
+      const fileName = `Task_Management_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.output('dataurlnewwindow', { filename: fileName });
+      toast.success("PDF opened in new window. You can download it from there.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error(`Error generating PDF: ${error.message}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F7FF] p-6">
       <div className=" mx-auto">
@@ -269,7 +453,10 @@ const TaskManagementMain = () => {
             <p className="text-gray-600 font-[BasisGrotesquePro]">Track and manage all firm tasks and workflows</p>
           </div>
           <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro]">
+            <button
+              onClick={exportTasksToPDF}
+              className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro]"
+            >
               <svg
                 width="18"
                 height="18"
@@ -288,7 +475,7 @@ const TaskManagementMain = () => {
               Export Report
             </button>
 
-            <button 
+            <button
               type="button"
               onClick={(e) => {
                 e.preventDefault();
@@ -306,7 +493,7 @@ const TaskManagementMain = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {kpiData.map((kpi, index) => (
             <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] p-3">
               <div className="flex items-center justify-between mb-1">
@@ -475,7 +662,7 @@ const TaskManagementMain = () => {
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             onClick={(e) => {
               if (e.target === e.currentTarget && !deleting) {

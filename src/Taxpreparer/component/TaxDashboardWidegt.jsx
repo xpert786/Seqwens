@@ -48,7 +48,7 @@ export default function Dashboard() {
         if (result.success && result.data) {
           const pendingCount = result.data.pagination?.total_count || result.data.tasks?.length || 0;
           const statistics = result.data.statistics || {};
-          
+
           // Update pending tasks count
           setSummaryCards(prev => ({
             ...prev,
@@ -150,7 +150,7 @@ export default function Dashboard() {
             value: loading ? "..." : summaryCards.pending_tasks?.count || 0,
             content: loading ? "Loading..." : summaryCards.pending_tasks?.status || "",
             statusType: summaryCards.pending_tasks?.status_type || "",
-            tooltip: summaryCards.pending_tasks?.status && summaryCards.pending_tasks.status.includes('behind target') 
+            tooltip: summaryCards.pending_tasks?.status && summaryCards.pending_tasks.status.includes('behind target')
               ? `This shows tasks that are behind your daily completion target. The target is set in your firm's settings and represents the expected number of tasks to complete per day. Currently: ${summaryCards.pending_tasks.count} pending tasks.`
               : summaryCards.pending_tasks?.status || "",
           },
@@ -171,7 +171,7 @@ export default function Dashboard() {
         ].map((card, index) => {
           // Hide icons when status_type is "no_change"
           const shouldShowStatusIcon = card.statusType !== "no_change";
-          
+
           return (
             <div className="col-sm-6 col-md-3 px-4" key={index}>
               <div
@@ -184,11 +184,11 @@ export default function Dashboard() {
                 </div>
                 <h5 className="dashboarded-carded-valued">{card.value}</h5>
                 <div style={{ position: 'relative' }}>
-                  <p 
+                  <p
                     className="card-contented"
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: '4px',
                       cursor: card.tooltip ? 'help' : 'default'
                     }}
@@ -197,15 +197,15 @@ export default function Dashboard() {
                     {card.content}
                     {/* Only show tooltip icon if status_type is not "no_change" */}
                     {card.tooltip && shouldShowStatusIcon && (
-                      <span 
-                        style={{ 
-                          fontSize: '12px', 
+                      <span
+                        style={{
+                          fontSize: '12px',
                           color: '#6B7280',
                           cursor: 'help'
                         }}
                         title={card.tooltip}
                       >
-                        ℹ️
+
                       </span>
                     )}
                   </p>
