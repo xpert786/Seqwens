@@ -266,11 +266,11 @@ export default function FirmAdminDashboard() {
   const RevenueTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const revenueValue = payload[0]?.value || 0;
-      
+
       return (
-        <div className="bg-white rounded-lg  p-3 border border-blue-200" style={{minWidth: '140px'}}>
-          <div className="text-sm font-semibold mb-2" style={{color: '#374151'}}>{label}</div>
-          <div className="text-sm" style={{color: '#3AD6F2'}}>
+        <div className="bg-white rounded-lg  p-3 border border-blue-200" style={{ minWidth: '140px' }}>
+          <div className="text-sm font-semibold mb-2" style={{ color: '#374151' }}>{label}</div>
+          <div className="text-sm" style={{ color: '#3AD6F2' }}>
             Revenue : ${revenueValue.toLocaleString()}
           </div>
         </div>
@@ -548,16 +548,16 @@ export default function FirmAdminDashboard() {
       <CustomizeModal />
       <ScheduleModal />
       <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex-1 min-w-0 pr-4 xl:pr-2">
-          <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm Dashboard</h4>
-          <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base xl:whitespace-nowrap leading-tight">
-            <span className="block xl:inline">Welcome Back</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
-          {/* <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex-1 min-w-0 pr-4 xl:pr-2">
+            <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm Dashboard</h4>
+            <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base xl:whitespace-nowrap leading-tight">
+              <span className="block xl:inline">Welcome Back</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
+            {/* <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
             Admin View
             <svg className="w-2 h-2 xl:w-3 xl:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -569,48 +569,7 @@ export default function FirmAdminDashboard() {
           >
             Customize
           </button> */}
-          <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
-            <DownsIcon />
-            Export Report
-          </button>
-          <button 
-            onClick={() => setIsScheduleModalOpen(true)}
-            className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
-          >
-            <SceheIcon />
-            Schedule Reports
-          </button>
-        </div>
-      </div>
-
-      {/* System Alerts Section */}
-      {widgetVisibility.Alerts && (
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">System Alerts</h4>
-            <div className="px-3 py-1 bg-orange-100 border border-orange-300 rounded-full">
-              <span className="text-xs font-medium text-orange-600 font-[BasisGrotesquePro]">
-                {loading ? '...' : (dashboardData?.system_alerts?.active_count || 0)} Active
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
-            <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
-              Admin View
-              <svg className="w-2 h-2 xl:w-3 xl:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setIsCustomizeModalOpen(true)}
-              className="px-1 xl:px-4 py-1 xl:py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 whitespace-nowrap"
-            >
-              Customize
-            </button>
-            <button
-              onClick={exportDashboardToPDF}
-              className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
-            >
+            <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
               <DownsIcon />
               Export Report
             </button>
@@ -799,442 +758,33 @@ export default function FirmAdminDashboard() {
               </div> */}
               </div>
             </div>
-  
-          {/* My Tasks */}
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-            <div className="absolute top-3 right-3">
-              <FilessIcon />
-            </div>
-            <div className="mb-3">
-              <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Tasks</h3>
-              <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
-                {loading ? '...' : (dashboardData?.key_metrics?.tasks?.current || 0)}
-              </p>
-              <div className="flex items-center gap-1 mt-1">
-                {dashboardData?.key_metrics?.tasks?.change_type === 'increase' || (dashboardData?.key_metrics?.tasks?.percentage_change && dashboardData.key_metrics.tasks.percentage_change > 0) ? <ChecksIcon /> : <Checks2Icon />}
-                <p className="text-xs text-black font-[BasisGrotesquePro]">
-                  {loading ? '...' : dashboardData?.key_metrics?.tasks?.percentage_change 
-                    ? `${dashboardData.key_metrics.tasks.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.tasks.percentage_change} vs Last Month`
-                    : 'No change'}
+
+            {/* My Tasks */}
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+              <div className="absolute top-3 right-3">
+                <FilessIcon />
+              </div>
+              <div className="mb-3">
+                <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{ fontSize: '15px' }}>My Tasks</h3>
+                <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                  {loading ? '...' : (dashboardData?.key_metrics?.tasks?.current || 0)}
                 </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-[#6B7280]">
-                <span>Target {dashboardData?.key_metrics?.tasks?.target || 0}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-[#3AD6F2] h-2 rounded-full" 
-                  style={{
-                    width: dashboardData?.key_metrics?.tasks?.target 
-                      ? `${Math.min((dashboardData.key_metrics.tasks.current / dashboardData.key_metrics.tasks.target) * 100, 100)}%`
-                      : '0%'
-                  }}
-                ></div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.tasks?.breakdown?.tax_prep || 0}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Tax Prep</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.tasks?.breakdown?.review || 0}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Review</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
+                <div className="flex items-center gap-1 mt-1">
+                  {dashboardData?.key_metrics?.tasks?.change_type === 'increase' || (dashboardData?.key_metrics?.tasks?.percentage_change && dashboardData.key_metrics.tasks.percentage_change > 0) ? <ChecksIcon /> : <Checks2Icon />}
+                  <p className="text-xs text-black font-[BasisGrotesquePro]">
+                    {loading ? '...' : dashboardData?.key_metrics?.tasks?.percentage_change
+                      ? `${dashboardData.key_metrics.tasks.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.tasks.percentage_change} vs Last Month`
+                      : 'No change'}
+                  </p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* My Response Time */}
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-            <div className="absolute top-3 right-3">
-              <WatchesIcon />
-            </div>
-            <div className="mb-3">
-              <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{fontSize: '15px'}}>My Response Time</h3>
-              <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
-                {loading ? '...' : (dashboardData?.key_metrics?.response_time?.current || 0)}
-              </p>
-              <div className="flex items-center gap-1 mt-1">
-                <ChecksIcon />
-                <p className="text-xs text-black font-[BasisGrotesquePro]">
-                  {loading ? '...' : dashboardData?.key_metrics?.response_time?.percentage_change 
-                    ? `${dashboardData.key_metrics.response_time.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.response_time.percentage_change} vs Last Week`
-                    : 'No change'}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-[#6B7280]">
-                <span>Target {dashboardData?.key_metrics?.response_time?.target || 0}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-[#3AD6F2] h-2 rounded-full" 
-                  style={{
-                    width: dashboardData?.key_metrics?.response_time?.target 
-                      ? `${Math.min((dashboardData.key_metrics.response_time.current / dashboardData.key_metrics.response_time.target) * 100, 100)}%`
-                      : '0%'
-                  }}
-                ></div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.response_time?.breakdown?.email || '0'}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Email</div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-[#6B7280]">
+                  <span>Target {dashboardData?.key_metrics?.tasks?.target || 0}</span>
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.response_time?.breakdown?.phone || '0'}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Phone</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.response_time?.breakdown?.portal || '0'}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Portal</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Revenue Analytics Section */}
-      {widgetVisibility.Revenue && (
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Revenue Analytics</h2>
-              <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filter
-              </button>
-              <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export
-              </button>
-              <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Tab Navigation and Monthly Dropdown */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="bg-white rounded-lg p-1 border border-gray-200">
-            <div className="flex gap-0">
-              
-              
-            </div>
-          </div>
-          <select className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-            <option>Monthly</option>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </select>
-        </div>
-        
-        <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={getRevenueData(dashboardData)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                />
-                <Tooltip content={<RevenueTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#3AD6F2"
-                  strokeWidth={3}
-                  dot={{ fill: '#3AD6F2', stroke: '#3AD6F2', strokeWidth: 2, r: 5 }}
-                  activeDot={{ r: 7, stroke: '#3AD6F2', strokeWidth: 2, fill: '#3AD6F2' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-        </div>
-        </div>
-      )}
-
-      {/* Client Engagement Funnel Section */}
-      {widgetVisibility.Engagement && (
-      <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Funnel</h2>
-            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Lead conversion and client journey</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading engagement data...</div>
-          ) : getClientEngagementData(dashboardData).length > 0 ? (
-            getClientEngagementData(dashboardData).map((item, index) => (
-              <div key={index} className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
-                  <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.value} {item.percentage}%</div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 relative">
-                  <div 
-                    className="h-3 rounded-full"
-                    style={{width: `${item.percentage}%`, backgroundColor: '#3AD6F2'}}
-                  >
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">No engagement data available</div>
-          )}
-        </div>
-        
-        <div className="mt-6 bg-orange-50 rounded-lg p-4">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Conversion Rate</div>
-              <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
-                {loading ? '...' : `${dashboardData?.client_engagement?.metrics?.conversion_rate || 0}%`}
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Avg. Response Time</div>
-              <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
-                {loading ? '...' : `${dashboardData?.client_engagement?.metrics?.avg_response_time || 0}${dashboardData?.client_engagement?.metrics?.avg_response_time_unit || 'h'}`}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* Staff Performance Leaderboard Section */}
-      {widgetVisibility.Staff && (
-      <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Staff Performance Leaderboard</h2>
-            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Top performer this month</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button> */}
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading staff performance...</div>
-          ) : dashboardData?.staff_performance?.leaderboard?.length > 0 ? (
-            dashboardData.staff_performance.leaderboard.map((staff, index) => (
-              <div key={staff.staff_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-[#FEF3C7] rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-[#FBBF24]">{staff.rank}</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{staff.name}</div>
-                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">{staff.tasks_completed} Task. {staff.avg_days} days Avg</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue?.toLocaleString() || '0'}</div>
-                  {/* <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.performance_percentage}%</div> */}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">No staff performance data available</div>
-          )}
-        </div>
-      </div>
-      )}
-
-      {/* Top Preparers Section */}
-      {widgetVisibility.Performance && (
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Top Prepares (This Month)</h2>
-        </div>
-        
-        <div className="space-y-3">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading top preparers...</div>
-          ) : dashboardData?.top_preparers?.data?.length > 0 ? (
-            dashboardData.top_preparers.data.map((preparer, index) => (
-              <div key={preparer.preparer_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                <div>
-                  <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{preparer.name}</div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">{preparer.returns} Returns</div>
-                    <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${preparer.revenue?.toLocaleString() || '0'}</div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">No preparer data available</div>
-          )}
-        </div>
-      </div>
-      )}
-
-      {/* Compliance & Risk Status Section */}
-      {widgetVisibility.Compliance && (
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Status</h2>
-            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Current compliance metrics & alerts summary</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading compliance data...</div>
-          ) : getComplianceData(dashboardData).length > 0 ? (
-            getComplianceData(dashboardData).map((item, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.status}</div>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.score}</div>
-                  <div className={`px-2 py-1 rounded text-xs font-medium ${
-                    item.badge === 'Low' ? 'bg-blue-100 text-blue-800' :
-                    item.badge === 'Medium' ? 'bg-gray-100 text-gray-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {item.badge}
-                  </div>
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 relative">
-                <div 
-                  className="h-4 rounded-full"
-                  style={{width: `${item.percentage}%`, backgroundColor: '#3AD6F2'}}
-                >
-                </div>
-              </div>
-            </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">No compliance data available</div>
-          )}
-          
-          {dashboardData?.compliance_risk?.metrics && (
-            <div className="mt-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-orange-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">KPA Completion Rate</div>
-                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
-                      {dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="h-3 rounded-full" 
-                      style={{
-                        width: `${dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%`, 
-                        backgroundColor: '#3AD6F2'
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                
-                <div className="bg-orange-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Flagged Returns (Active)</div>
-                    <div className="text-2xl font-bold text-red-600 font-[BasisGrotesquePro]">
-                      {dashboardData.compliance_risk.metrics.flagged_returns_active || 0}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-orange-50 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Overall compliance Score</div>
-                  <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
-                    {dashboardData.compliance_risk.metrics.overall_compliance_score || 0}%
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="h-3 rounded-full" 
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-[#3AD6F2] h-2 rounded-full"
                     style={{
                       width: dashboardData?.key_metrics?.tasks?.target
                         ? `${Math.min((dashboardData.key_metrics.tasks.current / dashboardData.key_metrics.tasks.target) * 100, 100)}%`
@@ -1319,6 +869,360 @@ export default function FirmAdminDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Revenue Analytics Section */}
+        {widgetVisibility.Revenue && (
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Revenue Analytics</h2>
+                  <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filter
+                  </button>
+                  <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export
+                  </button>
+                  <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation and Monthly Dropdown */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="bg-white rounded-lg p-1 border border-gray-200">
+                <div className="flex gap-0">
+
+
+                </div>
+              </div>
+              <select className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
+                <option>Monthly</option>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </select>
+            </div>
+
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={getRevenueData(dashboardData)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  />
+                  <Tooltip content={<RevenueTooltip />} />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#3AD6F2"
+                    strokeWidth={3}
+                    dot={{ fill: '#3AD6F2', stroke: '#3AD6F2', strokeWidth: 2, r: 5 }}
+                    activeDot={{ r: 7, stroke: '#3AD6F2', strokeWidth: 2, fill: '#3AD6F2' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Client Engagement Funnel Section */}
+        {widgetVisibility.Engagement && (
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Funnel</h2>
+                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Lead conversion and client journey</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="p-2 text-gray-500 hover:text-gray-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+                <button className="p-2 text-gray-500 hover:text-gray-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Loading engagement data...</div>
+              ) : getClientEngagementData(dashboardData).length > 0 ? (
+                getClientEngagementData(dashboardData).map((item, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
+                      <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.value} {item.percentage}%</div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 relative">
+                      <div
+                        className="h-3 rounded-full"
+                        style={{ width: `${item.percentage}%`, backgroundColor: '#3AD6F2' }}
+                      >
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">No engagement data available</div>
+              )}
+            </div>
+
+            <div className="mt-6 bg-orange-50 rounded-lg p-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Conversion Rate</div>
+                  <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                    {loading ? '...' : `${dashboardData?.client_engagement?.metrics?.conversion_rate || 0}%`}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Avg. Response Time</div>
+                  <div className="text-sm font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
+                    {loading ? '...' : `${dashboardData?.client_engagement?.metrics?.avg_response_time || 0}${dashboardData?.client_engagement?.metrics?.avg_response_time_unit || 'h'}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Staff Performance Leaderboard Section */}
+        {widgetVisibility.Staff && (
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Staff Performance Leaderboard</h2>
+                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Top performer this month</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* <button className="p-2 text-gray-500 hover:text-gray-700">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button className="p-2 text-gray-500 hover:text-gray-700">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button> */}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Loading staff performance...</div>
+              ) : dashboardData?.staff_performance?.leaderboard?.length > 0 ? (
+                dashboardData.staff_performance.leaderboard.map((staff, index) => (
+                  <div key={staff.staff_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-[#FEF3C7] rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-[#FBBF24]">{staff.rank}</span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{staff.name}</div>
+                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">{staff.tasks_completed} Task. {staff.avg_days} days Avg</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${staff.revenue?.toLocaleString() || '0'}</div>
+                      {/* <div className="text-sm text-green-600 font-[BasisGrotesquePro]">{staff.performance_percentage}%</div> */}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">No staff performance data available</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Top Preparers Section */}
+        {widgetVisibility.Performance && (
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Top Prepares (This Month)</h2>
+            </div>
+
+            <div className="space-y-3">
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Loading top preparers...</div>
+              ) : dashboardData?.top_preparers?.data?.length > 0 ? (
+                dashboardData.top_preparers.data.map((preparer, index) => (
+                  <div key={preparer.preparer_id || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div>
+                      <div className="font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{preparer.name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">{preparer.returns} Returns</div>
+                        <div className="font-bold text-[#3B4A66] font-[BasisGrotesquePro]">${preparer.revenue?.toLocaleString() || '0'}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">No preparer data available</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Compliance & Risk Status Section */}
+        {widgetVisibility.Compliance && (
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Compliance & Risk Status</h2>
+                <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Current compliance metrics & alerts summary</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="p-2 text-gray-500 hover:text-gray-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+                <button className="p-2 text-gray-500 hover:text-gray-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Loading compliance data...</div>
+              ) : getComplianceData(dashboardData).length > 0 ? (
+                getComplianceData(dashboardData).map((item, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.status}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.score}</div>
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${item.badge === 'Low' ? 'bg-blue-100 text-blue-800' :
+                          item.badge === 'Medium' ? 'bg-gray-100 text-gray-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                          {item.badge}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                      <div
+                        className="h-4 rounded-full"
+                        style={{ width: `${item.percentage}%`, backgroundColor: '#3AD6F2' }}
+                      >
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">No compliance data available</div>
+              )}
+
+              {dashboardData?.compliance_risk?.metrics && (
+                <div className="mt-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-orange-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">KPA Completion Rate</div>
+                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                          {dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="h-3 rounded-full"
+                          style={{
+                            width: `${dashboardData.compliance_risk.metrics.kpa_completion_rate || 0}%`,
+                            backgroundColor: '#3AD6F2'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="bg-orange-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Flagged Returns (Active)</div>
+                        <div className="text-2xl font-bold text-red-600 font-[BasisGrotesquePro]">
+                          {dashboardData.compliance_risk.metrics.flagged_returns_active || 0}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Overall compliance Score</div>
+                      <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">
+                        {dashboardData.compliance_risk.metrics.overall_compliance_score || 0}%
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="h-3 rounded-full"
+                        style={{
+                          width: dashboardData?.key_metrics?.tasks?.target
+                            ? `${Math.min((dashboardData.key_metrics.tasks.current / dashboardData.key_metrics.tasks.target) * 100, 100)}%`
+                            : '0%'
+                        }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                          {dashboardData?.key_metrics?.tasks?.breakdown?.tax_prep || 0}
+                        </div>
+                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Tax Prep</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                          {dashboardData?.key_metrics?.tasks?.breakdown?.review || 0}
+                        </div>
+                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Review</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
+                          {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
+                        </div>
+                        <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -3922,3 +3922,6 @@ export const firmAdminBillingHistoryAPI = {
       });
   }
 };
+
+// Export utility functions
+export { refreshAccessToken, clearUserData, getLoginUrl };
