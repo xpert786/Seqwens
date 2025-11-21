@@ -4,7 +4,6 @@ import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEl
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
 import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action, CrossesIcon } from '../../Components/icons';
 import '../../../Taxpreparer/styles/taxdashboard.css';
-import FirmAdmin from '../../../assets/FirmAdmin.png';
 import BulkActionModal from './BulkAction';
 import BulkImportModal from './BulkImportModal';
 import AddClientModal from "./AddClientModal";
@@ -20,13 +19,19 @@ const API_BASE_URL = getApiBaseUrl();
 
 export default function ClientManage() {
   const navigate = useNavigate();
-  const [selectedClients, setSelectedClients] = useState([]);
   const [showDropdown, setShowDropdown] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showFormBuilder, setShowFormBuilder] = useState(false);
+  const [showReassignStaffModal, setShowReassignStaffModal] = useState(false);
+  const [selectedClientForReassign, setSelectedClientForReassign] = useState(null);
+  const [isAssignMode, setIsAssignMode] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [selectedClientForDelete, setSelectedClientForDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [reassigning, setReassigning] = useState(false);
 
   // Staff members state
   const [staffMembers, setStaffMembers] = useState([]);
@@ -46,9 +51,18 @@ export default function ClientManage() {
 
   // Dashboard statistics state
   const [dashboardStats, setDashboardStats] = useState({
-    active_clients: 0,
-    total_billed: 0,
-    outstanding: 0,
+    active_clients: {
+      count: 0,
+      vs_last_month: 0
+    },
+    total_billed: {
+      amount: 0,
+      vs_last_month: 0
+    },
+    outstanding: {
+      amount: 0,
+      vs_last_month: 0
+    },
     new_this_month: {
       count: 0,
       vs_last_month: 0
@@ -66,7 +80,7 @@ export default function ClientManage() {
   const [dashboardError, setDashboardError] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
-    page_size: 20,
+    page_size: 10,
     total_count: 0,
     total_pages: 1,
     has_next: false,
@@ -227,7 +241,7 @@ export default function ClientManage() {
         const token = getAccessToken();
         const queryParams = new URLSearchParams();
         queryParams.append('page', currentPage.toString());
-        queryParams.append('page_size', '20');
+        queryParams.append('page_size', '10');
 
         if (debouncedSearchTerm.trim()) {
           queryParams.append('search', debouncedSearchTerm.trim());
@@ -303,7 +317,8 @@ export default function ClientManage() {
                 totalBilled: '$0', // Can be calculated from invoices if available
                 compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
                 pendingTasks: client.pending_tasks_count || 0,
-                documentsCount: client.documents_count || 0
+                documentsCount: client.documents_count || 0,
+                assignedStaff: client.assigned_staff || []
               };
             });
             setClients(mappedClients);
@@ -340,20 +355,189 @@ export default function ClientManage() {
     };
   }, [showDropdown]);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedClients(clients.map(client => client.id));
-    } else {
-      setSelectedClients([]);
+
+  // Helper function to refresh clients list
+  const refreshClientsList = async () => {
+    try {
+      setClientsLoading(true);
+      setClientsError(null);
+
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', currentPage.toString());
+      queryParams.append('page_size', '10');
+
+      if (debouncedSearchTerm.trim()) {
+        queryParams.append('search', debouncedSearchTerm.trim());
+      }
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/clients/list/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        if (result.data.overview) {
+          setOverview(result.data.overview);
+        }
+
+        if (result.data.pagination) {
+          setPagination(result.data.pagination);
+        }
+
+        if (result.data.clients) {
+          const mappedClients = result.data.clients.map(client => {
+            const profile = client.profile || client;
+            const firstName = profile.first_name || client.first_name || '';
+            const lastName = profile.last_name || client.last_name || '';
+            
+            let fullName = '';
+            if (firstName || lastName) {
+              fullName = `${firstName} ${lastName}`.trim();
+            } else if (profile.name || client.name) {
+              fullName = profile.name || client.name;
+            } else if (profile.full_name || client.full_name) {
+              fullName = profile.full_name || client.full_name;
+            } else {
+              fullName = profile.email || client.email || 'Unknown Client';
+            }
+            
+            return {
+              id: client.id || profile.id,
+              name: fullName,
+              company: client.client_type || profile.client_type || 'Individual',
+              type: client.client_type || profile.client_type || 'Individual',
+              email: profile.email || client.email || '',
+              phone: profile.phone || profile.phone_formatted || client.phone_number || client.phone || '',
+              status: client.status || profile.account_status?.toLowerCase() || 'new',
+              lastActivity: client.next_due_date || 'N/A',
+              lastActivityType: 'N/A',
+              lastActivityIcon: 'DocumentIcon',
+              totalBilled: '$0',
+              compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+              pendingTasks: client.pending_tasks_count || 0,
+              documentsCount: client.documents_count || 0,
+              assignedStaff: client.assigned_staff || []
+            };
+          });
+          setClients(mappedClients);
+        } else {
+          setClients([]);
+        }
+      } else {
+        setClients([]);
+      }
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+      setClientsError('Failed to load clients');
+      setClients([]);
+    } finally {
+      setClientsLoading(false);
     }
   };
 
-  const handleSelectClient = (clientId) => {
-    setSelectedClients(prev =>
-      prev.includes(clientId)
-        ? prev.filter(id => id !== clientId)
-        : [...prev, clientId]
-    );
+  // Soft Delete Taxpayer
+  const handleSoftDelete = async (clientId) => {
+    try {
+      setDeleting(true);
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/taxpayers/${clientId}/soft-delete/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(result.message || 'Client deleted successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowDeleteConfirmModal(false);
+        setSelectedClientForDelete(null);
+        // Refresh clients list
+        await refreshClientsList();
+      } else {
+        throw new Error(result.message || 'Failed to delete client');
+      }
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to delete client', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Reassign/Assign Tax Preparer (uses same API for both)
+  const handleReassignTaxPreparer = async (clientId, taxPreparerId) => {
+    try {
+      setReassigning(true);
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/taxpayers/${clientId}/reassign-tax-preparer/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          tax_preparer_id: parseInt(taxPreparerId)
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        const successMessage = isAssignMode 
+          ? (result.message || 'Tax preparer assigned successfully')
+          : (result.message || 'Tax preparer reassigned successfully');
+        toast.success(successMessage, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowReassignStaffModal(false);
+        setSelectedClientForReassign(null);
+        setIsAssignMode(false);
+        // Refresh clients list
+        await refreshClientsList();
+      } else {
+        throw new Error(result.message || 'Failed to assign/reassign tax preparer');
+      }
+    } catch (err) {
+      console.error('Error assigning/reassigning tax preparer:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to assign/reassign tax preparer', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setReassigning(false);
+    }
   };
 
 
@@ -454,6 +638,7 @@ export default function ClientManage() {
               lastActivity: client.next_due_date || 'N/A',
               totalBilled: '$0',
               compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
+              assignedStaff: client.assigned_staff || []
             };
           });
         }
@@ -596,10 +781,10 @@ export default function ClientManage() {
           <h5 className="taxdashboard-subtitle">Manage all firm clients and assignments</h5>
         </div>
         <div className="d-flex gap-3">
-          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
+          {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
             <SettingIcon />
             Build Intake Forms
-          </button>
+          </button> */}
           <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }}
             onClick={() => setShowBulkImportModal(true)}>
             <BulkImport />
@@ -626,52 +811,64 @@ export default function ClientManage() {
         {[
           {
             label: "Active Clients",
-            value: dashboardLoading ? '...' : dashboardStats.active_clients || 0,
+            value: dashboardLoading ? '...' : dashboardStats.active_clients?.count || 0,
+            change: dashboardStats.active_clients?.vs_last_month,
+            isCurrency: false
           },
           {
             label: "Total Billed",
-            value: dashboardLoading ? '...' : `$${dashboardStats.total_billed?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`,
+            value: dashboardLoading ? '...' : `$${(dashboardStats.total_billed?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            change: dashboardStats.total_billed?.vs_last_month,
+            isCurrency: true
           },
           {
             label: "Outstanding",
-            value: dashboardLoading ? '...' : `$${dashboardStats.outstanding?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`,
+            value: dashboardLoading ? '...' : `$${(dashboardStats.outstanding?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            change: dashboardStats.outstanding?.vs_last_month,
+            isCurrency: true
           },
           {
             label: "New This Month",
             value: dashboardLoading ? '...' : dashboardStats.new_this_month?.count || 0,
-            content: dashboardStats.new_this_month?.vs_last_month !== undefined
-              ? `vs Last Month: ${dashboardStats.new_this_month.vs_last_month >= 0 ? '+' : ''}${dashboardStats.new_this_month.vs_last_month}`
-              : '',
-            contentColor: "gray"
+            change: dashboardStats.new_this_month?.vs_last_month,
+            isCurrency: false
           },
-          // {
-          //   label: "Revenue by Type",
-          //   value: "",
-          //   content: dashboardLoading
-          //     ? 'Loading...'
-          //     : `Individual: $${dashboardStats.revenue_by_type?.individual?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nBusiness: $${dashboardStats.revenue_by_type?.business?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
-          // },
-          // {
-            // label: "Revenue by Segment",
-            // value: "",
-            // content: dashboardLoading
-            //   ? 'Loading...'
-            //   : `Recurring: $${dashboardStats.revenue_by_segment?.recurring?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}\nSeasonal: $${dashboardStats.revenue_by_segment?.seasonal?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`
-          // },
-        ].map((card, index) => (
-          <div className="w-full h-full" key={index}>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col">
-              <div className="flex justify-between items-start mb-4">
-                <div className="text-sm font-medium text-gray-600">{card.label}</div>
-                {card.icon}
-              </div>
-              {card.value && <h5 className="text-3xl font-bold text-gray-900 mb-2">{card.value}</h5>}
-              <div className="flex-1">
-                <p className="text-sm" style={{ color: card.contentColor || '#6B7280', whiteSpace: 'pre-line' }}>{card.content}</p>
+        ].map((card, index) => {
+          const changeValue = card.change !== undefined && card.change !== null ? card.change : null;
+          const isPositive = changeValue !== null && changeValue > 0;
+          const isNegative = changeValue !== null && changeValue < 0;
+          const isNeutral = changeValue === 0 || changeValue === null;
+
+          return (
+            <div className="w-full h-full" key={index}>
+              <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="text-sm font-medium text-gray-600">{card.label}</div>
+                  {card.icon}
+                </div>
+                {card.value && <h5 className="text-3xl font-bold text-gray-900 mb-2">{card.value}</h5>}
+                {changeValue !== null && (
+                  <p className="text-sm flex items-center gap-1" style={{ color: isPositive ? '#22C55E' : isNegative ? '#EF4444' : '#6B7280' }}>
+                    {isPositive ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                      </svg>
+                    ) : isNegative ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    ) : null}
+                    <span>
+                      {isPositive ? '+' : ''}
+                      {card.isCurrency ? `$${Math.abs(changeValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : Math.abs(changeValue)}
+                      {' vs last month'}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Client List Section */}
@@ -745,31 +942,15 @@ export default function ClientManage() {
 
         {/* Client Table */}
         <div className="overflow-x-auto px-6">
-          <table className="min-w-full" style={{ minWidth: '940px' }}>
+          <table className="min-w-full">
             <thead className="">
-              <tr className="flex gap-8" style={{ minWidth: '940px' }}>
-                <th className="w-[60px] flex justify-center py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    checked={selectedClients.length === clients.length && clients.length > 0}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4"
-                    style={{
-                      border: '1px solid var(--Palette2-SkyBlue-900, #3AD6F2)',
-                      backgroundColor: selectedClients.length === clients.length && clients.length > 0
-                        ? 'var(--Palette2-SkyBlue-900, #3AD6F2)'
-                        : 'transparent',
-                      color: selectedClients.length === clients.length && clients.length > 0
-                        ? 'white'
-                        : 'var(--Palette2-SkyBlue-900, #3AD6F2)'
-                    }}
-                  />
-                </th>
-                <th className="flex-1 min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                <th className="w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
-                <th className="w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
-                <th className="w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <tr className="flex gap-2 sm:gap-4 md:gap-6 lg:gap-8">
+                <th className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                <th className="w-[120px] sm:w-[150px] md:w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="w-[100px] sm:w-[120px] md:w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
+                <th className="w-[90px] sm:w-[100px] md:w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
+                <th className="w-[120px] sm:w-[140px] md:w-[160px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Staff</th>
+                <th className="w-[70px] sm:w-[80px] md:w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
 
@@ -797,36 +978,10 @@ export default function ClientManage() {
                   <tr key={client.id}>
                     <td colSpan="6" className="p-0">
                       <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
-                        <div className="flex items-center gap-8" style={{ minWidth: '940px' }}>
-                          {/* Checkbox Column */}
-                          <div className="w-[60px] flex justify-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedClients.includes(client.id)}
-                              onChange={() => handleSelectClient(client.id)}
-                              className="w-4 h-4"
-                              style={{
-                                border: '1px solid var(--Palette2-SkyBlue-900, #3AD6F2)',
-                                backgroundColor: selectedClients.includes(client.id)
-                                  ? 'var(--Palette2-SkyBlue-900, #3AD6F2)'
-                                  : 'transparent',
-                                color: selectedClients.includes(client.id)
-                                  ? 'white'
-                                  : 'var(--Palette2-SkyBlue-900, #3AD6F2)'
-                              }}
-                            />
-                          </div>
-
+                        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8">
                           {/* Client Column */}
-                          <div className="flex-1 min-w-[250px]">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-100 flex-shrink-0">
-                                <img
-                                  src={FirmAdmin}
-                                  alt={client.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
+                          <div className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px]">
+                            <div className="flex items-center">
                               <div className="flex-1 min-w-0">
                                 <div
                                   className="font-semibold text-gray-900 text-sm mb-1 cursor-pointer hover:text-blue-600 transition-colors"
@@ -848,34 +1003,34 @@ export default function ClientManage() {
                           </div>
 
                           {/* Contact Column */}
-                          <div className="w-[180px]">
+                          <div className="w-[120px] sm:w-[150px] md:w-[180px] flex-shrink-0">
                             <div className="space-y-2">
                               <div className="flex items-center space-x-2 text-xs text-gray-600">
                                 <MailIcon />
-                                <span className="break-all">{client.email}</span>
+                                <span className="break-all truncate">{client.email}</span>
                               </div>
                               <div className="flex items-center space-x-2 text-xs text-gray-600">
                                 <CallIcon />
-                                <span>{client.phone}</span>
+                                <span className="truncate">{client.phone}</span>
                               </div>
                             </div>
                           </div>
 
                           {/* Last Activity Column */}
-                          <div className="w-[140px]">
+                          <div className="w-[100px] sm:w-[120px] md:w-[140px] flex-shrink-0">
                             <div className="flex items-center space-x-2">
                               {getActivityIcon(client.lastActivityIcon)}
-                              <div>
-                                <div className="text-sm text-gray-600">{client.lastActivity}</div>
-                                <div className="text-xs text-gray-400">{client.lastActivityType}</div>
+                              <div className="min-w-0">
+                                <div className="text-sm text-gray-600 truncate">{client.lastActivity}</div>
+                                <div className="text-xs text-gray-400 truncate">{client.lastActivityType}</div>
                               </div>
                             </div>
                           </div>
 
                           {/* Compliance Column */}
-                          <div className="w-[120px] flex justify-start">
+                          <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
                             <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getComplianceColor(client.compliance)}`}
+                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getComplianceColor(client.compliance)}`}
                               style={client.compliance === 'Complete' || client.compliance === 'Active' ? {
                                 background: '#22C55E',
                                 border: '0.5px solid #22C55E'
@@ -892,8 +1047,36 @@ export default function ClientManage() {
                             </span>
                           </div>
 
+                          {/* Assigned Staff Column */}
+                          <div className="w-[120px] sm:w-[140px] md:w-[160px] flex-shrink-0">
+                            {client.assignedStaff && client.assignedStaff.length > 0 ? (
+                              <div className="space-y-1">
+                                {client.assignedStaff.map((staff, index) => (
+                                  <div key={staff.id || index} className="text-xs text-gray-600 truncate" title={staff.name}>
+                                    {staff.name}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setSelectedClientForReassign(client.id);
+                                  setIsAssignMode(true);
+                                  setShowReassignStaffModal(true);
+                                }}
+                                className="text-xs px-2 py-1 rounded text-white hover:opacity-90 transition-opacity"
+                                style={{
+                                  background: 'var(--Palette2-SkyBlue-900, #3AD6F2)',
+                                  fontSize: '11px'
+                                }}
+                              >
+                                Assign Staff
+                              </button>
+                            )}
+                          </div>
+
                           {/* Action Column */}
-                          <div className="w-[100px] text-sm font-medium relative dropdown-container flex justify-center">
+                          <div className="w-[70px] sm:w-[80px] md:w-[100px] text-sm font-medium relative dropdown-container flex justify-center flex-shrink-0">
                             <button
                               onClick={() => setShowDropdown(showDropdown === client.id ? null : client.id)}
                               className="text-gray-400 "
@@ -913,15 +1096,44 @@ export default function ClientManage() {
                               >
                                 <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
                                   {/* View Details removed - clicking on client name now redirects to details page */}
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Client</button>
+                                  {/* <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Client</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Timeline</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Send Message</button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedule Meeting</button>
-                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Reassign Staff</button>
+                                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedule Meeting</button> */}
+                                  {client.assignedStaff && client.assignedStaff.length > 0 ? (
+                                    <button 
+                                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setSelectedClientForReassign(client.id);
+                                        setIsAssignMode(false);
+                                        setShowReassignStaffModal(true);
+                                        setShowDropdown(null);
+                                      }}
+                                    >
+                                      Reassign Staff
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setSelectedClientForReassign(client.id);
+                                        setIsAssignMode(true);
+                                        setShowReassignStaffModal(true);
+                                        setShowDropdown(null);
+                                      }}
+                                    >
+                                      Assign Staff
+                                    </button>
+                                  )}
                                   <div style={{ borderTop: '0.2px solid #000000' }}></div>
                                   <button
                                     className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                                     style={{ color: 'var(--color-red-500, #EF4444)' }}
+                                    onClick={() => {
+                                      setSelectedClientForDelete(client.id);
+                                      setShowDeleteConfirmModal(true);
+                                      setShowDropdown(null);
+                                    }}
                                   >
                                     Delete Client
                                   </button>
@@ -940,7 +1152,7 @@ export default function ClientManage() {
         </div>
 
         {/* Pagination */}
-        {pagination.total_pages > 1 && (
+        {pagination.total_count > 0 && (
           <div className="p-6 border-t border-gray-200 flex items-center justify-between">
             <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
               Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} clients
@@ -1207,12 +1419,16 @@ export default function ClientManage() {
       <BulkActionModal
         isOpen={showBulkActionModal}
         onClose={() => setShowBulkActionModal(false)}
-        selectedCount={selectedClients.length}
+        selectedCount={0}
       />
       {/* Bulk Impot modal  */}
       <BulkImportModal
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
+        onImportSuccess={async () => {
+          // Refresh clients list after successful import
+          await refreshClientsList();
+        }}
       />
       <AddClientModal
         isOpen={showAddClientModal}
@@ -1227,6 +1443,189 @@ export default function ClientManage() {
         isOpen={showFormBuilder}
         onClose={() => setShowFormBuilder(false)}
       />
+
+      {/* Reassign/Assign Staff Modal */}
+      {showReassignStaffModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ zIndex: 9999 }}
+          onClick={() => {
+            if (!reassigning) {
+              setShowReassignStaffModal(false);
+              setSelectedClientForReassign(null);
+              setIsAssignMode(false);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            style={{
+              borderRadius: '12px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>
+                {isAssignMode ? 'Assign Tax Preparer' : 'Reassign Tax Preparer'}
+              </h2>
+              <button
+                onClick={() => {
+                  if (!reassigning) {
+                    setShowReassignStaffModal(false);
+                    setSelectedClientForReassign(null);
+                    setIsAssignMode(false);
+                  }
+                }}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={reassigning}
+              >
+                <CrossesIcon />
+              </button>
+            </div>
+
+            {staffLoading ? (
+              <div className="text-center py-4 text-gray-500">Loading staff members...</div>
+            ) : staffError ? (
+              <div className="text-center py-4 text-red-500">{staffError}</div>
+            ) : staffMembers.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">No staff members available</div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                    Select Tax Preparer
+                  </label>
+                  <select
+                    id="reassign-staff-select"
+                    key={`reassign-select-${selectedClientForReassign}`}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 font-[BasisGrotesquePro] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={reassigning}
+                    defaultValue=""
+                  >
+                    <option value="">Select a tax preparer</option>
+                    {staffMembers.map((staff) => (
+                      <option key={staff.id} value={staff.id}>
+                        {staff.name} {staff.email ? `(${staff.email})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {reassigning && (
+                  <div className="text-center py-2 text-gray-500 text-sm">
+                    {isAssignMode ? 'Assigning...' : 'Reassigning...'}
+                  </div>
+                )}
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      if (!reassigning) {
+                        setShowReassignStaffModal(false);
+                        setSelectedClientForReassign(null);
+                        setIsAssignMode(false);
+                      }
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                    disabled={reassigning}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      const selectElement = document.getElementById('reassign-staff-select');
+                      const selectedValue = selectElement?.value;
+                      if (selectedValue && selectedClientForReassign) {
+                        handleReassignTaxPreparer(selectedClientForReassign, selectedValue);
+                      } else {
+                        toast.error('Please select a tax preparer', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
+                      }
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                    style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
+                    disabled={reassigning}
+                  >
+                    {reassigning 
+                      ? (isAssignMode ? 'Assigning...' : 'Reassigning...') 
+                      : (isAssignMode ? 'Assign' : 'Reassign')
+                    }
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ zIndex: 9999 }}
+          onClick={() => {
+            if (!deleting) {
+              setShowDeleteConfirmModal(false);
+              setSelectedClientForDelete(null);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            style={{
+              borderRadius: '12px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Client</h2>
+              <button
+                onClick={() => {
+                  if (!deleting) {
+                    setShowDeleteConfirmModal(false);
+                    setSelectedClientForDelete(null);
+                  }
+                }}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={deleting}
+              >
+                <CrossesIcon />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                Are you sure you want to delete this client? This action will soft delete the client and cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  setSelectedClientForDelete(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedClientForDelete) {
+                    handleSoftDelete(selectedClientForDelete);
+                  }
+                }}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                style={{ background: 'var(--color-red-500, #EF4444)' }}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

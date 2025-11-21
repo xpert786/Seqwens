@@ -3581,63 +3581,76 @@ export const firmAdminMessagingAPI = {
   composeMessage: async (messageData, attachment = null) => {
     const token = getAccessToken() || AUTH_TOKEN;
 
-    // Check if there's an attachment
-    if (attachment) {
-      // Use FormData for multipart/form-data when attachment is present
-      const formData = new FormData();
+    // Always use FormData as per API documentation
+    const formData = new FormData();
 
-      // Add all form fields to FormData
-      if (messageData.recipients) {
-        // recipients should be an array, convert to JSON string
-        formData.append('recipients', JSON.stringify(messageData.recipients));
+    // Add recipients - must be sent as a JSON array string with string elements
+    // Curl format: -F "recipients=[3]" sends the string "[3]"
+    // But backend expects array elements to be strings, so we send "[\"3\"]"
+    // When backend parses "[\"3\"]", it gets ["3"] which validates correctly
+    if (messageData.recipients) {
+      if (Array.isArray(messageData.recipients)) {
+        // Convert all to strings explicitly, then JSON stringify
+        // Example: [3] -> ["3"] -> "[\"3\"]"
+        const stringRecipients = messageData.recipients.map(r => {
+          // Ensure it's a string, not a number
+          const str = String(r);
+          return str;
+        });
+        const jsonString = JSON.stringify(stringRecipients);
+        formData.append('recipients', jsonString);
+      } else {
+        // Single recipient: convert to string and wrap in array
+        const jsonString = JSON.stringify([String(messageData.recipients)]);
+        formData.append('recipients', jsonString);
       }
-      if (messageData.subject) {
-        formData.append('subject', messageData.subject);
-      }
-      if (messageData.message) {
-        formData.append('message', messageData.message);
-      }
-      if (messageData.priority) {
-        formData.append('priority', messageData.priority);
-      }
-
-      // Add attachment
-      formData.append('attachment', attachment);
-
-      const config = {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Don't set Content-Type - browser will set it with boundary for FormData
-        },
-        body: formData
-      };
-
-      const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/messages/compose/`, config);
-
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.errors) {
-            const fieldErrors = Object.entries(errorData.errors)
-              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-              .join('; ');
-            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
-          } else {
-            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-          }
-        } catch (parseError) {
-          console.error('Error parsing response:', parseError);
-        }
-        throw new Error(errorMessage);
-      }
-
-      return await response.json();
-    } else {
-      // Use JSON for regular requests without attachments
-      return await apiRequest('/firm-admin/messages/compose/', 'POST', messageData);
     }
+    
+    // Add subject
+    if (messageData.subject) {
+      formData.append('subject', messageData.subject);
+    }
+    
+    // Add message
+    if (messageData.message) {
+      formData.append('message', messageData.message);
+    }
+
+    // Add attachment if present
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - browser will set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/messages/compose/`, config);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.errors) {
+          const fieldErrors = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+        } else {
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        }
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
   },
 
   // Search recipients
@@ -3650,6 +3663,38 @@ export const firmAdminMessagingAPI = {
 
     const queryString = queryParams.toString();
     return await apiRequest(`/firm-admin/messages/recipients/search/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Send message in thread
+  sendMessage: async (threadId, messageData, attachment = null) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+
+    if (attachment) {
+      // Use FormData for multipart/form-data when attachment is present
+      const formData = new FormData();
+      formData.append('message', messageData.message || '');
+      formData.append('attachment', attachment);
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/messages/threads/${threadId}/send_message/`, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without attachments
+      return await apiRequest(`/firm-admin/messages/threads/${threadId}/send_message/`, 'POST', messageData);
+    }
   }
 };
 

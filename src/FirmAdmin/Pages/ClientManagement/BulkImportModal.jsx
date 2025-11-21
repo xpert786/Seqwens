@@ -4,7 +4,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
-export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }) {
+export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, onImportSuccess }) {
   const API_BASE_URL = getApiBaseUrl();
   const [currentStep, setCurrentStep] = useState(1);
   const [csvFile, setCsvFile] = useState(null);
@@ -23,7 +23,7 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
       setError('');
 
       const token = getAccessToken();
-      const url = `${API_BASE_URL}/taxpayer/firm-admin/clients/import/fields/`;
+      const url = `${API_BASE_URL}/firm/clients/bulk-import/fields/`;
 
       const response = await fetchWithCors(url, {
         method: 'GET',
@@ -43,7 +43,12 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
       if (result.success && result.data) {
         // Map API fields to component format
         const fields = result.data.system_fields || [];
-        const mappedFields = fields.map((field, index) => ({
+        // Filter out assigned_to_staff_email field
+        const filteredFields = fields.filter(field => {
+          const fieldKey = field.field_key || field.field_name.toLowerCase().replace(/\s+/g, '_');
+          return fieldKey !== 'assigned_to_staff_email';
+        });
+        const mappedFields = filteredFields.map((field, index) => ({
           id: index + 1,
           name: field.field_name + (field.required ? '*' : ''),
           required: field.required || false,
@@ -263,7 +268,7 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
     }
   };
 
-  // Validate data and show validation results
+  // Preview import (validate data and show preview)
   const handleContinueToPreview = async () => {
     // Check if required fields are mapped
     const mappedFieldKeys = Object.values(fieldMappings)
@@ -300,7 +305,7 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
       return;
     }
 
-    // Validate data by calling the import API (it will return validation results)
+    // Preview data by calling the preview API
     if (!csvFile) {
       setError('Please upload a CSV file first');
       return;
@@ -312,12 +317,12 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
 
       const token = getAccessToken();
 
-      // Build mapping configuration
+      // Build mapping configuration (CSV column name -> system field key)
       const mappingConfig = {};
       Object.keys(fieldMappings).forEach(csvIndex => {
         const systemFieldId = fieldMappings[csvIndex];
         const systemField = systemFields.find(sf => sf.id === systemFieldId);
-        if (systemField && systemField.field_key !== 'skip') {
+        if (systemField && systemField.field_key !== 'skip' && systemField.field_key !== 'assigned_to_staff_email') {
           mappingConfig[csvColumns[parseInt(csvIndex) - 1]?.column] = systemField.field_key;
         }
       });
@@ -325,9 +330,11 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('csv_file', csvFile);
-      formData.append('mapping', JSON.stringify(mappingConfig));
+      if (Object.keys(mappingConfig).length > 0) {
+        formData.append('mapping', JSON.stringify(mappingConfig));
+      }
 
-      const url = `${API_BASE_URL}/taxpayer/firm-admin/clients/import/`;
+      const url = `${API_BASE_URL}/firm/clients/bulk-import/preview/`;
 
       const response = await fetchWithCors(url, {
         method: 'POST',
@@ -345,29 +352,90 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
       const result = await response.json();
 
       if (result.success && result.data) {
-        // Store validation results to show in Step 3
+        // Store preview results to show in Step 3
         setValidationResults(result.data);
         setCurrentStep(3);
       } else {
-        throw new Error('Validation failed');
+        throw new Error(result.message || 'Preview failed');
       }
     } catch (err) {
-      console.error('Error validating data:', err);
+      console.error('Error previewing import:', err);
       const errorMsg = handleAPIError(err);
-      setError(errorMsg || 'Failed to validate data. Please try again.');
+      setError(errorMsg || 'Failed to preview import. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle final import (after validation)
+  // Handle final import (after preview)
   const handleBulkImport = async () => {
-    // The import is already done in validation step, just move to results
-    if (validationResults) {
-      setImportResults(validationResults);
-      setCurrentStep(4);
-    } else {
-      setError('No validation results available. Please validate data first.');
+    if (!csvFile) {
+      setError('Please upload a CSV file first');
+      return;
+    }
+
+    if (!validationResults) {
+      setError('No preview results available. Please preview data first.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const token = getAccessToken();
+
+      // Build mapping configuration (same as preview)
+      const mappingConfig = {};
+      Object.keys(fieldMappings).forEach(csvIndex => {
+        const systemFieldId = fieldMappings[csvIndex];
+        const systemField = systemFields.find(sf => sf.id === systemFieldId);
+        if (systemField && systemField.field_key !== 'skip' && systemField.field_key !== 'assigned_to_staff_email') {
+          mappingConfig[csvColumns[parseInt(csvIndex) - 1]?.column] = systemField.field_key;
+        }
+      });
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('csv_file', csvFile);
+      if (Object.keys(mappingConfig).length > 0) {
+        formData.append('mapping', JSON.stringify(mappingConfig));
+      }
+
+      const url = `${API_BASE_URL}/firm/clients/bulk-import/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Store import results
+        setImportResults(result.data);
+        setCurrentStep(4);
+        // Trigger refresh callback if provided
+        if (onImportSuccess) {
+          onImportSuccess(result.data);
+        }
+      } else {
+        throw new Error(result.message || 'Import failed');
+      }
+    } catch (err) {
+      console.error('Error importing clients:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to import clients. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -443,19 +511,19 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
               <span>Download CSV Template</span>
             </button>
 
-            {/* Continue to Validation Button */}
+            {/* Continue to Mapping Button */}
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => csvFile && csvColumns.length > 0 ? setCurrentStep(2) : setError('Please upload a CSV file first')}
                 disabled={!csvFile || csvColumns.length === 0 || loading}
-                className="px-5 py-2 text-white text-sm transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2 text-white text-sm transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
                 style={{
                   backgroundColor: '#F56D2D',
                   borderRadius: '8px',
                   fontWeight: '600'
                 }}
               >
-                <span>Continue to Validation</span>
+                <span>Continue to Mapping</span>
                 <span>→</span>
               </button>
             </div>
@@ -624,16 +692,24 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
             </div>
           </div>
 
-          {/* Continue Button */}
-          <div className="flex justify-end mt-6">
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center mt-6">
+            <button
+              onClick={() => setCurrentStep(1)}
+              disabled={loading}
+              className="px-5 py-2 text-gray-700 bg-white border border-gray-300 text-sm transition flex items-center gap-2 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
             <button
               onClick={handleContinueToPreview}
               disabled={loading}
-              className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] !border border-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] !border border-[#F56D2D] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
             >
               {loading ? 'Validating...' : (
                 <>
-                  <span>Continue to Validation</span>
+                  <span>Continue to Preview</span>
                   <span>→</span>
                 </>
               )}
@@ -644,19 +720,17 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
     }
 
     if (currentStep === 3) {
-      // Get all validation results
-      const allResults = validationResults?.validation_results ||
-        validationResults?.results ||
-        validationResults?.rows ||
-        [];
+      // Get preview rows from API response
+      const previewRows = validationResults?.preview_rows || [];
+      const summary = validationResults?.summary || {};
 
       return (
         <div>
-          {/* Data Validation Results */}
+          {/* Import Preview */}
           <div className="mb-6">
-            <h5 className="text-base font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Data Validation Results</h5>
+            <h5 className="text-base font-bold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">Import Preview</h5>
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-              Review the validation results and fix any errors before importing
+              Review the preview results before importing. {validationResults?.message || ''}
             </p>
           </div>
 
@@ -664,32 +738,32 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
-                {validationResults?.valid_count || validationResults?.successful_imports?.length || (allResults.filter(r => r.status === 'valid' || r.status === 'success' || (!r.errors && !r.status)).length) || 0}
+                {summary.will_import_count || summary.valid_count || 0}
               </div>
-              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Valid Records</div>
+              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Will Import</div>
             </div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">
-                {validationResults?.error_count || validationResults?.failed_imports?.length || (allResults.filter(r => r.status === 'error' || r.errors?.length > 0).length) || 0}
+                {summary.invalid_count || 0}
               </div>
-              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
+              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Invalid</div>
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
-                {validationResults?.duplicate_count || 0}
+                {summary.duplicate_count || 0}
               </div>
               <div className="text-sm text-yellow-700 font-[BasisGrotesquePro]">Duplicates</div>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
-                {validationResults?.warning_count || validationResults?.warnings?.length || (allResults.filter(r => r.warnings?.length > 0).length) || 0}
+                {summary.total_rows || 0}
               </div>
-              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Warnings</div>
+              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Total Rows</div>
             </div>
           </div>
 
-          {/* Validation Table */}
-          {allResults.length > 0 && (
+          {/* Preview Table */}
+          {previewRows.length > 0 && (
             <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -699,102 +773,66 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Office</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Phone</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Issues</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {allResults.map((result, index) => {
-                      const isSuccess = result.status === 'valid' || result.status === 'success' || (!result.errors && !result.status);
-                      const isError = result.status === 'error' || result.errors?.length > 0;
-                      const isWarning = result.status === 'warning' || result.warnings?.length > 0;
+                    {previewRows.slice(0, 20).map((row, index) => {
+                      const isSuccess = row.status === 'valid';
+                      const isError = row.status === 'invalid';
+                      const isDuplicate = row.status === 'duplicate';
+                      const rowData = row.data || {};
 
-                      // Get user data from different possible response structures
-                      const userData = result.data || result.client || result || {};
-                      const userName = userData.first_name && userData.last_name
-                        ? `${userData.first_name} ${userData.last_name}`
-                        : userData.full_name || userData.name || 'N/A';
-                      const userEmail = userData.email || 'N/A';
-                      const userType = userData.client_type || userData.type || userData.company_name || 'N/A';
-                      const userOffice = userData.office_location || userData.office || userData.filing_year || 'N/A';
+                      const userName = rowData.first_name && rowData.last_name
+                        ? `${rowData.first_name} ${rowData.last_name}`
+                        : rowData.full_name || 'N/A';
+                      const userEmail = rowData.email || 'N/A';
+                      const userPhone = rowData.phone_number || 'N/A';
 
                       return (
-                        <tr key={result.id || result.row_number || index} className="hover:bg-gray-50">
+                        <tr key={row.row || index} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">
-                            {result.row_number || index + 1}
+                            {row.row || index + 1}
                           </td>
                           <td className="px-4 py-3">
                             {isSuccess ? (
-                              <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g clipPath="url(#clip0_3643_8784)">
-                                  <path d="M9.16634 4.61775V5.00108C9.16583 5.89959 8.87488 6.77386 8.3369 7.49351C7.79891 8.21315 7.04271 8.73961 6.18107 8.99437C5.31944 9.24913 4.39853 9.21854 3.5557 8.90716C2.71287 8.59578 1.99328 8.02029 1.50424 7.26653C1.0152 6.51276 0.782921 5.62111 0.84204 4.72455C0.901159 3.82798 1.24851 2.97455 1.83229 2.29153C2.41607 1.60851 3.205 1.13249 4.08142 0.934477C4.95784 0.736462 5.87479 0.827057 6.69551 1.19275M3.74968 4.58442L4.99968 5.83442L9.16634 1.66775" stroke="#22C55E" strokeLinecap="round" strokeLinejoin="round" />
-                                </g>
-                                <defs>
-                                  <clipPath id="clip0_3643_8784">
-                                    <rect width="10" height="10" fill="white" />
-                                  </clipPath>
-                                </defs>
-                              </svg>
-                            ) : isError ? (
-                              <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="0.5" y="0.5" width="9" height="9" rx="4.5" stroke="#EF4444" />
-                                <path d="M6.69441 3.74858C6.72427 3.71976 6.74809 3.68529 6.76449 3.64717C6.78088 3.60905 6.78952 3.56805 6.7899 3.52656C6.79028 3.48507 6.7824 3.44391 6.7667 3.4055C6.75101 3.36709 6.72782 3.33219 6.69849 3.30283C6.66916 3.27348 6.63428 3.25026 6.59589 3.23452C6.55749 3.21879 6.51634 3.21087 6.47485 3.21121C6.43336 3.21155 6.39235 3.22015 6.35421 3.23651C6.31608 3.25287 6.28158 3.27666 6.25274 3.30649L5.00024 4.55858L3.74816 3.30649C3.71955 3.27579 3.68505 3.25116 3.64672 3.23408C3.60838 3.217 3.567 3.20782 3.52504 3.20708C3.48308 3.20634 3.44141 3.21406 3.40249 3.22978C3.36358 3.24549 3.32823 3.26889 3.29856 3.29856C3.26889 3.32823 3.24549 3.36358 3.22978 3.40249C3.21406 3.44141 3.20634 3.48308 3.20708 3.52504C3.20782 3.567 3.217 3.60838 3.23408 3.64672C3.25116 3.68505 3.27579 3.71955 3.30649 3.74816L4.55774 5.00066L3.30566 6.25274C3.25046 6.31198 3.22041 6.39034 3.22184 6.47129C3.22327 6.55225 3.25606 6.6295 3.31332 6.68675C3.37057 6.74401 3.44782 6.7768 3.52878 6.77823C3.60973 6.77966 3.68809 6.74961 3.74733 6.69441L5.00024 5.44233L6.25233 6.69483C6.31157 6.75003 6.38992 6.78008 6.47088 6.77865C6.55184 6.77722 6.62908 6.74442 6.68634 6.68717C6.74359 6.62991 6.77639 6.55267 6.77782 6.47171C6.77924 6.39075 6.74919 6.3124 6.69399 6.25316L5.44274 5.00066L6.69441 3.74858Z" fill="#EF4444" />
-                              </svg>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Valid
+                              </span>
+                            ) : isDuplicate ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Duplicate
+                              </span>
                             ) : (
-                              <svg width="15" height="15" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g clipPath="url(#clip0_3643_8885)">
-                                  <path d="M4.99954 1.25L9.25788 8.625H0.741211L4.99954 1.25Z" stroke="#FBBF24" strokeLinecap="square" />
-                                  <path d="M5 4.375V5.83333M5 7.29167H5.00167V7.29333H5V7.29167Z" stroke="#FBBF24" strokeLinecap="square" />
-                                </g>
-                                <defs>
-                                  <clipPath id="clip0_3643_8885">
-                                    <rect width="10" height="10" fill="white" />
-                                  </clipPath>
-                                </defs>
-                              </svg>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Invalid
+                              </span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userName}</td>
                           <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userEmail}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userType}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userOffice}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userPhone}</td>
                           <td className="px-4 py-3">
-                            {result.errors && result.errors.length > 0 ? (
+                            {row.errors && row.errors.length > 0 ? (
                               <div className="flex flex-col gap-1">
-                                {result.errors.map((error, errIndex) => (
-                                  <div key={errIndex} className="flex items-center gap-2">
-                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <g clipPath="url(#clip0_3643_8813)">
-                                        <path d="M6.00021 4.49914V6.49914M6.00021 8.49914H6.00521M10.8652 8.99914L6.86521 1.99914C6.77799 1.84524 6.65151 1.71723 6.49867 1.62817C6.34583 1.53911 6.1721 1.49219 5.99521 1.49219C5.81831 1.49219 5.64459 1.53911 5.49175 1.62817C5.33891 1.71723 5.21243 1.84524 5.12521 1.99914L1.12521 8.99914C1.03705 9.15181 0.990823 9.32509 0.991213 9.50139C0.991604 9.67769 1.0386 9.85076 1.12743 10.003C1.21627 10.1553 1.34378 10.2814 1.49706 10.3685C1.65033 10.4557 1.82391 10.5007 2.00021 10.4991H10.0002C10.1757 10.499 10.348 10.4526 10.4998 10.3648C10.6517 10.2769 10.7778 10.1507 10.8655 9.99869C10.9531 9.8467 10.9992 9.67433 10.9992 9.49888C10.9991 9.32343 10.9529 9.15108 10.8652 8.99914Z" stroke="#991B1B" strokeLinecap="round" strokeLinejoin="round" />
-                                      </g>
-                                      <defs>
-                                        <clipPath id="clip0_3643_8813">
-                                          <rect width="12" height="12" fill="white" />
-                                        </clipPath>
-                                      </defs>
-                                    </svg>
-                                    <span className="text-xs font-[BasisGrotesquePro]" style={{ color: '#991B1B' }}>{error}</span>
+                                {row.errors.map((error, errIndex) => (
+                                  <div key={errIndex} className="text-xs text-red-600 font-[BasisGrotesquePro]">
+                                    {error}
                                   </div>
                                 ))}
                               </div>
-                            ) : result.warnings && result.warnings.length > 0 ? (
+                            ) : row.warnings && row.warnings.length > 0 ? (
                               <div className="flex flex-col gap-1">
-                                {result.warnings.map((warning, warnIndex) => (
-                                  <div key={warnIndex} className="flex items-center gap-2">
-                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <g clipPath="url(#clip0_3643_8813)">
-                                        <path d="M6.00021 4.49914V6.49914M6.00021 8.49914H6.00521M10.8652 8.99914L6.86521 1.99914C6.77799 1.84524 6.65151 1.71723 6.49867 1.62817C6.34583 1.53911 6.1721 1.49219 5.99521 1.49219C5.81831 1.49219 5.64459 1.53911 5.49175 1.62817C5.33891 1.71723 5.21243 1.84524 5.12521 1.99914L1.12521 8.99914C1.03705 9.15181 0.990823 9.32509 0.991213 9.50139C0.991604 9.67769 1.0386 9.85076 1.12743 10.003C1.21627 10.1553 1.34378 10.2814 1.49706 10.3685C1.65033 10.4557 1.82391 10.5007 2.00021 10.4991H10.0002C10.1757 10.499 10.348 10.4526 10.4998 10.3648C10.6517 10.2769 10.7778 10.1507 10.8655 9.99869C10.9531 9.8467 10.9992 9.67433 10.9992 9.49888C10.9991 9.32343 10.9529 9.15108 10.8652 8.99914Z" stroke="#991B1B" strokeLinecap="round" strokeLinejoin="round" />
-                                      </g>
-                                      <defs>
-                                        <clipPath id="clip0_3643_8813">
-                                          <rect width="12" height="12" fill="white" />
-                                        </clipPath>
-                                      </defs>
-                                    </svg>
-                                    <span className="text-xs font-[BasisGrotesquePro]" style={{ color: '#991B1B' }}>{warning}</span>
+                                {row.warnings.map((warning, warnIndex) => (
+                                  <div key={warnIndex} className="text-xs text-yellow-600 font-[BasisGrotesquePro]">
+                                    {warning}
                                   </div>
                                 ))}
+                              </div>
+                            ) : isDuplicate && row.existing_client ? (
+                              <div className="text-xs text-yellow-600 font-[BasisGrotesquePro]">
+                                Already exists: {row.existing_client.name}
                               </div>
                             ) : (
                               <span className="text-sm text-gray-500 font-[BasisGrotesquePro]">-</span>
@@ -806,18 +844,31 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
                   </tbody>
                 </table>
               </div>
+              {previewRows.length > 20 && (
+                <div className="px-4 py-2 text-sm text-gray-500 text-center font-[BasisGrotesquePro]">
+                  Showing first 20 rows of {previewRows.length} total rows
+                </div>
+              )}
             </div>
           )}
 
-          {/* Import Button */}
-          <div className="flex justify-end">
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center">
+            <button
+              onClick={() => setCurrentStep(2)}
+              disabled={loading}
+              className="px-5 py-2 text-gray-700 bg-white border border-gray-300 text-sm transition flex items-center gap-2 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
             <button
               onClick={handleBulkImport}
-              disabled={loading || !validationResults || (validationResults.valid_count || 0) === 0}
+              disabled={loading || !validationResults || (summary.will_import_count || summary.valid_count || 0) === 0}
               className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] rounded-lg font-semibold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Importing...' : (
-                <span>Import {validationResults?.valid_count || validationResults?.successful_imports?.length || (allResults.filter(r => r.status === 'valid' || r.status === 'success' || (!r.errors && !r.status)).length) || 0} valid records</span>
+                <span>Import {summary.will_import_count || summary.valid_count || 0} valid records</span>
               )}
             </button>
           </div>
@@ -846,32 +897,148 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal }
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
-                {importResults?.valid_count || importResults?.successful_imports?.length || 0}
+                {importResults?.success_count || importResults?.successful?.length || 0}
               </div>
-              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Valid Records</div>
+              <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Successful</div>
             </div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-red-700 font-[BasisGrotesquePro]">
-                {importResults?.error_count || importResults?.failed_imports?.length || 0}
+                {importResults?.failure_count || importResults?.failed?.length || 0}
               </div>
-              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
+              <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Failed</div>
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
-                {importResults?.duplicate_count || 0}
+                {importResults?.duplicate_count || importResults?.duplicates?.length || 0}
               </div>
               <div className="text-sm text-yellow-700 font-[BasisGrotesquePro]">Duplicates</div>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
-                {importResults?.warning_count || importResults?.warnings?.length || 0}
+                {importResults?.total_rows || 0}
               </div>
-              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Warnings</div>
+              <div className="text-sm text-blue-700 font-[BasisGrotesquePro]">Total Rows</div>
             </div>
           </div>
+
+          {/* Successful Imports */}
+          {importResults?.successful && importResults.successful.length > 0 && (
+            <div className="mb-6">
+              <h6 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">Successfully Imported ({importResults.successful.length})</h6>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Row</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Client ID</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {importResults.successful.slice(0, 10).map((item, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.row}</td>
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.client_id}</td>
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.name}</td>
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.email}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {importResults.successful.length > 10 && (
+                  <div className="px-4 py-2 text-xs text-gray-500 text-center font-[BasisGrotesquePro]">
+                    Showing first 10 of {importResults.successful.length} successful imports
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Failed Imports */}
+          {importResults?.failed && importResults.failed.length > 0 && (
+            <div className="mb-6">
+              <h6 className="text-sm font-semibold text-red-700 mb-2 font-[BasisGrotesquePro]">Failed Imports ({importResults.failed.length})</h6>
+              <div className="border border-red-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-red-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-red-700 uppercase font-[BasisGrotesquePro]">Row</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-red-700 uppercase font-[BasisGrotesquePro]">Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-red-700 uppercase font-[BasisGrotesquePro]">Errors</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-red-100 bg-white">
+                      {importResults.failed.slice(0, 10).map((item, idx) => (
+                        <tr key={idx} className="hover:bg-red-50">
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.row}</td>
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">
+                            {item.data?.first_name && item.data?.last_name
+                              ? `${item.data.first_name} ${item.data.last_name}`
+                              : item.data?.full_name || item.data?.email || 'N/A'}
+                          </td>
+                          <td className="px-4 py-2">
+                            <div className="flex flex-col gap-1">
+                              {item.errors?.map((error, errIdx) => (
+                                <span key={errIdx} className="text-xs text-red-600 font-[BasisGrotesquePro]">{error}</span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {importResults.failed.length > 10 && (
+                  <div className="px-4 py-2 text-xs text-gray-500 text-center font-[BasisGrotesquePro]">
+                    Showing first 10 of {importResults.failed.length} failed imports
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Duplicates */}
+          {importResults?.duplicates && importResults.duplicates.length > 0 && (
+            <div className="mb-6">
+              <h6 className="text-sm font-semibold text-yellow-700 mb-2 font-[BasisGrotesquePro]">Duplicates Skipped ({importResults.duplicates.length})</h6>
+              <div className="border border-yellow-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-yellow-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-yellow-700 uppercase font-[BasisGrotesquePro]">Row</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-yellow-700 uppercase font-[BasisGrotesquePro]">Email</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-yellow-700 uppercase font-[BasisGrotesquePro]">Existing Client</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-yellow-100 bg-white">
+                      {importResults.duplicates.slice(0, 10).map((item, idx) => (
+                        <tr key={idx} className="hover:bg-yellow-50">
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.row}</td>
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{item.data?.email || 'N/A'}</td>
+                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">
+                            {item.existing_client_name || `ID: ${item.existing_client_id}` || 'N/A'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {importResults.duplicates.length > 10 && (
+                  <div className="px-4 py-2 text-xs text-gray-500 text-center font-[BasisGrotesquePro]">
+                    Showing first 10 of {importResults.duplicates.length} duplicates
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Close Button */}
           <div className="flex justify-end mt-6">

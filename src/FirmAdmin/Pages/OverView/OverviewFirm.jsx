@@ -3,6 +3,8 @@ import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Ic
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { firmAdminDashboardAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import {
   AreaChart,
@@ -77,6 +79,7 @@ export default function FirmAdminDashboard() {
   });
   const [scheduleFrequency, setScheduleFrequency] = useState('Weekly');
   const [recipients, setRecipients] = useState('admins@firm.com');
+  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState(null);
@@ -463,6 +466,89 @@ export default function FirmAdminDashboard() {
     );
   };
 
+  // Handle schedule report submission
+  const handleScheduleReport = async () => {
+    // Validate inputs
+    if (!recipients || !recipients.trim()) {
+      toast.error('Please enter at least one recipient email address');
+      return;
+    }
+
+    // Parse email addresses (comma-separated)
+    const emailList = recipients
+      .split(',')
+      .map(email => email.trim())
+      .filter(email => email.length > 0);
+
+    if (emailList.length === 0) {
+      toast.error('Please enter at least one valid email address');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+    if (invalidEmails.length > 0) {
+      toast.error(`Invalid email addresses: ${invalidEmails.join(', ')}`);
+      return;
+    }
+
+    // Map frequency to API format (lowercase)
+    const frequencyMap = {
+      'Daily': 'daily',
+      'Weekly': 'weekly',
+      'Monthly': 'monthly',
+      'Quarterly': 'quarterly'
+    };
+
+    const apiFrequency = frequencyMap[scheduleFrequency] || 'weekly';
+
+    try {
+      setScheduleLoading(true);
+
+      const token = getAccessToken();
+      const API_BASE_URL = getApiBaseUrl();
+      const url = `${API_BASE_URL}/firm/reports/generate/`;
+
+      const payload = {
+        frequency: apiFrequency,
+        recipient_emails: emailList
+      };
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Report generation task has been queued successfully');
+        setIsScheduleModalOpen(false);
+        // Reset form
+        setRecipients('');
+        setScheduleFrequency('Weekly');
+      } else {
+        throw new Error(result.message || 'Failed to schedule report');
+      }
+    } catch (err) {
+      console.error('Error scheduling report:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to schedule report. Please try again.');
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
   // ScheduleModal Component
   const ScheduleModal = () => {
     if (!isScheduleModalOpen) return null;
@@ -479,7 +565,8 @@ export default function FirmAdminDashboard() {
               </div>
               <button
                 onClick={() => setIsScheduleModalOpen(false)}
-                className="w-8 h-8 rounded-full  flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-200 transition-colors"
+                disabled={scheduleLoading}
+                className="w-8 h-8 rounded-full  flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-200 transition-colors disabled:opacity-50"
               >
                 <CrossesIcon />
               </button>
@@ -495,7 +582,8 @@ export default function FirmAdminDashboard() {
                 <select
                   value={scheduleFrequency}
                   onChange={(e) => setScheduleFrequency(e.target.value)}
-                  className="w-full text-sm border border-gray-300 rounded px-3 py-2 font-[BasisGrotesquePro] focus:ring-2 focus:ring-orange-500 focus:border-orange-500 appearance-none bg-white"
+                  disabled={scheduleLoading}
+                  className="w-full text-sm border border-gray-300 rounded px-3 py-2 font-[BasisGrotesquePro] focus:ring-2 focus:ring-orange-500 focus:border-orange-500 appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="Daily">Daily</option>
                   <option value="Weekly">Weekly</option>
@@ -514,12 +602,14 @@ export default function FirmAdminDashboard() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-800 font-[BasisGrotesquePro]">Recipients</label>
               <input
-                type="email"
+                type="text"
                 value={recipients}
                 onChange={(e) => setRecipients(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 font-[BasisGrotesquePro] focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                placeholder="Enter email addresses"
+                disabled={scheduleLoading}
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2 font-[BasisGrotesquePro] focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Enter email addresses (comma-separated)"
               />
+              <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Separate multiple emails with commas</p>
             </div>
           </div>
 
@@ -527,15 +617,27 @@ export default function FirmAdminDashboard() {
           <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
             <button
               onClick={() => setIsScheduleModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+              disabled={scheduleLoading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
-              onClick={() => setIsScheduleModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro]"
+              onClick={handleScheduleReport}
+              disabled={scheduleLoading}
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Schedule
+              {scheduleLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Scheduling...
+                </>
+              ) : (
+                'Schedule'
+              )}
             </button>
           </div>
         </div>

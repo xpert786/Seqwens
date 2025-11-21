@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { firmAdminMessagingAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 
 const Messages = () => {
@@ -9,12 +11,10 @@ const Messages = () => {
   const [conversationSearch, setConversationSearch] = useState('');
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
   const [messageType, setMessageType] = useState('');
-  const [priority, setPriority] = useState('medium');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [recipientInput, setRecipientInput] = useState('');
   const [recipients, setRecipients] = useState([]);
-  const [schedule, setSchedule] = useState('');
   const [attachment, setAttachment] = useState(null);
   
   // API state
@@ -24,12 +24,19 @@ const Messages = () => {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendingThreadMessage, setSendingThreadMessage] = useState(false);
+  const [threadMessageInput, setThreadMessageInput] = useState('');
+  const [threadAttachment, setThreadAttachment] = useState(null);
   const [recipientSearchResults, setRecipientSearchResults] = useState([]);
   const [showRecipientDropdown, setShowRecipientDropdown] = useState(false);
   const [messageFilter, setMessageFilter] = useState('all');
+  const [staffMembers, setStaffMembers] = useState([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState('');
   
   const recipientInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const threadFileInputRef = useRef(null);
 
   // Fetch conversations
   useEffect(() => {
@@ -94,7 +101,50 @@ const Messages = () => {
     fetchThreadDetails();
   }, [selectedThreadId]);
 
-  // Search recipients
+  // Fetch staff members
+  const fetchStaffMembers = async () => {
+    try {
+      setStaffLoading(true);
+      const token = getAccessToken();
+      const API_BASE_URL = getApiBaseUrl();
+      
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/list/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.staff_members) {
+        setStaffMembers(result.data.staff_members || []);
+      } else {
+        setStaffMembers([]);
+      }
+    } catch (err) {
+      console.error('Error fetching staff members:', err);
+      setStaffMembers([]);
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  // Fetch staff members when compose modal opens
+  useEffect(() => {
+    if (isComposeModalOpen) {
+      fetchStaffMembers();
+      // Reset selection when modal opens
+      setSelectedStaffId('');
+    }
+  }, [isComposeModalOpen]);
+
+  // Search recipients (kept for backward compatibility if needed)
   const searchRecipients = async (query) => {
     if (!query || query.trim().length < 2) {
       setRecipientSearchResults([]);
@@ -128,6 +178,11 @@ const Messages = () => {
     }
   }, [recipientInput]);
 
+  // Handle staff selection
+  const handleStaffChange = (staffId) => {
+    setSelectedStaffId(staffId);
+  };
+
   // Handle conversation selection
   const handleConversationSelect = (conversation) => {
     setSelectedConversation(conversation);
@@ -136,37 +191,31 @@ const Messages = () => {
 
   // Handle compose message
   const handleComposeMessage = async () => {
-    if (!subject.trim() || !message.trim() || recipients.length === 0) {
-      toast.error('Please fill in all required fields');
+    if (!subject.trim() || !message.trim()) {
+      toast.error('Please fill in subject and message');
+      return;
+    }
+
+    if (!selectedStaffId) {
+      toast.error('Please select a staff member');
       return;
     }
 
     try {
       setSending(true);
       
-      // Convert recipients to proper format (user IDs or @everyone)
-      const formattedRecipients = recipients.map(recipient => {
-        if (recipient === '@everyone') {
-          return '@everyone';
-        }
-        // If it's already a user ID number, return as is
-        if (typeof recipient === 'number') {
-          return recipient;
-        }
-        // If it's a string starting with @, return as is
-        if (typeof recipient === 'string' && recipient.startsWith('@')) {
-          return recipient;
-        }
-        // Otherwise, try to extract ID from recipient object or return as string
-        return recipient.id || recipient;
-      });
-      
+      // Send only the single selected staff ID
+      // Backend expects recipients as an array with string ID: ["3"] not [3]
+      // Ensure the ID is explicitly converted to string
+      const recipientId = String(selectedStaffId);
       const messageData = {
-        recipients: formattedRecipients,
+        recipients: [recipientId],
         subject: subject.trim(),
-        message: message.trim(),
-        priority: priority || 'medium'
+        message: message.trim()
       };
+      
+      console.log('Sending message data:', messageData);
+      console.log('Recipients type check:', typeof messageData.recipients[0], messageData.recipients[0]);
 
       const response = await firmAdminMessagingAPI.composeMessage(messageData, attachment);
       
@@ -176,9 +225,8 @@ const Messages = () => {
         // Reset form
         setSubject('');
         setMessage('');
-        setRecipients([]);
+        setSelectedStaffId('');
         setRecipientInput('');
-        setPriority('medium');
         setAttachment(null);
         // Refresh conversations
         const conversationsResponse = await firmAdminMessagingAPI.listConversations({});
@@ -241,6 +289,55 @@ const Messages = () => {
     const file = e.target.files[0];
     if (file) {
       setAttachment(file);
+    }
+  };
+
+  // Handle thread file attachment
+  const handleThreadFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setThreadAttachment(file);
+    }
+  };
+
+  // Handle sending message in thread
+  const handleSendThreadMessage = async () => {
+    if (!selectedThreadId || !threadMessageInput.trim()) {
+      return;
+    }
+
+    try {
+      setSendingThreadMessage(true);
+
+      const messageData = {
+        message: threadMessageInput.trim()
+      };
+
+      const response = await firmAdminMessagingAPI.sendMessage(selectedThreadId, messageData, threadAttachment);
+
+      if (response.success) {
+        toast.success('Message sent successfully');
+        setThreadMessageInput('');
+        setThreadAttachment(null);
+        // Refresh thread messages
+        const threadResponse = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
+        if (threadResponse.success && threadResponse.data) {
+          setThreadMessages(threadResponse.data.messages || []);
+        }
+        // Refresh conversations to update last message
+        const conversationsResponse = await firmAdminMessagingAPI.listConversations({});
+        if (conversationsResponse.success && conversationsResponse.data) {
+          setConversations(conversationsResponse.data.conversations || []);
+        }
+      } else {
+        throw new Error(response.message || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error('Error sending thread message:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to send message');
+    } finally {
+      setSendingThreadMessage(false);
     }
   };
 
@@ -494,9 +591,6 @@ const Messages = () => {
                         }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
-                          {getFirstChar(conv.client_name || conv.assigned_staff_names?.[0] || 'All Staff')}
-                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] truncate flex-1 min-w-0">
@@ -551,9 +645,6 @@ const Messages = () => {
               ) : (
                 threadMessages.map((msg) => (
                   <div key={msg.id} className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-sm flex-shrink-0">
-                      {getInitials(msg.sender_name || 'User')}
-                    </div>
                     <div className="flex-1 min-w-0">
                       {/* Sender Info - NO background color */}
                       <div className="flex items-baseline gap-2 mb-2">
@@ -596,21 +687,55 @@ const Messages = () => {
 
             {/* Message Input */}
             <div className="flex items-center gap-3 !border-t border-[#E8F0FF] pt-4">
-              <button className="w-8 h-8 rounded bg-[#F56D2D] flex items-center justify-center flex-shrink-0 hover:bg-[#E55A1D] transition-colors cursor-pointer">
+              <input
+                ref={threadFileInputRef}
+                type="file"
+                onChange={handleThreadFileSelect}
+                className="hidden"
+              />
+              <button 
+                onClick={() => threadFileInputRef.current?.click()}
+                className="w-8 h-8 rounded bg-[#F56D2D] flex items-center justify-center flex-shrink-0 hover:bg-[#E55A1D] transition-colors cursor-pointer"
+                title={threadAttachment ? threadAttachment.name : "Attach file"}
+              >
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                 </svg>
               </button>
+              {threadAttachment && (
+                <span className="text-xs text-gray-600 truncate max-w-[100px]" title={threadAttachment.name}>
+                  {threadAttachment.name}
+                </span>
+              )}
               <input
                 type="text"
-                placeholder="Write your messages here..."
-                className="flex-1 px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                value={threadMessageInput}
+                onChange={(e) => setThreadMessageInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && threadMessageInput.trim() && !sendingThreadMessage && selectedThreadId) {
+                    e.preventDefault();
+                    handleSendThreadMessage();
+                  }
+                }}
+                placeholder={selectedThreadId ? "Write your messages here..." : "Select a conversation to send messages"}
+                disabled={sendingThreadMessage}
+                className="flex-1 px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <button className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0">
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8.74979 6.24892L6.87479 8.12392M12.6798 1.89329C12.7391 1.87283 12.803 1.86946 12.8641 1.88357C12.9252 1.89769 12.9812 1.92871 13.0255 1.97311C13.0698 2.01751 13.1008 2.07348 13.1148 2.13463C13.1288 2.19578 13.1253 2.25964 13.1048 2.31892L9.40229 12.9002C9.38014 12.9634 9.33949 13.0186 9.28561 13.0584C9.23174 13.0983 9.16713 13.121 9.10016 13.1237C9.0332 13.1264 8.96697 13.1089 8.91006 13.0735C8.85316 13.0381 8.80821 12.9864 8.78104 12.9252L6.76917 8.39892C6.73532 8.32365 6.67506 8.26339 6.59979 8.22954L2.07354 6.21704C2.01248 6.18978 1.96099 6.14483 1.92573 6.088C1.89047 6.03117 1.87307 5.96508 1.87576 5.89826C1.87845 5.83144 1.90112 5.76696 1.94083 5.71315C1.98055 5.65934 2.03548 5.61868 2.09854 5.59642L12.6798 1.89329Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-
+              <button 
+                onClick={handleSendThreadMessage}
+                disabled={!selectedThreadId || !threadMessageInput.trim() || sendingThreadMessage}
+                className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingThreadMessage ? (
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8.74979 6.24892L6.87479 8.12392M12.6798 1.89329C12.7391 1.87283 12.803 1.86946 12.8641 1.88357C12.9252 1.89769 12.9812 1.92871 13.0255 1.97311C13.0698 2.01751 13.1008 2.07348 13.1148 2.13463C13.1288 2.19578 13.1253 2.25964 13.1048 2.31892L9.40229 12.9002C9.38014 12.9634 9.33949 13.0186 9.28561 13.0584C9.23174 13.0983 9.16713 13.121 9.10016 13.1237C9.0332 13.1264 8.96697 13.1089 8.91006 13.0735C8.85316 13.0381 8.80821 12.9864 8.78104 12.9252L6.76917 8.39892C6.73532 8.32365 6.67506 8.26339 6.59979 8.22954L2.07354 6.21704C2.01248 6.18978 1.96099 6.14483 1.92573 6.088C1.89047 6.03117 1.87307 5.96508 1.87576 5.89826C1.87845 5.83144 1.90112 5.76696 1.94083 5.71315C1.98055 5.65934 2.03548 5.61868 2.09854 5.59642L12.6798 1.89329Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
@@ -641,97 +766,42 @@ const Messages = () => {
 
             {/* Modal Body - Scrollable */}
             <div className="p-3 space-y-3 overflow-y-auto hide-scrollbar flex-1">
-              {/* Message Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Message Type</label>
-                <div className="relative">
-                  <select
-                    value={messageType}
-                    onChange={(e) => setMessageType(e.target.value)}
-                    className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-1.5 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
-                  >
-                    <option value="">Select type</option>
-                    <option value="internal">Internal</option>
-                    <option value="client">Client</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
 
-              {/* Enter Recipients */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Enter Recipients</label>
-                <div className="min-h-[80px] !border border-[#E8F0FF] rounded-lg px-2 py-2 relative flex flex-col">
-                  {/* Tags at top */}
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {recipients.map((recipient, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-[#E8F0FF] !border border-[#E8F0FF] text-gray-700 rounded-full text-sm font-[BasisGrotesquePro]"
-                      >
-                        {recipient}
-                        <button
-                          onClick={() => setRecipients(recipients.filter((_, i) => i !== index))}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  {/* Input Field */}
-                  <input
-                    ref={recipientInputRef}
-                    type="text"
-                    value={recipientInput}
-                    onChange={(e) => setRecipientInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && recipientInput.trim()) {
-                        addRecipient(recipientInput.trim());
-                      }
-                    }}
-                    placeholder={recipients.length === 0 ? "Type @ to search or enter username..." : ""}
-                    className="flex-1 outline-none font-[BasisGrotesquePro] mb-8"
-                  />
-                  {/* Orange @ Button - Bottom Left */}
-                  <button
-                    onClick={() => {
-                      if (recipientInput.trim()) {
-                        addRecipient(recipientInput.trim());
-                      } else {
-                        addRecipient('@everyone');
-                      }
-                    }}
-                    className="absolute bottom-2 left-2 w-7 h-6 !rounded-lg bg-[#F56D2D] mt-3 flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0"
-                  >
-                    <span className="text-white font-bold text-sm">@</span>
-                  </button>
-                  
-                  {/* Recipient Search Dropdown */}
-                  {showRecipientDropdown && recipientSearchResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                      {recipientSearchResults.map((recipient) => (
-                        <button
-                          key={recipient.id}
-                          onClick={() => addRecipient(recipient)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-[#E0F2F7] flex items-center justify-center text-[#1E40AF] font-semibold text-xs">
-                            {getInitials(recipient.name)}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{recipient.name}</p>
-                            <p className="text-xs text-gray-500">{recipient.display_name || recipient.email}</p>
-                          </div>
-                        </button>
-                      ))}
+              {/* Select Staff Member */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Select Staff Member</label>
+                <div className="relative">
+                  {staffLoading ? (
+                    <div className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg text-sm text-gray-500 font-[BasisGrotesquePro]">
+                      Loading staff members...
                     </div>
+                  ) : (
+                    <>
+                      <select
+                        value={selectedStaffId}
+                        onChange={(e) => handleStaffChange(e.target.value)}
+                        className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] cursor-pointer"
+                      >
+                        <option value="">Select a staff member</option>
+                        {staffMembers.map((staff) => {
+                          const staffId = staff.id || staff.user_id || staff.staff_member?.id;
+                          const staffName = staff.name || `${staff.first_name || ''} ${staff.last_name || ''}`.trim() || staff.email || 'Unknown';
+                          const staffEmail = staff.email || '';
+                          const staffRole = staff.role_display || staff.role?.primary || 'Staff';
+                          
+                          return (
+                            <option key={staffId} value={String(staffId)}>
+                              {staffName} ({staffEmail}) - {staffRole}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -746,47 +816,6 @@ const Messages = () => {
                   placeholder="Enter subject"
                   className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
                 />
-              </div>
-
-              {/* Priority */}
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Priority</label>
-                <div className="relative">
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-1.5 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Schedule */}
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Schedule</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={schedule}
-                    onChange={(e) => setSchedule(e.target.value)}
-                    placeholder="DD/MM/YYYY ( Time )"
-                    className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] pr-10"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                </div>
               </div>
 
               {/* Message */}
@@ -840,7 +869,7 @@ const Messages = () => {
                 </button>
                 <button 
                   onClick={handleComposeMessage}
-                  disabled={sending || !subject.trim() || !message.trim() || recipients.length === 0}
+                  disabled={sending || !subject.trim() || !message.trim() || !selectedStaffId}
                   className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
