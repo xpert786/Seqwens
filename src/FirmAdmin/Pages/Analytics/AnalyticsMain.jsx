@@ -125,9 +125,10 @@ export default function AnalyticsMain() {
       yPosition += 5;
       doc.text("For detailed charts and visualizations, please refer to the web dashboard.", 14, yPosition);
 
-      // Save the PDF
-      const fileName = `Analytics_Report_${activeTab.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
+      // Open PDF in a new tab instead of downloading
+      const pdfBlob = doc.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, '_blank');
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert(`Error generating PDF: ${error.message}`);

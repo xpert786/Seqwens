@@ -131,6 +131,10 @@ export default function ESignatureManagement() {
     is_active: '',
     search: ''
   });
+  
+  // Client-side pagination for template cards (5 per page)
+  const [templateCardsCurrentPage, setTemplateCardsCurrentPage] = useState(1);
+  const TEMPLATE_CARDS_PER_PAGE = 5;
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [showDeleteTemplateModal, setShowDeleteTemplateModal] = useState(false);
   const [selectedTemplateForDelete, setSelectedTemplateForDelete] = useState(null);
@@ -946,6 +950,11 @@ export default function ESignatureManagement() {
     }
   }, [activeTab, templatesCurrentPage, templatesFilters, fetchTemplates]);
 
+  // Reset client-side pagination when templates change
+  useEffect(() => {
+    setTemplateCardsCurrentPage(1);
+  }, [templates]);
+
   // Create template
   const handleCreateTemplate = async () => {
     if (!newTemplate.name || !newTemplate.document) {
@@ -1290,7 +1299,10 @@ export default function ESignatureManagement() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-                {templates.map((template) => (
+                {templates.slice(
+                  (templateCardsCurrentPage - 1) * TEMPLATE_CARDS_PER_PAGE,
+                  templateCardsCurrentPage * TEMPLATE_CARDS_PER_PAGE
+                ).map((template) => (
                   <div
                     key={template.id}
                     className="bg-white rounded-lg p-4 sm:p-5"
@@ -1376,57 +1388,35 @@ export default function ESignatureManagement() {
                 ))}
               </div>
 
-              {/* Pagination */}
-              {templatesPagination.total_count > 0 && (
+              {/* Client-side Pagination for Template Cards */}
+              {templates.length > TEMPLATE_CARDS_PER_PAGE && (
                 <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
                   <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                    Showing {((templatesPagination.page - 1) * templatesPagination.page_size) + 1} to {Math.min(templatesPagination.page * templatesPagination.page_size, templatesPagination.total_count)} of {templatesPagination.total_count} templates
+                    Showing {((templateCardsCurrentPage - 1) * TEMPLATE_CARDS_PER_PAGE) + 1} to {Math.min(templateCardsCurrentPage * TEMPLATE_CARDS_PER_PAGE, templates.length)} of {templates.length} templates
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setTemplatesCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={!templatesPagination.has_previous || templatesCurrentPage === 1}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!templatesPagination.has_previous || templatesCurrentPage === 1
+                      onClick={() => setTemplateCardsCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={templateCardsCurrentPage === 1}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${templateCardsCurrentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
+                      style={{ borderRadius: '8px' }}
                     >
                       Previous
                     </button>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, templatesPagination.total_pages) }, (_, i) => {
-                        let pageNum;
-                        if (templatesPagination.total_pages <= 5) {
-                          pageNum = i + 1;
-                        } else if (templatesCurrentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (templatesCurrentPage >= templatesPagination.total_pages - 2) {
-                          pageNum = templatesPagination.total_pages - 4 + i;
-                        } else {
-                          pageNum = templatesCurrentPage - 2 + i;
-                        }
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setTemplatesCurrentPage(pageNum)}
-                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
-                              templatesCurrentPage === pageNum
-                                ? 'bg-[#F56D2D] text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                      Page {templateCardsCurrentPage} of {Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)}
+                    </span>
                     <button
-                      onClick={() => setTemplatesCurrentPage(prev => Math.min(templatesPagination.total_pages, prev + 1))}
-                      disabled={!templatesPagination.has_next || templatesCurrentPage === templatesPagination.total_pages}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!templatesPagination.has_next || templatesCurrentPage === templatesPagination.total_pages
+                      onClick={() => setTemplateCardsCurrentPage(prev => Math.min(Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE), prev + 1))}
+                      disabled={templateCardsCurrentPage >= Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${templateCardsCurrentPage >= Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
+                      style={{ borderRadius: '8px' }}
                     >
                       Next
                     </button>

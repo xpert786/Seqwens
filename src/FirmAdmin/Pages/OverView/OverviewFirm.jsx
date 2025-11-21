@@ -457,10 +457,10 @@ export default function FirmAdminDashboard() {
       // Generate PDF blob
       const pdfBlob = doc.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      
+
       // Open PDF in new window first
       const newWindow = window.open(pdfUrl, '_blank');
-      
+
       // Wait a moment for the window to open, then trigger download
       setTimeout(() => {
         const fileName = `Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -470,15 +470,15 @@ export default function FirmAdminDashboard() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clean up the blob URL after a delay
         setTimeout(() => {
           URL.revokeObjectURL(pdfUrl);
         }, 100);
-        
+
         toast.success('Report generated and downloaded successfully!');
       }, 500);
-      
+
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error(`Error generating PDF: ${error.message}`);
@@ -909,15 +909,6 @@ export default function FirmAdminDashboard() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1 mb-4">
-              <button
-                onClick={() => setIsScheduleModalOpen(true)}
-                className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
-              >
-                <SceheIcon />
-                Schedule Reports
-              </button>
-            </div>
 
             {loading ? (
               <div className="text-center py-8 text-gray-500">Loading alerts...</div>
@@ -946,7 +937,7 @@ export default function FirmAdminDashboard() {
                         </svg>
                         <span className="text-xs text-blue-500 font-[BasisGrotesquePro]">{alert.time_ago || 'Recently'}</span>
                       </div>
-                      {alert.action && (
+                      {/* {alert.action && (
                         <button
                           onClick={() => {
                             if (alert.action?.endpoint) {
@@ -957,7 +948,7 @@ export default function FirmAdminDashboard() {
                         >
                           {alert.action.label}
                         </button>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 ))}
