@@ -135,51 +135,24 @@ export default function Overview() {
       })[0] || null;
   }, [insights]);
 
-  // Data for the second chart (Multi-line Chart)
-  const engagementData = [
-    {
-      month: 'Jan',
-      activeUsers: 7200,
-      newUsers: 180,
-      sessions: 12000
-    },
-    {
-      month: 'Feb',
-      activeUsers: 7500,
-      newUsers: 220,
-      sessions: 12500
-    },
-    {
-      month: 'Mar',
-      activeUsers: 7800,
-      newUsers: 190,
-      sessions: 13000
-    },
-    {
-      month: 'Apr',
-      activeUsers: 7600,
-      newUsers: 210,
-      sessions: 12800
-    },
-    {
-      month: 'May',
-      activeUsers: 7680,
-      newUsers: 203,
-      sessions: 13600
-    },
-    {
-      month: 'Jun',
-      activeUsers: 7900,
-      newUsers: 240,
-      sessions: 13200
-    },
-    {
-      month: 'Jul',
-      activeUsers: 8200,
-      newUsers: 280,
-      sessions: 14000
-    }
-  ];
+  // Data for the second chart (Multi-line Chart) - Dynamic from API
+  const engagementData = useMemo(() => {
+    const metrics = insights?.user_engagement_metrics;
+    if (!metrics) return [];
+
+    const labels = metrics.labels || [];
+    const activeUsers = metrics.active_users || [];
+    const newUsers = metrics.new_users || [];
+    const sessions = metrics.sessions || [];
+
+    // Transform API data into chart format
+    return labels.map((label, index) => ({
+      month: label,
+      activeUsers: activeUsers[index] ?? 0,
+      newUsers: newUsers[index] ?? 0,
+      sessions: sessions[index] ?? 0
+    }));
+  }, [insights]);
 
   const monthlyRevenueData = revenueData;
 
@@ -371,20 +344,21 @@ export default function Overview() {
       <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
           <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>User Engagement Metrics</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Daily active users, new registrations, and session data</p>
+          <p className="text-sm" style={{ color: '#3B4A66' }}>Active users, new registrations, and session data by month</p>
         </div>
 
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={engagementData}
-              margin={{
-                top: 10,
-                right: 30,
-                left: 0,
-                bottom: 0,
-              }}
-            >
+          {engagementData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={engagementData}
+                margin={{
+                  top: 10,
+                  right: 30,
+                  left: 0,
+                  bottom: 0,
+                }}
+              >
               <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
               <XAxis
                 dataKey="month"
@@ -396,8 +370,7 @@ export default function Overview() {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                domain={[0, 16000]}
-                ticks={[0, 4000, 8000, 12000, 16000]}
+                domain={[0, 'auto']}
               />
               <Tooltip content={<MultiLineTooltip />} />
 
@@ -432,23 +405,30 @@ export default function Overview() {
               />
             </LineChart>
           </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+              No user engagement data available for this period.
+            </div>
+          )}
         </div>
 
         {/* Legend */}
-        <div className="flex justify-center gap-6 mt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }}></div>
-            <span className="text-sm" style={{ color: '#3B4A66' }}>Active Users</span>
+        {engagementData.length > 0 && (
+          <div className="flex justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }}></div>
+              <span className="text-sm" style={{ color: '#3B4A66' }}>Active Users</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF7043' }}></div>
+              <span className="text-sm" style={{ color: '#3B4A66' }}>New Users</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
+              <span className="text-sm" style={{ color: '#3B4A66' }}>Sessions</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF7043' }}></div>
-            <span className="text-sm" style={{ color: '#3B4A66' }}>New Users</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
-            <span className="text-sm" style={{ color: '#3B4A66' }}>Sessions</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Third Chart - Bar Chart */}

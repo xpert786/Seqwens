@@ -34,8 +34,15 @@ export default function Subscriptions() {
   // API data states
   const [plansData, setPlansData] = useState(null);
   const [chartData, setChartData] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+  const [revenueInsights, setRevenueInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Client-side pagination for displaying subscription cards
+  const [subscriptionCardsCurrentPage, setSubscriptionCardsCurrentPage] = useState(1);
+  const [showAllSubscriptionCards, setShowAllSubscriptionCards] = useState(false);
+  const SUBSCRIPTION_CARDS_PER_PAGE = 3;
 
   const PLAN_CONFIG = [
     { key: 'solo', label: 'Solo' },
@@ -55,6 +62,14 @@ export default function Subscriptions() {
     }
     if (displayKey) {
       acc[displayKey] = plan;
+    }
+    return acc;
+  }, {});
+
+  // Create revenue by plan lookup
+  const revenueByPlanLookup = (revenueInsights?.revenue_by_plan || []).reduce((acc, revenuePlan) => {
+    if (revenuePlan?.plan) {
+      acc[revenuePlan.plan.toLowerCase()] = revenuePlan;
     }
     return acc;
   }, {});
@@ -206,6 +221,13 @@ export default function Subscriptions() {
           setEmailNotifications(Boolean(notificationSettings.subscription_email_updates_enabled));
           setSmsAlerts(Boolean(notificationSettings.subscription_sms_updates_enabled));
         }
+        // Store metrics from API response
+        if (data.metrics) {
+          setMetrics(data.metrics);
+        }
+        // Reset client-side pagination when data changes
+        setSubscriptionCardsCurrentPage(1);
+        setShowAllSubscriptionCards(false);
       } catch (err) {
         console.error('Error fetching subscriptions:', err);
         setTableError(handleAPIError(err));
@@ -240,16 +262,18 @@ export default function Subscriptions() {
         setLoading(true);
         setError(null);
 
-        // Fetch both plans and chart data in parallel
-        const [plansResponse, chartsResponse, planPerformanceResponse] = await Promise.all([
+        // Fetch plans, chart data, plan performance, and revenue insights in parallel
+        const [plansResponse, chartsResponse, planPerformanceResponse, revenueInsightsResponse] = await Promise.all([
           superAdminAPI.getSubscriptionPlans(),
           superAdminAPI.getSubscriptionCharts('revenue', 30),
-          superAdminAPI.getSuperadminPlanPerformance()
+          superAdminAPI.getSuperadminPlanPerformance(),
+          superAdminAPI.getRevenueInsights({ days: 30 })
         ]);
 
         setPlansData(plansResponse.data);
         setChartData(chartsResponse.data);
         setPlanPerformance(planPerformanceResponse.data || null);
+        setRevenueInsights(revenueInsightsResponse.data || null);
         await fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
         setFiltersInitialized(true);
       } catch (err) {
@@ -355,6 +379,26 @@ export default function Subscriptions() {
   const mrrMin = mrrValues.length ? Math.min(...mrrValues) : 0;
   const churnMax = churnValues.length ? Math.max(...churnValues) : 0;
   const distributionMax = planDistributionData.reduce((max, item) => Math.max(max, item?.firms ?? 0), 0);
+
+  // Client-side pagination logic for subscription cards
+  const totalSubscriptionCards = subscriptions.length;
+  const totalSubscriptionCardsPages = Math.ceil(totalSubscriptionCards / SUBSCRIPTION_CARDS_PER_PAGE);
+  const shouldShowSubscriptionCardsPagination = totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && !showAllSubscriptionCards;
+  const displayedSubscriptionCards = showAllSubscriptionCards
+    ? subscriptions
+    : subscriptions.slice((subscriptionCardsCurrentPage - 1) * SUBSCRIPTION_CARDS_PER_PAGE, subscriptionCardsCurrentPage * SUBSCRIPTION_CARDS_PER_PAGE);
+
+  const handleViewAllSubscriptionCards = (e) => {
+    e.preventDefault();
+    setShowAllSubscriptionCards(!showAllSubscriptionCards);
+    if (showAllSubscriptionCards) {
+      setSubscriptionCardsCurrentPage(1);
+    }
+  };
+
+  const handleSubscriptionCardsPageChange = (newPage) => {
+    setSubscriptionCardsCurrentPage(newPage);
+  };
 
   // Loading state
   if (loading) {
@@ -481,73 +525,160 @@ export default function Subscriptions() {
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Total Revenue</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.formatted_total_revenue || '$0.00'}
+                {metrics?.total_revenue?.formatted || '$0.00'}
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                  +{plansData?.average_growth || '0'}%
-                </span>
-
-              </div>
+              {/* {metrics?.total_revenue && (
+                <div className="flex items-center gap-1">
+                  {metrics.total_revenue.trend === 'up' && (
+                    <>
+                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                        +{metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.total_revenue.trend === 'down' && (
+                    <>
+                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                        {metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.total_revenue.trend === 'neutral' && (
+                    <>
+                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        {metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              )} */}
             </div>
-
             <BlueDollarIcon className="text-lg" />
-
           </div>
         </div>
 
-        {/* Active Subscriptions */}
+        {/* Active Subscribers */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscriptions</p>
+              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscribers</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.plans?.reduce((total, plan) => total + plan.total_subscribers, 0) || 0}
+                {metrics?.active_subscribers?.formatted || '0'}
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                  +{plansData?.average_growth || '0'}%
-                </span>
-
-              </div>
+              {/* {metrics?.active_subscribers && (
+                <div className="flex items-center gap-1">
+                  {metrics.active_subscribers.trend === 'up' && (
+                    <>
+                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                        +{metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.active_subscribers.trend === 'down' && (
+                    <>
+                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.active_subscribers.trend === 'neutral' && (
+                    <>
+                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              )} */}
             </div>
             <BlueUserIcon className="text-lg" />
           </div>
         </div>
 
-        {/* Trial Subscriptions */}
+        {/* Most Popular Plan */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.most_popular_plan?.charAt(0).toUpperCase() + plansData?.most_popular_plan?.slice(1) || 'N/A'}
+                {metrics?.most_popular_plan?.plan_label || 'N/A'}
               </p>
-              <div className="flex items-center gap-1">
-                <ClockgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>Top performer</span>
-
-              </div>
+              {metrics?.most_popular_plan && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    {/* {metrics.most_popular_plan.trend === 'up' && (
+                      <>
+                        <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                        <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                          +{metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
+                        </span>
+                      </>
+                    )}
+                    {metrics.most_popular_plan.trend === 'down' && (
+                      <>
+                        <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                        <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                          {metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
+                        </span>
+                      </>
+                    )}
+                    {metrics.most_popular_plan.trend === 'neutral' && (
+                      <>
+                        <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                          {metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
+                        </span>
+                      </>
+                    )} */}
+                  </div>
+                  <span className="text-xs" style={{ color: '#6B7280' }}>
+                    {metrics.most_popular_plan.count || 0} subscribers
+                  </span>
+                </div>
+              )}
             </div>
             <BlueClockIcon className="text-lg" />
           </div>
         </div>
 
-        {/* Growth Rate */}
+        {/* Average Growth */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Average Growth</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.average_growth || '0'}%
+                {metrics?.average_growth?.formatted || '+0.00%'}
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>Monthly</span>
-
-              </div>
+              {metrics?.average_growth && (
+                <div className="flex items-center gap-1">
+                  {metrics.average_growth.trend === 'up' && (
+                    <>
+                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                        Monthly
+                      </span>
+                    </>
+                  )}
+                  {metrics.average_growth.trend === 'down' && (
+                    <>
+                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                        Monthly
+                      </span>
+                    </>
+                  )}
+                  {metrics.average_growth.trend === 'neutral' && (
+                    <>
+                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        Monthly
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <BlueExclamationTriangleIcon className="text-lg" />
           </div>
@@ -578,6 +709,7 @@ export default function Subscriptions() {
             {PLAN_CONFIG.map(({ key, label }) => {
               const normalizedKey = key.toLowerCase();
               const plan = planLookup[normalizedKey] || planLookup[label.toLowerCase()];
+              const revenuePlan = revenueByPlanLookup[normalizedKey];
 
               if (plan) {
                 const { badgeClass, textClass } = getPlanBadgeStyles(plan.plan_type || label);
@@ -600,13 +732,32 @@ export default function Subscriptions() {
                           <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
                             {plan.total_subscribers} subscribers
                           </p>
-                          <div className='flex flex-row gap-2'>
-                            <p className="text-xs" style={{ color: '#3B4A66' }}>
-                              {plan.formatted_revenue} revenue.
-                            </p>
-                            <p className="text-xs" style={{ color: '#3B4A66' }}>
-                              {plan.formatted_growth} growth
-                            </p>
+                          <div className='flex flex-col gap-1'>
+                            {revenuePlan && (
+                              <>
+                                <div className='flex flex-row gap-2'>
+                                  <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                    {revenuePlan.formatted_revenue || '$0.00'} revenue
+                                  </p>
+                                  <p className="text-xs" style={{ color: '#6B7280' }}>
+                                    ({revenuePlan.percentage?.toFixed(1) || '0'}%)
+                                  </p>
+                                </div>
+                                <p className="text-xs" style={{ color: '#6B7280' }}>
+                                  {revenuePlan.invoice_count || 0} invoice{revenuePlan.invoice_count !== 1 ? 's' : ''}
+                                </p>
+                              </>
+                            )}
+                            {!revenuePlan && (
+                              <div className='flex flex-row gap-2'>
+                                <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                  {plan.formatted_revenue || '$0.00'} revenue.
+                                </p>
+                                <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                  {plan.formatted_growth || '0%'} growth
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -720,6 +871,9 @@ export default function Subscriptions() {
           </div>
         </div>
       </div>
+
+      {/* User Engagement Metrics Section */}
+      
 
       {/* Plan Performance Section */}
       <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
@@ -1002,6 +1156,15 @@ export default function Subscriptions() {
               <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
               <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed view of all platform subscriptions</p>
             </div>
+            {totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && (
+              <button
+                onClick={handleViewAllSubscriptionCards}
+                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+              >
+                {showAllSubscriptionCards ? 'Show Less' : 'View All'}
+              </button>
+            )}
           </div>
 
           {tableError && (
@@ -1032,8 +1195,8 @@ export default function Subscriptions() {
                   Loading subscriptions...
                 </div>
               </div>
-            ) : subscriptions.length > 0 ? (
-              subscriptions.map((subscription) => {
+            ) : displayedSubscriptionCards.length > 0 ? (
+              displayedSubscriptionCards.map((subscription) => {
                 const planStyles = getPlanBadgeStyles(subscription.plan);
                 const statusClasses = getStatusBadgeClasses(subscription.status);
                 return (
@@ -1091,6 +1254,33 @@ export default function Subscriptions() {
               </div>
             )}
           </div>
+
+          {/* Client-side Pagination Controls */}
+          {shouldShowSubscriptionCardsPagination && (
+            <div className="flex items-center justify-between px-4 py-3 mt-4 border-t border-[#E8F0FF]">
+              <button
+                onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage - 1)}
+                disabled={subscriptionCardsCurrentPage === 1}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderRadius: '8px' }}
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  Page {subscriptionCardsCurrentPage} of {totalSubscriptionCardsPages}
+                </span>
+              </div>
+              <button
+                onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage + 1)}
+                disabled={subscriptionCardsCurrentPage === totalSubscriptionCardsPages}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderRadius: '8px' }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

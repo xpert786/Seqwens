@@ -49,7 +49,7 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
     if (matchChildren) {
       return location.pathname === path || location.pathname.startsWith(`${path}/`);
     }
-    
+
     // Special handling for specific paths
     if (path === '/superadmin') {
       return location.pathname === '/superadmin' || location.pathname === '/superadmin/';
@@ -61,22 +61,20 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
         location.pathname.startsWith('/superadmin/users-details/')
       );
     }
-    
+
     // Default matching
     if (location.pathname === path) return true;
     return location.pathname.startsWith(`${path}/`);
   };
 
   const linkClass = (path, matchChildren = false) =>
-    `flex items-center justify-start px-0.5 py-1.5 rounded-lg my-0 text-xs font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${
-      isActivePath(path, matchChildren)
-        ? "bg-[#F6F7FF] !text-[#3B4A66]"
-        : "!text-[#3B4A66] hover:bg-slate-50 hover:!text-[#3B4A66]"
+    `flex items-center justify-start px-0.5 py-1.5 rounded-lg my-0 text-xs font-medium transition-all duration-200 whitespace-nowrap text-left no-underline ${isActivePath(path, matchChildren)
+      ? "bg-[#F6F7FF] !text-[#3B4A66]"
+      : "!text-[#3B4A66] hover:bg-slate-50 hover:!text-[#3B4A66]"
     }`;
 
   const iconWrapperClass = (path, matchChildren = false) =>
-    `inline-flex items-center justify-center mr-3 w-6 h-6 rounded-full ${
-      isActivePath(path, matchChildren) ? "bg-[#3AD6F2] p-1 [&>svg]:!text-white [&>svg]:!fill-[#3AD6F2]" : ""
+    `inline-flex items-center justify-center mr-3 w-6 h-6 rounded-full ${isActivePath(path, matchChildren) ? "bg-[#3AD6F2] p-1 [&>svg]:!text-white [&>svg]:!fill-[#3AD6F2]" : ""
     }`;
 
   const bottomLinkClass = (path) =>

@@ -82,6 +82,71 @@ export default function ESignatureManagement() {
   const [totalPages, setTotalPages] = useState(5);
   const [pdfPageWidth, setPdfPageWidth] = useState(550);
 
+  // E-Signature Requests state
+  const [esignRequests, setEsignRequests] = useState([]);
+  const [esignStatistics, setEsignStatistics] = useState({
+    total: 0,
+    pending: 0,
+    sent: 0,
+    viewed: 0,
+    signed: 0,
+    completed: 0,
+    cancelled: 0,
+    expired: 0
+  });
+  const [esignLoading, setEsignLoading] = useState(false);
+  const [esignError, setEsignError] = useState(null);
+  const [esignFilters, setEsignFilters] = useState({
+    status: '',
+    client_id: '',
+    requested_by: '',
+    search: '',
+    start_date: '',
+    end_date: ''
+  });
+  const [esignPagination, setEsignPagination] = useState({
+    page: 1,
+    page_size: 10,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
+  const [esignCurrentPage, setEsignCurrentPage] = useState(1);
+
+  // E-Signature Templates state
+  const [templates, setTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [templatesError, setTemplatesError] = useState(null);
+  const [templatesPagination, setTemplatesPagination] = useState({
+    page: 1,
+    page_size: 10,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
+  const [templatesCurrentPage, setTemplatesCurrentPage] = useState(1);
+  const [templatesFilters, setTemplatesFilters] = useState({
+    is_active: '',
+    search: ''
+  });
+  
+  // Client-side pagination for template cards (5 per page)
+  const [templateCardsCurrentPage, setTemplateCardsCurrentPage] = useState(1);
+  const TEMPLATE_CARDS_PER_PAGE = 5;
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+  const [showDeleteTemplateModal, setShowDeleteTemplateModal] = useState(false);
+  const [selectedTemplateForDelete, setSelectedTemplateForDelete] = useState(null);
+  const [deletingTemplate, setDeletingTemplate] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: '',
+    description: '',
+    document: null,
+    is_active: true
+  });
+  const [creatingTemplate, setCreatingTemplate] = useState(false);
+
   // Memoize PDF options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
     cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
@@ -525,6 +590,82 @@ export default function ESignatureManagement() {
     });
   };
 
+  // Fetch e-signature requests
+  const fetchEsignRequests = useCallback(async () => {
+    try {
+      setEsignLoading(true);
+      setEsignError(null);
+
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+      
+      queryParams.append('page', esignCurrentPage.toString());
+      queryParams.append('page_size', '10');
+
+      if (esignFilters.status) {
+        queryParams.append('status', esignFilters.status);
+      }
+      if (esignFilters.client_id) {
+        queryParams.append('client_id', esignFilters.client_id);
+      }
+      if (esignFilters.requested_by) {
+        queryParams.append('requested_by', esignFilters.requested_by);
+      }
+      if (esignFilters.search) {
+        queryParams.append('search', esignFilters.search);
+      }
+      if (esignFilters.start_date) {
+        queryParams.append('start_date', esignFilters.start_date);
+      }
+      if (esignFilters.end_date) {
+        queryParams.append('end_date', esignFilters.end_date);
+      }
+
+      const response = await fetchWithCors(`${getApiBaseUrl()}/firm/esign-requests/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setEsignRequests(result.data.requests || []);
+        if (result.data.statistics) {
+          setEsignStatistics(result.data.statistics);
+        }
+        if (result.data.pagination) {
+          setEsignPagination(result.data.pagination);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to fetch e-signature requests');
+      }
+    } catch (err) {
+      console.error('Error fetching e-signature requests:', err);
+      setEsignError(handleAPIError(err));
+      toast.error(handleAPIError(err) || 'Failed to fetch e-signature requests', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setEsignLoading(false);
+    }
+  }, [esignCurrentPage, esignFilters]);
+
+  // Fetch e-signature requests when tab is active or filters/page change
+  useEffect(() => {
+    if (activeTab === 'Signature Request') {
+      fetchEsignRequests();
+    }
+  }, [activeTab, esignCurrentPage, esignFilters, fetchEsignRequests]);
+
   // Create signature request
   const createSignatureRequest = async () => {
     if (!taskTitle.trim()) {
@@ -748,29 +889,174 @@ export default function ESignatureManagement() {
     }
   }, [showPreviewModal, showFinalSignatureModal]);
 
-  const templates = [
-    {
-      id: 1,
-      title: 'Tax Return Signature',
-      description: 'Standard tax return client signature template',
-      fields: 3,
-      usage: 45
-    },
-    {
-      id: 2,
-      title: 'Engagement Letter',
-      description: 'Client engagement agreement template',
-      fields: 5,
-      usage: 35
-    },
-    {
-      id: 3,
-      title: 'Power Of Attorney',
-      description: 'IRS power of attorney form template',
-      fields: 4,
-      usage: 28
+  // Fetch e-signature templates
+  const fetchTemplates = useCallback(async () => {
+    try {
+      setTemplatesLoading(true);
+      setTemplatesError(null);
+
+      const token = getAccessToken();
+      const queryParams = new URLSearchParams();
+      
+      queryParams.append('page', templatesCurrentPage.toString());
+      queryParams.append('page_size', '10');
+
+      if (templatesFilters.is_active !== '') {
+        queryParams.append('is_active', templatesFilters.is_active);
+      }
+      if (templatesFilters.search) {
+        queryParams.append('search', templatesFilters.search);
+      }
+
+      const response = await fetchWithCors(`${getApiBaseUrl()}/firm/esign-templates/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setTemplates(result.data.templates || []);
+        if (result.data.pagination) {
+          setTemplatesPagination(result.data.pagination);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to fetch templates');
+      }
+    } catch (err) {
+      console.error('Error fetching templates:', err);
+      setTemplatesError(handleAPIError(err));
+      toast.error(handleAPIError(err) || 'Failed to fetch templates', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setTemplatesLoading(false);
     }
-  ];
+  }, [templatesCurrentPage, templatesFilters]);
+
+  // Fetch templates when tab is active or filters/page change
+  useEffect(() => {
+    if (activeTab === 'Templates') {
+      fetchTemplates();
+    }
+  }, [activeTab, templatesCurrentPage, templatesFilters, fetchTemplates]);
+
+  // Reset client-side pagination when templates change
+  useEffect(() => {
+    setTemplateCardsCurrentPage(1);
+  }, [templates]);
+
+  // Create template
+  const handleCreateTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.document) {
+      toast.error('Please provide template name and document', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    try {
+      setCreatingTemplate(true);
+      const token = getAccessToken();
+      const formData = new FormData();
+      
+      formData.append('name', newTemplate.name);
+      if (newTemplate.description) {
+        formData.append('description', newTemplate.description);
+      }
+      formData.append('document', newTemplate.document);
+      formData.append('is_active', newTemplate.is_active.toString());
+
+      const response = await fetchWithCors(`${getApiBaseUrl()}/firm/esign-templates/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Template created successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowCreateTemplateModal(false);
+        setNewTemplate({
+          name: '',
+          description: '',
+          document: null,
+          is_active: true
+        });
+        fetchTemplates();
+      } else {
+        throw new Error(result.message || 'Failed to create template');
+      }
+    } catch (err) {
+      console.error('Error creating template:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to create template', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setCreatingTemplate(false);
+    }
+  };
+
+  // Delete template
+  const handleDeleteTemplate = async (templateId) => {
+    try {
+      setDeletingTemplate(true);
+      const token = getAccessToken();
+
+      const response = await fetchWithCors(`${getApiBaseUrl()}/firm/esign-templates/${templateId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      toast.success('Template deleted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setShowDeleteTemplateModal(false);
+      setSelectedTemplateForDelete(null);
+      fetchTemplates();
+    } catch (err) {
+      console.error('Error deleting template:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to delete template', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeletingTemplate(false);
+    }
+  };
 
   return (
     <div className="p-3 sm:p-4 md:p-6 bg-[rgb(243,247,255)] min-h-screen">
@@ -786,7 +1072,13 @@ export default function ESignatureManagement() {
             </p>
           </div>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              if (activeTab === 'Templates') {
+                setShowCreateTemplateModal(true);
+              } else {
+                setShowCreateModal(true);
+              }
+            }}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium w-full sm:w-auto"
             style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
           >
@@ -804,7 +1096,7 @@ export default function ESignatureManagement() {
         {/* Desktop Navigation - Always visible on screens ≥ 768px */}
         <div className="hidden md:block mb-6 w-fit">
           <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Signature Request', 'Templates', 'Settings'].map((tab) => (
+            {['Signature Request', 'Templates'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -862,7 +1154,7 @@ export default function ESignatureManagement() {
             <div className="flex-1">
               <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
                 {activeTab === 'Signature Request' ? 'Signature Request' :
-                  activeTab === 'Templates' ? 'Templates' : 'Settings'}
+                  activeTab === 'Templates' ? 'Templates' : 'Signature Request'}
               </span>
             </div>
           </div>
@@ -928,35 +1220,6 @@ export default function ESignatureManagement() {
                   )}
                 </div>
               </button>
-              <button
-                onClick={() => handleTabChange('Settings')}
-                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'Settings'
-                  ? 'text-white bg-[#3AD6F2]'
-                  : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>Settings</span>
-                  {activeTab === 'Settings' && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M13.3333 4L6 11.3333L2.66667 8"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button>
             </div>
           )}
         </div>
@@ -965,72 +1228,203 @@ export default function ESignatureManagement() {
       {/* Templates Tab Content */}
       {activeTab === 'Templates' && (
         <div className="bg-white rounded-lg p-4 sm:p-6">
-          <div className="mb-4 md:mb-6">
-            <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Signature Templates
-            </h5>
-            <p className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Manage reusable signature templates
-            </p>
+          <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                Signature Templates
+              </h5>
+              <p className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                Manage reusable signature templates
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCreateTemplateModal(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium w-full sm:w-auto"
+              style={{ fontFamily: 'BasisGrotesquePro' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Add Template
+            </button>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Status</label>
+              <select
+                value={templatesFilters.is_active}
+                onChange={(e) => {
+                  setTemplatesFilters(prev => ({ ...prev, is_active: e.target.value }));
+                  setTemplatesCurrentPage(1);
+                }}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              >
+                <option value="">All Templates</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Search</label>
+              <input
+                type="text"
+                value={templatesFilters.search}
+                onChange={(e) => {
+                  setTemplatesFilters(prev => ({ ...prev, search: e.target.value }));
+                  setTemplatesCurrentPage(1);
+                }}
+                placeholder="Search templates..."
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              />
+            </div>
           </div>
 
           {/* Template Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {templates.map((template) => (
-              <div
-                key={template.id}
-                className="bg-white rounded-lg p-4 sm:p-5"
-                style={{
-                  border: '1px solid #E8F0FF',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  relative: 'true',
-                }}
-              >
-                {/* Template Title */}
-                <h5 className="text-base sm:text-lg font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  {template.title}
-                </h5>
+          {templatesLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Loading templates...</p>
+            </div>
+          ) : templatesError ? (
+            <div className="text-center py-8">
+              <p className="text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>{templatesError}</p>
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>No templates found</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                {templates.slice(
+                  (templateCardsCurrentPage - 1) * TEMPLATE_CARDS_PER_PAGE,
+                  templateCardsCurrentPage * TEMPLATE_CARDS_PER_PAGE
+                ).map((template) => (
+                  <div
+                    key={template.id}
+                    className="bg-white rounded-lg p-4 sm:p-5"
+                    style={{
+                      border: '1px solid #E8F0FF',
+                      borderRadius: '10px',
+                      padding: '10px',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    {/* Template Title */}
+                    <div className="flex items-start justify-between mb-2">
+                      <h5 className="text-base sm:text-lg font-semibold text-gray-800 flex-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        {template.name}
+                      </h5>
+                      {template.is_active ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          Inactive
+                        </span>
+                      )}
+                    </div>
 
-                {/* Template Description */}
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  {template.description}
-                </p>
+                    {/* Template Description */}
+                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      {template.description || 'No description'}
+                    </p>
 
-                {/* Template Details */}
-                <div className="space-y-2 mb-3 sm:mb-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Fields:
-                    </span>
-                    <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {template.fields}
-                    </span>
+                    {/* Template Details */}
+                    <div className="space-y-2 mb-3 sm:mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          Signature Fields:
+                        </span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          {template.signature_fields_count || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          Created by:
+                        </span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          {template.created_by_name || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          Created:
+                        </span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                          {template.created_at ? new Date(template.created_at).toLocaleDateString() : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
+                      {template.document_url && (
+                        <button
+                          onClick={() => window.open(template.document_url, '_blank')}
+                          className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+                        >
+                          View Document
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedTemplateForDelete(template.id);
+                          setShowDeleteTemplateModal(true);
+                        }}
+                        className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Usage:
-                    </span>
-                    <span className="text-xs sm:text-sm font-medium text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      {template.usage} times
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
-                  <button className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
-                    Edit Template
-                  </button>
-                  <button className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
-                    Use template
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+
+              {/* Client-side Pagination for Template Cards */}
+              {templates.length > TEMPLATE_CARDS_PER_PAGE && (
+                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                  <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                    Showing {((templateCardsCurrentPage - 1) * TEMPLATE_CARDS_PER_PAGE) + 1} to {Math.min(templateCardsCurrentPage * TEMPLATE_CARDS_PER_PAGE, templates.length)} of {templates.length} templates
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setTemplateCardsCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={templateCardsCurrentPage === 1}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${templateCardsCurrentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      style={{ borderRadius: '8px' }}
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                      Page {templateCardsCurrentPage} of {Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)}
+                    </span>
+                    <button
+                      onClick={() => setTemplateCardsCurrentPage(prev => Math.min(Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE), prev + 1))}
+                      disabled={templateCardsCurrentPage >= Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${templateCardsCurrentPage >= Math.ceil(templates.length / TEMPLATE_CARDS_PER_PAGE)
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      style={{ borderRadius: '8px' }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
@@ -1045,6 +1439,22 @@ export default function ESignatureManagement() {
             <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Track and manage document signature requests
             </p>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-yellow-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.pending}</div>
+              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending</div>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-purple-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.signed}</div>
+              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Signed</div>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-red-600" style={{ fontFamily: 'BasisGrotesquePro' }}>{esignStatistics.expired}</div>
+              <div className="text-xs text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>Expired</div>
+            </div>
           </div>
 
           {/* Signature Requests Table */}
@@ -1070,7 +1480,7 @@ export default function ESignatureManagement() {
                       Progress
                     </th>
                     <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Due Date
+                      Expires At
                     </th>
                     <th className="text-left py-3 px-4 text-sm  text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       Actions
@@ -1078,721 +1488,172 @@ export default function ESignatureManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Row 1: SIG-001 */}
-                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-4">
-                      <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        SIG-001
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        Tax Return - John Smith 2023
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        John Smith
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 flex items-center gap-1.5">
-                      <svg width="15" height="15" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clip-path="url(#clip0_5150_5728)">
-                          <path d="M7.00008 12.8346C10.2217 12.8346 12.8334 10.223 12.8334 7.0013C12.8334 3.77964 10.2217 1.16797 7.00008 1.16797C3.77842 1.16797 1.16675 3.77964 1.16675 7.0013C1.16675 10.223 3.77842 12.8346 7.00008 12.8346Z" stroke="#FBBF24" stroke-linecap="round" stroke-linejoin="round" />
-                          <path d="M7 3.5V7L9.33333 8.16667" stroke="#FBBF24" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_5150_5728">
-                            <rect width="15" height="15" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
+                  {esignLoading ? (
+                    <tr>
+                      <td colSpan="7" className="py-8 text-center text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : esignError ? (
+                    <tr>
+                      <td colSpan="7" className="py-8 text-center text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        {esignError}
+                      </td>
+                    </tr>
+                  ) : esignRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="py-8 text-center text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        No signature requests found
+                      </td>
+                    </tr>
+                  ) : (
+                    esignRequests.map((request) => {
+                      const getStatusColor = (status) => {
+                        switch (status) {
+                          case 'pending': return { bg: '#FBBF24', text: 'white', icon: 'pending' };
+                          case 'sent': return { bg: '#3B82F6', text: 'white', icon: 'sent' };
+                          case 'viewed': return { bg: '#6366F1', text: 'white', icon: 'viewed' };
+                          case 'signed': return { bg: '#8B5CF6', text: 'white', icon: 'signed' };
+                          case 'completed': return { bg: '#22C55E', text: 'white', icon: 'completed' };
+                          case 'cancelled': return { bg: '#6B7280', text: 'white', icon: 'cancelled' };
+                          case 'expired': return { bg: '#EF4444', text: 'white', icon: 'expired' };
+                          default: return { bg: '#6B7280', text: 'white', icon: 'default' };
+                        }
+                      };
+                      const statusStyle = getStatusColor(request.status);
+                      const expiresDate = request.expires_at ? new Date(request.expires_at).toLocaleDateString() : 'N/A';
+                      const progress = `${request.completed_fields || 0}/${request.total_fields || 0}`;
 
-
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#FBBF24] text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-
-                        Pending
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <svg width="15" height="15" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <g clip-path="url(#clip0_5150_5734)">
-                            <path d="M9.33342 12.25V11.0833C9.33342 10.4645 9.08758 9.871 8.65 9.43342C8.21241 8.99583 7.61892 8.75 7.00008 8.75H3.50008C2.88124 8.75 2.28775 8.99583 1.85017 9.43342C1.41258 9.871 1.16675 10.4645 1.16675 11.0833V12.25" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M5.25008 6.41667C6.53875 6.41667 7.58341 5.372 7.58341 4.08333C7.58341 2.79467 6.53875 1.75 5.25008 1.75C3.96142 1.75 2.91675 2.79467 2.91675 4.08333C2.91675 5.372 3.96142 6.41667 5.25008 6.41667Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M12.8333 12.2484V11.0817C12.8329 10.5647 12.6608 10.0625 12.344 9.6539C12.0273 9.2453 11.5838 8.95347 11.0833 8.82422" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M9.33325 1.82422C9.83516 1.95273 10.28 2.24463 10.5977 2.6539C10.9154 3.06317 11.0878 3.56654 11.0878 4.08464C11.0878 4.60273 10.9154 5.1061 10.5977 5.51537C10.28 5.92464 9.83516 6.21654 9.33325 6.34505" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_5150_5734">
-                              <rect width="15" height="15" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>1/2</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        2024-01-22
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="View">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="Download">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 2: SIG-002 */}
-                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-4">
-                      <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        SIG-002
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        Engagement Letter - ABC Corp
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        ABC Corporation
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 flex items-center gap-1.5">
-                      <DocumentSuccessIcon width={15} height={15} />
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#22C55E] text-white" style={{ fontFamily: 'BasisGrotesquePro' }}>
-
-                        Completed
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <svg width="15" height="15" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <g clip-path="url(#clip0_5150_5734)">
-                            <path d="M9.33342 12.25V11.0833C9.33342 10.4645 9.08758 9.871 8.65 9.43342C8.21241 8.99583 7.61892 8.75 7.00008 8.75H3.50008C2.88124 8.75 2.28775 8.99583 1.85017 9.43342C1.41258 9.871 1.16675 10.4645 1.16675 11.0833V12.25" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M5.25008 6.41667C6.53875 6.41667 7.58341 5.372 7.58341 4.08333C7.58341 2.79467 6.53875 1.75 5.25008 1.75C3.96142 1.75 2.91675 2.79467 2.91675 4.08333C2.91675 5.372 3.96142 6.41667 5.25008 6.41667Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M12.8333 12.2484V11.0817C12.8329 10.5647 12.6608 10.0625 12.344 9.6539C12.0273 9.2453 11.5838 8.95347 11.0833 8.82422" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M9.33325 1.82422C9.83516 1.95273 10.28 2.24463 10.5977 2.6539C10.9154 3.06317 11.0878 3.56654 11.0878 4.08464C11.0878 4.60273 10.9154 5.1061 10.5977 5.51537C10.28 5.92464 9.83516 6.21654 9.33325 6.34505" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_5150_5734">
-                              <rect width="15" height="15" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>3/3</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        2024-01-21
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="View">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="Download">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 3: SIG-003 */}
-                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-4">
-                      <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                        SIG-003
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        Power Of Attorney - Jane Doe
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        Jane Doe
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 flex items-center gap-1.5">
-                      <svg width="15" height="15" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clip-path="url(#clip0_5150_5787)">
-                          <path d="M7.00008 12.8346C10.2217 12.8346 12.8334 10.223 12.8334 7.0013C12.8334 3.77964 10.2217 1.16797 7.00008 1.16797C3.77842 1.16797 1.16675 3.77964 1.16675 7.0013C1.16675 10.223 3.77842 12.8346 7.00008 12.8346Z" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
-                          <path d="M8.75 5.25L5.25 8.75" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
-                          <path d="M5.25 5.25L8.75 8.75" stroke="#EF4444" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_5150_5787">
-                            <rect width="15" height="15" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500 text-white" style={{ fontFamily: 'BasisGrotesquePro' }}>
-
-                        Expired
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <svg width="15" height="15" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <g clip-path="url(#clip0_5150_5734)">
-                            <path d="M9.33342 12.25V11.0833C9.33342 10.4645 9.08758 9.871 8.65 9.43342C8.21241 8.99583 7.61892 8.75 7.00008 8.75H3.50008C2.88124 8.75 2.28775 8.99583 1.85017 9.43342C1.41258 9.871 1.16675 10.4645 1.16675 11.0833V12.25" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M5.25008 6.41667C6.53875 6.41667 7.58341 5.372 7.58341 4.08333C7.58341 2.79467 6.53875 1.75 5.25008 1.75C3.96142 1.75 2.91675 2.79467 2.91675 4.08333C2.91675 5.372 3.96142 6.41667 5.25008 6.41667Z" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M12.8333 12.2484V11.0817C12.8329 10.5647 12.6608 10.0625 12.344 9.6539C12.0273 9.2453 11.5838 8.95347 11.0833 8.82422" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M9.33325 1.82422C9.83516 1.95273 10.28 2.24463 10.5977 2.6539C10.9154 3.06317 11.0878 3.56654 11.0878 4.08464C11.0878 4.60273 10.9154 5.1061 10.5977 5.51537C10.28 5.92464 9.83516 6.21654 9.33325 6.34505" stroke="#3AD6F2" stroke-linecap="round" stroke-linejoin="round" />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_5150_5734">
-                              <rect width="15" height="15" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-
-                        <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>0/1</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
-                        2024-01-17
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="View">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="Download">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                      return (
+                        <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <td className="py-4 px-4">
+                            <span className="text-sm font-medium text-gray-400" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                              #{request.id}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                              {request.title || request.document_name || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                              {request.client_name || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500', backgroundColor: statusStyle.bg }}>
+                              {request.status_display || request.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>{progress}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                              {expiresDate}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              {request.document_url && (
+                                <button
+                                  onClick={() => window.open(request.document_url, '_blank')}
+                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                  aria-label="View"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                              )}
+                              {request.document_url && (
+                                <button
+                                  onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = request.document_url;
+                                    link.download = request.document_name || 'document.pdf';
+                                    link.click();
+                                  }}
+                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                  aria-label="Download"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
-              {/* Card 1: SIG-001 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      SIG-001
-                    </h3>
-                    <p className="text-xs text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Tax Return - John Smith 2023
-                    </p>
-                    <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Client: John Smith
-                    </p>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5" />
-                      <path d="M6 3V6L8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Pending
-                  </span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Progress:</span>
-                    <div className="flex items-center gap-1.5">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 2C9.10457 2 10 2.89543 10 4C10 5.10457 9.10457 6 8 6C6.89543 6 6 5.10457 6 4C6 2.89543 6.89543 2 8 2Z" fill="#3B4A66" />
-                        <path d="M3 13.6667C3 11.3131 4.97969 9.33333 7.33333 9.33333H8.66667C11.0203 9.33333 13 11.3131 13 13.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M12 2C13.1046 2 14 2.89543 14 4C14 5.10457 13.1046 6 12 6C10.8954 6 10 5.10457 10 4C10 2.89543 10.8954 2 12 2Z" fill="#3B4A66" />
-                        <path d="M15 13.6667C15 11.3131 13.0203 9.33333 10.6667 9.33333H9.33333C6.97969 9.33333 5 11.3131 5 13.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>1/2</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Due Date:</span>
-                    <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>2024-01-22</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                  <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    View
-                  </button>
-                  <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
-
-              {/* Card 2: SIG-002 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      SIG-002
-                    </h3>
-                    <p className="text-xs text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Engagement Letter - ABC Corp
-                    </p>
-                    <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Client: ABC Corporation
-                    </p>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="6" cy="6" r="5" fill="currentColor" />
-                      <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Completed
-                  </span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Progress:</span>
-                    <div className="flex items-center gap-1.5">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 2C9.10457 2 10 2.89543 10 4C10 5.10457 9.10457 6 8 6C6.89543 6 6 5.10457 6 4C6 2.89543 6.89543 2 8 2Z" fill="#3B4A66" />
-                        <path d="M3 13.6667C3 11.3131 4.97969 9.33333 7.33333 9.33333H8.66667C11.0203 9.33333 13 11.3131 13 13.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M12 2C13.1046 2 14 2.89543 14 4C14 5.10457 13.1046 6 12 6C10.8954 6 10 5.10457 10 4C10 2.89543 10.8954 2 12 2Z" fill="#3B4A66" />
-                        <path d="M15 13.6667C15 11.3131 13.0203 9.33333 10.6667 9.33333H9.33333C6.97969 9.33333 5 11.3131 5 13.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>3/3</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Due Date:</span>
-                    <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>2024-01-21</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                  <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    View
-                  </button>
-                  <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
-
-              {/* Card 3: SIG-003 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      SIG-003
-                    </h3>
-                    <p className="text-xs text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Power Of Attorney - Jane Doe
-                    </p>
-                    <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                      Client: Jane Doe
-                    </p>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5" />
-                      <path d="M4 4L8 8M8 4L4 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Expired
-                  </span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Progress:</span>
-                    <div className="flex items-center gap-1.5">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 2C9.10457 2 10 2.89543 10 4C10 5.10457 9.10457 6 8 6C6.89543 6 6 5.10457 6 4C6 2.89543 6.89543 2 8 2Z" fill="#3B4A66" />
-                        <path d="M3 13.6667C3 11.3131 4.97969 9.33333 7.33333 9.33333H8.66667C11.0203 9.33333 13 11.3131 13 13.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M12 2C13.1046 2 14 2.89543 14 4C14 5.10457 13.1046 6 12 6C10.8954 6 10 5.10457 10 4C10 2.89543 10.8954 2 12 2Z" fill="#3B4A66" />
-                        <path d="M15 13.6667C15 11.3131 13.0203 9.33333 10.6667 9.33333H9.33333C6.97969 9.33333 5 11.3131 5 13.6667" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>0/1</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>Due Date:</span>
-                    <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>2024-01-17</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                  <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 8C1 8 3.66667 3 8 3C12.3333 3 15 8 15 8C15 8 12.3333 13 8 13C3.66667 13 1 8 1 8Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    View
-                  </button>
-                  <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10M5.33333 6.66667L8 10M8 10L10.6667 6.66667M8 10V2" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
-        </div>
-      )}
 
-      {/* Settings Tab Content */}
-      {activeTab === 'Settings' && (
-        <div className="bg-white rounded-lg p-4 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column: Signature Settings */}
-            <div>
-              <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Signature Settings
-              </h5>
-              <p className="text-sm text-gray-600 mb-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Configure signature requirements and defaults
-              </p>
-
-              <div className="space-y-6">
-                {/* Default Expiry */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Default Expiry (days)
-                  </label>
-                  <input
-                    type="number"
-                    value={defaultExpiry}
-                    onChange={(e) => setDefaultExpiry(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
-                    style={{ fontFamily: 'BasisGrotesquePro' }}
-                  />
-                </div>
-
-                {/* Reminder Frequency */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Reminder Frequency (days)
-                  </label>
-                  <input
-                    type="number"
-                    value={reminderFrequency}
-                    onChange={(e) => setReminderFrequency(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
-                    style={{ fontFamily: 'BasisGrotesquePro' }}
-                  />
-                </div>
-
-                {/* Authentication Requirements */}
-                <div>
-                  <h5 className="text-sm font-medium text-gray-700 mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Authentication Requirements
-                  </h5>
-                  <div className="space-y-3">
-                    {/* Authentication Required Checkbox */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={authenticationRequired}
-                          onChange={(e) => setAuthenticationRequired(e.target.checked)}
-                          className="w-5 h-5 rounded cursor-pointer appearance-none"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            backgroundColor: authenticationRequired ? '#3AD6F2' : 'white',
-                            border: '2px solid',
-                            borderColor: authenticationRequired ? '#3AD6F2' : '#D1D5DB'
-                          }}
-                        />
-                        {authenticationRequired && (
-                          <svg
-                            className="absolute top-0 left-0 w-5 h-5 pointer-events-none"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M16.6667 5L7.50004 14.1667L3.33337 10"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        className="text-sm text-gray-700 cursor-pointer"
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
-                        onClick={() => setAuthenticationRequired(!authenticationRequired)}
+          {/* Pagination */}
+          {esignPagination.total_count > 0 && (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+              <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                Showing {((esignPagination.page - 1) * esignPagination.page_size) + 1} to {Math.min(esignPagination.page * esignPagination.page_size, esignPagination.total_count)} of {esignPagination.total_count} requests
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEsignCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!esignPagination.has_previous || esignCurrentPage === 1}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!esignPagination.has_previous || esignCurrentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, esignPagination.total_pages) }, (_, i) => {
+                    let pageNum;
+                    if (esignPagination.total_pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (esignCurrentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (esignCurrentPage >= esignPagination.total_pages - 2) {
+                      pageNum = esignPagination.total_pages - 4 + i;
+                    } else {
+                      pageNum = esignCurrentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setEsignCurrentPage(pageNum)}
+                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
+                          esignCurrentPage === pageNum
+                            ? 'bg-[#F56D2D] text-white'
+                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
                       >
-                        Authentication Requirements
-                      </label>
-                    </div>
-
-                    {/* SMS Verification Required Checkbox */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={smsVerificationRequired}
-                          onChange={(e) => setSmsVerificationRequired(e.target.checked)}
-                          className="w-5 h-5 rounded cursor-pointer appearance-none"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            backgroundColor: smsVerificationRequired ? '#3AD6F2' : 'white',
-                            border: '2px solid',
-                            borderColor: smsVerificationRequired ? '#3AD6F2' : '#D1D5DB'
-                          }}
-                        />
-                        {smsVerificationRequired && (
-                          <svg
-                            className="absolute top-0 left-0 w-5 h-5 pointer-events-none"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M16.6667 5L7.50004 14.1667L3.33337 10"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        className="text-sm text-gray-700 cursor-pointer"
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
-                        onClick={() => setSmsVerificationRequired(!smsVerificationRequired)}
-                      >
-                        SMS verification required
-                      </label>
-                    </div>
-                  </div>
+                        {pageNum}
+                      </button>
+                    );
+                  })}
                 </div>
+                <button
+                  onClick={() => setEsignCurrentPage(prev => Math.min(esignPagination.total_pages, prev + 1))}
+                  disabled={!esignPagination.has_next || esignCurrentPage === esignPagination.total_pages}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!esignPagination.has_next || esignCurrentPage === esignPagination.total_pages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  Next
+                </button>
               </div>
             </div>
-
-            {/* Right Column: Compliance & Security */}
-            <div>
-              <h5 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Compliance & Security
-              </h5>
-              <p className="text-sm text-gray-600 mb-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Legal and security configurations
-              </p>
-
-              <div className="space-y-6">
-                {/* Certificate Authority */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Certificate Authority
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={certificateAuthority}
-                      onChange={(e) => setCertificateAuthority(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
-                      style={{ fontFamily: 'BasisGrotesquePro' }}
-                    >
-                      <option>DocuSign</option>
-                      <option>Adobe Sign</option>
-                      <option>HelloSign</option>
-                      <option>PandaDoc</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Audit Trail Retention */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Audit Trail Retention (years)
-                  </label>
-                  <input
-                    type="number"
-                    value={auditTrailRetention}
-                    onChange={(e) => setAuditTrailRetention(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
-                    style={{ fontFamily: 'BasisGrotesquePro' }}
-                  />
-                </div>
-
-                {/* Compliance Standards */}
-                <div>
-                  <h5 className="text-sm font-medium text-gray-700 mb-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    Compliance Standards
-                  </h5>
-                  <div className="space-y-3">
-                    {/* ESIGN Act Compliant Checkbox */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={esignActCompliant}
-                          onChange={(e) => setEsignActCompliant(e.target.checked)}
-                          className="w-5 h-5 rounded cursor-pointer appearance-none"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            backgroundColor: esignActCompliant ? '#3AD6F2' : 'white',
-                            border: '2px solid',
-                            borderColor: esignActCompliant ? '#3AD6F2' : '#D1D5DB'
-                          }}
-                        />
-                        {esignActCompliant && (
-                          <svg
-                            className="absolute top-0 left-0 w-5 h-5 pointer-events-none"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M16.6667 5L7.50004 14.1667L3.33337 10"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        className="text-sm text-gray-700 cursor-pointer"
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
-                        onClick={() => setEsignActCompliant(!esignActCompliant)}
-                      >
-                        ESIGN Act compliant
-                      </label>
-                    </div>
-
-                    {/* UETA Compliant Checkbox */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={uetaCompliant}
-                          onChange={(e) => setUetaCompliant(e.target.checked)}
-                          className="w-5 h-5 rounded cursor-pointer appearance-none"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            backgroundColor: uetaCompliant ? '#3AD6F2' : 'white',
-                            border: '2px solid',
-                            borderColor: uetaCompliant ? '#3AD6F2' : '#D1D5DB'
-                          }}
-                        />
-                        {uetaCompliant && (
-                          <svg
-                            className="absolute top-0 left-0 w-5 h-5 pointer-events-none"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M16.6667 5L7.50004 14.1667L3.33337 10"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        className="text-sm text-gray-700 cursor-pointer"
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
-                        onClick={() => setUetaCompliant(!uetaCompliant)}
-                      >
-                        UETA compliant
-                      </label>
-                    </div>
-
-                    {/* EU eIDAS Compliant Checkbox */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={euEidasCompliant}
-                          onChange={(e) => setEuEidasCompliant(e.target.checked)}
-                          className="w-5 h-5 rounded cursor-pointer appearance-none"
-                          style={{
-                            accentColor: '#3AD6F2',
-                            backgroundColor: euEidasCompliant ? '#3AD6F2' : 'white',
-                            border: '2px solid',
-                            borderColor: euEidasCompliant ? '#3AD6F2' : '#D1D5DB'
-                          }}
-                        />
-                        {euEidasCompliant && (
-                          <svg
-                            className="absolute top-0 left-0 w-5 h-5 pointer-events-none"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M16.6667 5L7.50004 14.1667L3.33337 10"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        className="text-sm text-gray-700 cursor-pointer"
-                        style={{ fontFamily: 'BasisGrotesquePro' }}
-                        onClick={() => setEuEidasCompliant(!euEidasCompliant)}
-                      >
-                        EU eIDAS compliant
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -3166,6 +3027,162 @@ export default function ESignatureManagement() {
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
                 Complete Signature
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Template Modal */}
+      {showCreateTemplateModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => !creatingTemplate && setShowCreateTemplateModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+                Create Template
+              </h2>
+              <button
+                onClick={() => !creatingTemplate && setShowCreateTemplateModal(false)}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={creatingTemplate}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Template Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                  disabled={creatingTemplate}
+                  placeholder="Enter template name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Description
+                </label>
+                <textarea
+                  value={newTemplate.description}
+                  onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                  disabled={creatingTemplate}
+                  rows="3"
+                  placeholder="Enter template description"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Document <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="file"
+                  accept=".doc,.docx,.pdf"
+                  onChange={(e) => setNewTemplate(prev => ({ ...prev, document: e.target.files[0] }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                  disabled={creatingTemplate}
+                />
+                {newTemplate.document && (
+                  <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Selected: {newTemplate.document.name}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={newTemplate.is_active}
+                  onChange={(e) => setNewTemplate(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="w-4 h-4 text-[#3AD6F2] border-gray-300 rounded focus:ring-[#3AD6F2]"
+                  disabled={creatingTemplate}
+                />
+                <label htmlFor="is_active" className="ml-2 text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                  Active
+                </label>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowCreateTemplateModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                  disabled={creatingTemplate}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateTemplate}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                  style={{ background: '#F56D2D' }}
+                  disabled={creatingTemplate}
+                >
+                  {creatingTemplate ? 'Creating...' : 'Create Template'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Template Confirmation Modal */}
+      {showDeleteTemplateModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => !deletingTemplate && setShowDeleteTemplateModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
+                Delete Template
+              </h2>
+              <button
+                onClick={() => !deletingTemplate && setShowDeleteTemplateModal(false)}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={deletingTemplate}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                Are you sure you want to delete this template? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteTemplateModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                disabled={deletingTemplate}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => selectedTemplateForDelete && handleDeleteTemplate(selectedTemplateForDelete)}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                style={{ background: '#EF4444' }}
+                disabled={deletingTemplate}
+              >
+                {deletingTemplate ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

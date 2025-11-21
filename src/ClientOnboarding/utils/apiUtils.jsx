@@ -1451,14 +1451,87 @@ export const firmAdminDashboardAPI = {
   getDashboard: async (params = {}) => {
     const { date_range = '30d', period = 'monthly', recent_clients_limit = 10 } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (date_range) queryParams.append('date_range', date_range);
     if (period) queryParams.append('period', period);
     if (recent_clients_limit) queryParams.append('recent_clients_limit', recent_clients_limit.toString());
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/user/firm-admin/dashboard/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get account settings
+  // GET /seqwens/api/firm/account-settings/
+  getAccountSettings: async () => {
+    const endpoint = `/firm/account-settings/`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Update account settings
+  // PUT /seqwens/api/firm/account-settings/
+  // Accepts: { first_name, last_name, email, phone_number, profile_picture (file) }
+  updateAccountSettings: async (data) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+
+    // Add text fields
+    if (data.first_name !== undefined) {
+      formData.append('first_name', data.first_name);
+    }
+    if (data.last_name !== undefined) {
+      formData.append('last_name', data.last_name);
+    }
+    if (data.email !== undefined) {
+      formData.append('email', data.email);
+    }
+    if (data.phone_number !== undefined) {
+      formData.append('phone_number', data.phone_number);
+    }
+
+    // Add profile picture file if provided
+    if (data.profile_picture && data.profile_picture instanceof File) {
+      formData.append('profile_picture', data.profile_picture);
+    }
+
+    const config = {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - let browser set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/account-settings/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+
+          // Handle validation errors
+          if (response.status === 400 && errorData.errors) {
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, errors]) => {
+                const fieldErrors = Array.isArray(errors) ? errors.join(', ') : errors;
+                return `${field}: ${fieldErrors}`;
+              })
+              .join('; ');
+            const error = new Error(errorMessages || errorData.message || 'Validation failed');
+            error.fieldErrors = errorData.errors;
+            error.status = response.status;
+            throw error;
+          }
+
+          const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+          error.status = response.status;
+          throw error;
+        }
+        return response.json();
+      });
   }
 };
 
@@ -1518,7 +1591,7 @@ export const firmAdminTasksAPI = {
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle validation errors
           if (response.status === 400 && errorData.errors) {
             const errorMessages = Object.entries(errorData.errors)
@@ -1533,7 +1606,7 @@ export const firmAdminTasksAPI = {
             error.status = response.status;
             throw error;
           }
-          
+
           const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
           error.status = response.status;
           throw error;
@@ -1826,7 +1899,7 @@ export const firmAdminNotificationAPI = {
 // Firm Admin Documents API functions
 export const firmAdminDocumentsAPI = {
   // ========== Document Folders Management ==========
-  
+
   // List all folders (Firm's File Manager)
   // GET /firm/document-folders/
   listFolders: async (params = {}) => {
@@ -2010,7 +2083,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Document Categories Management ==========
-  
+
   // List all categories
   // GET /firm/document-categories/
   listCategories: async (params = {}) => {
@@ -2077,7 +2150,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Bulk Document Upload ==========
-  
+
   // Upload multiple documents
   // POST /firm/documents/upload/
   // Note: This endpoint requires multipart/form-data
@@ -2091,7 +2164,7 @@ export const firmAdminDocumentsAPI = {
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add files
     if (Array.isArray(files)) {
       files.forEach(file => {
@@ -2124,7 +2197,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Browse Documents (Across All Clients) ==========
-  
+
   // Browse documents (root level or within a folder)
   // GET /firm/documents/browse/
   browseDocuments: async (params = {}) => {
@@ -2177,7 +2250,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Browse Client Documents ==========
-  
+
   // Browse specific client's documents
   // GET /taxpayer/firm-admin/clients/{client_id}/documents/browse/
   browseClientDocuments: async (clientId, params = {}) => {
@@ -2227,7 +2300,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Browse Own Documents (Firm Admin's Personal Documents) ==========
-  
+
   // Browse firm admin's own documents
   // GET /taxpayer/firm-admin/documents/browse/
   browseOwnDocuments: async (params = {}) => {
@@ -2638,6 +2711,9 @@ export const firmOfficeAPI = {
   getOfficeClients: async (officeId) => {
     return await apiRequest(`/firm/office-locations/${officeId}/clients/`, 'GET');
   },
+  getOfficePerformance: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/performance/`, 'GET');
+  },
   updateOffice: async (officeId, officeData) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'PATCH', officeData);
   },
@@ -2706,7 +2782,7 @@ export const firmSignatureDocumentRequestsAPI = {
       formData.append('type', requestData.type); // "signature_request" or "document_request"
       formData.append('task_title', requestData.task_title);
       formData.append('client_id', requestData.client_id.toString());
-      
+
       // spouse_sign field - always send, default to false if not provided
       formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
 
@@ -3581,63 +3657,76 @@ export const firmAdminMessagingAPI = {
   composeMessage: async (messageData, attachment = null) => {
     const token = getAccessToken() || AUTH_TOKEN;
 
-    // Check if there's an attachment
-    if (attachment) {
-      // Use FormData for multipart/form-data when attachment is present
-      const formData = new FormData();
+    // Always use FormData as per API documentation
+    const formData = new FormData();
 
-      // Add all form fields to FormData
-      if (messageData.recipients) {
-        // recipients should be an array, convert to JSON string
-        formData.append('recipients', JSON.stringify(messageData.recipients));
+    // Add recipients - must be sent as a JSON array string with string elements
+    // Curl format: -F "recipients=[3]" sends the string "[3]"
+    // But backend expects array elements to be strings, so we send "[\"3\"]"
+    // When backend parses "[\"3\"]", it gets ["3"] which validates correctly
+    if (messageData.recipients) {
+      if (Array.isArray(messageData.recipients)) {
+        // Convert all to strings explicitly, then JSON stringify
+        // Example: [3] -> ["3"] -> "[\"3\"]"
+        const stringRecipients = messageData.recipients.map(r => {
+          // Ensure it's a string, not a number
+          const str = String(r);
+          return str;
+        });
+        const jsonString = JSON.stringify(stringRecipients);
+        formData.append('recipients', jsonString);
+      } else {
+        // Single recipient: convert to string and wrap in array
+        const jsonString = JSON.stringify([String(messageData.recipients)]);
+        formData.append('recipients', jsonString);
       }
-      if (messageData.subject) {
-        formData.append('subject', messageData.subject);
-      }
-      if (messageData.message) {
-        formData.append('message', messageData.message);
-      }
-      if (messageData.priority) {
-        formData.append('priority', messageData.priority);
-      }
-
-      // Add attachment
-      formData.append('attachment', attachment);
-
-      const config = {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Don't set Content-Type - browser will set it with boundary for FormData
-        },
-        body: formData
-      };
-
-      const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/messages/compose/`, config);
-
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.errors) {
-            const fieldErrors = Object.entries(errorData.errors)
-              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-              .join('; ');
-            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
-          } else {
-            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-          }
-        } catch (parseError) {
-          console.error('Error parsing response:', parseError);
-        }
-        throw new Error(errorMessage);
-      }
-
-      return await response.json();
-    } else {
-      // Use JSON for regular requests without attachments
-      return await apiRequest('/firm-admin/messages/compose/', 'POST', messageData);
     }
+    
+    // Add subject
+    if (messageData.subject) {
+      formData.append('subject', messageData.subject);
+    }
+    
+    // Add message
+    if (messageData.message) {
+      formData.append('message', messageData.message);
+    }
+
+    // Add attachment if present
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - browser will set it with boundary for FormData
+      },
+      body: formData
+    };
+
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/messages/compose/`, config);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.errors) {
+          const fieldErrors = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+        } else {
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        }
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
   },
 
   // Search recipients
@@ -3650,6 +3739,38 @@ export const firmAdminMessagingAPI = {
 
     const queryString = queryParams.toString();
     return await apiRequest(`/firm-admin/messages/recipients/search/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Send message in thread
+  sendMessage: async (threadId, messageData, attachment = null) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+
+    if (attachment) {
+      // Use FormData for multipart/form-data when attachment is present
+      const formData = new FormData();
+      formData.append('message', messageData.message || '');
+      formData.append('attachment', attachment);
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/messages/threads/${threadId}/send_message/`, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without attachments
+      return await apiRequest(`/firm-admin/messages/threads/${threadId}/send_message/`, 'POST', messageData);
+    }
   }
 };
 
@@ -3823,7 +3944,7 @@ export const firmAdminInvoiceAPI = {
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle validation errors
           if (response.status === 400 && errorData.errors) {
             const error = new Error(errorData.message || 'Validation failed');
@@ -3831,7 +3952,7 @@ export const firmAdminInvoiceAPI = {
             error.status = response.status;
             throw error;
           }
-          
+
           throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
         }
         return response.json();
@@ -3889,7 +4010,7 @@ export const firmAdminBillingHistoryAPI = {
     } = params;
 
     const queryParams = new URLSearchParams();
-    
+
     if (tax_preparer_id) queryParams.append('tax_preparer_id', tax_preparer_id.toString());
     if (client_id) queryParams.append('client_id', client_id.toString());
     if (status) queryParams.append('status', status);

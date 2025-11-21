@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { DocumentUpload, DocumentBrowseFolder, DocumentDownload, DocumentMoreIcon, DocumentCriticalIssuesIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentOverdueIcon, PdfDocumentIconLight, DocumentWarningIconCompliance, DocumentTextIcon, DocumentPostion, DocumentOpacity, DocumentRotation, DocumentEye } from '../Components/icons';
+import { DocumentUpload, DocumentDownload, DocumentMoreIcon, DocumentCriticalIssuesIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentOverdueIcon, PdfDocumentIconLight, DocumentWarningIconCompliance, DocumentTextIcon, DocumentPostion, DocumentOpacity, DocumentRotation, DocumentEye } from '../Components/icons';
 import { firmAdminDocumentsAPI } from '../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
@@ -225,13 +225,6 @@ export default function DocumentManagement() {
 
             {/* Buttons Section */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mt-3 lg:mt-0 w-full sm:w-auto">
-              <button
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
-                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
-              >
-                <DocumentBrowseFolder />
-                <span>Browse Folders</span>
-              </button>
               <button
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}

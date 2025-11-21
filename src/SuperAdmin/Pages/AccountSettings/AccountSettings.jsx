@@ -5,13 +5,10 @@ import Billing from "./Billing";
 import SystemHealth from "./SystemHealth";
 import PlatformControl from "./PlatformControl";
 import LogsAndBackups from "./LogsAndBackups";
-import RoleManagement from "./RoleManagement";
-import ArchivedMonitoring from "./ArchivedMonitoring";
-import { useModal } from "../../Context/ModalContext";          
+import ArchivedMonitoring from "./ArchivedMonitoring";          
 
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
-    const { handleShowRoleModal } = useModal();
 
     const tabs = [
         { id: "profile", label: "General" },
@@ -19,7 +16,6 @@ export default function AccountSettings() {
         { id: "systemHealth", label: "System Health" },     
         {id: "platformControl", label: "Platform Control" },
         {id: "logsAndBackups", label: "Logs and Backups" },
-        {id: "roleManagement", label: "Role Management" },
         {id: "archiveMonitoring", label: "Archived Monitoring" },
     ];
 
@@ -97,7 +93,6 @@ export default function AccountSettings() {
                 {activeTab === "systemHealth" && <SystemHealth />}
                 {activeTab === "platformControl" && <PlatformControl />}
                 {activeTab === "logsAndBackups" && <LogsAndBackups />}
-                {activeTab === "roleManagement" && <RoleManagement onShowModal={handleShowRoleModal} />}
                 {activeTab === "archiveMonitoring" && <ArchivedMonitoring />}
             </div>
         </div>

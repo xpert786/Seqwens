@@ -255,11 +255,10 @@ export default function BillingManagement() {
         }
       });
 
-      // Save the PDF
-      const fileName = `Billing_Report_${new Date().toISOString().split('T')[0]}.pdf`;
-      console.log("Saving PDF:", fileName);
-      doc.save(fileName);
-      console.log("PDF saved successfully");
+      // Open PDF in a new tab instead of downloading directly
+      const pdfBlob = doc.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, '_blank');
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert(`Error generating PDF: ${error.message}`);
@@ -529,7 +528,12 @@ export default function BillingManagement() {
                   const description = invoice.description || '';
 
                   return (
-                    <tr key={invoice.id} className="border-b hover:bg-gray-50" style={{ borderColor: '#F3F4F6' }}>
+                    <tr
+                      key={invoice.id}
+                      onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
+                      className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                      style={{ borderColor: '#F3F4F6' }}
+                    >
                       <td className="py-4 px-4 text-sm font-medium" style={{ color: '#1F2937' }}>
                         {invoiceNumber}
                       </td>
@@ -554,7 +558,7 @@ export default function BillingManagement() {
                       <td className="py-4 px-4 text-sm" style={{ color: '#6B7280' }}>
                         {dueDate}
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => navigate(`/firmadmin/billing/${invoice.id}`)}
                           className="p-2 hover:bg-gray-100 !rounded-lg transition"

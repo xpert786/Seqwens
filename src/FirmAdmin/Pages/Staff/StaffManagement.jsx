@@ -52,6 +52,9 @@ export default function StaffManagement() {
   const [inviteActionMethod, setInviteActionMethod] = useState(null);
   const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
   const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [selectedStaffForDelete, setSelectedStaffForDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleInviteCreated = (inviteData) => {
     fetchPendingInvites();
@@ -181,6 +184,96 @@ export default function StaffManagement() {
       setLoading(false);
     }
   }, [activeFilter, searchTerm, roleFilter, performanceFilter]);
+
+  // Download Performance Report
+  const handleDownloadPerformanceReport = async () => {
+    try {
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/tax-preparers/performance-report/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `performance_report_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Performance report downloaded successfully', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (err) {
+      console.error('Error downloading performance report:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to download performance report', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  // Soft Delete Tax Preparer
+  const handleSoftDelete = async (staffId) => {
+    try {
+      setDeleting(true);
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/tax-preparers/${staffId}/soft-delete/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(result.message || 'Staff member deleted successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowDeleteConfirmModal(false);
+        setSelectedStaffForDelete(null);
+        setShowDropdown(null);
+        // Refresh staff list
+        await fetchStaffMembers();
+      } else {
+        throw new Error(result.message || 'Failed to delete staff member');
+      }
+    } catch (err) {
+      console.error('Error deleting staff member:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to delete staff member', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Fetch pending invites from API
   const fetchPendingInvites = useCallback(async () => {
@@ -850,7 +943,10 @@ export default function StaffManagement() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             {/* Top Row - 3 buttons */}
             <div className="flex flex-wrap items-center gap-2">
-              <button className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap">
+              <button 
+                onClick={handleDownloadPerformanceReport}
+                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+              >
                 <PowersIcon />
                 Performance Report
               </button>
@@ -1050,10 +1146,14 @@ export default function StaffManagement() {
                           </div>
                         </td>
                         <td className="px-4 py-4 w-[100px]">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${invite.is_expired
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-full ${invite.is_expired
                             ? 'bg-red-100 text-red-700'
                             : 'bg-[#F59E0B] text-white'
                             }`}>
+                            <span className={`w-2 h-2 rounded-full ${invite.is_expired
+                              ? 'bg-red-700'
+                              : 'bg-white'
+                              }`}></span>
                             {invite.is_expired ? 'Expired' : (invite.status_display || invite.status)}
                           </span>
                         </td>
@@ -1349,12 +1449,12 @@ export default function StaffManagement() {
             }}
           >
             <div className="py-1">
-              <button
+              {/* <button
                 onClick={() => setShowDropdown(null)}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
               >
                 Edit Task
-              </button>
+              </button> */}
               <button
                 onClick={() => setShowDropdown(null)}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
@@ -1368,7 +1468,17 @@ export default function StaffManagement() {
                 Reassign Clients
               </button> */}
               <button
-                onClick={() => setShowDropdown(null)}
+                onClick={() => {
+                  const staff = staffData.find(s => {
+                    const mapped = mapStaffData(s);
+                    return mapped.id === showDropdown;
+                  });
+                  if (staff) {
+                    setSelectedStaffForDelete(staff.id);
+                    setShowDeleteConfirmModal(true);
+                    setShowDropdown(null);
+                  }
+                }}
                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
               >
                 Remove Staff
@@ -1509,6 +1619,75 @@ export default function StaffManagement() {
                 onClick={closeInviteActionsModal}
               >
                 Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ zIndex: 9999 }}
+          onClick={() => {
+            if (!deleting) {
+              setShowDeleteConfirmModal(false);
+              setSelectedStaffForDelete(null);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            style={{
+              borderRadius: '12px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Remove Staff</h2>
+              <button
+                onClick={() => {
+                  if (!deleting) {
+                    setShowDeleteConfirmModal(false);
+                    setSelectedStaffForDelete(null);
+                  }
+                }}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={deleting}
+              >
+                <CrossesIcon />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                Are you sure you want to remove this staff member? This action will soft delete the staff member and cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  setSelectedStaffForDelete(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedStaffForDelete) {
+                    handleSoftDelete(selectedStaffForDelete);
+                  }
+                }}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                style={{ background: 'var(--color-red-500, #EF4444)' }}
+                disabled={deleting}
+              >
+                {deleting ? 'Removing...' : 'Remove'}
               </button>
             </div>
           </div>
