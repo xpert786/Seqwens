@@ -57,6 +57,11 @@ export default function FirmManagement() {
     const [unsuspendError, setUnsuspendError] = useState(null);
     const [unsuspendSuccess, setUnsuspendSuccess] = useState(false);
 
+    // Client-side pagination for displaying firm cards
+    const [firmCardsCurrentPage, setFirmCardsCurrentPage] = useState(1);
+    const [showAllFirmCards, setShowAllFirmCards] = useState(false);
+    const FIRM_CARDS_PER_PAGE = 3;
+
     // Assign clients modal state
     const [showAssignClientsModal, setShowAssignClientsModal] = useState(false);
     const [assignClientsFirm, setAssignClientsFirm] = useState(null);
@@ -94,6 +99,9 @@ export default function FirmManagement() {
                     total_count: totalCount,
                     total_pages: totalPages
                 });
+                // Reset client-side pagination when data changes
+                setFirmCardsCurrentPage(1);
+                setShowAllFirmCards(false);
             } else {
                 throw new Error(response.message || 'Failed to fetch firms');
             }
@@ -181,6 +189,26 @@ export default function FirmManagement() {
             hour: 'numeric',
             minute: '2-digit'
         });
+    };
+
+    // Client-side pagination logic for firm cards
+    const totalFirmCards = firms.length;
+    const totalFirmCardsPages = Math.ceil(totalFirmCards / FIRM_CARDS_PER_PAGE);
+    const shouldShowFirmCardsPagination = totalFirmCards > FIRM_CARDS_PER_PAGE && !showAllFirmCards;
+    const displayedFirmCards = showAllFirmCards
+        ? firms
+        : firms.slice((firmCardsCurrentPage - 1) * FIRM_CARDS_PER_PAGE, firmCardsCurrentPage * FIRM_CARDS_PER_PAGE);
+
+    const handleViewAllFirmCards = (e) => {
+        e.preventDefault();
+        setShowAllFirmCards(!showAllFirmCards);
+        if (showAllFirmCards) {
+            setFirmCardsCurrentPage(1);
+        }
+    };
+
+    const handleFirmCardsPageChange = (newPage) => {
+        setFirmCardsCurrentPage(newPage);
     };
 
     const handleExportReport = async () => {
@@ -708,12 +736,25 @@ export default function FirmManagement() {
                 <div className="bg-white rounded-lg border-1  border-[#E8F0FF]">
                     {/* List Header */}
                     <div className="p-6 ">
-                        <h4 className="text-md font-bold text-gray-800 mb-2">
-                            Firms ({pagination.total_count})
-                        </h4>
-                        <p className="text-gray-500 text-sm">
-                            Comprehensive list of all firms registered on the platform
-                        </p>
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 className="text-md font-bold text-gray-800 mb-2">
+                                    Firms ({pagination.total_count})
+                                </h4>
+                                <p className="text-gray-500 text-sm">
+                                    Comprehensive list of all firms registered on the platform
+                                </p>
+                            </div>
+                            {totalFirmCards > FIRM_CARDS_PER_PAGE && (
+                                <button
+                                    onClick={handleViewAllFirmCards}
+                                    className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                                    style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                                >
+                                    {showAllFirmCards ? 'Show Less' : 'View All'}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Table Headers */}
@@ -742,7 +783,7 @@ export default function FirmManagement() {
                     {/* Firm Entries */}
                     {!loading && (
                         <div className="divide-y divide-gray-200">
-                            {firms.length > 0 ? firms.map((firm) => (
+                            {displayedFirmCards.length > 0 ? displayedFirmCards.map((firm) => (
                                 <div key={firm.id} className="pr-1 pl-3 py-3 transition-colors border-1 border-[#E8F0FF] m-2" style={{ borderRadius: '7px' }}>
                                     <div className="grid grid-cols-12 gap-4 items-center">
                                         {/* Firm Column */}
@@ -856,6 +897,34 @@ export default function FirmManagement() {
                             )}
                         </div>
                     )}
+
+                    {/* Client-side Pagination Controls */}
+                    {shouldShowFirmCardsPagination && (
+                        <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF]">
+                            <button
+                                onClick={() => handleFirmCardsPageChange(firmCardsCurrentPage - 1)}
+                                disabled={firmCardsCurrentPage === 1}
+                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                Previous
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600">
+                                    Page {firmCardsCurrentPage} of {totalFirmCardsPages}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => handleFirmCardsPageChange(firmCardsCurrentPage + 1)}
+                                disabled={firmCardsCurrentPage === totalFirmCardsPages}
+                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between px-4 py-4">
                         <div className="text-sm text-gray-500">
                             Showing {Math.min((pagination.page - 1) * pagination.page_size + 1, pagination.total_count)}-

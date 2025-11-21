@@ -37,6 +37,11 @@ export default function Subscriptions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Client-side pagination for displaying subscription cards
+  const [subscriptionCardsCurrentPage, setSubscriptionCardsCurrentPage] = useState(1);
+  const [showAllSubscriptionCards, setShowAllSubscriptionCards] = useState(false);
+  const SUBSCRIPTION_CARDS_PER_PAGE = 3;
+
   const PLAN_CONFIG = [
     { key: 'solo', label: 'Solo' },
     { key: 'team', label: 'Team' },
@@ -206,6 +211,9 @@ export default function Subscriptions() {
           setEmailNotifications(Boolean(notificationSettings.subscription_email_updates_enabled));
           setSmsAlerts(Boolean(notificationSettings.subscription_sms_updates_enabled));
         }
+        // Reset client-side pagination when data changes
+        setSubscriptionCardsCurrentPage(1);
+        setShowAllSubscriptionCards(false);
       } catch (err) {
         console.error('Error fetching subscriptions:', err);
         setTableError(handleAPIError(err));
@@ -355,6 +363,26 @@ export default function Subscriptions() {
   const mrrMin = mrrValues.length ? Math.min(...mrrValues) : 0;
   const churnMax = churnValues.length ? Math.max(...churnValues) : 0;
   const distributionMax = planDistributionData.reduce((max, item) => Math.max(max, item?.firms ?? 0), 0);
+
+  // Client-side pagination logic for subscription cards
+  const totalSubscriptionCards = subscriptions.length;
+  const totalSubscriptionCardsPages = Math.ceil(totalSubscriptionCards / SUBSCRIPTION_CARDS_PER_PAGE);
+  const shouldShowSubscriptionCardsPagination = totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && !showAllSubscriptionCards;
+  const displayedSubscriptionCards = showAllSubscriptionCards
+    ? subscriptions
+    : subscriptions.slice((subscriptionCardsCurrentPage - 1) * SUBSCRIPTION_CARDS_PER_PAGE, subscriptionCardsCurrentPage * SUBSCRIPTION_CARDS_PER_PAGE);
+
+  const handleViewAllSubscriptionCards = (e) => {
+    e.preventDefault();
+    setShowAllSubscriptionCards(!showAllSubscriptionCards);
+    if (showAllSubscriptionCards) {
+      setSubscriptionCardsCurrentPage(1);
+    }
+  };
+
+  const handleSubscriptionCardsPageChange = (newPage) => {
+    setSubscriptionCardsCurrentPage(newPage);
+  };
 
   // Loading state
   if (loading) {
@@ -1002,6 +1030,15 @@ export default function Subscriptions() {
               <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
               <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed view of all platform subscriptions</p>
             </div>
+            {totalSubscriptionCards > SUBSCRIPTION_CARDS_PER_PAGE && (
+              <button
+                onClick={handleViewAllSubscriptionCards}
+                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+              >
+                {showAllSubscriptionCards ? 'Show Less' : 'View All'}
+              </button>
+            )}
           </div>
 
           {tableError && (
@@ -1032,8 +1069,8 @@ export default function Subscriptions() {
                   Loading subscriptions...
                 </div>
               </div>
-            ) : subscriptions.length > 0 ? (
-              subscriptions.map((subscription) => {
+            ) : displayedSubscriptionCards.length > 0 ? (
+              displayedSubscriptionCards.map((subscription) => {
                 const planStyles = getPlanBadgeStyles(subscription.plan);
                 const statusClasses = getStatusBadgeClasses(subscription.status);
                 return (
@@ -1091,6 +1128,33 @@ export default function Subscriptions() {
               </div>
             )}
           </div>
+
+          {/* Client-side Pagination Controls */}
+          {shouldShowSubscriptionCardsPagination && (
+            <div className="flex items-center justify-between px-4 py-3 mt-4 border-t border-[#E8F0FF]">
+              <button
+                onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage - 1)}
+                disabled={subscriptionCardsCurrentPage === 1}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderRadius: '8px' }}
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  Page {subscriptionCardsCurrentPage} of {totalSubscriptionCardsPages}
+                </span>
+              </div>
+              <button
+                onClick={() => handleSubscriptionCardsPageChange(subscriptionCardsCurrentPage + 1)}
+                disabled={subscriptionCardsCurrentPage === totalSubscriptionCardsPages}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderRadius: '8px' }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

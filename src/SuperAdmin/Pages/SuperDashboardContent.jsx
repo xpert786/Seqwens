@@ -47,6 +47,9 @@ export default function SuperDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [firmsCurrentPage, setFirmsCurrentPage] = useState(1);
+  const [showAllFirms, setShowAllFirms] = useState(false);
+  const FIRMS_PER_PAGE = 3;
 
   const formatCurrency = (value) => {
     const numericValue = Number(value);
@@ -87,6 +90,8 @@ export default function SuperDashboardContent() {
       if (response.success && response.data) {
         setDashboardData(response.data);
         setLastRefresh(new Date());
+        setFirmsCurrentPage(1);
+        setShowAllFirms(false);
       } else {
         throw new Error(response.message || 'Failed to fetch dashboard data');
       }
@@ -329,6 +334,26 @@ export default function SuperDashboardContent() {
   const maxSubscriberValue = revenueData.reduce((max, item) => Math.max(max, item.subscribers || 0), 0);
   const revenueUpperBound = maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.2) : 1;
   const subscriberUpperBound = maxSubscriberValue > 0 ? Math.ceil(maxSubscriberValue * 1.2) : 1;
+
+  // Pagination logic for Recent Firms
+  const totalFirms = recentFirms.length;
+  const totalPages = Math.ceil(totalFirms / FIRMS_PER_PAGE);
+  const shouldShowPagination = totalFirms > FIRMS_PER_PAGE && !showAllFirms;
+  const displayedFirms = showAllFirms
+    ? recentFirms
+    : recentFirms.slice((firmsCurrentPage - 1) * FIRMS_PER_PAGE, firmsCurrentPage * FIRMS_PER_PAGE);
+
+  const handleViewAll = (e) => {
+    e.preventDefault();
+    setShowAllFirms(!showAllFirms);
+    if (showAllFirms) {
+      setFirmsCurrentPage(1);
+    }
+  };
+
+  const handleFirmsPageChange = (newPage) => {
+    setFirmsCurrentPage(newPage);
+  };
 
   const maxActivityValue = activityData.reduce((max, item) => Math.max(max, item.count || 0), 0);
   const activityUpperBound = maxActivityValue > 0 ? Math.ceil(maxActivityValue * 1.2) : 1;
@@ -767,11 +792,19 @@ export default function SuperDashboardContent() {
           <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 self-start">
             <div className="flex justify-between items-center">
               <h4 className="text-lg font-semibold text-gray-900">Recent Firm Registrations</h4>
-              <a href="#" className="text-black text-sm font-medium hover:underline cursor-pointer rounded-md px-3 py-2" style={{ border: '1px solid #E8F0FF' }}>View All</a>
+              {totalFirms > FIRMS_PER_PAGE && (
+                <button
+                  onClick={handleViewAll}
+                  className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                  style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
+                >
+                  {showAllFirms ? 'Show Less' : 'View All'}
+                </button>
+              )}
             </div>
             <p className="text-sm text-gray-500 mb-3">Latest firms that joined the platform</p>
             <div className="space-y-2">
-              {recentFirms.map((firm, index) => (
+              {displayedFirms.map((firm, index) => (
                 <div key={index} className="border border-[#E8F0FF] flex items-center justify-between p-3 rounded-lg">
                   <div className="flex-1">
                     <h6 className="font-medium text-gray-900">{firm.name}</h6>
@@ -785,6 +818,31 @@ export default function SuperDashboardContent() {
                 </div>
               ))}
             </div>
+            {shouldShowPagination && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#E8F0FF]">
+                <button
+                  onClick={() => handleFirmsPageChange(firmsCurrentPage - 1)}
+                  disabled={firmsCurrentPage === 1}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ borderRadius: '8px' }}
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    Page {firmsCurrentPage} of {totalPages}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleFirmsPageChange(firmsCurrentPage + 1)}
+                  disabled={firmsCurrentPage === totalPages}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ borderRadius: '8px' }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
 

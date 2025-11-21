@@ -320,7 +320,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                     </svg>
 
                   </span>
-                  Templates
+                  Email Templates
                 </Link>
                 <Link to="/firmadmin/integrations" className={linkClass("/firmadmin/integrations")}>
                   <span className={iconWrapperClass("/firmadmin/integrations")}>
