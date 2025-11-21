@@ -34,6 +34,8 @@ export default function Subscriptions() {
   // API data states
   const [plansData, setPlansData] = useState(null);
   const [chartData, setChartData] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+  const [revenueInsights, setRevenueInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -60,6 +62,14 @@ export default function Subscriptions() {
     }
     if (displayKey) {
       acc[displayKey] = plan;
+    }
+    return acc;
+  }, {});
+
+  // Create revenue by plan lookup
+  const revenueByPlanLookup = (revenueInsights?.revenue_by_plan || []).reduce((acc, revenuePlan) => {
+    if (revenuePlan?.plan) {
+      acc[revenuePlan.plan.toLowerCase()] = revenuePlan;
     }
     return acc;
   }, {});
@@ -211,6 +221,10 @@ export default function Subscriptions() {
           setEmailNotifications(Boolean(notificationSettings.subscription_email_updates_enabled));
           setSmsAlerts(Boolean(notificationSettings.subscription_sms_updates_enabled));
         }
+        // Store metrics from API response
+        if (data.metrics) {
+          setMetrics(data.metrics);
+        }
         // Reset client-side pagination when data changes
         setSubscriptionCardsCurrentPage(1);
         setShowAllSubscriptionCards(false);
@@ -248,16 +262,18 @@ export default function Subscriptions() {
         setLoading(true);
         setError(null);
 
-        // Fetch both plans and chart data in parallel
-        const [plansResponse, chartsResponse, planPerformanceResponse] = await Promise.all([
+        // Fetch plans, chart data, plan performance, and revenue insights in parallel
+        const [plansResponse, chartsResponse, planPerformanceResponse, revenueInsightsResponse] = await Promise.all([
           superAdminAPI.getSubscriptionPlans(),
           superAdminAPI.getSubscriptionCharts('revenue', 30),
-          superAdminAPI.getSuperadminPlanPerformance()
+          superAdminAPI.getSuperadminPlanPerformance(),
+          superAdminAPI.getRevenueInsights({ days: 30 })
         ]);
 
         setPlansData(plansResponse.data);
         setChartData(chartsResponse.data);
         setPlanPerformance(planPerformanceResponse.data || null);
+        setRevenueInsights(revenueInsightsResponse.data || null);
         await fetchSubscriptionsData({ search: searchTerm, status: statusFilter, plan: planFilter });
         setFiltersInitialized(true);
       } catch (err) {
@@ -509,73 +525,160 @@ export default function Subscriptions() {
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Total Revenue</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.formatted_total_revenue || '$0.00'}
+                {metrics?.total_revenue?.formatted || '$0.00'}
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                  +{plansData?.average_growth || '0'}%
-                </span>
-
-              </div>
+              {/* {metrics?.total_revenue && (
+                <div className="flex items-center gap-1">
+                  {metrics.total_revenue.trend === 'up' && (
+                    <>
+                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                        +{metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.total_revenue.trend === 'down' && (
+                    <>
+                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                        {metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.total_revenue.trend === 'neutral' && (
+                    <>
+                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        {metrics.total_revenue.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              )} */}
             </div>
-
             <BlueDollarIcon className="text-lg" />
-
           </div>
         </div>
 
-        {/* Active Subscriptions */}
+        {/* Active Subscribers */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscriptions</p>
+              <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Active Subscribers</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.plans?.reduce((total, plan) => total + plan.total_subscribers, 0) || 0}
+                {metrics?.active_subscribers?.formatted || '0'}
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                  +{plansData?.average_growth || '0'}%
-                </span>
-
-              </div>
+              {/* {metrics?.active_subscribers && (
+                <div className="flex items-center gap-1">
+                  {metrics.active_subscribers.trend === 'up' && (
+                    <>
+                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                        +{metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.active_subscribers.trend === 'down' && (
+                    <>
+                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                  {metrics.active_subscribers.trend === 'neutral' && (
+                    <>
+                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              )} */}
             </div>
             <BlueUserIcon className="text-lg" />
           </div>
         </div>
 
-        {/* Trial Subscriptions */}
+        {/* Most Popular Plan */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Most Popular Plan</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.most_popular_plan?.charAt(0).toUpperCase() + plansData?.most_popular_plan?.slice(1) || 'N/A'}
+                {metrics?.most_popular_plan?.plan_label || 'N/A'}
               </p>
-              <div className="flex items-center gap-1">
-                <ClockgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>Top performer</span>
-
-              </div>
+              {metrics?.most_popular_plan && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    {/* {metrics.most_popular_plan.trend === 'up' && (
+                      <>
+                        <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                        <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                          +{metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
+                        </span>
+                      </>
+                    )}
+                    {metrics.most_popular_plan.trend === 'down' && (
+                      <>
+                        <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                        <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                          {metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
+                        </span>
+                      </>
+                    )}
+                    {metrics.most_popular_plan.trend === 'neutral' && (
+                      <>
+                        <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                          {metrics.most_popular_plan.percentage_increase?.toFixed(1) || '0'}%
+                        </span>
+                      </>
+                    )} */}
+                  </div>
+                  <span className="text-xs" style={{ color: '#6B7280' }}>
+                    {metrics.most_popular_plan.count || 0} subscribers
+                  </span>
+                </div>
+              )}
             </div>
             <BlueClockIcon className="text-lg" />
           </div>
         </div>
 
-        {/* Growth Rate */}
+        {/* Average Growth */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: '#3B4A66' }}>Average Growth</p>
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
-                {plansData?.average_growth || '0'}%
+                {metrics?.average_growth?.formatted || '+0.00%'}
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                <span className="text-xs font-medium" style={{ color: '#10B981' }}>Monthly</span>
-
-              </div>
+              {metrics?.average_growth && (
+                <div className="flex items-center gap-1">
+                  {metrics.average_growth.trend === 'up' && (
+                    <>
+                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
+                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+                        Monthly
+                      </span>
+                    </>
+                  )}
+                  {metrics.average_growth.trend === 'down' && (
+                    <>
+                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
+                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                        Monthly
+                      </span>
+                    </>
+                  )}
+                  {metrics.average_growth.trend === 'neutral' && (
+                    <>
+                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                        Monthly
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <BlueExclamationTriangleIcon className="text-lg" />
           </div>
@@ -606,6 +709,7 @@ export default function Subscriptions() {
             {PLAN_CONFIG.map(({ key, label }) => {
               const normalizedKey = key.toLowerCase();
               const plan = planLookup[normalizedKey] || planLookup[label.toLowerCase()];
+              const revenuePlan = revenueByPlanLookup[normalizedKey];
 
               if (plan) {
                 const { badgeClass, textClass } = getPlanBadgeStyles(plan.plan_type || label);
@@ -628,13 +732,32 @@ export default function Subscriptions() {
                           <p className="text-xs mb-1" style={{ color: '#3B4A66', fontWeight: '800' }}>
                             {plan.total_subscribers} subscribers
                           </p>
-                          <div className='flex flex-row gap-2'>
-                            <p className="text-xs" style={{ color: '#3B4A66' }}>
-                              {plan.formatted_revenue} revenue.
-                            </p>
-                            <p className="text-xs" style={{ color: '#3B4A66' }}>
-                              {plan.formatted_growth} growth
-                            </p>
+                          <div className='flex flex-col gap-1'>
+                            {revenuePlan && (
+                              <>
+                                <div className='flex flex-row gap-2'>
+                                  <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                    {revenuePlan.formatted_revenue || '$0.00'} revenue
+                                  </p>
+                                  <p className="text-xs" style={{ color: '#6B7280' }}>
+                                    ({revenuePlan.percentage?.toFixed(1) || '0'}%)
+                                  </p>
+                                </div>
+                                <p className="text-xs" style={{ color: '#6B7280' }}>
+                                  {revenuePlan.invoice_count || 0} invoice{revenuePlan.invoice_count !== 1 ? 's' : ''}
+                                </p>
+                              </>
+                            )}
+                            {!revenuePlan && (
+                              <div className='flex flex-row gap-2'>
+                                <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                  {plan.formatted_revenue || '$0.00'} revenue.
+                                </p>
+                                <p className="text-xs" style={{ color: '#3B4A66' }}>
+                                  {plan.formatted_growth || '0%'} growth
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -748,6 +871,301 @@ export default function Subscriptions() {
           </div>
         </div>
       </div>
+
+      {/* User Engagement Metrics Section */}
+      {revenueInsights?.user_engagement_metrics && (
+        <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>User Engagement Metrics</h3>
+              <p className="text-xs" style={{ color: '#3B4A66' }}>Active users, new users, and sessions by month</p>
+            </div>
+            {revenueInsights?.generated_at && (
+              <span className="text-xs text-gray-500">
+                Generated: {formatDateTime(revenueInsights.generated_at)}
+              </span>
+            )}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Active Users Chart */}
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
+              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Active Users</h4>
+              {revenueInsights.user_engagement_metrics.active_users?.length > 0 ? (() => {
+                const engagementData = revenueInsights.user_engagement_metrics;
+                const labels = engagementData.labels || [];
+                const activeUsers = engagementData.active_users || [];
+                const maxValue = Math.max(...activeUsers, 1);
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 40;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = labels.length ? innerWidth / labels.length : innerWidth;
+                const barWidth = stepWidth * 0.6;
+
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = maxValue - ((maxValue / 4) * step);
+                        return (
+                          <g key={`active-users-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {Math.round(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {activeUsers.map((value, index) => {
+                        const height = maxValue ? (value / maxValue) * innerHeight : 0;
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`active-users-bar-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#10B981"
+                              rx="4"
+                            />
+                            {value > 0 && (
+                              <text
+                                x={x + barWidth / 2}
+                                y={y - 6}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fill="#059669"
+                                fontWeight="600"
+                              >
+                                {value}
+                              </text>
+                            )}
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="9"
+                              fill="#6B7280"
+                            >
+                              {labels[index]?.substring(0, 3) || ''}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+              })() : (
+                <p className="text-xs text-gray-500 mt-4">No active users data available.</p>
+              )}
+            </div>
+
+            {/* New Users Chart */}
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
+              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">New Users</h4>
+              {revenueInsights.user_engagement_metrics.new_users?.length > 0 ? (() => {
+                const engagementData = revenueInsights.user_engagement_metrics;
+                const labels = engagementData.labels || [];
+                const newUsers = engagementData.new_users || [];
+                const maxValue = Math.max(...newUsers, 1);
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 40;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = labels.length ? innerWidth / labels.length : innerWidth;
+                const barWidth = stepWidth * 0.6;
+
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = maxValue - ((maxValue / 4) * step);
+                        return (
+                          <g key={`new-users-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {Math.round(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {newUsers.map((value, index) => {
+                        const height = maxValue ? (value / maxValue) * innerHeight : 0;
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`new-users-bar-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#3B82F6"
+                              rx="4"
+                            />
+                            {value > 0 && (
+                              <text
+                                x={x + barWidth / 2}
+                                y={y - 6}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fill="#1E40AF"
+                                fontWeight="600"
+                              >
+                                {value}
+                              </text>
+                            )}
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="9"
+                              fill="#6B7280"
+                            >
+                              {labels[index]?.substring(0, 3) || ''}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+              })() : (
+                <p className="text-xs text-gray-500 mt-4">No new users data available.</p>
+              )}
+            </div>
+
+            {/* Sessions Chart */}
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
+              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Sessions</h4>
+              {revenueInsights.user_engagement_metrics.sessions?.length > 0 ? (() => {
+                const engagementData = revenueInsights.user_engagement_metrics;
+                const labels = engagementData.labels || [];
+                const sessions = engagementData.sessions || [];
+                const maxValue = Math.max(...sessions, 1);
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 40;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = labels.length ? innerWidth / labels.length : innerWidth;
+                const barWidth = stepWidth * 0.6;
+
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = maxValue - ((maxValue / 4) * step);
+                        return (
+                          <g key={`sessions-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {Math.round(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {sessions.map((value, index) => {
+                        const height = maxValue ? (value / maxValue) * innerHeight : 0;
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`sessions-bar-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#8B5CF6"
+                              rx="4"
+                            />
+                            {value > 0 && (
+                              <text
+                                x={x + barWidth / 2}
+                                y={y - 6}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fill="#6D28D9"
+                                fontWeight="600"
+                              >
+                                {value}
+                              </text>
+                            )}
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="9"
+                              fill="#6B7280"
+                            >
+                              {labels[index]?.substring(0, 3) || ''}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+              })() : (
+                <p className="text-xs text-gray-500 mt-4">No sessions data available.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Plan Performance Section */}
       <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
