@@ -4,7 +4,7 @@ import { PayIcon, ViewIcon, LockIcon, CrossIcon, DownloadIcon, PrintIcon } from 
 import { Modal, Button, Form } from 'react-bootstrap';
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [showModal, setShowModal] = useState(false);

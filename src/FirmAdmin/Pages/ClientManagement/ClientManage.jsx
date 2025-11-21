@@ -13,7 +13,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = getApiBaseUrl();

@@ -5,7 +5,7 @@ import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const API_BASE_URL = getApiBaseUrl();
 

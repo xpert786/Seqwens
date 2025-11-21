@@ -18,7 +18,7 @@ const getHeaders = () => {
 };
 
 // Token refresh function
-const refreshAccessToken = async () => {
+export const refreshAccessToken = async () => {
   const refreshToken = getRefreshToken();
   if (!refreshToken) {
     throw new Error('No refresh token available');
@@ -1451,11 +1451,11 @@ export const firmAdminDashboardAPI = {
   getDashboard: async (params = {}) => {
     const { date_range = '30d', period = 'monthly', recent_clients_limit = 10 } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (date_range) queryParams.append('date_range', date_range);
     if (period) queryParams.append('period', period);
     if (recent_clients_limit) queryParams.append('recent_clients_limit', recent_clients_limit.toString());
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/user/firm-admin/dashboard/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
@@ -1518,7 +1518,7 @@ export const firmAdminTasksAPI = {
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle validation errors
           if (response.status === 400 && errorData.errors) {
             const errorMessages = Object.entries(errorData.errors)
@@ -1533,7 +1533,7 @@ export const firmAdminTasksAPI = {
             error.status = response.status;
             throw error;
           }
-          
+
           const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
           error.status = response.status;
           throw error;
@@ -1826,7 +1826,7 @@ export const firmAdminNotificationAPI = {
 // Firm Admin Documents API functions
 export const firmAdminDocumentsAPI = {
   // ========== Document Folders Management ==========
-  
+
   // List all folders (Firm's File Manager)
   // GET /firm/document-folders/
   listFolders: async (params = {}) => {
@@ -2010,7 +2010,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Document Categories Management ==========
-  
+
   // List all categories
   // GET /firm/document-categories/
   listCategories: async (params = {}) => {
@@ -2077,7 +2077,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Bulk Document Upload ==========
-  
+
   // Upload multiple documents
   // POST /firm/documents/upload/
   // Note: This endpoint requires multipart/form-data
@@ -2091,7 +2091,7 @@ export const firmAdminDocumentsAPI = {
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add files
     if (Array.isArray(files)) {
       files.forEach(file => {
@@ -2124,7 +2124,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Browse Documents (Across All Clients) ==========
-  
+
   // Browse documents (root level or within a folder)
   // GET /firm/documents/browse/
   browseDocuments: async (params = {}) => {
@@ -2177,7 +2177,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Browse Client Documents ==========
-  
+
   // Browse specific client's documents
   // GET /taxpayer/firm-admin/clients/{client_id}/documents/browse/
   browseClientDocuments: async (clientId, params = {}) => {
@@ -2227,7 +2227,7 @@ export const firmAdminDocumentsAPI = {
   },
 
   // ========== Browse Own Documents (Firm Admin's Personal Documents) ==========
-  
+
   // Browse firm admin's own documents
   // GET /taxpayer/firm-admin/documents/browse/
   browseOwnDocuments: async (params = {}) => {
@@ -2706,7 +2706,7 @@ export const firmSignatureDocumentRequestsAPI = {
       formData.append('type', requestData.type); // "signature_request" or "document_request"
       formData.append('task_title', requestData.task_title);
       formData.append('client_id', requestData.client_id.toString());
-      
+
       // spouse_sign field - always send, default to false if not provided
       formData.append('spouse_sign', requestData.spouse_sign === true ? 'true' : 'false');
 
@@ -3823,7 +3823,7 @@ export const firmAdminInvoiceAPI = {
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle validation errors
           if (response.status === 400 && errorData.errors) {
             const error = new Error(errorData.message || 'Validation failed');
@@ -3831,7 +3831,7 @@ export const firmAdminInvoiceAPI = {
             error.status = response.status;
             throw error;
           }
-          
+
           throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
         }
         return response.json();
@@ -3889,7 +3889,7 @@ export const firmAdminBillingHistoryAPI = {
     } = params;
 
     const queryParams = new URLSearchParams();
-    
+
     if (tax_preparer_id) queryParams.append('tax_preparer_id', tax_preparer_id.toString());
     if (client_id) queryParams.append('client_id', client_id.toString());
     if (status) queryParams.append('status', status);
@@ -3923,5 +3923,6 @@ export const firmAdminBillingHistoryAPI = {
   }
 };
 
-// Export utility functions
-export { refreshAccessToken, clearUserData, getLoginUrl };
+// Re-export utility functions for convenience
+export { clearUserData } from './userUtils';
+export { getLoginUrl } from './urlUtils';

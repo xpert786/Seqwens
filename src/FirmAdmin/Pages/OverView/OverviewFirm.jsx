@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Icon, DownsIcon, SceheIcon, CrossesIcon } from "../../Components/icons";
 import jsPDF from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { firmAdminDashboardAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import {
@@ -569,7 +569,10 @@ export default function FirmAdminDashboard() {
           >
             Customize
           </button> */}
-            <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+            <button
+              onClick={exportDashboardToPDF}
+              className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
+            >
               <DownsIcon />
               Export Report
             </button>
@@ -593,6 +596,34 @@ export default function FirmAdminDashboard() {
                   {loading ? '...' : (dashboardData?.system_alerts?.active_count || 0)} Active
                 </span>
               </div>
+            </div>
+            <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1 mb-4">
+              <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
+                Admin View
+                <svg className="w-2 h-2 xl:w-3 xl:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setIsCustomizeModalOpen(true)}
+                className="px-1 xl:px-4 py-1 xl:py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 whitespace-nowrap"
+              >
+                Customize
+              </button>
+              <button
+                onClick={exportDashboardToPDF}
+                className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
+              >
+                <DownsIcon />
+                Export Report
+              </button>
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
+              >
+                <SceheIcon />
+                Schedule Reports
+              </button>
             </div>
 
             {loading ? (
@@ -810,62 +841,6 @@ export default function FirmAdminDashboard() {
                       {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
                     </div>
                     <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* My Response Time */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
-              <div className="absolute top-3 right-3">
-                <WatchesIcon />
-              </div>
-              <div className="mb-3">
-                <h3 className="text-xs font-medium text-[#6B7280] font-[BasisGrotesquePro]" style={{ fontSize: '15px' }}>My Response Time</h3>
-                <p className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">
-                  {loading ? '...' : (dashboardData?.key_metrics?.response_time?.current || 0)}
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <ChecksIcon />
-                  <p className="text-xs text-black font-[BasisGrotesquePro]">
-                    {loading ? '...' : dashboardData?.key_metrics?.response_time?.percentage_change
-                      ? `${dashboardData.key_metrics.response_time.percentage_change > 0 ? '+' : ''}${dashboardData.key_metrics.response_time.percentage_change} vs Last Week`
-                      : 'No change'}
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-[#6B7280]">
-                  <span>Target {dashboardData?.key_metrics?.response_time?.target || 0}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-[#3AD6F2] h-2 rounded-full"
-                    style={{
-                      width: dashboardData?.key_metrics?.response_time?.target
-                        ? `${Math.min((dashboardData.key_metrics.response_time.current / dashboardData.key_metrics.response_time.target) * 100, 100)}%`
-                        : '0%'
-                    }}
-                  ></div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                      {dashboardData?.key_metrics?.response_time?.breakdown?.email || '0'}
-                    </div>
-                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Email</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                      {dashboardData?.key_metrics?.response_time?.breakdown?.phone || '0'}
-                    </div>
-                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Phone</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                      {dashboardData?.key_metrics?.response_time?.breakdown?.portal || '0'}
-                    </div>
-                    <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Portal</div>
                   </div>
                 </div>
               </div>
@@ -1771,7 +1746,7 @@ export default function FirmAdminDashboard() {
             </div>
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 }
