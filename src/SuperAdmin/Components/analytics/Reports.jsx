@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaDownload, FaBell } from 'react-icons/fa';
 import { superAdminAPI, handleAPIError } from '../../utils/superAdminAPI';
+import { toast } from 'react-toastify';
+import { superToastOptions } from '../../utils/toastConfig';
 
 const normalizeOptions = (items = []) => items.map((item) => {
   if (typeof item === 'string') {
@@ -59,6 +61,20 @@ export default function Reports() {
   const [schedulesLoading, setSchedulesLoading] = useState(false);
   const [schedulesError, setSchedulesError] = useState(null);
 
+  // Platform Reports state
+  const [platformReportForm, setPlatformReportForm] = useState({
+    report_type: 'firm_report',
+    time_period: 'monthly',
+    format: 'pdf'
+  });
+  const [platformReportLoading, setPlatformReportLoading] = useState(false);
+  const [platformScheduledReports, setPlatformScheduledReports] = useState({
+    custom_reports: [],
+    firm_reports: []
+  });
+  const [platformScheduledLoading, setPlatformScheduledLoading] = useState(false);
+  const [platformScheduledError, setPlatformScheduledError] = useState(null);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -109,9 +125,32 @@ export default function Reports() {
     }
   }, []);
 
+  // Fetch platform scheduled reports
+  const fetchPlatformScheduledReports = useCallback(async () => {
+    try {
+      setPlatformScheduledLoading(true);
+      setPlatformScheduledError(null);
+      const response = await superAdminAPI.getScheduledReports();
+      if (response?.success && response?.data) {
+        setPlatformScheduledReports({
+          custom_reports: response.data.custom_reports || [],
+          firm_reports: response.data.firm_reports || []
+        });
+      } else {
+        setPlatformScheduledReports({ custom_reports: [], firm_reports: [] });
+      }
+    } catch (err) {
+      setPlatformScheduledError(handleAPIError(err));
+      setPlatformScheduledReports({ custom_reports: [], firm_reports: [] });
+    } finally {
+      setPlatformScheduledLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSchedules();
-  }, [fetchSchedules]);
+    fetchPlatformScheduledReports();
+  }, [fetchSchedules, fetchPlatformScheduledReports]);
 
   useEffect(() => {
     if (!config) return;
@@ -220,6 +259,7 @@ export default function Reports() {
         setFeedback({ type: 'success', message: response.message || 'Report scheduled successfully.' });
         setScheduleState((prev) => ({ ...prev, scheduledFor: '' }));
         fetchSchedules();
+        fetchPlatformScheduledReports();
       } else {
         throw new Error(response?.message || 'Failed to schedule report');
       }
@@ -228,6 +268,41 @@ export default function Reports() {
     } finally {
       setScheduleLoading(false);
     }
+  };
+
+  // Handle platform report generation
+  const handleGeneratePlatformReport = async () => {
+    if (!platformReportForm.report_type || !platformReportForm.time_period) {
+      setFeedback({ type: 'error', message: 'Please select report type and time period.' });
+      return;
+    }
+
+    try {
+      setPlatformReportLoading(true);
+      setFeedback(null);
+      const response = await superAdminAPI.generatePlatformReport(platformReportForm);
+      
+      if (response?.success) {
+        const successMsg = response.message || `Report generated and downloaded successfully: ${response.filename || 'report.pdf'}`;
+        setFeedback({ type: 'success', message: successMsg });
+        toast.success(successMsg, superToastOptions);
+      } else {
+        throw new Error(response?.message || 'Failed to generate platform report');
+      }
+    } catch (err) {
+      const errorMsg = handleAPIError(err);
+      setFeedback({ type: 'error', message: errorMsg });
+      toast.error(errorMsg, superToastOptions);
+    } finally {
+      setPlatformReportLoading(false);
+    }
+  };
+
+  const handlePlatformReportFormChange = (field) => (event) => {
+    setPlatformReportForm((prev) => ({
+      ...prev,
+      [field]: event.target.value
+    }));
   };
 
   return (
@@ -417,54 +492,242 @@ export default function Reports() {
         </div>
       )}
 
+      {/* Platform Reports Section */}
       <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
         <div className="mb-6">
-          <h4 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Scheduled Reports</h4>
+          <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Platform Reports</h3>
+          <p className="text-sm" style={{color: '#3B4A66'}}>Generate platform-wide reports for firms, staff, or clients.</p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Type *</label>
+              <select
+                value={platformReportForm.report_type}
+                onChange={handlePlatformReportFormChange('report_type')}
+                className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+              >
+                <option value="firm_report">Firm Report</option>
+                <option value="staff_report">Staff Report</option>
+                <option value="client_report">Client Report</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Time Period *</label>
+              <select
+                value={platformReportForm.time_period}
+                onChange={handlePlatformReportFormChange('time_period')}
+                className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+              >
+                <option value="weekly">Weekly (Last 7 days)</option>
+                <option value="monthly">Monthly (Current month)</option>
+                <option value="quarterly">Quarterly (Current quarter)</option>
+                <option value="yearly">Yearly (Current year)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format</label>
+              <select
+                value={platformReportForm.format}
+                onChange={handlePlatformReportFormChange('format')}
+                className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+              >
+                <option value="pdf">PDF</option>
+                <option value="docx">DOCX (Word)</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={handleGeneratePlatformReport}
+            disabled={platformReportLoading}
+            className="flex items-center justify-center gap-2 px-6 py-2 text-white font-medium transition-colors disabled:opacity-60"
+            style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
+          >
+            <FaDownload className="text-sm" />
+            {platformReportLoading ? 'Generating...' : 'Generate Platform Report'}
+          </button>
+        </div>
+      </div>
+
+      {/* Scheduled Reports Section */}
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+        <div className="mb-6">
+          <h4 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>All Scheduled Reports</h4>
           <p className="text-sm" style={{color: '#3B4A66'}}>Automated reports that will be delivered to stakeholders.</p>
         </div>
 
-        {schedulesLoading ? (
+        {platformScheduledLoading || schedulesLoading ? (
           <div className="h-32 flex items-center justify-center text-sm text-gray-500">
             Loading schedules...
           </div>
-        ) : schedulesError ? (
+        ) : (platformScheduledError || schedulesError) ? (
           <div className="p-4 border border-red-200 rounded-lg bg-red-50 text-sm text-red-600">
-            {schedulesError}
-          </div>
-        ) : schedules.length === 0 ? (
-          <div className="p-4 border border-dashed border-[#E8F0FF] rounded-lg text-sm text-gray-500 text-center">
-            No scheduled reports yet. Create one using the schedule form above.
+            {platformScheduledError || schedulesError}
           </div>
         ) : (
-          <div className="space-y-4">
-            {schedules.map((schedule) => (
-              <div
-                key={schedule.id || `${schedule.report_type}-${schedule.scheduled_for}`}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
-                style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-              >
-                <div>
-                  <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
-                    {(schedule.report_type || 'Report').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                  </h6>
-                  <p className="text-xs" style={{color: '#6B7280'}}>
-                    {schedule.time_period?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom period'} • {schedule.format?.toUpperCase?.() || schedule.format}
-                  </p>
-                  <p className="text-xs mt-1" style={{color: '#6B7280'}}>
-                    Next run: {formatDateTime(schedule.next_run || schedule.scheduled_for)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
-                    {schedule.frequency?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'One-off'}
-                  </span>
-                  <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
-                    {schedule.status?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
-                  </span>
+          <>
+            {/* Custom Reports */}
+            {platformScheduledReports.custom_reports && platformScheduledReports.custom_reports.length > 0 && (
+              <div className="mb-6">
+                <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
+                  Custom Reports ({platformScheduledReports.custom_reports.length})
+                </h5>
+                <div className="space-y-3">
+                  {platformScheduledReports.custom_reports.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
+                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
+                    >
+                      <div>
+                        <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
+                          {schedule.report_type_display || schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom Report'}
+                        </h6>
+                        <p className="text-xs" style={{color: '#6B7280'}}>
+                          {schedule.time_period_display || schedule.time_period?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom period'} • {schedule.format_display || schedule.format?.toUpperCase() || 'PDF'}
+                        </p>
+                        <p className="text-xs mt-1" style={{color: '#6B7280'}}>
+                          {schedule.last_run_at_formatted 
+                            ? `Last run: ${schedule.last_run_at_formatted}` 
+                            : 'Never run'}
+                          {schedule.scheduled_for && (
+                            <span className="ml-2">• Next: {formatDateTime(schedule.scheduled_for)}</span>
+                          )}
+                        </p>
+                        {schedule.created_by && (
+                          <p className="text-xs mt-1" style={{color: '#9CA3AF'}}>
+                            Created by: {schedule.created_by}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
+                          {schedule.frequency_display || schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'One-off'}
+                        </span>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          schedule.status === 'active' ? 'bg-green-100 text-green-800' :
+                          schedule.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          schedule.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                          schedule.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {schedule.status_display || schedule.status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Firm Reports */}
+            {platformScheduledReports.firm_reports && platformScheduledReports.firm_reports.length > 0 && (
+              <div className="mb-6">
+                <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
+                  Firm Reports ({platformScheduledReports.firm_reports.length})
+                </h5>
+                <div className="space-y-3">
+                  {platformScheduledReports.firm_reports.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
+                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
+                    >
+                      <div>
+                        <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
+                          {schedule.firm_name || `Firm ${schedule.firm_id}`}
+                        </h6>
+                        <p className="text-xs" style={{color: '#6B7280'}}>
+                          Frequency: {schedule.frequency_display || schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'N/A'}
+                          {schedule.recipient_emails_count && (
+                            <span className="ml-2">• {schedule.recipient_emails_count} recipient(s)</span>
+                          )}
+                        </p>
+                        <p className="text-xs mt-1" style={{color: '#6B7280'}}>
+                          {schedule.last_run_at_formatted 
+                            ? `Last run: ${schedule.last_run_at_formatted}` 
+                            : 'Never run'}
+                          {schedule.next_run_at && (
+                            <span className="ml-2">• Next: {formatDateTime(schedule.next_run_at)}</span>
+                          )}
+                        </p>
+                        {schedule.created_by && (
+                          <p className="text-xs mt-1" style={{color: '#9CA3AF'}}>
+                            Created by: {schedule.created_by}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          schedule.status === 'active' ? 'bg-green-100 text-green-800' :
+                          schedule.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                          schedule.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                          schedule.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {schedule.status_display || schedule.status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Legacy Custom Schedules (from old API) */}
+            {schedules.length > 0 && (
+              <div className="mb-6">
+                <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
+                  Legacy Custom Schedules ({schedules.length})
+                </h5>
+                <div className="space-y-3">
+                  {schedules.map((schedule) => (
+                    <div
+                      key={schedule.id || `${schedule.report_type}-${schedule.scheduled_for}`}
+                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
+                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
+                    >
+                      <div>
+                        <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
+                          {(schedule.report_type || 'Report').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                        </h6>
+                        <p className="text-xs" style={{color: '#6B7280'}}>
+                          {schedule.time_period?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom period'} • {schedule.format?.toUpperCase?.() || schedule.format}
+                        </p>
+                        <p className="text-xs mt-1" style={{color: '#6B7280'}}>
+                          Next run: {formatDateTime(schedule.next_run || schedule.scheduled_for)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
+                          {schedule.frequency?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'One-off'}
+                        </span>
+                        <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
+                          {schedule.status?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {(!platformScheduledReports.custom_reports || platformScheduledReports.custom_reports.length === 0) &&
+             (!platformScheduledReports.firm_reports || platformScheduledReports.firm_reports.length === 0) &&
+             schedules.length === 0 && (
+              <div className="p-4 border border-dashed border-[#E8F0FF] rounded-lg text-sm text-gray-500 text-center">
+                No scheduled reports yet. Create one using the schedule form above.
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

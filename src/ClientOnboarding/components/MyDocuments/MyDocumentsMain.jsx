@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { UpIcon } from "../icons";
 import DocumentRequests from './DocumentRequests';
 import MyDocumentsContent from './MyDocumentsContent';
@@ -19,6 +19,7 @@ export default function MyDocumentsMain() {
   const [activeTab, setActiveTab] = useState('requests');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isFolderSelected, setIsFolderSelected] = useState(false);
+  const documentsRefreshKey = useRef(0);
 
   return (
     <div className='px-4'>
@@ -43,7 +44,16 @@ export default function MyDocumentsMain() {
               Upload Documents
             </button>
 
-            <UploadModal show={showUploadModal} handleClose={() => setShowUploadModal(false)} />
+            <UploadModal 
+              show={showUploadModal} 
+              handleClose={() => setShowUploadModal(false)}
+              onUploadSuccess={() => {
+                // Trigger refresh of documents list
+                documentsRefreshKey.current += 1;
+                // If on My Documents tab, the component will refresh automatically
+                // The key change will force a remount if needed
+              }}
+            />
 
           </div>
 
@@ -88,7 +98,7 @@ export default function MyDocumentsMain() {
       {/* Conditional Content */}
       <div >
         {activeTab === 'requests' && <DocumentRequests />}
-        {activeTab === 'my' && <MyDocumentsContent />}
+        {activeTab === 'my' && <MyDocumentsContent key={documentsRefreshKey.current} />}
         {activeTab === 'folders' && <Folders onFolderSelect={setIsFolderSelected} />}
         {activeTab === 'signature' && <ESignature />}
         {activeTab === 'archived' && <ArchivedDocuments />}

@@ -1,21 +1,48 @@
-import React, { useState } from "react";
-import { TotalFirmsIcon, BlueUserIcon, SystemHealthIcon } from "../../Components/icons";
+import React, { useState, useEffect } from "react";
+import { TotalFirmsIcon, BlueUserIcon, SystemHealthIcon, TrashIcon1 } from "../../Components/icons";
+import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
+import { toast } from "react-toastify";
+import { superToastOptions } from "../../utils/toastConfig";
+import { Modal, Button, Form } from "react-bootstrap";
 
 export default function PlatformControl() {
     const [platformName, setPlatformName] = useState("Acme Tax Suite");
     const [primaryColor, setPrimaryColor] = useState("#FF8787");
     const [logoUrl, setLogoUrl] = useState("5");
-    const [enableRetentionRules, setEnableRetentionRules] = useState(false);
-    const [yearsToKeep, setYearsToKeep] = useState("");
-    const [ipAddress, setIpAddress] = useState("203.120.45.0/24");
     const [require2FA, setRequire2FA] = useState(false);
     const [minPasswordLength, setMinPasswordLength] = useState("10");
     const [requireSpecialChar, setRequireSpecialChar] = useState(false);
 
+    // IP Restrictions state
+    const [ipRestrictions, setIpRestrictions] = useState([]);
+    const [loadingIPRestrictions, setLoadingIPRestrictions] = useState(true);
+    const [showIPModal, setShowIPModal] = useState(false);
+    const [editingIPRestriction, setEditingIPRestriction] = useState(null);
+    const [ipFormData, setIpFormData] = useState({
+        restriction_type: "tenant",
+        firm: null,
+        ip_address: "",
+        description: "",
+        is_active: true
+    });
+    const [ipFormErrors, setIpFormErrors] = useState({});
+    const [submittingIP, setSubmittingIP] = useState(false);
+    const [ipFilter, setIpFilter] = useState(""); // "tenant", "firm", or ""
+
+    // Retention Rules state
+    const [retentionRule, setRetentionRule] = useState(null);
+    const [loadingRetention, setLoadingRetention] = useState(true);
+    const [retentionFormData, setRetentionFormData] = useState({
+        enable_retention_rules: false,
+        years_to_keep: 7,
+        firm_id: null
+    });
+    const [submittingRetention, setSubmittingRetention] = useState(false);
+
     const auditData = [
         { label: "Active Firms", value: "128", icon: <TotalFirmsIcon /> },
         { label: "2FA Not Enforced", value: "12", icon: <BlueUserIcon /> },
-        { label: "Pending IP Rules", value: "3", icon: <SystemHealthIcon /> }
+        { label: "Pending IP Rules", value: ipRestrictions.filter(r => !r.is_active).length.toString(), icon: <SystemHealthIcon /> }
     ];
 
     const storagePlans = [
@@ -23,6 +50,242 @@ export default function PlatformControl() {
         { name: "Growth", planId: "Plan ID 2", used: 4000, total: 5000 },
         { name: "Enterprise", planId: "Plan ID 3", used: 520, total: 5000 }
     ];
+
+    // Fetch IP Restrictions
+    const fetchIPRestrictions = async () => {
+        try {
+            setLoadingIPRestrictions(true);
+            const filters = {};
+            if (ipFilter) {
+                filters.restrictionType = ipFilter;
+            }
+            const response = await superAdminAPI.getIPRestrictions(filters);
+            
+            if (response.success && response.data) {
+                setIpRestrictions(Array.isArray(response.data) ? response.data : []);
+            } else {
+                setIpRestrictions([]);
+            }
+        } catch (err) {
+            console.error('Error fetching IP restrictions:', err);
+            toast.error(handleAPIError(err), superToastOptions);
+            setIpRestrictions([]);
+        } finally {
+            setLoadingIPRestrictions(false);
+        }
+    };
+
+    // Fetch Retention Rules
+    const fetchRetentionRule = async () => {
+        try {
+            setLoadingRetention(true);
+            const response = await superAdminAPI.getRetentionRule();
+            
+            if (response.success && response.data) {
+                setRetentionRule(response.data);
+                setRetentionFormData({
+                    enable_retention_rules: response.data.enable_retention_rules || false,
+                    years_to_keep: response.data.years_to_keep || 7,
+                    firm_id: response.data.firm || null
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching retention rule:', err);
+            toast.error(handleAPIError(err), superToastOptions);
+        } finally {
+            setLoadingRetention(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchIPRestrictions();
+        fetchRetentionRule();
+    }, [ipFilter]);
+
+    // Handle create/update IP restriction
+    const handleSaveIPRestriction = async () => {
+        setIpFormErrors({});
+        
+        // Validation
+        if (!ipFormData.ip_address || !ipFormData.ip_address.trim()) {
+            setIpFormErrors({ ip_address: "IP address is required" });
+            return;
+        }
+        if (ipFormData.restriction_type === "firm" && !ipFormData.firm) {
+            setIpFormErrors({ firm: "Firm is required for firm-level restrictions" });
+            return;
+        }
+        if (ipFormData.restriction_type === "tenant" && ipFormData.firm) {
+            setIpFormErrors({ firm: "Firm must be null for tenant-level restrictions" });
+            return;
+        }
+
+        try {
+            setSubmittingIP(true);
+            const payload = {
+                restriction_type: ipFormData.restriction_type,
+                ip_address: ipFormData.ip_address.trim(),
+                description: ipFormData.description.trim() || "",
+                is_active: ipFormData.is_active
+            };
+            
+            if (ipFormData.restriction_type === "firm") {
+                payload.firm = ipFormData.firm;
+            } else {
+                payload.firm = null;
+            }
+
+            let response;
+            if (editingIPRestriction) {
+                response = await superAdminAPI.updateIPRestriction(editingIPRestriction.id, payload);
+            } else {
+                response = await superAdminAPI.createIPRestriction(payload);
+            }
+
+            if (response.success) {
+                toast.success(response.message || (editingIPRestriction ? "IP restriction updated successfully" : "IP restriction created successfully"), superToastOptions);
+                setShowIPModal(false);
+                setEditingIPRestriction(null);
+                setIpFormData({
+                    restriction_type: "tenant",
+                    firm: null,
+                    ip_address: "",
+                    description: "",
+                    is_active: true
+                });
+                fetchIPRestrictions();
+            }
+        } catch (err) {
+            console.error('Error saving IP restriction:', err);
+            const errorMsg = handleAPIError(err);
+            toast.error(errorMsg, superToastOptions);
+            
+            // Handle validation errors
+            if (err.message && err.message.includes("errors")) {
+                try {
+                    const errorData = JSON.parse(err.message);
+                    if (errorData.errors) {
+                        setIpFormErrors(errorData.errors);
+                    }
+                } catch (e) {
+                    // Not JSON, ignore
+                }
+            }
+        } finally {
+            setSubmittingIP(false);
+        }
+    };
+
+    // Handle delete IP restriction
+    const handleDeleteIPRestriction = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this IP restriction?")) {
+            return;
+        }
+
+        try {
+            const response = await superAdminAPI.deleteIPRestriction(id);
+            
+            if (response.success) {
+                toast.success(response.message || "IP restriction deleted successfully", superToastOptions);
+                fetchIPRestrictions();
+            }
+        } catch (err) {
+            console.error('Error deleting IP restriction:', err);
+            toast.error(handleAPIError(err), superToastOptions);
+        }
+    };
+
+    // Handle toggle IP restriction status
+    const handleToggleIPStatus = async (restriction) => {
+        try {
+            const response = await superAdminAPI.updateIPRestriction(restriction.id, {
+                ...restriction,
+                is_active: !restriction.is_active
+            });
+            
+            if (response.success) {
+                toast.success(`IP restriction ${!restriction.is_active ? "activated" : "deactivated"}`, superToastOptions);
+                fetchIPRestrictions();
+            }
+        } catch (err) {
+            console.error('Error updating IP restriction status:', err);
+            toast.error(handleAPIError(err), superToastOptions);
+        }
+    };
+
+    // Handle save retention rule
+    const handleSaveRetentionRule = async () => {
+        if (retentionFormData.years_to_keep < 1 || retentionFormData.years_to_keep > 100) {
+            toast.error("Years to keep must be between 1 and 100", superToastOptions);
+            return;
+        }
+
+        try {
+            setSubmittingRetention(true);
+            const payload = {
+                enable_retention_rules: retentionFormData.enable_retention_rules,
+                years_to_keep: retentionFormData.years_to_keep
+            };
+            
+            if (retentionFormData.firm_id) {
+                payload.firm_id = retentionFormData.firm_id;
+            }
+
+            const response = await superAdminAPI.createOrUpdateRetentionRule(payload);
+            
+            if (response.success) {
+                toast.success(response.message || "Retention rule updated successfully", superToastOptions);
+                fetchRetentionRule();
+            }
+        } catch (err) {
+            console.error('Error saving retention rule:', err);
+            toast.error(handleAPIError(err), superToastOptions);
+        } finally {
+            setSubmittingRetention(false);
+        }
+    };
+
+    // Open IP restriction modal for editing
+    const openEditIPModal = (restriction) => {
+        setEditingIPRestriction(restriction);
+        setIpFormData({
+            restriction_type: restriction.restriction_type || "tenant",
+            firm: restriction.firm || null,
+            ip_address: restriction.ip_address || "",
+            description: restriction.description || "",
+            is_active: restriction.is_active !== undefined ? restriction.is_active : true
+        });
+        setIpFormErrors({});
+        setShowIPModal(true);
+    };
+
+    // Open IP restriction modal for creating
+    const openCreateIPModal = () => {
+        setEditingIPRestriction(null);
+        setIpFormData({
+            restriction_type: "tenant",
+            firm: null,
+            ip_address: "",
+            description: "",
+            is_active: true
+        });
+        setIpFormErrors({});
+        setShowIPModal(true);
+    };
+
+    // Close IP modal
+    const closeIPModal = () => {
+        setShowIPModal(false);
+        setEditingIPRestriction(null);
+        setIpFormData({
+            restriction_type: "tenant",
+            firm: null,
+            ip_address: "",
+            description: "",
+            is_active: true
+        });
+        setIpFormErrors({});
+    };
 
     return (
         <div className=" min-h-screen">
@@ -178,113 +441,359 @@ export default function PlatformControl() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* IP / Location Restrictions */}
                 <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
-                    <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
-                        IP / Location Restrictions
-                    </h3>
-                    <p className="text-[#4B5563] text-sm font-normal font-[BasisGrotesquePro] mb-6">
-                        Limit where firms and staff can log in from.
-                    </p>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="retentionRules"
-                                checked={enableRetentionRules}
-                                onChange={(e) => setEnableRetentionRules(e.target.checked)}
-                                className="w-4 h-4 rounded focus:ring-[#3AD6F2] border-2"
-                                style={{
-                                    accentColor: "#3AD6F2",
-                                    borderColor: "#3AD6F2",
-                                }}
-                            />
-                            <label htmlFor="retentionRules" className="text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro]">
-                                Enable Retention Rules
-                            </label>
-                        </div>
-
-
-
+                    <div className="flex justify-between items-center mb-4">
                         <div>
-                            <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                                years to keep
-                            </label>
-                            <div className="bg-white border border-[#E8F0FF] rounded-xl  pl-4 pr-4 pt-2 pb-2 ">
-                                <div className="text-[#3B4A66] text-base font-semibold font-[BasisGrotesquePro] mb-1">
-                                    203.120.45.0/24
-                                </div>
-                                <div className="text-[#6B7280] text-sm font-normal font-[BasisGrotesquePro]">
-                                    ALLOW - Office VPN
-                                </div>
-                            </div>
+                            <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
+                                IP / Location Restrictions
+                            </h3>
+                            <p className="text-[#4B5563] text-sm font-normal font-[BasisGrotesquePro]">
+                                Limit where firms and staff can log in from.
+                            </p>
                         </div>
+                        <button
+                            onClick={openCreateIPModal}
+                            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-[#E55A1F] transition-colors"
+                        >
+                            Add IP Restriction
+                        </button>
+                    </div>
 
-                        <div className="text-gray-500 text-xs font-normal font-[BasisGrotesquePro] leading-relaxed">
-                            <span className="text-[#3B4A66] font-semibold">Tip:</span> Use CIDR Notation For Ranges (Eg. 198.51.100.0/24). IP Restrictions Are Applied At The Tenant-Level And Can Be Overridden Per-Firm If Allowed.
+                    {/* Filter */}
+                    <div className="mb-4">
+                        <select
+                            value={ipFilter}
+                            onChange={(e) => setIpFilter(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] text-sm"
+                        >
+                            <option value="">All Restrictions</option>
+                            <option value="tenant">Tenant-Level</option>
+                            <option value="firm">Firm-Level</option>
+                        </select>
+                    </div>
+
+                    {/* IP Restrictions List */}
+                    {loadingIPRestrictions ? (
+                        <div className="text-center py-8 text-gray-600 font-[BasisGrotesquePro]">
+                            Loading IP restrictions...
                         </div>
+                    ) : ipRestrictions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500 font-[BasisGrotesquePro]">
+                            No IP restrictions found
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {ipRestrictions.map((restriction) => (
+                                <div
+                                    key={restriction.id}
+                                    className="bg-white border border-[#E8F0FF] rounded-xl p-4 hover:bg-gray-50 transition-colors"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex-1">
+                                            <div className="text-[#3B4A66] text-base font-semibold font-[BasisGrotesquePro] mb-1">
+                                                {restriction.ip_address}
+                                            </div>
+                                            <div className="text-[#6B7280] text-sm font-normal font-[BasisGrotesquePro] mb-1">
+                                                {restriction.description || "No description"}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${
+                                                    restriction.restriction_type === "tenant" 
+                                                        ? "bg-blue-100 text-blue-800" 
+                                                        : "bg-purple-100 text-purple-800"
+                                                }`}>
+                                                    {restriction.restriction_type === "tenant" ? "Tenant-Level" : "Firm-Level"}
+                                                </span>
+                                                <span className={`px-2 py-1 rounded text-xs font-[BasisGrotesquePro] ${
+                                                    restriction.is_active 
+                                                        ? "bg-green-100 text-green-800" 
+                                                        : "bg-red-100 text-red-800"
+                                                }`}>
+                                                    {restriction.is_active ? "Active" : "Inactive"}
+                                                </span>
+                                                {restriction.firm_name && (
+                                                    <span className="text-xs text-gray-600 font-[BasisGrotesquePro]">
+                                                        Firm: {restriction.firm_name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 ml-4">
+                                            <button
+                                                onClick={() => handleToggleIPStatus(restriction)}
+                                                className="text-sm text-gray-600 hover:text-gray-800 font-[BasisGrotesquePro]"
+                                                title={restriction.is_active ? "Deactivate" : "Activate"}
+                                            >
+                                                {restriction.is_active ? "Deactivate" : "Activate"}
+                                            </button>
+                                            <button
+                                                onClick={() => openEditIPModal(restriction)}
+                                                className="text-sm text-blue-600 hover:text-blue-800 font-[BasisGrotesquePro]"
+                                                title="Edit"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteIPRestriction(restriction.id)}
+                                                className="text-sm text-red-600 hover:text-red-800 font-[BasisGrotesquePro]"
+                                                title="Delete"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="text-gray-500 text-xs font-normal font-[BasisGrotesquePro] leading-relaxed mt-4">
+                        <span className="text-[#3B4A66] font-semibold">Tip:</span> Use CIDR Notation For Ranges (Eg. 198.51.100.0/24). IP Restrictions Are Applied At The Tenant-Level And Can Be Overridden Per-Firm If Allowed.
                     </div>
                 </div>
 
-                {/* Security Enforcement */}
+                {/* Retention Rules */}
                 <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
-                    <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
-                        Security Enforcement
+                    <h3 className="text-[#4B5563] text-xl font-semibold font-[BasisGrotesquePro] mb-2">
+                        Retention Rules
                     </h3>
-                    <p className="text-gray-600 text-sm font-normal font-[BasisGrotesquePro] mb-6">
-                        Mandate policies across all firms.
+                    <p className="text-[#4B5563] text-sm font-normal font-[BasisGrotesquePro] mb-6">
+                        Configure data retention policies.
                     </p>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="require2FA"
-                                checked={require2FA}
-                                onChange={(e) => setRequire2FA(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <label htmlFor="require2FA" className="text-gray-700 text-sm font-medium font-[BasisGrotesquePro]">
-                                Require 2-Factor Authentication For All Staff
-                            </label>
+                    {loadingRetention ? (
+                        <div className="text-center py-8 text-gray-600 font-[BasisGrotesquePro]">
+                            Loading retention rules...
                         </div>
-
-                        <div>
-                            <label className="block text-gray-700 text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                                Minimum password length
-                            </label>
-                            <div className="relative">
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
                                 <input
-                                    type="number"
-                                    value={minPasswordLength}
-                                    onChange={(e) => setMinPasswordLength(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] pr-8"
+                                    type="checkbox"
+                                    id="enableRetentionRules"
+                                    checked={retentionFormData.enable_retention_rules}
+                                    onChange={(e) => setRetentionFormData({
+                                        ...retentionFormData,
+                                        enable_retention_rules: e.target.checked
+                                    })}
+                                    className="w-4 h-4 rounded focus:ring-[#3AD6F2] border-2"
+                                    style={{
+                                        accentColor: "#3AD6F2",
+                                        borderColor: "#3AD6F2",
+                                    }}
                                 />
-                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                <label htmlFor="enableRetentionRules" className="text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro]">
+                                    Enable Retention Rules
+                                </label>
+                            </div>
+
+                            {retentionFormData.enable_retention_rules && (
+                                <div>
+                                    <label className="block text-[#4B5563] text-sm font-medium font-[BasisGrotesquePro] mb-2">
+                                        Years to Keep Data
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={retentionFormData.years_to_keep}
+                                        onChange={(e) => setRetentionFormData({
+                                            ...retentionFormData,
+                                            years_to_keep: parseInt(e.target.value) || 7
+                                        })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
+                                    />
+                                    <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
+                                        Enter a value between 1 and 100 years
+                                    </p>
                                 </div>
+                            )}
+
+                            <button
+                                onClick={handleSaveRetentionRule}
+                                disabled={submittingRetention}
+                                className="w-full px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-[#E55A1F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {submittingRetention ? "Saving..." : "Save Retention Rule"}
+                            </button>
+
+                            {retentionRule && (
+                                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">
+                                        <strong>Current Setting:</strong> {retentionRule.enable_retention_rules 
+                                            ? `Data will be kept for ${retentionRule.years_to_keep} years`
+                                            : "Retention rules are disabled"}
+                                    </p>
+                                    {retentionRule.updated_at && (
+                                        <p className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
+                                            Last updated: {new Date(retentionRule.updated_at).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Security Enforcement */}
+            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mt-6">
+                <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
+                    Security Enforcement
+                </h3>
+                <p className="text-gray-600 text-sm font-normal font-[BasisGrotesquePro] mb-6">
+                    Mandate policies across all firms.
+                </p>
+
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="require2FA"
+                            checked={require2FA}
+                            onChange={(e) => setRequire2FA(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="require2FA" className="text-gray-700 text-sm font-medium font-[BasisGrotesquePro]">
+                            Require 2-Factor Authentication For All Staff
+                        </label>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium font-[BasisGrotesquePro] mb-2">
+                            Minimum password length
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={minPasswordLength}
+                                onChange={(e) => setMinPasswordLength(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] pr-8"
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="requireSpecialChar"
-                                checked={requireSpecialChar}
-                                onChange={(e) => setRequireSpecialChar(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <label htmlFor="requireSpecialChar" className="text-gray-700 text-sm font-medium font-[BasisGrotesquePro]">
-                                Require Special Character In Passwords
-                            </label>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="requireSpecialChar"
+                            checked={requireSpecialChar}
+                            onChange={(e) => setRequireSpecialChar(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="requireSpecialChar" className="text-gray-700 text-sm font-medium font-[BasisGrotesquePro]">
+                            Require Special Character In Passwords
+                        </label>
                     </div>
                 </div>
             </div>
+
+            {/* IP Restriction Modal */}
+            <Modal show={showIPModal} onHide={closeIPModal} centered size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title style={{ fontFamily: "BasisGrotesquePro" }}>
+                        {editingIPRestriction ? "Edit IP Restriction" : "Create IP Restriction"}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Restriction Type *</Form.Label>
+                            <Form.Select
+                                value={ipFormData.restriction_type}
+                                onChange={(e) => setIpFormData({
+                                    ...ipFormData,
+                                    restriction_type: e.target.value,
+                                    firm: e.target.value === "tenant" ? null : ipFormData.firm
+                                })}
+                                isInvalid={!!ipFormErrors.restriction_type}
+                            >
+                                <option value="tenant">Tenant-Level (All Firms)</option>
+                                <option value="firm">Firm-Level (Specific Firm)</option>
+                            </Form.Select>
+                            {ipFormErrors.restriction_type && (
+                                <Form.Control.Feedback type="invalid">{ipFormErrors.restriction_type}</Form.Control.Feedback>
+                            )}
+                        </Form.Group>
+
+                        {ipFormData.restriction_type === "firm" && (
+                            <Form.Group className="mb-3">
+                                <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Firm ID *</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    value={ipFormData.firm || ""}
+                                    onChange={(e) => setIpFormData({
+                                        ...ipFormData,
+                                        firm: e.target.value ? parseInt(e.target.value) : null
+                                    })}
+                                    placeholder="Enter firm ID"
+                                    isInvalid={!!ipFormErrors.firm}
+                                />
+                                {ipFormErrors.firm && (
+                                    <Form.Control.Feedback type="invalid">{ipFormErrors.firm}</Form.Control.Feedback>
+                                )}
+                            </Form.Group>
+                        )}
+
+                        <Form.Group className="mb-3">
+                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>IP Address / CIDR *</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={ipFormData.ip_address}
+                                onChange={(e) => setIpFormData({ ...ipFormData, ip_address: e.target.value })}
+                                placeholder="e.g., 192.168.1.1 or 192.168.1.0/24"
+                                isInvalid={!!ipFormErrors.ip_address}
+                            />
+                            <Form.Text className="text-muted" style={{ fontFamily: "BasisGrotesquePro" }}>
+                                Use CIDR notation for IP ranges (e.g., 192.168.1.0/24)
+                            </Form.Text>
+                            {ipFormErrors.ip_address && (
+                                <Form.Control.Feedback type="invalid">{ipFormErrors.ip_address}</Form.Control.Feedback>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Description</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={ipFormData.description}
+                                onChange={(e) => setIpFormData({ ...ipFormData, description: e.target.value })}
+                                placeholder="e.g., Office VPN, Home Office"
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                label="Active"
+                                checked={ipFormData.is_active}
+                                onChange={(e) => setIpFormData({ ...ipFormData, is_active: e.target.checked })}
+                                style={{ fontFamily: "BasisGrotesquePro" }}
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeIPModal}>
+                        Cancel
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleSaveIPRestriction}
+                        disabled={submittingIP}
+                        style={{ backgroundColor: "#F56D2D", border: "none" }}
+                    >
+                        {submittingIP ? "Saving..." : (editingIPRestriction ? "Update" : "Create")}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }

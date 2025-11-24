@@ -34,7 +34,15 @@ export default function LogsAndBackups() {
             });
 
             if (response.success && response.data) {
-                const logs = response.data.logs || response.data || [];
+                // Ensure logs is always an array
+                let logs = [];
+                if (Array.isArray(response.data.logs)) {
+                    logs = response.data.logs;
+                } else if (Array.isArray(response.data)) {
+                    logs = response.data;
+                } else if (response.data.logs && Array.isArray(response.data.logs)) {
+                    logs = response.data.logs;
+                }
                 // Map API response to UI format
                 const mappedLogs = logs.map(log => ({
                     timestamp: log.timestamp || log.created_at || 'N/A',
