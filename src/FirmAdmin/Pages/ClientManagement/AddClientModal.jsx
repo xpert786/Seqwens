@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -32,80 +32,25 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
           setStaffLoading(true);
           setStaffError('');
 
-          const token = getAccessToken();
-          const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/list/`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            }
-          });
+          const result = await firmAdminStaffAPI.getFirmWithTaxPreparers();
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const result = await response.json();
+          if (result.success && result.data && Array.isArray(result.data)) {
+            // Transform the data to match the expected format
+            let staffList = result.data.map(item => ({
+              id: item.id,
+              name: item.display_name || (item.type === 'firm' ? item.name : `${item.first_name || ''} ${item.last_name || ''}`.trim()),
+              email: item.email || '',
+              type: item.type, // 'firm' or 'tax_preparer'
+              ...item // Include all other fields
+            }));
 
-          if (result.success && result.data && result.data.staff_members) {
-            let staffList = result.data.staff_members;
-
-            // Get current user (Firm Admin) data
-            const currentUser = getUserData();
-            console.log('Current Firm Admin User:', currentUser);
-            if (currentUser && currentUser.id) {
-              // Check if current user is already in the staff list
-              const isCurrentUserInList = staffList.some(staff =>
-                staff.id === currentUser.id ||
-                staff.user_id === currentUser.id ||
-                staff.staff_member?.id === currentUser.id
-              );
-
-              console.log('Is current user in staff list?', isCurrentUserInList);
-
-              // If current user is not in the list, add them
-              if (!isCurrentUserInList) {
-                const currentUserAsStaff = {
-                  id: currentUser.id,
-                  user_id: currentUser.id,
-                  name: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.email || 'Firm Admin',
-                  email: currentUser.email || '',
-                  role_display: 'Firm Admin',
-                  role: { primary: 'admin', role_type: 'admin' },
-                  status: { value: 'active', is_active: true },
-                  is_active: true
-                };
-
-                console.log('Adding current user to staff list:', currentUserAsStaff);
-
-                // Add current user at the beginning of the list
-                staffList = [currentUserAsStaff, ...staffList];
-              }
-            }
-
-            console.log('Final staff list:', staffList);
-
+            console.log('Firm and tax preparers loaded:', staffList);
             setStaffMembers(staffList);
           } else {
-            // Even if API fails, try to add current user
-            const currentUser = getUserData();
-            if (currentUser && currentUser.id) {
-              const currentUserAsStaff = {
-                id: currentUser.id,
-                user_id: currentUser.id,
-                name: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.email || 'Firm Admin',
-                email: currentUser.email || '',
-                role_display: 'Firm Admin',
-                role: { primary: 'admin', role_type: 'admin' },
-                status: { value: 'active', is_active: true },
-                is_active: true
-              };
-              setStaffMembers([currentUserAsStaff]);
-            } else {
-              setStaffMembers([]);
-            }
+            setStaffMembers([]);
           }
         } catch (err) {
-          console.error('Error fetching staff members:', err);
+          console.error('Error fetching firm and tax preparers:', err);
           setStaffError('Failed to load staff members. Please try again.');
           setStaffMembers([]);
         } finally {
@@ -362,7 +307,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                   <option value="">Select staff member</option>
                   {staffMembers.map((staff) => (
                     <option key={staff.id} value={staff.id}>
-                      {staff.name} {staff.email ? `(${staff.email})` : ''} - {staff.role_display}
+                      {staff.name} {staff.email ? `(${staff.email})` : ''} {staff.type === 'firm' ? '- Firm' : staff.role_display ? `- ${staff.role_display}` : ''}
                     </option>
                   ))}
                 </select>

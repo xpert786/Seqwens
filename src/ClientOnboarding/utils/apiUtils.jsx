@@ -2649,6 +2649,10 @@ export const firmAdminStaffAPI = {
   listBasicStaff: async () => {
     return await apiRequest('/taxpayer/firm-admin/staff/', 'GET');
   },
+  // Get firm with tax preparers (for assign staff dropdown)
+  getFirmWithTaxPreparers: async () => {
+    return await apiRequest('/firm/with-tax-preparers/', 'GET');
+  },
 };
 
 // Firm Admin Office Locations API functions
