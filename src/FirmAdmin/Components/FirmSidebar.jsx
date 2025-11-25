@@ -98,14 +98,23 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
     }`;
 
   const iconWrapperClass = (path) =>
-    `inline-flex items-center justify-center mr-3 w-5 h-5 ${isActive(path) ? "bg-orange-500 p-1 rounded [&>svg]:!text-white" : "[&>svg]:!text-white"
+    `inline-flex items-center justify-center mr-3 w-5 h-5 ${isActive(path) ? "p-1 rounded [&>svg]:!text-white" : "[&>svg]:!text-white"
     }`;
+  
+  const getIconWrapperStyle = (path) => {
+    if (isActive(path)) {
+      return {
+        backgroundColor: 'var(--firm-secondary-color, #F56D2D)'
+      };
+    }
+    return {};
+  };
 
   return (
     <div
       className="h-[calc(100vh-70px)] fixed top-[70px] left-0 z-[1000] transition-all duration-300"
       style={{
-        backgroundColor: '#32B582',
+        backgroundColor: 'var(--firm-primary-color, #32B582)',
         width: sidebarWidth,
         transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         visibility: isSidebarOpen ? 'visible' : 'hidden'
@@ -116,7 +125,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
         style={{
           width: sidebarWidth,
           scrollbarWidth: 'thin',
-          scrollbarColor: '#ffffff #32B582',
+          scrollbarColor: `#ffffff var(--firm-primary-color, #32B582)`,
           marginRight: '0',
           paddingRight: '0',
           position: 'relative',
@@ -139,7 +148,7 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
             {expandedSections.dashboard && (
               <div className="space-y-1" style={{ borderBottom: '0.6px solid #FFFFFF80', paddingBottom: '16px' }}>
                 <Link to="/firmadmin" className={linkClass("/firmadmin")}>
-                  <span className={iconWrapperClass("/firmadmin")}>
+                  <span className={iconWrapperClass("/firmadmin")} style={getIconWrapperStyle("/firmadmin")}>
                     <DashIconed />
                   </span>
                   Overview

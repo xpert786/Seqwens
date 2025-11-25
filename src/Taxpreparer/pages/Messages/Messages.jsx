@@ -1560,14 +1560,6 @@ export default function MessagePage() {
                       return;
                     }
 
-                    if (!composeForm.subject.trim() || !composeForm.message.trim()) {
-                      toast.error('Please fill in subject and message', {
-                        position: "top-right",
-                        autoClose: 3000,
-                      });
-                      return;
-                    }
-
                     const clientIdNumber = parseInt(composeForm.clientId, 10);
                     if (Number.isNaN(clientIdNumber)) {
                       toast.error('Invalid client selected', {
@@ -1577,98 +1569,47 @@ export default function MessagePage() {
                       return;
                     }
 
-                    const assignedStaffIds = composeForm.assignedStaffText
-                      .split(',')
-                      .map((id) => id.trim())
-                      .filter((id) => id.length > 0)
-                      .map((id) => parseInt(id, 10))
-                      .filter((id) => !Number.isNaN(id));
+                    // Use the new chat/create endpoint
+                    const response = await chatService.createTaxPreparerChat(clientIdNumber);
 
-                    const payload = {
-                      client_id: clientIdNumber,
-                      subject: composeForm.subject.trim(),
-                      message: composeForm.message.trim(),
-                      assigned_staff_ids: assignedStaffIds,
-                    };
-
-                    const response = await taxPreparerThreadsAPI.createThread(payload);
-
-                    if (response.success && response.data) {
-                      const threadData = response.data.thread || response.data;
-                      if (!threadData) {
-                        throw new Error('Invalid response received from server');
-                      }
-
-                      const lastMessageText = threadData.last_message_preview?.content
-                        || composeForm.message
-                        || 'No message';
-                      const truncatedMessage = lastMessageText.length > 50
-                        ? `${lastMessageText.substring(0, 50)}...`
-                        : lastMessageText;
-                      const threadTimestamp = threadData.last_message_at || threadData.created_at || new Date().toISOString();
-
-                      const newThread = {
-                        id: threadData.id,
-                        name: threadData.client_name || 'Unknown Client',
-                        lastMessage: truncatedMessage,
-                        time: 'Just now',
-                        status: threadData.status,
-                        unreadCount: threadData.unread_count || 0,
-                        createdAt: threadTimestamp,
-                        lastMessageAt: threadTimestamp,
-                        subject: threadData.subject,
-                        assignedStaff: threadData.assigned_staff,
-                        assignedStaffNames: threadData.assigned_staff_names,
-                        clientName: threadData.client_name,
-                        clientEmail: threadData.client_email,
-                        firmName: threadData.firm_name,
-                        lastMessagePreview: threadData.last_message_preview,
-                        messages: [],
-                        clientId: threadData.client || threadData.client_id || clientIdNumber,
-                      };
-
-                      setConversations(prev =>
-                        [newThread, ...prev].sort((a, b) => {
-                          const dateA = new Date(a.lastMessageAt || 0);
-                          const dateB = new Date(b.lastMessageAt || 0);
-                          return dateB - dateA;
-                        })
-                      );
-                      setActiveConversationId(newThread.id);
-
-                      const initialMessage = response.data.initial_message;
-                      if (initialMessage) {
-                        const formattedInitialMessage = {
-                          id: initialMessage.id,
-                          type: initialMessage.sender_role?.toLowerCase() === 'client' ? 'admin' : 'user',
-                          text: initialMessage.content || '',
-                          date: initialMessage.created_at,
-                          sender: initialMessage.sender_name || '',
-                          senderRole: initialMessage.sender_role || '',
-                          isRead: initialMessage.is_read || false,
-                          isEdited: initialMessage.is_edited || false,
-                          messageType: initialMessage.message_type || 'text',
-                          isInternal: initialMessage.is_internal || false,
-                          attachment: initialMessage.attachment || null,
-                          attachmentName: initialMessage.attachment_name || null,
-                          attachmentSize: initialMessage.attachment_size_display || null,
-                        };
-                        setActiveChatMessages([formattedInitialMessage]);
-                      } else {
-                        setActiveChatMessages([]);
-                      }
-
-                      fetchThreads(true);
-
-                      toast.success(response.message || 'Chat created successfully', {
-                        position: "top-right",
-                        autoClose: 3000,
-                      });
-
-                      handleCloseComposeModal();
-                    } else {
-                      throw new Error(response.message || 'Failed to create thread');
+                    // Handle response - could be success/data format or direct data
+                    const chatData = response.success ? response.data : response;
+                    if (!chatData) {
+                      throw new Error('Invalid response received from server');
                     }
+
+                    // Extract chat/thread ID from response
+                    const chatId = chatData.id || chatData.chat_id || chatData.thread_id;
+                    if (!chatId) {
+                      throw new Error('Chat ID not found in response');
+                    }
+
+                    // Send initial message if provided
+                    if (composeForm.message && composeForm.message.trim()) {
+                      try {
+                        await taxPreparerThreadsAPI.sendMessage(chatId, {
+                          content: composeForm.message.trim(),
+                          message_type: 'text',
+                          is_internal: false
+                        });
+                      } catch (msgError) {
+                        console.warn('Failed to send initial message:', msgError);
+                        // Continue even if message sending fails
+                      }
+                    }
+
+                    // Set the active conversation to the new chat
+                    setActiveConversationId(chatId);
+
+                    // Refresh threads to get the new chat in the list
+                    await fetchThreads(true);
+
+                    toast.success('Chat created successfully', {
+                      position: "top-right",
+                      autoClose: 3000,
+                    });
+
+                    handleCloseComposeModal();
                   } catch (err) {
                     console.error('Error creating thread:', err);
                     toast.error('Failed to create thread: ' + (err.message || 'Unknown error'), {

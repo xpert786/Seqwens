@@ -8,7 +8,7 @@ export const corsConfig = {
   development: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000/seqwens',
+        target: 'http://168.231.121.7/seqwens',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
@@ -19,12 +19,14 @@ export const corsConfig = {
 
 // Alternative API base URL for development (using proxy)
 export const getApiBaseUrl = () => {
-  // In development, use the Vite proxy to avoid CORS issues
-  if (import.meta.env.DEV) {
-    return '/api';
-  }
-  // In production, use the full URL
+  // Always use the full URL with IP address
   return 'http://168.231.121.7/seqwens/api';
+  
+  // Uncomment below to use proxy in development (if needed)
+  // if (import.meta.env.DEV) {
+  //   return '/api';
+  // }
+  // return 'http://168.231.121.7/seqwens/api';
 };
 
 // Fallback API base URL for when proxy fails

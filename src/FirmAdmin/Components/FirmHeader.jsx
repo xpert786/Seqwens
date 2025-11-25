@@ -9,10 +9,12 @@ import NotificationPanel from "../../ClientOnboarding/components/Notifications/N
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
+import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
 import "../styles/FirmHeader.css";
 
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const navigate = useNavigate();
+    const { logoUrl } = useFirmPortalColors();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -227,7 +229,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                         {/* Logo */}
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img
-                                src={logo}
+                                src={logoUrl || logo}
                                 alt="Logo"
                                 className="firm-topbar-logo"
                                 style={{ maxHeight: "40px", width: "auto" }}

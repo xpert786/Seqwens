@@ -10,7 +10,9 @@ const API_PREFIX = '/taxpayer';
 export const chatService = {
   /**
    * Create a new chat thread
-   * @param {number} targetUserId - The ID of the user to chat with
+   * Option 1: Simple (no parameters) - uses assigned tax preparer automatically
+   * Option 2: With targetUserId - creates thread with specific user
+   * @param {number} [targetUserId] - Optional. The ID of the user to chat with. If not provided, uses assigned tax preparer.
    * @returns {Promise<Object>} Response with thread data
    */
   createThread: async (targetUserId) => {
@@ -20,15 +22,19 @@ export const chatService = {
     }
 
     const API_BASE_URL = getApiBaseUrl();
+    
+    // Prepare request body - empty if no targetUserId provided
+    const requestBody = targetUserId 
+      ? { target_user_id: targetUserId }
+      : {};
+
     const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat-threads/create/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        target_user_id: targetUserId,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -123,6 +129,110 @@ export const chatService = {
         },
       }
     );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Create a new chat for tax preparer with a client
+   * POST /seqwens/api/taxpayer/chat/create/
+   * @param {number} clientUserId - The ID of the client user to chat with
+   * @returns {Promise<Object>} Response with chat data
+   */
+  createTaxPreparerChat: async (clientUserId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    
+    const requestBody = {
+      participant2: clientUserId,
+      chat_type: 'tax_preparer_client'
+    };
+
+    const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat/create/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Mark messages as read in a chat thread
+   * POST /seqwens/api/taxpayer/chat-threads/<thread_id>/mark-read/
+   * @param {number} threadId - The thread ID
+   * @param {number} [messageId] - Optional. Specific message ID to mark as read. If not provided, marks all messages as read.
+   * @returns {Promise<Object>} Response
+   */
+  markThreadMessagesAsRead: async (threadId, messageId = null) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    
+    const requestBody = messageId ? { message_id: messageId } : {};
+
+    const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat-threads/${threadId}/mark-read/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Mark messages as read in a chat
+   * POST /seqwens/api/taxpayer/chat/<chat_id>/mark-read/
+   * @param {number} chatId - The chat ID
+   * @param {number} [messageId] - Optional. Specific message ID to mark as read. If not provided, marks all messages as read.
+   * @returns {Promise<Object>} Response
+   */
+  markChatMessagesAsRead: async (chatId, messageId = null) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    
+    const requestBody = messageId ? { message_id: messageId } : {};
+
+    const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat/${chatId}/mark-read/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

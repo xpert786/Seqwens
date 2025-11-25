@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000/seqwens',
+        target: 'http://168.231.121.7/seqwens',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path, // Keep /api in the path

@@ -18,7 +18,8 @@ export const useChatWebSocket = (threadId, enabled = true) => {
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
-  const reconnectDelay = 3000; // 3 seconds
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s (max 30s)
+  const getReconnectDelay = (attempt) => Math.min(1000 * Math.pow(2, attempt), 30000);
 
   // Get WebSocket URL
   const getWebSocketUrl = useCallback(() => {
@@ -45,7 +46,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
     } catch (error) {
       console.error('Error constructing WebSocket URL:', error);
       // Fallback to default localhost
-      return `ws://localhost:8000/ws/chat-thread/${threadId}/?token=${token}`;
+      return `ws://168.231.121.7/ws/chat-thread/${threadId}/?token=${token}`;
     }
   }, [threadId]);
 
@@ -105,21 +106,44 @@ export const useChatWebSocket = (threadId, enabled = true) => {
               break;
 
             case 'typing':
-              // Typing indicator
+              // Typing indicator (matching guide format)
               if (data.user_id !== undefined) {
-                const { user_id, is_typing } = data;
+                const { user_id, user_name, is_typing } = data;
                 setTypingUsers((prev) => {
                   if (is_typing) {
                     // Add user if not already in the array
-                    if (!prev.includes(user_id)) {
-                      return [...prev, user_id];
+                    const exists = prev.find(u => u.id === user_id);
+                    if (!exists) {
+                      return [...prev, { id: user_id, name: user_name || 'User' }];
                     }
                     return prev;
                   } else {
                     // Remove user from array
-                    return prev.filter(id => id !== user_id);
+                    return prev.filter(u => u.id !== user_id);
                   }
                 });
+              }
+              break;
+
+            case 'message_read':
+              // Message marked as read (matching guide format)
+              if (data.message_id) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === data.message_id
+                      ? { ...msg, is_read: true, read_at: data.read_at }
+                      : msg
+                  )
+                );
+              }
+              break;
+
+            case 'connection_status':
+              // Connection status message (matching guide format)
+              console.log('Connection status:', data.status, 'Thread ID:', data.thread_id);
+              if (data.status === 'connected') {
+                setIsConnected(true);
+                setError(null);
               }
               break;
 
@@ -147,14 +171,15 @@ export const useChatWebSocket = (threadId, enabled = true) => {
         console.log('WebSocket disconnected:', event.code, event.reason);
         setIsConnected(false);
 
-        // Attempt to reconnect if not a normal closure
+        // Attempt to reconnect if not a normal closure (with exponential backoff)
         if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current += 1;
-          console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
+          const delay = getReconnectDelay(reconnectAttemptsRef.current);
+          console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${delay}ms...`);
 
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
-          }, reconnectDelay);
+          }, delay);
         } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
           setError('Failed to connect. Please refresh the page.');
         }
@@ -182,27 +207,77 @@ export const useChatWebSocket = (threadId, enabled = true) => {
     reconnectAttemptsRef.current = 0;
   }, []);
 
-  // Send message via WebSocket
-  const sendMessage = useCallback((content, isInternal = false) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('WebSocket is not connected');
-      return false;
-    }
-
+  // Fallback: Send message via REST API
+  const sendMessageViaAPI = useCallback(async (threadId, content, isInternal = false) => {
     try {
-      const message = {
-        type: 'send_message',
-        content: content.trim(),
-        is_internal: isInternal,
-      };
+      const token = getAccessToken();
+      const apiBaseUrl = getApiBaseUrl();
+      
+      const response = await fetch(
+        `${apiBaseUrl}/taxpayer/chat-threads/${threadId}/send_message/`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ 
+            content: content.trim(),
+            is_internal: isInternal 
+          })
+        }
+      );
 
-      wsRef.current.send(JSON.stringify(message));
-      return true;
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Add the sent message to local state
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === result.data.id);
+            if (exists) return prev;
+            return [...prev, result.data];
+          });
+          return true;
+        }
+      }
+      return false;
     } catch (err) {
-      console.error('Error sending message via WebSocket:', err);
+      console.error('Error sending message via API:', err);
+      setError('Failed to send message');
       return false;
     }
   }, []);
+
+  // Send message via WebSocket (with REST API fallback)
+  const sendMessage = useCallback((content, isInternal = false) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      try {
+        const message = {
+          type: 'send_message',
+          content: content.trim(),
+          is_internal: isInternal,
+        };
+
+        wsRef.current.send(JSON.stringify(message));
+        return true;
+      } catch (err) {
+        console.error('Error sending message via WebSocket:', err);
+        // Fallback to REST API
+        if (threadId) {
+          sendMessageViaAPI(threadId, content, isInternal);
+        }
+        return false;
+      }
+    } else {
+      // WebSocket not connected, use REST API fallback
+      console.log('WebSocket not connected, using REST API fallback');
+      if (threadId) {
+        sendMessageViaAPI(threadId, content, isInternal);
+        return true;
+      }
+      return false;
+    }
+  }, [threadId, sendMessageViaAPI]);
 
   // Send typing indicator
   const sendTyping = useCallback((isTyping) => {
@@ -225,43 +300,73 @@ export const useChatWebSocket = (threadId, enabled = true) => {
   }, []);
 
   // Mark specific message as read
-  const markAsRead = useCallback((messageId) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      return false;
+  const markAsRead = useCallback(async (messageId) => {
+    // Try WebSocket first if available
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      try {
+        const message = {
+          type: 'mark_read',
+          message_id: messageId,
+        };
+        wsRef.current.send(JSON.stringify(message));
+        return true;
+      } catch (err) {
+        console.error('Error sending read receipt via WebSocket:', err);
+        // Fall through to HTTP fallback
+      }
     }
 
-    try {
-      const message = {
-        type: 'mark_read',
-        message_id: messageId,
-      };
-
-      wsRef.current.send(JSON.stringify(message));
-      return true;
-    } catch (err) {
-      console.error('Error sending read receipt:', err);
-      return false;
+    // HTTP fallback when WebSocket is not available
+    if (threadId) {
+      try {
+        const { chatService } = await import('./chatService');
+        await chatService.markThreadMessagesAsRead(threadId, messageId);
+        return true;
+      } catch (err) {
+        console.error('Error marking message as read via HTTP:', err);
+        return false;
+      }
     }
-  }, []);
+
+    return false;
+  }, [threadId]);
 
   // Mark all messages as read
-  const markAllAsRead = useCallback(() => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      return false;
+  const markAllAsRead = useCallback(async () => {
+    // Try WebSocket first if available
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      try {
+        const message = {
+          type: 'mark_read',
+          // Mark all messages (no specific message_id)
+        };
+        wsRef.current.send(JSON.stringify(message));
+        
+        // Optimistically update local state
+        setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })));
+        return true;
+      } catch (err) {
+        console.error('Error marking all messages as read via WebSocket:', err);
+        // Fall through to HTTP fallback
+      }
     }
 
-    try {
-      const message = {
-        type: 'mark_read',
-      };
-
-      wsRef.current.send(JSON.stringify(message));
-      return true;
-    } catch (err) {
-      console.error('Error marking all messages as read:', err);
-      return false;
+    // HTTP fallback when WebSocket is not available
+    if (threadId) {
+      try {
+        const { chatService } = await import('./chatService');
+        await chatService.markThreadMessagesAsRead(threadId);
+        // Optimistically update local state
+        setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })));
+        return true;
+      } catch (err) {
+        console.error('Error marking all messages as read via HTTP:', err);
+        return false;
+      }
     }
-  }, []);
+
+    return false;
+  }, [threadId]);
 
   // Connect when threadId changes
   useEffect(() => {

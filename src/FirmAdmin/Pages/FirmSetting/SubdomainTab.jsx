@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { useFirmPortalColors } from '../../Context/FirmPortalColorsContext';
 import { toast } from 'react-toastify';
 
 export default function SubdomainTab() {
+  const { refreshColors } = useFirmPortalColors();
   const [formData, setFormData] = useState({
     subdomain: '',
     portal_enabled: false,
     portal_title: '',
     portal_description: '',
-    primary_color: '#1a73e8',
-    secondary_color: '#34a853'
+    primary_color: '#32B582',
+    secondary_color: '#F56D2D'
   });
   
   const [portalUrl, setPortalUrl] = useState('');
@@ -21,6 +23,8 @@ export default function SubdomainTab() {
   const [faviconFile, setFaviconFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingColors, setSavingColors] = useState(false);
+  const [savingAssets, setSavingAssets] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState('');
   const [availabilityStatus, setAvailabilityStatus] = useState(null);
@@ -156,6 +160,86 @@ export default function SubdomainTab() {
     }
   };
 
+  // Handle apply colors only
+  const handleApplyColors = async () => {
+    try {
+      setSavingColors(true);
+      setError('');
+
+      const colorData = {
+        primary_color: formData.primary_color,
+        secondary_color: formData.secondary_color
+      };
+
+      const response = await firmAdminSettingsAPI.updateSubdomainSettings(colorData, {});
+      
+      if (response.success && response.data) {
+        toast.success('Portal colors updated successfully');
+        
+        // Refresh portal colors to apply new colors immediately
+        refreshColors();
+      } else {
+        throw new Error(response.message || 'Failed to update portal colors');
+      }
+    } catch (err) {
+      console.error('Error updating portal colors:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to update portal colors');
+      toast.error(errorMsg || 'Failed to update portal colors');
+    } finally {
+      setSavingColors(false);
+    }
+  };
+
+  // Handle apply assets only
+  const handleApplyAssets = async () => {
+    try {
+      setSavingAssets(true);
+      setError('');
+
+      // Check if there are files to upload
+      if (!logoFile && !faviconFile) {
+        toast.warning('Please select a logo or favicon to upload');
+        setSavingAssets(false);
+        return;
+      }
+
+      const files = {};
+      if (logoFile) files.logo = logoFile;
+      if (faviconFile) files.favicon = faviconFile;
+
+      // Send empty data object, only files
+      const response = await firmAdminSettingsAPI.updateSubdomainSettings({}, files);
+      
+      if (response.success && response.data) {
+        toast.success('Portal assets updated successfully');
+        
+        // Update previews if new URLs are returned
+        if (response.data.logo_url) {
+          setLogoUrl(response.data.logo_url);
+          setLogoPreview(response.data.logo_url);
+        }
+        if (response.data.favicon_url) {
+          setFaviconUrl(response.data.favicon_url);
+          setFaviconPreview(response.data.favicon_url);
+        }
+        
+        // Clear file selections after successful upload
+        setLogoFile(null);
+        setFaviconFile(null);
+      } else {
+        throw new Error(response.message || 'Failed to update portal assets');
+      }
+    } catch (err) {
+      console.error('Error updating portal assets:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to update portal assets');
+      toast.error(errorMsg || 'Failed to update portal assets');
+    } finally {
+      setSavingAssets(false);
+    }
+  };
+
   // Handle save
   const handleSave = async () => {
     try {
@@ -198,6 +282,9 @@ export default function SubdomainTab() {
         // Clear file selections after successful upload
         setLogoFile(null);
         setFaviconFile(null);
+        
+        // Refresh portal colors to apply new colors immediately
+        refreshColors();
       } else {
         throw new Error(response.message || 'Failed to update subdomain settings');
       }
@@ -396,6 +483,29 @@ export default function SubdomainTab() {
               </div>
             </div>
           </div>
+
+          {/* Apply Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleApplyColors}
+              disabled={savingColors}
+              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {savingColors ? (
+                <>
+                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Applying...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Apply</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -498,6 +608,29 @@ export default function SubdomainTab() {
                 <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">PNG, ICO up to 500KB</p>
               </div>
             </div>
+          </div>
+
+          {/* Apply Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleApplyAssets}
+              disabled={savingAssets || (!logoFile && !faviconFile)}
+              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {savingAssets ? (
+                <>
+                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Applying...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Apply</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

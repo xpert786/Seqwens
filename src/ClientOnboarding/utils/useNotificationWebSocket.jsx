@@ -50,7 +50,7 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
         // For production, use the same host with port 8000
         const isDevelopment = import.meta.env.DEV;
         if (isDevelopment && host.includes('localhost')) {
-          wsServerUrl = 'ws://localhost:8000';
+          wsServerUrl = 'ws://168.231.121.7/';
         } else {
           // Use the same host with port 8000 for WebSocket
           wsServerUrl = `ws://${host}:8000`;
@@ -58,7 +58,7 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
       } catch (urlError) {
         // If URL parsing fails, use default
         console.warn('Failed to parse API base URL, using default WebSocket URL');
-        wsServerUrl = 'ws://localhost:8000';
+        wsServerUrl = 'ws://168.231.121.7/';
       }
       
       const wsUrl = `${wsServerUrl}/ws/notifications/?token=${token}`;
