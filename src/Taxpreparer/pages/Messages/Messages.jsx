@@ -6,6 +6,8 @@ import { ConverIcon, JdIcon, FileIcon, PlusIcon, PLusIcon } from "../../../Clien
 import taxheaderlogo from "../../../assets/logo.png";
 import { taxPreparerThreadsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { useThreadWebSocket } from "../../../ClientOnboarding/utils/useThreadWebSocket";
+import { chatService } from "../../../ClientOnboarding/utils/chatService";
+import { useChatWebSocket } from "../../../ClientOnboarding/utils/useChatWebSocket";
 import { toast } from "react-toastify";
 
 export default function MessagePage() {
@@ -67,7 +69,7 @@ export default function MessagePage() {
     cursor: isSendButtonActive ? "pointer" : "not-allowed"
   };
 
-  // WebSocket hook for real-time messaging
+  // WebSocket hook for real-time messaging (using new chat-threads API)
   const {
     isConnected: wsConnected,
     messages: wsMessages,
@@ -77,7 +79,7 @@ export default function MessagePage() {
     sendTyping: wsSendTyping,
     markAsRead: wsMarkAsRead,
     markAllAsRead: wsMarkAllAsRead,
-  } = useThreadWebSocket(activeConversationId, true);
+  } = useChatWebSocket(activeConversationId, true);
 
   const filterOptions = [
     "All Messages",
@@ -96,10 +98,22 @@ export default function MessagePage() {
         }
         setThreadsError(null);
 
-        const response = await taxPreparerThreadsAPI.getThreads();
+        // Try new chat-threads API first, fallback to old threads API
+        let response;
+        try {
+          response = await chatService.getThreads();
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+          response = await taxPreparerThreadsAPI.getThreads();
+        }
 
-        if (response.success && response.data && response.data.threads) {
-          const transformedThreads = response.data.threads.map(thread => {
+        // Handle new API response format (data is array directly)
+        const threadsArray = response.success && response.data 
+          ? (Array.isArray(response.data) ? response.data : response.data.threads || [])
+          : [];
+
+        if (threadsArray.length > 0) {
+          const transformedThreads = threadsArray.map(thread => {
             const lastTimestamp =
               thread.last_message_at ||
               thread.updated_at ||
@@ -134,30 +148,33 @@ export default function MessagePage() {
               });
             }
 
-            const clientName = thread.client_name || "Unknown Client";
-            const lastMessageText = thread.last_message_preview
-              ? thread.last_message_preview.content || "No message"
-              : "No message";
+            // Handle both old and new API response formats
+            const clientName = thread.client?.name || thread.client_name || "Unknown Client";
+            const lastMessageText = thread.last_message?.content
+              ? thread.last_message.content
+              : (thread.last_message_preview
+                ? thread.last_message_preview.content || "No message"
+                : "No message");
             const truncatedMessage =
               lastMessageText.length > 50 ? lastMessageText.substring(0, 50) + "..." : lastMessageText;
 
             return {
-              id: thread.id,
+              id: thread.id || thread.thread_id,
               name: clientName,
               lastMessage: truncatedMessage,
               time: formattedTime,
               lastMessageAt: lastTimestamp,
-              status: thread.status,
+              status: thread.status || 'active',
               unreadCount: thread.unread_count || 0,
               createdAt: thread.created_at,
               subject: thread.subject,
-              assignedStaff: thread.assigned_staff,
-              assignedStaffNames: thread.assigned_staff_names,
-              clientName: thread.client_name,
-              clientEmail: thread.client_email,
-              clientId: thread.client || thread.client_id || null,
+              assignedStaff: thread.assigned_staff || [],
+              assignedStaffNames: thread.assigned_staff?.map(s => s.name) || thread.assigned_staff_names || [],
+              clientName: thread.client?.name || thread.client_name,
+              clientEmail: thread.client?.email || thread.client_email,
+              clientId: thread.client?.id || thread.client || thread.client_id || null,
               firmName: thread.firm_name,
-              lastMessagePreview: thread.last_message_preview,
+              lastMessagePreview: thread.last_message || thread.last_message_preview,
               messages: [],
             };
           });
@@ -272,32 +289,53 @@ export default function MessagePage() {
           setLoadingMessages(true);
         }
 
-        const response = await taxPreparerThreadsAPI.getThreadDetails(activeConversationId);
+        // Try new chat-threads API first, fallback to old threads API
+        let response;
+        try {
+          response = await chatService.getMessages(activeConversationId);
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+          response = await taxPreparerThreadsAPI.getThreadDetails(activeConversationId);
+        }
 
+        // Handle both new and old API response formats
+        let messagesArray = [];
         if (response && response.success === true && response.data) {
-          const messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
+          if (Array.isArray(response.data.messages)) {
+            messagesArray = response.data.messages;
+          } else if (Array.isArray(response.data)) {
+            messagesArray = response.data;
+          } else if (response.data.messages) {
+            messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
+          }
+        }
 
-          if (messagesArray.length > 0) {
-            const transformedMessages = messagesArray.map(msg => {
-              const isClient = msg.sender_role === "Client" || msg.sender_role === "client";
-              const messageType = isClient ? "admin" : "user";
+        if (messagesArray.length > 0) {
+          const transformedMessages = messagesArray.map(msg => {
+            // Handle both new and old API formats
+            const sender = msg.sender || {};
+            const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
+            const senderRole = sender.role || msg.sender_role || '';
+            
+            const isClient = senderRole === "Client" || senderRole === "client";
+            const messageType = isClient ? "admin" : "user";
 
-              return {
-                id: msg.id,
-                type: messageType,
-                text: msg.content || "",
-                date: msg.created_at,
-                sender: msg.sender_name || "",
-                senderRole: msg.sender_role || "",
-                isRead: msg.is_read || false,
-                isEdited: msg.is_edited || false,
-                messageType: msg.message_type || "text",
-                isInternal: msg.is_internal || false,
-                attachment: msg.attachment || null,
-                attachmentName: msg.attachment_name || null,
-                attachmentSize: msg.attachment_size_display || null,
-              };
-            });
+            return {
+              id: msg.id,
+              type: messageType,
+              text: msg.content || "",
+              date: msg.created_at,
+              sender: senderName,
+              senderRole: senderRole,
+              isRead: msg.is_read || false,
+              isEdited: msg.is_edited || false,
+              messageType: msg.message_type || "text",
+              isInternal: msg.is_internal || false,
+              attachment: msg.attachment || null,
+              attachmentName: msg.attachment_name || null,
+              attachmentSize: msg.attachment_size_display || null,
+            };
+          });
 
             setActiveChatMessages(prev => {
               const prevIds = new Set(prev.map(m => m.id));
@@ -328,7 +366,6 @@ export default function MessagePage() {
           } else {
             setActiveChatMessages([]);
           }
-        }
       } catch (err) {
         console.error("Error fetching messages:", err);
       } finally {
@@ -362,8 +399,13 @@ export default function MessagePage() {
 
       if (relevantMessages.length > 0) {
         const transformedMessages = relevantMessages.map(msg => {
+          // Handle both new and old API formats
+          const sender = msg.sender || {};
+          const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
+          const senderRole = sender.role || msg.sender_role || '';
+          
           // Tax preparer's sent messages appear on RIGHT, client's received messages appear on LEFT
-          const isClient = msg.sender_role === "Client" || msg.sender_role === "client";
+          const isClient = senderRole === "Client" || senderRole === "client";
           let messageType = isClient ? "admin" : "user";
 
           return {
@@ -371,8 +413,8 @@ export default function MessagePage() {
             type: messageType,
             text: msg.content || '',
             date: msg.created_at,
-            sender: msg.sender_name || '',
-            senderRole: msg.sender_role || '',
+            sender: senderName,
+            senderRole: senderRole,
             isRead: msg.is_read || false,
             isEdited: msg.is_edited || false,
             messageType: msg.message_type || 'text',

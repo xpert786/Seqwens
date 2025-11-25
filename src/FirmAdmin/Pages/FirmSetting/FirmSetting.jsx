@@ -6,11 +6,12 @@ import BusinessTab from './BusinessTab';
 import ServicesTab from './ServicesTab';
 import IntegrationsTab from './IntegrationsTab';
 import AdvancedTab from './AdvancedTab';
+import SubdomainTab from './SubdomainTab';
 
 export default function FirmSetting() {
   const [activeTab, setActiveTab] = useState('General');
 
-  const tabs = ['General', 'Branding', 'Business', 'Services', 'Integrations', 'Advanced'];
+  const tabs = ['General', 'Branding', 'Business', 'Services', 'Integrations', 'Advanced', 'Subdomain'];
 
   return (
     <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
@@ -53,6 +54,7 @@ export default function FirmSetting() {
         {activeTab === 'Services' && <ServicesTab />}
         {activeTab === 'Integrations' && <IntegrationsTab />}
         {activeTab === 'Advanced' && <AdvancedTab />}
+        {activeTab === 'Subdomain' && <SubdomainTab />}
       </div>
     </div>
   );

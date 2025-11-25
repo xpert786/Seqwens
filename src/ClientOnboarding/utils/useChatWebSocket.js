@@ -3,12 +3,13 @@ import { getAccessToken } from './userUtils';
 import { getApiBaseUrl } from './corsConfig';
 
 /**
- * Custom hook for WebSocket connection to thread messaging
+ * Custom hook for WebSocket connection to chat-thread messaging
+ * Uses the new WebSocket endpoint: /ws/chat-thread/<thread_id>/
  * @param {number|null} threadId - The thread ID to connect to
  * @param {boolean} enabled - Whether to enable the WebSocket connection
  * @returns {Object} WebSocket state and methods
  */
-export const useThreadWebSocket = (threadId, enabled = true) => {
+export const useChatWebSocket = (threadId, enabled = true) => {
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -19,38 +20,32 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
   const maxReconnectAttempts = 5;
   const reconnectDelay = 3000; // 3 seconds
 
-  // Get WebSocket URL from API config
-  const getWebSocketUrl = useCallback(async () => {
-    try {
-      const token = getAccessToken();
-      const apiBaseUrl = getApiBaseUrl();
-      
-      // Get WebSocket config from API
-      const response = await fetch(`${apiBaseUrl}/taxpayer/threads/websocket-config/`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+  // Get WebSocket URL
+  const getWebSocketUrl = useCallback(() => {
+    if (!threadId) return null;
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          const serverUrl = data.data.websocket_server_url || 'ws://localhost:8000';
-          return `${serverUrl}/ws/threads/${threadId}/?token=${token}`;
-        }
-      }
+    const token = getAccessToken();
+    if (!token) {
+      console.error('No authentication token found');
+      return null;
+    }
+
+    // Get base URL - use environment variable or default
+    const apiBaseUrl = getApiBaseUrl();
+    // Extract host from API URL (remove /seqwens/api path)
+    try {
+      const url = new URL(apiBaseUrl);
+      const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+      // Remove /seqwens/api from the path, keep just the host
+      const wsHost = `${wsProtocol}//${url.host}`;
       
-      // Fallback to default URL (matching documentation format)
-      const defaultServerUrl = 'ws://localhost:8000';
-      return `${defaultServerUrl}/ws/threads/${threadId}/?token=${token}`;
-    } catch (err) {
-      console.error('Error getting WebSocket config:', err);
-      // Fallback to default URL (matching documentation format)
-      const token = getAccessToken();
-      const defaultServerUrl = 'ws://localhost:8000';
-      return `${defaultServerUrl}/ws/threads/${threadId}/?token=${token}`;
+      // Use the new WebSocket endpoint format
+      // WebSocket endpoint should be at the root, not under /seqwens/api
+      return `${wsHost}/ws/chat-thread/${threadId}/?token=${token}`;
+    } catch (error) {
+      console.error('Error constructing WebSocket URL:', error);
+      // Fallback to default localhost
+      return `ws://localhost:8000/ws/chat-thread/${threadId}/?token=${token}`;
     }
   }, [threadId]);
 
@@ -66,13 +61,18 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
         wsRef.current.close();
       }
 
-      const wsUrl = await getWebSocketUrl();
+      const wsUrl = getWebSocketUrl();
+      if (!wsUrl) {
+        setError('Unable to construct WebSocket URL');
+        return;
+      }
+
       console.log('Connecting to WebSocket:', wsUrl);
 
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('✅ WebSocket connected to thread:', threadId);
+        console.log('✅ WebSocket connected to chat thread:', threadId);
         setIsConnected(true);
         setError(null);
         reconnectAttemptsRef.current = 0;
@@ -87,13 +87,12 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
             case 'connection_established':
               // Connection established message
               console.log('✅ WebSocket connection confirmed to thread:', data.thread_id);
-              console.log('Connected as user:', data.user_name, `(${data.user_id})`);
               break;
 
-            case 'thread_message':
-              // New message received (matching documentation format)
-              if (data.message) {
-                const message = data.message;
+            case 'message':
+              // New message received
+              if (data.data) {
+                const message = data.data;
                 setMessages((prev) => {
                   // Check if message already exists
                   const exists = prev.some((m) => m.id === message.id);
@@ -106,44 +105,26 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
               break;
 
             case 'typing':
-              // Typing indicator (matching documentation format)
-              if (data.user_id && data.user_name !== undefined) {
-                const { user_id, user_name, is_typing } = data;
+              // Typing indicator
+              if (data.user_id !== undefined) {
+                const { user_id, is_typing } = data;
                 setTypingUsers((prev) => {
                   if (is_typing) {
-                    // Add user to typing list if not already there
-                    if (!prev.find((u) => u.id === user_id)) {
-                      return [...prev, { id: user_id, name: user_name }];
+                    // Add user if not already in the array
+                    if (!prev.includes(user_id)) {
+                      return [...prev, user_id];
                     }
                     return prev;
                   } else {
-                    // Remove user from typing list
-                    return prev.filter((u) => u.id !== user_id);
+                    // Remove user from array
+                    return prev.filter(id => id !== user_id);
                   }
                 });
               }
               break;
 
-            case 'messages_read':
-              // All messages marked as read (matching documentation format)
-              setMessages((prev) =>
-                prev.map((msg) => ({ ...msg, is_read: true }))
-              );
-              break;
-
-            case 'message_read':
-              // Specific message marked as read (matching documentation format)
-              if (data.message_id) {
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === data.message_id ? { ...msg, is_read: true } : msg
-                  )
-                );
-              }
-              break;
-
             case 'error':
-              // Error message (matching documentation format)
+              // Error message
               console.error('WebSocket error:', data.message);
               setError(data.message);
               break;
@@ -170,7 +151,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
         if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current += 1;
           console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
-          
+
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, reconnectDelay);
@@ -201,7 +182,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
     reconnectAttemptsRef.current = 0;
   }, []);
 
-  // Send message via WebSocket (matching documentation format)
+  // Send message via WebSocket
   const sendMessage = useCallback((content, isInternal = false) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       console.error('WebSocket is not connected');
@@ -212,7 +193,6 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
       const message = {
         type: 'send_message',
         content: content.trim(),
-        message_type: 'text',
         is_internal: isInternal,
       };
 
@@ -224,7 +204,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
     }
   }, []);
 
-  // Send typing indicator (matching documentation format)
+  // Send typing indicator
   const sendTyping = useCallback((isTyping) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       return false;
@@ -244,7 +224,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
     }
   }, []);
 
-  // Mark specific message as read (matching documentation format)
+  // Mark specific message as read
   const markAsRead = useCallback((messageId) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       return false;
@@ -264,7 +244,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
     }
   }, []);
 
-  // Mark all messages as read (matching documentation format)
+  // Mark all messages as read
   const markAllAsRead = useCallback(() => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       return false;
@@ -272,7 +252,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
 
     try {
       const message = {
-        type: 'read_messages',
+        type: 'mark_read',
       };
 
       wsRef.current.send(JSON.stringify(message));

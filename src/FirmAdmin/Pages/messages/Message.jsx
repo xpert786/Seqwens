@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { firmAdminMessagingAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { chatService } from '../../../ClientOnboarding/utils/chatService';
+import { useChatWebSocket } from '../../../ClientOnboarding/utils/useChatWebSocket';
 import { toast } from 'react-toastify';
 
 const Messages = () => {
@@ -38,6 +40,18 @@ const Messages = () => {
   const fileInputRef = useRef(null);
   const threadFileInputRef = useRef(null);
 
+  // WebSocket hook for real-time messaging (using new chat-threads API)
+  const {
+    isConnected: wsConnected,
+    messages: wsMessages,
+    typingUsers,
+    error: wsError,
+    sendMessage: wsSendMessage,
+    sendTyping: wsSendTyping,
+    markAsRead: wsMarkAsRead,
+    markAllAsRead: wsMarkAllAsRead,
+  } = useChatWebSocket(selectedThreadId, true);
+
   // Fetch conversations
   useEffect(() => {
     const fetchConversations = async () => {
@@ -51,7 +65,35 @@ const Messages = () => {
           params.type = messageFilter === 'client' ? 'client' : 'staff';
         }
         
-        const response = await firmAdminMessagingAPI.listConversations(params);
+        // Try new chat-threads API first, fallback to old firm admin API
+        let response;
+        try {
+          response = await chatService.getThreads();
+          // Transform new API response to match expected format
+          if (response.success && response.data) {
+            const threadsArray = Array.isArray(response.data) ? response.data : [];
+            setConversations(threadsArray.map(thread => ({
+              id: thread.id || thread.thread_id,
+              subject: thread.subject,
+              client_name: thread.client?.name || thread.client_name,
+              client_email: thread.client?.email || thread.client_email,
+              assigned_staff: thread.assigned_staff || [],
+              assigned_staff_names: thread.assigned_staff?.map(s => s.name) || [],
+              unread_count: thread.unread_count || 0,
+              last_message_at: thread.last_message?.created_at || thread.updated_at || thread.created_at,
+              last_message_preview: thread.last_message || null,
+              is_staff_conversation: !thread.client,
+              created_at: thread.created_at,
+              updated_at: thread.updated_at,
+            })));
+            return;
+          }
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+        }
+        
+        // Fallback to old API
+        response = await firmAdminMessagingAPI.listConversations(params);
         
         if (response.success && response.data) {
           setConversations(response.data.conversations || []);
@@ -81,7 +123,33 @@ const Messages = () => {
 
       try {
         setMessagesLoading(true);
-        const response = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
+        // Try new chat-threads API first, fallback to old firm admin API
+        let response;
+        try {
+          response = await chatService.getMessages(selectedThreadId);
+          // Transform new API response to match expected format
+          if (response.success && response.data) {
+            const messagesArray = Array.isArray(response.data.messages) 
+              ? response.data.messages 
+              : (Array.isArray(response.data) ? response.data : []);
+            setThreadMessages(messagesArray.map(msg => ({
+              id: msg.id,
+              content: msg.content,
+              sender_name: msg.sender?.name || msg.sender_name,
+              sender_role: msg.sender?.role || msg.sender_role,
+              created_at: msg.created_at,
+              is_read: msg.is_read || false,
+              attachment: msg.attachment || null,
+              attachment_name: msg.attachment_name || null,
+            })));
+            return;
+          }
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+        }
+        
+        // Fallback to old API
+        response = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
         
         if (response.success && response.data) {
           setThreadMessages(response.data.messages || []);
@@ -100,6 +168,47 @@ const Messages = () => {
 
     fetchThreadDetails();
   }, [selectedThreadId]);
+
+  // Sync WebSocket messages with local state
+  useEffect(() => {
+    if (wsMessages && wsMessages.length > 0 && selectedThreadId) {
+      const relevantMessages = wsMessages.filter(msg => {
+        return !msg.thread_id || msg.thread_id === selectedThreadId;
+      });
+
+      if (relevantMessages.length > 0) {
+        const transformedMessages = relevantMessages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender_name: msg.sender?.name || msg.sender_name,
+          sender_role: msg.sender?.role || msg.sender_role,
+          created_at: msg.created_at,
+          is_read: msg.is_read || false,
+          attachment: msg.attachment || null,
+          attachment_name: msg.attachment_name || null,
+        }));
+
+        setThreadMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+          
+          if (newMessages.length > 0) {
+            return [...prev, ...newMessages].sort((a, b) => 
+              new Date(a.created_at) - new Date(b.created_at)
+            );
+          }
+          return prev;
+        });
+
+        // Mark new messages as read
+        transformedMessages.forEach(msg => {
+          if (!msg.is_read) {
+            wsMarkAsRead(msg.id);
+          }
+        });
+      }
+    }
+  }, [wsMessages, selectedThreadId, wsMarkAsRead]);
 
   // Fetch staff members
   const fetchStaffMembers = async () => {
@@ -306,18 +415,32 @@ const Messages = () => {
       return;
     }
 
+    const messageText = threadMessageInput.trim();
+    setThreadMessageInput(''); // Clear input immediately
+
     try {
       setSendingThreadMessage(true);
 
+      // Try WebSocket first if connected
+      if (wsConnected) {
+        const sent = wsSendMessage(messageText, false);
+        if (sent) {
+          console.log('✅ Message sent via WebSocket');
+          setThreadAttachment(null);
+          // Message will come back via WebSocket
+          return;
+        }
+      }
+
+      // Fallback to REST API
       const messageData = {
-        message: threadMessageInput.trim()
+        message: messageText.trim()
       };
 
       const response = await firmAdminMessagingAPI.sendMessage(selectedThreadId, messageData, threadAttachment);
 
       if (response.success) {
         toast.success('Message sent successfully');
-        setThreadMessageInput('');
         setThreadAttachment(null);
         // Refresh thread messages
         const threadResponse = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
@@ -336,6 +459,8 @@ const Messages = () => {
       console.error('Error sending thread message:', err);
       const errorMsg = handleAPIError(err);
       toast.error(errorMsg || 'Failed to send message');
+      // Restore message on error
+      setThreadMessageInput(messageText);
     } finally {
       setSendingThreadMessage(false);
     }

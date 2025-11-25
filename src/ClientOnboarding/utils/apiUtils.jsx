@@ -183,6 +183,22 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         } else {
           errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
         }
+
+        // Handle backend Python errors (like NameError, ImportError, etc.)
+        if (errorMessage && typeof errorMessage === 'string') {
+          // Check for Python NameError patterns (including wrapped error messages)
+          const nameErrorMatch = errorMessage.match(/name ['"]([\w]+)['"] is not defined/i);
+          if (nameErrorMatch) {
+            const missingName = nameErrorMatch[1];
+            errorMessage = `Backend configuration error: Missing import or definition for '${missingName}'. Please contact support.`;
+            console.error(`Backend error detected: ${missingName} is not defined. This is a backend configuration issue that needs to be fixed on the server.`);
+          }
+          // Check for other common Python errors
+          else if (errorMessage.includes("is not defined") || errorMessage.includes("NameError") || errorMessage.includes("ImportError")) {
+            errorMessage = `Backend configuration error detected. Please contact support if this issue persists.`;
+            console.error('Backend Python error detected:', errorMessage);
+          }
+        }
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
       }
@@ -3894,6 +3910,81 @@ export const firmAdminSettingsAPI = {
   // Update firm advanced information
   updateAdvancedInfo: async (advancedData, method = 'POST') => {
     return await apiRequest('/user/firm-admin/settings/advanced/', method, advancedData);
+  },
+
+  // Get subdomain settings
+  getSubdomainSettings: async () => {
+    return await apiRequest('/firm/subdomain/settings/', 'GET');
+  },
+
+  // Check subdomain availability
+  checkSubdomainAvailability: async (subdomain) => {
+    return await apiRequest(`/firm/subdomain/check/?subdomain=${encodeURIComponent(subdomain)}`, 'GET');
+  },
+
+  // Update subdomain settings
+  updateSubdomainSettings: async (subdomainData, files = {}) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const hasFiles = files.logo || files.favicon;
+
+    if (hasFiles) {
+      // Use FormData for multipart/form-data when files are present
+      const formData = new FormData();
+
+      // Add all form fields to FormData
+      Object.keys(subdomainData).forEach(key => {
+        const value = subdomainData[key];
+        if (value !== null && value !== undefined && value !== '') {
+          if (typeof value === 'boolean') {
+            formData.append(key, value ? 'true' : 'false');
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      // Add files
+      if (files.logo) {
+        formData.append('logo', files.logo);
+      }
+      if (files.favicon) {
+        formData.append('favicon', files.favicon);
+      }
+
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/subdomain/settings/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.errors) {
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('; ');
+            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          } else {
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without files
+      return await apiRequest('/firm/subdomain/settings/', 'PATCH', subdomainData);
+    }
   }
 };
 

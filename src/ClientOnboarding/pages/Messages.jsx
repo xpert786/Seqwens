@@ -6,6 +6,8 @@ import { getAccessToken } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
 import { threadsAPI } from "../utils/apiUtils";
 import { useThreadWebSocket } from "../utils/useThreadWebSocket";
+import { chatService } from "../utils/chatService";
+import { useChatWebSocket } from "../utils/useChatWebSocket";
 import { toast } from "react-toastify";
 
 export default function Messages() {
@@ -44,7 +46,7 @@ export default function Messages() {
 
   const API_BASE_URL = getApiBaseUrl();
 
-  // WebSocket hook for real-time messaging
+  // WebSocket hook for real-time messaging (using new chat-threads API)
   const {
     isConnected: wsConnected,
     messages: wsMessages,
@@ -54,7 +56,7 @@ export default function Messages() {
     sendTyping: wsSendTyping,
     markAsRead: wsMarkAsRead,
     markAllAsRead: wsMarkAllAsRead,
-  } = useThreadWebSocket(activeConversationId, true);
+  } = useChatWebSocket(activeConversationId, true);
 
   const formatRelativeTime = (timestamp) => {
     if (!timestamp) return "N/A";
@@ -133,41 +135,57 @@ export default function Messages() {
         }
         setError(null);
 
-        const response = await threadsAPI.getThreads();
+        // Try new chat-threads API first, fallback to old threads API
+        let response;
+        try {
+          response = await chatService.getThreads();
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+          response = await threadsAPI.getThreads();
+        }
 
-        if (response.success && response.data && response.data.threads) {
-          const transformedChats = response.data.threads.map(thread => {
+        // Handle new API response format (data is array directly)
+        const threadsArray = response.success && response.data 
+          ? (Array.isArray(response.data) ? response.data : response.data.threads || [])
+          : [];
+
+        if (threadsArray.length > 0) {
+          const transformedChats = threadsArray.map(thread => {
             const lastTimestamp =
               thread.last_message_at ||
               thread.updated_at ||
               thread.created_at ||
               new Date().toISOString();
 
-            const staffNames =
-              thread.assigned_staff_names && thread.assigned_staff_names.length > 0
+            // Handle both old and new API response formats
+            const staffNames = thread.assigned_staff && thread.assigned_staff.length > 0
+              ? thread.assigned_staff.map(s => s.name || s.email || 'Staff').join(", ")
+              : (thread.assigned_staff_names && thread.assigned_staff_names.length > 0
                 ? thread.assigned_staff_names.join(", ")
-                : "Tax Professional";
+                : "Tax Professional");
 
-            const lastMessageText = thread.last_message_preview
-              ? thread.last_message_preview.content || "No message"
-              : "No message";
+            const lastMessageText = thread.last_message?.content
+              ? thread.last_message.content
+              : (thread.last_message_preview
+                ? thread.last_message_preview.content || "No message"
+                : "No message");
 
             return {
-              id: thread.id,
+              id: thread.id || thread.thread_id,
               name: staffNames,
               lastMessage: lastMessageText,
               time: formatRelativeTime(lastTimestamp),
               lastMessageAt: lastTimestamp,
-              status: thread.status,
+              status: thread.status || 'active',
               unreadCount: thread.unread_count || 0,
               createdAt: thread.created_at,
               subject: thread.subject,
-              assignedStaff: thread.assigned_staff,
-              assignedStaffNames: thread.assigned_staff_names,
-              clientName: thread.client_name,
+              assignedStaff: thread.assigned_staff || [],
+              assignedStaffNames: thread.assigned_staff?.map(s => s.name) || thread.assigned_staff_names || [],
+              clientName: thread.client?.name || thread.client_name,
               firmName: thread.firm_name,
-              clientId: thread.client || thread.client_id || null,
-              lastMessagePreview: thread.last_message_preview,
+              clientId: thread.client?.id || thread.client || thread.client_id || null,
+              lastMessagePreview: thread.last_message || thread.last_message_preview,
               messages: [],
             };
           });
@@ -244,52 +262,73 @@ export default function Messages() {
         }
 
         console.log('Fetching messages for thread:', activeConversationId);
-        const response = await threadsAPI.getThreadDetails(activeConversationId);
+        // Try new chat-threads API first, fallback to old threads API
+        let response;
+        try {
+          response = await chatService.getMessages(activeConversationId);
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+          response = await threadsAPI.getThreadDetails(activeConversationId);
+        }
         console.log('Thread details response:', response);
 
+        // Handle both new and old API response formats
+        let messagesArray = [];
         if (response && response.success === true && response.data) {
-          const messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
-          console.log('Messages array length:', messagesArray.length);
+          if (Array.isArray(response.data.messages)) {
+            messagesArray = response.data.messages;
+          } else if (Array.isArray(response.data)) {
+            messagesArray = response.data;
+          } else if (response.data.messages) {
+            messagesArray = Array.isArray(response.data.messages) ? response.data.messages : [];
+          }
+        }
+        console.log('Messages array length:', messagesArray.length);
 
-          if (messagesArray.length > 0) {
-            // Transform messages to match component structure
-            const transformedMessages = messagesArray.map(msg => {
-              // Determine message type based on sender_role
-              let messageType = "user"; // Default for client messages
-              if (msg.sender_role === "Admin" || msg.sender_role === "Staff" || msg.sender_role === "Accountant" || msg.sender_role === "Bookkeeper" || msg.sender_role === "Assistant") {
-                messageType = "admin";
-              }
+        if (messagesArray.length > 0) {
+          // Transform messages to match component structure
+          const transformedMessages = messagesArray.map(msg => {
+            // Handle both new and old API formats
+            const sender = msg.sender || {};
+            const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
+            const senderRole = sender.role || msg.sender_role || '';
+            
+            // Determine message type based on sender_role
+            let messageType = "user"; // Default for client messages
+            if (senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant") {
+              messageType = "admin";
+            }
 
-              return {
-                id: msg.id,
-                type: messageType,
-                text: msg.content || '',
-                date: msg.created_at,
-                sender: msg.sender_name || '',
-                senderRole: msg.sender_role || '',
-                isRead: msg.is_read || false,
-                isEdited: msg.is_edited || false,
-                messageType: msg.message_type || 'text',
-                attachment: msg.attachment || null,
-                attachmentName: msg.attachment_name || null,
-                attachmentSize: msg.attachment_size_display || null,
-              };
-            });
+            return {
+              id: msg.id,
+              type: messageType,
+              text: msg.content || '',
+              date: msg.created_at,
+              sender: senderName,
+              senderRole: senderRole,
+              isRead: msg.is_read || false,
+              isEdited: msg.is_edited || false,
+              messageType: msg.message_type || 'text',
+              attachment: msg.attachment || null,
+              attachmentName: msg.attachment_name || null,
+              attachmentSize: msg.attachment_size_display || null,
+            };
+          });
 
-            console.log('Transformed messages:', transformedMessages);
+          console.log('Transformed messages:', transformedMessages);
 
-            // Update messages - will merge with existing if polling
-            setActiveChatMessages(prev => {
-              // Check if messages have changed
-              const prevIds = new Set(prev.map(m => m.id));
-              const newIds = new Set(transformedMessages.map(m => m.id));
+          // Update messages - will merge with existing if polling
+          setActiveChatMessages(prev => {
+            // Check if messages have changed
+            const prevIds = new Set(prev.map(m => m.id));
+            const newIds = new Set(transformedMessages.map(m => m.id));
 
-              // If same messages, don't update
-              if (prevIds.size === newIds.size &&
-                [...prevIds].every(id => newIds.has(id)) &&
-                [...newIds].every(id => prevIds.has(id))) {
-                return prev;
-              }
+            // If same messages, don't update
+            if (prevIds.size === newIds.size &&
+              [...prevIds].every(id => newIds.has(id)) &&
+              [...newIds].every(id => prevIds.has(id))) {
+              return prev;
+            }
 
             return transformedMessages;
           });
@@ -327,9 +366,6 @@ export default function Messages() {
               messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
             }
           }, 100);
-          } else {
-            setActiveChatMessages([]);
-          }
         } else {
           setActiveChatMessages([]);
         }
@@ -386,9 +422,14 @@ export default function Messages() {
 
       if (relevantMessages.length > 0) {
         const transformedMessages = relevantMessages.map(msg => {
+          // Handle both new and old API formats
+          const sender = msg.sender || {};
+          const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
+          const senderRole = sender.role || msg.sender_role || '';
+          
           // Determine message type based on sender_role
           let messageType = "user"; // Default for client messages
-          if (msg.sender_role === "Admin" || msg.sender_role === "Staff" || msg.sender_role === "Accountant" || msg.sender_role === "Bookkeeper" || msg.sender_role === "Assistant") {
+          if (senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant") {
             messageType = "admin";
           }
 
@@ -397,8 +438,8 @@ export default function Messages() {
             type: messageType,
             text: msg.content || '',
             date: msg.created_at,
-            sender: msg.sender_name || '',
-            senderRole: msg.sender_role || '',
+            sender: senderName,
+            senderRole: senderRole,
             isRead: msg.is_read || false,
             isEdited: msg.is_edited || false,
             messageType: msg.message_type || 'text',
