@@ -10,7 +10,7 @@ import AddClientModal from "./AddClientModal";
 import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
@@ -182,29 +182,24 @@ export default function ClientManage() {
         setStaffLoading(true);
         setStaffError(null);
 
-        const token = getAccessToken();
-        const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/list/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          }
-        });
+        const result = await firmAdminStaffAPI.getFirmWithTaxPreparers();
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success && result.data && result.data.staff_members) {
-          setStaffMembers(result.data.staff_members);
-          console.log('Staff members loaded:', result.data.staff_members);
+        if (result.success && result.data && Array.isArray(result.data)) {
+          // Transform the data to match the expected format
+          const transformedData = result.data.map(item => ({
+            id: item.id,
+            name: item.display_name || (item.type === 'firm' ? item.name : `${item.first_name || ''} ${item.last_name || ''}`.trim()),
+            email: item.email || '',
+            type: item.type, // 'firm' or 'tax_preparer'
+            ...item // Include all other fields
+          }));
+          setStaffMembers(transformedData);
+          console.log('Firm and tax preparers loaded:', transformedData);
         } else {
           setStaffMembers([]);
         }
       } catch (err) {
-        console.error('Error fetching staff members:', err);
+        console.error('Error fetching firm and tax preparers:', err);
         setStaffError('Failed to load staff members');
         setStaffMembers([]);
       } finally {
@@ -1505,7 +1500,7 @@ export default function ClientManage() {
                     <option value="">Select a tax preparer</option>
                     {staffMembers.map((staff) => (
                       <option key={staff.id} value={staff.id}>
-                        {staff.name} {staff.email ? `(${staff.email})` : ''}
+                        {staff.name} {staff.email ? `(${staff.email})` : ''} {staff.type === 'firm' ? '- Firm' : ''}
                       </option>
                     ))}
                   </select>
