@@ -19,8 +19,14 @@ export const corsConfig = {
 
 // Alternative API base URL for development (using proxy)
 export const getApiBaseUrl = () => {
+  // Always use the full URL with IP address
   return 'http://168.231.121.7/seqwens/api';
-
+  
+  // Uncomment below to use proxy in development (if needed)
+  // if (import.meta.env.DEV) {
+  //   return '/api';
+  // }
+  // return 'http://168.231.121.7/seqwens/api';
 };
 
 // Fallback API base URL for when proxy fails

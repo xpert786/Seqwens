@@ -14,7 +14,7 @@ export default defineConfig({
         target: 'http://168.231.121.7/seqwens',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path, // Keep /api in the path since target includes /seqwens
+        rewrite: (path) => path, // Keep /api in the path
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
             console.log('proxy error', err);

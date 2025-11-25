@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from "react-router-dom";
 import FirmHeader from './FirmHeader';
 import FirmSidebar from './FirmSidebar';
+import '../styles/FirmPortalColors.css';
 
 export default function FirmDashboardLayout() {
   const [sidebarWidth, setSidebarWidth] = useState('320px');

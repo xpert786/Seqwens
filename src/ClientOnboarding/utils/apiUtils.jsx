@@ -183,6 +183,22 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         } else {
           errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
         }
+
+        // Handle backend Python errors (like NameError, ImportError, etc.)
+        if (errorMessage && typeof errorMessage === 'string') {
+          // Check for Python NameError patterns (including wrapped error messages)
+          const nameErrorMatch = errorMessage.match(/name ['"]([\w]+)['"] is not defined/i);
+          if (nameErrorMatch) {
+            const missingName = nameErrorMatch[1];
+            errorMessage = `Backend configuration error: Missing import or definition for '${missingName}'. Please contact support.`;
+            console.error(`Backend error detected: ${missingName} is not defined. This is a backend configuration issue that needs to be fixed on the server.`);
+          }
+          // Check for other common Python errors
+          else if (errorMessage.includes("is not defined") || errorMessage.includes("NameError") || errorMessage.includes("ImportError")) {
+            errorMessage = `Backend configuration error detected. Please contact support if this issue persists.`;
+            console.error('Backend Python error detected:', errorMessage);
+          }
+        }
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
       }
@@ -1161,7 +1177,7 @@ export const threadsAPI = {
         body: formData
       };
 
-      let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/create/`, config);
+      let response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/create/`, config);
 
       // Handle 401 Unauthorized - try to refresh token
       if (response.status === 401) {
@@ -1170,7 +1186,7 @@ export const threadsAPI = {
           config.headers = {
             'Authorization': `Bearer ${getAccessToken() || AUTH_TOKEN}`,
           };
-          response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/create/`, config);
+          response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/create/`, config);
 
           if (response.status === 401) {
             clearUserData();
@@ -1199,7 +1215,7 @@ export const threadsAPI = {
       return await response.json();
     } else {
       // Use JSON for text-only messages
-      return await apiRequest('/taxpayer/threads/create/', 'POST', {
+      return await apiRequest('/taxpayer/chat-threads/create/', 'POST', {
         subject: threadData.subject,
         message: threadData.message
       });
@@ -1231,7 +1247,10 @@ export const threadsAPI = {
       }
 
       if (messageData.is_internal !== undefined) {
-        formData.append('is_internal', messageData.is_internal);
+        // Convert boolean to capitalized string for Django FormData boolean fields
+        // Django expects "True" or "False" (capitalized) for boolean form fields
+        const isInternalValue = messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True';
+        formData.append('is_internal', isInternalValue ? 'True' : 'False');
       }
 
       if (messageData.attachment) {
@@ -1259,12 +1278,12 @@ export const threadsAPI = {
         body: JSON.stringify({
           content: messageData.content || '',
           message_type: messageData.message_type || 'text',
-          is_internal: messageData.is_internal || false
+          is_internal: messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True'
         })
       };
     }
 
-    response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+    response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/${threadId}/send_message/`, config);
 
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401) {
@@ -1283,7 +1302,7 @@ export const threadsAPI = {
           };
         }
 
-        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/${threadId}/send_message/`, config);
 
         if (response.status === 401) {
           clearUserData();
@@ -1321,8 +1340,19 @@ export const threadsAPI = {
     return await apiRequest(`/taxpayer/threads/${threadId}/close/`, 'POST');
   },
   // Mark messages as read
+  // Supports both old format (message_ids array) and new format (single message_id or all)
   markAsRead: async (threadId, messageIds) => {
-    return await apiRequest(`/taxpayer/threads/${threadId}/mark_read/`, 'POST', { message_ids: messageIds });
+    // If messageIds is an array, mark all messages (or use first one if single item)
+    // If messageIds is a single number, mark that specific message
+    // If messageIds is null/undefined, mark all messages
+    const requestBody = messageIds 
+      ? (Array.isArray(messageIds) 
+          ? (messageIds.length === 1 ? { message_id: messageIds[0] } : {})
+          : { message_id: messageIds })
+      : {};
+    
+    // Use new chat-threads endpoint
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/mark-read/`, 'POST', requestBody);
   },
   // Archive thread
   archiveThread: async (threadId) => {
@@ -3116,7 +3146,10 @@ export const taxPreparerThreadsAPI = {
       }
 
       if (messageData.is_internal !== undefined) {
-        formData.append('is_internal', messageData.is_internal);
+        // Convert boolean to capitalized string for Django FormData boolean fields
+        // Django expects "True" or "False" (capitalized) for boolean form fields
+        const isInternalValue = messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True';
+        formData.append('is_internal', isInternalValue ? 'True' : 'False');
       }
 
       if (messageData.attachment) {
@@ -3144,13 +3177,13 @@ export const taxPreparerThreadsAPI = {
         body: JSON.stringify({
           content: messageData.content || '',
           message_type: messageData.message_type || 'text',
-          is_internal: messageData.is_internal || false
+          is_internal: messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True'
         })
       };
     }
 
     // Use the same endpoint as taxpayer (as per documentation)
-    response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+    response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/${threadId}/send_message/`, config);
 
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401) {
@@ -3169,7 +3202,7 @@ export const taxPreparerThreadsAPI = {
           };
         }
 
-        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/threads/${threadId}/send_message/`, config);
+        response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/${threadId}/send_message/`, config);
 
         if (response.status === 401) {
           clearUserData();
@@ -3211,8 +3244,19 @@ export const taxPreparerThreadsAPI = {
     return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/reopen/`, 'POST');
   },
   // Mark messages as read
+  // Supports both old format (message_ids array) and new format (single message_id or all)
   markAsRead: async (threadId, messageIds) => {
-    return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/mark_read/`, 'POST', { message_ids: messageIds });
+    // If messageIds is an array, mark all messages (or use first one if single item)
+    // If messageIds is a single number, mark that specific message
+    // If messageIds is null/undefined, mark all messages
+    const requestBody = messageIds 
+      ? (Array.isArray(messageIds) 
+          ? (messageIds.length === 1 ? { message_id: messageIds[0] } : {})
+          : { message_id: messageIds })
+      : {};
+    
+    // Use new chat-threads endpoint
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/mark-read/`, 'POST', requestBody);
   },
   // Mark all messages as read in thread
   markAllAsRead: async (threadId) => {
@@ -3649,62 +3693,46 @@ export const firmAdminMessagingAPI = {
   },
 
   // Get thread details
+  // GET /taxpayer/chat-threads/{id}/
   getThreadDetails: async (threadId) => {
-    return await apiRequest(`/taxpayer/firm-admin/messages/threads/${threadId}/`, 'GET');
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/`, 'GET');
   },
 
-  // Compose and send message
-  composeMessage: async (messageData, attachment = null) => {
+  // Get messages in a thread
+  // GET /taxpayer/chat-threads/{id}/messages/?page=1&page_size=50
+  getMessages: async (threadId, params = {}) => {
+    const { page = 1, page_size = 50 } = params;
+    const queryParams = new URLSearchParams();
+    
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/messages/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Compose/Create a Chat Thread
+  // POST /taxpayer/firm-admin/messages/compose/
+  // Accepts: { target_user_id }
+  composeMessage: async (messageData) => {
     const token = getAccessToken() || AUTH_TOKEN;
 
-    // Always use FormData as per API documentation
-    const formData = new FormData();
-
-    // Add recipients - must be sent as a JSON array string with string elements
-    // Curl format: -F "recipients=[3]" sends the string "[3]"
-    // But backend expects array elements to be strings, so we send "[\"3\"]"
-    // When backend parses "[\"3\"]", it gets ["3"] which validates correctly
-    if (messageData.recipients) {
-      if (Array.isArray(messageData.recipients)) {
-        // Convert all to strings explicitly, then JSON stringify
-        // Example: [3] -> ["3"] -> "[\"3\"]"
-        const stringRecipients = messageData.recipients.map(r => {
-          // Ensure it's a string, not a number
-          const str = String(r);
-          return str;
-        });
-        const jsonString = JSON.stringify(stringRecipients);
-        formData.append('recipients', jsonString);
-      } else {
-        // Single recipient: convert to string and wrap in array
-        const jsonString = JSON.stringify([String(messageData.recipients)]);
-        formData.append('recipients', jsonString);
-      }
-    }
-    
-    // Add subject
-    if (messageData.subject) {
-      formData.append('subject', messageData.subject);
-    }
-    
-    // Add message
-    if (messageData.message) {
-      formData.append('message', messageData.message);
-    }
-
-    // Add attachment if present
-    if (attachment) {
-      formData.append('attachment', attachment);
-    }
+    // Prepare JSON payload - only target_user_id is required
+    const payload = {
+      target_user_id: messageData.target_user_id
+    };
 
     const config = {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type - browser will set it with boundary for FormData
       },
-      body: formData
+      body: JSON.stringify(payload)
     };
+
+    console.log('Compose Message API Request URL:', `${API_BASE_URL}/taxpayer/firm-admin/messages/compose/`);
+    console.log('Compose Message API Request Payload:', payload);
 
     const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/firm-admin/messages/compose/`, config);
 
@@ -3712,6 +3740,8 @@ export const firmAdminMessagingAPI = {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
+        console.error('Compose Message Error Response:', errorData);
+        
         if (errorData.errors) {
           const fieldErrors = Object.entries(errorData.errors)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
@@ -3721,7 +3751,7 @@ export const firmAdminMessagingAPI = {
           errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
         }
       } catch (parseError) {
-        console.error('Error parsing response:', parseError);
+        console.error('Error parsing compose message response:', parseError);
       }
       throw new Error(errorMessage);
     }
@@ -3741,14 +3771,22 @@ export const firmAdminMessagingAPI = {
     return await apiRequest(`/firm-admin/messages/recipients/search/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
-  // Send message in thread
+  // Send a Message to a Thread
+  // POST /taxpayer/chat-threads/{id}/send_message/
+  // Accepts: { content, is_internal }
   sendMessage: async (threadId, messageData, attachment = null) => {
     const token = getAccessToken() || AUTH_TOKEN;
 
     if (attachment) {
       // Use FormData for multipart/form-data when attachment is present
       const formData = new FormData();
-      formData.append('message', messageData.message || '');
+      formData.append('content', messageData.content || messageData.message || '');
+      // Convert boolean to capitalized string for Django FormData boolean fields
+      // Django expects "True" or "False" (capitalized) for boolean form fields
+      const isInternalValue = messageData.is_internal !== undefined 
+        ? (messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True')
+        : false;
+      formData.append('is_internal', isInternalValue ? 'True' : 'False');
       formData.append('attachment', attachment);
 
       const config = {
@@ -3759,7 +3797,7 @@ export const firmAdminMessagingAPI = {
         body: formData
       };
 
-      const response = await fetchWithCors(`${API_BASE_URL}/firm-admin/messages/threads/${threadId}/send_message/`, config);
+      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/chat-threads/${threadId}/send_message/`, config);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -3769,7 +3807,13 @@ export const firmAdminMessagingAPI = {
       return await response.json();
     } else {
       // Use JSON for regular requests without attachments
-      return await apiRequest(`/firm-admin/messages/threads/${threadId}/send_message/`, 'POST', messageData);
+      // Map message to content if needed for backward compatibility
+      const payload = {
+        content: messageData.content || messageData.message || '',
+        is_internal: messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True'
+      };
+      
+      return await apiRequest(`/taxpayer/chat-threads/${threadId}/send_message/`, 'POST', payload);
     }
   }
 };
@@ -3894,6 +3938,134 @@ export const firmAdminSettingsAPI = {
   // Update firm advanced information
   updateAdvancedInfo: async (advancedData, method = 'POST') => {
     return await apiRequest('/user/firm-admin/settings/advanced/', method, advancedData);
+  },
+
+  // Get subdomain settings
+  getSubdomainSettings: async () => {
+    return await apiRequest('/firm/subdomain/settings/', 'GET');
+  },
+
+  // Check subdomain availability
+  checkSubdomainAvailability: async (subdomain) => {
+    return await apiRequest(`/firm/subdomain/check/?subdomain=${encodeURIComponent(subdomain)}`, 'GET');
+  },
+
+  // Update subdomain settings
+  updateSubdomainSettings: async (subdomainData, files = {}) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const hasFiles = files.logo || files.favicon;
+
+    if (hasFiles) {
+      // Use FormData for multipart/form-data when files are present
+      const formData = new FormData();
+
+      // Add all form fields to FormData
+      Object.keys(subdomainData).forEach(key => {
+        const value = subdomainData[key];
+        if (value !== null && value !== undefined && value !== '') {
+          if (typeof value === 'boolean') {
+            // Django expects capitalized boolean strings in FormData: "True" or "False"
+            formData.append(key, value ? 'True' : 'False');
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      // Add files
+      if (files.logo) {
+        formData.append('logo', files.logo);
+      }
+      if (files.favicon) {
+        formData.append('favicon', files.favicon);
+      }
+
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/firm/subdomain/settings/`, config);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.errors) {
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('; ');
+            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          } else {
+            errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } else {
+      // Use JSON for regular requests without files
+      return await apiRequest('/firm/subdomain/settings/', 'PATCH', subdomainData);
+    }
+  },
+
+  // Delete firm account
+  // DELETE /firm/account/delete/
+  // Accepts: { password, confirmation_text (optional) }
+  deleteAccount: async (password, confirmationText = null) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    
+    const payload = {
+      password: password
+    };
+    
+    // Add confirmation_text if provided
+    if (confirmationText) {
+      payload.confirmation_text = confirmationText;
+    }
+
+    const config = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload)
+    };
+
+    console.log('Delete Account API Request URL:', `${API_BASE_URL}/firm/account/delete/`);
+    console.log('Delete Account API Request Payload:', { password: '***', confirmation_text: confirmationText });
+
+    const response = await fetchWithCors(`${API_BASE_URL}/firm/account/delete/`, config);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        console.error('Delete Account Error Response:', errorData);
+        
+        if (errorData.errors) {
+          const fieldErrors = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+        } else {
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        }
+      } catch (parseError) {
+        console.error('Error parsing delete account response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
   }
 };
 

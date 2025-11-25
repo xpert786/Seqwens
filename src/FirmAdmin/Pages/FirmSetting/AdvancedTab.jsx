@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminSettingsAPI, handleAPIError, clearUserData } from '../../../ClientOnboarding/utils/apiUtils';
+import { getLoginUrl } from '../../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
 
 export default function AdvancedTab() {
@@ -18,29 +19,46 @@ export default function AdvancedTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [firmName, setFirmName] = useState('');
 
-  // Fetch advanced information on mount
+  // Fetch advanced information and firm name on mount
   useEffect(() => {
-    const fetchAdvancedInfo = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError('');
         
-        const response = await firmAdminSettingsAPI.getAdvancedInfo();
+        // Fetch advanced info
+        const advancedResponse = await firmAdminSettingsAPI.getAdvancedInfo();
         
-        if (response.success && response.data) {
+        if (advancedResponse.success && advancedResponse.data) {
           setDocumentTemplates({
-            invoice_template: response.data.invoice_template || 'Standard Template',
-            letter_template: response.data.letter_template || 'Professional',
-            report_template: response.data.report_template || 'Detailed'
+            invoice_template: advancedResponse.data.invoice_template || 'Standard Template',
+            letter_template: advancedResponse.data.letter_template || 'Professional',
+            report_template: advancedResponse.data.report_template || 'Detailed'
           });
           setAccessControl({
-            staff_access_level: response.data.staff_access_level || 'Standard',
-            client_data_access: response.data.client_data_access || 'Assigned',
-            financial_data_access: response.data.financial_data_access || 'Managers'
+            staff_access_level: advancedResponse.data.staff_access_level || 'Standard',
+            client_data_access: advancedResponse.data.client_data_access || 'Assigned',
+            financial_data_access: advancedResponse.data.financial_data_access || 'Managers'
           });
         } else {
-          throw new Error(response.message || 'Failed to load advanced information');
+          throw new Error(advancedResponse.message || 'Failed to load advanced information');
+        }
+
+        // Fetch firm name for delete confirmation
+        try {
+          const generalResponse = await firmAdminSettingsAPI.getGeneralInfo();
+          if (generalResponse.success && generalResponse.data) {
+            setFirmName(generalResponse.data.firm_name || '');
+          }
+        } catch (err) {
+          console.error('Error fetching firm name:', err);
+          // Don't fail the whole component if firm name fetch fails
         }
       } catch (err) {
         console.error('Error fetching advanced info:', err);
@@ -52,7 +70,7 @@ export default function AdvancedTab() {
       }
     };
 
-    fetchAdvancedInfo();
+    fetchData();
   }, []);
 
   const handleTemplateChange = (field, value) => {
@@ -106,6 +124,65 @@ export default function AdvancedTab() {
       toast.error(errorMsg || 'Failed to update advanced settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Handle delete account
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      toast.error('Please enter your password to confirm deletion', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    // Validate confirmation text if provided
+    if (deleteConfirmation && deleteConfirmation !== 'DELETE' && deleteConfirmation !== firmName) {
+      toast.error('Confirmation text must be "DELETE" or your firm name', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      setError('');
+
+      const response = await firmAdminSettingsAPI.deleteAccount(
+        deletePassword,
+        deleteConfirmation || null
+      );
+
+      if (response.success) {
+        toast.success(response.message || 'Firm account deleted successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+
+        // Clear all user data
+        clearUserData();
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = getLoginUrl();
+        }, 2000);
+      } else {
+        throw new Error(response.message || 'Failed to delete account');
+      }
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to delete account');
+      toast.error(errorMsg || 'Failed to delete account', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -343,27 +420,16 @@ export default function AdvancedTab() {
           <div className="flex items-start justify-between p-4 bg-[#EF444417] !rounded-lg !border border-[#EF4444]">
             <div className="flex-1">
               <h6 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-                Staff Access Level
-              </h6>
-              <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">
-                Default permissions for new staff
-              </p>
-            </div>
-            <button className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] !rounded-lg hover:bg-red-700 transition font-[BasisGrotesquePro] flex-shrink-0">
-              Standard
-            </button>
-          </div>
-
-          <div className="flex items-start justify-between p-4 bg-[#EF444417] !rounded-lg !border border-[#EF4444]">
-            <div className="flex-1">
-              <h6 className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
                 Delete Firm Account
               </h6>
               <p className="text-xs text-[#4B5563] font-regular font-[BasisGrotesquePro]">
                 Permanently delete your firm account and all data
               </p>
             </div>
-            <button className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] !rounded-lg hover:bg-red-700 transition font-[BasisGrotesquePro] flex-shrink-0">
+            <button 
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] !rounded-lg hover:bg-red-700 transition font-[BasisGrotesquePro] flex-shrink-0"
+            >
               Delete Account
             </button>
           </div>
@@ -392,6 +458,90 @@ export default function AdvancedTab() {
           )}
         </button>
       </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 !border border-[#E8F0FF]">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-[#EF4444] font-[BasisGrotesquePro] mb-2">
+                Delete Firm Account
+              </h3>
+              <p className="text-sm text-[#4B5563] font-[BasisGrotesquePro]">
+                This action cannot be undone. This will permanently delete your firm account and all associated data. All users will lose access immediately.
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Enter Your Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Enter your password to confirm"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444] font-[BasisGrotesquePro]"
+                  disabled={deleting}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                  Type "DELETE" or Firm Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder={firmName ? `Type "DELETE" or "${firmName}"` : 'Type "DELETE"'}
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444] font-[BasisGrotesquePro]"
+                  disabled={deleting}
+                />
+                <p className="text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-1">
+                  For additional security, type "DELETE" or your firm name
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletePassword('');
+                  setDeleteConfirmation('');
+                  setError('');
+                }}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-gray-100 !rounded-lg hover:bg-gray-200 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting || !deletePassword}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] !rounded-lg hover:bg-red-700 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete Account</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

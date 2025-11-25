@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { firmAdminMessagingAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { chatService } from '../../../ClientOnboarding/utils/chatService';
+import { useChatWebSocket } from '../../../ClientOnboarding/utils/useChatWebSocket';
 import { toast } from 'react-toastify';
 
 const Messages = () => {
@@ -33,10 +35,60 @@ const Messages = () => {
   const [staffMembers, setStaffMembers] = useState([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState('');
+  const [avgResponseTime, setAvgResponseTime] = useState(null);
+  const [responseTimeLoading, setResponseTimeLoading] = useState(false);
   
   const recipientInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const threadFileInputRef = useRef(null);
+
+  // WebSocket hook for real-time messaging (using new chat-threads API)
+  const {
+    isConnected: wsConnected,
+    messages: wsMessages,
+    typingUsers,
+    error: wsError,
+    sendMessage: wsSendMessage,
+    sendTyping: wsSendTyping,
+    markAsRead: wsMarkAsRead,
+    markAllAsRead: wsMarkAllAsRead,
+  } = useChatWebSocket(selectedThreadId, true);
+
+  // Fetch average response time
+  useEffect(() => {
+    const fetchResponseTime = async () => {
+      try {
+        setResponseTimeLoading(true);
+        const token = getAccessToken();
+        if (!token) {
+          return;
+        }
+
+        const API_BASE_URL = getApiBaseUrl();
+        const response = await fetchWithCors(`${API_BASE_URL}/firm/my-response-time/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setAvgResponseTime(data.data);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching response time:', err);
+        // Don't show error toast, just use default value
+      } finally {
+        setResponseTimeLoading(false);
+      }
+    };
+
+    fetchResponseTime();
+  }, []);
 
   // Fetch conversations
   useEffect(() => {
@@ -51,7 +103,35 @@ const Messages = () => {
           params.type = messageFilter === 'client' ? 'client' : 'staff';
         }
         
-        const response = await firmAdminMessagingAPI.listConversations(params);
+        // Try new chat-threads API first, fallback to old firm admin API
+        let response;
+        try {
+          response = await chatService.getThreads();
+          // Transform new API response to match expected format
+          if (response.success && response.data) {
+            const threadsArray = Array.isArray(response.data) ? response.data : [];
+            setConversations(threadsArray.map(thread => ({
+              id: thread.id || thread.thread_id,
+              subject: thread.subject,
+              client_name: thread.client?.name || thread.client_name,
+              client_email: thread.client?.email || thread.client_email,
+              assigned_staff: thread.assigned_staff || [],
+              assigned_staff_names: thread.assigned_staff?.map(s => s.name) || [],
+              unread_count: thread.unread_count || 0,
+              last_message_at: thread.last_message?.created_at || thread.updated_at || thread.created_at,
+              last_message_preview: thread.last_message || null,
+              is_staff_conversation: !thread.client,
+              created_at: thread.created_at,
+              updated_at: thread.updated_at,
+            })));
+            return;
+          }
+        } catch (newApiError) {
+          console.log('New chat API failed, trying old API:', newApiError);
+        }
+        
+        // Fallback to old API
+        response = await firmAdminMessagingAPI.listConversations(params);
         
         if (response.success && response.data) {
           setConversations(response.data.conversations || []);
@@ -71,9 +151,9 @@ const Messages = () => {
     fetchConversations();
   }, [searchTerm, messageFilter]);
 
-  // Fetch thread details when conversation is selected
+  // Fetch thread messages when conversation is selected
   useEffect(() => {
-    const fetchThreadDetails = async () => {
+    const fetchThreadMessages = async () => {
       if (!selectedThreadId) {
         setThreadMessages([]);
         return;
@@ -81,15 +161,104 @@ const Messages = () => {
 
       try {
         setMessagesLoading(true);
-        const response = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
         
-        if (response.success && response.data) {
-          setThreadMessages(response.data.messages || []);
-        } else {
-          throw new Error(response.message || 'Failed to load messages');
+        // Use the getMessages API function
+        let response;
+        try {
+          // Try firmAdminMessagingAPI.getMessages first
+          response = await firmAdminMessagingAPI.getMessages(selectedThreadId, { page: 1, page_size: 50 });
+          console.log('getMessages response for thread', selectedThreadId, ':', response);
+          
+          // Handle various response formats
+          let messagesArray = [];
+          
+          // Check if response has success property
+          if (response && typeof response === 'object') {
+            // Format: { success: true, data: { messages: [...] } }
+            if (response.success && response.data) {
+              if (Array.isArray(response.data.messages)) {
+                messagesArray = response.data.messages;
+              } else if (Array.isArray(response.data)) {
+                messagesArray = response.data;
+              } else if (response.data.results && Array.isArray(response.data.results)) {
+                messagesArray = response.data.results;
+              }
+            }
+            // Format: { data: { messages: [...] } }
+            else if (response.data) {
+              if (Array.isArray(response.data.messages)) {
+                messagesArray = response.data.messages;
+              } else if (Array.isArray(response.data)) {
+                messagesArray = response.data;
+              } else if (response.data.results && Array.isArray(response.data.results)) {
+                messagesArray = response.data.results;
+              }
+            }
+            // Format: { messages: [...] }
+            else if (Array.isArray(response.messages)) {
+              messagesArray = response.messages;
+            }
+            // Format: direct array
+            else if (Array.isArray(response)) {
+              messagesArray = response;
+            }
+          }
+          
+          console.log('Extracted messages array length:', messagesArray.length);
+          
+          if (messagesArray.length > 0) {
+            const transformedMessages = messagesArray.map(msg => ({
+              id: msg.id,
+              content: msg.content || msg.message || '',
+              sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+              sender_role: msg.sender?.role || msg.sender_role || '',
+              created_at: msg.created_at,
+              is_read: msg.is_read || false,
+              attachment: msg.attachment || null,
+              attachment_name: msg.attachment_name || null,
+            }));
+            console.log('Setting threadMessages with', transformedMessages.length, 'messages');
+            setThreadMessages(transformedMessages);
+            return;
+          } else {
+            console.log('No messages found in response, trying chatService fallback');
+          }
+        } catch (apiError) {
+          console.error('firmAdminMessagingAPI.getMessages failed:', apiError);
+          
+          // Fallback to chatService
+          try {
+            response = await chatService.getMessages(selectedThreadId);
+            console.log('chatService.getMessages response:', response);
+            
+            if (response.success && response.data) {
+              const messagesArray = Array.isArray(response.data.messages) 
+                ? response.data.messages 
+                : (Array.isArray(response.data) ? response.data : []);
+              
+              if (messagesArray.length > 0) {
+                setThreadMessages(messagesArray.map(msg => ({
+                  id: msg.id,
+                  content: msg.content || msg.message,
+                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                  sender_role: msg.sender?.role || msg.sender_role || '',
+                  created_at: msg.created_at,
+                  is_read: msg.is_read || false,
+                  attachment: msg.attachment || null,
+                  attachment_name: msg.attachment_name || null,
+                })));
+                return;
+              }
+            }
+          } catch (chatServiceError) {
+            console.log('chatService.getMessages also failed:', chatServiceError);
+          }
         }
+        
+        // If no messages found, set empty array
+        setThreadMessages([]);
       } catch (err) {
-        console.error('Error fetching thread details:', err);
+        console.error('Error fetching thread messages:', err);
         const errorMsg = handleAPIError(err);
         toast.error(errorMsg || 'Failed to load messages');
         setThreadMessages([]);
@@ -98,8 +267,49 @@ const Messages = () => {
       }
     };
 
-    fetchThreadDetails();
+    fetchThreadMessages();
   }, [selectedThreadId]);
+
+  // Sync WebSocket messages with local state
+  useEffect(() => {
+    if (wsMessages && wsMessages.length > 0 && selectedThreadId) {
+      const relevantMessages = wsMessages.filter(msg => {
+        return !msg.thread_id || msg.thread_id === selectedThreadId;
+      });
+
+      if (relevantMessages.length > 0) {
+        const transformedMessages = relevantMessages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender_name: msg.sender?.name || msg.sender_name,
+          sender_role: msg.sender?.role || msg.sender_role,
+          created_at: msg.created_at,
+          is_read: msg.is_read || false,
+          attachment: msg.attachment || null,
+          attachment_name: msg.attachment_name || null,
+        }));
+
+        setThreadMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
+          
+          if (newMessages.length > 0) {
+            return [...prev, ...newMessages].sort((a, b) => 
+              new Date(a.created_at) - new Date(b.created_at)
+            );
+          }
+          return prev;
+        });
+
+        // Mark new messages as read
+        transformedMessages.forEach(msg => {
+          if (!msg.is_read) {
+            wsMarkAsRead(msg.id);
+          }
+        });
+      }
+    }
+  }, [wsMessages, selectedThreadId, wsMarkAsRead]);
 
   // Fetch staff members
   const fetchStaffMembers = async () => {
@@ -191,11 +401,6 @@ const Messages = () => {
 
   // Handle compose message
   const handleComposeMessage = async () => {
-    if (!subject.trim() || !message.trim()) {
-      toast.error('Please fill in subject and message');
-      return;
-    }
-
     if (!selectedStaffId) {
       toast.error('Please select a staff member');
       return;
@@ -204,20 +409,16 @@ const Messages = () => {
     try {
       setSending(true);
       
-      // Send only the single selected staff ID
-      // Backend expects recipients as an array with string ID: ["3"] not [3]
-      // Ensure the ID is explicitly converted to string
-      const recipientId = String(selectedStaffId);
+      // Convert selectedStaffId to number for target_user_id
+      // Backend expects: { target_user_id: 123 }
+      const targetUserId = Number(selectedStaffId);
       const messageData = {
-        recipients: [recipientId],
-        subject: subject.trim(),
-        message: message.trim()
+        target_user_id: targetUserId
       };
       
-      console.log('Sending message data:', messageData);
-      console.log('Recipients type check:', typeof messageData.recipients[0], messageData.recipients[0]);
+      console.log('Sending compose message data:', messageData);
 
-      const response = await firmAdminMessagingAPI.composeMessage(messageData, attachment);
+      const response = await firmAdminMessagingAPI.composeMessage(messageData);
       
       if (response.success) {
         toast.success('Message sent successfully');
@@ -306,24 +507,92 @@ const Messages = () => {
       return;
     }
 
+    const messageText = threadMessageInput.trim();
+    setThreadMessageInput(''); // Clear input immediately
+
     try {
       setSendingThreadMessage(true);
 
+      // Try WebSocket first if connected
+      if (wsConnected) {
+        const sent = wsSendMessage(messageText, false);
+        if (sent) {
+          console.log('✅ Message sent via WebSocket');
+          setThreadAttachment(null);
+          // Message will come back via WebSocket
+          return;
+        }
+      }
+
+      // Fallback to REST API
       const messageData = {
-        message: threadMessageInput.trim()
+        content: messageText.trim(),
+        is_internal: false
       };
 
       const response = await firmAdminMessagingAPI.sendMessage(selectedThreadId, messageData, threadAttachment);
 
       if (response.success) {
         toast.success('Message sent successfully');
-        setThreadMessageInput('');
         setThreadAttachment(null);
-        // Refresh thread messages
-        const threadResponse = await firmAdminMessagingAPI.getThreadDetails(selectedThreadId);
-        if (threadResponse.success && threadResponse.data) {
-          setThreadMessages(threadResponse.data.messages || []);
+        
+        // Refresh thread messages using getMessages
+        try {
+          const messagesResponse = await firmAdminMessagingAPI.getMessages(selectedThreadId, { page: 1, page_size: 50 });
+          console.log('Refreshed messages after send:', messagesResponse);
+          
+          let messagesArray = [];
+          if (messagesResponse.success && messagesResponse.data) {
+            if (Array.isArray(messagesResponse.data.messages)) {
+              messagesArray = messagesResponse.data.messages;
+            } else if (Array.isArray(messagesResponse.data)) {
+              messagesArray = messagesResponse.data;
+            } else if (messagesResponse.data.results) {
+              messagesArray = messagesResponse.data.results;
+            }
+          } else if (Array.isArray(messagesResponse)) {
+            messagesArray = messagesResponse;
+          }
+          
+          if (messagesArray.length > 0) {
+            setThreadMessages(messagesArray.map(msg => ({
+              id: msg.id,
+              content: msg.content || msg.message,
+              sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+              sender_role: msg.sender?.role || msg.sender_role || '',
+              created_at: msg.created_at,
+              is_read: msg.is_read || false,
+              attachment: msg.attachment || null,
+              attachment_name: msg.attachment_name || null,
+            })));
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing messages after send:', refreshError);
+          // Try chatService as fallback
+          try {
+            const chatResponse = await chatService.getMessages(selectedThreadId);
+            if (chatResponse.success && chatResponse.data) {
+              const messagesArray = Array.isArray(chatResponse.data.messages) 
+                ? chatResponse.data.messages 
+                : (Array.isArray(chatResponse.data) ? chatResponse.data : []);
+              if (messagesArray.length > 0) {
+                setThreadMessages(messagesArray.map(msg => ({
+                  id: msg.id,
+                  content: msg.content || msg.message,
+                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                  sender_role: msg.sender?.role || msg.sender_role || '',
+                  created_at: msg.created_at,
+                  is_read: msg.is_read || false,
+                  attachment: msg.attachment || null,
+                  attachment_name: msg.attachment_name || null,
+                })));
+              }
+            }
+          } catch (fallbackError) {
+            console.error('Fallback refresh also failed:', fallbackError);
+          }
         }
+        
         // Refresh conversations to update last message
         const conversationsResponse = await firmAdminMessagingAPI.listConversations({});
         if (conversationsResponse.success && conversationsResponse.data) {
@@ -336,6 +605,8 @@ const Messages = () => {
       console.error('Error sending thread message:', err);
       const errorMsg = handleAPIError(err);
       toast.error(errorMsg || 'Failed to send message');
+      // Restore message on error
+      setThreadMessageInput(messageText);
     } finally {
       setSendingThreadMessage(false);
     }
@@ -422,6 +693,31 @@ const Messages = () => {
     }
   ];
 
+  // Format response time value
+  const formatResponseTime = (responseTimeData) => {
+    if (!responseTimeData) {
+      return '2.4h'; // Default fallback
+    }
+
+    const { avg_response_time_hours, avg_response_time_minutes, unit } = responseTimeData;
+    
+    if (unit === 'hours') {
+      // Format hours with 1 decimal place
+      return `${avg_response_time_hours?.toFixed(1) || '0.0'}h`;
+    } else if (unit === 'minutes') {
+      // Convert minutes to hours if > 60, otherwise show minutes
+      if (avg_response_time_minutes >= 60) {
+        const hours = (avg_response_time_minutes / 60).toFixed(1);
+        return `${hours}h`;
+      } else {
+        return `${Math.round(avg_response_time_minutes)}m`;
+      }
+    }
+    
+    // Fallback to hours if unit is not specified
+    return `${avg_response_time_hours?.toFixed(1) || '0.0'}h`;
+  };
+
   // Calculate summary stats
   const unreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
   const clientConversations = conversations.filter(conv => !conv.is_staff_conversation).length;
@@ -440,7 +736,10 @@ const Messages = () => {
       ...summaryCards[2],
       value: internalConversations.toString()
     },
-    summaryCards[3] // Keep avg response time as is for now
+    {
+      ...summaryCards[3],
+      value: responseTimeLoading ? '...' : formatResponseTime(avgResponseTime)
+    }
   ];
 
   return (
@@ -454,7 +753,7 @@ const Messages = () => {
               <p className="text-gray-600 font-[BasisGrotesquePro]">Internal and client communication center</p>
             </div>
             <div className="flex gap-4 mt-4 lg:mt-0">
-              <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro]">
+              {/* <button className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro]">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
@@ -465,7 +764,7 @@ const Messages = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 Bulk Chat
-              </button>
+              </button> */}
               <button
                 onClick={() => setIsComposeModalOpen(true)}
                 className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]"
@@ -624,12 +923,27 @@ const Messages = () => {
           {/* Right Panel - Message Thread Card */}
           <div className="w-full lg:w-2/3 bg-white !rounded-lg  !border border-[#E8F0FF] p-6 h-[600px] flex flex-col">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Message Thread</h3>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Message Thread</h3>
+                {/* WebSocket Connection Status */}
+                {selectedThreadId && (
+                  <div className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${
+                    wsConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {wsConnected ? '🟢 Connected' : '🔴 Disconnected'}
+                  </div>
+                )}
+              </div>
               <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
                 {selectedConversation 
                   ? `Conversation: ${selectedConversation.subject || 'Untitled'}`
                   : 'Select a conversation to view messages'}
               </p>
+              {wsError && (
+                <p className="text-xs text-red-600 font-[BasisGrotesquePro] mt-1">
+                  {wsError}
+                </p>
+              )}
             </div>
 
             {/* Messages */}
@@ -643,26 +957,27 @@ const Messages = () => {
                   <div className="text-gray-500 text-sm">No messages yet</div>
                 </div>
               ) : (
-                threadMessages.map((msg) => (
-                  <div key={msg.id} className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      {/* Sender Info - NO background color */}
-                      <div className="flex items-baseline gap-2 mb-2">
-                        <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] leading-none">
-                          {msg.sender_name || 'Unknown'}
-                        </p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] !border border-[#E8F0FF] bg-white text-gray-700 leading-none flex-shrink-0`}>
-                          {msg.sender_role || 'User'}
-                        </span>
-                        <span className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap leading-none">
-                          {formatTimeAgo(msg.created_at)}
-                        </span>
-                      </div>
-                      {/* Message Content - ALL messages have background color */}
-                      <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
-                        <p className="text-sm text-gray-700 font-[BasisGrotesquePro] leading-relaxed">
-                          {msg.content}
-                        </p>
+                <>
+                  {threadMessages.map((msg) => (
+                    <div key={msg.id} className="flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* Sender Info - NO background color */}
+                        <div className="flex items-baseline gap-2 mb-2">
+                          <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] leading-none">
+                            {msg.sender_name || 'Unknown'}
+                          </p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] !border border-[#E8F0FF] bg-white text-gray-700 leading-none flex-shrink-0`}>
+                            {msg.sender_role || 'User'}
+                          </span>
+                          <span className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap leading-none">
+                            {formatTimeAgo(msg.created_at)}
+                          </span>
+                        </div>
+                        {/* Message Content - ALL messages have background color */}
+                        <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
+                          <p className="text-sm text-gray-700 font-[BasisGrotesquePro] leading-relaxed">
+                            {msg.content}
+                          </p>
                         {msg.attachment && (
                           <div className="mt-2">
                             <a 
@@ -681,7 +996,21 @@ const Messages = () => {
                       </div>
                     </div>
                   </div>
-                ))
+                  ))}
+                  
+                  {/* Typing Indicator */}
+                  {typingUsers && typingUsers.length > 0 && (
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
+                          <p className="text-sm text-gray-500 font-[BasisGrotesquePro] italic">
+                            {typingUsers.map(u => u.name || 'User').join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

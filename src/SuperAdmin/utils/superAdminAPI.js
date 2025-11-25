@@ -731,6 +731,218 @@ export const superAdminAPI = {
     });
     const query = params.toString();
     return await apiRequest(`/user/superadmin/audit-logs/export/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // API Keys Management API functions
+  // Get all API keys with optional filters
+  getAPIKeys: async ({ service = '', status = '', search = '', currentOnly = false } = {}) => {
+    const params = new URLSearchParams();
+    if (service) params.append('service', service);
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    if (currentOnly) params.append('current_only', 'true');
+    
+    const query = params.toString();
+    return await apiRequest(`/user/admin/system/api-keys/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Get API key by ID
+  getAPIKeyById: async (keyId) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'GET');
+  },
+
+  // Reveal full API key (unmasked)
+  revealAPIKey: async (keyId) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/reveal/`, 'GET');
+  },
+
+  // Create new API key
+  createAPIKey: async (apiKeyData) => {
+    return await apiRequest('/user/admin/system/api-keys/', 'POST', apiKeyData);
+  },
+
+  // Update API key (PATCH - partial update)
+  updateAPIKey: async (keyId, apiKeyData) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'PATCH', apiKeyData);
+  },
+
+  // Update API key (PUT - full update)
+  updateAPIKeyFull: async (keyId, apiKeyData) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'PUT', apiKeyData);
+  },
+
+  // Delete API key
+  deleteAPIKey: async (keyId) => {
+    return await apiRequest(`/user/admin/system/api-keys/${keyId}/`, 'DELETE');
+  },
+
+  // IP Restrictions API functions
+  // Get all IP restrictions with optional filters
+  getIPRestrictions: async ({ restrictionType = '', firmId = '', isActive = '' } = {}) => {
+    const params = new URLSearchParams();
+    if (restrictionType) params.append('restriction_type', restrictionType);
+    if (firmId) params.append('firm_id', firmId);
+    if (isActive !== '') params.append('is_active', isActive.toString());
+    
+    const query = params.toString();
+    return await apiRequest(`/user/admin/ip-restrictions/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Get IP restriction by ID
+  getIPRestrictionById: async (restrictionId) => {
+    return await apiRequest(`/user/admin/ip-restrictions/${restrictionId}/`, 'GET');
+  },
+
+  // Create IP restriction
+  createIPRestriction: async (restrictionData) => {
+    return await apiRequest('/user/admin/ip-restrictions/', 'POST', restrictionData);
+  },
+
+  // Update IP restriction
+  updateIPRestriction: async (restrictionId, restrictionData) => {
+    return await apiRequest(`/user/admin/ip-restrictions/${restrictionId}/`, 'PUT', restrictionData);
+  },
+
+  // Delete IP restriction
+  deleteIPRestriction: async (restrictionId) => {
+    return await apiRequest(`/user/admin/ip-restrictions/${restrictionId}/`, 'DELETE');
+  },
+
+  // Retention Rules API functions
+  // Get retention rule (tenant-level or firm-level)
+  getRetentionRule: async (firmId = null) => {
+    const params = new URLSearchParams();
+    if (firmId) params.append('firm_id', firmId);
+    
+    const query = params.toString();
+    return await apiRequest(`/user/admin/retention-rules/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Create or update retention rule
+  createOrUpdateRetentionRule: async (retentionData) => {
+    return await apiRequest('/user/admin/retention-rules/', 'POST', retentionData);
+  },
+
+  // Update retention rule (PUT method)
+  updateRetentionRule: async (retentionData) => {
+    return await apiRequest('/user/admin/retention-rules/', 'PUT', retentionData);
+  },
+
+  // Platform Analytics & Reporting API functions
+  // Get platform analytics and reporting data
+  getPlatformAnalytics: async (days = 30) => {
+    const params = new URLSearchParams();
+    if (days) params.append('days', days.toString());
+    
+    const query = params.toString();
+    return await apiRequest(`/user/admin/platform-analytics-reporting/${query ? `?${query}` : ''}`, 'GET');
+  },
+
+  // Platform Reporting API functions
+  // List all scheduled reports (custom and firm reports)
+  getScheduledReports: async () => {
+    return await apiRequest('/user/admin/reports/scheduled/', 'GET');
+  },
+
+  // Generate platform report (returns file download)
+  generatePlatformReport: async (reportData) => {
+    try {
+      const token = getAccessToken();
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      const config = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(reportData)
+      };
+
+      console.log('Generate Platform Report API Request URL:', `${API_BASE_URL}/user/admin/reports/platform/generate/`);
+      console.log('Generate Platform Report API Request Config:', config);
+      console.log('Generate Platform Report API Request Data:', reportData);
+
+      let response = await fetchWithCors(`${API_BASE_URL}/user/admin/reports/platform/generate/`, config);
+
+      // Handle 401 Unauthorized - try to refresh token
+      if (response.status === 401) {
+        console.log('Received 401, attempting to refresh token...');
+
+        try {
+          await refreshAccessToken();
+
+          // Retry the original request with new token
+          config.headers = {
+            'Authorization': `Bearer ${getAccessToken()}`,
+            'Content-Type': 'application/json',
+          };
+          response = await fetchWithCors(`${API_BASE_URL}/user/admin/reports/platform/generate/`, config);
+
+          if (response.status === 401) {
+            // Refresh failed, redirect to login
+            console.log('Token refresh failed, clearing user data and redirecting to login');
+            clearUserData();
+            window.location.href = getLoginUrl();
+            throw new Error('Session expired. Please login again.');
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      }
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('Generate Platform Report API Error Response:', errorData);
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing Generate Platform Report response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Get filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'platform_report.pdf';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Get file blob
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return {
+        success: true,
+        message: 'Report generated and downloaded successfully',
+        filename: filename
+      };
+    } catch (error) {
+      console.error('Generate Platform Report API Request Error:', error);
+
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
+      }
+
+      throw error;
+    }
   }
 };
 

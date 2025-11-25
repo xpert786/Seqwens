@@ -37,19 +37,19 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          const serverUrl = data.data.websocket_server_url || 'ws://168.231.121.7:8000';
+          const serverUrl = data.data.websocket_server_url || 'ws://localhost:8000';
           return `${serverUrl}/ws/threads/${threadId}/?token=${token}`;
         }
       }
       
       // Fallback to default URL (matching documentation format)
-      const defaultServerUrl = 'ws://168.231.121.7:8000';
+      const defaultServerUrl = 'ws://localhost:8000';
       return `${defaultServerUrl}/ws/threads/${threadId}/?token=${token}`;
     } catch (err) {
       console.error('Error getting WebSocket config:', err);
       // Fallback to default URL (matching documentation format)
       const token = getAccessToken();
-      const defaultServerUrl = 'ws://168.231.121.7:8000';
+      const defaultServerUrl = 'ws://localhost:8000';
       return `${defaultServerUrl}/ws/threads/${threadId}/?token=${token}`;
     }
   }, [threadId]);

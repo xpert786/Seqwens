@@ -4,6 +4,7 @@ import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
 
 // Layouts
 import FirmDashboardLayout from './Components/FirmDashboardLayout';
+import { FirmPortalColorsProvider } from './Context/FirmPortalColorsContext';
 
 // Pages
 import OverviewFirm from './Pages/OverView/OverviewFirm';
@@ -70,13 +71,14 @@ function FirmAdminProtectedRoute({ children }) {
 
 export default function FirmRoutes() {
   return (
-    <Routes>
-      {/* Main firm admin dashboard route with layout */}
-      <Route path="/" element={
-        <FirmAdminProtectedRoute>
-          <FirmDashboardLayout />
-        </FirmAdminProtectedRoute>
-      }>
+    <FirmPortalColorsProvider>
+      <Routes>
+        {/* Main firm admin dashboard route with layout */}
+        <Route path="/" element={
+          <FirmAdminProtectedRoute>
+            <FirmDashboardLayout />
+          </FirmAdminProtectedRoute>
+        }>
         <Route index element={<OverviewFirm />} />
         <Route path="dashboard" element={<OverviewFirm />} />
 
@@ -129,5 +131,6 @@ export default function FirmRoutes() {
         <Route path="*" element={<Navigate to="/firmadmin" replace />} />
       </Route>
     </Routes>
+    </FirmPortalColorsProvider>
   );
 }

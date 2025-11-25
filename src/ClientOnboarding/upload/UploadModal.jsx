@@ -10,7 +10,7 @@ import { getAccessToken } from "../utils/userUtils";
 import { handleAPIError } from "../utils/apiUtils";
 
 
-export default function UploadModal({ show, handleClose }) {
+export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const fileInputRef = useRef();
     const folderDropdownRef = useRef(null);
     const [files, setFiles] = useState([]);
@@ -264,24 +264,6 @@ export default function UploadModal({ show, handleClose }) {
         setUploading(true);
 
         try {
-            // Prepare FormData
-            const formData = new FormData();
-
-            // Add all files
-            files.forEach((file) => {
-                if (file.fileObject) {
-                    formData.append('files', file.fileObject);
-                }
-            });
-
-            // Prepare documents metadata
-            const documentsMetadata = files.map((file) => ({
-                category_id: file.categoryId,
-                folder_id: file.folderId,
-            }));
-
-            formData.append('documents_metadata', JSON.stringify(documentsMetadata));
-
             // Get API base URL and token
             const API_BASE_URL = getApiBaseUrl();
             const token = getAccessToken();
@@ -290,98 +272,170 @@ export default function UploadModal({ show, handleClose }) {
                 throw new Error('No authentication token found. Please login again.');
             }
 
-            // Make API request
-            const config = {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    // Don't set Content-Type for FormData - let browser set it with boundary
-                },
-                body: formData
-            };
+            const errorsByFileIndex = {};
+            let successCount = 0;
+            let failCount = 0;
 
-            console.log('Upload API Request URL:', `${API_BASE_URL}/taxpayer/documents/upload/`);
-            console.log('Upload API Request Config:', config);
-            console.log('Documents Metadata:', documentsMetadata);
-
-            const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
-
-            let result;
-            try {
-                result = await response.json();
-            } catch (parseError) {
-                console.error('Error parsing upload response:', parseError);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            // Upload files one by one using the new API endpoint
+            for (let idx = 0; idx < files.length; idx++) {
+                const file = files[idx];
+                
+                if (!file.fileObject) {
+                    errorsByFileIndex[idx] = ['File object not found'];
+                    failCount++;
+                    continue;
                 }
-                throw new Error('Failed to parse server response');
+
+                try {
+                    // Prepare FormData for single file upload
+                    const formData = new FormData();
+                    formData.append('file', file.fileObject);
+                    
+                    // Add optional folder_id if provided
+                    if (file.folderId) {
+                        formData.append('folder_id', file.folderId);
+                    }
+                    
+                    // Add optional category_id if provided
+                    if (file.categoryId) {
+                        formData.append('category_id', file.categoryId);
+                    }
+
+                    // Make API request for this file
+                    const config = {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            // Don't set Content-Type for FormData - let browser set it with boundary
+                        },
+                        body: formData
+                    };
+
+                    console.log(`Upload API Request for file ${idx + 1}/${files.length}:`, file.name);
+                    console.log('Upload API Request URL:', `${API_BASE_URL}/taxpayer/documents/upload/`);
+                    console.log('Folder ID:', file.folderId);
+                    console.log('Category ID:', file.categoryId);
+
+                    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/documents/upload/`, config);
+
+                    let result;
+                    try {
+                        result = await response.json();
+                    } catch (parseError) {
+                        console.error('Error parsing upload response:', parseError);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        throw new Error('Failed to parse server response');
+                    }
+
+                    console.log(`Upload API Response for file ${idx + 1}:`, result);
+
+                    // Check if upload was successful
+                    if (!response.ok) {
+                        let errorMessage = `HTTP error! status: ${response.status}`;
+                        errorMessage = result.message || result.detail || result.error || errorMessage;
+                        
+                        // Handle specific error cases
+                        if (response.status === 400) {
+                            if (result.message && result.message.includes('Only PDF files are allowed')) {
+                                errorMessage = 'Only PDF files are allowed';
+                            } else if (result.errors && result.errors.file) {
+                                errorMessage = Array.isArray(result.errors.file) 
+                                    ? result.errors.file.join(', ') 
+                                    : result.errors.file;
+                            }
+                        } else if (response.status === 404) {
+                            if (result.message && result.message.includes('Folder not found')) {
+                                errorMessage = 'Folder not found';
+                            } else if (result.message && result.message.includes('Category not found')) {
+                                errorMessage = 'Category not found';
+                            }
+                        } else if (response.status === 401) {
+                            errorMessage = 'Authentication failed. Please login again.';
+                        } else if (response.status === 500) {
+                            errorMessage = result.message || 'An error occurred while uploading the file';
+                        }
+                        
+                        errorsByFileIndex[idx] = [getUserFriendlyError(errorMessage)];
+                        failCount++;
+                        continue;
+                    }
+
+                    // Check success response
+                    if (result.success === false) {
+                        const errorMessage = result.message || 'Upload failed';
+                        errorsByFileIndex[idx] = [getUserFriendlyError(errorMessage)];
+                        failCount++;
+                        continue;
+                    }
+
+                    // Success
+                    if (result.success === true && result.data) {
+                        console.log(`File ${idx + 1} uploaded successfully. Document ID: ${result.data.document_id}, Pages: ${result.data.pages || 'N/A'}`);
+                        successCount++;
+                    } else {
+                        // Unexpected response format
+                        errorsByFileIndex[idx] = ['Unexpected server response'];
+                        failCount++;
+                    }
+
+                } catch (fileError) {
+                    console.error(`Error uploading file ${idx + 1} (${file.name}):`, fileError);
+                    const errorMessage = handleAPIError(fileError);
+                    errorsByFileIndex[idx] = [getUserFriendlyError(errorMessage)];
+                    failCount++;
+                }
             }
 
-            console.log('Upload API Response:', result);
-
-            // Check if upload was successful or has validation errors
-            if (result.success === false && result.errors && Array.isArray(result.errors)) {
-                // Handle validation errors for specific files
-                const errorsByFileIndex = {};
-                
-                result.errors.forEach((errorObj) => {
-                    const fileIndex = errorObj.file_index;
-                    if (fileIndex !== undefined && fileIndex !== null) {
-                        if (!errorsByFileIndex[fileIndex]) {
-                            errorsByFileIndex[fileIndex] = [];
-                        }
-                        const friendlyError = getUserFriendlyError(errorObj.error);
-                        errorsByFileIndex[fileIndex].push(friendlyError);
-                    }
-                });
-
-                // Set file-specific errors
+            // Set file-specific errors if any
+            if (Object.keys(errorsByFileIndex).length > 0) {
                 setFileErrors(errorsByFileIndex);
 
-                // Show general error message
-                const errorMessage = result.message || 'Validation failed for some files';
-                toast.error(errorMessage, {
+                // Show error message for failed uploads
+                if (failCount > 0) {
+                    toast.error(`${failCount} file(s) failed to upload. ${successCount > 0 ? `${successCount} file(s) uploaded successfully.` : ''}`, {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+
+                    // Scroll to first file with error
+                    const firstErrorIndex = Math.min(...Object.keys(errorsByFileIndex).map(Number));
+                    if (firstErrorIndex >= 0 && firstErrorIndex < files.length) {
+                        setSelectedIndex(firstErrorIndex);
+                    }
+
+                    setUploading(false);
+                    return;
+                }
+            }
+
+            // All files uploaded successfully
+            if (successCount === files.length) {
+                toast.success(`All ${successCount} file(s) uploaded successfully!`, {
                     position: "top-right",
-                    autoClose: 5000,
+                    autoClose: 3000,
                     hideProgressBar: false,
                     closeOnClick: true,
                     pauseOnHover: true,
                     draggable: true,
+                    icon: false,
+                    className: "custom-toast-success",
+                    bodyClassName: "custom-toast-body",
                 });
 
-                // Scroll to first file with error
-                const firstErrorIndex = Math.min(...Object.keys(errorsByFileIndex).map(Number));
-                if (firstErrorIndex >= 0 && firstErrorIndex < files.length) {
-                    setSelectedIndex(firstErrorIndex);
+                // Call success callback if provided (e.g., to refresh documents list)
+                if (onUploadSuccess && typeof onUploadSuccess === 'function') {
+                    onUploadSuccess();
                 }
 
-                setUploading(false);
-                return;
+                // Reset modal after successful upload
+                resetModal();
             }
-
-            // Check if response was not ok and no specific errors array was provided
-            if (!response.ok) {
-                let errorMessage = `HTTP error! status: ${response.status}`;
-                errorMessage = result.message || result.detail || result.error || errorMessage;
-                throw new Error(errorMessage);
-            }
-
-            console.log('Upload successful:', result);
-
-            toast.success("Upload successful!", {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                icon: false,
-                className: "custom-toast-success",
-                bodyClassName: "custom-toast-body",
-            });
-
-            // Reset modal after successful upload
-            resetModal();
 
         } catch (error) {
             console.error('Upload error:', error);
