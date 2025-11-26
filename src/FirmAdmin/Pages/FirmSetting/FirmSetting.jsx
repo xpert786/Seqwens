@@ -11,12 +11,12 @@ import SubdomainTab from './SubdomainTab';
 export default function FirmSetting() {
   const [activeTab, setActiveTab] = useState('General');
 
-  const tabs = ['General', 'Branding', 'Business', 'Services', 'Integrations', 'Advanced', 'Subdomain'];
-
+  const tabs = ['General', 'Business', 'Services', 'Integrations', 'Advanced', 'Domain & Branding'];
   return (
     <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
+
         <div>
           <h4 className="text-2xl font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
             Firm Settings
@@ -49,12 +49,12 @@ export default function FirmSetting() {
       {/* Tab Content */}
       <div>
         {activeTab === 'General' && <GeneralTab />}
-        {activeTab === 'Branding' && <BrandingTab />}
+        {/* {activeTab === 'Branding' && <BrandingTab />} */}
         {activeTab === 'Business' && <BusinessTab />}
         {activeTab === 'Services' && <ServicesTab />}
         {activeTab === 'Integrations' && <IntegrationsTab />}
         {activeTab === 'Advanced' && <AdvancedTab />}
-        {activeTab === 'Subdomain' && <SubdomainTab />}
+        {activeTab === 'Domain & Branding' && <SubdomainTab />}
       </div>
     </div>
   );

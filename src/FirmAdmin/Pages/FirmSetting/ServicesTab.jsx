@@ -205,13 +205,13 @@ export default function ServicesTab() {
                     />
                     <button
                       onClick={() => handleSaveEdit(service.name)}
-                      className="px-3 py-1 text-xs font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                      className="px-3 py-1 text-xs font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
                     >
                       Save
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="px-3 py-1 text-xs font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+                      className="px-3 py-1 text-xs font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
                     >
                       Cancel
                     </button>
@@ -223,7 +223,7 @@ export default function ServicesTab() {
                     </div>
                     <button 
                       onClick={() => handleEditService(service)}
-                      className="px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+                      className="px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
                     >
                       Edit
                     </button>
@@ -289,7 +289,7 @@ export default function ServicesTab() {
         <button 
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {saving ? (
             <>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { firmAdminMessagingAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { chatService } from '../../../ClientOnboarding/utils/chatService';
 import { useChatWebSocket } from '../../../ClientOnboarding/utils/useChatWebSocket';
+import { JdIcon } from '../../../ClientOnboarding/components/icons';
 import { toast } from 'react-toastify';
 
 const Messages = () => {
@@ -18,7 +19,7 @@ const Messages = () => {
   const [recipientInput, setRecipientInput] = useState('');
   const [recipients, setRecipients] = useState([]);
   const [attachment, setAttachment] = useState(null);
-  
+
   // API state
   const [conversations, setConversations] = useState([]);
   const [threadMessages, setThreadMessages] = useState([]);
@@ -37,10 +38,12 @@ const Messages = () => {
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [avgResponseTime, setAvgResponseTime] = useState(null);
   const [responseTimeLoading, setResponseTimeLoading] = useState(false);
-  
+
   const recipientInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const threadFileInputRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   // WebSocket hook for real-time messaging (using new chat-threads API)
   const {
@@ -90,66 +93,74 @@ const Messages = () => {
     fetchResponseTime();
   }, []);
 
-  // Fetch conversations
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
+  // Fetch conversations - extracted to be reusable
+  const fetchConversations = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) {
         setLoading(true);
-        setError('');
-        
-        const params = {};
-        if (searchTerm) params.search = searchTerm;
-        if (messageFilter !== 'all') {
-          params.type = messageFilter === 'client' ? 'client' : 'staff';
-        }
-        
-        // Try new chat-threads API first, fallback to old firm admin API
-        let response;
-        try {
-          response = await chatService.getThreads();
-          // Transform new API response to match expected format
-          if (response.success && response.data) {
-            const threadsArray = Array.isArray(response.data) ? response.data : [];
-            setConversations(threadsArray.map(thread => ({
-              id: thread.id || thread.thread_id,
-              subject: thread.subject,
-              client_name: thread.client?.name || thread.client_name,
-              client_email: thread.client?.email || thread.client_email,
-              assigned_staff: thread.assigned_staff || [],
-              assigned_staff_names: thread.assigned_staff?.map(s => s.name) || [],
-              unread_count: thread.unread_count || 0,
-              last_message_at: thread.last_message?.created_at || thread.updated_at || thread.created_at,
-              last_message_preview: thread.last_message || null,
-              is_staff_conversation: !thread.client,
-              created_at: thread.created_at,
-              updated_at: thread.updated_at,
-            })));
-            return;
-          }
-        } catch (newApiError) {
-          console.log('New chat API failed, trying old API:', newApiError);
-        }
-        
-        // Fallback to old API
-        response = await firmAdminMessagingAPI.listConversations(params);
-        
+      }
+      setError('');
+
+      const params = {};
+      if (searchTerm) params.search = searchTerm;
+      if (messageFilter !== 'all') {
+        params.type = messageFilter === 'client' ? 'client' : 'staff';
+      }
+
+      // Try new chat-threads API first, fallback to old firm admin API
+      let response;
+      try {
+        response = await chatService.getThreads();
+        // Transform new API response to match expected format
         if (response.success && response.data) {
-          setConversations(response.data.conversations || []);
-        } else {
-          throw new Error(response.message || 'Failed to load conversations');
+          const threadsArray = Array.isArray(response.data) ? response.data : [];
+          setConversations(threadsArray.map(thread => ({
+            id: thread.id || thread.thread_id,
+            subject: thread.subject,
+            client_name: thread.client?.name || thread.client_name || null,
+            client_email: thread.client?.email || thread.client_email || null,
+            client: thread.client || null,
+            assigned_staff: thread.assigned_staff || [],
+            assigned_staff_names: thread.assigned_staff?.map(s => s.name) || [],
+            unread_count: thread.unread_count || 0,
+            last_message_at: thread.last_message?.created_at || thread.updated_at || thread.created_at,
+            last_message_preview: thread.last_message || null,
+            is_staff_conversation: !thread.client,
+            created_at: thread.created_at,
+            updated_at: thread.updated_at,
+          })));
+          return;
         }
-      } catch (err) {
-        console.error('Error fetching conversations:', err);
-        const errorMsg = handleAPIError(err);
-        setError(errorMsg || 'Failed to load conversations');
+      } catch (newApiError) {
+        console.log('New chat API failed, trying old API:', newApiError);
+      }
+
+      // Fallback to old API
+      response = await firmAdminMessagingAPI.listConversations(params);
+
+      if (response.success && response.data) {
+        setConversations(response.data.conversations || []);
+      } else {
+        throw new Error(response.message || 'Failed to load conversations');
+      }
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to load conversations');
+      if (showLoading) {
         toast.error(errorMsg || 'Failed to load conversations');
-      } finally {
+      }
+    } finally {
+      if (showLoading) {
         setLoading(false);
       }
-    };
-
-    fetchConversations();
+    }
   }, [searchTerm, messageFilter]);
+
+  // Fetch conversations on mount and when filters change
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   // Fetch thread messages when conversation is selected
   useEffect(() => {
@@ -161,17 +172,17 @@ const Messages = () => {
 
       try {
         setMessagesLoading(true);
-        
+
         // Use the getMessages API function
         let response;
         try {
           // Try firmAdminMessagingAPI.getMessages first
           response = await firmAdminMessagingAPI.getMessages(selectedThreadId, { page: 1, page_size: 50 });
           console.log('getMessages response for thread', selectedThreadId, ':', response);
-          
+
           // Handle various response formats
           let messagesArray = [];
-          
+
           // Check if response has success property
           if (response && typeof response === 'object') {
             // Format: { success: true, data: { messages: [...] } }
@@ -203,15 +214,16 @@ const Messages = () => {
               messagesArray = response;
             }
           }
-          
+
           console.log('Extracted messages array length:', messagesArray.length);
-          
+
           if (messagesArray.length > 0) {
             const transformedMessages = messagesArray.map(msg => ({
               id: msg.id,
               content: msg.content || msg.message || '',
               sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
               sender_role: msg.sender?.role || msg.sender_role || '',
+              sender_id: msg.sender?.id || msg.sender_id || null,
               created_at: msg.created_at,
               is_read: msg.is_read || false,
               attachment: msg.attachment || null,
@@ -225,23 +237,24 @@ const Messages = () => {
           }
         } catch (apiError) {
           console.error('firmAdminMessagingAPI.getMessages failed:', apiError);
-          
+
           // Fallback to chatService
           try {
             response = await chatService.getMessages(selectedThreadId);
             console.log('chatService.getMessages response:', response);
-            
+
             if (response.success && response.data) {
-              const messagesArray = Array.isArray(response.data.messages) 
-                ? response.data.messages 
+              const messagesArray = Array.isArray(response.data.messages)
+                ? response.data.messages
                 : (Array.isArray(response.data) ? response.data : []);
-              
+
               if (messagesArray.length > 0) {
                 setThreadMessages(messagesArray.map(msg => ({
                   id: msg.id,
                   content: msg.content || msg.message,
                   sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
                   sender_role: msg.sender?.role || msg.sender_role || '',
+                  sender_id: msg.sender?.id || msg.sender_id || null,
                   created_at: msg.created_at,
                   is_read: msg.is_read || false,
                   attachment: msg.attachment || null,
@@ -254,7 +267,7 @@ const Messages = () => {
             console.log('chatService.getMessages also failed:', chatServiceError);
           }
         }
-        
+
         // If no messages found, set empty array
         setThreadMessages([]);
       } catch (err) {
@@ -270,11 +283,11 @@ const Messages = () => {
     fetchThreadMessages();
   }, [selectedThreadId]);
 
-  // Sync WebSocket messages with local state
+  // Sync WebSocket messages with local state - prevent duplicates
   useEffect(() => {
     if (wsMessages && wsMessages.length > 0 && selectedThreadId) {
       const relevantMessages = wsMessages.filter(msg => {
-        return !msg.thread_id || msg.thread_id === selectedThreadId;
+        return (!msg.thread_id || msg.thread_id === selectedThreadId) && msg.id;
       });
 
       if (relevantMessages.length > 0) {
@@ -283,6 +296,7 @@ const Messages = () => {
           content: msg.content,
           sender_name: msg.sender?.name || msg.sender_name,
           sender_role: msg.sender?.role || msg.sender_role,
+          sender_id: msg.sender?.id || msg.sender_id || null,
           created_at: msg.created_at,
           is_read: msg.is_read || false,
           attachment: msg.attachment || null,
@@ -291,10 +305,15 @@ const Messages = () => {
 
         setThreadMessages(prev => {
           const existingIds = new Set(prev.map(m => m.id));
-          const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
-          
+          const newMessages = transformedMessages.filter(m => m.id && !existingIds.has(m.id));
+
           if (newMessages.length > 0) {
-            return [...prev, ...newMessages].sort((a, b) => 
+            // Merge and sort by created_at
+            const merged = [...prev, ...newMessages];
+            const unique = merged.filter((msg, index, self) =>
+              index === self.findIndex(m => m.id === msg.id)
+            );
+            return unique.sort((a, b) =>
               new Date(a.created_at) - new Date(b.created_at)
             );
           }
@@ -303,7 +322,7 @@ const Messages = () => {
 
         // Mark new messages as read
         transformedMessages.forEach(msg => {
-          if (!msg.is_read) {
+          if (msg.id && !msg.is_read) {
             wsMarkAsRead(msg.id);
           }
         });
@@ -311,13 +330,38 @@ const Messages = () => {
     }
   }, [wsMessages, selectedThreadId, wsMarkAsRead]);
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      // Check if user is near the bottom (within 100px) or at the bottom
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+      // Always scroll to bottom when new messages arrive if user is near bottom or when sending
+      if (isNearBottom || threadMessages.length > 0) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
+      }
+    }
+  }, [threadMessages.length, selectedThreadId]);
+
+  // Scroll to bottom when thread is selected
+  useEffect(() => {
+    if (selectedThreadId && messagesEndRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 300);
+    }
+  }, [selectedThreadId]);
+
   // Fetch staff members
   const fetchStaffMembers = async () => {
     try {
       setStaffLoading(true);
       const token = getAccessToken();
       const API_BASE_URL = getApiBaseUrl();
-      
+
       const response = await fetchWithCors(`${API_BASE_URL}/firm/staff/list/`, {
         method: 'GET',
         headers: {
@@ -329,7 +373,7 @@ const Messages = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
 
       if (result.success && result.data && result.data.staff_members) {
@@ -364,7 +408,7 @@ const Messages = () => {
 
     try {
       const response = await firmAdminMessagingAPI.searchRecipients({ q: query, type: 'staff' });
-      
+
       if (response.success && response.data) {
         setRecipientSearchResults(response.data.recipients || []);
         setShowRecipientDropdown(true);
@@ -408,18 +452,18 @@ const Messages = () => {
 
     try {
       setSending(true);
-      
+
       // Convert selectedStaffId to number for target_user_id
       // Backend expects: { target_user_id: 123 }
       const targetUserId = Number(selectedStaffId);
       const messageData = {
         target_user_id: targetUserId
       };
-      
+
       console.log('Sending compose message data:', messageData);
 
       const response = await firmAdminMessagingAPI.composeMessage(messageData);
-      
+
       if (response.success) {
         toast.success('Message sent successfully');
         setIsComposeModalOpen(false);
@@ -429,11 +473,8 @@ const Messages = () => {
         setSelectedStaffId('');
         setRecipientInput('');
         setAttachment(null);
-        // Refresh conversations
-        const conversationsResponse = await firmAdminMessagingAPI.listConversations({});
-        if (conversationsResponse.success && conversationsResponse.data) {
-          setConversations(conversationsResponse.data.conversations || []);
-        }
+        // Refresh conversations using consistent API (without loading state)
+        fetchConversations(false);
       } else {
         throw new Error(response.message || 'Failed to send message');
       }
@@ -462,7 +503,7 @@ const Messages = () => {
       } else {
         recipientToAdd = recipient;
       }
-      
+
       // Check if already added
       const isAlreadyAdded = recipients.some(r => {
         if (typeof r === 'string' && typeof recipientToAdd === 'string') {
@@ -473,7 +514,7 @@ const Messages = () => {
         }
         return false;
       });
-      
+
       if (!isAlreadyAdded) {
         // If @everyone is in recipients, remove it first
         const filteredRecipients = recipients.filter(r => r !== '@everyone');
@@ -519,12 +560,20 @@ const Messages = () => {
         if (sent) {
           console.log('✅ Message sent via WebSocket');
           setThreadAttachment(null);
-          // Message will come back via WebSocket
+          toast.success('Message sent successfully');
+          // Message will come back via WebSocket, no need to refresh manually
+          // Only refresh conversations to update last message timestamp (without loading state)
+          fetchConversations(false);
+          // Scroll to bottom after sending
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }, 100);
+          setSendingThreadMessage(false);
           return;
         }
       }
 
-      // Fallback to REST API
+      // Fallback to REST API only if WebSocket failed or not connected
       const messageData = {
         content: messageText.trim(),
         is_internal: false
@@ -535,69 +584,75 @@ const Messages = () => {
       if (response.success) {
         toast.success('Message sent successfully');
         setThreadAttachment(null);
-        
-        // Refresh thread messages using getMessages
-        try {
-          const messagesResponse = await firmAdminMessagingAPI.getMessages(selectedThreadId, { page: 1, page_size: 50 });
-          console.log('Refreshed messages after send:', messagesResponse);
-          
-          let messagesArray = [];
-          if (messagesResponse.success && messagesResponse.data) {
-            if (Array.isArray(messagesResponse.data.messages)) {
-              messagesArray = messagesResponse.data.messages;
-            } else if (Array.isArray(messagesResponse.data)) {
-              messagesArray = messagesResponse.data;
-            } else if (messagesResponse.data.results) {
-              messagesArray = messagesResponse.data.results;
-            }
-          } else if (Array.isArray(messagesResponse)) {
-            messagesArray = messagesResponse;
-          }
-          
-          if (messagesArray.length > 0) {
-            setThreadMessages(messagesArray.map(msg => ({
-              id: msg.id,
-              content: msg.content || msg.message,
-              sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-              sender_role: msg.sender?.role || msg.sender_role || '',
-              created_at: msg.created_at,
-              is_read: msg.is_read || false,
-              attachment: msg.attachment || null,
-              attachment_name: msg.attachment_name || null,
-            })));
-          }
-        } catch (refreshError) {
-          console.error('Error refreshing messages after send:', refreshError);
-          // Try chatService as fallback
+
+        // Only refresh messages if WebSocket is not connected (to avoid duplicates)
+        // If WebSocket is connected, it will receive the message automatically
+        if (!wsConnected) {
+          // Scroll to bottom after sending
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }, 200);
           try {
-            const chatResponse = await chatService.getMessages(selectedThreadId);
-            if (chatResponse.success && chatResponse.data) {
-              const messagesArray = Array.isArray(chatResponse.data.messages) 
-                ? chatResponse.data.messages 
-                : (Array.isArray(chatResponse.data) ? chatResponse.data : []);
-              if (messagesArray.length > 0) {
-                setThreadMessages(messagesArray.map(msg => ({
-                  id: msg.id,
-                  content: msg.content || msg.message,
-                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                  sender_role: msg.sender?.role || msg.sender_role || '',
-                  created_at: msg.created_at,
-                  is_read: msg.is_read || false,
-                  attachment: msg.attachment || null,
-                  attachment_name: msg.attachment_name || null,
-                })));
+            const messagesResponse = await firmAdminMessagingAPI.getMessages(selectedThreadId, { page: 1, page_size: 50 });
+            console.log('Refreshed messages after send (REST fallback):', messagesResponse);
+
+            let messagesArray = [];
+            if (messagesResponse.success && messagesResponse.data) {
+              if (Array.isArray(messagesResponse.data.messages)) {
+                messagesArray = messagesResponse.data.messages;
+              } else if (Array.isArray(messagesResponse.data)) {
+                messagesArray = messagesResponse.data;
+              } else if (messagesResponse.data.results) {
+                messagesArray = messagesResponse.data.results;
               }
+            } else if (Array.isArray(messagesResponse)) {
+              messagesArray = messagesResponse;
             }
-          } catch (fallbackError) {
-            console.error('Fallback refresh also failed:', fallbackError);
+
+            if (messagesArray.length > 0) {
+              setThreadMessages(messagesArray.map(msg => ({
+                id: msg.id,
+                content: msg.content || msg.message,
+                sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                sender_role: msg.sender?.role || msg.sender_role || '',
+                sender_id: msg.sender?.id || msg.sender_id || null,
+                created_at: msg.created_at,
+                is_read: msg.is_read || false,
+                attachment: msg.attachment || null,
+                attachment_name: msg.attachment_name || null,
+              })));
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing messages after send:', refreshError);
+            // Try chatService as fallback
+            try {
+              const chatResponse = await chatService.getMessages(selectedThreadId);
+              if (chatResponse.success && chatResponse.data) {
+                const messagesArray = Array.isArray(chatResponse.data.messages)
+                  ? chatResponse.data.messages
+                  : (Array.isArray(chatResponse.data) ? chatResponse.data : []);
+                if (messagesArray.length > 0) {
+                  setThreadMessages(messagesArray.map(msg => ({
+                    id: msg.id,
+                    content: msg.content || msg.message,
+                    sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                    sender_role: msg.sender?.role || msg.sender_role || '',
+                    sender_id: msg.sender?.id || msg.sender_id || null,
+                    created_at: msg.created_at,
+                    is_read: msg.is_read || false,
+                    attachment: msg.attachment || null,
+                    attachment_name: msg.attachment_name || null,
+                  })));
+                }
+              }
+            } catch (fallbackError) {
+              console.error('Fallback refresh also failed:', fallbackError);
+            }
           }
         }
-        
-        // Refresh conversations to update last message
-        const conversationsResponse = await firmAdminMessagingAPI.listConversations({});
-        if (conversationsResponse.success && conversationsResponse.data) {
-          setConversations(conversationsResponse.data.conversations || []);
-        }
+
+        // Refresh conversations to update last message (use same API as initial fetch, without loading state)
+        fetchConversations(false);
       } else {
         throw new Error(response.message || 'Failed to send message');
       }
@@ -700,7 +755,7 @@ const Messages = () => {
     }
 
     const { avg_response_time_hours, avg_response_time_minutes, unit } = responseTimeData;
-    
+
     if (unit === 'hours') {
       // Format hours with 1 decimal place
       return `${avg_response_time_hours?.toFixed(1) || '0.0'}h`;
@@ -713,7 +768,7 @@ const Messages = () => {
         return `${Math.round(avg_response_time_minutes)}m`;
       }
     }
-    
+
     // Fallback to hours if unit is not specified
     return `${avg_response_time_hours?.toFixed(1) || '0.0'}h`;
   };
@@ -722,7 +777,7 @@ const Messages = () => {
   const unreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
   const clientConversations = conversations.filter(conv => !conv.is_staff_conversation).length;
   const internalConversations = conversations.filter(conv => conv.is_staff_conversation).length;
-  
+
   const updatedSummaryCards = [
     {
       ...summaryCards[0],
@@ -813,7 +868,7 @@ const Messages = () => {
               </div>
             </div>
             <div className="relative">
-              <select 
+              <select
                 value={messageFilter}
                 onChange={(e) => setMessageFilter(e.target.value)}
                 className="appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none  font-[BasisGrotesquePro] cursor-pointer min-w-[160px]"
@@ -854,7 +909,7 @@ const Messages = () => {
             </div>
 
             {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto space-y-2">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
               {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="text-gray-500">Loading conversations...</div>
@@ -893,7 +948,7 @@ const Messages = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] truncate flex-1 min-w-0">
-                              {conv.client_name || conv.assigned_staff_names?.join(', ') || 'All Staff'}
+                              {conv.client_name || conv.client?.name || conv.assigned_staff_names?.join(', ') || 'All Staff'}
                             </p>
                             {conv.unread_count > 0 && (
                               <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 leading-none">
@@ -927,16 +982,16 @@ const Messages = () => {
                 <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Message Thread</h3>
                 {/* WebSocket Connection Status */}
                 {selectedThreadId && (
-                  <div className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${
-                    wsConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    {wsConnected ? '🟢 Connected' : '🔴 Disconnected'}
+                  <div className={`text-xs px-2 py-1 rounded-full font-[BasisGrotesquePro] ${wsConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                    {/* {wsConnected ? '🟢 Connected' : '🔴 Disconnected'} */}
                   </div>
                 )}
               </div>
+
               <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                {selectedConversation 
-                  ? `Conversation: ${selectedConversation.subject || 'Untitled'}`
+                {selectedConversation
+                  ? `${selectedConversation.client_name || selectedConversation.assigned_staff_names?.join(', ') || 'All Staff'} - ${selectedConversation.subject || 'Untitled'}`
                   : 'Select a conversation to view messages'}
               </p>
               {wsError && (
@@ -947,7 +1002,7 @@ const Messages = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto space-y-4 mb-4 hide-scrollbar">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-4 mb-4 hide-scrollbar">
               {messagesLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="text-gray-500">Loading messages...</div>
@@ -958,51 +1013,74 @@ const Messages = () => {
                 </div>
               ) : (
                 <>
-                  {threadMessages.map((msg) => (
-                    <div key={msg.id} className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        {/* Sender Info - NO background color */}
-                        <div className="flex items-baseline gap-2 mb-2">
-                          <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] leading-none">
-                            {msg.sender_name || 'Unknown'}
-                          </p>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] !border border-[#E8F0FF] bg-white text-gray-700 leading-none flex-shrink-0`}>
-                            {msg.sender_role || 'User'}
-                          </span>
-                          <span className="text-xs text-gray-500 font-[BasisGrotesquePro] whitespace-nowrap leading-none">
-                            {formatTimeAgo(msg.created_at)}
-                          </span>
-                        </div>
-                        {/* Message Content - ALL messages have background color */}
-                        <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
-                          <p className="text-sm text-gray-700 font-[BasisGrotesquePro] leading-relaxed">
-                            {msg.content}
-                          </p>
-                        {msg.attachment && (
-                          <div className="mt-2">
-                            <a 
-                              href={msg.attachment} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                              </svg>
-                              {msg.attachment_name || 'Attachment'}
-                            </a>
+                  {threadMessages.map((msg) => {
+                    // Get current user data to compare with message sender
+                    const currentUser = getUserData();
+                    const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+                    const currentUserName = currentUser?.name || currentUser?.firm_name || 'Seqwens Firm';
+
+                    // Check if message is sent by current user by comparing sender_id
+                    let isSentByCurrentUser = false;
+                    if (msg.sender_id && currentUserId) {
+                      isSentByCurrentUser = String(msg.sender_id) === String(currentUserId) || msg.sender_id === currentUserId;
+                    } else {
+                      // Fallback: In FirmAdmin, staff messages are "sent" (right side), client messages are "received" (left side)
+                      const senderRole = (msg.sender_role || '').toLowerCase();
+                      const isStaff = senderRole.includes('staff') || senderRole.includes('admin') || senderRole.includes('accountant') || senderRole.includes('bookkeeper') || senderRole.includes('assistant');
+                      isSentByCurrentUser = isStaff;
+                    }
+
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`d-flex mb-3 w-100 ${isSentByCurrentUser ? 'justify-content-end' : ''}`}
+                        style={{ fontFamily: "BasisGrotesquePro", justifyContent: isSentByCurrentUser ? 'flex-end' : 'flex-start' }}
+                      >
+                        {/* {!isSentByCurrentUser && (
+                          <JdIcon color="#f97316" className="me-2" />
+                        )} */}
+                        <div className={`bg-[#FFF4E6] p-2 px-4 rounded ${isSentByCurrentUser ? 'mr-4' : 'ml-2'} max-w-[75%] min-w-[80px]`} style={{ fontFamily: "BasisGrotesquePro", marginLeft: isSentByCurrentUser ? '0' : '10px', marginRight: isSentByCurrentUser ? '16px' : '0' }}>
+                          <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
+                            {isSentByCurrentUser ? (msg.sender_name || currentUserName) : (msg.sender_name || 'Unknown')}
                           </div>
-                        )}
+                          <div style={{ color: "#1F2937" }}>{msg.content}</div>
+                          {msg.attachment && (
+                            <div className="mt-2">
+                              <a
+                                href={msg.attachment}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                                {msg.attachment_name || 'Attachment'}
+                              </a>
+                            </div>
+                          )}
+                          <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: isSentByCurrentUser ? "right" : "left" }}>
+                            {new Date(msg.created_at).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </div>
+                        </div>
+                        {/* {isSentByCurrentUser && (
+                          <JdIcon color="#f97316" className="ms-2" />
+                        )} */}
                       </div>
-                    </div>
-                  </div>
-                  ))}
-                  
+                    );
+                  })}
+
                   {/* Typing Indicator */}
                   {typingUsers && typingUsers.length > 0 && (
                     <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2">
+                      <div className="flex flex-col">
+                        <div className="bg-[#FFF4E6] !border border-[#FFE0B2] rounded-lg p-2 inline-block max-w-[80%]">
                           <p className="text-sm text-gray-500 font-[BasisGrotesquePro] italic">
                             {typingUsers.map(u => u.name || 'User').join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                           </p>
@@ -1010,6 +1088,9 @@ const Messages = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Scroll anchor for auto-scroll */}
+                  <div ref={messagesEndRef} />
                 </>
               )}
             </div>
@@ -1022,20 +1103,6 @@ const Messages = () => {
                 onChange={handleThreadFileSelect}
                 className="hidden"
               />
-              <button 
-                onClick={() => threadFileInputRef.current?.click()}
-                className="w-8 h-8 rounded bg-[#F56D2D] flex items-center justify-center flex-shrink-0 hover:bg-[#E55A1D] transition-colors cursor-pointer"
-                title={threadAttachment ? threadAttachment.name : "Attach file"}
-              >
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </button>
-              {threadAttachment && (
-                <span className="text-xs text-gray-600 truncate max-w-[100px]" title={threadAttachment.name}>
-                  {threadAttachment.name}
-                </span>
-              )}
               <input
                 type="text"
                 value={threadMessageInput}
@@ -1048,9 +1115,9 @@ const Messages = () => {
                 }}
                 placeholder={selectedThreadId ? "Write your messages here..." : "Select a conversation to send messages"}
                 disabled={sendingThreadMessage}
-                className="flex-1 px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 w-full px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <button 
+              <button
                 onClick={handleSendThreadMessage}
                 disabled={!selectedThreadId || !threadMessageInput.trim() || sendingThreadMessage}
                 className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1117,7 +1184,7 @@ const Messages = () => {
                           const staffName = staff.name || `${staff.first_name || ''} ${staff.last_name || ''}`.trim() || staff.email || 'Unknown';
                           const staffEmail = staff.email || '';
                           const staffRole = staff.role_display || staff.role?.primary || 'Staff';
-                          
+
                           return (
                             <option key={staffId} value={String(staffId)}>
                               {staffName} ({staffEmail}) - {staffRole}
@@ -1170,7 +1237,7 @@ const Messages = () => {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <button 
+                <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors"
                 >
@@ -1196,7 +1263,7 @@ const Messages = () => {
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleComposeMessage}
                   disabled={sending || !subject.trim() || !message.trim() || !selectedStaffId}
                   className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1217,4 +1284,5 @@ const Messages = () => {
 };
 
 export default Messages;
+
 
