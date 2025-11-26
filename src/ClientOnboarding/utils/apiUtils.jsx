@@ -3297,6 +3297,10 @@ export const invoicesAPI = {
   // Get all invoices for the current taxpayer
   getInvoices: async () => {
     return await apiRequest('/taxpayer/invoices/', 'GET');
+  },
+  // Create payment session for an invoice
+  payInvoice: async (invoiceId) => {
+    return await apiRequest(`/taxpayer/invoices/${invoiceId}/pay/`, 'POST');
   }
 };
 
