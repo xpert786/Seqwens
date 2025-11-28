@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getMediaUrl } from '../../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
 
 export default function BrandingTab() {
@@ -48,10 +49,10 @@ export default function BrandingTab() {
           
           // Set logo and favicon previews if URLs exist
           if (response.data.logo_url) {
-            setLogoPreview(response.data.logo_url);
+            setLogoPreview(getMediaUrl(response.data.logo_url));
           }
           if (response.data.favicon_url) {
-            setFaviconPreview(response.data.favicon_url);
+            setFaviconPreview(getMediaUrl(response.data.favicon_url));
           }
         } else {
           throw new Error(response.message || 'Failed to load branding information');
@@ -134,10 +135,10 @@ export default function BrandingTab() {
         toast.success('Branding information updated successfully');
         // Update previews if new URLs are returned
         if (response.data.logo_url) {
-          setLogoPreview(response.data.logo_url);
+          setLogoPreview(getMediaUrl(response.data.logo_url));
         }
         if (response.data.favicon_url) {
-          setFaviconPreview(response.data.favicon_url);
+          setFaviconPreview(getMediaUrl(response.data.favicon_url));
         }
         // Clear file selections after successful upload
         setLogoFile(null);
@@ -470,6 +471,19 @@ export default function BrandingTab() {
 
         <div className="bg-white rounded-lg p-2">
           <div className="space-y-4">
+            {/* Logo Preview */}
+            <div className="flex justify-center mb-6">
+              {logoPreview ? (
+                <img 
+                  src={logoPreview} 
+                  alt="Logo preview" 
+                  className="max-h-20 object-contain"
+                />
+              ) : (
+                <div className="text-center text-sm text-gray-400">Logo will appear here</div>
+              )}
+            </div>
+
             <input
               type="email"
               placeholder="Enter your email"

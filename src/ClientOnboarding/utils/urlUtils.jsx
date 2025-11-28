@@ -8,17 +8,12 @@
 export const getBaseUrl = () => {
   const isServer = import.meta.env.VITE_IS_SERVER === 'true';
   
-  if (isServer) {
     // Use Vite server URL when server is true
-    return 'http://168.231.121.7/seqwens-frontend';
-  } else {
-    // Use localhost URL when server is false
-    return 'http://localhost:5173';
-  }
+  return 'http://168.231.121.7/seqwens-frontend';
 };
 
 /**
- * Get the login URL based on server environment
+ * Get the login URL based on server environmentWWWWWW
  * @returns {string} The login URL
  */
 export const getLoginUrl = () => {
@@ -61,4 +56,41 @@ export const navigateToUrl = (path, navigate = null) => {
  */
 export const navigateToLogin = (navigate = null) => {
   navigateToUrl('/login', navigate);
+};
+
+/**
+ * Transform media URLs to use the server base URL
+ * Ensures all media files are loaded from the correct server location
+ * @param {string} mediaUrl - The media URL (can be relative, localhost, or full URL)
+ * @returns {string} The transformed URL pointing to the server
+ */
+export const getMediaUrl = (mediaUrl) => {
+  if (!mediaUrl) {
+    return null;
+  }
+
+  // If URL already starts with http, check if it needs to be converted
+  if (mediaUrl.startsWith('http')) {
+    // Replace localhost URLs with server URL
+    if (mediaUrl.includes('localhost:5173')) {
+      return mediaUrl.replace('http://localhost:5173', 'http://168.231.121.7/seqwens');
+    }
+    // Already has full server URL
+    return mediaUrl;
+  }
+
+  // Handle relative paths
+  // If it's a relative path like /seqwens/media/firm_logos/testlogo.jpg
+  if (mediaUrl.startsWith('/seqwens/')) {
+    return `http://168.231.121.7${mediaUrl}`;
+  }
+
+  // If it's a path like /media/firm_logos/testlogo.jpg
+  if (mediaUrl.startsWith('/media/')) {
+    return `http://168.231.121.7/seqwens${mediaUrl}`;
+  }
+
+  // Default: prepend the server base URL
+  const cleanPath = mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`;
+  return `http://168.231.121.7/seqwens${cleanPath}`;
 };

@@ -14,6 +14,7 @@ import {
     BarChart,
     Bar
 } from 'recharts';
+import { useFirmSettings } from '../Context/FirmSettingsContext';
 const tabs = [
     'Security Overview',
     'Active Sessions',
@@ -207,6 +208,7 @@ const complianceDetails = [
 ];
 
 export default function SecurityCompliance() {
+    const { advancedReportingEnabled } = useFirmSettings();
     const [activeTab, setActiveTab] = useState('Security Overview');
     const [auditLoggingEnabled, setAuditLoggingEnabled] = useState(true);
     const [csvExportEnabled, setCsvExportEnabled] = useState(true);
@@ -442,16 +444,18 @@ export default function SecurityCompliance() {
                     />
                 </div>
                 <div className="relative">
-                    <button
-                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                        style={{ borderRadius: '8px' }}
-                        type="button"
-                    >
-                        Export CSV
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </button>
+                    {!advancedReportingEnabled && (
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Export CSV
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -643,6 +647,7 @@ export default function SecurityCompliance() {
 
 
                 {/* Enable CSV Export */}
+                {!advancedReportingEnabled && (
                 <div className="mb-8 pb-8 border-b border-[#E5E7EB]">
                     <div className="gap-6 sm:flex-row sm:items-start sm:justify-between">
                         {/* Enable Toggles Section */}
@@ -737,6 +742,7 @@ export default function SecurityCompliance() {
                         </div>
                     </div>
                 </div>
+                )}
 
             </div>
         </div>
@@ -771,16 +777,18 @@ export default function SecurityCompliance() {
                         </div>
                     </div>
                 </div>
-                <button
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                    style={{ borderRadius: '8px' }}
-                    type="button"
-                >
-                    Export CSV
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                </button>
+                {!advancedReportingEnabled && (
+                    <button
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                        style={{ borderRadius: '8px' }}
+                        type="button"
+                    >
+                        Export CSV
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                )}
             </div>
 
             {/* Charts Section - Two Columns */}
@@ -1925,17 +1933,11 @@ export default function SecurityCompliance() {
                 </div>
 
                 {activeTab === 'Security Overview' && renderSecurityOverview()}
-
                 {activeTab === 'Active Sessions' && renderActiveSessions()}
-
                 {activeTab === 'Audits Logs' && renderAuditLogs()}
-
                 {activeTab === 'Compliance' && renderCompliance()}
-
                 {activeTab === 'Security Controls' && renderSecurityControls()}
-
                 {activeTab === 'Security Settings' && renderSecuritySettings()}
-
                 {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && activeTab !== 'Audits Logs' && activeTab !== 'Compliance' && activeTab !== 'Security Controls' && activeTab !== 'Security Settings' && renderPlaceholder()}
             </div>
             {renderReviewModal()}

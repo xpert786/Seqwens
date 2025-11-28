@@ -21,7 +21,7 @@ const UsageDashboard = () => {
             const token = getAccessToken();
             // Using superadmin endpoint as provided
             // If there's a firm-admin specific endpoint, it can be changed here
-            const url = `${API_BASE_URL}/superadmin/subscriptions/usage-dashboard/`;
+            const url = `${API_BASE_URL}/user/firm-admin/subscriptions/usage-dashboard/`;
 
             const response = await fetchWithCors(url, {
                 method: 'GET',
