@@ -1772,7 +1772,7 @@ const SchedulingCalendar = () => {
                                             {staff.full_name ||
                                                 (staff.first_name && staff.last_name
                                                     ? `${staff.first_name} ${staff.last_name}`
-                                                    : staff.email || `Staff #${staff.id}`)}
+                                                    : staff.email || `Staff #${staff.first_name} ${staff.last_name}`)}
                                         </option>
                                     ))}
                                 </select>

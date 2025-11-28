@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AssignTasked, CrossesIcon, ExportCSV, Importing, Msged } from '../../Components/icons';
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 const BulkAction = ({ isOpen, onClose, selectedCount }) => {
+  const { advancedReportingEnabled } = useFirmSettings();
   const [message, setMessage] = useState('');
   const [task, setTask] = useState('');
   const [complianceCheck, setComplianceCheck] = useState(false);
@@ -222,42 +224,44 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
           </div>
 
           {/* Bottom Buttons */}
-          <div className="flex justify-end" style={{ gap: '12px' }}>
-            <button
-              onClick={handleImportCSV}
-              className="flex items-center gap-2 font-medium transition-colors"
-              style={{ 
-                backgroundColor: '#FFF',
-                color: '#131323',
-                border: '1px solid #DBEAFE',
-                borderRadius: '8px',
-                fontSize: '14px',
-                padding: '10px 20px',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
-              <Importing className="w-4 h-4" />
-              Import CSV
-            </button>
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-2 font-medium transition-colors"
-              style={{ 
-                backgroundColor: '#F97316',
-                borderRadius: '8px',
-                fontSize: '14px',
-                padding: '10px 20px',
-                fontWeight: '500',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <ExportCSV className="w-4 h-4" />
-              Export CSV
-            </button>
-          </div>
+          {!advancedReportingEnabled && (
+            <div className="flex justify-end" style={{ gap: '12px' }}>
+              <button
+                onClick={handleImportCSV}
+                className="flex items-center gap-2 font-medium transition-colors"
+                style={{ 
+                  backgroundColor: '#FFF',
+                  color: '#131323',
+                  border: '1px solid #DBEAFE',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  padding: '10px 20px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                <Importing className="w-4 h-4" />
+                Import CSV
+              </button>
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 font-medium transition-colors"
+                style={{ 
+                  backgroundColor: '#F97316',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  padding: '10px 20px',
+                  fontWeight: '500',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <ExportCSV className="w-4 h-4" />
+                Export CSV
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

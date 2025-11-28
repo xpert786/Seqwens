@@ -6,10 +6,12 @@ import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useFirmSettings } from "../../Context/FirmSettingsContext";
 
 const API_BASE_URL = getApiBaseUrl();
 
 export default function BillingManagement() {
+  const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState({
@@ -406,15 +408,17 @@ export default function BillingManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={exportInvoicesToPDF}
-            className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export Report
-          </button>
+          {!advancedReportingEnabled && (
+            <button
+              onClick={exportInvoicesToPDF}
+              className="px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center gap-2 hover:bg-gray-50 transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export Report
+            </button>
+          )}
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="px-5 py-2 !rounded-lg flex items-center gap-2 text-white font-medium"

@@ -11,11 +11,13 @@ import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 const API_BASE_URL = getApiBaseUrl();
 
 
 export default function StaffManagement() {
+  const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -950,13 +952,15 @@ export default function StaffManagement() {
                 <PowersIcon />
                 Performance Report
               </button>
-              <button
-                onClick={() => setIsBulkImportModalOpen(true)}
-                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
-              >
-                <UpperDownsIcon />
-                Bulk Import
-              </button>
+              {!advancedReportingEnabled && (
+                <button
+                  onClick={() => setIsBulkImportModalOpen(true)}
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+                >
+                  <UpperDownsIcon />
+                  Bulk Import
+                </button>
+              )}
               <button
                 onClick={() => setIsAddStaffModalOpen(true)}
                 className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
@@ -970,13 +974,15 @@ export default function StaffManagement() {
 
             {/* Bottom Row - 1 button */}
             <div className="flex items-center">
-              <button 
-                onClick={exportStaffToPDF}
-                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
-              >
-                <DownsIcon />
-                Export Report
-              </button>
+              {!advancedReportingEnabled && (
+                <button
+                  onClick={exportStaffToPDF}
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+                >
+                  <DownsIcon />
+                  Export Report
+                </button>
+              )}
             </div>
           </div>
         </div>

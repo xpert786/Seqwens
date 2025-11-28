@@ -1,8 +1,10 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, Cell } from 'recharts';
 import TabNavigation from '../Integrations/TabNavigation';
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
+  const { advancedReportingEnabled } = useFirmSettings();
   // KPI Data
   const kpiData = [
     {
@@ -250,7 +252,9 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs }) {
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Upsell / Add-On Performance</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-800">Export CSV</button>
+            {!advancedReportingEnabled && (
+              <button className="text-sm text-blue-600 hover:text-blue-800">Export CSV</button>
+            )}
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">

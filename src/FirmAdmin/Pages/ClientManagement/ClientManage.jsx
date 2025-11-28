@@ -14,10 +14,12 @@ import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/uti
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 const API_BASE_URL = getApiBaseUrl();
 
 export default function ClientManage() {
+  const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -780,19 +782,23 @@ export default function ClientManage() {
             <SettingIcon />
             Build Intake Forms
           </button> */}
-          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }}
-            onClick={() => setShowBulkImportModal(true)}>
-            <BulkImport />
-            Bulk Import
-          </button>
+          {!advancedReportingEnabled && (
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }}
+              onClick={() => setShowBulkImportModal(true)}>
+              <BulkImport />
+              Bulk Import
+            </button>
+          )}
           <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
             <AddClient />
             Add Client
           </button>
-          <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
-            <ExportReport />
-            Export Report
-          </button>
+          {!advancedReportingEnabled && (
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
+              <ExportReport />
+              Export Report
+            </button>
+          )}
         </div>
       </div>
       {/* Dashboard Error Display */}
