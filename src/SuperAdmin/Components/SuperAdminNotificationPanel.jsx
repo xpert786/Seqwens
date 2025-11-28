@@ -83,6 +83,10 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
   const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [total, setTotal] = useState(0);
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
+  
+  // Limit for recent notifications
+  const RECENT_NOTIFICATIONS_LIMIT = 3;
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
@@ -140,24 +144,46 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
   );
 
   const filteredNotifications = useMemo(() => {
+    let filtered = [];
     if (selectedTab === "unread") {
-      return sortByRecent(notifications.filter((notification) => !notification.is_read));
+      filtered = sortByRecent(notifications.filter((notification) => !notification.is_read));
+    } else if (selectedTab === "read") {
+      filtered = sortByRecent(notifications.filter((notification) => notification.is_read));
+    } else {
+      // All tab shows recent message notifications
+      const messageNotifications = notifications.filter((notification) =>
+        (notification.notification_type || "").toLowerCase().includes("message")
+      );
+      filtered = sortByRecent(messageNotifications);
     }
-    if (selectedTab === "read") {
-      return sortByRecent(notifications.filter((notification) => notification.is_read)).slice(
-        0,
-        READ_TAB_LIMIT
+    
+    // If not showing all, limit to 5 notifications
+    if (!showAllNotifications) {
+      return filtered.slice(0, RECENT_NOTIFICATIONS_LIMIT);
+    }
+    
+    return filtered;
+  }, [notifications, selectedTab, sortByRecent, showAllNotifications]);
+  
+  // Check if there are more notifications to show
+  const hasMoreNotifications = useMemo(() => {
+    let allFiltered = [];
+    if (selectedTab === "unread") {
+      allFiltered = notifications.filter((notification) => !notification.is_read);
+    } else if (selectedTab === "read") {
+      allFiltered = notifications.filter((notification) => notification.is_read);
+    } else {
+      allFiltered = notifications.filter((notification) =>
+        (notification.notification_type || "").toLowerCase().includes("message")
       );
     }
-    // All tab shows recent message notifications
-    const messageNotifications = notifications.filter((notification) =>
-      (notification.notification_type || "").toLowerCase().includes("message")
-    );
-    return sortByRecent(messageNotifications);
-  }, [notifications, selectedTab, sortByRecent]);
+    
+    return allFiltered.length > RECENT_NOTIFICATIONS_LIMIT;
+  }, [notifications, selectedTab]);
 
   useEffect(() => {
     fetchNotifications();
+    setShowAllNotifications(false); // Reset to show recent when tab changes
   }, [fetchNotifications]);
 
   useEffect(() => {
@@ -493,7 +519,65 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
         )}
       </div>
 
-      {/* Footer */}
+      {/* View All Button */}
+      {!loading && !error && hasMoreNotifications && !showAllNotifications && (
+        <div
+          className="text-center p-2"
+          style={{
+            borderTop: "1px solid #E5E7EB",
+          }}
+        >
+          <button
+            className="btn btn-sm"
+            onClick={() => setShowAllNotifications(true)}
+            style={{
+              backgroundColor: "#F56D2D",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "6px",
+              padding: "8px 24px",
+              fontSize: "12px",
+              fontFamily: "BasisGrotesquePro",
+              fontWeight: "500",
+            }}
+          >
+            View All ({filteredNotifications.length > RECENT_NOTIFICATIONS_LIMIT ? 
+              (selectedTab === "unread" ? notifications.filter((n) => !n.is_read).length :
+               selectedTab === "read" ? notifications.filter((n) => n.is_read).length :
+               notifications.filter((n) => (n.notification_type || "").toLowerCase().includes("message")).length) 
+              : filteredNotifications.length} notifications)
+          </button>
+        </div>
+      )}
+      
+      {/* Show Less Button */}
+      {!loading && !error && showAllNotifications && (
+        <div
+          className="text-center p-2"
+          style={{
+            borderTop: "1px solid #E5E7EB",
+          }}
+        >
+          <button
+            className="btn btn-sm"
+            onClick={() => setShowAllNotifications(false)}
+            style={{
+              backgroundColor: "#F56D2D",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "6px",
+              padding: "8px 24px",
+              fontSize: "12px",
+              fontFamily: "BasisGrotesquePro",
+              fontWeight: "500",
+            }}
+          >
+            Show Less
+          </button>
+        </div>
+      )}
+      
+      {/* Footer - View All Notifications Page */}
       {filteredNotifications.length > 0 && (
         <div
           className="text-center p-2"
@@ -517,7 +601,7 @@ const SuperAdminNotificationPanel = ({ onClose }) => {
               fontFamily: "BasisGrotesquePro",
             }}
           >
-            View All Notifications
+            View All Notifications Page
           </button>
         </div>
       )}

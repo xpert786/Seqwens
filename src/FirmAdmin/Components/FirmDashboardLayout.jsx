@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from "react-router-dom";
 import FirmHeader from './FirmHeader';
 import FirmSidebar from './FirmSidebar';
+import MaintenanceMode from '../../ClientOnboarding/components/MaintenanceMode';
 import '../styles/FirmPortalColors.css';
 
 export default function FirmDashboardLayout() {
@@ -39,6 +40,7 @@ export default function FirmDashboardLayout() {
 
   return (
     <div className="firm-dashboard-layout">
+      <MaintenanceMode />
       <FirmHeader onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       <FirmSidebar isSidebarOpen={isSidebarOpen} />
       <main 

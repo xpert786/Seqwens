@@ -173,6 +173,8 @@ export default function AcceptInvite() {
 
                     if (userType === 'super_admin') {
                         redirectPath = "/superadmin";
+                    } else if (userType === 'support_admin' || userType === 'billing_admin') {
+                        redirectPath = "/superadmin";
                     } else if (userType === 'admin') {
                         redirectPath = "/firmadmin";
                     } else if (userType === 'tax_preparer') {

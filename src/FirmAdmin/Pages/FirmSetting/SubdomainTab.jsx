@@ -13,7 +13,7 @@ export default function SubdomainTab() {
     primary_color: '#32B582',
     secondary_color: '#F56D2D'
   });
-  
+
   const [portalUrl, setPortalUrl] = useState('');
   const [logoUrl, setLogoUrl] = useState(null);
   const [faviconUrl, setFaviconUrl] = useState(null);
@@ -28,7 +28,7 @@ export default function SubdomainTab() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState('');
   const [availabilityStatus, setAvailabilityStatus] = useState(null);
-  
+
   const logoInputRef = useRef(null);
   const faviconInputRef = useRef(null);
 
@@ -38,9 +38,9 @@ export default function SubdomainTab() {
       try {
         setLoading(true);
         setError('');
-        
+
         const response = await firmAdminSettingsAPI.getSubdomainSettings();
-        
+
         if (response.success && response.data) {
           setFormData({
             subdomain: response.data.subdomain || '',
@@ -82,7 +82,7 @@ export default function SubdomainTab() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear availability status when subdomain changes
     if (name === 'subdomain') {
       setAvailabilityStatus(null);
@@ -100,15 +100,15 @@ export default function SubdomainTab() {
     try {
       setCheckingAvailability(true);
       setAvailabilityStatus(null);
-      
+
       const response = await firmAdminSettingsAPI.checkSubdomainAvailability(subdomain);
-      
+
       if (response.success) {
         setAvailabilityStatus({
           available: response.available,
           message: response.message
         });
-        
+
         if (response.available) {
           toast.success(response.message || 'Subdomain is available');
         } else {
@@ -172,10 +172,10 @@ export default function SubdomainTab() {
       };
 
       const response = await firmAdminSettingsAPI.updateSubdomainSettings(colorData, {});
-      
+
       if (response.success && response.data) {
         toast.success('Portal colors updated successfully');
-        
+
         // Refresh portal colors to apply new colors immediately
         refreshColors();
       } else {
@@ -210,10 +210,10 @@ export default function SubdomainTab() {
 
       // Send empty data object, only files
       const response = await firmAdminSettingsAPI.updateSubdomainSettings({}, files);
-      
+
       if (response.success && response.data) {
         toast.success('Portal assets updated successfully');
-        
+
         // Update previews if new URLs are returned
         if (response.data.logo_url) {
           setLogoUrl(response.data.logo_url);
@@ -223,7 +223,7 @@ export default function SubdomainTab() {
           setFaviconUrl(response.data.favicon_url);
           setFaviconPreview(response.data.favicon_url);
         }
-        
+
         // Clear file selections after successful upload
         setLogoFile(null);
         setFaviconFile(null);
@@ -260,15 +260,15 @@ export default function SubdomainTab() {
       if (faviconFile) files.favicon = faviconFile;
 
       const response = await firmAdminSettingsAPI.updateSubdomainSettings(subdomainData, files);
-      
+
       if (response.success && response.data) {
         toast.success('Subdomain settings updated successfully');
-        
+
         // Update portal URL if returned
         if (response.data.portal_url) {
           setPortalUrl(response.data.portal_url);
         }
-        
+
         // Update previews if new URLs are returned
         if (response.data.logo_url) {
           setLogoUrl(response.data.logo_url);
@@ -278,11 +278,11 @@ export default function SubdomainTab() {
           setFaviconUrl(response.data.favicon_url);
           setFaviconPreview(response.data.favicon_url);
         }
-        
+
         // Clear file selections after successful upload
         setLogoFile(null);
         setFaviconFile(null);
-        
+
         // Refresh portal colors to apply new colors immediately
         refreshColors();
       } else {
@@ -346,7 +346,7 @@ export default function SubdomainTab() {
                 <button
                   onClick={handleCheckAvailability}
                   disabled={checkingAvailability || !formData.subdomain.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#2BC5E0] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] !rounded-lg hover:bg-[#2BC5E0] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {checkingAvailability ? (
                     <>
@@ -359,9 +359,8 @@ export default function SubdomainTab() {
                 </button>
               </div>
               {availabilityStatus && (
-                <p className={`text-xs mt-2 font-[BasisGrotesquePro] ${
-                  availabilityStatus.available ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <p className={`text-xs mt-2 font-[BasisGrotesquePro] ${availabilityStatus.available ? 'text-green-600' : 'text-red-600'
+                  }`}>
                   {availabilityStatus.message}
                 </p>
               )}
@@ -489,7 +488,7 @@ export default function SubdomainTab() {
             <button
               onClick={handleApplyColors}
               disabled={savingColors}
-              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {savingColors ? (
                 <>
@@ -529,9 +528,9 @@ export default function SubdomainTab() {
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center">
                 {logoPreview ? (
-                  <img 
-                    src={logoPreview} 
-                    alt="Logo preview" 
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
                     className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
                   />
                 ) : (
@@ -550,7 +549,7 @@ export default function SubdomainTab() {
                   onChange={handleLogoSelect}
                   className="hidden"
                 />
-                <button 
+                <button
                   onClick={() => logoInputRef.current?.click()}
                   className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] font-[BasisGrotesquePro] flex items-center gap-2"
                 >
@@ -574,9 +573,9 @@ export default function SubdomainTab() {
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center">
                 {faviconPreview ? (
-                  <img 
-                    src={faviconPreview} 
-                    alt="Favicon preview" 
+                  <img
+                    src={faviconPreview}
+                    alt="Favicon preview"
                     className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
                   />
                 ) : (
@@ -594,7 +593,7 @@ export default function SubdomainTab() {
                   onChange={handleFaviconSelect}
                   className="hidden"
                 />
-                <button 
+                <button
                   onClick={() => faviconInputRef.current?.click()}
                   className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-[#E8F0FF] transition font-[BasisGrotesquePro] flex items-center gap-2"
                 >
@@ -615,7 +614,7 @@ export default function SubdomainTab() {
             <button
               onClick={handleApplyAssets}
               disabled={savingAssets || (!logoFile && !faviconFile)}
-              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {savingAssets ? (
                 <>
@@ -640,7 +639,7 @@ export default function SubdomainTab() {
         <button
           onClick={handleSave}
           disabled={saving || !formData.subdomain.trim()}
-          className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {saving ? (
             <>

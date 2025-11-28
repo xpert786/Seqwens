@@ -8,6 +8,7 @@ import { taxPreparerThreadsAPI } from "../../../ClientOnboarding/utils/apiUtils"
 import { useThreadWebSocket } from "../../../ClientOnboarding/utils/useThreadWebSocket";
 import { chatService } from "../../../ClientOnboarding/utils/chatService";
 import { useChatWebSocket } from "../../../ClientOnboarding/utils/useChatWebSocket";
+import { getUserData } from "../../../ClientOnboarding/utils/userUtils";
 import { toast } from "react-toastify";
 
 export default function MessagePage() {
@@ -108,7 +109,7 @@ export default function MessagePage() {
         }
 
         // Handle new API response format (data is array directly)
-        const threadsArray = response.success && response.data 
+        const threadsArray = response.success && response.data
           ? (Array.isArray(response.data) ? response.data : response.data.threads || [])
           : [];
 
@@ -186,7 +187,6 @@ export default function MessagePage() {
           });
 
           setConversations(sortedThreads);
-
           if (clientIdFromUrl || threadIdFromUrl) {
             let targetThread = null;
 
@@ -316,9 +316,23 @@ export default function MessagePage() {
             const sender = msg.sender || {};
             const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
             const senderRole = sender.role || msg.sender_role || '';
-            
-            const isClient = senderRole === "Client" || senderRole === "client";
-            const messageType = isClient ? "admin" : "user";
+            const senderId = sender.id || msg.sender_id || null;
+
+            // Get current user to compare with sender
+            const currentUser = getUserData();
+            const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+
+            // Determine if message is sent by current user (tax preparer) or received from client
+            let isSentByCurrentUser = false;
+            if (senderId && currentUserId) {
+              isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+            } else {
+              // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
+              const isClient = senderRole === "Client" || senderRole === "client";
+              isSentByCurrentUser = !isClient;
+            }
+
+            const messageType = isSentByCurrentUser ? "user" : "admin";
 
             return {
               id: msg.id,
@@ -337,35 +351,35 @@ export default function MessagePage() {
             };
           });
 
-            setActiveChatMessages(prev => {
-              const prevIds = new Set(prev.map(m => m.id));
-              const newIds = new Set(transformedMessages.map(m => m.id));
+          setActiveChatMessages(prev => {
+            const prevIds = new Set(prev.map(m => m.id));
+            const newIds = new Set(transformedMessages.map(m => m.id));
 
-              if (
-                prevIds.size === newIds.size &&
-                [...prevIds].every(id => newIds.has(id)) &&
-                [...newIds].every(id => prevIds.has(id))
-              ) {
-                return prev;
-              }
+            if (
+              prevIds.size === newIds.size &&
+              [...prevIds].every(id => newIds.has(id)) &&
+              [...newIds].every(id => prevIds.has(id))
+            ) {
+              return prev;
+            }
 
-              return transformedMessages;
-            });
+            return transformedMessages;
+          });
 
-            transformedMessages.forEach(msg => {
-              if (!msg.isRead && msg.type === "admin") {
-                wsMarkAsRead(msg.id);
-              }
-            });
+          transformedMessages.forEach(msg => {
+            if (!msg.isRead && msg.type === "admin") {
+              wsMarkAsRead(msg.id);
+            }
+          });
 
-            setTimeout(() => {
-              if (messagesEndRef.current) {
-                messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-              }
-            }, 100);
-          } else {
-            setActiveChatMessages([]);
-          }
+          setTimeout(() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 100);
+        } else {
+          setActiveChatMessages([]);
+        }
       } catch (err) {
         console.error("Error fetching messages:", err);
       } finally {
@@ -403,10 +417,24 @@ export default function MessagePage() {
           const sender = msg.sender || {};
           const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
           const senderRole = sender.role || msg.sender_role || '';
-          
+          const senderId = sender.id || msg.sender_id || null;
+
+          // Get current user to compare with sender
+          const currentUser = getUserData();
+          const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+
+          // Determine if message is sent by current user (tax preparer) or received from client
+          let isSentByCurrentUser = false;
+          if (senderId && currentUserId) {
+            isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+          } else {
+            // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
+            const isClient = senderRole === "Client" || senderRole === "client";
+            isSentByCurrentUser = !isClient;
+          }
+
           // Tax preparer's sent messages appear on RIGHT, client's received messages appear on LEFT
-          const isClient = senderRole === "Client" || senderRole === "client";
-          let messageType = isClient ? "admin" : "user";
+          let messageType = isSentByCurrentUser ? "user" : "admin";
 
           return {
             id: msg.id,
@@ -435,14 +463,14 @@ export default function MessagePage() {
             const filtered = prev.filter(prevMsg => {
               if (prevMsg.isOptimistic) {
                 // Check if this optimistic message matches any new message
-                return !newMessages.some(newMsg => 
-                  newMsg.text === prevMsg.text && 
+                return !newMessages.some(newMsg =>
+                  newMsg.text === prevMsg.text &&
                   Math.abs(new Date(newMsg.date) - new Date(prevMsg.date)) < 5000 // Within 5 seconds
                 );
               }
               return true;
             });
-            
+
             const merged = [...filtered, ...newMessages].sort((a, b) => {
               return new Date(a.date) - new Date(b.date);
             });
@@ -458,29 +486,29 @@ export default function MessagePage() {
             ? lastMessage.text.substring(0, 50) + '...'
             : lastMessage.text;
 
-        setConversations(prevConvs => {
-          const updated = prevConvs.map(conv => {
-            if (conv.id === activeConversationId) {
-              return {
-                ...conv,
-                lastMessage: truncatedMessage,
-                time: 'Just now',
-                lastMessageAt: lastMessage.date || new Date().toISOString(),
-                unreadCount:
-                  lastMessage.type === "admin" && !lastMessage.isRead
-                    ? (conv.unreadCount || 0) + 1
-                    : conv.unreadCount || 0,
-              };
-            }
-            return conv;
+          setConversations(prevConvs => {
+            const updated = prevConvs.map(conv => {
+              if (conv.id === activeConversationId) {
+                return {
+                  ...conv,
+                  lastMessage: truncatedMessage,
+                  time: 'Just now',
+                  lastMessageAt: lastMessage.date || new Date().toISOString(),
+                  unreadCount:
+                    lastMessage.type === "admin" && !lastMessage.isRead
+                      ? (conv.unreadCount || 0) + 1
+                      : conv.unreadCount || 0,
+                };
+              }
+              return conv;
+            });
+            return updated.sort((a, b) => {
+              const dateA = new Date(a.lastMessageAt || 0);
+              const dateB = new Date(b.lastMessageAt || 0);
+              return dateB - dateA;
+            });
           });
-          return updated.sort((a, b) => {
-            const dateA = new Date(a.lastMessageAt || 0);
-            const dateB = new Date(b.lastMessageAt || 0);
-            return dateB - dateA;
-          });
-        });
-        fetchThreads(true);
+          fetchThreads(true);
         }
 
         // Mark client messages as read (client messages are type "admin" now, appearing on left)
@@ -540,7 +568,7 @@ export default function MessagePage() {
 
       // Add message instantly to chat area
       setActiveChatMessages(prev => [...prev, optimisticMsg].sort((a, b) => new Date(a.date) - new Date(b.date)));
-      
+
       // Update conversation list instantly
       const truncatedMessage = messageText.length > 50
         ? messageText.substring(0, 50) + '...'
@@ -592,8 +620,23 @@ export default function MessagePage() {
       if (response.success) {
         // Replace optimistic message with real message
         const senderRole = response.data?.sender_role || '';
-        const isClient = senderRole === "Client" || senderRole === "client";
-        const finalMessageType = isClient ? "admin" : "user";
+        const senderId = response.data?.sender_id || response.data?.sender?.id || null;
+
+        // Get current user to compare with sender
+        const currentUser = getUserData();
+        const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+
+        // Determine if message is sent by current user (tax preparer) or received from client
+        let isSentByCurrentUser = false;
+        if (senderId && currentUserId) {
+          isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+        } else {
+          // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
+          const isClient = senderRole === "Client" || senderRole === "client";
+          isSentByCurrentUser = !isClient;
+        }
+
+        const finalMessageType = isSentByCurrentUser ? "user" : "admin";
 
         const realMsg = {
           id: response.data?.id || Date.now(),
@@ -892,41 +935,6 @@ export default function MessagePage() {
                     </small>
                   </div>
                 </div>
-                {/* Tabs */}
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    onClick={() => setActiveTab("Messages")}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "8px",
-                      border: "none",
-                      backgroundColor: activeTab === "Messages" ? "#00C0C6" : "white",
-                      color: activeTab === "Messages" ? "white" : "#718096",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      fontFamily: "BasisGrotesquePro"
-                    }}
-                  >
-                    Messages
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("Tasks")}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "8px",
-                      border: "1px solid #E2E8F0",
-                      backgroundColor: activeTab === "Tasks" ? "#00C0C6" : "white",
-                      color: activeTab === "Tasks" ? "white" : "#718096",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      fontFamily: "BasisGrotesquePro"
-                    }}
-                  >
-                    Tasks
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
@@ -936,108 +944,28 @@ export default function MessagePage() {
                     Choose a conversation to view messages
                   </small>
                 </div>
-                {/* Tabs */}
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    onClick={() => setActiveTab("Messages")}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "8px",
-                      border: "none",
-                      backgroundColor: activeTab === "Messages" ? "#00C0C6" : "white",
-                      color: activeTab === "Messages" ? "white" : "#718096",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      fontFamily: "BasisGrotesquePro"
-                    }}
-                  >
-                    Messages
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("Tasks")}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "8px",
-                      border: "1px solid #E2E8F0",
-                      backgroundColor: activeTab === "Tasks" ? "#00C0C6" : "white",
-                      color: activeTab === "Tasks" ? "white" : "#718096",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      fontFamily: "BasisGrotesquePro"
-                    }}
-                  >
-                    Tasks
-                  </button>
-                </div>
               </div>
             );
           })()}
 
           {/* Chat Content and Input Area */}
-          {activeTab === "Tasks" ? (
-            /* Tasks Tab Content - Keep existing Tasks tab content */
-            <>
-              <div className="flex-grow-1 overflow-auto mb-3 d-flex align-items-center justify-content-center" style={{ minHeight: "200px" }}>
-                <div className="text-center">
-                  <p className="text-muted">Tasks functionality coming soon</p>
-                </div>
-              </div>
-              <div className="border-top pt-2">
-                <div className="d-flex align-items-center">
-                  <input
-                    type="text"
-                    className="form-control me-2"
-                    placeholder="Write a message..."
-                    value={newMessage}
-                    onChange={handleTyping}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    style={{ fontFamily: "BasisGrotesquePro" }}
-                  />
-                  <button
-                    type="button"
-                    className="btn"
-                    style={sendButtonStyles}
-                    onClick={handleSend}
-                    aria-label="Send message"
-                    disabled={!isSendButtonActive}
+          <>
+            {(() => {
+              const activeConversation = conversations.find(c => c.id === activeConversationId);
+              return activeConversation ? (
+                <>
+                  <div
+                    ref={messagesContainerRef}
+                    className="flex-grow-1 overflow-auto mb-3"
+                    style={{
+                      minHeight: "200px",
+                      maxHeight: "calc(55vh - 200px)",
+                      scrollbarWidth: "thin",
+                      scrollbarColor: "#C1C1C1 #F3F7FF"
+                    }}
                   >
-                    <FaPaperPlane
-                      onClick={handleSend}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handleSend();
-                        }
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            /* Messages Tab Content */
-            <>
-              {(() => {
-                const activeConversation = conversations.find(c => c.id === activeConversationId);
-                return activeConversation ? (
-                  <>
-                    <div 
-                      ref={messagesContainerRef}
-                      className="flex-grow-1 overflow-auto mb-3" 
-                      style={{ 
-                        minHeight: "200px",
-                        maxHeight: "calc(55vh - 200px)",
-                        scrollbarWidth: "thin",
-                        scrollbarColor: "#C1C1C1 #F3F7FF"
-                      }}
-                    >
-                      <style>
-                        {`
+                    <style>
+                      {`
                           .flex-grow-1.overflow-auto.mb-3::-webkit-scrollbar {
                             width: 8px;
                           }
@@ -1053,21 +981,21 @@ export default function MessagePage() {
                             background: #A0A0A0;
                           }
                         `}
-                      </style>
-                      {loadingMessages ? (
-                        <div className="text-center py-5">
-                          <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
-                          <p className="text-muted mt-2 small">Loading messages...</p>
-                        </div>
-                      ) : activeChatMessages.length > 0 ? (
-                        <>
+                    </style>
+                    {loadingMessages ? (
+                      <div className="text-center py-5">
+                        <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <p className="text-muted mt-2 small">Loading messages...</p>
+                      </div>
+                    ) : activeChatMessages.length > 0 ? (
+                      <>
                         {activeChatMessages.map((msg) => {
                           // Client messages (received) appear on LEFT
                           if (msg.type === "admin") {
                             return (
-                              <div key={msg.id} className="d-flex mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>
-                                <JdIcon color="#f97316" className="me-2" />
-                                <div className="bg-light p-2 px-3 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "70%" }}>
+                              <div key={msg.id} className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
+                                {/* <JdIcon color="#f97316" className="me-2" /> */}
+                                <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
                                   <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
                                     {msg.sender}
                                   </div>
@@ -1101,12 +1029,12 @@ export default function MessagePage() {
                               </div>
                             );
                           }
-                          // Tax preparer messages (sent) appear on RIGHT
+                          // Tax preparer messages (sent by current user) appear on RIGHT
                           else if (msg.type === "user") {
                             return (
-                              <div key={msg.id} className="d-flex mb-3 justify-content-end">
-                                <div className="bg-light p-2 px-3 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "10px", maxWidth: "70%", backgroundColor: "#E8F0FF" }}>
-                                  <div>{msg.text}</div>
+                              <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
+                                <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
+                                  <div style={{ color: "#1F2937" }}>{msg.text}</div>
                                   {msg.attachment && (
                                     <div className="mt-2">
                                       <FileIcon className="me-2 text-primary" />
@@ -1133,83 +1061,82 @@ export default function MessagePage() {
                                     )}
                                   </div>
                                 </div>
-                                <JdIcon color="#f97316" className="ms-2" />
+                                {/* <JdIcon color="#f97316" className="ms-2" /> */}
                               </div>
                             );
                           }
                           return null;
                         })}
                         <div ref={messagesEndRef} />
-                        </>
-                      ) : (
-                        <div className="text-center py-5">
-                          <p className="text-muted">No messages yet. Start the conversation!</p>
+                      </>
+                    ) : (
+                      <div className="text-center py-5">
+                        <p className="text-muted">No messages yet. Start the conversation!</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-top pt-2">
+                    <div className="d-flex align-items-center">
+                      {/* WebSocket connection indicator */}
+                      {wsConnected && (
+                        <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
                         </div>
                       )}
-                    </div>
-
-                    <div className="border-top pt-2">
-                      <div className="d-flex align-items-center">
-                        {/* WebSocket connection indicator */}
-                        {wsConnected && (
-                          <div className="me-2" style={{ fontSize: "10px", color: "#10B981" }} title="Connected">
-                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }}></div>
-                          </div>
-                        )}
-                        {!wsConnected && wsError && (
-                          <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
-                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
-                          </div>
-                        )}
-                        {/* Typing indicator */}
-                        {typingUsers.length > 0 && (
-                          <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
-                            {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-                          </div>
-                        )}
-                        <input
-                          type="text"
-                          className="form-control me-2"
-                          placeholder="Write a message..."
-                          value={newMessage}
-                          onChange={handleTyping}
-                          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                          style={{ fontFamily: "BasisGrotesquePro" }}
-                        />
-                        <button
-                          type="button"
-                          className="btn"
-                          style={sendButtonStyles}
+                      {!wsConnected && wsError && (
+                        <div className="me-2" style={{ fontSize: "10px", color: "#EF4444" }} title="Disconnected">
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#EF4444" }}></div>
+                        </div>
+                      )}
+                      {/* Typing indicator */}
+                      {typingUsers.length > 0 && (
+                        <div className="me-2" style={{ fontSize: "12px", color: "#6B7280", fontStyle: "italic" }}>
+                          {typingUsers.map(u => u.name).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                        </div>
+                      )}
+                      <input
+                        type="text"
+                        className="form-control me-2"
+                        placeholder="Write a message..."
+                        value={newMessage}
+                        onChange={handleTyping}
+                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                        style={{ fontFamily: "BasisGrotesquePro" }}
+                      />
+                      <button
+                        type="button"
+                        className="btn"
+                        style={sendButtonStyles}
+                        onClick={handleSend}
+                        disabled={!isSendButtonActive}
+                        aria-label="Send message"
+                      >
+                        <FaPaperPlane
                           onClick={handleSend}
-                          disabled={!isSendButtonActive}
-                          aria-label="Send message"
-                        >
-                          <FaPaperPlane
-                            onClick={handleSend}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                handleSend();
-                              }
-                            }}
-                            role="button"
-                            tabIndex={0}
-                            style={{ cursor: "pointer" }}
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="d-flex align-items-center justify-content-center h-100">
-                    <div className="text-center">
-                      <p className="text-muted mb-0">Select a conversation to view messages</p>
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleSend();
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </button>
                     </div>
                   </div>
-                );
-              })()}
-            </>
-          )}
+                </>
+              ) : (
+                <div className="d-flex align-items-center justify-content-center h-100">
+                  <div className="text-center">
+                    <p className="text-muted mb-0">Select a conversation to view messages</p>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
         </div>
       </div>
 

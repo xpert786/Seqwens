@@ -135,9 +135,24 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       config.body = JSON.stringify(data);
     }
 
+    // Sanitize data for logging to prevent API keys from appearing in console
+    const sanitizeForLogging = (obj) => {
+      if (!obj || typeof obj !== 'object') return obj;
+      const sanitized = { ...obj };
+      // Mask sensitive fields
+      if (sanitized.key) sanitized.key = '***MASKED***';
+      if (sanitized.api_key) sanitized.api_key = '***MASKED***';
+      if (sanitized.apiKey) sanitized.apiKey = '***MASKED***';
+      if (sanitized.password) sanitized.password = '***MASKED***';
+      if (sanitized.token) sanitized.token = '***MASKED***';
+      if (sanitized.access_token) sanitized.access_token = '***MASKED***';
+      if (sanitized.refresh_token) sanitized.refresh_token = '***MASKED***';
+      return sanitized;
+    };
+
     console.log('API Request URL:', `${API_BASE_URL}${endpoint}`);
     console.log('API Request Config:', config);
-    console.log('API Request Data:', data);
+    console.log('API Request Data:', sanitizeForLogging(data));
 
     let response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
 
@@ -839,7 +854,7 @@ export const clientNotificationAPI = {
 
   // Delete notification
   deleteNotification: async (notificationId) => {
-    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+    return await apiRequest(`/user/notifications/${notificationId}/delete/`, 'DELETE');
   }
 };
 
@@ -1469,7 +1484,7 @@ export const taxPreparerNotificationAPI = {
 
   // Delete notification
   deleteNotification: async (notificationId) => {
-    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+    return await apiRequest(`/user/notifications/${notificationId}/delete/`, 'DELETE');
   }
 };
 
@@ -1922,7 +1937,7 @@ export const firmAdminNotificationAPI = {
 
   // Delete notification
   deleteNotification: async (notificationId) => {
-    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+    return await apiRequest(`/user/notifications/${notificationId}/delete/`, 'DELETE');
   }
 };
 
@@ -2974,7 +2989,7 @@ export const superAdminNotificationAPI = {
 
   // Delete notification
   deleteNotification: async (notificationId) => {
-    return await apiRequest(`/taxpayer/notifications/${notificationId}/`, 'DELETE');
+    return await apiRequest(`/user/notifications/${notificationId}/delete/`, 'DELETE');
   }
 };
 
@@ -3297,6 +3312,17 @@ export const invoicesAPI = {
   // Get all invoices for the current taxpayer
   getInvoices: async () => {
     return await apiRequest('/taxpayer/invoices/', 'GET');
+  },
+  // Create payment session for an invoice
+  payInvoice: async (invoiceId, successUrl = null, cancelUrl = null) => {
+    const payload = {};
+    if (successUrl) {
+      payload.success_url = successUrl;
+    }
+    if (cancelUrl) {
+      payload.cancel_url = cancelUrl;
+    }
+    return await apiRequest(`/taxpayer/invoices/${invoiceId}/pay/`, 'POST', Object.keys(payload).length > 0 ? payload : null);
   }
 };
 
@@ -4217,6 +4243,18 @@ export const firmAdminBillingHistoryAPI = {
         }
         return response.json();
       });
+  }
+};
+
+// Maintenance Mode API functions
+export const maintenanceModeAPI = {
+  // Get maintenance mode status
+  getMaintenanceStatus: async () => {
+    return await apiRequest('/user/maintenance-mode/status/', 'GET');
+  },
+  // Session timeout logout
+  sessionTimeoutLogout: async () => {
+    return await apiRequest('/user/session-timeout/logout/', 'POST');
   }
 };
 

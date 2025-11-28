@@ -27,7 +27,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const searchRef = useRef(null);
-    
+
     const menuItems = [
         { label: "Profile", action: "profile" },
         { label: "Settings", action: "settings" },
@@ -52,7 +52,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         try {
             const response = await firmAdminDashboardAPI.getAccountSettings();
             const data = response?.data || response;
-            
+
             if (data?.profile_picture) {
                 setProfilePicture(data.profile_picture);
             } else {
@@ -133,7 +133,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         fetchUnreadCount();
         fetchProfileData();
         const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
-        
+
         // Listen for profile picture updates from localStorage
         const handleStorageChange = (e) => {
             if (e.key === 'profilePictureUpdated') {
@@ -142,13 +142,13 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
             }
         };
         window.addEventListener('storage', handleStorageChange);
-        
+
         // Also listen for custom event for same-tab updates
         const handleProfileUpdate = () => {
             fetchProfileData();
         };
         window.addEventListener('profilePictureUpdated', handleProfileUpdate);
-        
+
         return () => {
             clearInterval(interval);
             window.removeEventListener('storage', handleStorageChange);
@@ -229,7 +229,8 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                         {/* Logo */}
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img
-                                src={logoUrl || logo}
+                                // src={logoUrl || logo}
+                                src={logo}
                                 alt="Logo"
                                 className="firm-topbar-logo"
                                 style={{ maxHeight: "40px", width: "auto" }}
@@ -362,8 +363,8 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                         {profileInitials}
                                     </div>
                                 )}
-                                <FiChevronDown 
-                                    size={18} 
+                                <FiChevronDown
+                                    size={18}
                                     className={`text-muted d-none d-sm-block ${showProfileMenu ? "rotate-180" : ""}`}
                                     style={{ transition: "transform 0.2s ease" }}
                                 />
@@ -381,18 +382,17 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                     {menuItems.map((item, index) => (
                                         <React.Fragment key={item.action}>
                                             {item.action === "logout" && (
-                                                <div 
-                                                    className="border-top border-gray-200 my-1" 
+                                                <div
+                                                    className="border-top border-gray-200 my-1"
                                                     aria-hidden="true"
                                                 />
                                             )}
                                             <button
                                                 type="button"
-                                                className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${
-                                                    item.isDanger 
-                                                        ? "text-danger" 
-                                                        : "text-gray-700"
-                                                } hover:bg-gray-50 transition-colors`}
+                                                className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${item.isDanger
+                                                    ? "text-danger"
+                                                    : "text-gray-700"
+                                                    } hover:bg-gray-50 transition-colors`}
                                                 onClick={() => handleMenuAction(item.action)}
                                                 role="menuitem"
                                                 style={{
@@ -400,8 +400,8 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                                     fontSize: "14px",
                                                 }}
                                             >
-                                                {item.action === "logout" && isLoggingOut 
-                                                    ? "Logging out..." 
+                                                {item.action === "logout" && isLoggingOut
+                                                    ? "Logging out..."
                                                     : item.label}
                                             </button>
                                         </React.Fragment>
@@ -440,7 +440,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                     </div>
                 )}
             </nav>
-            
+
             {/* Notification Panel */}
             {showNotifications && (
                 <NotificationPanel

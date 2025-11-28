@@ -5,15 +5,44 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { invoicesAPI, handleAPIError } from '../../utils/apiUtils';
 
 const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [showModal, setShowModal] = useState(false);
     const [showInvoiceDetailsModal, setShowInvoiceDetailsModal] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
 
-    const handlePayNowClick = (invoice) => {
-        setSelectedInvoice(invoice);
-        setShowModal(true);
+    const handlePayNowClick = async (invoice) => {
+        try {
+            // Build success and cancel URLs
+            const baseUrl = window.location.origin;
+            const successUrl = `${baseUrl}/invoices/${invoice.id}/payment-success`;
+            const cancelUrl = `${baseUrl}/invoices/${invoice.id}/payment-cancelled`;
+            
+            // Call the payment API with success and cancel URLs
+            const response = await invoicesAPI.payInvoice(invoice.id, successUrl, cancelUrl);
+
+            if (response.success && response.data && response.data.checkout_url) {
+                // Redirect to Stripe Checkout
+                window.location.href = response.data.checkout_url;
+            } else {
+                throw new Error(response.message || 'Failed to create payment session');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(errorMessage || 'Failed to process payment. Please try again.', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
+            });
+        }
     };
 
     const handleCloseModal = () => {
@@ -31,19 +60,38 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
         setSelectedInvoice(null);
     };
 
-    const handlePaymentSubmit = () => {
-        toast.success(`Payment of $${(selectedInvoice.remaining_amount || selectedInvoice.amount || 0).toFixed(2)} for ${selectedInvoice.invoice_number || selectedInvoice.id} processed.`, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: false,
-          className: "custom-toast-success",
-          bodyClassName: "custom-toast-body",
-        });
-        setShowModal(false);
+    const handlePaymentSubmit = async () => {
+        try {
+            const invoiceId = selectedInvoice.id;
+            // Build success and cancel URLs
+            const baseUrl = window.location.origin;
+            const successUrl = `${baseUrl}/invoices/${invoiceId}/payment-success`;
+            const cancelUrl = `${baseUrl}/invoices/${invoiceId}/payment-cancelled`;
+            
+            // Call the payment API with success and cancel URLs
+            const response = await invoicesAPI.payInvoice(invoiceId, successUrl, cancelUrl);
+
+            if (response.success && response.data && response.data.checkout_url) {
+                // Redirect to Stripe Checkout
+                window.location.href = response.data.checkout_url;
+            } else {
+                throw new Error(response.message || 'Failed to create payment session');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(errorMessage || 'Failed to process payment. Please try again.', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                icon: false,
+                className: "custom-toast-error",
+                bodyClassName: "custom-toast-body",
+            });
+        }
     };
 
     // Map all invoices to display format (show all invoices, not just outstanding)

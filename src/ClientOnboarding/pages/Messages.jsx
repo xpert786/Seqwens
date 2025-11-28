@@ -18,7 +18,7 @@ export default function Messages() {
   const clientIdFromUrl = urlParams.get('clientId');
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
-  
+
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -145,7 +145,7 @@ export default function Messages() {
         }
 
         // Handle new API response format (data is array directly)
-        const threadsArray = response.success && response.data 
+        const threadsArray = response.success && response.data
           ? (Array.isArray(response.data) ? response.data : response.data.threads || [])
           : [];
 
@@ -292,7 +292,7 @@ export default function Messages() {
             const sender = msg.sender || {};
             const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
             const senderRole = sender.role || msg.sender_role || '';
-            
+
             // Determine message type based on sender_role
             let messageType = "user"; // Default for client messages
             if (senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant") {
@@ -341,12 +341,12 @@ export default function Messages() {
               const updated = prevConvs.map(conv =>
                 conv.id === activeConversationId
                   ? {
-                      ...conv,
-                      lastMessage: lastMessage.text,
-                      time: formatRelativeTime(lastTimestamp),
-                      lastMessageAt: lastTimestamp,
-                      messages: transformedMessages,
-                    }
+                    ...conv,
+                    lastMessage: lastMessage.text,
+                    time: formatRelativeTime(lastTimestamp),
+                    lastMessageAt: lastTimestamp,
+                    messages: transformedMessages,
+                  }
                   : conv
               );
               return sortConversationsByRecent(updated);
@@ -426,7 +426,7 @@ export default function Messages() {
           const sender = msg.sender || {};
           const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
           const senderRole = sender.role || msg.sender_role || '';
-          
+
           // Determine message type based on sender_role
           let messageType = "user"; // Default for client messages
           if (senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant") {
@@ -453,20 +453,20 @@ export default function Messages() {
         setActiveChatMessages(prev => {
           const existingIds = new Set(prev.map(m => m.id));
           const newMessages = transformedMessages.filter(m => !existingIds.has(m.id));
-          
+
           if (newMessages.length > 0) {
             // Remove optimistic messages that match the new real messages (by text and approximate time)
             const filtered = prev.filter(prevMsg => {
               if (prevMsg.isOptimistic) {
                 // Check if this optimistic message matches any new message
-                return !newMessages.some(newMsg => 
-                  newMsg.text === prevMsg.text && 
+                return !newMessages.some(newMsg =>
+                  newMsg.text === prevMsg.text &&
                   Math.abs(new Date(newMsg.date) - new Date(prevMsg.date)) < 5000 // Within 5 seconds
                 );
               }
               return true;
             });
-            
+
             const merged = [...filtered, ...newMessages].sort((a, b) => {
               return new Date(a.date) - new Date(b.date);
             });
@@ -478,20 +478,20 @@ export default function Messages() {
         // Update conversation's last message instantly
         if (transformedMessages.length > 0) {
           const lastMessage = transformedMessages[transformedMessages.length - 1];
-        setConversations(prevConvs => {
-          const updated = prevConvs.map(conv =>
-            conv.id === activeConversationId
-              ? {
+          setConversations(prevConvs => {
+            const updated = prevConvs.map(conv =>
+              conv.id === activeConversationId
+                ? {
                   ...conv,
                   lastMessage: lastMessage.text,
                   time: "Just now",
                   lastMessageAt: lastMessage.date || new Date().toISOString(),
                 }
-              : conv
-          );
-          return sortConversationsByRecent(updated);
-        });
-        fetchChats(true);
+                : conv
+            );
+            return sortConversationsByRecent(updated);
+          });
+          fetchChats(true);
         }
 
         // Mark new messages as read
@@ -538,18 +538,18 @@ export default function Messages() {
 
       // Add message instantly to chat area
       setActiveChatMessages(prev => [...prev, optimisticMsg].sort((a, b) => new Date(a.date) - new Date(b.date)));
-      
+
       // Update conversation list instantly
       const optimisticTimestamp = new Date().toISOString();
       setConversations(prevConvs => {
         const updated = prevConvs.map(conv =>
           conv.id === activeConversationId
             ? {
-                ...conv,
-                lastMessage: messageText,
-                time: "Just now",
-                lastMessageAt: optimisticTimestamp,
-              }
+              ...conv,
+              lastMessage: messageText,
+              time: "Just now",
+              lastMessageAt: optimisticTimestamp,
+            }
             : conv
         );
         return sortConversationsByRecent(updated);
@@ -632,12 +632,12 @@ export default function Messages() {
     // Send typing indicator via WebSocket
     if (wsConnected && value.trim().length > 0) {
       wsSendTyping(true);
-      
+
       // Clear previous timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      
+
       // Stop typing after 2 seconds of inactivity
       typingTimeoutRef.current = setTimeout(() => {
         wsSendTyping(false);
@@ -960,12 +960,12 @@ export default function Messages() {
                 </div>
               </div>
 
-              <div 
+              <div
                 ref={messagesContainerRef}
-                className="flex-grow-1 mb-3" 
-                style={{ 
-                  overflowY: "auto", 
-                  overflowX: "hidden", 
+                className="flex-grow-1 mb-3"
+                style={{
+                  overflowY: "auto",
+                  overflowX: "hidden",
                   minHeight: "200px",
                   maxHeight: "calc(55vh - 200px)",
                   scrollbarWidth: "thin",
@@ -998,85 +998,85 @@ export default function Messages() {
                   </div>
                 ) : activeChatMessages.length > 0 ? (
                   <>
-                  {activeChatMessages.map((msg) => {
-                    // Admin/Staff messages appear on left
-                    if (msg.type === "admin") {
-                      return (
-                        <div key={msg.id} className="d-flex mb-3" style={{ fontFamily: "BasisGrotesquePro" }}>
-                          <JdIcon color="#f97316" className="me-2" />
-                          <div className="bg-light p-2 px-3 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "70%" }}>
-                            <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
-                              {msg.sender}
-                            </div>
-                            <div>{msg.text}</div>
-                            {msg.attachment && (
-                              <div className="mt-2">
-                                <FileIcon className="me-2 text-primary" />
-                                <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
-                                  {msg.attachmentName || "Attachment"}
-                                </a>
-                                {msg.attachmentSize && (
-                                  <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                    ({msg.attachmentSize})
-                                  </span>
+                    {activeChatMessages.map((msg) => {
+                      // Admin/Staff messages (received) appear on left
+                      if (msg.type === "admin") {
+                        return (
+                          <div key={msg.id} className="d-flex mb-3 w-100" style={{ fontFamily: "BasisGrotesquePro", justifyContent: "flex-start" }}>
+                            {/* <JdIcon color="#f97316" className="me-2" /> */}
+                            <div className="bg-light p-2 px-4 rounded" style={{ marginLeft: "10px", fontFamily: "BasisGrotesquePro", maxWidth: "75%", minWidth: "80px" }}>
+                              <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
+                                {msg.sender}
+                              </div>
+                              <div style={{ color: msg.type === "user" ? "#FFFFFF" : "inherit" }}>{msg.text}</div>
+                              {msg.attachment && (
+                                <div className="mt-2">
+                                  <FileIcon className="me-2 text-primary" />
+                                  <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
+                                    {msg.attachmentName || "Attachment"}
+                                  </a>
+                                  {msg.attachmentSize && (
+                                    <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                      ({msg.attachmentSize})
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
+                                {new Date(msg.date).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                                {msg.isEdited && (
+                                  <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
                                 )}
                               </div>
-                            )}
-                            <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
-                              {new Date(msg.date).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true
-                              })}
-                              {msg.isEdited && (
-                                <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                              )}
                             </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    // User/Client messages appear on right
-                    else if (msg.type === "user") {
-                      return (
-                        <div key={msg.id} className="d-flex mb-3 justify-content-end">
-                          <div className="bg-light p-2 px-3 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "10px", maxWidth: "70%", backgroundColor: "#E8F0FF" }}>
-                            <div>{msg.text}</div>
-                            {msg.attachment && (
-                              <div className="mt-2">
-                                <FileIcon className="me-2 text-primary" />
-                                <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
-                                  {msg.attachmentName || "Attachment"}
-                                </a>
-                                {msg.attachmentSize && (
-                                  <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
-                                    ({msg.attachmentSize})
-                                  </span>
+                        );
+                      }
+                      // User/Client messages (sent by current user) appear on right
+                      else if (msg.type === "user") {
+                        return (
+                          <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
+                            <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
+                              <div style={{ color: "#1F2937" }}>{msg.text}</div>
+                              {msg.attachment && (
+                                <div className="mt-2">
+                                  <FileIcon className="me-2 text-primary" />
+                                  <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
+                                    {msg.attachmentName || "Attachment"}
+                                  </a>
+                                  {msg.attachmentSize && (
+                                    <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
+                                      ({msg.attachmentSize})
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
+                                {new Date(msg.date).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                                {msg.isEdited && (
+                                  <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
                                 )}
                               </div>
-                            )}
-                            <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: "right" }}>
-                              {new Date(msg.date).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true
-                              })}
-                              {msg.isEdited && (
-                                <span style={{ marginLeft: "8px", fontStyle: "italic" }}>(edited)</span>
-                              )}
                             </div>
+                            {/* <JdIcon color="#f97316" className="ms-2" /> */}
                           </div>
-                          <JdIcon color="#f97316" className="ms-2" />
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                  <div ref={messagesEndRef} />
+                        );
+                      }
+                      return null;
+                    })}
+                    <div ref={messagesEndRef} />
                   </>
                 ) : (
                   <div className="text-center py-5">

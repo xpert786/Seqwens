@@ -76,6 +76,9 @@ export default function Login() {
       if (userType === 'super_admin') {
         // Redirect to super admin dashboard
         navigate("/superadmin");
+      } else if (userType === 'support_admin' || userType === 'billing_admin') {
+        // Redirect to admin dashboard
+        navigate("/superadmin");
       } else if (userType === 'admin') {
         // Redirect to firm admin dashboard
         navigate("/firmadmin");

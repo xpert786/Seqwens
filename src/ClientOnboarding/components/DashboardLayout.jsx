@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { Outlet } from "react-router-dom";
+import MaintenanceMode from "./MaintenanceMode";
 import "../styles/DashboardLayout.css";
 
 export default function DashboardLayout() {
@@ -15,6 +16,7 @@ export default function DashboardLayout() {
     <div
       className={`dashboard-layout ${isSidebarOpen ? "" : "dashboard-collapsed"}`}
     >
+      <MaintenanceMode />
       <Topbar
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isSidebarOpen}

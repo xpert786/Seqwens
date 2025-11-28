@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
-import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
+import { clearUserData, getStorage } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 
 import { UserManage, SubscriptionIcon, DashIcon, MesIcon, IntakeIcon, HelpsIcon, AccountIcon, LogOutIcon } from "./icons";
@@ -10,10 +10,18 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userType, setUserType] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     platformManagement: true,
     systemAdministration: true
   });
+
+  // Get user type on component mount
+  useEffect(() => {
+    const storage = getStorage();
+    const type = storage?.getItem("userType");
+    setUserType(type);
+  }, []);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -102,46 +110,61 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
             </div>
             {expandedSections.platformManagement && (
               <ul className="flex flex-col px-0 mt-2">
-                <li className="mb-2 text-[13px]">
-                  <Link to="/superadmin" className={linkClass("/superadmin")}>
-                    <span className={iconWrapperClass("/superadmin")}>
-                      <DashIcon />
-                    </span>
-                    Platform Overview
-                  </Link>
-                </li>
-                <li className="mb-2">
-                  <Link to="/superadmin/users" className={linkClass("/superadmin/users", true)}>
-                    <span className={iconWrapperClass("/superadmin/users", true)}>
-                      <UserManage />
-                    </span>
-                    User Management
-                  </Link>
-                </li>
-                <li className="mb-2">
-                  <Link to="/superadmin/subscriptions" className={linkClass("/superadmin/subscriptions")}>
-                    <span className={iconWrapperClass("/superadmin/subscriptions")}>
-                      <SubscriptionIcon />
-                    </span>
-                    Subscriptions
-                  </Link>
-                </li>
-                <li className="mb-2">
-                  <Link to="/superadmin/analytics" className={linkClass("/superadmin/analytics")}>
-                    <span className={iconWrapperClass("/superadmin/analytics")}>
-                      <MesIcon />
-                    </span>
-                    Analytics
-                  </Link>
-                </li>
-                <li className="mb-2">
-                  <Link to="/superadmin/firms" className={linkClass("/superadmin/firms", true)}>
-                    <span className={iconWrapperClass("/superadmin/firms", true)}>
-                      <UserManage />
-                    </span>
-                    Firm Management
-                  </Link>
-                </li>
+                {/* Platform Overview - Only for super_admin */}
+                {userType === 'super_admin' && (
+                  <li className="mb-2 text-[13px]">
+                    <Link to="/superadmin" className={linkClass("/superadmin")}>
+                      <span className={iconWrapperClass("/superadmin")}>
+                        <DashIcon />
+                      </span>
+                      Platform Overview
+                    </Link>
+                  </li>
+                )}
+                {/* User Management - Only for super_admin */}
+                {userType === 'super_admin' && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/users" className={linkClass("/superadmin/users", true)}>
+                      <span className={iconWrapperClass("/superadmin/users", true)}>
+                        <UserManage />
+                      </span>
+                      User Management
+                    </Link>
+                  </li>
+                )}
+                {/* Subscriptions - Only for super_admin and billing_admin */}
+                {(userType === 'super_admin' || userType === 'billing_admin') && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/subscriptions" className={linkClass("/superadmin/subscriptions")}>
+                      <span className={iconWrapperClass("/superadmin/subscriptions")}>
+                        <SubscriptionIcon />
+                      </span>
+                      Subscriptions
+                    </Link>
+                  </li>
+                )}
+                {/* Analytics - Only for super_admin */}
+                {userType === 'super_admin' && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/analytics" className={linkClass("/superadmin/analytics")}>
+                      <span className={iconWrapperClass("/superadmin/analytics")}>
+                        <MesIcon />
+                      </span>
+                      Analytics
+                    </Link>
+                  </li>
+                )}
+                {/* Firm Management - Only for super_admin */}
+                {userType === 'super_admin' && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/firms" className={linkClass("/superadmin/firms", true)}>
+                      <span className={iconWrapperClass("/superadmin/firms", true)}>
+                        <UserManage />
+                      </span>
+                      Firm Management
+                    </Link>
+                  </li>
+                )}
               </ul>
             )}
           </li>
@@ -159,22 +182,28 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
             </div>
             {expandedSections.systemAdministration && (
               <ul className="flex flex-col px-0 mt-2">
-                <li className="mb-2">
-                  <Link to="/superadmin/system-settings" className={linkClass("/superadmin/system-settings")}>
-                    <span className={iconWrapperClass("/superadmin/system-settings")}>
-                      <IntakeIcon />
-                    </span>
-                    System Settings
-                  </Link>
-                </li>
-                <li className="mb-2">
-                  <Link to="/superadmin/support" className={linkClass("/superadmin/support")}>
-                    <span className={iconWrapperClass("/superadmin/support")}>
-                      <HelpsIcon />
-                    </span>
-                    Support Center
-                  </Link>
-                </li>
+                {/* System Settings - Only for super_admin */}
+                {userType === 'super_admin' && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/system-settings" className={linkClass("/superadmin/system-settings")}>
+                      <span className={iconWrapperClass("/superadmin/system-settings")}>
+                        <IntakeIcon />
+                      </span>
+                      System Settings
+                    </Link>
+                  </li>
+                )}
+                {/* Support Center - Only for super_admin and support_admin */}
+                {(userType === 'super_admin' || userType === 'support_admin') && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/support" className={linkClass("/superadmin/support")}>
+                      <span className={iconWrapperClass("/superadmin/support")}>
+                        <HelpsIcon />
+                      </span>
+                      Support Center
+                    </Link>
+                  </li>
+                )}
               </ul>
             )}
           </li>

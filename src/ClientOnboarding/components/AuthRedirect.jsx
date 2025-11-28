@@ -21,6 +21,8 @@ export default function AuthRedirect({ children }) {
       // Redirect based on user type
       if (userType === 'super_admin') {
         navigate("/superadmin", { replace: true });
+      } else if (userType === 'support_admin' || userType === 'billing_admin') {
+        navigate("/superadmin", { replace: true });
       } else if (userType === 'admin') {
         navigate("/firmadmin", { replace: true });
       } else if (userType === 'tax_preparer') {
