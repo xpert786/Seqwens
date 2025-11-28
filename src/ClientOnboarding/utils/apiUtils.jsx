@@ -469,6 +469,20 @@ export const handleAPIError = (error) => {
   return error.message || 'An unexpected error occurred. Please try again.';
 };
 
+// Firm Admin Analytics API functions
+export const firmAdminAnalyticsAPI = {
+  // Get revenue by client segment for the firm admin
+  getRevenueSegments: async (days = 365) => {
+    const params = new URLSearchParams();
+    if (days) {
+      params.append('days', days.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/reports/revenue-segments/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+};
+
 // Data Intake API functions
 export const dataIntakeAPI = {
   // Submit data intake form
@@ -872,6 +886,16 @@ export const securityAPI = {
   // Update password
   updatePassword: async (passwordData) => {
     return await apiRequest('/user/security-settings/', 'PATCH', passwordData);
+  },
+
+  // List active admin sessions
+  getAdminSessions: async () => {
+    return await apiRequest('/firm/sessions/active', 'GET');
+  },
+
+  // Terminate a specific admin session by key
+  terminateAdminSession: async (sessionKey) => {
+    return await apiRequest(`/firm/sessions/${sessionKey}/terminate/`, 'POST');
   }
 };
 

@@ -1,9 +1,69 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import TabNavigation from '../Integrations/TabNavigation';
-
+import { firmAdminAnalyticsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
 export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
+  const [segments, setSegments] = useState([]);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+  const [segmentsError, setSegmentsError] = useState('');
+  const [chartData, setChartData] = useState([]);
+  const [clientSegments, setClientSegments] = useState([]);
+
+  useEffect(() => {
+    async function loadSegments() {
+      try {
+        setIsLoadingSegments(true);
+        setSegmentsError(null);
+
+        const response = await firmAdminAnalyticsAPI.getRevenueSegments(365);
+        const segs = response?.data?.segments ?? [];
+        setSegments(segs);
+
+        // Donut chart data: use revenue values
+        setChartData(
+          segs.map(s => ({
+            name: s.label,
+            value: s.revenue,
+            color: s.color
+          }))
+        );
+
+        // Segment list data
+        setClientSegments(
+          segs.map(s => ({
+            name: s.label,
+            value: `$${s.revenue.toLocaleString()}`,
+            average: `$${s.avg_revenue.toLocaleString()} avg`,
+            info: `${s.client_count} clients`,
+            rawColor: s.color
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to load segments:', error);
+        setSegmentsError('Failed to load segments.');
+        setSegments([]);
+        setChartData([]);
+        setClientSegments([]);
+      } finally {
+        setIsLoadingSegments(false);
+      }
+    }
+
+    loadSegments();
+  }, []);
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 border border-gray-200 rounded shadow-lg">
+          <p className="font-medium">{payload[0].name}</p>
+          <p className="text-blue-600">${payload[0].value.toLocaleString()}</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   const kpiData = [
     {
@@ -49,60 +109,6 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
       )
     }
   ];
-
-  const clientSegments = [
-    {
-      name: 'Individual Clients',
-      value: '$125,000',
-      average: '$801 avg',
-      info: '2 hours ago',
-      color: 'bg-blue-500',
-      percentage: 40
-    },
-    {
-      name: 'Small Business',
-      value: '$87,000',
-      average: '$1,299 avg',
-      info: '67 clients',
-      color: 'bg-green-500',
-      percentage: 28
-    },
-    {
-      name: 'Medium Business',
-      value: '$69,000',
-      average: '$3,833 avg',
-      info: '18 clients',
-      color: 'bg-orange-500',
-      percentage: 22
-    },
-    {
-      name: 'Enterprise',
-      value: '$34,000',
-      average: '$5,667 avg',
-      info: '6 clients',
-      color: 'bg-red-500',
-      percentage: 10
-    }
-  ];
-
-  const chartData = [
-    { name: 'Individual Clients', value: 125000, color: '#3B82F6' },
-    { name: 'Small Business', value: 87000, color: '#10B981' },
-    { name: 'Medium Business', value: 69000, color: '#F97316' },
-    { name: 'Enterprise', value: 34000, color: '#EF4444' }
-  ];
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 rounded shadow-lg">
-          <p className="font-medium">{payload[0].name}</p>
-          <p className="text-blue-600">${payload[0].value.toLocaleString()}</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <>
@@ -309,7 +315,7 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
                     <div className="text-[#DC5A6E]">Lost Client: 3</div>
                   </div>
                   {/* Tooltip connector line */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-px h-2 bg-gray-300 border-dotted border-l"></div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-px h-2 bg-gray-300 border-dashed border-l"></div>
                   {/* Data point circle */}
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-1 bg-white rounded-full border border-gray-300"></div>
                 </div>
@@ -331,49 +337,83 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
 
       {/* Client Segmentation Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-        <div className="mb-4 sm:mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
-          <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
+        {/* Header */}
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
+            <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
+          </div>
+          {segmentsError && (
+            <span className="text-xs text-red-500">{segmentsError}</span>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-          {/* Donut Chart */}
+
+          {/* ----------- Donut Chart ----------- */}
           <div className="flex items-center justify-center">
             <div className="w-56 h-56 sm:w-64 sm:h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                    stroke="#fff"
-                    strokeWidth={2}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+              {isLoadingSegments && chartData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                  Loading segmentation...
+                </div>
+              ) : chartData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                  No segmentation data available.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={120}
+                      dataKey="value"
+                      stroke="#fff"
+                      strokeWidth={2}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
-          
-          {/* Segment List */}
+
+          {/* ----------- Segment List ----------- */}
           <div className="space-y-4">
+            {isLoadingSegments && clientSegments.length === 0 && (
+              <div className="text-sm text-gray-500">Loading segments...</div>
+            )}
+
+            {!isLoadingSegments &&
+              clientSegments.length === 0 &&
+              !segmentsError && (
+                <div className="text-sm text-gray-500">No segments available.</div>
+              )}
+
             {clientSegments.map((segment, index) => (
-              <div key={index} className="flex items-center justify-between px-2 py-1 border border-[#E8F0FF] rounded-lg">
+              <div
+                key={index}
+                className="flex items-center justify-between px-2 py-1 border border-[#E8F0FF] rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${segment.color}`}></div>
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: segment.rawColor }}
+                  ></div>
+
                   <div>
                     <h6 className="font-medium text-gray-900">{segment.name}</h6>
                     <p className="text-sm text-gray-600">{segment.average}</p>
                   </div>
                 </div>
+
                 <div className="text-right">
                   <div className="font-semibold text-gray-900">{segment.value}</div>
                   <div className="text-xs text-gray-500">{segment.info}</div>
