@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import TaxHeader from "./TaxHeader";
 import { Outlet } from "react-router-dom";
+import MaintenanceMode from "../../ClientOnboarding/components/MaintenanceMode";
 import "../styles/taxdashboardlayout.css";
 import TaxSidebar from "./TaxSidebar";
 
@@ -13,6 +14,7 @@ export default function TaxDashboardLayout() {
 
   return (
     <div className={`tdl-layout ${isSidebarOpen ? "" : "tdl-collapsed"}`}>
+      <MaintenanceMode />
       <TaxHeader
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isSidebarOpen}

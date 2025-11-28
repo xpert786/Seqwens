@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   AreaChart,
   Area,
@@ -30,6 +30,7 @@ import {
   SecurityYellowIcon
 } from '../Components/icons';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
+import { getStorage } from '../../ClientOnboarding/utils/userUtils';
 
 const SUBSCRIPTION_COLOR_MAP = {
   solo: '#10B981',
@@ -42,6 +43,7 @@ const SUBSCRIPTION_COLOR_MAP = {
 const FALLBACK_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#06B6D4', '#8B5CF6', '#EF4444', '#F97316'];
 
 export default function SuperDashboardContent() {
+  const navigate = useNavigate();
   // State management
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,27 @@ export default function SuperDashboardContent() {
   const [firmsCurrentPage, setFirmsCurrentPage] = useState(1);
   const [showAllFirms, setShowAllFirms] = useState(false);
   const FIRMS_PER_PAGE = 3;
+
+  // Redirect based on user role
+  useEffect(() => {
+    const storage = getStorage();
+    const userType = storage?.getItem("userType");
+    
+    // Redirect support_admin to support center
+    if (userType === 'support_admin') {
+      navigate("/superadmin/support", { replace: true });
+      return;
+    }
+    
+    // Redirect billing_admin to subscriptions
+    if (userType === 'billing_admin') {
+      navigate("/superadmin/subscriptions", { replace: true });
+      return;
+    }
+    
+    // Only super_admin should see the dashboard
+    // If not super_admin, the route protection will handle it
+  }, [navigate]);
 
   const formatCurrency = (value) => {
     const numericValue = Number(value);

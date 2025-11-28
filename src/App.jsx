@@ -7,6 +7,8 @@ import Dashboard from "./ClientOnboarding/pages/Dashboard";
 import MyDocuments from "./ClientOnboarding/pages/MyDocuments";
 import DataIntake from "./ClientOnboarding/pages/DataIntake";
 import Invoices from "./ClientOnboarding/pages/Invoices";
+import PaymentSuccess from "./ClientOnboarding/pages/PaymentSuccess";
+import PaymentCancelled from "./ClientOnboarding/pages/PaymentCancelled";
 import Messages from "./ClientOnboarding/pages/Messages";
 import Appointments from "./ClientOnboarding/pages/Appointments";
 import Accounts from "./ClientOnboarding/pages/Accounts";
@@ -82,6 +84,8 @@ export default function App() {
           </ProtectedRoute>
         }>
           <Route index element={<Invoices />} />
+          <Route path=":invoiceId/payment-success" element={<PaymentSuccess />} />
+          <Route path=":invoiceId/payment-cancelled" element={<PaymentCancelled />} />
         </Route>
 
         <Route path="/messages" element={

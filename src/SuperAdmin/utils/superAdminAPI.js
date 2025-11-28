@@ -67,9 +67,25 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       }
     }
 
+    // Sanitize data for logging to prevent API keys from appearing in console
+    const sanitizeForLogging = (obj) => {
+      if (!obj || typeof obj !== 'object') return obj;
+      if (obj instanceof FormData) return '[FormData]'; // Don't log FormData
+      const sanitized = { ...obj };
+      // Mask sensitive fields
+      if (sanitized.key) sanitized.key = '***MASKED***';
+      if (sanitized.api_key) sanitized.api_key = '***MASKED***';
+      if (sanitized.apiKey) sanitized.apiKey = '***MASKED***';
+      if (sanitized.password) sanitized.password = '***MASKED***';
+      if (sanitized.token) sanitized.token = '***MASKED***';
+      if (sanitized.access_token) sanitized.access_token = '***MASKED***';
+      if (sanitized.refresh_token) sanitized.refresh_token = '***MASKED***';
+      return sanitized;
+    };
+
     console.log('SuperAdmin API Request URL:', `${API_BASE_URL}${endpoint}`);
     console.log('SuperAdmin API Request Config:', config);
-    console.log('SuperAdmin API Request Data:', data);
+    console.log('SuperAdmin API Request Data:', sanitizeForLogging(data));
 
     let response = await fetchWithCors(`${API_BASE_URL}${endpoint}`, config);
 
@@ -352,6 +368,11 @@ export const superAdminAPI = {
   // Get system health data
   getSystemHealth: async () => {
     return await apiRequest('/user/admin/system/health/', 'GET');
+  },
+
+  // Get system performance metrics
+  getPerformanceMetrics: async () => {
+    return await apiRequest('/user/admin/system/performance-metrics/', 'GET');
   },
 
   // Get activity logs
@@ -859,9 +880,22 @@ export const superAdminAPI = {
         body: JSON.stringify(reportData)
       };
 
+      // Sanitize reportData for logging
+      const sanitizeReportData = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+        const sanitized = { ...obj };
+        // Mask sensitive fields
+        if (sanitized.key) sanitized.key = '***MASKED***';
+        if (sanitized.api_key) sanitized.api_key = '***MASKED***';
+        if (sanitized.apiKey) sanitized.apiKey = '***MASKED***';
+        if (sanitized.password) sanitized.password = '***MASKED***';
+        if (sanitized.token) sanitized.token = '***MASKED***';
+        return sanitized;
+      };
+
       console.log('Generate Platform Report API Request URL:', `${API_BASE_URL}/user/admin/reports/platform/generate/`);
       console.log('Generate Platform Report API Request Config:', config);
-      console.log('Generate Platform Report API Request Data:', reportData);
+      console.log('Generate Platform Report API Request Data:', sanitizeReportData(reportData));
 
       let response = await fetchWithCors(`${API_BASE_URL}/user/admin/reports/platform/generate/`, config);
 

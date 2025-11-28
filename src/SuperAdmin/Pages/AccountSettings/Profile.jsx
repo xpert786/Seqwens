@@ -577,51 +577,7 @@ export default function Profile() {
                             />
                             <label htmlFor="smsAlerts"></label>
                         </div>
-                    </div>
-
-                    {/* Slack Integration */}
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <div
-                                style={{
-                                    color: "#3B4A66",
-                                    fontSize: "16px",
-                                    fontWeight: "500",
-                                    fontFamily: "BasisGrotesquePro",
-                                }}
-                            >
-                                Slack Integration
-                            </div>
-                            <p
-                                style={{
-                                    color: "#6B7280",
-                                    fontSize: "14px",
-                                    fontWeight: "400",
-                                    fontFamily: "BasisGrotesquePro",
-                                    margin: "4px 0 0 0",
-                                }}
-                            >
-                                Post alerts to Slack channels
-                            </p>
-                        </div>
-                        <div className="custom-toggle">
-                            <input
-                                type="checkbox"
-                                id="slackIntegration"
-                                checked={
-                                    formState.notification_settings.slack_integration_enabled
-                                }
-                                onChange={() =>
-                                    handleToggle(
-                                        "notification_settings",
-                                        "slack_integration_enabled"
-                                    )
-                                }
-                                disabled={isLoading || isSaving}
-                            />
-                            <label htmlFor="slackIntegration"></label>
-                        </div>
-                    </div>
+                    </div>                    
 
                     {/* Weekly Reports */}
                     <div className="flex justify-between items-center">
@@ -778,49 +734,7 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <div
-                                style={{
-                                    color: "#3B4A66",
-                                    fontSize: "16px",
-                                    fontWeight: "500",
-                                    fontFamily: "BasisGrotesquePro",
-                                }}
-                            >
-                                IP Whitelisting
-                            </div>
-                            <p
-                                style={{
-                                    color: "#6B7280",
-                                    fontSize: "14px",
-                                    fontWeight: "400",
-                                    fontFamily: "BasisGrotesquePro",
-                                    margin: "4px 0 0 0",
-                                }}
-                            >
-                                Restrict admin access to approved IP addresses
-                            </p>
-                        </div>
-                        <div className="custom-toggle">
-                            <input
-                                type="checkbox"
-                                id="ipWhitelisting"
-                                checked={
-                                    formState.security_settings.ip_whitelisting_enabled
-                                }
-                                onChange={() =>
-                                    handleToggle(
-                                        "security_settings",
-                                        "ip_whitelisting_enabled"
-                                    )
-                                }
-                                disabled={isLoading || isSaving}
-                            />
-                            <label htmlFor="ipWhitelisting"></label>
-                        </div>
-                    </div>
-
+                    
                     <div className="flex justify-between items-center">
                         <div>
                             <div

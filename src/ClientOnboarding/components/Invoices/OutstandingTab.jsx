@@ -14,8 +14,13 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
     const handlePayNowClick = async (invoice) => {
         try {
-            // Directly call the payment API and redirect to Stripe
-            const response = await invoicesAPI.payInvoice(invoice.id);
+            // Build success and cancel URLs
+            const baseUrl = window.location.origin;
+            const successUrl = `${baseUrl}/invoices/${invoice.id}/payment-success`;
+            const cancelUrl = `${baseUrl}/invoices/${invoice.id}/payment-cancelled`;
+            
+            // Call the payment API with success and cancel URLs
+            const response = await invoicesAPI.payInvoice(invoice.id, successUrl, cancelUrl);
 
             if (response.success && response.data && response.data.checkout_url) {
                 // Redirect to Stripe Checkout
@@ -58,7 +63,13 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const handlePaymentSubmit = async () => {
         try {
             const invoiceId = selectedInvoice.id;
-            const response = await invoicesAPI.payInvoice(invoiceId);
+            // Build success and cancel URLs
+            const baseUrl = window.location.origin;
+            const successUrl = `${baseUrl}/invoices/${invoiceId}/payment-success`;
+            const cancelUrl = `${baseUrl}/invoices/${invoiceId}/payment-cancelled`;
+            
+            // Call the payment API with success and cancel URLs
+            const response = await invoicesAPI.payInvoice(invoiceId, successUrl, cancelUrl);
 
             if (response.success && response.data && response.data.checkout_url) {
                 // Redirect to Stripe Checkout
