@@ -5,6 +5,7 @@ import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
 // Layouts
 import FirmDashboardLayout from './Components/FirmDashboardLayout';
 import { FirmPortalColorsProvider } from './Context/FirmPortalColorsContext';
+import { FirmSettingsProvider } from './Context/FirmSettingsContext';
 
 // Pages
 import OverviewFirm from './Pages/OverView/OverviewFirm';
@@ -72,6 +73,7 @@ function FirmAdminProtectedRoute({ children }) {
 export default function FirmRoutes() {
   return (
     <FirmPortalColorsProvider>
+      <FirmSettingsProvider>
       <Routes>
         {/* Main firm admin dashboard route with layout */}
         <Route path="/" element={
@@ -131,6 +133,7 @@ export default function FirmRoutes() {
         <Route path="*" element={<Navigate to="/firmadmin" replace />} />
       </Route>
     </Routes>
+    </FirmSettingsProvider>
     </FirmPortalColorsProvider>
   );
 }

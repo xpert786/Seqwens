@@ -6,8 +6,10 @@ import { firmAdminTasksAPI, handleAPIError } from '../../../ClientOnboarding/uti
 import { toast } from 'react-toastify';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 const TaskManagementMain = () => {
+  const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('All Priorities');
@@ -453,28 +455,29 @@ const TaskManagementMain = () => {
             <p className="text-gray-600 font-[BasisGrotesquePro]">Track and manage all firm tasks and workflows</p>
           </div>
           <div className="flex space-x-3">
-            <button
-              onClick={exportTasksToPDF}
-              className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro]"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+            {!advancedReportingEnabled && (
+              <button
+                onClick={exportTasksToPDF}
+                className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro]"
               >
-                <path
-                  d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25"
-                  stroke="#4B5563"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25"
+                    stroke="#4B5563"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
 
-              Export Report
-            </button>
-
+                Export Report
+              </button>
+            )}
             <button
               type="button"
               onClick={(e) => {

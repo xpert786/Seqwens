@@ -469,6 +469,20 @@ export const handleAPIError = (error) => {
   return error.message || 'An unexpected error occurred. Please try again.';
 };
 
+// Firm Admin Analytics API functions
+export const firmAdminAnalyticsAPI = {
+  // Get revenue by client segment for the firm admin
+  getRevenueSegments: async (days = 365) => {
+    const params = new URLSearchParams();
+    if (days) {
+      params.append('days', days.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/reports/revenue-segments/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+};
+
 // Data Intake API functions
 export const dataIntakeAPI = {
   // Submit data intake form
@@ -872,6 +886,16 @@ export const securityAPI = {
   // Update password
   updatePassword: async (passwordData) => {
     return await apiRequest('/user/security-settings/', 'PATCH', passwordData);
+  },
+
+  // List active admin sessions
+  getAdminSessions: async () => {
+    return await apiRequest('/firm/sessions/active', 'GET');
+  },
+
+  // Terminate a specific admin session by key
+  terminateAdminSession: async (sessionKey) => {
+    return await apiRequest(`/firm/sessions/${sessionKey}/terminate/`, 'POST');
   }
 };
 
@@ -2588,52 +2612,118 @@ export const firmAdminClientsAPI = {
 };
 
 // Firm Admin Email Templates API functions
-export const firmAdminEmailTemplatesAPI = {
-  // Create email template
-  createTemplate: async (templateData) => {
-    return await apiRequest('/user/firm-admin/email-templates/', 'POST', templateData);
-  },
+const EMAIL_TEMPLATE_BASE = '/user/firm-admin/email-templates';
+const ensureEmailTemplateSuccess = (response, defaultMessage) => {
+  if (response && typeof response === 'object' && Object.prototype.hasOwnProperty.call(response, 'success')) {
+    if (!response.success) {
+      const error = new Error(response.message || defaultMessage);
+      error.data = response.data;
+      throw error;
+    }
+    return response.data ?? {};
+  }
+  return response;
+};
 
+export const firmAdminEmailTemplatesAPI = {
   // List email templates
   listTemplates: async (params = {}) => {
-    const { page = 1, page_size = 20, search, category, status } = params;
+    const { category, status, search } = params;
     const queryParams = new URLSearchParams();
 
-    if (page) {
-      queryParams.append('page', page.toString());
-    }
-    if (page_size) {
-      queryParams.append('page_size', page_size.toString());
-    }
-    if (search) {
-      queryParams.append('search', search);
-    }
     if (category) {
       queryParams.append('category', category);
     }
     if (status) {
       queryParams.append('status', status);
     }
+    if (search) {
+      queryParams.append('search', search);
+    }
 
     const queryString = queryParams.toString();
-    const endpoint = `/user/firm-admin/email-templates/${queryString ? `?${queryString}` : ''}`;
-    return await apiRequest(endpoint, 'GET');
+    const response = await apiRequest(
+      `${EMAIL_TEMPLATE_BASE}/${queryString ? `?${queryString}` : ''}`,
+      'GET'
+    );
+    return ensureEmailTemplateSuccess(response, 'Failed to fetch email templates');
   },
 
   // Get template details
   getTemplate: async (templateId) => {
-    return await apiRequest(`/user/firm-admin/email-templates/${templateId}/`, 'GET');
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/`, 'GET');
+    return ensureEmailTemplateSuccess(response, 'Failed to fetch email template');
+  },
+
+  // Create email template (direct HTML or WYSIWYG payload supported)
+  createTemplate: async (templateData) => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/`, 'POST', templateData);
+    return ensureEmailTemplateSuccess(response, 'Failed to create email template');
   },
 
   // Update template
   updateTemplate: async (templateId, templateData) => {
-    return await apiRequest(`/user/firm-admin/email-templates/${templateId}/`, 'PATCH', templateData);
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/`, 'PATCH', templateData);
+    return ensureEmailTemplateSuccess(response, 'Failed to update email template');
   },
 
   // Delete template
   deleteTemplate: async (templateId) => {
-    return await apiRequest(`/user/firm-admin/email-templates/${templateId}/`, 'DELETE');
-  }
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/`, 'DELETE');
+    ensureEmailTemplateSuccess(response, 'Failed to delete email template');
+    return true;
+  },
+
+  // Duplicate template
+  duplicateTemplate: async (templateId, name) => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/`, 'POST', {
+      action: 'duplicate',
+      name,
+    });
+    return ensureEmailTemplateSuccess(response, 'Failed to duplicate email template');
+  },
+
+  // Send email using template
+  sendTemplate: async (templateId, payload) => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/${templateId}/`, 'POST', {
+      action: 'send',
+      ...payload,
+    });
+    return ensureEmailTemplateSuccess(response, 'Failed to send email');
+  },
+
+  // Preview template (WYSIWYG-friendly)
+  previewTemplate: async (payload) => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/preview/`, 'POST', payload);
+    return ensureEmailTemplateSuccess(response, 'Failed to generate preview');
+  },
+
+  // Get available variables for an email type
+  getVariables: async (emailType) => {
+    if (!emailType) {
+      throw new Error('Email type is required to fetch variables');
+    }
+    const response = await apiRequest(
+      `${EMAIL_TEMPLATE_BASE}/variables/?email_type=${encodeURIComponent(emailType)}`,
+      'GET'
+    );
+    return ensureEmailTemplateSuccess(response, 'Failed to fetch template variables');
+  },
+
+  // List email templates organized by email type
+  listTemplatesByType: async () => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/by-type/`, 'GET');
+    return ensureEmailTemplateSuccess(response, 'Failed to fetch templates by type');
+  },
+
+  // Assign email template to email type
+  assignTemplate: async (templateId, emailType) => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/assign/`, 'POST', {
+      template_id: templateId,
+      email_type: emailType,
+    });
+    return ensureEmailTemplateSuccess(response, 'Failed to assign template');
+  },
 };
 
 // Firm Admin Staff API functions

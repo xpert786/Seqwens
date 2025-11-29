@@ -8,6 +8,7 @@ import { firmAdminDashboardAPI, handleAPIError } from '../../../ClientOnboarding
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 import {
   AreaChart,
   Area,
@@ -61,6 +62,7 @@ const getBreakdownData = (dashboardData) => {
 
 export default function FirmAdminDashboard() {
   const navigate = useNavigate();
+  const { advancedReportingEnabled } = useFirmSettings();
   const [activeTab, setActiveTab] = useState('trend');
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -859,7 +861,7 @@ export default function FirmAdminDashboard() {
     <>
       <CustomizeModal />
       <ScheduleModal />
-      <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
+      <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <div className="flex-1 min-w-0 pr-4 xl:pr-2">
@@ -869,25 +871,15 @@ export default function FirmAdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
-            {/* <button className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[8px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1">
-            Admin View
-            <svg className="w-2 h-2 xl:w-3 xl:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <button 
-            onClick={() => setIsCustomizeModalOpen(true)}
-            className="px-1 xl:px-4 py-1 xl:py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 whitespace-nowrap"
-          >
-            Customize
-          </button> */}
-            <button
-              onClick={exportDashboardToPDF}
-              className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
-            >
-              <DownsIcon />
-              Export Report
-            </button>
+            {!advancedReportingEnabled && (
+              <button
+                onClick={exportDashboardToPDF}
+                className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
+              >
+                <DownsIcon />
+                Export Report
+              </button>
+            )}
             <button
               onClick={() => setIsScheduleModalOpen(true)}
               className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
@@ -898,72 +890,13 @@ export default function FirmAdminDashboard() {
           </div>
         </div>
 
-        {/* System Alerts Section */}
-        {widgetVisibility.Alerts && (
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-[18px] font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">System Alerts</h4>
-              <div className="px-3 py-1 bg-orange-100 border border-orange-300 rounded-full">
-                <span className="text-xs font-medium text-orange-600 font-[BasisGrotesquePro]">
-                  {loading ? '...' : (dashboardData?.system_alerts?.active_count || 0)} Active
-                </span>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-8 text-gray-500">Loading alerts...</div>
-            ) : dashboardData?.system_alerts?.alerts?.length > 0 ? (
-              <div className="space-y-0">
-                {dashboardData.system_alerts.alerts.map((alert, index) => (
-                  <div
-                    key={alert.id || index}
-                    className={`flex items-center justify-between py-4 ${index < dashboardData.system_alerts.alerts.length - 1 ? 'border-b border-[#E5E7EB]' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h6 className="font-semibold text-[#3B4A66] font-[BasisGrotesquePro] text-[10px]">{alert.title}</h6>
-                        <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">{alert.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-xs text-blue-500 font-[BasisGrotesquePro]">{alert.time_ago || 'Recently'}</span>
-                      </div>
-                      {/* {alert.action && (
-                        <button
-                          onClick={() => {
-                            if (alert.action?.endpoint) {
-                              window.location.href = alert.action.endpoint;
-                            }
-                          }}
-                          className="px-3 py-1 border border-[#D1D5DB] text-[#3B4A66] text-xs rounded font-[BasisGrotesquePro] hover:bg-gray-50"
-                        >
-                          {alert.action.label}
-                        </button>
-                      )} */}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">No active alerts</div>
-            )}
-          </div>
-        )}
+      
 
         {/* Key Metrics Section */}
         {widgetVisibility.Kpi && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 mb-6 w-full">
             {/* My Revenue */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0">
               <div className="absolute top-3 right-3">
                 <DolersIcon />
               </div>
@@ -1019,7 +952,7 @@ export default function FirmAdminDashboard() {
             </div>
 
             {/* My Clients */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0">
               <div className="absolute top-3 right-3">
                 <DoublesIcon />
               </div>
@@ -1051,31 +984,12 @@ export default function FirmAdminDashboard() {
                     }}
                   ></div>
                 </div>
-                {/* <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.clients?.breakdown?.individual || 0}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Individual</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.clients?.breakdown?.business || 0}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Business</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
-                    {dashboardData?.key_metrics?.clients?.breakdown?.estate || 0}
-                  </div>
-                  <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Estate</div>
-                </div>
-              </div> */}
+               
               </div>
             </div>
 
             {/* My Tasks */}
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-4 relative">
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-3 relative min-w-0">
               <div className="absolute top-3 right-3">
                 <FilessIcon />
               </div>
@@ -1148,12 +1062,14 @@ export default function FirmAdminDashboard() {
                     </svg>
                     Filter
                   </button>
-                  <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export
-                  </button>
+                  {!advancedReportingEnabled && (
+                    <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Export
+                    </button>
+                  )}
                   <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />

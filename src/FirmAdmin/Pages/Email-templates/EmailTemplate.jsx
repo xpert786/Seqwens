@@ -1,214 +1,100 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { firmAdminEmailTemplatesAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import TabNavigation from '../Integrations/TabNavigation';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
-import CreateTemplateModal from './CreateTemplateModal';
-
-const API_BASE_URL = getApiBaseUrl();
-
-// API Functions for Email Templates
-const emailTemplateAPI = {
-    // List Templates
-    listTemplates: async () => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching email templates:', error);
-            throw error;
-        }
-    },
-
-    // Create Template
-    createTemplate: async (templateData) => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(templateData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error creating email template:', error);
-            throw error;
-        }
-    },
-
-    // Get Template Details
-    getTemplate: async (templateId) => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching email template:', error);
-            throw error;
-        }
-    },
-
-    // Update Template
-    updateTemplate: async (templateId, updateData) => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(updateData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error updating email template:', error);
-            throw error;
-        }
-    },
-
-    // Delete Template
-    deleteTemplate: async (templateId) => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error deleting email template:', error);
-            throw error;
-        }
-    },
-
-    // Duplicate Template
-    duplicateTemplate: async (templateId, newName) => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    action: 'duplicate',
-                    name: newName
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error duplicating email template:', error);
-            throw error;
-        }
-    },
-
-    // Send Email
-    sendEmail: async (templateId, emailData) => {
-        try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/email-templates/${templateId}/`;
-            
-            const response = await fetchWithCors(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    action: 'send',
-                    ...emailData
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error sending email:', error);
-            throw error;
-        }
-    }
-};
 
 const statusClasses = {
     active: '!border border-[#22C55E] bg-transparent text-[#198754]',
     draft: '!border border-[#FBBF24] bg-transparent text-[#D97706]',
     archived: 'bg-[#EEF2F7] text-[#6B7280]'
+};
+
+const EMAIL_TEMPLATE_CATEGORIES = [
+    { value: 'letterhead', label: 'Letterhead' },
+    { value: 'tax_preparation', label: 'Tax Preparation' },
+    { value: 'onboarding', label: 'Onboarding' },
+    { value: 'scheduling', label: 'Scheduling' },
+    { value: 'payment', label: 'Payment' },
+    { value: 'document_request', label: 'Document Request' },
+    { value: 'appointment', label: 'Appointment' },
+    { value: 'reminder', label: 'Reminder' },
+    { value: 'notification', label: 'Notification' },
+    { value: 'other', label: 'Other' }
+];
+
+const EMAIL_TEMPLATE_TYPES = [
+    { value: 'client_invite', label: 'Client Invite' },
+    { value: 'staff_invite', label: 'Staff Invite' },
+    { value: 'firm_onboarding', label: 'Firm Onboarding' },
+    { value: 'account_deletion', label: 'Account Deletion' },
+    { value: 'subscription_created', label: 'Subscription Created' },
+    { value: 'subscription_ending', label: 'Subscription Ending' },
+    { value: 'subscription_expired', label: 'Subscription Expired' }
+];
+
+const EMAIL_TEMPLATE_TONES = [
+    { value: 'formal', label: 'Formal' },
+    { value: 'professional', label: 'Professional' },
+    { value: 'friendly', label: 'Friendly' },
+    { value: 'casual', label: 'Casual' },
+    { value: 'warm', label: 'Warm' },
+    { value: 'urgent', label: 'Urgent' },
+    { value: 'informative', label: 'Informative' }
+];
+
+const EMAIL_TEMPLATE_STATUSES = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'active', label: 'Active' },
+    { value: 'archived', label: 'Archived' }
+];
+
+const ESSENTIAL_VARIABLES = [
+    {
+        key: 'Firm Name',
+        label: 'Firm Name',
+        description: 'Your firm name',
+        placeholder: '[Firm Name]'
+    },
+    {
+        key: 'First Name',
+        label: 'First Name',
+        description: 'Recipient first name',
+        placeholder: '[First Name]'
+    },
+    {
+        key: 'Last Name',
+        label: 'Last Name',
+        description: 'Recipient last name',
+        placeholder: '[Last Name]'
+    },
+    {
+        key: 'Invite Link',
+        label: 'Invite Link',
+        description: 'Invitation link',
+        placeholder: '[Invite Link]'
+    },
+    {
+        key: 'Expiry Date',
+        label: 'Expiry Date',
+        description: 'Invitation expiry date',
+        placeholder: '[Expiry Date]'
+    },
+    {
+        key: 'Role',
+        label: 'Role',
+        description: 'Recipient role',
+        placeholder: '[Role]'
+    }
+];
+
+const extractTemplatesFromResponse = (payload) => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.templates)) return payload.templates;
+    if (Array.isArray(payload.results)) return payload.results;
+    return [];
 };
 
 export default function EmailTemplate() {
@@ -220,14 +106,16 @@ export default function EmailTemplate() {
     const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [editorTemplate, setEditorTemplate] = useState(null);
+    const [showEditorModal, setShowEditorModal] = useState(false);
 
     // Fetch templates from API
     const fetchTemplates = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await emailTemplateAPI.listTemplates();
-            setTemplates(Array.isArray(data) ? data : (data.results || data.templates || []));
+            const data = await firmAdminEmailTemplatesAPI.listTemplates();
+            setTemplates(extractTemplatesFromResponse(data));
         } catch (err) {
             setError(err.message);
             handleAPIError(err);
@@ -246,7 +134,7 @@ export default function EmailTemplate() {
     // Handler functions
     const handleCreateTemplate = async (templateData) => {
         try {
-            await emailTemplateAPI.createTemplate(templateData);
+            await firmAdminEmailTemplatesAPI.createTemplate(templateData);
             toast.success('Template created successfully');
             fetchTemplates();
             return true;
@@ -259,7 +147,7 @@ export default function EmailTemplate() {
 
     const handleUpdateTemplate = async (templateId, updateData) => {
         try {
-            await emailTemplateAPI.updateTemplate(templateId, updateData);
+            await firmAdminEmailTemplatesAPI.updateTemplate(templateId, updateData);
             toast.success('Template updated successfully');
             fetchTemplates();
             return true;
@@ -275,7 +163,7 @@ export default function EmailTemplate() {
             return false;
         }
         try {
-            await emailTemplateAPI.deleteTemplate(templateId);
+            await firmAdminEmailTemplatesAPI.deleteTemplate(templateId);
             toast.success('Template deleted successfully');
             fetchTemplates();
             return true;
@@ -288,7 +176,7 @@ export default function EmailTemplate() {
 
     const handleDuplicateTemplate = async (templateId, newName) => {
         try {
-            await emailTemplateAPI.duplicateTemplate(templateId, newName);
+            await firmAdminEmailTemplatesAPI.duplicateTemplate(templateId, newName);
             toast.success('Template duplicated successfully');
             fetchTemplates();
             return true;
@@ -301,7 +189,7 @@ export default function EmailTemplate() {
 
     const handleSendEmail = async (templateId, emailData) => {
         try {
-            await emailTemplateAPI.sendEmail(templateId, emailData);
+            await firmAdminEmailTemplatesAPI.sendTemplate(templateId, emailData);
             toast.success('Email sent successfully');
             return true;
         } catch (err) {
@@ -310,7 +198,16 @@ export default function EmailTemplate() {
             return false;
         }
     };
-    const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+
+    const openEditor = (template = null) => {
+        setEditorTemplate(template);
+        setShowEditorModal(true);
+    };
+
+    const closeEditor = () => {
+        setShowEditorModal(false);
+        setEditorTemplate(null);
+    };
 
     return (
         <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
@@ -326,7 +223,7 @@ export default function EmailTemplate() {
                     </div>
                     <div className="flex items-center gap-3">
                         <button 
-                            onClick={() => setShowCreateTemplateModal(true)}
+                            onClick={() => openEditor(null)}
                             className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#3AD6F2] px-4 font-semibold text-white hover:bg-[#2BC5E0] transition-colors"
                         >
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -334,13 +231,7 @@ export default function EmailTemplate() {
                             </svg>
                             Create Template
                         </button>
-                        <button className="inline-flex h-11 items-center justify-center gap-2 self-start !rounded-lg !bg-[#F56D2D] px-4 font-semibold text-white hover:bg-[#E55A1D] transition-colors">
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16.5 5.25L10.125 11.625L6.375 7.875L1.5 12.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M12 5.25H16.5V9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Upgrade Plan
-                        </button>
+                       
                     </div>
                 </header>
 
@@ -362,12 +253,12 @@ export default function EmailTemplate() {
                             loading={loading}
                             error={error}
                             onRefresh={fetchTemplates}
-                            onCreate={handleCreateTemplate}
-                            onUpdate={handleUpdateTemplate}
                             onDelete={handleDeleteTemplate}
                             onDuplicate={handleDuplicateTemplate}
                             onSend={handleSendEmail}
-                            onGetTemplate={emailTemplateAPI.getTemplate}
+                            onGetTemplate={firmAdminEmailTemplatesAPI.getTemplate}
+                            onRequestEdit={openEditor}
+                            onRequestCreate={() => openEditor(null)}
                         />
                     )}
                     {activeTab === 'Analytics' && <AnalyticsView />}
@@ -378,16 +269,27 @@ export default function EmailTemplate() {
                 </section>
             </div>
 
-            {/* Create Template Modal */}
-            <CreateTemplateModal
-                isOpen={showCreateTemplateModal}
-                onClose={() => setShowCreateTemplateModal(false)}
-                onTemplateCreated={() => {
-                    // Refresh templates list if needed
-                    console.log('Template created, refresh list');
-                    // You can add logic here to refresh the templates list
-                }}
-            />
+            {/* Template Editor Modal */}
+            {showEditorModal && (
+                <TemplateFormModal
+                    template={editorTemplate}
+                    onClose={closeEditor}
+                    onSubmit={async (templatePayload) => {
+                        if (editorTemplate?.id) {
+                            const success = await handleUpdateTemplate(editorTemplate.id, templatePayload);
+                            if (success) {
+                                closeEditor();
+                            }
+                            return success;
+                        }
+                        const success = await handleCreateTemplate(templatePayload);
+                        if (success) {
+                            closeEditor();
+                        }
+                        return success;
+                    }}
+                />
+            )}
         </div>
     );
 }
@@ -443,61 +345,172 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
     const [recipientEmail, setRecipientEmail] = useState('');
     const [recipientName, setRecipientName] = useState('');
     const [variables, setVariables] = useState({});
-    
-    const handleSubmit = () => {
+    const [variablesInput, setVariablesInput] = useState('{}');
+    const [variablesError, setVariablesError] = useState('');
+    const [availableVariables, setAvailableVariables] = useState([]);
+    const [variablesLoading, setVariablesLoading] = useState(false);
+    const [sending, setSending] = useState(false);
+
+    const loadVariables = useCallback(async () => {
+        if (!template?.email_type) {
+            setAvailableVariables([]);
+            return;
+        }
+        try {
+            setVariablesLoading(true);
+            const data = await firmAdminEmailTemplatesAPI.getVariables(template.email_type);
+            setAvailableVariables(data?.variables || []);
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to load template variables');
+        } finally {
+            setVariablesLoading(false);
+        }
+    }, [template?.email_type]);
+
+    useEffect(() => {
+        loadVariables();
+    }, [loadVariables]);
+
+    useEffect(() => {
+        setVariablesInput(JSON.stringify(variables, null, 2));
+    }, [variables]);
+
+    useEffect(() => {
+        setVariables({});
+        setVariablesInput('{}');
+        setVariablesError('');
+    }, [template?.id]);
+
+    const handleVariablesInputChange = (value) => {
+        setVariablesInput(value);
+        try {
+            const parsed = value.trim() ? JSON.parse(value) : {};
+            setVariables(parsed);
+            setVariablesError('');
+        } catch {
+            setVariablesError('Invalid JSON format');
+        }
+    };
+
+    const handleApplyVariable = (variable) => {
+        setVariables((prev) => ({
+            ...prev,
+            [variable.key]: variable.example || variable.placeholder || ''
+        }));
+    };
+
+    const handleSubmit = async () => {
         if (!recipientEmail || !recipientEmail.trim()) {
             toast.error('Please enter recipient email');
             return;
         }
-        onSend({
-            recipient_email: recipientEmail.trim(),
-            recipient_name: recipientName.trim() || undefined,
-            variables: variables
-        });
+        if (variablesError) {
+            toast.error('Please fix variables JSON before sending');
+            return;
+        }
+        try {
+            setSending(true);
+            const success = await onSend({
+                recipient_email: recipientEmail.trim(),
+                recipient_name: recipientName.trim() || undefined,
+                variables
+            });
+            if (success) {
+                onClose();
+            }
+        } finally {
+            setSending(false);
+        }
     };
     
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Send Email</h3>
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Email *</label>
-                        <input
-                            type="email"
-                            value={recipientEmail}
-                            onChange={(e) => setRecipientEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                            placeholder="client@example.com"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Name</label>
-                        <input
-                            type="text"
-                            value={recipientName}
-                            onChange={(e) => setRecipientName(e.target.value)}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                            placeholder="Jane Smith"
-                        />
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Email *</label>
+                            <input
+                                type="email"
+                                value={recipientEmail}
+                                onChange={(e) => setRecipientEmail(e.target.value)}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="client@example.com"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Recipient Name</label>
+                            <input
+                                type="text"
+                                value={recipientName}
+                                onChange={(e) => setRecipientName(e.target.value)}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="Jane Smith"
+                            />
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Variables (JSON)</label>
                         <textarea
-                            value={JSON.stringify(variables, null, 2)}
-                            onChange={(e) => {
-                                try {
-                                    setVariables(JSON.parse(e.target.value));
-                                } catch {
-                                    // Invalid JSON, ignore
-                                }
-                            }}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-32 font-mono text-xs"
-                            placeholder='{"Date": "2024-03-25", "Time": "2:00 PM"}'
+                            value={variablesInput}
+                            onChange={(e) => handleVariablesInputChange(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-40 font-mono text-xs"
+                            placeholder='{"Firm Name": "ABC Tax Services"}'
                         />
+                        {variablesError && (
+                            <p className="mt-1 text-xs text-red-500">{variablesError}</p>
+                        )}
+                    </div>
+                    <div className="border border-dashed border-[#C8D5FF] rounded-lg p-4 bg-[#F9FBFF]">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-[#1F2A55]">
+                                    Available Variables {template?.email_type ? `(${template.email_type.replace('_', ' ')})` : ''}
+                                </p>
+                                <p className="text-xs text-[#6B7280]">
+                                    Click a variable to add it with example data
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={loadVariables}
+                                className="mt-2 inline-flex items-center justify-center rounded-md border border-[#E8F0FF] px-3 py-1.5 text-xs font-semibold text-[#1F2A55] hover:bg-white sm:mt-0"
+                            >
+                                Refresh
+                            </button>
+                        </div>
+                        <div className="mt-3 max-h-48 overflow-y-auto space-y-2">
+                            {variablesLoading ? (
+                                <p className="text-sm text-[#7B8AB2]">Loading variables...</p>
+                            ) : availableVariables.length === 0 ? (
+                                <p className="text-sm text-[#7B8AB2]">No variables available for this email type.</p>
+                            ) : (
+                                availableVariables.map((variable) => (
+                                    <div
+                                        key={variable.key}
+                                        className="flex flex-col gap-1 rounded-lg border border-[#E8F0FF] bg-white/80 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                                    >
+                                        <div>
+                                            <p className="text-sm font-semibold text-[#1F2A55]">{variable.label}</p>
+                                            <p className="text-xs text-[#6B7280]">{variable.description}</p>
+                                            <p className="text-xs text-[#94A3B8]">Placeholder: {variable.placeholder}</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleApplyVariable(variable)}
+                                            className="self-start rounded-md border border-[#3AD6F2] px-3 py-1 text-xs font-semibold text-[#1F2A55] hover:bg-[#EBFCFF]"
+                                        >
+                                            Use example
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
-                <div className="flex justify-end gap-3 mt-6">
+                <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:justify-end">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
@@ -506,9 +519,10 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D]"
+                        disabled={sending}
+                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] disabled:opacity-50"
                     >
-                        Send Email
+                        {sending ? 'Sending...' : 'Send Email'}
                     </button>
                 </div>
             </div>
@@ -546,110 +560,477 @@ const PreviewModal = ({ template, onClose }) => {
     );
 };
 
+const VARIABLE_FIELD_LABELS = {
+    subject: 'Subject',
+    header_html: 'Header HTML',
+    body_html: 'Body HTML',
+    footer_html: 'Footer HTML',
+    body_text: 'Body Text'
+};
+
+const convertPlainTextToHtml = (text = '') => {
+    if (!text.trim()) return '';
+    const paragraphs = text
+        .split(/\n{2,}/)
+        .map((paragraph) => {
+            const lines = paragraph.split(/\n/).map((line) => line.trim());
+            return `<p>${lines.join('<br />')}</p>`;
+        });
+    return paragraphs.join('\n');
+};
+
+const getInitialFormState = (template) => ({
+    name: template?.name || '',
+    description: template?.description || '',
+    category: template?.category || 'onboarding',
+    email_type: template?.email_type || 'client_invite',
+    subject: template?.subject || '',
+    header_html: template?.header_html || '',
+    body_html: template?.body_html || template?.body || '',
+    footer_html: template?.footer_html || '',
+    body_text: template?.body_text || '',
+    tone: template?.tone || 'professional',
+    status: template?.status || 'draft',
+    is_active: template?.is_active ?? false
+});
+
 const TemplateFormModal = ({ template, onClose, onSubmit }) => {
-    const [formData, setFormData] = useState({
-        name: template?.name || '',
-        category: template?.category || 'document',
-        subject: template?.subject || '',
-        body_html: template?.body_html || template?.body || '',
-        status: template?.status || 'draft'
-    });
-    
-    const handleSubmit = () => {
-        if (!formData.name || !formData.name.trim()) {
-            toast.error('Please enter template name');
+    const isEdit = Boolean(template?.id);
+    const [formData, setFormData] = useState(getInitialFormState(template));
+    const [lastFocusedField, setLastFocusedField] = useState('body_html');
+    const [variables, setVariables] = useState([]);
+    const [variablesLoading, setVariablesLoading] = useState(false);
+    const [variablesError, setVariablesError] = useState('');
+    const [previewData, setPreviewData] = useState(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        setFormData(getInitialFormState(template));
+        setLastFocusedField('body_html');
+    }, [template]);
+
+    const loadVariables = useCallback(async () => {
+        if (!formData.email_type) {
+            setVariables([]);
             return;
         }
-        if (!formData.subject || !formData.subject.trim()) {
-            toast.error('Please enter subject');
+        try {
+            setVariablesLoading(true);
+            const data = await firmAdminEmailTemplatesAPI.getVariables(formData.email_type);
+            const fetchedVariables = data?.variables || [];
+            const mergedVariables = [...fetchedVariables];
+            ESSENTIAL_VARIABLES.forEach((essentialVar) => {
+                const exists = mergedVariables.some(
+                    (variable) =>
+                        variable.key === essentialVar.key ||
+                        variable.placeholder === essentialVar.placeholder
+                );
+                if (!exists) {
+                    mergedVariables.push(essentialVar);
+                }
+            });
+            setVariables(mergedVariables);
+            setVariablesError('');
+        } catch (err) {
+            handleAPIError(err);
+            setVariables(ESSENTIAL_VARIABLES);
+            setVariablesError(err.message || 'Failed to fetch variables');
+        } finally {
+            setVariablesLoading(false);
+        }
+    }, [formData.email_type]);
+
+    useEffect(() => {
+        loadVariables();
+    }, [loadVariables]);
+
+    const handleInsertVariable = (placeholder) => {
+        if (!lastFocusedField) {
+            toast.info('Select a field before inserting a variable');
             return;
         }
-        onSubmit(formData);
+        setFormData((prev) => {
+            const value = prev[lastFocusedField] || '';
+            const needsSpacing = value && !value.endsWith(' ') ? ' ' : '';
+            return {
+                ...prev,
+                [lastFocusedField]: `${value}${needsSpacing}${placeholder}`
+            };
+        });
     };
-    
+
+    const handleVariableDragStart = (event, placeholder) => {
+        event.dataTransfer.setData('text/plain', placeholder);
+        event.dataTransfer.effectAllowed = 'copy';
+    };
+
+    const handleFieldDragOver = (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    };
+
+    const handleFieldDrop = (event, field) => {
+        event.preventDefault();
+        const placeholder = event.dataTransfer.getData('text/plain');
+        if (!placeholder) return;
+        const target = event.target;
+        const value = formData[field] || '';
+        const start = target.selectionStart ?? value.length;
+        const end = target.selectionEnd ?? value.length;
+        const newValue = value.slice(0, start) + placeholder + value.slice(end);
+        setFormData((prev) => ({
+            ...prev,
+            [field]: newValue
+        }));
+    };
+
+    const handlePreview = async () => {
+        if (!formData.subject.trim() || !formData.body_html.trim()) {
+            toast.error('Subject and body are required for preview');
+            return;
+        }
+        try {
+            setPreviewLoading(true);
+            const bodyContent = /<\/?[a-z][\s\S]*>/i.test(formData.body_html)
+                ? formData.body_html
+                : convertPlainTextToHtml(formData.body_html);
+            const payload = {
+                subject: formData.subject,
+                header_content: formData.header_html || '',
+                body_content: bodyContent || '',
+                footer_content: formData.footer_html || '',
+                email_type: formData.email_type
+            };
+            const data = await firmAdminEmailTemplatesAPI.previewTemplate(payload);
+            setPreviewData(data);
+        } catch (err) {
+            handleAPIError(err);
+            toast.error(err.message || 'Failed to generate preview');
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
+
+    const validateForm = () => {
+        if (!formData.name.trim()) {
+            toast.error('Template name is required');
+            return false;
+        }
+        if (!formData.subject.trim()) {
+            toast.error('Subject is required');
+            return false;
+        }
+        if (!formData.body_html.trim()) {
+            toast.error('Body HTML is required');
+            return false;
+        }
+        return true;
+    };
+
+    const handleSubmit = async () => {
+        if (!validateForm()) {
+            return;
+        }
+        const payload = {
+            name: formData.name.trim(),
+            category: formData.category,
+            email_type: formData.email_type,
+            subject: formData.subject.trim(),
+            tone: formData.tone,
+            status: formData.status,
+            is_active: !!formData.is_active
+        };
+
+        if (formData.description.trim()) payload.description = formData.description.trim();
+        if (formData.header_html.trim()) payload.header_html = formData.header_html.trim();
+        if (formData.body_html.trim()) {
+            const rawBody = formData.body_html.trim();
+            payload.body_html = /<\/?[a-z][\s\S]*>/i.test(rawBody) ? rawBody : convertPlainTextToHtml(rawBody);
+        }
+        if (formData.footer_html.trim()) payload.footer_html = formData.footer_html.trim();
+        if (formData.body_text.trim()) payload.body_text = formData.body_text.trim();
+
+        try {
+            setSubmitting(true);
+            const success = await onSubmit(payload);
+            if (success) {
+                setPreviewData(null);
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const fieldLabel = VARIABLE_FIELD_LABELS[lastFocusedField] || 'selected field';
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-[#1F2A55]">
-                        {template ? 'Edit Template' : 'Create Template'}
-                    </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1200]">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-[#1F2A55]">
+                            {isEdit ? 'Edit Email Template' : 'Create Email Template'}
+                        </h3>
+                        <p className="text-sm text-[#6B7280]">
+                            Use placeholders like Firm Name, First Name, etc. in your content
+                        </p>
+                    </div>
                     <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55]">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Name *</label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                            placeholder="Payment Reminder"
-                        />
+
+                <div className="lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(260px,1fr)] lg:gap-6">
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Template Name *</label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                    placeholder="Welcome Email"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Description</label>
+                                <input
+                                    type="text"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                    placeholder="Short internal description"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Category</label>
+                                <select
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                >
+                                    {EMAIL_TEMPLATE_CATEGORIES.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Email Type</label>
+                                <select
+                                    value={formData.email_type}
+                                    onChange={(e) => setFormData({ ...formData, email_type: e.target.value })}
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                >
+                                    {EMAIL_TEMPLATE_TYPES.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Tone</label>
+                                <select
+                                    value={formData.tone}
+                                    onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                >
+                                    {EMAIL_TEMPLATE_TONES.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2">Status</label>
+                                <select
+                                    value={formData.status}
+                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                    className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                >
+                                    {EMAIL_TEMPLATE_STATUSES.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex flex-col justify-end md:col-span-2">
+                                <label className="text-sm font-medium text-[#3B4A66] mb-2">Active Template</label>
+                                <label className="inline-flex items-center gap-2 text-sm text-[#1F2A55]">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.is_active}
+                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                        className="h-4 w-4 text-[#3AD6F2] border-[#C8D5FF] rounded focus:ring-[#3AD6F2]"
+                                    />
+                                    Use this template for live communications
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Subject *</label>
+                            <input
+                                type="text"
+                                value={formData.subject}
+                                onFocus={() => setLastFocusedField('subject')}
+                                onDragOver={handleFieldDragOver}
+                                onDrop={(event) => handleFieldDrop(event, 'subject')}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
+                                placeholder="Welcome to Firm Name!"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                            {['header_html', 'body_html', 'footer_html'].map((field) => (
+                                <div key={field} className={field === 'body_html' ? 'lg:col-span-3' : 'lg:col-span-3'}>
+                                    <label className="block text-sm font-medium text-[#3B4A66] mb-2 capitalize">
+                                        {VARIABLE_FIELD_LABELS[field]} {field === 'body_html' ? '*' : ''}
+                                    </label>
+                                    <textarea
+                                        value={formData[field]}
+                                        onFocus={() => setLastFocusedField(field)}
+                                        onDragOver={handleFieldDragOver}
+                                        onDrop={(event) => handleFieldDrop(event, field)}
+                                        onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                                        className={`w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-mono text-xs ${field === 'body_html' ? 'h-48' : 'h-32'}`}
+                                        placeholder="<div>Content...</div>"
+                                    />
+                                    {field === 'body_html' && (
+                                        <p className="mt-1 text-xs text-[#6B7280]">
+                                            Type plain text and we will wrap it with HTML automatically. You can also drag variables directly into this field.
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-[#3B4A66] mb-2">Body Text (optional)</label>
+                            <textarea
+                                value={formData.body_text}
+                                onFocus={() => setLastFocusedField('body_text')}
+                                onDragOver={handleFieldDragOver}
+                                onDrop={(event) => handleFieldDrop(event, 'body_text')}
+                                onChange={(e) => setFormData({ ...formData, body_text: e.target.value })}
+                                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-32"
+                                placeholder="Plain text version for fallback"
+                            />
+                        </div>
+
+                        {previewData && (
+                            <div className="border border-[#E8F0FF] rounded-lg p-4 bg-[#FDFDFE]">
+                                <div className="flex justify-between items-center mb-3">
+                                    <p className="text-sm font-semibold text-[#1F2A55]">Preview</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewData(null)}
+                                        className="text-xs text-[#7B8AB2] hover:text-[#1F2A55]"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                                <p className="text-sm font-medium text-[#1F2A55] mb-3">{previewData.subject}</p>
+                                <div
+                                    className="border border-[#E8F0FF] rounded-lg bg-white p-4 text-sm text-[#1F2A55]"
+                                    dangerouslySetInnerHTML={{ __html: previewData.html }}
+                                />
+                                {previewData.sample_variables && (
+                                    <div className="mt-3">
+                                        <p className="text-xs font-semibold text-[#6B7280] uppercase">Sample Variables</p>
+                                        <div className="grid gap-2 mt-1 sm:grid-cols-2">
+                                            {Object.entries(previewData.sample_variables).map(([key, value]) => (
+                                                <div key={key} className="rounded-md border border-[#E8F0FF] bg-white px-3 py-2 text-xs text-[#1F2A55]">
+                                                    <span className="font-semibold">{key}:</span> {value}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Category</label>
-                        <select
-                            value={formData.category}
-                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                        >
-                            <option value="payment">Payment</option>
-                            <option value="tax_preparation">Tax Preparation</option>
-                            <option value="onboarding">Onboarding</option>
-                            <option value="scheduling">Scheduling</option>
-                            <option value="document">Document</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Subject *</label>
-                        <input
-                            type="text"
-                            value={formData.subject}
-                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                            placeholder="Payment Reminder - Invoice # [Invoice Number]"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Body HTML</label>
-                        <textarea
-                            value={formData.body_html}
-                            onChange={(e) => setFormData({ ...formData, body_html: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] h-48 font-mono text-xs"
-                            placeholder="<html><body><p>Dear [Client Name],</p></body></html>"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#3B4A66] mb-2">Status</label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]"
-                        >
-                            <option value="draft">Draft</option>
-                            <option value="active">Active</option>
-                            <option value="archived">Archived</option>
-                        </select>
+
+                    <div className="mt-6 lg:mt-0">
+                        <div className="border border-dashed border-[#C8D5FF] rounded-lg p-4 bg-[#F9FBFF] lg:sticky lg:top-6">
+                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <p className="text-sm font-semibold text-[#1F2A55]">
+                                        Available Variables ({formData.email_type || 'general'})
+                                    </p>
+                                    <p className="text-xs text-[#6B7280]">
+                                        Click or drag to insert into the {fieldLabel.toLowerCase()}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={loadVariables}
+                                    className="mt-2 inline-flex items-center justify-center rounded-md border border-[#E8F0FF] px-3 py-1.5 text-xs font-semibold text-[#1F2A55] hover:bg-white md:mt-0"
+                                >
+                                    Refresh
+                                </button>
+                            </div>
+                            <div className="mt-3 max-h-64 overflow-y-auto space-y-2 pr-1">
+                                {variablesLoading ? (
+                                    <p className="text-sm text-[#7B8AB2]">Loading variables...</p>
+                                ) : variablesError ? (
+                                    <p className="text-sm text-red-500">{variablesError}</p>
+                                ) : variables.length === 0 ? (
+                                    <p className="text-sm text-[#7B8AB2]">No variables configured for this email type.</p>
+                                ) : (
+                                    variables.map((variable) => (
+                                        <button
+                                            key={variable.key}
+                                            type="button"
+                                            draggable
+                                            onDragStart={(event) => handleVariableDragStart(event, variable.placeholder)}
+                                            onClick={() => handleInsertVariable(variable.placeholder)}
+                                            className="w-full text-left rounded-md border border-[#E8F0FF] bg-white/80 px-3 py-2 text-xs font-semibold text-[#1F2A55] hover:bg-[#EBFCFF]"
+                                        >
+                                            <span className="block text-sm">{variable.label}</span>
+                                            <span className="text-[#6B7280]">{variable.description}</span>
+                                            <span className="text-[#94A3B8]">Placeholder: {variable.placeholder}</span>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div className="flex justify-end gap-3 mt-6">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D]"
-                    >
-                        {template ? 'Update' : 'Create'}
-                    </button>
+
+                <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:justify-between">
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={handlePreview}
+                            className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                            disabled={previewLoading}
+                        >
+                            {previewLoading ? 'Generating preview...' : 'Preview'}
+                        </button>
+                    </div>
+                    <div className="flex gap-3 sm:justify-end">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            className="px-4 py-2 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] disabled:opacity-50"
+                        >
+                            {submitting ? 'Saving...' : isEdit ? 'Update Template' : 'Create Template'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -697,12 +1078,21 @@ const transformTemplateData = (template) => {
         'onboarding': PeopleIcon,
         'scheduling': ClockIcon,
         'payment': FolderIcon,
-        'document': FolderIcon
+        'document': FolderIcon,
+        'document_request': FolderIcon,
+        'appointment': ClockIcon,
+        'reminder': ClockIcon,
+        'notification': FolderIcon,
+        'letterhead': FolderIcon,
+        'other': FolderIcon
     };
 
-    const category = template.category || 'document';
-    const categoryLabel = category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const category = (template.category || 'other').toLowerCase();
+    const categoryLabel = template.category_display || category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     const status = statusMap[template.status?.toLowerCase()] || statusMap['draft'];
+    const usageCount = typeof template.usage_count === 'number' ? template.usage_count : 0;
+    const lastUsedTimestamp = template.last_used_at || template.last_used || template.updated_at;
+    const lastUsed = lastUsedTimestamp ? new Date(lastUsedTimestamp).toLocaleDateString() : 'Never';
 
     return {
         id: template.id || template.template_id,
@@ -714,8 +1104,8 @@ const transformTemplateData = (template) => {
             icon: categoryIconMap[category.toLowerCase()] || FolderIcon
         },
         subject: template.subject || 'No subject',
-        usage: template.usage_count ? `${template.usage_count} times` : '0 times',
-        lastUsed: template.last_used ? new Date(template.last_used).toLocaleDateString() : 'Never',
+        usage: `${usageCount} ${usageCount === 1 ? 'time' : 'times'}`,
+        lastUsed,
         status: status,
         rawData: template // Keep original data for API calls
     };
@@ -727,16 +1117,15 @@ function TemplatesView({
     loading, 
     error, 
     onRefresh,
-    onCreate,
-    onUpdate,
     onDelete,
     onDuplicate,
     onSend,
-    onGetTemplate
+    onGetTemplate,
+    onRequestEdit,
+    onRequestCreate
 }) {
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
     const [showSendModal, setShowSendModal] = useState(false);
     const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
@@ -755,8 +1144,7 @@ function TemplatesView({
     const handleEdit = async (template) => {
         try {
             const fullTemplate = await onGetTemplate(template.id);
-            setSelectedTemplate(fullTemplate);
-            setShowEditModal(true);
+            onRequestEdit?.(fullTemplate);
         } catch (err) {
             toast.error('Failed to load template details');
         }
@@ -822,12 +1210,6 @@ function TemplatesView({
                     <h3 className="text-lg font-semibold text-[#1F2A55]">Email Templates</h3>
                     <p className="mt-1 text-sm text-[#7B8AB2]">Manage your email templates and their usage</p>
                 </div>
-                <button 
-                    onClick={() => setShowEditModal(true)}
-                    className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] text-sm font-medium"
-                >
-                    + Create Template
-                </button>
             </div>
 
             <div className="hidden xl:grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-4 text-sm font-semibold tracking-wide text-[#4B5563] sm:px-6 lg:px-8">
@@ -1002,29 +1384,6 @@ function TemplatesView({
                     onClose={() => {
                         setShowPreviewModal(false);
                         setSelectedTemplate(null);
-                    }}
-                />
-            )}
-
-            {/* Create/Edit Modal */}
-            {showEditModal && (
-                <TemplateFormModal
-                    template={selectedTemplate}
-                    onClose={() => {
-                        setShowEditModal(false);
-                        setSelectedTemplate(null);
-                    }}
-                    onSubmit={async (templateData) => {
-                        let success = false;
-                        if (selectedTemplate) {
-                            success = await onUpdate(selectedTemplate.id, templateData);
-                        } else {
-                            success = await onCreate(templateData);
-                        }
-                        if (success) {
-                            setShowEditModal(false);
-                            setSelectedTemplate(null);
-                        }
                     }}
                 />
             )}

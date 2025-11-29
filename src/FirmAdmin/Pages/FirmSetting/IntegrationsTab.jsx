@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 export default function IntegrationsTab() {
+  const { advancedReportingEnabled, updateAdvancedReporting } = useFirmSettings();
   const [preferences, setPreferences] = useState({
     client_portal_access: true,
     email_notifications: true,
@@ -29,12 +31,14 @@ export default function IntegrationsTab() {
         const response = await firmAdminSettingsAPI.getIntegrationsInfo();
         
         if (response.success && response.data) {
+          const advancedValue = response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true;
           setPreferences({
             client_portal_access: response.data.client_portal_access !== undefined ? response.data.client_portal_access : true,
             email_notifications: response.data.email_notifications !== undefined ? response.data.email_notifications : true,
             workflow_automation: response.data.workflow_automation !== undefined ? response.data.workflow_automation : true,
-            advanced_reporting: response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true
+            advanced_reporting: advancedValue
           });
+          updateAdvancedReporting(advancedValue);
           setDataManagement({
             data_retention_years: response.data.data_retention_years || 7,
             backup_frequency: response.data.backup_frequency || 'Daily'
@@ -56,10 +60,16 @@ export default function IntegrationsTab() {
   }, []);
 
   const togglePreference = (key) => {
-    setPreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setPreferences(prev => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key]
+      };
+      if (key === 'advanced_reporting') {
+        updateAdvancedReporting(updated[key]);
+      }
+      return updated;
+    });
   };
 
   const handleDataManagementChange = (field, value) => {
@@ -86,12 +96,14 @@ export default function IntegrationsTab() {
         toast.success('Integrations settings updated successfully');
         // Update with response data if needed
         if (response.data) {
+          const advancedValue = response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true;
           setPreferences({
             client_portal_access: response.data.client_portal_access !== undefined ? response.data.client_portal_access : true,
             email_notifications: response.data.email_notifications !== undefined ? response.data.email_notifications : true,
             workflow_automation: response.data.workflow_automation !== undefined ? response.data.workflow_automation : true,
-            advanced_reporting: response.data.advanced_reporting !== undefined ? response.data.advanced_reporting : true
+            advanced_reporting: advancedValue
           });
+          updateAdvancedReporting(advancedValue);
           setDataManagement({
             data_retention_years: response.data.data_retention_years || 7,
             backup_frequency: response.data.backup_frequency || 'Daily'
@@ -287,24 +299,26 @@ export default function IntegrationsTab() {
             </select>
           </div>
 
-          <div className="space-y-3 pt-2">
-            <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+          {!advancedReportingEnabled && (
+            <div className="space-y-3 pt-2">
+              <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
 
-              Download Data Export
-            </button>
-            <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2 mt-3">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M12.75 6L9 2.25L5.25 6" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M9 2.25V11.25" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+                Download Data Export
+              </button>
+              <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2 mt-3">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12.75 6L9 2.25L5.25 6" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M9 2.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
 
-              Import Data
-            </button>
-          </div>
+                Import Data
+              </button>
+            </div>
+          )}
         </div>
       </div>
       </div>

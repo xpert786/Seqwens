@@ -324,7 +324,6 @@ export default function Offices() {
                                     <th className="px-4 py-3 text-left text-base font-medium text-gray-500 tracking-wider">Staff</th>
                                     <th className="px-4 py-3 text-left text-base font-medium text-gray-500 tracking-wider">Clients</th>
                                     <th className="px-4 py-3 text-left text-base font-medium text-gray-500 tracking-wider">Monthly Revenue</th>
-                                    <th className="px-4 py-3 text-left text-base font-medium text-gray-500 tracking-wider">Performance</th>
                                     <th className="px-4 py-3 text-left text-base font-medium text-gray-500 tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -429,41 +428,6 @@ export default function Offices() {
                                                 <span className="font-semibold text-gray-500">{formatCurrency(formattedOffice.monthlyRevenue)}</span>
                                             </td>
 
-                                            {/* Performance Column */}
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-2">
-                                                    {formattedOffice.performanceTrend === 'up' && (
-                                                        <>
-                                                            <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M13 0.5L7.6875 5.8125L4.5625 2.6875L0.5 6.75" stroke="#22C55E" strokeLinecap="round" strokeLinejoin="round" />
-                                                            </svg>
-                                                            <span className="text-sm text-green-600 font-medium">{formattedOffice.performanceDisplay}</span>
-                                                        </>
-                                                    )}
-                                                    {formattedOffice.performanceTrend === 'down' && (
-                                                        <>
-                                                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <g clipPath="url(#clip0_5150_7661)">
-                                                                    <path d="M10 10.625H13.75V6.875" stroke="#EF4444" strokeLinecap="round" strokeLinejoin="round" />
-                                                                    <path d="M13.75 10.625L8.4375 5.3125L5.3125 8.4375L1.25 4.375" stroke="#EF4444" strokeLinecap="round" strokeLinejoin="round" />
-                                                                </g>
-                                                                <defs>
-                                                                    <clipPath id="clip0_5150_7661">
-                                                                        <rect width="15" height="15" fill="white" transform="matrix(1 0 0 -1 0 15)" />
-                                                                    </clipPath>
-                                                                </defs>
-                                                            </svg>
-                                                            <span className="text-sm text-red-500 font-semibold">{formattedOffice.performanceDisplay}</span>
-                                                        </>
-                                                    )}
-                                                    {formattedOffice.performanceTrend === 'neutral' && (
-                                                        <>
-                                                            <FaMinus className="text-gray-400" />
-                                                            <span className="text-sm text-gray-500 font-semibold">{formattedOffice.performanceDisplay}</span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
 
                                             {/* Actions Column */}
                                             <td className="px-4 py-4 whitespace-nowrap">
@@ -492,12 +456,7 @@ export default function Offices() {
                                                                 >
                                                                     View Details
                                                                 </button>
-                                                                <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                                    Edit Office
-                                                                </button>
-                                                                <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                                    Office Setting
-                                                                </button>
+                                                               
                                                                 <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                                                     Delete Office
                                                                 </button>

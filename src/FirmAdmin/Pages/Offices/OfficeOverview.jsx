@@ -2091,44 +2091,7 @@ export default function OfficeOverview() {
             )}
             {activeTab === 'Settings' && (
                 <div className="space-y-6 p-6">
-                    <div className="rounded-xl bg-white p-6">
-                        <div className="gap-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div>
-                                <h5 className="text-lg font-semibold text-gray-600">Office Analytics</h5>
-                                <p className="text-sm text-[#64748B]">
-                                    View this office in the multi-office dashboard context.
-                                </p>
-                            </div>
-                            <div className="flex flex-col gap-3 sm:flex-row">
-                                <button
-                                    type="button"
-                                    onClick={() => navigate(`/firmadmin/offices/${officeId}/dashboard-view`)}
-                                    className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-4 py-2 text-sm gap-2 font-medium text-white transition-colors hover:bg-orange-600"
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M1.54688 9.26054C1.48437 9.09215 1.48437 8.90692 1.54688 8.73854C2.15565 7.26243 3.18902 6.00032 4.51596 5.11221C5.8429 4.22411 7.40366 3.75 9.00038 3.75C10.5971 3.75 12.1579 4.22411 13.4848 5.11221C14.8117 6.00032 15.8451 7.26243 16.4539 8.73854C16.5164 8.90692 16.5164 9.09215 16.4539 9.26054C15.8451 10.7366 14.8117 11.9988 13.4848 12.8869C12.1579 13.775 10.5971 14.2491 9.00038 14.2491C7.40366 14.2491 5.8429 13.775 4.51596 12.8869C3.18902 11.9988 2.15565 10.7366 1.54688 9.26054Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M9 11.25C10.2426 11.25 11.25 10.2426 11.25 9C11.25 7.75736 10.2426 6.75 9 6.75C7.75736 6.75 6.75 7.75736 6.75 9C6.75 10.2426 7.75736 11.25 9 11.25Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-
-                                    View In Dashboard
-                                </button>
-
-                                <Link
-                                    to={`/firmadmin/offices/${officeId}/compare`}
-                                    className="inline-flex items-center gap-2 justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-colors hover:bg-[#F8FAFC]"
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M2.25 2.25V15.75H15.75M13.5 12.75V6.75M9.75 12.75V3.75M6 12.75V10.5" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-
-
-                                    Compare with Others
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
+                   
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <div className="space-y-6 rounded-xl bg-white p-6 border border-[#E4ECFF]">

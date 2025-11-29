@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import { getMediaUrl } from '../../ClientOnboarding/utils/urlUtils';
 import { getStorage } from '../../ClientOnboarding/utils/userUtils';
 
 const FirmPortalColorsContext = createContext({
@@ -49,8 +50,8 @@ export const FirmPortalColorsProvider = ({ children }) => {
       if (response.success && response.data) {
         const primary = response.data.primary_color || '#32B582';
         const secondary = response.data.secondary_color || '#F56D2D';
-        const logo = response.data.logo_url || null;
-        const favicon = response.data.favicon_url || null;
+        const logo = response.data.logo_url ? getMediaUrl(response.data.logo_url) : null;
+        const favicon = response.data.favicon_url ? getMediaUrl(response.data.favicon_url) : null;
         
         setPrimaryColor(primary);
         setSecondaryColor(secondary);

@@ -14,6 +14,8 @@ import {
     BarChart,
     Bar
 } from 'recharts';
+import { useFirmSettings } from '../Context/FirmSettingsContext';
+import { securityAPI } from '../../ClientOnboarding/utils/apiUtils';
 const tabs = [
     'Security Overview',
     'Active Sessions',
@@ -69,32 +71,19 @@ const metrics = [
     }
 ];
 
-const activeSessions = [
-    {
-        user: 'Mike Johnson',
-        email: 'mike.johnson@example.com',
-        device: 'Chrome on Windows',
-        location: 'Los Angeles, CA',
-        lastActivity: '2024-01-15 15:30:00',
-        duration: '2h 15m'
-    },
-    {
-        user: 'Jane Doe',
-        email: 'jane.doe@example.com',
-        device: 'Safari on macOS',
-        location: 'New York, NY',
-        lastActivity: '2024-01-15 15:25:00',
-        duration: '45m'
-    },
-    {
-        user: 'John Smith',
-        email: 'john.smith@example.com',
-        device: 'Firefox on Linux',
-        location: 'Chicago, IL',
-        lastActivity: '2024-01-15 12:30:00',
-        duration: '1h 30m'
-    }
-];
+const mapSessionResponseToViewModel = (session) => {
+    return {
+        sessionKey: session.session_key,
+        user: session.username || (session.is_anonymous ? 'Anonymous Session' : 'Unknown User'),
+        email: session.email || '',
+        role: session.role || '',
+        device: session.device || 'Unknown Device',
+        location: session.location || 'Unknown',
+        lastActivity: session.last_activity || session.expire_date || '',
+        duration: session.duration || '',
+        isAnonymous: Boolean(session.is_anonymous),
+    };
+};
 
 const alerts = [
     {
@@ -207,6 +196,7 @@ const complianceDetails = [
 ];
 
 export default function SecurityCompliance() {
+    const { advancedReportingEnabled } = useFirmSettings();
     const [activeTab, setActiveTab] = useState('Security Overview');
     const [auditLoggingEnabled, setAuditLoggingEnabled] = useState(true);
     const [csvExportEnabled, setCsvExportEnabled] = useState(true);
@@ -265,6 +255,9 @@ export default function SecurityCompliance() {
     const [enableActiveSessionsView, setEnableActiveSessionsView] = useState(false);
     const [allowForceLogout, setAllowForceLogout] = useState(true);
     const [enableStaffReports, setEnableStaffReports] = useState(false);
+    const [activeSessions, setActiveSessions] = useState([]);
+    const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+    const [sessionsError, setSessionsError] = useState('');
 
     // Handle body scroll lock when modal is open
     useEffect(() => {
@@ -288,6 +281,48 @@ export default function SecurityCompliance() {
             };
         }
     }, [isReviewModalOpen]);
+
+    const fetchActiveSessions = async () => {
+        try {
+            setIsLoadingSessions(true);
+            setSessionsError('');
+
+            const response = await securityAPI.getAdminSessions();
+
+            if (response && response.success && Array.isArray(response.data)) {
+                const mapped = response.data.map(mapSessionResponseToViewModel);
+                setActiveSessions(mapped);
+            } else {
+                setSessionsError(response?.message || 'Failed to load active sessions');
+                setActiveSessions([]);
+            }
+        } catch (error) {
+            console.error('Error fetching active sessions:', error);
+            setSessionsError(error.message || 'Failed to load active sessions');
+            setActiveSessions([]);
+        } finally {
+            setIsLoadingSessions(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'Active Sessions') {
+            fetchActiveSessions();
+        }
+    }, [activeTab]);
+
+    const handleTerminateSession = async (sessionKey) => {
+        if (!sessionKey) return;
+
+        try {
+            setSessionsError('');
+            await securityAPI.terminateAdminSession(sessionKey);
+            await fetchActiveSessions();
+        } catch (error) {
+            console.error('Error terminating session:', error);
+            setSessionsError(error.message || 'Failed to terminate session');
+        }
+    };
 
     const renderSecurityOverview = () => (
         <>
@@ -380,6 +415,20 @@ export default function SecurityCompliance() {
                     <p className="text-base font-semibold text-gray-600 mb-0">Active User Sessions</p>
                     <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
                 </div>
+                <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                    {sessionsError && (
+                        <span className="text-xs text-red-500">{sessionsError}</span>
+                    )}
+                    <button
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                        style={{ borderRadius: '8px' }}
+                        type="button"
+                        onClick={fetchActiveSessions}
+                        disabled={isLoadingSessions}
+                    >
+                        {isLoadingSessions ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                </div>
             </div>
 
             <div className="mt-6 overflow-x-auto">
@@ -389,18 +438,37 @@ export default function SecurityCompliance() {
                             <th className="px-4 py-3">User</th>
                             <th className="px-4 py-3">Device</th>
                             <th className="px-4 py-3">Location</th>
-                            <th className="px-4 py-3">Last Activity</th>
+                            <th className="px-4 py-3">Last Activity / Expiration</th>
                             <th className="px-4 py-3">Duration</th>
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E5E7EB] bg-white">
+                        {isLoadingSessions && activeSessions.length === 0 && (
+                            <tr>
+                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={6}>
+                                    Loading active sessions...
+                                </td>
+                            </tr>
+                        )}
+                        {!isLoadingSessions && activeSessions.length === 0 && !sessionsError && (
+                            <tr>
+                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={6}>
+                                    No active sessions found.
+                                </td>
+                            </tr>
+                        )}
                         {activeSessions.map((session) => (
-                            <tr key={session.user} className="hover:bg-[#F8FAFF]">
+                            <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
                                 <td className="px-4 py-3">
                                     <div className="flex flex-col">
                                         <span className="text-sm font-semibold text-gray-500">{session.user}</span>
-                                        <span className="text-xs text-[#6B7280]">{session.email}</span>
+                                        {session.email && (
+                                            <span className="text-xs text-[#6B7280]">{session.email}</span>
+                                        )}
+                                        {session.role && (
+                                            <span className="text-xs text-[#9CA3AF]">{session.role}</span>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.device}</td>
@@ -408,7 +476,12 @@ export default function SecurityCompliance() {
                                 <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.lastActivity}</td>
                                 <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.duration}</td>
                                 <td className="px-4 py-3 text-right">
-                                    <button className="text-sm font-semibold text-red-500 transition-colors hover:text-red-500" type="button">
+                                    <button
+                                        className="text-sm font-semibold text-red-500 transition-colors hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        type="button"
+                                        onClick={() => handleTerminateSession(session.sessionKey)}
+                                        disabled={!session.sessionKey || isLoadingSessions}
+                                    >
                                         Terminate
                                     </button>
                                 </td>
@@ -442,16 +515,18 @@ export default function SecurityCompliance() {
                     />
                 </div>
                 <div className="relative">
-                    <button
-                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                        style={{ borderRadius: '8px' }}
-                        type="button"
-                    >
-                        Export CSV
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </button>
+                    {!advancedReportingEnabled && (
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Export CSV
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -643,6 +718,7 @@ export default function SecurityCompliance() {
 
 
                 {/* Enable CSV Export */}
+                {!advancedReportingEnabled && (
                 <div className="mb-8 pb-8 border-b border-[#E5E7EB]">
                     <div className="gap-6 sm:flex-row sm:items-start sm:justify-between">
                         {/* Enable Toggles Section */}
@@ -737,6 +813,7 @@ export default function SecurityCompliance() {
                         </div>
                     </div>
                 </div>
+                )}
 
             </div>
         </div>
@@ -771,16 +848,18 @@ export default function SecurityCompliance() {
                         </div>
                     </div>
                 </div>
-                <button
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                    style={{ borderRadius: '8px' }}
-                    type="button"
-                >
-                    Export CSV
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                </button>
+                {!advancedReportingEnabled && (
+                    <button
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                        style={{ borderRadius: '8px' }}
+                        type="button"
+                    >
+                        Export CSV
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                )}
             </div>
 
             {/* Charts Section - Two Columns */}
@@ -1925,17 +2004,11 @@ export default function SecurityCompliance() {
                 </div>
 
                 {activeTab === 'Security Overview' && renderSecurityOverview()}
-
                 {activeTab === 'Active Sessions' && renderActiveSessions()}
-
                 {activeTab === 'Audits Logs' && renderAuditLogs()}
-
                 {activeTab === 'Compliance' && renderCompliance()}
-
                 {activeTab === 'Security Controls' && renderSecurityControls()}
-
                 {activeTab === 'Security Settings' && renderSecuritySettings()}
-
                 {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && activeTab !== 'Audits Logs' && activeTab !== 'Compliance' && activeTab !== 'Security Controls' && activeTab !== 'Security Settings' && renderPlaceholder()}
             </div>
             {renderReviewModal()}
