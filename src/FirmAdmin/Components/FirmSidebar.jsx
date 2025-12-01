@@ -331,15 +331,6 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                   </span>
                   Email Templates
                 </Link>
-                <Link to="/firmadmin/integrations" className={linkClass("/firmadmin/integrations")}>
-                  <span className={iconWrapperClass("/firmadmin/integrations")}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14 3.32812C14 4.43269 11.3137 5.32812 8 5.32812C4.68629 5.32812 2 4.43269 2 3.32812M14 3.32812C14 2.22356 11.3137 1.32812 8 1.32812C4.68629 1.32812 2 2.22356 2 3.32812M14 3.32812V12.6615C14 13.1919 13.3679 13.7006 12.2426 14.0757C11.1174 14.4507 9.5913 14.6615 8 14.6615C6.4087 14.6615 4.88258 14.4507 3.75736 14.0757C2.63214 13.7006 2 13.1919 2 12.6615V3.32812M2 7.99479C2 8.52522 2.63214 9.03393 3.75736 9.40901C4.88258 9.78408 6.4087 9.99479 8 9.99479C9.5913 9.99479 11.1174 9.78408 12.2426 9.40901C13.3679 9.03393 14 8.52522 14 7.99479" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-
-                  </span>
-                  Integrations
-                </Link>
                 <Link to="/firmadmin/security" className={linkClass("/firmadmin/security")}>
                   <span className={iconWrapperClass("/firmadmin/security")}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

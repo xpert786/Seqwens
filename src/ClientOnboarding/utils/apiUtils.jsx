@@ -890,12 +890,66 @@ export const securityAPI = {
 
   // List active admin sessions
   getAdminSessions: async () => {
-    return await apiRequest('/firm/sessions/active', 'GET');
+    return await apiRequest('/firm/sessions/active/', 'GET');
   },
 
   // Terminate a specific admin session by key
   terminateAdminSession: async (sessionKey) => {
     return await apiRequest(`/firm/sessions/${sessionKey}/terminate/`, 'POST');
+  },
+
+  // Get audit log settings
+  getAuditLogSettings: async () => {
+    return await apiRequest('/firm/audit-logs/settings/', 'GET');
+  },
+
+  // Update audit log settings
+  updateAuditLogSettings: async (settings) => {
+    return await apiRequest('/firm/audit-logs/settings/', 'PUT', settings);
+  },
+
+  // Get audit logs with filters and pagination
+  getAuditLogs: async (params = {}) => {
+    const { action, user_id, start_date, end_date, page = 1, page_size = 50 } = params;
+    const queryParams = new URLSearchParams();
+    
+    if (action) queryParams.append('action', action);
+    if (user_id) queryParams.append('user_id', user_id);
+    if (start_date) queryParams.append('start_date', start_date);
+    if (end_date) queryParams.append('end_date', end_date);
+    queryParams.append('page', page.toString());
+    queryParams.append('page_size', page_size.toString());
+
+    const queryString = queryParams.toString();
+    return await apiRequest(`/firm/audit-logs/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get security alerts with filters and pagination
+  getSecurityAlerts: async (params = {}) => {
+    const { alert_type, alert_category, status, user_id, start_date, end_date, page = 1, page_size = 50 } = params;
+    const queryParams = new URLSearchParams();
+    
+    if (alert_type) queryParams.append('alert_type', alert_type);
+    if (alert_category) queryParams.append('alert_category', alert_category);
+    if (status) queryParams.append('status', status);
+    if (user_id) queryParams.append('user_id', user_id);
+    if (start_date) queryParams.append('start_date', start_date);
+    if (end_date) queryParams.append('end_date', end_date);
+    queryParams.append('page', page.toString());
+    queryParams.append('page_size', page_size.toString());
+
+    const queryString = queryParams.toString();
+    return await apiRequest(`/firm/security-alerts/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get security alert detail
+  getSecurityAlert: async (alertId) => {
+    return await apiRequest(`/firm/security-alerts/${alertId}/`, 'GET');
+  },
+
+  // Update security alert (resolve, dismiss, block)
+  updateSecurityAlert: async (alertId, updateData) => {
+    return await apiRequest(`/firm/security-alerts/${alertId}/`, 'PATCH', updateData);
   }
 };
 
@@ -2708,6 +2762,12 @@ export const firmAdminEmailTemplatesAPI = {
       'GET'
     );
     return ensureEmailTemplateSuccess(response, 'Failed to fetch template variables');
+  },
+
+  // Get email template analytics
+  getAnalytics: async () => {
+    const response = await apiRequest(`${EMAIL_TEMPLATE_BASE}/analytics/`, 'GET');
+    return ensureEmailTemplateSuccess(response, 'Failed to fetch email template analytics');
   },
 
   // List email templates organized by email type

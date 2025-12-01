@@ -78,23 +78,7 @@ export default function EmailSettingsView() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ label, value, change, Icon }) => (
-          <div
-            key={label}
-            className="!rounded-xl bg-white px-4 py-3 !border border-[#E8F0FF]"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-normal text-[#7B8AB2]">{label}</p>
-                <p className="mt-2 text-2xl font-semibold text-[#1F2A55]">{value}</p>
-              </div>
-              <span className="inline-flex text-[#27CBF2]">
-                <Icon />
-              </span>
-            </div>
-            <p className="mt-3 text-sm font-normal text-[#7B8AB2]">{change}</p>
-          </div>
-        ))}
+        
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

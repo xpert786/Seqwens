@@ -34,6 +34,7 @@ export default function DataIntakeForm() {
     state: "",
     zip: "",
     filingStatus: "",
+    businessType: "individual",
   });
 
   // Phone country codes state
@@ -82,6 +83,9 @@ export default function DataIntakeForm() {
 
   // Field errors state - maps field paths to error messages
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // General/top-level errors state (for errors like tax_documents)
+  const [generalErrors, setGeneralErrors] = useState([]);
 
   // Refs for scrolling to error fields
   const fieldRefs = useRef({});
@@ -147,6 +151,7 @@ export default function DataIntakeForm() {
               state: data.state || "",
               zip: data.zip || "",
               filingStatus: data.filling_status || "",
+              businessType: data.business_type || "individual",
             });
             // If phone exists, mark country as selected
             if (data.phone_number) {
@@ -333,6 +338,7 @@ export default function DataIntakeForm() {
       'state': 'personalInfo.state',
       'zip': 'personalInfo.zip',
       'filing_status': 'personalInfo.filingStatus',
+      'business_type': 'personalInfo.businessType',
       'income_information': 'filingStatus',
 
       // Spouse info fields (nested in personal_info.spouse_info)
@@ -448,12 +454,31 @@ export default function DataIntakeForm() {
   // Parse API error response and set field errors
   const parseAndSetFieldErrors = (errorData, source) => {
     const errors = {};
+    const generalErrorMessages = [];
 
     // First, check if errors are in the errors object
     if (errorData.errors) {
+      // Check for tax_documents errors first (these should be shown at top)
+      if (errorData.errors.tax_documents) {
+        const taxDocErrors = Array.isArray(errorData.errors.tax_documents)
+          ? errorData.errors.tax_documents.map(item => {
+              if (typeof item === 'object' && item !== null && item.string) {
+                return item.string;
+              }
+              return String(item);
+            })
+          : [String(errorData.errors.tax_documents)];
+        generalErrorMessages.push(...taxDocErrors);
+      }
+
       // Helper function to recursively parse nested error objects
       const parseNestedErrors = (errorObj, prefix = '') => {
         Object.entries(errorObj).forEach(([key, value]) => {
+          // Skip tax_documents as we handle it separately
+          if (key === 'tax_documents') {
+            return;
+          }
+          
           if (Array.isArray(value)) {
             // This is a field with error messages
             const fieldPath = prefix ? `${prefix}.${key}` : key;
@@ -519,6 +544,7 @@ export default function DataIntakeForm() {
 
     console.log('Parsed field errors:', errors);
     setFieldErrors(errors);
+    setGeneralErrors(generalErrorMessages);
 
     // Scroll to first error after a short delay to ensure DOM is updated
     setTimeout(() => {
@@ -678,6 +704,9 @@ export default function DataIntakeForm() {
   };
 
   const handleSubmit = async () => {
+    // Clear previous general errors
+    setGeneralErrors([]);
+    
     // Validate required fields first
     const validationErrors = validateRequiredFields();
     if (Object.keys(validationErrors).length > 0) {
@@ -723,6 +752,7 @@ export default function DataIntakeForm() {
           state: personalInfo.state || "",
           zip: personalInfo.zip || "",
           filing_status: personalInfo.filingStatus || "",
+          business_type: personalInfo.businessType || "",
           income_information: filingStatus.length > 0 ? filingStatus : ["w2"],
           no_of_dependents: hasDependents ? dependents.length : 0,
           other_deductions: otherInfo.otherDeductions === "yes",
@@ -1019,6 +1049,7 @@ export default function DataIntakeForm() {
     setUploadStatus(null);
     setUploadProgress(0);
     setUploadedFile(file);
+    setGeneralErrors([]); // Clear general errors when file is selected
 
     // Show success state after a brief moment to indicate file is ready
     setTimeout(() => {
@@ -1199,6 +1230,50 @@ export default function DataIntakeForm() {
           Complete your tax information started
         </p>
       </div>
+
+      {/* General Error Display */}
+      {generalErrors.length > 0 && (
+        <div className="alert alert-danger mb-4" role="alert" style={{
+          borderRadius: "8px",
+          border: "1px solid #EF4444",
+          backgroundColor: "#FEF2F2",
+          padding: "16px",
+          fontFamily: "BasisGrotesquePro"
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "12px"
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ marginTop: "2px", flexShrink: 0 }}>
+              <path d="M10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66667 10 1.66667C5.39763 1.66667 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333Z" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10 6.66667V10" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10 13.3333H10.0083" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <strong style={{
+                color: "#DC2626",
+                fontSize: "16px",
+                fontWeight: "500",
+                display: "block",
+                marginBottom: "8px"
+              }}>
+                Validation Error
+              </strong>
+              <ul style={{
+                margin: 0,
+                paddingLeft: "20px",
+                color: "#991B1B",
+                fontSize: "14px"
+              }}>
+                {generalErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Personal Information */}
       <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
@@ -1614,6 +1689,41 @@ export default function DataIntakeForm() {
                 marginTop: "4px"
               }}>
                 {getFieldError('personalInfo.filingStatus')}
+              </div>
+            )}
+          </div>
+          <div className="col-md-4">
+            <label className="form-label" style={{
+              fontFamily: "BasisGrotesquePro",
+              fontWeight: 400,
+              fontSize: "16px",
+              color: "#3B4A66"
+            }}>
+              Business Type
+            </label>
+            <select
+              className={`form-select mt-2 ${getFieldError('personalInfo.businessType') ? 'is-invalid' : ''}`}
+              value={personalInfo.businessType}
+              onChange={(e) => handlePersonalInfoChange('businessType', e.target.value)}
+              data-field="personalInfo.businessType"
+              ref={(el) => {
+                if (!fieldRefs.current['personalInfo.businessType']) {
+                  fieldRefs.current['personalInfo.businessType'] = el;
+                }
+              }}
+            >
+              <option value="individual">Individual</option>
+              <option value="small_business">Small Business</option>
+              <option value="medium_business">Medium Business</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+            {getFieldError('personalInfo.businessType') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('personalInfo.businessType')}
               </div>
             )}
           </div>
