@@ -1036,35 +1036,19 @@ export default function Messages() {
                               {msg.hasAttachment && (
                                 <div className="mt-2">
                                   <FileIcon className="me-2 text-primary" />
-                                  <button
-                                    onClick={async () => {
-                                      if (!activeConversationId || !msg.id) return;
-                                      try {
-                                        await threadsAPI.downloadMessageAttachment(activeConversationId, msg.id);
-                                        toast.success('Attachment downloaded successfully', {
-                                          position: 'top-right',
-                                          autoClose: 2000
-                                        });
-                                      } catch (error) {
-                                        console.error('Error downloading attachment:', error);
-                                        toast.error('Failed to download attachment', {
-                                          position: 'top-right',
-                                          autoClose: 3000
-                                        });
-                                      }
-                                    }}
+                                  <a
+                                    href={msg.attachment || msg.attachmentObj?.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     style={{ 
                                       fontSize: "12px", 
                                       color: "#3B82F6",
-                                      background: "none",
-                                      border: "none",
-                                      padding: 0,
-                                      cursor: "pointer",
-                                      textDecoration: "underline"
+                                      textDecoration: "underline",
+                                      cursor: "pointer"
                                     }}
                                   >
                                     {msg.attachmentName || "Attachment"}
-                                  </button>
+                                  </a>
                                   {msg.attachmentSize && (
                                     <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
                                       ({msg.attachmentSize})
@@ -1097,35 +1081,19 @@ export default function Messages() {
                               {msg.hasAttachment && (
                                 <div className="mt-2">
                                   <FileIcon className="me-2 text-primary" />
-                                  <button
-                                    onClick={async () => {
-                                      if (!activeConversationId || !msg.id) return;
-                                      try {
-                                        await threadsAPI.downloadMessageAttachment(activeConversationId, msg.id);
-                                        toast.success('Attachment downloaded successfully', {
-                                          position: 'top-right',
-                                          autoClose: 2000
-                                        });
-                                      } catch (error) {
-                                        console.error('Error downloading attachment:', error);
-                                        toast.error('Failed to download attachment', {
-                                          position: 'top-right',
-                                          autoClose: 3000
-                                        });
-                                      }
-                                    }}
+                                  <a
+                                    href={msg.attachment || msg.attachmentObj?.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     style={{ 
                                       fontSize: "12px", 
                                       color: "#3B82F6",
-                                      background: "none",
-                                      border: "none",
-                                      padding: 0,
-                                      cursor: "pointer",
-                                      textDecoration: "underline"
+                                      textDecoration: "underline",
+                                      cursor: "pointer"
                                     }}
                                   >
                                     {msg.attachmentName || "Attachment"}
-                                  </button>
+                                  </a>
                                   {msg.attachmentSize && (
                                     <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
                                       ({msg.attachmentSize})

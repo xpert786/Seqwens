@@ -428,9 +428,6 @@ export default function StaffDetails() {
         <ScheduleTab staffId={id} />
       )}
 
-      {activeTab === 'Onboarding' && (
-        <OnboardingTab onboardingSteps={onboardingSteps} trainingModules={trainingModules} />
-      )}
 
       {activeTab === 'Activity log' && (
         <ActivityLogTab staffMember={staffMember} activityLog={activityLog} />

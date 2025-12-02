@@ -454,7 +454,7 @@ export const superAdminAPI = {
   suspendFirm: async (firmId, reason) => {
     const suspendData = {
       reason: reason,
-      action: 'suspend'
+      status: 'suspend'
     };
     return await apiRequest(`/user/superadmin/firms/${firmId}/suspend/`, 'POST', suspendData);
   },

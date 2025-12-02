@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 import AllPlans from './AllPlans';
 import AddOns from './AddOns';
 import Billing from './Billing';
@@ -13,6 +14,7 @@ import EnterpriseOfficeManagement from './Enterprise/EnterpriseOfficeManagement'
 import EnterpriseConsolidatedBilling from './Enterprise/EnterpriseConsolidatedBilling';
 import EnterpriseCostAllocation from './Enterprise/EnterpriseCostAllocation';
 import EnterpriseContracts from './Enterprise/EnterpriseContracts';
+import UpgradePlanModal from './UpgradePlanModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -27,6 +29,7 @@ const SubscriptionManagement = () => {
     const [saving, setSaving] = useState(false);
     const [currentPlan, setCurrentPlan] = useState(null);
     const [subscriptionOverview, setSubscriptionOverview] = useState(null);
+    const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
 
     // Form state for adding payment method
     const [newPaymentMethod, setNewPaymentMethod] = useState({
@@ -321,6 +324,63 @@ const SubscriptionManagement = () => {
         }
     };
 
+    // Handle delete payment method
+    const handleDeletePaymentMethod = async (paymentId) => {
+        if (!window.confirm('Are you sure you want to delete this payment method?')) {
+            return;
+        }
+
+        try {
+            const token = getAccessToken();
+            const url = `${API_BASE_URL}/firm-admin/payment-methods/${paymentId}/`;
+
+            const response = await fetchWithCors(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                toast.success(result.message || 'Payment method deleted successfully', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                    pauseOnHover: false
+                });
+                // Refresh the payment methods list
+                await fetchPaymentMethods();
+            } else {
+                // Handle specific error cases
+                let errorMessage = result.message || 'Failed to delete payment method';
+                
+                if (errorMessage.includes('primary payment method')) {
+                    errorMessage = 'Cannot delete primary payment method. Set another payment method as primary first.';
+                } else if (errorMessage.includes('last payment method')) {
+                    errorMessage = 'Cannot delete the last payment method. Please add another payment method first.';
+                } else if (errorMessage.includes('not found')) {
+                    errorMessage = 'Payment method not found.';
+                }
+
+                toast.error(errorMessage, {
+                    position: 'top-right',
+                    autoClose: 5000,
+                    pauseOnHover: false
+                });
+            }
+        } catch (err) {
+            console.error('Error deleting payment method:', err);
+            const errorMsg = handleAPIError(err);
+            toast.error(errorMsg || 'Failed to delete payment method. Please try again.', {
+                position: 'top-right',
+                autoClose: 3000,
+                pauseOnHover: false
+            });
+        }
+    };
+
     // Format payment method data for display
     const formatPaymentMethod = (method) => {
         const isPrimary = method.is_primary || method.isPrimary || false;
@@ -409,10 +469,13 @@ const SubscriptionManagement = () => {
                             <h4 className="text-2xl font-bold text-gray-900 mb-1 font-[BasisGrotesquePro]">Subscription Management</h4>
                             <p className="text-gray-600 font-[BasisGrotesquePro]">Manage your plan, usage, and billing</p>
                         </div>
-                        <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#EA580C] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] text-sm sm:text-base whitespace-nowrap">
+                        <button 
+                            onClick={() => setIsUpgradePlanModalOpen(true)}
+                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#EA580C] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] text-sm sm:text-base whitespace-nowrap"
+                        >
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16.5 5.25L10.125 11.625L6.375 7.875L1.5 12.75" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M12 5.25H16.5V9.75" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M16.5 5.25L10.125 11.625L6.375 7.875L1.5 12.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12 5.25H16.5V9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
 
                             Upgrade Plan
@@ -699,7 +762,11 @@ const SubscriptionManagement = () => {
 
                                         return (
                                             <div key={formatted.id} className="!bg-white rounded-lg !border border-[#E8F0FF] p-4 sm:p-6 relative shadow-sm">
-                                                <button className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors mt-3">
+                                                <button 
+                                                    onClick={() => handleDeletePaymentMethod(method.id || formatted.id)}
+                                                    className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors mt-3"
+                                                    title="Delete payment method"
+                                                >
                                                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" fill="white" />
                                                         <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" stroke="#E8F0FF" />
@@ -1013,6 +1080,13 @@ const SubscriptionManagement = () => {
                 )}
 
             </div>
+
+            {/* Upgrade Plan Modal */}
+            <UpgradePlanModal
+                isOpen={isUpgradePlanModalOpen}
+                onClose={() => setIsUpgradePlanModalOpen(false)}
+                currentPlanName={currentPlan}
+            />
         </div>
     );
 };
