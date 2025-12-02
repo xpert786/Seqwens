@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { AddTask, AwaitingIcon, CompletedIcon, Contacted, DoubleuserIcon, DoubleUserIcon, FaildIcon, Task1, ZoomIcon } from "../../component/icons";
 import CreateEventModal from "./CreateEventModal";
+import SetAvailabilityModal from "../../../FirmAdmin/Pages/Scheduling & calendar/SetAvailabilityModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
@@ -11,6 +12,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
+  const [isSetAvailabilityModalOpen, setIsSetAvailabilityModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [calendarData, setCalendarData] = useState(null);
   const [appointments, setAppointments] = useState([]);
@@ -430,13 +432,30 @@ export default function CalendarPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h3 className="text-2xl font-semibold text-gray-900">Calendar</h3>
-          <p className="text-gray-600">Manage your appointments and schedule</p>        </div>
-        <button
-          onClick={handleOpenCreateEventModal}
-          className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
-        >
-          <AddTask />Create New Event
-        </button>
+          <p className="text-gray-600">Manage your appointments and schedule</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsSetAvailabilityModalOpen(true)}
+            className="btn dashboard-btn d-flex align-items-center gap-2"
+            style={{ 
+              background: "white", 
+              border: "1px solid #E8F0FF",
+              color: "#3B4A66"
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Set Availability
+          </button>
+          <button
+            onClick={handleOpenCreateEventModal}
+            className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+          >
+            <AddTask />Create New Event
+          </button>
+        </div>
       </div>
 
       {/* Stats - First 4 Cards */}
@@ -726,6 +745,14 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Set Availability Modal */}
+      <SetAvailabilityModal
+        isOpen={isSetAvailabilityModalOpen}
+        onClose={() => setIsSetAvailabilityModalOpen(false)}
+        onSuccess={fetchCalendarData}
+        isTaxpayer={true}
+      />
 
       {/* Create Event Modal */}
       <CreateEventModal

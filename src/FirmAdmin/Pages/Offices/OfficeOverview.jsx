@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaCog, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { FaCog, FaEdit, FaArrowLeft, FaStar, FaUsers } from 'react-icons/fa';
 import { firmOfficeAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import TaxpayerManagementModal from './TaxpayerManagementModal';
 import {
     LineChart,
     Line,
@@ -236,6 +237,11 @@ export default function OfficeOverview() {
     const [performanceLoading, setPerformanceLoading] = useState(false);
     const [performanceError, setPerformanceError] = useState('');
 
+    // Taxpayer management state
+    const [showTaxpayerModal, setShowTaxpayerModal] = useState(false);
+    const [isPrimaryOffice, setIsPrimaryOffice] = useState(false);
+    const [settingPrimary, setSettingPrimary] = useState(false);
+
     // Fetch office details from API
     useEffect(() => {
         const fetchOfficeDetails = async () => {
@@ -253,6 +259,7 @@ export default function OfficeOverview() {
 
                 if (response.success && response.data) {
                     setOffice(response.data);
+                    setIsPrimaryOffice(response.data.is_primary || false);
                 } else {
                     throw new Error(response.message || 'Failed to load office details');
                 }
@@ -615,6 +622,64 @@ export default function OfficeOverview() {
         }
     };
 
+    const handleSetPrimaryOffice = async () => {
+        if (!window.confirm('Are you sure you want to set this office as the primary office?')) {
+            return;
+        }
+
+        try {
+            setSettingPrimary(true);
+            const response = await firmOfficeAPI.setPrimaryOffice(officeId);
+
+            if (response.success) {
+                toast.success('Office set as primary successfully', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+                setIsPrimaryOffice(true);
+                // Refresh office data
+                const officeResponse = await firmOfficeAPI.getOffice(officeId);
+                if (officeResponse.success && officeResponse.data) {
+                    setOffice(officeResponse.data);
+                }
+            } else {
+                toast.error(response.message || 'Failed to set primary office', {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
+            }
+        } catch (error) {
+            const errorMessage = handleAPIError(error);
+            toast.error(errorMessage, {
+                position: 'top-right',
+                autoClose: 3000
+            });
+        } finally {
+            setSettingPrimary(false);
+        }
+    };
+
+    const handleTaxpayerUpdate = () => {
+        // Refresh clients count when taxpayers are updated
+        if (activeTab === 'Clients') {
+            const fetchClients = async () => {
+                try {
+                    setClientsLoading(true);
+                    const response = await firmOfficeAPI.getOfficeClients(officeId);
+                    if (response.success && response.data) {
+                        setClients(response.data.clients || []);
+                        setClientsCount(response.data.clients_count || response.data.clients?.length || 0);
+                    }
+                } catch (err) {
+                    console.error('Error fetching clients:', err);
+                } finally {
+                    setClientsLoading(false);
+                }
+            };
+            fetchClients();
+        }
+    };
+
     // Show loading state
     if (loading) {
         return (
@@ -687,11 +752,36 @@ export default function OfficeOverview() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 text-gray-600 cursor-pointer hover:text-gray-900" style={{ borderRadius: '8px' }}>
+                    <div className="flex items-center gap-4 flex-wrap">
+                        {!isPrimaryOffice && (
+                            <button
+                                onClick={handleSetPrimaryOffice}
+                                disabled={settingPrimary}
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#00C0C6] rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                <FaStar className="w-4 h-4" />
+                                {settingPrimary ? 'Setting...' : 'Set as Primary Office'}
+                            </button>
+                        )}
+                        {isPrimaryOffice && (
+                            <span className="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg flex items-center gap-2" style={{ borderRadius: '8px' }}>
+                                <FaStar className="w-4 h-4" />
+                                Primary Office
+                            </span>
+                        )}
+                        <button
+                            onClick={() => setShowTaxpayerModal(true)}
+                            className="px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            <FaUsers className="w-4 h-4" />
+                            Manage Taxpayers
+                        </button>
+                        {/* <div className="flex items-center gap-2 text-gray-600 cursor-pointer hover:text-gray-900" style={{ borderRadius: '8px' }}>
                             <FaCog className="w-4 h-4" />
                             <span className="text-sm font-medium">Office Settings</span>
-                        </div>
+                        </div> */}
                         <button
                             onClick={() => navigate(`/firmadmin/offices/${officeId}/edit`)}
                             className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
@@ -960,7 +1050,7 @@ export default function OfficeOverview() {
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm font-medium text-gray-700">Task Completion Rate</span>
                                                 <span className="text-sm font-semibold text-gray-900">
-                                                    {officeData?.task_completion_rate?.display || officeData?.task_completion_rate?.rate || officeData?.taskCompletionRate || '0'}%
+                                                    {officeData?.task_completion_rate?.display || officeData?.task_completion_rate?.rate || officeData?.taskCompletionRate || '0'}
                                                 </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -1466,531 +1556,13 @@ export default function OfficeOverview() {
                 )}
 
                 {/* Scheduling & Coordination Tab Content */}
-                {activeTab === 'Scheduling & Coordination' && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1fr] gap-6">
-                            <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-3">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            {viewOptions.map((view) => (
-                                                <button
-                                                    key={view}
-                                                    type="button"
-                                                    onClick={() => setCalendarView(view)}
-                                                    className={`px-4 py-2 text-xs font-medium  rounded-lg transition-colors ${calendarView === view
-                                                        ? 'bg-[#3AD6F2] text-white shadow-sm'
-                                                        : 'bg-white text-gray-500 border border-gray-200 hover:border-[#3AD6F2] hover:text-gray-900'
-                                                        }`}
-                                                    style={{ borderRadius: '8px' }}
-                                                >
-                                                    {view}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCalendarNavigation(-1)}
-                                                className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-[#3AD6F2] transition-colors flex items-center justify-center"
-                                                aria-label="Previous period"
-                                            >
-                                                <span className="text-lg leading-none">&lt;</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setCurrentCalendarDate(new Date())}
-                                                className="px-4 py-2 text-xs font-medium bg-white text-gray-500  rounded-lg hover:bg-[#25c2df] transition-colors"
-                                            >
-                                                Today
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCalendarNavigation(1)}
-                                                className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-[#3AD6F2] transition-colors flex items-center justify-center"
-                                                aria-label="Next period"
-                                            >
-                                                <span className="text-lg leading-none">&gt;</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center justify-between gap-3">
-                                        <div>
-                                            <p className="text-xl font-medium text-gray-600 leading-none">
-                                                {monthLabel}
-                                            </p>
-                                            {calendarView !== 'Monthly' && (
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    Monthly view currently shown while additional views
-                                                    are under development.
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-7 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                        {DAYS_OF_WEEK.map((day) => (
-                                            <div key={day} className="text-center">
-                                                {day}
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="grid grid-cols-7 gap-2 md:gap-3">
-                                        {calendarDays.map((day) => {
-                                            const isSelected = selectedSlot?.date === day.iso;
-                                            return (
-                                                <button
-                                                    type="button"
-                                                    key={day.iso + day.isCurrentMonth}
-                                                    onClick={() => handleDaySelect(day)}
-                                                    className={`relative h-24 md:h-28 w-full rounded-2xl border p-3 text-left transition-all ${day.isCurrentMonth
-                                                        ? 'bg-white text-gray-600'
-                                                        : 'bg-gray-50 text-gray-400'
-                                                        } ${day.isToday ? 'border-[#3AD6F2]' : 'border-gray-100'} ${isSelected ? 'ring-2 ring-[#3AD6F2]' : ''
-                                                        } hover:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]`}
-                                                >
-                                                    <span
-                                                        className={`text-sm font-semibold ${day.isCurrentMonth
-                                                            ? 'text-gray-600'
-                                                            : 'text-gray-400'
-                                                            }`}
-                                                    >
-                                                        {day.date.getDate()}
-                                                    </span>
-                                                    <div className="mt-2 space-y-2">
-                                                        {day.events.slice(0, 2).map((event) => (
-                                                            <div
-                                                                key={event.id}
-                                                                className="rounded-lg border border-[#E8F0FF] bg-[#F5F9FF] px-2 py-1"
-                                                            >
-                                                                <p className="text-xs font-semibold text-gray-600 truncate">
-                                                                    {event.title}
-                                                                </p>
-                                                                <div className="flex items-center justify-between text-[11px] text-gray-500">
-                                                                    <span className="truncate">
-                                                                        {resourceLookup[event.resourceId]?.name ||
-                                                                            'Resource'}
-                                                                    </span>
-                                                                    <span>{formatTimeLabel(event.startTime)}</span>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        {day.events.length > 2 && (
-                                                            <p className="text-[11px] font-medium text-[#3AD6F2]">
-                                                                +{day.events.length - 2} more
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="bg-white rounded-lg p-4 md:p-6">
-                                    <div className="flex items-start justify-between gap-2 mb-4">
-                                        <div>
-                                            <p className="text-base font-semibold text-gray-600">
-                                                Scheduling Controls
-                                            </p>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                Manage filters and search across office bookings.
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={handleResetFilters}
-                                            className="rounded-lg bg-[#F56D2D] px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition-colors"
-                                            style={{ borderRadius: '8px' }}
-                                        >
-                                            Reset
-                                        </button>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                                Office
-                                            </label>
-                                            <select
-                                                value={selectedOfficeFilter}
-                                                onChange={(event) => setSelectedOfficeFilter(event.target.value)}
-                                                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
-                                            >
-                                                {schedulingOfficeOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                                Search events
-                                            </label>
-                                            <input
-                                                value={searchTerm}
-                                                onChange={(event) => setSearchTerm(event.target.value)}
-                                                placeholder="Search events..."
-                                                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-lg p-3 md:p-6 shadow-sm">
-                                    <div className="mb-4">
-                                        <p className="text-base font-semibold text-gray-600">
-                                            Resource Quick Timeline
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Quick book 30min slots for today
-                                        </p>
-                                    </div>
-                                    <div className="space-y-4">
-                                        {schedulingResources.map((resource) => (
-                                            <div key={resource.id} className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-sm font-semibold text-gray-600">
-                                                        {resource.name}
-                                                    </p>
-                                                    <span className="text-[11px] text-gray-500">
-                                                        {resource.location}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {resource.slots.map((slot) => (
-                                                        <button
-                                                            type="button"
-                                                            key={`${resource.id}-${slot}`}
-                                                            onClick={() => handleQuickSlotSelect(resource.id, slot)}
-                                                            className="rounded-full border border-gray-200 px-3 py-1 font-medium text-gray-600 hover:bg-[#3AD6F2] hover:text-white transition-colors"
-                                                            style={{ borderRadius: '8px', fontSize: '12px' }}
-                                                        >
-                                                            {slot}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-lg p-4 md:p-6">
-                                    <p className="text-base font-semibold text-gray-600 mb-4">Conflict Summary</p>
-                                    <div className="space-y-3">
-                                        {conflictSummary.length > 0 ? (
-                                            conflictSummary.map((event) => (
-                                                <div key={event.id} className="rounded-lg bg-gray-50">
-                                                    <p className="text-sm font-semibold text-gray-600">
-                                                        {event.title} (
-                                                        {resourceLookup[event.resourceId]?.name || 'Resource'})
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {new Date(event.date).toLocaleDateString(undefined, {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            year: 'numeric'
-                                                        })}
-                                                        {' • '}
-                                                        {event.location}
-                                                    </p>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-sm text-gray-500">No conflicts detected for the selected filters.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+               
 
                 {/* Resource Management Tab Content */}
-                {activeTab === 'Resource Management' && (
-                    <div className="space-y-6">
-                        {/* Top Section - Charts */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Monthly Performance - Pie Chart */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-6">
-                                    <p className="text-lg font-medium text-gray-600">Monthly Performance</p>
-                                    <div className="relative">
-                                        <select className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:border-transparent">
-                                            <option>All Offices</option>
-                                            <option>Office 1</option>
-                                            <option>Office 2</option>
-                                        </select>
-                                        <svg className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div className="relative" style={{ height: '300px' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={office.resourceManagement?.monthlyPerformance}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={true}
-                                                label={({ value }) => `${value}`}
-                                                outerRadius={100}
-                                                fill="#F56D2D"
-                                                dataKey="value"
-                                            >
-                                                {office.resourceManagement?.monthlyPerformance.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-
-                            {/* ROI Comparison - Bar Chart */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm">
-                                <p className="text-lg font-medium text-gray-600 mb-6">ROI Comparison</p>
-                                <div className="relative" style={{ height: '300px' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart
-                                            data={office.resourceManagement?.roiComparison}
-                                            margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                                            <XAxis
-                                                dataKey="location"
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fill: '#6B7280', fontSize: 12 }}
-                                            />
-                                            <YAxis
-                                                domain={[0, 16000]}
-                                                ticks={[0, 4000, 8000, 12000, 16000]}
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fill: '#6B7280', fontSize: 12 }}
-                                                width={60}
-                                            />
-                                            <Tooltip
-                                                contentStyle={{
-                                                    backgroundColor: 'white',
-                                                    border: '1px solid #E5E7EB',
-                                                    borderRadius: '8px',
-                                                    padding: '8px 12px'
-                                                }}
-                                                labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
-                                            />
-                                            <Bar dataKey="revenue" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                                            <Bar dataKey="cost" fill="#10B981" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                                {/* Legend */}
-                                <div className="flex items-center justify-center gap-6 mt-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3B82F6' }}></div>
-                                        <span className="text-xs text-gray-600">Revenue</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#10B981' }}></div>
-                                        <span className="text-xs text-gray-600">Cost</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Inventory Tracking Table */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <p className="text-lg font-medium text-gray-600 mb-6">Inventory Tracking</p>
-                            <div className="overflow-x-auto">
-                                {/* Table Header - Desktop */}
-                                <div className="hidden md:grid grid-cols-12 gap-4 pb-3 mb-4 border-b border-gray-200">
-                                    <div className="col-span-3">
-                                        <span className="text-sm font-semibold text-gray-500">Item</span>
-                                    </div>
-                                    <div className="col-span-3 text-center">
-                                        <span className="text-sm font-semibold text-gray-500">Stock</span>
-                                    </div>
-                                    <div className="col-span-3 text-center">
-                                        <span className="text-sm font-semibold text-gray-500">Reorder Alert</span>
-                                    </div>
-                                    <div className="col-span-3 text-center">
-                                        <span className="text-sm font-semibold text-gray-500">Status</span>
-                                    </div>
-                                </div>
-
-                                {/* Table Rows */}
-                                <div className="space-y-3">
-                                    {office.resourceManagement?.inventory.map((item) => (
-                                        <div key={item.id} className="bg-white border border-gray-100 rounded-lg p-4">
-                                            {/* Mobile Layout */}
-                                            <div className="md:hidden space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="font-medium text-sm text-gray-700">{item.item}</div>
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.status === 'Okay'
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-red-500 text-white'
-                                                        }`}>
-                                                        {item.status}
-                                                    </span>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <div className="text-sm text-gray-700">
-                                                        <span className="font-medium">Stock:</span> {item.stock}
-                                                    </div>
-                                                    <div className="text-sm text-gray-700">
-                                                        <span className="font-medium">Reorder Alert:</span> {item.reorderAlert}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Desktop Layout */}
-                                            <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                                                <div className="col-span-3">
-                                                    <span className="text-sm font-medium text-gray-700">{item.item}</span>
-                                                </div>
-                                                <div className="col-span-3 text-center">
-                                                    <span className="text-sm text-gray-700">{item.stock}</span>
-                                                </div>
-                                                <div className="col-span-3 text-center">
-                                                    <span className="text-sm text-gray-700">{item.reorderAlert}</span>
-                                                </div>
-                                                <div className="col-span-3 flex justify-center">
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${item.status === 'Okay'
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-red-500 text-white'
-                                                        }`}>
-                                                        {item.status}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+               
 
                 {/* Compliance & Audit Tab Content */}
-                {activeTab === 'Compliance & Audit' && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                            <div className="rounded-xl bg-white p-6 lg:col-span-6">
-                                <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                        <h5 className="text-lg font-semibold text-gray-600">EFIN Status Overview</h5>
-                                        <p className="text-sm text-[#64748B]">
-                                            Track the current standing of your Electronic Filing Identification Numbers.
-                                        </p>
-                                    </div>
-                                    <span className="rounded-full bg-[#F1F5FF] px-3 py-1 text-xs font-semibold text-[#1E3A8A]">
-                                        Total EFINs: {totalEfin}
-                                    </span>
-                                </div>
-                                <div className="relative mt-6 h-72">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={office.resourceManagement?.monthlyPerformance}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={true}
-                                                label={({ value }) => `${value}`}
-                                                outerRadius={100}
-                                                fill="#F56D2D"
-                                                dataKey="value"
-                                            >
-                                                {office.resourceManagement?.monthlyPerformance.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-
-                                </div>
-
-                            </div>
-
-                            <div className="rounded-xl bg-white p-6 lg:col-span-6">
-                                <h5 className="text-lg font-semibold text-gray-600">Bank Partner Enrollment</h5>
-                                <p className="mt-1 text-sm text-[#64748B]">
-                                    Monitor the status of your banking partners and take action when needed.
-                                </p>
-                                <div className="mt-6 space-y-4">
-                                    {bankPartners.map((partner) => (
-                                        <div
-                                            key={partner.id}
-                                            className="flex items-center justify-between rounded-xl px-4 py-3"
-                                        >
-                                            <span className="text-sm font-medium text-gray-600">
-                                                {partner.name}
-                                            </span>
-                                            <span
-                                                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${partnerStatusStyles[partner.status] ||
-                                                    'bg-[#E2E8F0] text-[#475569]'
-                                                    }`}
-                                            >
-                                                {partner.status}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl bg-white p-6 ">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h5 className="text-lg font-semibold text-gray-600">Office-Level Audit Trail</h5>
-                                    <p className="text-sm text-[#64748B]">
-                                        Detailed activity logs across your offices for transparency and compliance.
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            <div className="mt-6 overflow-hidden rounded-xl">
-                                <div className="hidden bg-[#F9FBFF] px-6 py-3 text-xs font-semibold tracking-wide text-[#64748B] sm:grid sm:grid-cols-12">
-                                    <span className="col-span-3">User</span>
-                                    <span className="col-span-3">Office</span>
-                                    <span className="col-span-4">Action</span>
-                                    <span className="col-span-2 text-right">IP Address</span>
-                                </div>
-                                <div className="divide-y divide-[#EFF4FF]">
-                                    {auditTrail.map((entry) => (
-                                        <div
-                                            key={entry.id}
-                                            className="grid grid-cols-1 gap-4 px-4 py-4 sm:grid-cols-12 sm:items-center sm:px-6"
-                                        >
-                                            <div className="sm:col-span-3">
-                                                <p className="text-sm font-medium text-gray-600">{entry.user}</p>
-                                                <p className="text-xs text-[#94A3B8] sm:hidden">{entry.ip}</p>
-                                            </div>
-                                            <div className="sm:col-span-3">
-                                                <p className="text-sm font-medium text-gray-600">{entry.office}</p>
-                                                <p className="text-xs text-[#94A3B8] sm:hidden">{entry.timestamp}</p>
-                                            </div>
-                                            <div className="sm:col-span-4">
-                                                <p className="text-sm font-medium text-gray-600">{entry.action}</p>
-                                            </div>
-                                            <div className="hidden text-right text-sm font-medium text-[#1F2937] sm:col-span-2 sm:block">
-                                                {entry.ip}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                
             </div>
             {isBookingModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
@@ -2332,6 +1904,15 @@ export default function OfficeOverview() {
                     </div>
                 </div>
             )}
+
+            {/* Taxpayer Management Modal */}
+            <TaxpayerManagementModal
+                show={showTaxpayerModal}
+                onClose={() => setShowTaxpayerModal(false)}
+                officeId={officeId}
+                officeName={officeData?.name || 'Office'}
+                onUpdate={handleTaxpayerUpdate}
+            />
         </>
     );
 }

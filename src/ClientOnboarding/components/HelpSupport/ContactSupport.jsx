@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { EmailsIcon, LiveIcon, MobileIcon, TicketIcon } from "../icons";
-import { supportTicketAPI, handleAPIError } from "../../utils/apiUtils";
+import { supportTicketAPI, taxpayerFirmAPI, handleAPIError } from "../../utils/apiUtils";
 
 const ContactSupport = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +12,38 @@ const ContactSupport = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [supportInfo, setSupportInfo] = useState({
+    email_support: {
+      email: 'support@firm.com',
+      description: 'Get help via email within 24 hours',
+      availability: 'Support 24/7'
+    },
+    phone_support: {
+      phone: '+01 (555) 123-4567',
+      description: 'Speak directly with our support team',
+      availability: 'Mon-Fri 9AM-6PM'
+    }
+  });
+  const [loadingSupportInfo, setLoadingSupportInfo] = useState(true);
+
+  // Fetch office support information
+  useEffect(() => {
+    const fetchSupportInfo = async () => {
+      try {
+        setLoadingSupportInfo(true);
+        const response = await taxpayerFirmAPI.getOfficeSupport();
+        if (response.success && response.data) {
+          setSupportInfo(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching support info:', error);
+        // Keep default values on error
+      } finally {
+        setLoadingSupportInfo(false);
+      }
+    };
+    fetchSupportInfo();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,9 +124,25 @@ const ContactSupport = () => {
               <EmailsIcon />
             </div>
             <h6 className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "18px", color: "#3B4A66" }}>Email Support</h6>
-            <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>Get help via email within 24 hours</p>
-            <p className="mb-0" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "15px", color: "#3B4A66" }}>support@smithcpa.com</p>
-            <p style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>Support 24/7</p>
+            {loadingSupportInfo ? (
+              <div className="text-center py-2">
+                <div className="spinner-border spinner-border-sm text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>
+                  {supportInfo.email_support?.description || 'Get help via email within 24 hours'}
+                </p>
+                <p className="mb-0" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "15px", color: "#3B4A66" }}>
+                  {supportInfo.email_support?.email || 'support@firm.com'}
+                </p>
+                <p style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>
+                  {supportInfo.email_support?.availability || 'Support 24/7'}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -105,9 +153,25 @@ const ContactSupport = () => {
               <MobileIcon />
             </div>
             <h6 className=" mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "18px", color: "#3B4A66" }}>Phone Support</h6>
-            <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>Speak directly with our support team</p>
-            <p className="mb-0" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "15px", color: "#3B4A66" }}>+01 (555) 123-4567</p>
-            <p style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>Mon-Fri 9AM-6PM</p>
+            {loadingSupportInfo ? (
+              <div className="text-center py-2">
+                <div className="spinner-border spinner-border-sm text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>
+                  {supportInfo.phone_support?.description || 'Speak directly with our support team'}
+                </p>
+                <p className="mb-0" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", fontSize: "15px", color: "#3B4A66" }}>
+                  {supportInfo.phone_support?.phone || '+01 (555) 123-4567'}
+                </p>
+                <p style={{ fontFamily: "BasisGrotesquePro", fontWeight: "400", fontSize: "13px", color: "#4B5563" }}>
+                  {supportInfo.phone_support?.availability || 'Mon-Fri 9AM-6PM'}
+                </p>
+              </>
+            )}
           </div>
         </div>
 

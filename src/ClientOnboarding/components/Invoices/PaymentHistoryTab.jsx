@@ -1,14 +1,17 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { ViewIcon, DownloadIcon, PrintIcon, CrossIcon } from "../icons";
+import { taxpayerFirmAPI } from "../../utils/apiUtils";
 import "../../styles/Login.css";
 
 const InvoicePopupWithPDF = ({ invoices = [] }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const invoiceRef = useRef(null);
+  const [firmLogo, setFirmLogo] = useState(null);
+  const [firmName, setFirmName] = useState('');
 
   // Filter and map invoices to display format - show only paid invoices
   const paidInvoices = invoices
@@ -46,6 +49,23 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
         originalInvoice: inv // Keep reference to original invoice data
       };
     });
+
+  // Fetch firm logo
+  useEffect(() => {
+    const fetchFirmLogo = async () => {
+      try {
+        const response = await taxpayerFirmAPI.getFirmLogo();
+        if (response.success && response.data) {
+          setFirmLogo(response.data.logo_url);
+          setFirmName(response.data.firm_name || '');
+        }
+      } catch (error) {
+        console.error('Error fetching firm logo:', error);
+        // Silently fail - logo is optional
+      }
+    };
+    fetchFirmLogo();
+  }, []);
 
   const handleDownload = async () => {
     const element = invoiceRef.current;
@@ -223,9 +243,35 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
                         width: "80px",
                         height: "50px",
                         backgroundColor: "#E8F0FF",
+                        overflow: "hidden",
                       }}
                     >
-                      <strong style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Logo</strong>
+                      {firmLogo ? (
+                        <img
+                          src={firmLogo}
+                          alt={firmName || "Firm Logo"}
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "100%",
+                            objectFit: "contain"
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            setFirmLogo(null);
+                          }}
+                        />
+                      ) : (
+                        <strong
+                          style={{
+                            color: "#3B4A66",
+                            fontSize: "18px",
+                            fontWeight: "500",
+                            fontFamily: "BasisGrotesquePro"
+                          }}
+                        >
+                          Logo
+                        </strong>
+                      )}
                     </div>
 
                     <p className="mt-2 mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "8px", fontWeight: "400" }}>123 Business Street</p>

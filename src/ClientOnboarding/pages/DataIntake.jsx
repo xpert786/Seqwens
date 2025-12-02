@@ -75,7 +75,6 @@ export default function DataIntakeForm() {
   const [openDropdowns, setOpenDropdowns] = useState({
     businessInfo: false,
     rentalProperty: false,
-    additionalDeductions: false,
   });
 
   const navigate = useNavigate();
@@ -2692,53 +2691,6 @@ export default function DataIntakeForm() {
             )}
           </div>
 
-          {/* Additional Deductions Dropdown */}
-          <div style={{ marginTop: "12px" }}>
-            <button
-              onClick={() => toggleDropdown('additionalDeductions')}
-              className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-              style={{
-                background: "var(--Palette2-Dark-blue-50, #F3F7FF)",
-                borderRadius: "8px",
-                border: "none",
-                padding: "14px 16px",
-                width: "100%",
-                cursor: "pointer"
-              }}
-            >
-              <span style={{
-                fontFamily: "BasisGrotesquePro",
-                fontSize: "14px",
-                fontWeight: "500",
-                color: "#3B4A66"
-              }}>
-                Additional Deductions
-              </span>
-              {openDropdowns.additionalDeductions ? (
-                <FaChevronUp style={{ color: "#3B4A66" }} />
-              ) : (
-                <FaChevronDown style={{ color: "#3B4A66" }} />
-              )}
-            </button>
-            {openDropdowns.additionalDeductions && (
-              <div style={{
-                background: "#FFFFFF",
-                border: "1px solid #E8F0FF",
-                borderRadius: "8px",
-                padding: "16px",
-                marginTop: "8px"
-              }}>
-                <p style={{
-                  fontFamily: "BasisGrotesquePro",
-                  fontSize: "14px",
-                  color: "#4B5563",
-                  margin: 0
-                }}>
-                  Additional Deductions form will be displayed here. This is static data for now.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 

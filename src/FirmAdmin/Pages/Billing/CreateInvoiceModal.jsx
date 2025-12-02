@@ -8,7 +8,6 @@ const API_BASE_URL = getApiBaseUrl();
 export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
   const [invoiceData, setInvoiceData] = useState({
     client_id: '',
-    invoice_number: '',
     issue_date: '',
     due_date: ''
   });
@@ -26,6 +25,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
   const [clientsError, setClientsError] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Fetch clients when modal opens
   useEffect(() => {
@@ -67,8 +67,46 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
     fetchClients();
   }, []);
 
+  // Format date input with automatic slashes (MM/DD/YYYY)
+  const formatDateInput = (value) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Limit to 8 digits (MMDDYYYY)
+    const limitedDigits = digits.slice(0, 8);
+    
+    // Add slashes after month (2 digits) and day (4 digits)
+    let formatted = '';
+    if (limitedDigits.length > 0) {
+      formatted = limitedDigits.slice(0, 2);
+      if (limitedDigits.length > 2) {
+        formatted += '/' + limitedDigits.slice(2, 4);
+      }
+      if (limitedDigits.length > 4) {
+        formatted += '/' + limitedDigits.slice(4, 8);
+      }
+    }
+    
+    return formatted;
+  };
+
   const handleInputChange = (field, value) => {
-    setInvoiceData(prev => ({ ...prev, [field]: value }));
+    // Special handling for date fields to auto-format with slashes
+    if (field === 'due_date' || field === 'issue_date') {
+      const formattedValue = formatDateInput(value);
+      setInvoiceData(prev => ({ ...prev, [field]: formattedValue }));
+    } else {
+      setInvoiceData(prev => ({ ...prev, [field]: value }));
+    }
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -171,6 +209,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
       setLoading(true);
       setError('');
       setSuccess('');
+      setFieldErrors({});
 
       // Format dates for API
       const formattedIssueDate = formatDateForAPI(invoiceData.issue_date);
@@ -190,11 +229,6 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
         invoice_items: invoice_items
       };
 
-      // Add optional invoice_number if provided
-      if (invoiceData.invoice_number.trim()) {
-        payload.invoice_number = invoiceData.invoice_number.trim();
-      }
-
       console.log('Creating invoice with payload:', payload);
 
       const token = getAccessToken();
@@ -207,12 +241,32 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
         body: JSON.stringify(payload)
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        // Check if there are field-specific errors
+        if (result.errors && typeof result.errors === 'object') {
+          const errors = {};
+          Object.keys(result.errors).forEach(field => {
+            // Get the first error message for each field
+            if (Array.isArray(result.errors[field]) && result.errors[field].length > 0) {
+              errors[field] = result.errors[field][0];
+            } else if (typeof result.errors[field] === 'string') {
+              errors[field] = result.errors[field];
+            }
+          });
+          setFieldErrors(errors);
+          
+          // Set general error message if available
+          if (result.message) {
+            setError(result.message);
+          }
+        } else {
+          setError(result.message || result.detail || `HTTP error! status: ${response.status}`);
+        }
+        return;
       }
 
-      const result = await response.json();
       console.log('Invoice created successfully:', result);
 
       setSuccess('Invoice created successfully!');
@@ -269,11 +323,14 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
             </div>
           )}
 
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Client Information Section */}
+          <div>
+            <h5 className="text-base font-semibold mb-3 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Client Information
+            </h5>
             <div>
               <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                Client ID <span className="text-red-500">*</span>
+                Select Client <span className="text-red-500">*</span>
               </label>
               {loadingClients ? (
                 <div className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-sm">
@@ -314,105 +371,120 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
                 <p className="text-xs text-gray-500 mt-1">No clients available</p>
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                Invoice Number
-              </label>
-              <input
-                type="text"
-                value={invoiceData.invoice_number}
-                onChange={(e) => handleInputChange('invoice_number', e.target.value)}
-                placeholder="123afasd"
-                className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
-              />
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                Issue Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={invoiceData.issue_date}
-                onChange={(e) => handleInputChange('issue_date', e.target.value)}
-                placeholder="mm/dd/yyyy"
-                className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                Due Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={invoiceData.due_date}
-                onChange={(e) => handleInputChange('due_date', e.target.value)}
-                placeholder="mm-dd-yyyyy"
-                className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Invoice Items */}
+          {/* Invoice Details Section */}
           <div>
-            <h6 className="text-lg mb-4 text-[#3B4A66] font-[BasisGrotesquePro]" >Invoice Items</h6>
-            <div className="space-y-4">
+            <h5 className="text-base font-semibold mb-3 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Invoice Details
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
+                  Issue Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={invoiceData.issue_date}
+                  onChange={(e) => handleInputChange('issue_date', e.target.value)}
+                  placeholder="mm/dd/yyyy"
+                  className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
+                  Due Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={invoiceData.due_date}
+                  onChange={(e) => handleInputChange('due_date', e.target.value)}
+                  placeholder="mm/dd/yyyy"
+                  className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+                    fieldErrors.due_date 
+                      ? 'border-red-300 focus:ring-red-500' 
+                      : 'border-[#E8F0FF] focus:ring-blue-500'
+                  }`}
+                  required
+                />
+                {fieldErrors.due_date && (
+                  <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">
+                    {fieldErrors.due_date}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Items Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h5 className="text-base font-semibold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Invoice Items
+              </h5>
+            </div>
+            <div className="space-y-3">
               {invoiceItems.map((item, index) => (
-                <div key={index} className="grid grid-cols-3 gap-4 items-end">
-                  <div className="col-span-1">
+                <div key={index} className="grid grid-cols-12 gap-3 items-end">
+                  <div className="col-span-12 md:col-span-5">
+                    <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                      Description
+                    </label>
                     <input
                       type="text"
                       value={item.description}
                       onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                      placeholder="Description"
+                      placeholder="Enter item description"
                       className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
-                  <div>
+                  <div className="col-span-12 md:col-span-4">
+                    <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                      Amount ($)
+                    </label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
                       value={item.value}
                       onChange={(e) => handleItemChange(index, 'value', e.target.value)}
-                      placeholder="Value"
+                      placeholder="0.00"
                       className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
-                  {invoiceItems.length > 1 && (
-                    <div>
+                  <div className="col-span-12 md:col-span-3">
+                    {invoiceItems.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(index)}
-                        className="px-3 py-2 text-red-600 !rounded-lg text-sm font-medium !border border-red-200 hover:bg-red-50 transition w-full"
+                        className="w-full px-3 py-2 text-red-600 !rounded-lg text-sm font-medium !border border-red-200 hover:bg-red-50 transition"
                       >
                         Remove
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
               <button
                 onClick={handleAddItem}
-                className="px-4 py-2 text-black !rounded-lg text-sm font-medium !border border-[#E8F0FF]"
+                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] hover:bg-gray-50 transition"
               >
-                + Add item
+                + Add Item
               </button>
             </div>
           </div>
 
-          {/* Total */}
-          <div className="flex justify-between items-center py-4 border-t" style={{ borderColor: '#E5E7EB' }}>
-            <span className="text-lg font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Total:</span>
-            <span className="text-lg font-medium font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-              ${calculateTotal().toLocaleString()}
-            </span>
+          {/* Summary Section */}
+          <div className="bg-gray-50 rounded-lg p-4 border" style={{ borderColor: '#E5E7EB' }}>
+            <div className="flex justify-between items-center">
+              <span className="text-base font-semibold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>Total Amount:</span>
+              <span className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                ${calculateTotal().toFixed(2)}
+              </span>
+            </div>
           </div>
 
           {/* Footer Buttons */}
