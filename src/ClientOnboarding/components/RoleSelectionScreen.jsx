@@ -8,6 +8,7 @@ import { getStorage, isLoggedIn } from "../utils/userUtils";
 const ROLE_DISPLAY_NAMES = {
   client: "Client Dashboard",
   staff: "Tax Preparer Dashboard",
+  tax_preparer: "Tax Preparer Dashboard",
   admin: "Firm Admin Dashboard",
   firm: "Firm Admin Dashboard",
   super_admin: "Super Admin Dashboard",
@@ -19,6 +20,7 @@ const ROLE_DISPLAY_NAMES = {
 const ROLE_DESCRIPTIONS = {
   client: "Access your personal tax documents and information",
   staff: "Manage client tax preparation and documents",
+  tax_preparer: "Manage client tax preparation and documents",
   admin: "Manage firm settings and users",
   firm: "Manage firm settings and users",
   super_admin: "System administration and management",
@@ -30,6 +32,7 @@ const ROLE_DESCRIPTIONS = {
 const ROLE_ICONS = {
   client: "👤",
   staff: "📋",
+  tax_preparer: "📋",
   admin: "🏢",
   firm: "🏢",
   super_admin: "⚙️",
@@ -75,6 +78,8 @@ export default function RoleSelectionScreen() {
 
     // Check if user has multiple roles
     const roles = user.role;
+    console.log('RoleSelectionScreen - User roles:', roles);
+    console.log('RoleSelectionScreen - User data:', user);
     if (!roles || !Array.isArray(roles) || roles.length <= 1) {
       // User doesn't have multiple roles, redirect based on user_type
       const userType = user.user_type;
@@ -141,7 +146,8 @@ export default function RoleSelectionScreen() {
       route = "/superadmin";
     } else if (role === 'admin' || role === 'firm') {
       route = "/firmadmin";
-    } else if (role === 'staff') {
+    } else if (role === 'staff' || role === 'tax_preparer') {
+      userType = 'tax_preparer';
       route = "/taxdashboard";
     } else if (role === 'client') {
       // Client routing - check verification status
@@ -180,14 +186,33 @@ export default function RoleSelectionScreen() {
     return null;
   }
 
-  const availableRoles = userData.role.filter(role => 
-    ROLE_DISPLAY_NAMES[role] !== undefined
-  );
+  // Filter roles that have display names, but also include all roles as fallback
+  const availableRoles = userData.role.filter(role => {
+    const hasMapping = ROLE_DISPLAY_NAMES[role] !== undefined;
+    if (!hasMapping) {
+      console.warn(`RoleSelectionScreen - Role "${role}" not found in ROLE_DISPLAY_NAMES`);
+    }
+    return hasMapping;
+  });
+
+  console.log('RoleSelectionScreen - Available roles after filtering:', availableRoles);
+  console.log('RoleSelectionScreen - All roles:', userData.role);
+  console.log('RoleSelectionScreen - ROLE_DISPLAY_NAMES keys:', Object.keys(ROLE_DISPLAY_NAMES));
+  console.log('RoleSelectionScreen - tax_preparer in mappings?', 'tax_preparer' in ROLE_DISPLAY_NAMES);
 
   if (availableRoles.length === 0) {
     // No valid roles, redirect to login
+    console.error('RoleSelectionScreen - No available roles found, redirecting to login');
     navigate("/login");
     return null;
+  }
+
+  // If we have multiple roles but only one is showing, log a warning
+  if (userData.role.length > 1 && availableRoles.length === 1) {
+    console.warn('RoleSelectionScreen - User has multiple roles but only one is available after filtering', {
+      allRoles: userData.role,
+      availableRoles: availableRoles
+    });
   }
 
   return (

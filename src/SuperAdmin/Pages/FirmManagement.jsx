@@ -716,7 +716,7 @@ export default function FirmManagement() {
                         <div className="flex justify-between items-start mb-2">
                             <div>
                                 <h4 className="text-md font-bold text-gray-800 mb-2">
-                                    Firms ({pagination.total_count})
+                                    Firms
                                 </h4>
                                 <p className="text-gray-500 text-sm">
                                     Comprehensive list of all firms registered on the platform
@@ -846,10 +846,10 @@ export default function FirmManagement() {
                                                     </button>
                                                     <button
 
-                                                        onClick={() => handleAction(firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm', firm.id)}
+                                                        onClick={() => handleAction(firm.status?.toLowerCase() === 'suspend' ? 'Unsuspend Firm' : 'Suspend Firm', firm.id)}
                                                         className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                                                     >
-                                                        {firm.status?.toLowerCase() === 'suspended' ? 'Unsuspend Firm' : 'Suspend Firm'}
+                                                        {firm.status?.toLowerCase() === 'suspend' ? 'Unsuspend Firm' : 'Suspend Firm'}
                                                     </button>
                                                     <button
                                                         onClick={() => handleAction('Delete', firm.id)}

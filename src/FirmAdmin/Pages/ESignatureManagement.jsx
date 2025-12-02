@@ -825,11 +825,19 @@ export default function ESignatureManagement() {
           let errorMessage = `HTTP error! status: ${response.status}`;
           try {
             const errorData = await response.json();
-            if (errorData.errors) {
-              const fieldErrors = Object.entries(errorData.errors)
-                .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-                .join('; ');
-              errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+            if (errorData.errors && typeof errorData.errors === 'object') {
+              // Extract only the error messages from errors object, not the generic message
+              const errorMessages = [];
+              Object.entries(errorData.errors).forEach(([field, messages]) => {
+                const fieldMessages = Array.isArray(messages) ? messages : [messages];
+                errorMessages.push(...fieldMessages);
+              });
+              
+              if (errorMessages.length > 0) {
+                errorMessage = errorMessages.join('. ');
+              } else {
+                errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+              }
             } else {
               errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
             }
@@ -987,6 +995,20 @@ export default function ESignatureManagement() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        // Extract specific error messages from errors object
+        if (errorData.errors && typeof errorData.errors === 'object') {
+          const errorMessages = [];
+          Object.entries(errorData.errors).forEach(([field, messages]) => {
+            const fieldMessages = Array.isArray(messages) ? messages : [messages];
+            errorMessages.push(...fieldMessages);
+          });
+          
+          if (errorMessages.length > 0) {
+            throw new Error(errorMessages.join('. '));
+          }
+        }
+        
         throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
@@ -1006,14 +1028,29 @@ export default function ESignatureManagement() {
         });
         fetchTemplates();
       } else {
+        // Extract specific error messages from errors object
+        if (result.errors && typeof result.errors === 'object') {
+          const errorMessages = [];
+          Object.entries(result.errors).forEach(([field, messages]) => {
+            const fieldMessages = Array.isArray(messages) ? messages : [messages];
+            errorMessages.push(...fieldMessages);
+          });
+          
+          if (errorMessages.length > 0) {
+            throw new Error(errorMessages.join('. '));
+          }
+        }
+        
         throw new Error(result.message || 'Failed to create template');
       }
     } catch (err) {
       console.error('Error creating template:', err);
-      const errorMsg = handleAPIError(err);
+      // Use the error message directly (already extracted from errors object if available)
+      const errorMsg = err.message || handleAPIError(err);
       toast.error(errorMsg || 'Failed to create template', {
         position: "top-right",
         autoClose: 3000,
+        pauseOnHover: false
       });
     } finally {
       setCreatingTemplate(false);

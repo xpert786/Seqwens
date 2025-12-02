@@ -199,6 +199,66 @@ export default function DocumentManagement() {
     handleFolderClick(folderId);
   };
 
+  // Handle delete folder
+  const handleDeleteFolder = async (folderId, folderName) => {
+    if (!window.confirm(`Are you sure you want to delete the folder "${folderName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await firmAdminDocumentsAPI.deleteFolder(folderId);
+
+      if (response.success) {
+        toast.success(response.message || 'Folder deleted successfully', {
+          position: 'top-right',
+          autoClose: 3000,
+          pauseOnHover: false
+        });
+        
+        // Refresh the folders list
+        await fetchDocuments(null, searchQuery);
+      } else {
+        throw new Error(response.message || 'Failed to delete folder');
+      }
+    } catch (err) {
+      console.error('Error deleting folder:', err);
+      
+      // Extract specific error messages from errors object if available
+      let errorMessage = handleAPIError(err);
+      
+      // Try to extract errors from response if available
+      if (err.response) {
+        try {
+          const errorData = await err.response.json().catch(() => ({}));
+          if (errorData.errors && typeof errorData.errors === 'object') {
+            const errorMessages = [];
+            Object.entries(errorData.errors).forEach(([field, messages]) => {
+              const fieldMessages = Array.isArray(messages) ? messages : [messages];
+              errorMessages.push(...fieldMessages);
+            });
+            
+            if (errorMessages.length > 0) {
+              errorMessage = errorMessages.join('. ');
+            }
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+      }
+      
+      toast.error(errorMessage || 'Failed to delete folder. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+        pauseOnHover: false
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter folders based on search (now handled by API, but keep for client-side filtering if needed)
   const filteredFolders = folders.filter(folder =>
     folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -387,6 +447,7 @@ export default function DocumentManagement() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            handleDeleteFolder(folder.id, folder.name);
                             setOpenActionsMenu(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"

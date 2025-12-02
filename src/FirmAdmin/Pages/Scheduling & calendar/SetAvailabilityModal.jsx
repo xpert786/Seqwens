@@ -8,6 +8,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
   const [slotDuration, setSlotDuration] = useState(30);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -21,6 +23,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
       setSelectedStaffId('');
       setStartDate('');
       setEndDate('');
+      setStartTime('09:00');
+      setEndTime('17:00');
       setSlotDuration(30);
       setErrors({});
     }
@@ -39,7 +43,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
       console.error('Error fetching staff members:', error);
       toast.error(handleAPIError(error) || 'Failed to load staff members', {
         position: 'top-right',
-        autoClose: 3000
+        autoClose: 3000,
+        pauseOnHover: false
       });
       setStaffMembers([]);
     } finally {
@@ -65,6 +70,15 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       newErrors.end_date = 'End date must be after start date';
     }
+    if (!startTime) {
+      newErrors.start_time = 'Please select a start time';
+    }
+    if (!endTime) {
+      newErrors.end_time = 'Please select an end time';
+    }
+    if (startTime && endTime && startTime >= endTime) {
+      newErrors.end_time = 'End time must be after start time';
+    }
     if (!slotDuration || slotDuration < 15 || slotDuration > 480) {
       newErrors.slot_duration = 'Slot duration must be between 15 and 480 minutes';
     }
@@ -80,6 +94,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
       const availabilityData = {
         start_date: startDate,
         end_date: endDate,
+        start_time: startTime,
+        end_time: endTime,
         slot_duration: parseInt(slotDuration)
       };
 
@@ -94,14 +110,16 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
       if (response.success) {
         toast.success(response.message || 'Availability set successfully', {
           position: 'top-right',
-          autoClose: 3000
+          autoClose: 3000,
+          pauseOnHover: false
         });
         onSuccess?.();
         onClose();
       } else {
         toast.error(response.message || 'Failed to set availability', {
           position: 'top-right',
-          autoClose: 3000
+          autoClose: 3000,
+          pauseOnHover: false
         });
       }
     } catch (error) {
@@ -122,7 +140,8 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
       
       toast.error(handleAPIError(error) || 'Failed to set availability', {
         position: 'top-right',
-        autoClose: 3000
+        autoClose: 3000,
+        pauseOnHover: false
       });
     } finally {
       setSubmitting(false);
@@ -259,6 +278,68 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
               />
               {errors.end_date && (
                 <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">{errors.end_date}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Time Range */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                Start Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                  if (errors.start_time) {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.start_time;
+                      return newErrors;
+                    });
+                  }
+                  // If end time is before or equal to new start time, clear it
+                  if (endTime && e.target.value >= endTime) {
+                    setEndTime('');
+                  }
+                }}
+                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
+                  errors.start_time ? 'border-red-300' : 'border-gray-300'
+                }`}
+                required
+              />
+              {errors.start_time && (
+                <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">{errors.start_time}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                End Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => {
+                  setEndTime(e.target.value);
+                  if (errors.end_time) {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.end_time;
+                      return newErrors;
+                    });
+                  }
+                }}
+                min={startTime || '00:00'}
+                className={`w-full border rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm ${
+                  errors.end_time ? 'border-red-300' : 'border-gray-300'
+                }`}
+                required
+              />
+              {errors.end_time && (
+                <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">{errors.end_time}</p>
               )}
             </div>
           </div>
