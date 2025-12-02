@@ -3,6 +3,7 @@ import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import RoleManagement from "../../../ClientOnboarding/components/RoleManagement";
 
 
 export default function AccountSettings() {
@@ -51,7 +52,7 @@ export default function AccountSettings() {
         { id: "profile", label: "Profile" },
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
-
+        { id: "roles", label: "Roles" },
     ];
 
     return (
@@ -144,6 +145,7 @@ export default function AccountSettings() {
                         {activeTab === "profile" && <Profile profileData={settings?.profile} companyProfile={settings?.company_profile} onUpdate={fetchSettings} />}
                         {activeTab === "notifications" && <Notifications notifications={settings?.notifications} onUpdate={fetchSettings} />}
                         {activeTab === "security" && <Security security={settings?.security} onUpdate={fetchSettings} />}
+                        {activeTab === "roles" && <RoleManagement />}
                     </>
                 )}
             </div>

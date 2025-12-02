@@ -4,6 +4,7 @@ import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Security from "./Security";
 import Billing from "./Billing";
+import RoleManagement from "../RoleManagement";
 
 export default function AccountSettings() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +23,7 @@ export default function AccountSettings() {
         { id: "notifications", label: "Notifications" },
         { id: "security", label: "Security" },
         { id: "billing", label: "Billing" },
+        { id: "roles", label: "Roles" },
     ];
 
     return (
@@ -111,6 +113,7 @@ export default function AccountSettings() {
                     {activeTab === "notifications" && <Notifications />}
                     {activeTab === "security" && <Security />}
                     {activeTab === "billing" && <Billing />}
+                    {activeTab === "roles" && <RoleManagement />}
                 </div>
             </div>
         </div>

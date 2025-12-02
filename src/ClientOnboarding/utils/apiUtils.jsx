@@ -421,6 +421,56 @@ export const userAPI = {
   }
 };
 
+// Role Management API functions (Linked Users System)
+export const roleAPI = {
+  // Add role (creates linked user)
+  addRole: async (role) => {
+    const payload = { role: role };
+    return await apiRequest('/user/roles/add/', 'POST', payload);
+  },
+
+  // Remove role (deletes linked user)
+  removeRole: async (role) => {
+    const payload = { role: role };
+    return await apiRequest('/user/roles/remove/', 'DELETE', payload);
+  },
+
+  // Get user's current roles (primary + linked users)
+  getRoles: async () => {
+    return await apiRequest('/user/roles/', 'GET');
+  },
+
+  // Get all linked users
+  getLinkedUsers: async () => {
+    return await apiRequest('/user/linked-users/', 'GET');
+  },
+
+  // Switch active role
+  switchRole: async (role) => {
+    const payload = { role: role };
+    return await apiRequest('/user/switch-role/', 'POST', payload);
+  },
+
+  // Get user for specific role
+  getUserForRole: async (role) => {
+    return await apiRequest(`/user/roles/${role}/`, 'GET');
+  },
+
+  // Check if user has role
+  hasRole: async (role) => {
+    return await apiRequest(`/user/has-role/?role=${role}`, 'GET');
+  },
+
+  // Get users by role (admin/super admin only)
+  getUsersByRole: async (role, primaryUserId = null) => {
+    let endpoint = `/user/users-by-role/?role=${role}`;
+    if (primaryUserId) {
+      endpoint += `&primary_user_id=${primaryUserId}`;
+    }
+    return await apiRequest(endpoint, 'GET');
+  }
+};
+
 // Form validation utilities
 export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

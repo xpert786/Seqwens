@@ -319,6 +319,23 @@ export default function DataIntakeForm() {
     }
   };
 
+  // Validate phone number - extract number part (without country code) and check if exactly 10 digits
+  const validatePhoneNumber = (phoneValue) => {
+    if (!phoneValue) return { valid: false, error: 'Phone number is required' };
+    
+    // Extract all digits from the phone value (react-phone-input-2 includes country code)
+    const digitsOnly = phoneValue.replace(/\D/g, '');
+    
+    // Extract the number part (last 10 digits) - this is the actual phone number without country code
+    const numberPart = digitsOnly.slice(-10);
+    
+    if (numberPart.length !== 10) {
+      return { valid: false, error: 'Phone number must be exactly 10 digits' };
+    }
+    
+    return { valid: true, error: null };
+  };
+
   // Map API field names to form field paths
   const mapApiFieldToFormField = (apiField, source) => {
     // Mapping from API field names to form field paths
@@ -649,6 +666,11 @@ export default function DataIntakeForm() {
     }
     if (!personalInfo.phone || personalInfo.phone.trim() === '') {
       errors['personalInfo.phone'] = ['Phone number is required'];
+    } else {
+      const phoneValidation = validatePhoneNumber(personalInfo.phone);
+      if (!phoneValidation.valid) {
+        errors['personalInfo.phone'] = [phoneValidation.error];
+      }
     }
     if (!personalInfo.address || personalInfo.address.trim() === '') {
       errors['personalInfo.address'] = ['Address is required'];
@@ -679,6 +701,14 @@ export default function DataIntakeForm() {
       }
       if (!spouseInfo.ssn || spouseInfo.ssn.trim() === '') {
         errors['spouseInfo.ssn'] = ['Spouse SSN is required'];
+      }
+      if (!spouseInfo.phone || spouseInfo.phone.trim() === '') {
+        errors['spouseInfo.phone'] = ['Spouse phone number is required'];
+      } else {
+        const phoneValidation = validatePhoneNumber(spouseInfo.phone);
+        if (!phoneValidation.valid) {
+          errors['spouseInfo.phone'] = [phoneValidation.error];
+        }
       }
     }
 
@@ -1486,11 +1516,30 @@ export default function DataIntakeForm() {
               value={personalInfo.phone || ''}
               onChange={(phone) => {
                 handlePersonalInfoChange('phone', phone);
+                // Clear error when user starts typing
+                if (getFieldError('personalInfo.phone')) {
+                  clearFieldError('personalInfo.phone');
+                }
               }}
               onCountryChange={(countryCode, countryData) => {
                 setPersonalPhoneCountry(countryCode.toLowerCase());
                 setPersonalPhoneCountrySelected(true);
+                // When country changes, set the dial code and clear any existing number
+                // User will need to enter the 10-digit number
                 handlePersonalInfoChange('phone', `+${countryData.dialCode}`);
+                clearFieldError('personalInfo.phone');
+              }}
+              onBlur={() => {
+                // Validate on blur if phone number is entered
+                if (personalInfo.phone && personalInfo.phone.trim()) {
+                  const phoneValidation = validatePhoneNumber(personalInfo.phone);
+                  if (!phoneValidation.valid) {
+                    setFieldErrors(prev => ({
+                      ...prev,
+                      'personalInfo.phone': [phoneValidation.error]
+                    }));
+                  }
+                }
               }}
               onFocus={() => {
                 if (!personalInfo.phone && !personalPhoneCountrySelected) {
@@ -1925,14 +1974,31 @@ export default function DataIntakeForm() {
               country={spousePhoneCountry}
               value={spouseInfo.phone || ''}
               onChange={(phone) => {
-                // Always allow the change - let the library handle it
                 handleSpouseInfoChange('phone', phone);
+                // Clear error when user starts typing
+                if (getFieldError('spouseInfo.phone')) {
+                  clearFieldError('spouseInfo.phone');
+                }
               }}
               onCountryChange={(countryCode, countryData) => {
                 setSpousePhoneCountry(countryCode.toLowerCase());
                 setSpousePhoneCountrySelected(true);
-                // When country is selected, insert the dial code
+                // When country changes, set the dial code and clear any existing number
+                // User will need to enter the 10-digit number
                 handleSpouseInfoChange('phone', `+${countryData.dialCode}`);
+                clearFieldError('spouseInfo.phone');
+              }}
+              onBlur={() => {
+                // Validate on blur if phone number is entered
+                if (spouseInfo.phone && spouseInfo.phone.trim()) {
+                  const phoneValidation = validatePhoneNumber(spouseInfo.phone);
+                  if (!phoneValidation.valid) {
+                    setFieldErrors(prev => ({
+                      ...prev,
+                      'spouseInfo.phone': [phoneValidation.error]
+                    }));
+                  }
+                }
               }}
               onFocus={() => {
                 // If field is empty and country not selected, ensure we have a default
@@ -1940,7 +2006,7 @@ export default function DataIntakeForm() {
                   // Keep empty, user must select country first
                 }
               }}
-              inputClass="form-control"
+              inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
               containerClass="w-100 phone-input-container"
               inputStyle={{
                 height: '45px',
@@ -1950,7 +2016,7 @@ export default function DataIntakeForm() {
                 paddingBottom: '6px',
                 width: '100%',
                 fontSize: '1rem',
-                border: '1px solid #ced4da',
+                border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
                 borderRadius: '0.375rem',
                 backgroundColor: '#fff'
               }}
@@ -1958,7 +2024,17 @@ export default function DataIntakeForm() {
               countryCodeEditable={false}
               disabled={false}
               specialLabel=""
+              data-field="spouseInfo.phone"
             />
+            {getFieldError('spouseInfo.phone') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('spouseInfo.phone')}
+              </div>
+            )}
           </div>
         </div>
       </div>

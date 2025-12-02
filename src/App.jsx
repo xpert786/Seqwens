@@ -28,6 +28,7 @@ import AcceptInvite from "./ClientOnboarding/Login-setup/AcceptInvite";
 import ProtectedRoute from "./ClientOnboarding/components/ProtectedRoute";
 import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
 import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
+import RoleSelectionScreen from "./ClientOnboarding/components/RoleSelectionScreen";
 import TailwindTest from "./TailwindTest";
 import TaxRoutes from "./Taxpreparer/TaxRoutes";
 import SuperRoutes from "./SuperAdmin/SuperRoutes";
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify-phone" element={<VerifyPhone />} />
         <Route path="/invite" element={<AcceptInvite />} />
+        <Route path="/select-role" element={<RoleSelectionScreen />} />
         {/* Tailwind test route */}
         <Route path="/tw-test" element={<TailwindTest />} />
         {/* Root path - Authentication check */}
