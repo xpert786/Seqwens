@@ -623,16 +623,6 @@ export default function FirmManagement() {
                     {/* Action Buttons */}
                     <div className="flex flex-wrap items-center gap-2">
                         <button
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                            style={{ borderRadius: '8px' }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M12.75 6.5L9 2.75M9 2.75L5.25 6.5M9 2.75V11.75" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Import Report
-                        </button>
-                        <button
                             onClick={handleExportReport}
                             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             style={{ borderRadius: '8px' }}
@@ -689,19 +679,6 @@ export default function FirmManagement() {
                         </div>
 
                         {/* Plan Filter */}
-                        <div className="w-fit">
-                            <select
-                                value={planFilter}
-                                onChange={(e) => setPlanFilter(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                            >
-                                <option value="All Plans">All Plans</option>
-                                <option value="Solo">Solo</option>
-                                <option value="Team">Team</option>
-                                <option value="Professional">Professional</option>
-                                <option value="Enterprise">Enterprise</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
 
@@ -925,33 +902,6 @@ export default function FirmManagement() {
                         </div>
                     )}
 
-                    <div className="flex items-center justify-between px-4 py-4">
-                        <div className="text-sm text-gray-500">
-                            Showing {Math.min((pagination.page - 1) * pagination.page_size + 1, pagination.total_count)}-
-                            {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} firms
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={pagination.page <= 1 || loading}
-                                className="px-3 py-1 text-sm border border-[#E8F0FF] rounded-md disabled:opacity-50 hover:bg-[#F6F7FF]"
-                            >
-                                Previous
-                            </button>
-                            <span className="text-sm text-gray-600">
-                                Page {pagination.page} of {Math.max(pagination.total_pages, 1)}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages || prev + 1))}
-                                disabled={pagination.page >= (pagination.total_pages || 1) || loading}
-                                className="px-3 py-1 text-sm border border-[#E8F0FF] rounded-md disabled:opacity-50 hover:bg-[#F6F7FF]"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 

@@ -131,7 +131,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       headers: getHeaders(),
     };
 
-    if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+    if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE')) {
       config.body = JSON.stringify(data);
     }
 
@@ -423,9 +423,15 @@ export const userAPI = {
 
 // Role Management API functions (Linked Users System)
 export const roleAPI = {
-  // Add role (creates linked user)
-  addRole: async (role) => {
+  // Add role (creates linked user or submits role request)
+  addRole: async (role, firmName = null, message = null) => {
     const payload = { role: role };
+    if (firmName) {
+      payload.firm_name = firmName;
+    }
+    if (message) {
+      payload.message = message;
+    }
     return await apiRequest('/user/roles/add/', 'POST', payload);
   },
 
@@ -468,6 +474,16 @@ export const roleAPI = {
       endpoint += `&primary_user_id=${primaryUserId}`;
     }
     return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get available roles that user can request (GET only - this endpoint is read-only)
+  getAvailableRoles: async () => {
+    return await apiRequest('/user/available-roles/', 'GET');
+  },
+
+  // Get user's role requests
+  getRoleRequests: async () => {
+    return await apiRequest('/user/role-requests/', 'GET');
   }
 };
 
@@ -1472,6 +1488,56 @@ export const threadsAPI = {
     }
 
     return await response.json();
+  },
+  // Download message attachment
+  // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
+  downloadMessageAttachment: async (threadId, messageId) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetchWithCors(`${API_BASE_URL}/chat-threads/${threadId}/messages/${messageId}/download/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `Failed to download attachment: ${response.status}`);
+    }
+
+    // Get the blob data
+    const blob = await response.blob();
+    
+    // Get filename from Content-Disposition header or use default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'attachment';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    // Create a temporary URL for the blob
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return { success: true, filename };
   },
   // Get WebSocket configuration
   getWebSocketConfig: async () => {
@@ -2624,6 +2690,10 @@ export const firmAdminCalendarAPI = {
     const queryString = queryParams.toString();
     const endpoint = `/firm/calendar/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
+  },
+  // Set staff availability
+  setAvailability: async (availabilityData) => {
+    return await apiRequest('/taxpayer/firm-admin/availability/set/', 'POST', availabilityData);
   }
 };
 
@@ -2968,6 +3038,40 @@ export const firmOfficeAPI = {
   },
   deleteOffice: async (officeId) => {
     return await apiRequest(`/firm/office-locations/${officeId}/`, 'DELETE');
+  },
+  // Taxpayer management
+  listTaxpayers: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.search) queryParams.append('search', params.search);
+    if (params.office_id) queryParams.append('office_id', params.office_id);
+    if (params.assigned_only) queryParams.append('assigned_only', params.assigned_only);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/firm/taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+  assignTaxpayerToOffice: async (officeId, taxpayerId = null, taxpayerIds = null) => {
+    const payload = {};
+    if (taxpayerId) {
+      payload.taxpayer_id = taxpayerId;
+    } else if (taxpayerIds && Array.isArray(taxpayerIds)) {
+      payload.taxpayer_ids = taxpayerIds;
+    } else {
+      throw new Error('Either taxpayer_id or taxpayer_ids must be provided');
+    }
+    return await apiRequest(`/firm/office-locations/${officeId}/assign-taxpayer/`, 'POST', payload);
+  },
+  removeTaxpayerFromOffice: async (officeId, taxpayerId = null, taxpayerIds = null) => {
+    const payload = {};
+    if (taxpayerId) {
+      payload.taxpayer_id = taxpayerId;
+    } else if (taxpayerIds && Array.isArray(taxpayerIds)) {
+      payload.taxpayer_ids = taxpayerIds;
+    } else {
+      throw new Error('Either taxpayer_id or taxpayer_ids must be provided');
+    }
+    return await apiRequest(`/firm/office-locations/${officeId}/assign-taxpayer/`, 'DELETE', payload);
+  },
+  setPrimaryOffice: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/set-primary/`, 'POST');
   },
 };
 
@@ -3497,6 +3601,56 @@ export const taxPreparerThreadsAPI = {
   editMessage: async (threadId, messageId, content) => {
     return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/messages/${messageId}/edit/`, 'PATCH', { content });
   },
+  // Download message attachment
+  // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
+  downloadMessageAttachment: async (threadId, messageId) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetchWithCors(`${API_BASE_URL}/chat-threads/${threadId}/messages/${messageId}/download/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `Failed to download attachment: ${response.status}`);
+    }
+
+    // Get the blob data
+    const blob = await response.blob();
+    
+    // Get filename from Content-Disposition header or use default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'attachment';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    // Create a temporary URL for the blob
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return { success: true, filename };
+  },
   // Assign thread to staff member
   assignThread: async (threadId, staffIds) => {
     return await apiRequest(`/taxpayer/tax-preparer/threads/${threadId}/assign/`, 'POST', { staff_ids: staffIds });
@@ -3508,6 +3662,23 @@ export const taxPreparerThreadsAPI = {
 };
 
 // Invoices API functions
+// Taxpayer Firm Logo API
+export const taxpayerFirmAPI = {
+  // Get firm logo
+  getFirmLogo: async () => {
+    return await apiRequest('/taxpayer/firm/logo/', 'GET');
+  },
+  // Get office support information
+  getOfficeSupport: async () => {
+    return await apiRequest('/taxpayer/office/support/', 'GET');
+  },
+  // Set availability (for taxpayer/tax preparer)
+  setAvailability: async (availabilityData) => {
+    // For taxpayer, use the same endpoint but without staff_id
+    return await apiRequest('/taxpayer/firm-admin/availability/set/', 'POST', availabilityData);
+  },
+};
+
 export const invoicesAPI = {
   // Get all invoices for the current taxpayer
   getInvoices: async () => {
@@ -4045,6 +4216,56 @@ export const firmAdminMessagingAPI = {
       
       return await apiRequest(`/taxpayer/chat-threads/${threadId}/send_message/`, 'POST', payload);
     }
+  },
+  // Download message attachment
+  // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
+  downloadMessageAttachment: async (threadId, messageId) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const response = await fetchWithCors(`${API_BASE_URL}/chat-threads/${threadId}/messages/${messageId}/download/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `Failed to download attachment: ${response.status}`);
+    }
+
+    // Get the blob data
+    const blob = await response.blob();
+    
+    // Get filename from Content-Disposition header or use default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'attachment';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    // Create a temporary URL for the blob
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return { success: true, filename };
   }
 };
 

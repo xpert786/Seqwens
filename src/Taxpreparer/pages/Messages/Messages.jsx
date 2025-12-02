@@ -58,6 +58,8 @@ export default function MessagePage() {
   const [newTaskText, setNewTaskText] = useState("");
   const [activeChatMessages, setActiveChatMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [messageAttachment, setMessageAttachment] = useState(null);
+  const messageFileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -334,6 +336,15 @@ export default function MessagePage() {
 
             const messageType = isSentByCurrentUser ? "user" : "admin";
 
+            // Handle attachment object from API
+            const attachmentObj = msg.attachment || null;
+            const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
+            const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+            const attachmentSize = attachmentObj?.size || msg.attachment_size || null;
+            const attachmentSizeDisplay = attachmentSize 
+              ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+              : msg.attachment_size_display || null;
+
             return {
               id: msg.id,
               type: messageType,
@@ -345,9 +356,11 @@ export default function MessagePage() {
               isEdited: msg.is_edited || false,
               messageType: msg.message_type || "text",
               isInternal: msg.is_internal || false,
-              attachment: msg.attachment || null,
-              attachmentName: msg.attachment_name || null,
-              attachmentSize: msg.attachment_size_display || null,
+              attachment: attachmentUrl, // Keep URL for backward compatibility
+              attachmentObj: attachmentObj, // Store full attachment object
+              attachmentName: attachmentName,
+              attachmentSize: attachmentSizeDisplay,
+              hasAttachment: !!(attachmentObj || attachmentUrl),
             };
           });
 
@@ -539,11 +552,20 @@ export default function MessagePage() {
     }
   }, [activeChatMessages]);
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setMessageAttachment(file);
+    }
+  };
+
   const handleSend = async () => {
-    if (newMessage.trim() === "" || !activeConversationId) return;
+    if ((newMessage.trim() === "" && !messageAttachment) || !activeConversationId) return;
 
     const messageText = newMessage.trim();
+    const attachment = messageAttachment;
     setNewMessage("");
+    setMessageAttachment(null);
 
     // Stop typing indicator
     wsSendTyping(false);
@@ -556,23 +578,25 @@ export default function MessagePage() {
       const optimisticMsg = {
         id: `temp-${Date.now()}`,
         type: messageType,
-        text: messageText,
+        text: messageText || (attachment ? `📎 ${attachment.name}` : ''),
         date: new Date().toISOString(),
         sender: 'You',
         senderRole: '',
         isRead: false,
         isEdited: false,
-        messageType: 'text',
+        messageType: attachment ? 'file' : 'text',
         isOptimistic: true, // Mark as optimistic
+        attachment: attachment ? URL.createObjectURL(attachment) : null,
+        attachmentName: attachment?.name || null,
       };
 
       // Add message instantly to chat area
       setActiveChatMessages(prev => [...prev, optimisticMsg].sort((a, b) => new Date(a.date) - new Date(b.date)));
 
       // Update conversation list instantly
-      const truncatedMessage = messageText.length > 50
-        ? messageText.substring(0, 50) + '...'
-        : messageText;
+      const truncatedMessage = (messageText || (attachment ? `📎 ${attachment.name}` : '')).length > 50
+        ? (messageText || attachment.name).substring(0, 50) + '...'
+        : (messageText || (attachment ? `📎 ${attachment.name}` : ''));
 
       setConversations(prevConvs => {
         const updated = prevConvs.map(conv => {
@@ -600,8 +624,8 @@ export default function MessagePage() {
         }
       }, 50);
 
-      // Try WebSocket first if connected
-      if (wsConnected) {
+      // Try WebSocket first if connected (but WebSocket may not support attachments, so fallback to REST)
+      if (wsConnected && !attachment) {
         const sent = wsSendMessage(messageText, false); // false = not internal
         if (sent) {
           console.log('✅ Message sent via WebSocket');
@@ -610,12 +634,12 @@ export default function MessagePage() {
         }
       }
 
-      // Fallback to REST API
+      // Fallback to REST API (required for attachments)
       const response = await taxPreparerThreadsAPI.sendMessage(activeConversationId, {
         content: messageText,
-        message_type: 'text',
+        message_type: attachment ? 'file' : 'text',
         is_internal: false
-      });
+      }, attachment);
 
       if (response.success) {
         // Replace optimistic message with real message
@@ -1000,12 +1024,38 @@ export default function MessagePage() {
                                     {msg.sender}
                                   </div>
                                   <div>{msg.text}</div>
-                                  {msg.attachment && (
+                                  {msg.hasAttachment && (
                                     <div className="mt-2">
                                       <FileIcon className="me-2 text-primary" />
-                                      <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
+                                      <button
+                                        onClick={async () => {
+                                          if (!activeConversationId || !msg.id) return;
+                                          try {
+                                            await taxPreparerThreadsAPI.downloadMessageAttachment(activeConversationId, msg.id);
+                                            toast.success('Attachment downloaded successfully', {
+                                              position: 'top-right',
+                                              autoClose: 2000
+                                            });
+                                          } catch (error) {
+                                            console.error('Error downloading attachment:', error);
+                                            toast.error('Failed to download attachment', {
+                                              position: 'top-right',
+                                              autoClose: 3000
+                                            });
+                                          }
+                                        }}
+                                        style={{ 
+                                          fontSize: "12px", 
+                                          color: "#3B82F6",
+                                          background: "none",
+                                          border: "none",
+                                          padding: 0,
+                                          cursor: "pointer",
+                                          textDecoration: "underline"
+                                        }}
+                                      >
                                         {msg.attachmentName || "Attachment"}
-                                      </a>
+                                      </button>
                                       {msg.attachmentSize && (
                                         <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
                                           ({msg.attachmentSize})
@@ -1035,12 +1085,38 @@ export default function MessagePage() {
                               <div key={msg.id} className="d-flex mb-3 w-100 justify-content-end">
                                 <div className="bg-light p-2 px-4 rounded" style={{ fontFamily: "BasisGrotesquePro", marginRight: "16px", maxWidth: "75%", minWidth: "80px", backgroundColor: "#FFF4E6" }}>
                                   <div style={{ color: "#1F2937" }}>{msg.text}</div>
-                                  {msg.attachment && (
+                                  {msg.hasAttachment && (
                                     <div className="mt-2">
                                       <FileIcon className="me-2 text-primary" />
-                                      <a href={msg.attachment} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#3B82F6" }}>
+                                      <button
+                                        onClick={async () => {
+                                          if (!activeConversationId || !msg.id) return;
+                                          try {
+                                            await taxPreparerThreadsAPI.downloadMessageAttachment(activeConversationId, msg.id);
+                                            toast.success('Attachment downloaded successfully', {
+                                              position: 'top-right',
+                                              autoClose: 2000
+                                            });
+                                          } catch (error) {
+                                            console.error('Error downloading attachment:', error);
+                                            toast.error('Failed to download attachment', {
+                                              position: 'top-right',
+                                              autoClose: 3000
+                                            });
+                                          }
+                                        }}
+                                        style={{ 
+                                          fontSize: "12px", 
+                                          color: "#3B82F6",
+                                          background: "none",
+                                          border: "none",
+                                          padding: 0,
+                                          cursor: "pointer",
+                                          textDecoration: "underline"
+                                        }}
+                                      >
                                         {msg.attachmentName || "Attachment"}
-                                      </a>
+                                      </button>
                                       {msg.attachmentSize && (
                                         <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "8px" }}>
                                           ({msg.attachmentSize})
@@ -1096,6 +1172,46 @@ export default function MessagePage() {
                         </div>
                       )}
                       <input
+                        ref={messageFileInputRef}
+                        type="file"
+                        onChange={handleFileSelect}
+                        className="d-none"
+                      />
+                      <button
+                        type="button"
+                        className="btn me-2"
+                        onClick={() => messageFileInputRef.current?.click()}
+                        style={{ 
+                          background: "transparent", 
+                          border: "1px solid #E8F0FF",
+                          color: "#3B4A66"
+                        }}
+                        title="Attach file"
+                      >
+                        <FileIcon />
+                      </button>
+                      {messageAttachment && (
+                        <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
+                          {messageAttachment.name}
+                        </span>
+                      )}
+                      {messageAttachment && (
+                        <button
+                          type="button"
+                          className="btn me-2"
+                          onClick={() => setMessageAttachment(null)}
+                          style={{ 
+                            background: "transparent", 
+                            border: "none",
+                            color: "#EF4444",
+                            padding: "0 5px"
+                          }}
+                          title="Remove attachment"
+                        >
+                          ×
+                        </button>
+                      )}
+                      <input
                         type="text"
                         className="form-control me-2"
                         placeholder="Write a message..."
@@ -1107,9 +1223,13 @@ export default function MessagePage() {
                       <button
                         type="button"
                         className="btn"
-                        style={sendButtonStyles}
+                        style={{
+                          background: (newMessage.trim() || messageAttachment) ? "#F56D2D" : "#E5E7EB",
+                          color: (newMessage.trim() || messageAttachment) ? "#fff" : "#9CA3AF",
+                          cursor: (newMessage.trim() || messageAttachment) ? "pointer" : "not-allowed"
+                        }}
                         onClick={handleSend}
-                        disabled={!isSendButtonActive}
+                        disabled={!(newMessage.trim() || messageAttachment)}
                         aria-label="Send message"
                       >
                         <FaPaperPlane

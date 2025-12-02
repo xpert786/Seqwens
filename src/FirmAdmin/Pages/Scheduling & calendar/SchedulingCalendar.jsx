@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { firmAdminCalendarAPI, firmAdminMeetingsAPI, firmAdminClientsAPI, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import SetAvailabilityModal from './SetAvailabilityModal';
 
 const SchedulingCalendar = () => {
     const location = useLocation();
@@ -33,6 +34,7 @@ const SchedulingCalendar = () => {
 
     // Add Event Modal State - matching tax preparer modal structure
     const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+    const [isSetAvailabilityModalOpen, setIsSetAvailabilityModalOpen] = useState(false);
     const [eventTitle, setEventTitle] = useState('');
     const [appointmentDuration, setAppointmentDuration] = useState(30);
     const [timezone, setTimezone] = useState('America/New_York');
@@ -607,14 +609,58 @@ const SchedulingCalendar = () => {
                 setNewAppointmentDetails(response.new_appointment_details || meetingData);
                 setShowOverlapModal(true);
             } else if (response.status === 400) {
-                // Validation error
-                const errorMsg = response.message || 'Validation failed';
+                // Validation error - format user-friendly messages
                 const errors = response.errors || {};
-                const errorDetails = Object.entries(errors)
-                    .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
-                    .join('; ');
+                let userFriendlyMessage = response.message || 'Please check your input and try again.';
+                
+                // Handle non_field_errors (general errors)
+                if (errors.non_field_errors) {
+                    const nonFieldErrors = Array.isArray(errors.non_field_errors) 
+                        ? errors.non_field_errors 
+                        : [errors.non_field_errors];
+                    
+                    // Format non-field errors in user-friendly way
+                    const formattedNonFieldErrors = nonFieldErrors.map(err => {
+                        // Handle specific error messages
+                        if (typeof err === 'string') {
+                            // Remove technical prefixes and format dates nicely
+                            let formatted = err
+                                .replace(/^non_field_errors:\s*/i, '')
+                                .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
+                                    // Format date nicely
+                                    const dateObj = new Date(date);
+                                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                    return `The selected staff member is not available on ${formattedDate}`;
+                                });
+                            return formatted;
+                        }
+                        return err;
+                    });
+                    
+                    userFriendlyMessage = formattedNonFieldErrors.join('. ');
+                } else {
+                    // Handle field-specific errors
+                    const fieldErrors = Object.entries(errors)
+                        .filter(([field]) => field !== 'non_field_errors')
+                        .map(([field, msgs]) => {
+                            const messages = Array.isArray(msgs) ? msgs : [msgs];
+                            // Convert field names to user-friendly labels
+                            const fieldLabel = field
+                                .replace(/_/g, ' ')
+                                .replace(/\b\w/g, l => l.toUpperCase());
+                            return `${fieldLabel}: ${messages.join(', ')}`;
+                        });
+                    
+                    if (fieldErrors.length > 0) {
+                        userFriendlyMessage = fieldErrors.join('. ');
+                    }
+                }
 
-                toast.error(`${errorMsg}. ${errorDetails}`, {
+                toast.error(userFriendlyMessage, {
                     position: 'top-right',
                     autoClose: 5000
                 });
@@ -627,9 +673,52 @@ const SchedulingCalendar = () => {
             }
         } catch (error) {
             console.error('Error creating meeting:', error);
-            toast.error(handleAPIError(error) || 'Failed to create meeting', {
+            
+            // Try to extract user-friendly error from error response
+            let errorMessage = 'Failed to create meeting';
+            
+            if (error.response) {
+                const errorData = error.response.data || error.response;
+                if (errorData.errors) {
+                    const errors = errorData.errors;
+                    
+                    // Handle non_field_errors
+                    if (errors.non_field_errors) {
+                        const nonFieldErrors = Array.isArray(errors.non_field_errors) 
+                            ? errors.non_field_errors 
+                            : [errors.non_field_errors];
+                        
+                        const formattedErrors = nonFieldErrors.map(err => {
+                            if (typeof err === 'string') {
+                                return err
+                                    .replace(/^non_field_errors:\s*/i, '')
+                                    .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
+                                        const dateObj = new Date(date);
+                                        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric' 
+                                        });
+                                        return `The selected staff member is not available on ${formattedDate}`;
+                                    });
+                            }
+                            return err;
+                        });
+                        
+                        errorMessage = formattedErrors.join('. ');
+                    } else if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            toast.error(errorMessage, {
                 position: 'top-right',
-                autoClose: 3000
+                autoClose: 5000
             });
         } finally {
             setCreatingMeeting(false);
@@ -667,16 +756,81 @@ const SchedulingCalendar = () => {
                 // Refresh calendar data
                 await fetchCalendarData();
             } else {
-                toast.error(response.message || 'Failed to create meeting', {
+                // Handle validation errors in overwrite response
+                const errors = response.errors || {};
+                let errorMessage = response.message || 'Failed to create meeting';
+                
+                if (errors.non_field_errors) {
+                    const nonFieldErrors = Array.isArray(errors.non_field_errors) 
+                        ? errors.non_field_errors 
+                        : [errors.non_field_errors];
+                    
+                    const formattedErrors = nonFieldErrors.map(err => {
+                        if (typeof err === 'string') {
+                            return err
+                                .replace(/^non_field_errors:\s*/i, '')
+                                .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
+                                    const dateObj = new Date(date);
+                                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                    return `The selected staff member is not available on ${formattedDate}`;
+                                });
+                        }
+                        return err;
+                    });
+                    
+                    errorMessage = formattedErrors.join('. ');
+                }
+                
+                toast.error(errorMessage, {
                     position: 'top-right',
-                    autoClose: 3000
+                    autoClose: 5000
                 });
             }
         } catch (error) {
             console.error('Error confirming overwrite:', error);
-            toast.error(handleAPIError(error) || 'Failed to create meeting', {
+            
+            // Try to extract user-friendly error from error response
+            let errorMessage = 'Failed to create meeting';
+            
+            if (error.response) {
+                const errorData = error.response.data || error.response;
+                if (errorData.errors?.non_field_errors) {
+                    const nonFieldErrors = Array.isArray(errorData.errors.non_field_errors) 
+                        ? errorData.errors.non_field_errors 
+                        : [errorData.errors.non_field_errors];
+                    
+                    const formattedErrors = nonFieldErrors.map(err => {
+                        if (typeof err === 'string') {
+                            return err
+                                .replace(/^non_field_errors:\s*/i, '')
+                                .replace(/Staff member is not available on\s+(\d{4}-\d{2}-\d{2})/i, (match, date) => {
+                                    const dateObj = new Date(date);
+                                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                    return `The selected staff member is not available on ${formattedDate}`;
+                                });
+                        }
+                        return err;
+                    });
+                    
+                    errorMessage = formattedErrors.join('. ');
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            toast.error(errorMessage, {
                 position: 'top-right',
-                autoClose: 3000
+                autoClose: 5000
             });
         } finally {
             setConfirmingOverwrite(false);
@@ -843,15 +997,26 @@ const SchedulingCalendar = () => {
                             <h4 className="text-2xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Firm Calendar</h4>
                             <p className="text-gray-600 font-[BasisGrotesquePro]">Manage appointments, deadlines, and meetings</p>
                         </div>
-                        <button
-                            onClick={() => setIsAddEventModalOpen(true)}
-                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] mt-4 lg:mt-0"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Event
-                        </button>
+                        <div className="flex items-center gap-3 mt-4 lg:mt-0">
+                            <button
+                                onClick={() => setIsSetAvailabilityModalOpen(true)}
+                                className="px-4 py-2 bg-white border border-[#E8F0FF] text-[#3B4A66] !rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Set Availability
+                            </button>
+                            <button
+                                onClick={() => setIsAddEventModalOpen(true)}
+                                className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Event
+                            </button>
+                        </div>
                     </div>
 
                     {/* Metric Cards */}
@@ -1767,14 +1932,16 @@ const SchedulingCalendar = () => {
                                     disabled={loadingStaff}
                                 >
                                     <option value="">Select Staff Member</option>
-                                    {staffMembers.map((staff) => (
-                                        <option key={staff.id} value={staff.id}>
-                                            {staff.full_name ||
-                                                (staff.first_name && staff.last_name
-                                                    ? `${staff.first_name} ${staff.last_name}`
-                                                    : staff.email || `Staff #${staff.first_name} ${staff.last_name}`)}
-                                        </option>
-                                    ))}
+                                    {staffMembers.map((staff) => {
+                                        const staffName = staff.staff_member?.name || staff.name || 'Unknown Staff';
+                                        const staffEmail = staff.contact?.email || staff.email || '';
+                                        const staffRole = staff.role?.primary || staff.role?.display || '';
+                                        return (
+                                            <option key={staff.id} value={staff.id}>
+                                                {staffName}{staffEmail ? ` (${staffEmail})` : ''}{staffRole ? ` - ${staffRole}` : ''}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                                 {loadingStaff && (
                                     <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">Loading staff members...</p>
@@ -1817,6 +1984,16 @@ const SchedulingCalendar = () => {
                     </div>
                 </div>
             )}
+
+            {/* Set Availability Modal */}
+            <SetAvailabilityModal
+                isOpen={isSetAvailabilityModalOpen}
+                onClose={() => setIsSetAvailabilityModalOpen(false)}
+                onSuccess={async () => {
+                    await fetchCalendarData();
+                }}
+                isTaxpayer={false}
+            />
         </div>
     );
 };

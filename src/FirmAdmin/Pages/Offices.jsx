@@ -3,6 +3,7 @@ import { FaBuilding, FaUsers, FaPhone, FaMapMarkerAlt, FaEllipsisV, FaChevronUp,
 import { useNavigate } from 'react-router-dom';
 import { handleAPIError, firmOfficeAPI } from '../../ClientOnboarding/utils/apiUtils';
 import AddOfficeModal from './Offices/AddOfficeModal';
+import TaxpayerManagementModal from './Offices/TaxpayerManagementModal';
 
 export default function Offices() {
     const navigate = useNavigate();
@@ -20,6 +21,8 @@ export default function Offices() {
     const [statusFilter, setStatusFilter] = useState('All Status');
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddOfficeModal, setShowAddOfficeModal] = useState(false);
+    const [showTaxpayerModal, setShowTaxpayerModal] = useState(false);
+    const [selectedOfficeForTaxpayers, setSelectedOfficeForTaxpayers] = useState(null);
     const dropdownRefs = useRef({});
 
     // Fetch offices from API
@@ -457,6 +460,16 @@ export default function Offices() {
                                                                     View Details
                                                                 </button>
                                                                
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedOfficeForTaxpayers({ id: formattedOffice.id, name: formattedOffice.name });
+                                                                        setShowTaxpayerModal(true);
+                                                                        setShowDropdown(null);
+                                                                    }}
+                                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                >
+                                                                    Manage Taxpayers
+                                                                </button>
                                                                 <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                                                     Delete Office
                                                                 </button>
@@ -480,6 +493,20 @@ export default function Offices() {
                 onClose={() => setShowAddOfficeModal(false)}
                 onOfficeCreated={fetchOffices}
             />
+
+            {/* Taxpayer Management Modal */}
+            {selectedOfficeForTaxpayers && (
+                <TaxpayerManagementModal
+                    show={showTaxpayerModal}
+                    onClose={() => {
+                        setShowTaxpayerModal(false);
+                        setSelectedOfficeForTaxpayers(null);
+                    }}
+                    officeId={selectedOfficeForTaxpayers.id}
+                    officeName={selectedOfficeForTaxpayers.name}
+                    onUpdate={fetchOffices}
+                />
+            )}
         </div>
     );
 }

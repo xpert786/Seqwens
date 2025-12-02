@@ -218,17 +218,26 @@ const Messages = () => {
           console.log('Extracted messages array length:', messagesArray.length);
 
           if (messagesArray.length > 0) {
-            const transformedMessages = messagesArray.map(msg => ({
-              id: msg.id,
-              content: msg.content || msg.message || '',
-              sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-              sender_role: msg.sender?.role || msg.sender_role || '',
-              sender_id: msg.sender?.id || msg.sender_id || null,
-              created_at: msg.created_at,
-              is_read: msg.is_read || false,
-              attachment: msg.attachment || null,
-              attachment_name: msg.attachment_name || null,
-            }));
+            const transformedMessages = messagesArray.map(msg => {
+              // Handle attachment object from API
+              const attachmentObj = msg.attachment || null;
+              const attachmentUrl = attachmentObj?.url || null;
+              const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+              
+              return {
+                id: msg.id,
+                content: msg.content || msg.message || '',
+                sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                sender_role: msg.sender?.role || msg.sender_role || '',
+                sender_id: msg.sender?.id || msg.sender_id || null,
+                created_at: msg.created_at,
+                is_read: msg.is_read || false,
+                attachment: attachmentUrl, // Keep URL for backward compatibility
+                attachmentObj: attachmentObj, // Store full attachment object
+                attachment_name: attachmentName,
+                hasAttachment: !!(attachmentObj || attachmentUrl),
+              };
+            });
             console.log('Setting threadMessages with', transformedMessages.length, 'messages');
             setThreadMessages(transformedMessages);
             return;
@@ -249,17 +258,26 @@ const Messages = () => {
                 : (Array.isArray(response.data) ? response.data : []);
 
               if (messagesArray.length > 0) {
-                setThreadMessages(messagesArray.map(msg => ({
-                  id: msg.id,
-                  content: msg.content || msg.message,
-                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                  sender_role: msg.sender?.role || msg.sender_role || '',
-                  sender_id: msg.sender?.id || msg.sender_id || null,
-                  created_at: msg.created_at,
-                  is_read: msg.is_read || false,
-                  attachment: msg.attachment || null,
-                  attachment_name: msg.attachment_name || null,
-                })));
+                setThreadMessages(messagesArray.map(msg => {
+                  // Handle attachment object from API
+                  const attachmentObj = msg.attachment || null;
+                  const attachmentUrl = attachmentObj?.url || null;
+                  const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+                  
+                  return {
+                    id: msg.id,
+                    content: msg.content || msg.message,
+                    sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                    sender_role: msg.sender?.role || msg.sender_role || '',
+                    sender_id: msg.sender?.id || msg.sender_id || null,
+                    created_at: msg.created_at,
+                    is_read: msg.is_read || false,
+                    attachment: attachmentUrl, // Keep URL for backward compatibility
+                    attachmentObj: attachmentObj, // Store full attachment object
+                    attachment_name: attachmentName,
+                    hasAttachment: !!(attachmentObj || attachmentUrl),
+                  };
+                }));
                 return;
               }
             }
@@ -544,7 +562,7 @@ const Messages = () => {
 
   // Handle sending message in thread
   const handleSendThreadMessage = async () => {
-    if (!selectedThreadId || !threadMessageInput.trim()) {
+    if (!selectedThreadId || (!threadMessageInput.trim() && !threadAttachment)) {
       return;
     }
 
@@ -1044,19 +1062,38 @@ const Messages = () => {
                             {isSentByCurrentUser ? (msg.sender_name || currentUserName) : (msg.sender_name || 'Unknown')}
                           </div>
                           <div style={{ color: "#1F2937" }}>{msg.content}</div>
-                          {msg.attachment && (
+                          {msg.hasAttachment && (
                             <div className="mt-2">
-                              <a
-                                href={msg.attachment}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={async () => {
+                                  if (!selectedThreadId || !msg.id) return;
+                                  try {
+                                    await firmAdminMessagingAPI.downloadMessageAttachment(selectedThreadId, msg.id);
+                                    toast.success('Attachment downloaded successfully', {
+                                      position: 'top-right',
+                                      autoClose: 2000
+                                    });
+                                  } catch (error) {
+                                    console.error('Error downloading attachment:', error);
+                                    toast.error('Failed to download attachment', {
+                                      position: 'top-right',
+                                      autoClose: 3000
+                                    });
+                                  }
+                                }}
                                 className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  padding: 0,
+                                  cursor: "pointer"
+                                }}
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                 </svg>
                                 {msg.attachment_name || 'Attachment'}
-                              </a>
+                              </button>
                             </div>
                           )}
                           <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px", textAlign: isSentByCurrentUser ? "right" : "left" }}>
@@ -1103,12 +1140,27 @@ const Messages = () => {
                 onChange={handleThreadFileSelect}
                 className="hidden"
               />
+              <button
+                onClick={() => threadFileInputRef.current?.click()}
+                disabled={!selectedThreadId || sendingThreadMessage}
+                className="w-10 h-10 !rounded-lg border border-[#E8F0FF] flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Attach file"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              </button>
+              {threadAttachment && (
+                <span className="text-xs text-gray-600 max-w-[100px] truncate" title={threadAttachment.name}>
+                  {threadAttachment.name}
+                </span>
+              )}
               <input
                 type="text"
                 value={threadMessageInput}
                 onChange={(e) => setThreadMessageInput(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && threadMessageInput.trim() && !sendingThreadMessage && selectedThreadId) {
+                  if (e.key === 'Enter' && !e.shiftKey && (threadMessageInput.trim() || threadAttachment) && !sendingThreadMessage && selectedThreadId) {
                     e.preventDefault();
                     handleSendThreadMessage();
                   }
@@ -1117,9 +1169,18 @@ const Messages = () => {
                 disabled={sendingThreadMessage}
                 className="flex-1 w-full px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
               />
+              {threadAttachment && (
+                <button
+                  onClick={() => setThreadAttachment(null)}
+                  className="text-red-500 hover:text-red-700 text-sm px-2"
+                  title="Remove attachment"
+                >
+                  ×
+                </button>
+              )}
               <button
                 onClick={handleSendThreadMessage}
-                disabled={!selectedThreadId || !threadMessageInput.trim() || sendingThreadMessage}
+                disabled={!selectedThreadId || !(threadMessageInput.trim() || threadAttachment) || sendingThreadMessage}
                 className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sendingThreadMessage ? (
