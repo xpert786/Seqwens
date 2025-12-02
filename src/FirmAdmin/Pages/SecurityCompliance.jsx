@@ -15,7 +15,8 @@ import {
     Bar
 } from 'recharts';
 import { useFirmSettings } from '../Context/FirmSettingsContext';
-import { securityAPI } from '../../ClientOnboarding/utils/apiUtils';
+import { securityAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 const tabs = [
     'Security Overview',
     'Active Sessions',
@@ -72,16 +73,93 @@ const metrics = [
 ];
 
 const mapSessionResponseToViewModel = (session) => {
+    // Format last activity timestamp
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Unknown';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    // Format login timestamp
+    const formatLoginDate = (dateString) => {
+        if (!dateString) return 'Unknown';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    // Calculate duration from last_activity to current time (time since last activity)
+    const calculateDuration = (lastActivity) => {
+        if (!lastActivity) return 'Unknown';
+        try {
+            const last = new Date(lastActivity);
+            const now = new Date();
+            const diffMs = now - last;
+            
+            // If negative or zero, return "Just now"
+            if (diffMs <= 0) return 'Just now';
+            
+            const diffSecs = Math.floor(diffMs / 1000);
+            const diffMins = Math.floor(diffSecs / 60);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h ago`;
+            if (diffHours > 0) return `${diffHours}h ${diffMins % 60}m ago`;
+            if (diffMins > 0) return `${diffMins}m ago`;
+            return `${diffSecs}s ago`;
+        } catch {
+            return 'Unknown';
+        }
+    };
+
+    // Extract device info from user_agent
+    const getDeviceInfo = (userAgent) => {
+        if (!userAgent) return 'Unknown Device';
+        if (userAgent.includes('Windows')) return 'Windows';
+        if (userAgent.includes('Macintosh')) return 'Mac';
+        if (userAgent.includes('Linux')) return 'Linux';
+        if (userAgent.includes('Android')) return 'Android';
+        if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'iOS';
+        return 'Unknown Device';
+    };
+
     return {
-        sessionKey: session.session_key,
-        user: session.username || (session.is_anonymous ? 'Anonymous Session' : 'Unknown User'),
+        sessionKey: session.session_key || '',
+        user: session.username || 'Unknown User',
         email: session.email || '',
         role: session.role || '',
-        device: session.device || 'Unknown Device',
-        location: session.location || 'Unknown',
-        lastActivity: session.last_activity || session.expire_date || '',
-        duration: session.duration || '',
-        isAnonymous: Boolean(session.is_anonymous),
+        userType: session.user_type || '',
+        userId: session.user_id || '',
+        device: getDeviceInfo(session.user_agent),
+        location: session.ip_address || 'Unknown',
+        ipAddress: session.ip_address || '',
+        userAgent: session.user_agent || '',
+        lastActivity: formatDate(session.last_activity),
+        loginAt: formatLoginDate(session.login_at),
+        duration: calculateDuration(session.last_activity),
+        isActiveUser: Boolean(session.is_active_user),
+        isFirmMember: Boolean(session.is_firm_member),
+        isAnonymous: false,
     };
 };
 
@@ -113,15 +191,23 @@ const alerts = [
 ];
 
 const typeBadgeStyles = {
+    warning: 'border border-[#FBBF24] text-[#FBBF24]',
     Warning: 'border border-[#FBBF24] text-[#FBBF24]',
+    info: 'border border-[#22C55E] text-[#22C55E]',
     Info: 'border border-[#22C55E] text-[#22C55E]',
+    critical: 'border border-[#EF4444] text-[#EF4444]',
     Critical: 'border border-[#EF4444] text-[#EF4444]'
 };
 
 const statusBadgeStyles = {
+    active: 'bg-[#FBBF24] text-white',
     Active: 'bg-[#FBBF24] text-white',
+    resolved: 'bg-[#22C55E] text-white',
     Resolved: 'bg-[#22C55E] text-white',
-    Blocked: 'bg-[#EF4444] text-white'
+    blocked: 'bg-[#EF4444] text-white',
+    Blocked: 'bg-[#EF4444] text-white',
+    dismissed: 'bg-[#6B7280] text-white',
+    Dismissed: 'bg-[#6B7280] text-white'
 };
 
 // Issue Breakdown data for pie chart
@@ -258,6 +344,54 @@ export default function SecurityCompliance() {
     const [activeSessions, setActiveSessions] = useState([]);
     const [isLoadingSessions, setIsLoadingSessions] = useState(false);
     const [sessionsError, setSessionsError] = useState('');
+    const [sessionsSummary, setSessionsSummary] = useState(null);
+
+    // Audit Logs state
+    const [auditLogsData, setAuditLogsData] = useState([]);
+    const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+    const [auditLogsError, setAuditLogsError] = useState('');
+    const [auditLogsPagination, setAuditLogsPagination] = useState({
+        page: 1,
+        page_size: 50,
+        total_count: 0,
+        total_pages: 0
+    });
+    const [auditLogFilters, setAuditLogFilters] = useState({
+        action: '',
+        user_id: '',
+        start_date: '',
+        end_date: ''
+    });
+    const [auditLogSettings, setAuditLogSettings] = useState({
+        enabled: false,
+        track_document_access: false,
+        track_client_edits: false,
+        track_esignature_events: false,
+        track_return_submissions: false
+    });
+    const [auditLogSettingsLoading, setAuditLogSettingsLoading] = useState(false);
+    const [auditLogSettingsSaving, setAuditLogSettingsSaving] = useState(false);
+
+    // Security Alerts state
+    const [securityAlerts, setSecurityAlerts] = useState([]);
+    const [securityAlertsLoading, setSecurityAlertsLoading] = useState(false);
+    const [securityAlertsError, setSecurityAlertsError] = useState('');
+    const [securityAlertsStatistics, setSecurityAlertsStatistics] = useState({
+        total_active: 0,
+        critical_active: 0,
+        warning_active: 0
+    });
+    const [securityAlertsPagination, setSecurityAlertsPagination] = useState({
+        page: 1,
+        page_size: 50,
+        total_count: 0,
+        total_pages: 0
+    });
+    const [securityAlertsFilters, setSecurityAlertsFilters] = useState({
+        alert_type: '',
+        alert_category: '',
+        status: 'active'
+    });
 
     // Handle body scroll lock when modal is open
     useEffect(() => {
@@ -292,14 +426,25 @@ export default function SecurityCompliance() {
             if (response && response.success && Array.isArray(response.data)) {
                 const mapped = response.data.map(mapSessionResponseToViewModel);
                 setActiveSessions(mapped);
+                
+                // Set summary data if available
+                if (response.summary) {
+                    setSessionsSummary({
+                        totalActiveSessions: response.summary.total_active_sessions || 0,
+                        taxPreparerSessions: response.summary.tax_preparer_sessions || 0,
+                        taxpayerSessions: response.summary.taxpayer_sessions || 0
+                    });
+                }
             } else {
                 setSessionsError(response?.message || 'Failed to load active sessions');
                 setActiveSessions([]);
+                setSessionsSummary(null);
             }
         } catch (error) {
             console.error('Error fetching active sessions:', error);
             setSessionsError(error.message || 'Failed to load active sessions');
             setActiveSessions([]);
+            setSessionsSummary(null);
         } finally {
             setIsLoadingSessions(false);
         }
@@ -308,8 +453,31 @@ export default function SecurityCompliance() {
     useEffect(() => {
         if (activeTab === 'Active Sessions') {
             fetchActiveSessions();
+        } else if (activeTab === 'Audits Logs') {
+            fetchAuditLogSettings();
+            // Reset to page 1 when switching to audit logs tab
+            setAuditLogsPagination(prev => ({ ...prev, page: 1 }));
+        } else if (activeTab === 'Security Overview') {
+            fetchSecurityAlerts();
+            // Also fetch active sessions for the metrics
+            fetchActiveSessions();
         }
     }, [activeTab]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        if (activeTab === 'Audits Logs') {
+            setAuditLogsPagination(prev => ({ ...prev, page: 1 }));
+        }
+    }, [auditLogFilters, activeTab]);
+
+    // Fetch audit logs when filters or page changes
+    useEffect(() => {
+        if (activeTab === 'Audits Logs') {
+            fetchAuditLogs();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auditLogFilters, auditLogsPagination.page, activeTab]);
 
     const handleTerminateSession = async (sessionKey) => {
         if (!sessionKey) return;
@@ -324,10 +492,238 @@ export default function SecurityCompliance() {
         }
     };
 
-    const renderSecurityOverview = () => (
+    // Fetch audit log settings
+    const fetchAuditLogSettings = async () => {
+        try {
+            setAuditLogSettingsLoading(true);
+            const response = await securityAPI.getAuditLogSettings();
+            
+            if (response && response.success && response.data) {
+                setAuditLogSettings({
+                    enabled: response.data.enabled || false,
+                    track_document_access: response.data.track_document_access || false,
+                    track_client_edits: response.data.track_client_edits || false,
+                    track_esignature_events: response.data.track_esignature_events || false,
+                    track_return_submissions: response.data.track_return_submissions || false
+                });
+                // Sync with local state
+                setAuditLoggingEnabled(response.data.enabled || false);
+                setTrackedEvents({
+                    documentAccess: response.data.track_document_access || false,
+                    eSignatureEvents: response.data.track_esignature_events || false,
+                    clientEdits: response.data.track_client_edits || false,
+                    returnSubmissions: response.data.track_return_submissions || false
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching audit log settings:', error);
+            handleAPIError(error);
+            toast.error('Failed to load audit log settings');
+        } finally {
+            setAuditLogSettingsLoading(false);
+        }
+    };
+
+    // Update audit log settings
+    const updateAuditLogSettings = async (settings) => {
+        try {
+            setAuditLogSettingsSaving(true);
+            const response = await securityAPI.updateAuditLogSettings(settings);
+            
+            if (response && response.success) {
+                setAuditLogSettings(settings);
+                toast.success('Audit log settings updated successfully');
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error updating audit log settings:', error);
+            handleAPIError(error);
+            toast.error('Failed to update audit log settings');
+            return false;
+        } finally {
+            setAuditLogSettingsSaving(false);
+        }
+    };
+
+    // Fetch audit logs
+    const fetchAuditLogs = async () => {
+        try {
+            setAuditLogsLoading(true);
+            setAuditLogsError('');
+            
+            const params = {
+                ...auditLogFilters,
+                page: auditLogsPagination.page,
+                page_size: auditLogsPagination.page_size
+            };
+            
+            // Remove empty filter values
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) {
+                    delete params[key];
+                }
+            });
+
+            const response = await securityAPI.getAuditLogs(params);
+            
+            if (response && response.success) {
+                setAuditLogsData(response.data || []);
+                if (response.pagination) {
+                    setAuditLogsPagination(prev => ({
+                        ...prev,
+                        total_count: response.pagination.total_count || 0,
+                        total_pages: response.pagination.total_pages || 0
+                    }));
+                }
+            } else {
+                setAuditLogsError(response?.message || 'Failed to load audit logs');
+                setAuditLogsData([]);
+            }
+        } catch (error) {
+            console.error('Error fetching audit logs:', error);
+            setAuditLogsError(error.message || 'Failed to load audit logs');
+            setAuditLogsData([]);
+            handleAPIError(error);
+        } finally {
+            setAuditLogsLoading(false);
+        }
+    };
+
+    // Handle audit logging toggle
+    const handleAuditLoggingToggle = async (enabled) => {
+        const newSettings = {
+            ...auditLogSettings,
+            enabled
+        };
+        const success = await updateAuditLogSettings(newSettings);
+        if (success) {
+            setAuditLoggingEnabled(enabled);
+        }
+    };
+
+    // Handle tracked event change
+    const handleTrackedEventChange = async (eventKey) => {
+        const apiKeyMap = {
+            documentAccess: 'track_document_access',
+            eSignatureEvents: 'track_esignature_events',
+            clientEdits: 'track_client_edits',
+            returnSubmissions: 'track_return_submissions'
+        };
+
+        const newTrackedEvents = {
+            ...trackedEvents,
+            [eventKey]: !trackedEvents[eventKey]
+        };
+
+        const newSettings = {
+            ...auditLogSettings,
+            [apiKeyMap[eventKey]]: newTrackedEvents[eventKey]
+        };
+
+        const success = await updateAuditLogSettings(newSettings);
+        if (success) {
+            setTrackedEvents(newTrackedEvents);
+        }
+    };
+
+    // Fetch security alerts
+    const fetchSecurityAlerts = async () => {
+        try {
+            setSecurityAlertsLoading(true);
+            setSecurityAlertsError('');
+            
+            const params = {
+                ...securityAlertsFilters,
+                page: securityAlertsPagination.page,
+                page_size: securityAlertsPagination.page_size
+            };
+            
+            // Remove empty filter values
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) {
+                    delete params[key];
+                }
+            });
+
+            const response = await securityAPI.getSecurityAlerts(params);
+            
+            if (response && response.success) {
+                setSecurityAlerts(response.data || []);
+                if (response.statistics) {
+                    setSecurityAlertsStatistics({
+                        total_active: response.statistics.total_active || 0,
+                        critical_active: response.statistics.critical_active || 0,
+                        warning_active: response.statistics.warning_active || 0
+                    });
+                }
+                if (response.pagination) {
+                    setSecurityAlertsPagination(prev => ({
+                        ...prev,
+                        total_count: response.pagination.total_count || 0,
+                        total_pages: response.pagination.total_pages || 0
+                    }));
+                }
+            } else {
+                setSecurityAlertsError(response?.message || 'Failed to load security alerts');
+                setSecurityAlerts([]);
+            }
+        } catch (error) {
+            console.error('Error fetching security alerts:', error);
+            setSecurityAlertsError(error.message || 'Failed to load security alerts');
+            setSecurityAlerts([]);
+            handleAPIError(error);
+        } finally {
+            setSecurityAlertsLoading(false);
+        }
+    };
+
+    // Update security alert status (resolve, dismiss, block)
+    const handleUpdateSecurityAlert = async (alertId, status, reason = '') => {
+        try {
+            await securityAPI.updateSecurityAlert(alertId, { status, resolved_reason: reason });
+            toast.success(`Alert ${status === 'resolved' ? 'resolved' : status === 'dismissed' ? 'dismissed' : 'blocked'} successfully`);
+            await fetchSecurityAlerts();
+        } catch (error) {
+            console.error('Error updating security alert:', error);
+            handleAPIError(error);
+            toast.error('Failed to update security alert');
+        }
+    };
+
+    const renderSecurityOverview = () => {
+        // Calculate metrics from real data
+        const calculatedMetrics = [
+            {
+                label: 'Security Score',
+                value: '94/100',
+                subtitle: 'Excellent security posture',
+                icon: metrics[0].icon
+            },
+            {
+                label: 'Active Alerts',
+                value: securityAlertsStatistics.total_active?.toString() || '0',
+                subtitle: `${securityAlertsStatistics.critical_active || 0} critical, ${securityAlertsStatistics.warning_active || 0} warnings`,
+                icon: metrics[1].icon
+            },
+            {
+                label: 'Active Sessions',
+                value: sessionsSummary?.totalActiveSessions?.toString() || '0',
+                subtitle: sessionsSummary ? `${sessionsSummary.taxPreparerSessions || 0} preparers, ${sessionsSummary.taxpayerSessions || 0} taxpayers` : 'No active sessions',
+                icon: metrics[2].icon
+            },
+            {
+                label: 'Failed Logins',
+                value: '7',
+                subtitle: 'Last 24 hours',
+                icon: metrics[3].icon
+            }
+        ];
+
+        return (
         <>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-                {metrics.map((metric) => (
+                {calculatedMetrics.map((metric) => (
                     <div key={metric.label} className="rounded-2xl bg-white p-4">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium tracking-wide text-[#6B7280]">{metric.label}</span>
@@ -347,9 +743,26 @@ export default function SecurityCompliance() {
                         <h5 className="text-base font-semibold text-[#1F2937]">Security Alerts</h5>
                         <p className="text-sm text-[#6B7280]">Recent security events requiring attention</p>
                     </div>
-                    <button className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]" style={{ borderRadius: '8px' }}>
-                        View Audit Logs
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {securityAlertsError && (
+                            <span className="text-xs text-red-500">{securityAlertsError}</span>
+                        )}
+                        <button 
+                            onClick={fetchSecurityAlerts}
+                            disabled={securityAlertsLoading}
+                            className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed" 
+                            style={{ borderRadius: '8px' }}
+                        >
+                            {securityAlertsLoading ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('Audits Logs')}
+                            className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]" 
+                            style={{ borderRadius: '8px' }}
+                        >
+                            View Audit Logs
+                        </button>
+                    </div>
                 </div>
                 <div className="mt-6 overflow-x-auto">
                     <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
@@ -357,6 +770,7 @@ export default function SecurityCompliance() {
                             <tr>
                                 <th className="px-4 py-3">Alert ID</th>
                                 <th className="px-4 py-3">Type</th>
+                                <th className="px-4 py-3">Category</th>
                                 <th className="px-4 py-3">Title</th>
                                 <th className="px-4 py-3">Description</th>
                                 <th className="px-4 py-3">Timestamp</th>
@@ -365,36 +779,74 @@ export default function SecurityCompliance() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E5E7EB] bg-white">
-                            {alerts.map((alert) => (
-                                <tr key={alert.id} className="hover:bg-[#F8FAFF]">
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.id}</td>
+                            {securityAlertsLoading && securityAlerts.length === 0 && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
+                                        Loading security alerts...
+                                    </td>
+                                </tr>
+                            )}
+                            {!securityAlertsLoading && securityAlerts.length === 0 && !securityAlertsError && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
+                                        No security alerts found.
+                                    </td>
+                                </tr>
+                            )}
+                            {securityAlerts.map((alert) => (
+                                <tr key={alert.id || alert.alert_id} className="hover:bg-[#F8FAFF]">
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.alert_id || `ALT-${alert.id}`}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${typeBadgeStyles[alert.type] || 'border border-gray-300 text-gray-400'}`}>
-                                            {alert.type}
+                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${typeBadgeStyles[alert.alert_type] || 'border border-gray-300 text-gray-400'}`}>
+                                            {alert.alert_type_display || alert.alert_type || 'N/A'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.title}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.description}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.timestamp}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{alert.alert_category_display || alert.alert_category || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{alert.title || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{alert.description || 'N/A'}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">{alert.timestamp_formatted || alert.timestamp || 'N/A'}</td>
                                     <td className="px-4 py-3">
                                         <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeStyles[alert.status] || 'bg-gray-300 text-white'}`}>
-                                            {alert.status}
+                                            {alert.status_display || alert.status || 'N/A'}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] text-[#4B5563] transition-colors hover:bg-[#F3F7FF]">
+                                            {alert.status === 'active' && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleUpdateSecurityAlert(alert.alert_id || alert.id, 'resolved', 'Resolved by admin')}
+                                                        className="flex h-8 w-8 items-center justify-center rounded-full border border-[#22C55E] text-[#22C55E] transition-colors hover:bg-[#22C55E] hover:text-white"
+                                                        title="Resolve"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M13.3332 4L5.99984 11.3333L2.6665 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleUpdateSecurityAlert(alert.alert_id || alert.id, 'dismissed', 'Dismissed by admin')}
+                                                        className="flex h-8 w-8 items-center justify-center rounded-full border border-[#6B7280] text-[#6B7280] transition-colors hover:bg-[#6B7280] hover:text-white"
+                                                        title="Dismiss"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        </svg>
+                                                    </button>
+                                                </>
+                                            )}
+                                            <button 
+                                                onClick={() => {
+                                                    // View details - could open a modal
+                                                    console.log('View alert details:', alert);
+                                                }}
+                                                className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                                                title="View Details"
+                                            >
                                                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
                                                     <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" strokeWidth="0.5" />
                                                     <path d="M3.1665 8.9974C3.1665 8.9974 4.9165 4.91406 8.99984 4.91406C13.0832 4.91406 14.8332 8.9974 14.8332 8.9974C14.8332 8.9974 13.0832 13.0807 8.99984 13.0807C4.9165 13.0807 3.1665 8.9974 3.1665 8.9974Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
                                                     <path d="M9 10.75C9.9665 10.75 10.75 9.9665 10.75 9C10.75 8.0335 9.9665 7.25 9 7.25C8.0335 7.25 7.25 8.0335 7.25 9C7.25 9.9665 8.0335 10.75 9 10.75Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </button>
-                                            <button className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] text-[#4B5563] transition-colors hover:bg-[#F3F7FF]">
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M7.57129 10.25C8.81393 10.25 9.82129 9.24264 9.82129 8C9.82129 6.75736 8.81393 5.75 7.57129 5.75C6.32865 5.75 5.32129 6.75736 5.32129 8C5.32129 9.24264 6.32865 10.25 7.57129 10.25Z" stroke="#3B4A66" />
-                                                    <path d="M8.89489 0.614C8.61964 0.5 8.27014 0.5 7.57114 0.5C6.87214 0.5 6.52264 0.5 6.24739 0.614C6.06527 0.689385 5.8998 0.799922 5.76043 0.939293C5.62106 1.07866 5.51052 1.24414 5.43514 1.42625C5.36614 1.5935 5.33839 1.78925 5.32789 2.0735C5.32301 2.27895 5.26609 2.4798 5.16247 2.65727C5.05885 2.83473 4.91191 2.98302 4.73539 3.08825C4.55599 3.18858 4.35408 3.24175 4.14854 3.2428C3.943 3.24385 3.74055 3.19274 3.56014 3.09425C3.30814 2.96075 3.12589 2.88725 2.94514 2.86325C2.55088 2.8114 2.15216 2.91823 1.83664 3.16025C1.60114 3.3425 1.42564 3.64475 1.07614 4.25C0.726639 4.85525 0.551139 5.1575 0.512889 5.45375C0.487115 5.64909 0.500079 5.84759 0.551039 6.03792C0.601999 6.22825 0.689957 6.40667 0.809889 6.563C0.920889 6.707 1.07614 6.82775 1.31689 6.97925C1.67164 7.202 1.89964 7.5815 1.89964 8C1.89964 8.4185 1.67164 8.798 1.31689 9.02C1.07614 9.17225 0.920139 9.293 0.809889 9.437C0.689957 9.59333 0.601999 9.77175 0.551039 9.96208C0.500079 10.1524 0.487115 10.3509 0.512889 10.5463C0.551889 10.8418 0.726639 11.1448 1.07539 11.75C1.42564 12.3552 1.60039 12.6575 1.83664 12.8397C1.99297 12.9597 2.17139 13.0476 2.36172 13.0986C2.55205 13.1496 2.75055 13.1625 2.94589 13.1368C3.12589 13.1128 3.30814 13.0393 3.56014 12.9058C3.74055 12.8073 3.943 12.7561 4.14854 12.7572C4.35408 12.7582 4.55599 12.8114 4.73539 12.9117C5.09764 13.1217 5.31289 13.508 5.32789 13.9265C5.33839 14.2115 5.36539 14.4065 5.43514 14.5737C5.51052 14.7559 5.62106 14.9213 5.76043 15.0607C5.8998 15.2001 6.06527 15.3106 6.24739 15.386C6.52264 15.5 6.87214 15.5 7.57114 15.5C8.27014 15.5 8.61964 15.5 8.89489 15.386C9.077 15.3106 9.24247 15.2001 9.38185 15.0607C9.52122 14.9213 9.63175 14.7559 9.70714 14.5737C9.77614 14.4065 9.80389 14.2115 9.81439 13.9265C9.82939 13.508 10.0446 13.121 10.4069 12.9117C10.5863 12.8114 10.7882 12.7582 10.9937 12.7572C11.1993 12.7561 11.4017 12.8073 11.5821 12.9058C11.8341 13.0393 12.0164 13.1128 12.1964 13.1368C12.3917 13.1625 12.5902 13.1496 12.7806 13.0986C12.9709 13.0476 13.1493 12.9597 13.3056 12.8397C13.5419 12.6582 13.7166 12.3552 14.0661 11.75C14.4156 11.1448 14.5911 10.8425 14.6294 10.5463C14.6552 10.3509 14.6422 10.1524 14.5912 9.96208" stroke="#3B4A66" />
                                                 </svg>
                                             </button>
                                         </div>
@@ -407,53 +859,106 @@ export default function SecurityCompliance() {
             </div>
         </>
     );
+    };
 
     const renderActiveSessions = () => (
-        <div className="rounded-xl bg-white p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p className="text-base font-semibold text-gray-600 mb-0">Active User Sessions</p>
-                    <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
+        <div className="space-y-6">
+            {/* Summary Cards */}
+            {sessionsSummary && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="rounded-xl bg-white p-4 border border-[#E5E7EB]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-[#6B7280]">Total Active Sessions</p>
+                                <p className="mt-2 text-2xl font-semibold text-[#1F2937]">{sessionsSummary.totalActiveSessions}</p>
+                            </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F9FF]">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M14.1663 16.6667V15.8333C14.1663 14.9493 13.8151 14.1014 13.1909 13.4772C12.5667 12.853 11.7187 12.5017 10.8346 12.5017H4.16634C3.28228 12.5017 2.43443 12.853 1.81026 13.4772C1.18609 14.1014 0.834961 14.9493 0.834961 15.8333V16.6667" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M7.49932 9.16634C9.34028 9.16634 10.8327 7.67389 10.8327 5.83293C10.8327 3.99197 9.34028 2.49951 7.49932 2.49951C5.65836 2.49951 4.1659 3.99197 4.1659 5.83293C4.1659 7.67389 5.65836 9.16634 7.49932 9.16634Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="rounded-xl bg-white p-4 border border-[#E5E7EB]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-[#6B7280]">Tax Preparer Sessions</p>
+                                <p className="mt-2 text-2xl font-semibold text-[#1F2937]">{sessionsSummary.taxPreparerSessions}</p>
+                            </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F9FF]">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M10 10C11.3807 10 12.5 8.88071 12.5 7.5C12.5 6.11929 11.3807 5 10 5C8.61929 5 7.5 6.11929 7.5 7.5C7.5 8.88071 8.61929 10 10 10Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M2.5 17.5C2.5 14.4624 5.46243 12 10 12C14.5376 12 17.5 14.4624 17.5 17.5" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="rounded-xl bg-white p-4 border border-[#E5E7EB]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-[#6B7280]">Taxpayer Sessions</p>
+                                <p className="mt-2 text-2xl font-semibold text-[#1F2937]">{sessionsSummary.taxpayerSessions}</p>
+                            </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F9FF]">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M10 10C11.3807 10 12.5 8.88071 12.5 7.5C12.5 6.11929 11.3807 5 10 5C8.61929 5 7.5 6.11929 7.5 7.5C7.5 8.88071 8.61929 10 10 10Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M2.5 17.5C2.5 14.4624 5.46243 12 10 12C14.5376 12 17.5 14.4624 17.5 17.5" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                    {sessionsError && (
-                        <span className="text-xs text-red-500">{sessionsError}</span>
-                    )}
-                    <button
-                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                        style={{ borderRadius: '8px' }}
-                        type="button"
-                        onClick={fetchActiveSessions}
-                        disabled={isLoadingSessions}
-                    >
-                        {isLoadingSessions ? 'Refreshing...' : 'Refresh'}
-                    </button>
+            )}
+
+            {/* Sessions Table */}
+            <div className="rounded-xl bg-white p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-base font-semibold text-gray-600 mb-0">Active User Sessions</p>
+                        <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                        {sessionsError && (
+                            <span className="text-xs text-red-500">{sessionsError}</span>
+                        )}
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                            onClick={fetchActiveSessions}
+                            disabled={isLoadingSessions}
+                        >
+                            {isLoadingSessions ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                    </div>
                 </div>
-            </div>
 
             <div className="mt-6 overflow-x-auto">
                 <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                    <thead className="text-xs tracking-wide text-[#6B7280]">
+                    <thead className="bg-[#F8FAFF] text-xs font-semibold tracking-wide text-[#6B7280]">
                         <tr>
                             <th className="px-4 py-3">User</th>
+                            <th className="px-4 py-3">Role / Type</th>
                             <th className="px-4 py-3">Device</th>
-                            <th className="px-4 py-3">Location</th>
-                            <th className="px-4 py-3">Last Activity / Expiration</th>
-                            <th className="px-4 py-3">Duration</th>
+                            <th className="px-4 py-3">IP Address</th>
+                            <th className="px-4 py-3">Login Time</th>
+                            <th className="px-4 py-3">Last Activity</th>
+                            <th className="px-4 py-3">Time Since Last Activity</th>
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E5E7EB] bg-white">
                         {isLoadingSessions && activeSessions.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={6}>
+                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
                                     Loading active sessions...
                                 </td>
                             </tr>
                         )}
                         {!isLoadingSessions && activeSessions.length === 0 && !sessionsError && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={6}>
+                                <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={8}>
                                     No active sessions found.
                                 </td>
                             </tr>
@@ -462,22 +967,34 @@ export default function SecurityCompliance() {
                             <tr key={session.sessionKey || session.user || session.email || Math.random()} className="hover:bg-[#F8FAFF]">
                                 <td className="px-4 py-3">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-semibold text-gray-500">{session.user}</span>
+                                        <span className="text-sm font-semibold text-gray-600">{session.user}</span>
                                         {session.email && (
                                             <span className="text-xs text-[#6B7280]">{session.email}</span>
                                         )}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <div className="flex flex-col gap-1">
                                         {session.role && (
-                                            <span className="text-xs text-[#9CA3AF]">{session.role}</span>
+                                            <span className="text-xs font-medium text-[#4B5563]">{session.role}</span>
+                                        )}
+                                        {session.userType && (
+                                            <span className="inline-flex items-center rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2 py-0.5 text-xs font-medium text-[#6B7280]">
+                                                {session.userType.replace('_', ' ')}
+                                            </span>
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.device}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.location}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.lastActivity}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-gray-500">{session.duration}</td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{session.device}</td>
+                                <td className="px-4 py-3">
+                                    <span className="text-sm text-gray-600 font-mono">{session.ipAddress}</span>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{session.loginAt}</td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{session.lastActivity}</td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{session.duration}</td>
                                 <td className="px-4 py-3 text-right">
                                     <button
-                                        className="text-sm font-semibold text-red-500 transition-colors hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                         type="button"
                                         onClick={() => handleTerminateSession(session.sessionKey)}
                                         disabled={!session.sessionKey || isLoadingSessions}
@@ -490,15 +1007,10 @@ export default function SecurityCompliance() {
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
     );
 
-    const handleTrackedEventChange = (event) => {
-        setTrackedEvents(prev => ({
-            ...prev,
-            [event]: !prev[event]
-        }));
-    };
 
     const renderAuditLogs = () => (
         <div className="flex flex-col gap-6">
@@ -507,9 +1019,12 @@ export default function SecurityCompliance() {
                 <div className="flex-1 max-w-md">
                     <input
                         type="text"
-                        placeholder="Search user /action /ip"
+                        placeholder="Search by user email, action, or IP address"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            // Filter audit logs client-side for search
+                        }}
                         className="w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
                         style={{ borderRadius: '8px' }}
                     />
@@ -529,117 +1044,7 @@ export default function SecurityCompliance() {
                     )}
                 </div>
             </div>
-
-            {/* Active User Sessions Section */}
-            <div className="rounded-xl bg-white p-6">
-                <div className="gap-4 mb-6">
-                    <div>
-                        <h5 className="text-base font-semibold text-[#1F2937] mb-1">Active User Sessions</h5>
-                        <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-4">
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-
-                            Date Range
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g clip-path="url(#clip0_5150_36810)">
-                                    <path d="M12.6875 14H1.3125C0.58625 14 0 13.4137 0 12.6875V2.1875C0 1.46125 0.58625 0.875 1.3125 0.875H12.6875C13.4137 0.875 14 1.46125 14 2.1875V12.6875C14 13.4137 13.4137 14 12.6875 14ZM1.3125 1.75C1.0675 1.75 0.875 1.9425 0.875 2.1875V12.6875C0.875 12.9325 1.0675 13.125 1.3125 13.125H12.6875C12.9325 13.125 13.125 12.9325 13.125 12.6875V2.1875C13.125 1.9425 12.9325 1.75 12.6875 1.75H1.3125Z" fill="#3B4A66" />
-                                    <path d="M3.9375 3.5C3.6925 3.5 3.5 3.3075 3.5 3.0625V0.4375C3.5 0.1925 3.6925 0 3.9375 0C4.1825 0 4.375 0.1925 4.375 0.4375V3.0625C4.375 3.3075 4.1825 3.5 3.9375 3.5ZM10.0625 3.5C9.8175 3.5 9.625 3.3075 9.625 3.0625V0.4375C9.625 0.1925 9.8175 0 10.0625 0C10.3075 0 10.5 0.1925 10.5 0.4375V3.0625C10.5 3.3075 10.3075 3.5 10.0625 3.5ZM13.5625 5.25H0.4375C0.1925 5.25 0 5.0575 0 4.8125C0 4.5675 0.1925 4.375 0.4375 4.375H13.5625C13.8075 4.375 14 4.5675 14 4.8125C14 5.0575 13.8075 5.25 13.5625 5.25Z" fill="#3B4A66" />
-                                </g>
-                                <defs>
-                                    <clipPath id="clip0_5150_36810">
-                                        <rect width="14" height="14" fill="white" />
-                                    </clipPath>
-                                </defs>
-                            </svg>
-
-                        </button>
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Actions
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </button>
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Refresh
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2.14664 7.58334L1.83864 7.89367C1.92057 7.97489 2.03127 8.02046 2.14664 8.02046C2.26201 8.02046 2.37271 7.97489 2.45464 7.89367L2.14664 7.58334ZM3.43464 6.92184C3.5171 6.84 3.56367 6.72875 3.56411 6.61257C3.56455 6.49639 3.51881 6.3848 3.43697 6.30234C3.39645 6.26151 3.34828 6.22906 3.29522 6.20685C3.24215 6.18463 3.18523 6.17309 3.12771 6.17287C3.01153 6.17243 2.89993 6.21816 2.81747 6.30001L3.43464 6.92184ZM1.47464 6.30001C1.3918 6.22059 1.28108 6.1769 1.16633 6.17836C1.05159 6.17981 0.942005 6.22629 0.861206 6.30778C0.780407 6.38927 0.734859 6.49924 0.734379 6.61399C0.733899 6.72875 0.778525 6.83909 0.85864 6.92126L1.47464 6.30001ZM10.8593 4.31201C10.8886 4.3625 10.9278 4.40662 10.9744 4.44175C11.0211 4.47689 11.0743 4.50233 11.1309 4.51657C11.1875 4.53082 11.2464 4.53359 11.3042 4.52471C11.3619 4.51583 11.4172 4.49548 11.467 4.46488C11.5167 4.43427 11.5598 4.39401 11.5937 4.34648C11.6276 4.29895 11.6517 4.24511 11.6645 4.18813C11.6773 4.13116 11.6786 4.07219 11.6682 4.01472C11.6578 3.95725 11.6361 3.90244 11.6042 3.85351L10.8593 4.31201ZM7.04606 1.31251C4.10197 1.31251 1.70856 3.68142 1.70856 6.61092H2.58356C2.58356 4.17142 4.57856 2.18751 7.04606 2.18751V1.31251ZM1.70856 6.61092V7.58334H2.58356V6.61092H1.70856ZM2.45522 7.89426L3.43464 6.92184L2.81747 6.30001L1.83747 7.27242L2.45522 7.89426ZM2.45522 7.27301L1.47464 6.30001L0.858056 6.92126L1.83806 7.89309L2.45522 7.27301ZM11.6042 3.85467C11.1253 3.07664 10.4548 2.43441 9.65689 1.98935C8.85898 1.54429 7.9597 1.31125 7.04606 1.31251V2.18751C7.81035 2.18603 8.56282 2.38062 9.23044 2.75268C9.89806 3.12474 10.4591 3.66182 10.8599 4.31259L11.6042 3.85467ZM11.8498 6.41667L12.1572 6.10576C12.0753 6.02489 11.9649 5.97954 11.8498 5.97954C11.7347 5.97954 11.6243 6.02489 11.5424 6.10576L11.8498 6.41667ZM10.5583 7.07759C10.5174 7.118 10.4849 7.16606 10.4626 7.21903C10.4403 7.27201 10.4287 7.32885 10.4284 7.38632C10.4277 7.50239 10.4732 7.61397 10.5548 7.69651C10.6364 7.77904 10.7475 7.82578 10.8635 7.82644C10.9796 7.82709 11.0912 7.78161 11.1737 7.70001L10.5583 7.07759ZM12.5259 7.70001C12.5665 7.74147 12.615 7.77443 12.6685 7.79697C12.722 7.81951 12.7794 7.83118 12.8375 7.8313C12.8955 7.83141 12.953 7.81997 13.0066 7.79765C13.0602 7.77532 13.1088 7.74255 13.1496 7.70125C13.1904 7.65995 13.2226 7.61095 13.2443 7.55709C13.2659 7.50323 13.2766 7.4456 13.2758 7.38756C13.275 7.32951 13.2626 7.27221 13.2394 7.21899C13.2162 7.16578 13.1827 7.11771 13.1407 7.07759L12.5259 7.70001ZM3.10214 9.68684C3.04118 9.58806 2.94348 9.51754 2.83053 9.49079C2.71758 9.46404 2.59863 9.48326 2.49985 9.54421C2.40107 9.60517 2.33054 9.70287 2.3038 9.81582C2.27705 9.92877 2.29627 10.0477 2.35722 10.1465L3.10214 9.68684ZM6.93172 12.6875C9.88456 12.6875 12.2867 10.3203 12.2867 7.38909H11.4117C11.4117 9.82742 9.41089 11.8125 6.93172 11.8125V12.6875ZM12.2867 7.38909V6.41667H11.4117V7.38909H12.2867ZM11.5424 6.10576L10.5583 7.07759L11.1737 7.70001L12.1572 6.72759L11.5424 6.10576ZM11.5424 6.72759L12.5259 7.70001L13.1407 7.07759L12.1572 6.10576L11.5424 6.72759ZM2.35664 10.1459C2.83884 10.9248 3.51237 11.5672 4.31311 12.0121C5.11384 12.457 6.01512 12.6895 6.93114 12.6875V11.8125C6.16446 11.8145 5.41003 11.6202 4.73969 11.2481C4.06935 10.876 3.50599 10.3385 3.10214 9.68684L2.35664 10.1459Z" fill="#3B4A66" />
-                            </svg>
-
-                        </button>
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
-                        <thead className="text-sm font-medium tracking-wide text-[#6B7280]">
-                            <tr>
-                                <th className="px-4 py-3">Log ID</th>
-                                <th className="px-4 py-3">Action</th>
-                                <th className="px-4 py-3">User</th>
-                                <th className="px-4 py-3">Resource</th>
-                                <th className="px-4 py-3">Timestamp</th>
-                                <th className="px-4 py-3">IP Address</th>
-                                <th className="px-4 py-3">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
-                            {auditLogs.map((log) => (
-                                <tr key={log.logId} className="hover:bg-[#F8FAFF]">
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.logId}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.action}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.user}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.resource}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.timestamp}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.ipAddress}</td>
-                                    <td className="px-4 py-3">
-                                        <div className="inline-flex items-center gap-1 rounded-full bg-[#22C55E] px-3 py-1 text-xs font-semibold text-white">
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                                <g clipPath="url(#clip0_5150_36845)">
-                                                    <path
-                                                        d="M12.8332 6.46407V7.00073C12.8325 8.25865 12.4251 9.48263 11.6719 10.4901C10.9188 11.4976 9.86009 12.2347 8.6538 12.5913C7.4475 12.948 6.15824 12.9052 4.97828 12.4692C3.79832 12.0333 2.79089 11.2276 2.10623 10.1724C1.42158 9.11709 1.09638 7.86877 1.17915 6.61358C1.26192 5.3584 1.74821 4.16359 2.5655 3.20736C3.38279 2.25113 4.4873 1.58471 5.71428 1.30749C6.94127 1.03027 8.22499 1.1571 9.37401 1.66907M5.24984 6.4174L6.99984 8.1674L12.8332 2.33407"
-                                                        stroke="white"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    />
-                                                </g>
-                                                <defs>
-                                                    <clipPath id="clip0_5150_36845">
-                                                        <rect width="14" height="14" fill="white" />
-                                                    </clipPath>
-                                                </defs>
-                                            </svg>
-
-                                            <span>{log.status}</span>
-                                        </div>
-                                    </td>
-
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Audit Logs Configuration Section */}
+                    {/* Audit Logs Configuration Section */}
             <div className="rounded-xl bg-white p-6">
                 <div className="mb-6">
                     <h5 className="text-base font-semibold text-[#1F2937] mb-1">Audit Logs</h5>
@@ -674,44 +1079,35 @@ export default function SecurityCompliance() {
                                                     type="checkbox"
                                                     checked={trackedEvents[event.key]}
                                                     onChange={() => handleTrackedEventChange(event.key)}
-                                                    className="h-4 w-4 rounded-full accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                                    disabled={auditLogSettingsSaving || !auditLoggingEnabled}
+                                                    className="h-4 w-4 rounded-full accent-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 />
-                                                <span className="text-sm text-[#4B5563] ml-2  ">{event.label}</span>
+                                                <span className={`text-sm text-[#4B5563] ml-2 ${!auditLoggingEnabled ? 'opacity-50' : ''}`}>{event.label}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
 
                                 {/* Session Timeout */}
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-xs font-medium text-[#6B7280]">
-                                        Session Timeout (minutes)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={sessionTimeout}
-                                        onChange={(e) => setSessionTimeout(e.target.value)}
-                                        className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                        style={{ borderRadius: '8px' }}
-                                    />
-                                </div>
+                                
                             </div>
 
                         </div>
 
                         {/* Toggle button */}
                         <div className="flex items-start sm:items-center pt-1">
-                            <button
-                                type="button"
-                                onClick={() => setAuditLoggingEnabled(!auditLoggingEnabled)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                    }`}
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
+                                <button
+                                    type="button"
+                                    onClick={() => handleAuditLoggingToggle(!auditLoggingEnabled)}
+                                    disabled={auditLogSettingsSaving}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${auditLoggingEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
+                                    } ${auditLogSettingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${auditLoggingEnabled ? 'translate-x-6' : 'translate-x-1'
                                         }`}
-                                />
-                            </button>
+                                    />
+                                </button>
                         </div>
                     </div>
                 </div>
@@ -764,32 +1160,24 @@ export default function SecurityCompliance() {
                     </div>
                     {/* Filters Section */}
                     <div className="">
-                        <div className="grid grid-cols gap-4 sm:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">Filter By User</label>
-                                <input
-                                    type="text"
-                                    placeholder="Filter By User"
-                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">Filter By Client</label>
-                                <input
-                                    type="text"
-                                    placeholder="Filter By Client"
-                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">All Actions</label>
+                                <label className="text-xs font-medium text-[#6B7280]">Filter By Action</label>
                                 <div className="relative">
                                     <select
+                                        value={auditLogFilters.action}
+                                        onChange={(e) => setAuditLogFilters(prev => ({ ...prev, action: e.target.value }))}
                                         className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
                                     >
-                                        <option>All Actions</option>
+                                        <option value="">All Actions</option>
+                                        <option value="document_access">Document Access</option>
+                                        <option value="client_edit">Client Edit</option>
+                                        <option value="esignature_event">eSignature Event</option>
+                                        <option value="return_submission">Return Submission</option>
+                                        <option value="user_login">User Login</option>
+                                        <option value="user_logout">User Logout</option>
+                                        <option value="settings_change">Settings Change</option>
+                                        <option value="other">Other</option>
                                     </select>
                                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                         <svg
@@ -810,12 +1198,186 @@ export default function SecurityCompliance() {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-[#6B7280]">Start Date</label>
+                                <input
+                                    type="date"
+                                    value={auditLogFilters.start_date}
+                                    onChange={(e) => setAuditLogFilters(prev => ({ ...prev, start_date: e.target.value }))}
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-[#6B7280]">End Date</label>
+                                <input
+                                    type="date"
+                                    value={auditLogFilters.end_date}
+                                    onChange={(e) => setAuditLogFilters(prev => ({ ...prev, end_date: e.target.value }))}
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-[#6B7280]">User ID (optional)</label>
+                                <input
+                                    type="text"
+                                    placeholder="User ID"
+                                    value={auditLogFilters.user_id}
+                                    onChange={(e) => setAuditLogFilters(prev => ({ ...prev, user_id: e.target.value }))}
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
                 )}
 
             </div>
+            {/* Active User Sessions Section */}
+            <div className="rounded-xl bg-white p-6">
+                <div className="gap-4 mb-6">
+                    <div>
+                        <h5 className="text-base font-semibold text-[#1F2937] mb-1">Active User Sessions</h5>
+                        <p className="text-sm text-[#6B7280] mb-0">Monitor and manage active user sessions</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-4">
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+
+                            Date Range
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip0_5150_36810)">
+                                    <path d="M12.6875 14H1.3125C0.58625 14 0 13.4137 0 12.6875V2.1875C0 1.46125 0.58625 0.875 1.3125 0.875H12.6875C13.4137 0.875 14 1.46125 14 2.1875V12.6875C14 13.4137 13.4137 14 12.6875 14ZM1.3125 1.75C1.0675 1.75 0.875 1.9425 0.875 2.1875V12.6875C0.875 12.9325 1.0675 13.125 1.3125 13.125H12.6875C12.9325 13.125 13.125 12.9325 13.125 12.6875V2.1875C13.125 1.9425 12.9325 1.75 12.6875 1.75H1.3125Z" fill="#3B4A66" />
+                                    <path d="M3.9375 3.5C3.6925 3.5 3.5 3.3075 3.5 3.0625V0.4375C3.5 0.1925 3.6925 0 3.9375 0C4.1825 0 4.375 0.1925 4.375 0.4375V3.0625C4.375 3.3075 4.1825 3.5 3.9375 3.5ZM10.0625 3.5C9.8175 3.5 9.625 3.3075 9.625 3.0625V0.4375C9.625 0.1925 9.8175 0 10.0625 0C10.3075 0 10.5 0.1925 10.5 0.4375V3.0625C10.5 3.3075 10.3075 3.5 10.0625 3.5ZM13.5625 5.25H0.4375C0.1925 5.25 0 5.0575 0 4.8125C0 4.5675 0.1925 4.375 0.4375 4.375H13.5625C13.8075 4.375 14 4.5675 14 4.8125C14 5.0575 13.8075 5.25 13.5625 5.25Z" fill="#3B4A66" />
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_5150_36810">
+                                        <rect width="14" height="14" fill="white" />
+                                    </clipPath>
+                                </defs>
+                            </svg>
+
+                        </button>
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                        >
+                            Actions
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                        <button
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ borderRadius: '8px' }}
+                            type="button"
+                            onClick={fetchAuditLogs}
+                            disabled={auditLogsLoading}
+                        >
+                            {auditLogsLoading ? 'Refreshing...' : 'Refresh'}
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.14664 7.58334L1.83864 7.89367C1.92057 7.97489 2.03127 8.02046 2.14664 8.02046C2.26201 8.02046 2.37271 7.97489 2.45464 7.89367L2.14664 7.58334ZM3.43464 6.92184C3.5171 6.84 3.56367 6.72875 3.56411 6.61257C3.56455 6.49639 3.51881 6.3848 3.43697 6.30234C3.39645 6.26151 3.34828 6.22906 3.29522 6.20685C3.24215 6.18463 3.18523 6.17309 3.12771 6.17287C3.01153 6.17243 2.89993 6.21816 2.81747 6.30001L3.43464 6.92184ZM1.47464 6.30001C1.3918 6.22059 1.28108 6.1769 1.16633 6.17836C1.05159 6.17981 0.942005 6.22629 0.861206 6.30778C0.780407 6.38927 0.734859 6.49924 0.734379 6.61399C0.733899 6.72875 0.778525 6.83909 0.85864 6.92126L1.47464 6.30001ZM10.8593 4.31201C10.8886 4.3625 10.9278 4.40662 10.9744 4.44175C11.0211 4.47689 11.0743 4.50233 11.1309 4.51657C11.1875 4.53082 11.2464 4.53359 11.3042 4.52471C11.3619 4.51583 11.4172 4.49548 11.467 4.46488C11.5167 4.43427 11.5598 4.39401 11.5937 4.34648C11.6276 4.29895 11.6517 4.24511 11.6645 4.18813C11.6773 4.13116 11.6786 4.07219 11.6682 4.01472C11.6578 3.95725 11.6361 3.90244 11.6042 3.85351L10.8593 4.31201ZM7.04606 1.31251C4.10197 1.31251 1.70856 3.68142 1.70856 6.61092H2.58356C2.58356 4.17142 4.57856 2.18751 7.04606 2.18751V1.31251ZM1.70856 6.61092V7.58334H2.58356V6.61092H1.70856ZM2.45522 7.89426L3.43464 6.92184L2.81747 6.30001L1.83747 7.27242L2.45522 7.89426ZM2.45522 7.27301L1.47464 6.30001L0.858056 6.92126L1.83806 7.89309L2.45522 7.27301ZM11.6042 3.85467C11.1253 3.07664 10.4548 2.43441 9.65689 1.98935C8.85898 1.54429 7.9597 1.31125 7.04606 1.31251V2.18751C7.81035 2.18603 8.56282 2.38062 9.23044 2.75268C9.89806 3.12474 10.4591 3.66182 10.8599 4.31259L11.6042 3.85467ZM11.8498 6.41667L12.1572 6.10576C12.0753 6.02489 11.9649 5.97954 11.8498 5.97954C11.7347 5.97954 11.6243 6.02489 11.5424 6.10576L11.8498 6.41667ZM10.5583 7.07759C10.5174 7.118 10.4849 7.16606 10.4626 7.21903C10.4403 7.27201 10.4287 7.32885 10.4284 7.38632C10.4277 7.50239 10.4732 7.61397 10.5548 7.69651C10.6364 7.77904 10.7475 7.82578 10.8635 7.82644C10.9796 7.82709 11.0912 7.78161 11.1737 7.70001L10.5583 7.07759ZM12.5259 7.70001C12.5665 7.74147 12.615 7.77443 12.6685 7.79697C12.722 7.81951 12.7794 7.83118 12.8375 7.8313C12.8955 7.83141 12.953 7.81997 13.0066 7.79765C13.0602 7.77532 13.1088 7.74255 13.1496 7.70125C13.1904 7.65995 13.2226 7.61095 13.2443 7.55709C13.2659 7.50323 13.2766 7.4456 13.2758 7.38756C13.275 7.32951 13.2626 7.27221 13.2394 7.21899C13.2162 7.16578 13.1827 7.11771 13.1407 7.07759L12.5259 7.70001ZM3.10214 9.68684C3.04118 9.58806 2.94348 9.51754 2.83053 9.49079C2.71758 9.46404 2.59863 9.48326 2.49985 9.54421C2.40107 9.60517 2.33054 9.70287 2.3038 9.81582C2.27705 9.92877 2.29627 10.0477 2.35722 10.1465L3.10214 9.68684ZM6.93172 12.6875C9.88456 12.6875 12.2867 10.3203 12.2867 7.38909H11.4117C11.4117 9.82742 9.41089 11.8125 6.93172 11.8125V12.6875ZM12.2867 7.38909V6.41667H11.4117V7.38909H12.2867ZM11.5424 6.10576L10.5583 7.07759L11.1737 7.70001L12.1572 6.72759L11.5424 6.10576ZM11.5424 6.72759L12.5259 7.70001L13.1407 7.07759L12.1572 6.10576L11.5424 6.72759ZM2.35664 10.1459C2.83884 10.9248 3.51237 11.5672 4.31311 12.0121C5.11384 12.457 6.01512 12.6895 6.93114 12.6875V11.8125C6.16446 11.8145 5.41003 11.6202 4.73969 11.2481C4.06935 10.876 3.50599 10.3385 3.10214 9.68684L2.35664 10.1459Z" fill="#3B4A66" />
+                            </svg>
+
+                        </button>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-sm text-[#4B5563]">
+                        <thead className="text-sm font-medium tracking-wide text-[#6B7280]">
+                            <tr>
+                                <th className="px-4 py-3">Log ID</th>
+                                <th className="px-4 py-3">Action</th>
+                                <th className="px-4 py-3">User</th>
+                                <th className="px-4 py-3">Resource</th>
+                                <th className="px-4 py-3">Timestamp</th>
+                                <th className="px-4 py-3">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E7EB] bg-white">
+                            {auditLogsLoading && auditLogsData.length === 0 && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={6}>
+                                        Loading audit logs...
+                                    </td>
+                                </tr>
+                            )}
+                            {!auditLogsLoading && auditLogsData.length === 0 && !auditLogsError && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-[#6B7280]" colSpan={6}>
+                                        No audit logs found.
+                                    </td>
+                                </tr>
+                            )}
+                            {auditLogsError && (
+                                <tr>
+                                    <td className="px-4 py-6 text-center text-sm text-red-600" colSpan={6}>
+                                        {auditLogsError}
+                                    </td>
+                                </tr>
+                            )}
+                            {auditLogsData
+                                .filter((log) => {
+                                    if (!searchQuery.trim()) return true;
+                                    const query = searchQuery.toLowerCase();
+                                    return (
+                                        (log.user_email && log.user_email.toLowerCase().includes(query)) ||
+                                        (log.action_display && log.action_display.toLowerCase().includes(query)) ||
+                                        (log.action && log.action.toLowerCase().includes(query)) ||
+                                        (log.ip_address && log.ip_address.toLowerCase().includes(query))
+                                    );
+                                })
+                                .map((log) => (
+                                    <tr key={log.id || log.log_id} className="hover:bg-[#F8FAFF]">
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.log_id || `LOG-${log.id}`}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.action_display || log.action || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.user_email || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.resource || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.timestamp_formatted || log.timestamp || 'N/A'}</td>
+                                        <td className="px-4 py-3 text-sm font-semibold text-gray-600">{log.ip_address || 'N/A'}</td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                {auditLogsPagination.total_pages > 1 && (
+                    <div className="mt-6 flex items-center justify-between border-t border-[#E5E7EB] pt-4">
+                        <div className="text-sm text-[#6B7280]">
+                            Showing {((auditLogsPagination.page - 1) * auditLogsPagination.page_size) + 1} to {Math.min(auditLogsPagination.page * auditLogsPagination.page_size, auditLogsPagination.total_count)} of {auditLogsPagination.total_count} results
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setAuditLogsPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                                disabled={auditLogsPagination.page === 1 || auditLogsLoading}
+                                className="px-3 py-2 text-sm font-medium text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+                            <span className="px-3 py-2 text-sm font-medium text-[#4B5563]">
+                                Page {auditLogsPagination.page} of {auditLogsPagination.total_pages}
+                            </span>
+                            <button
+                                onClick={() => setAuditLogsPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                                disabled={auditLogsPagination.page >= auditLogsPagination.total_pages || auditLogsLoading}
+                                className="px-3 py-2 text-sm font-medium text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            
         </div>
     );
 
@@ -1010,92 +1572,7 @@ export default function SecurityCompliance() {
                 </div>
             </div>
 
-            {/* Compliance Settings Card */}
-            <div className="rounded-xl bg-white p-6">
-                <div className="mb-6">
-                    <p className="text-base font-semibold text-gray-600 mb-1">Compliance Settings</p>
-                    <p className="text-sm text-[#6B7280] mb-0">Configure compliance and data protection</p>
-                </div>
-
-                <div className="space-y-6">
-                    {/* SOC 2 Compliance */}
-                    <div className="flex items-center justify-between pb-2">
-                        <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-600 mb-0">SOC 2 Compliance</p>
-                            <span className="text-sm font-medium text-gray-500 mb-0">Enable SOC 2 Audit Controls</span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setSoc2Enabled(!soc2Enabled)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${soc2Enabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                }`}
-                        >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${soc2Enabled ? 'translate-x-6' : 'translate-x-1'
-                                    }`}
-                            />
-                        </button>
-                    </div>
-
-                    {/* HIPAA Compliance */}
-                    <div className="flex items-center justify-between pb-2">
-                        <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-600 mb-0">HIPAA Compliance</p>
-                            <span className="text-sm font-semibold text-gray-500 mb-0">Enable HIPAA Data Protection</span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setHipaaEnabled(!hipaaEnabled)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${hipaaEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                }`}
-                        >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hipaaEnabled ? 'translate-x-6' : 'translate-x-1'
-                                    }`}
-                            />
-                        </button>
-                    </div>
-
-                    {/* Data Retention */}
-                    <div className="">
-                        <div className="">
-                            <label className="text-sm font-semibold text-gray-600">Data Retention (years)</label>
-                        </div>
-                        <div className="w-full">
-                            <input
-                                type="number"
-                                value={dataRetention}
-                                onChange={(e) => setDataRetention(e.target.value)}
-                                className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                style={{ borderRadius: '8px' }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Encryption Level */}
-                    <div className="">
-                        <div className="">
-                            <label className="text-sm font-semibold text-gray-600">Encryption Level</label>
-                        </div>
-                        <div className="w-full relative">
-                            <select
-                                value={encryptionLevel}
-                                onChange={(e) => setEncryptionLevel(e.target.value)}
-                                className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
-                                style={{ borderRadius: '8px' }}
-                            >
-                                <option value="AES-256">AES-256</option>
-                                <option value="AES-128">AES-128</option>
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
         </div>
     );
 

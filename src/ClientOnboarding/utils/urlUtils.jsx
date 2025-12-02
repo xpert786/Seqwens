@@ -6,10 +6,13 @@
  * @returns {string} The base URL (server URL or localhost)
  */
 export const getBaseUrl = () => {
-  const isServer = import.meta.env.VITE_IS_SERVER === 'true';
-  
-    // Use Vite server URL when server is true
-  return 'http://168.231.121.7/seqwens-frontend';
+  const isServer = import.meta.env.VITE_IS_SERVER === 'false';
+  console.log('isServer', isServer);
+  if (isServer) {
+    return 'http://168.231.121.7/seqwens-frontend';
+  } else {
+    return 'http://localhost:5173';
+  }
 };
 
 /**

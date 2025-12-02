@@ -61,6 +61,16 @@ const MaintenanceMode = () => {
           setMaintenanceMode(response.maintenance_mode || false);
           setMaintenanceMessage(response.maintenance_message || 'The platform is currently undergoing maintenance. Please try again later.');
           
+          // Check for termination - log out immediately if true
+          if (response.termination === true) {
+            setSessionExpired(true);
+            setSessionTimeoutMessage(response.session_timeout_message || 'Your session has been terminated. Please log in again.');
+            
+            // Call session timeout logout
+            await handleSessionTimeoutLogout();
+            return; // Exit early to prevent further processing
+          }
+          
           // Check for session expiration
           if (response.session_expired === true) {
             setSessionExpired(true);

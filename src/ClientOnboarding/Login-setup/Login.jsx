@@ -66,9 +66,22 @@ export default function Login() {
       // Check user type and navigate to appropriate dashboard
       const user = response.user;
       const userType = user.user_type;
+      const roles = user.role; // Array of roles from API response
       
       console.log('User logged in with type:', userType);
+      console.log('User roles:', roles);
       
+      // Check if user has multiple roles
+      if (roles && Array.isArray(roles) && roles.length > 1) {
+        // User has multiple roles, show role selection screen
+        navigate("/select-role", { 
+          state: { userData: user },
+          replace: true 
+        });
+        return;
+      }
+      
+      // Single role - proceed with normal navigation
       // Store user type in storage for future reference
       storage.setItem("userType", userType);
       

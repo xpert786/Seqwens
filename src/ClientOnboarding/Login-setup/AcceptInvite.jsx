@@ -152,9 +152,28 @@ export default function AcceptInvite() {
                     localStorage.setItem("isLoggedIn", "true");
                     localStorage.setItem("userData", JSON.stringify(user));
 
+                    const roles = user.role; // Array of roles from API response
+                    
+                    // Check if user has multiple roles
+                    if (roles && Array.isArray(roles) && roles.length > 1) {
+                        // User has multiple roles, show role selection screen
+                        toast.success(response.message || "Account created successfully! Welcome to the team!", {
+                            position: "top-right",
+                            autoClose: 3000,
+                        });
+                        setTimeout(() => {
+                            navigate("/select-role", { 
+                                state: { userData: user },
+                                replace: true 
+                            });
+                        }, 2000);
+                        return;
+                    }
+
+                    // Single role - proceed with normal navigation
                     // Map role to user_type for routing
                     // The API returns 'role' but the app uses 'user_type' for routing
-                    let userType = user.user_type || user.role;
+                    let userType = user.user_type || (Array.isArray(roles) && roles.length > 0 ? roles[0] : null);
 
                     // Map 'staff' role to 'tax_preparer' for routing (staff use tax preparer dashboard)
                     if (userType === 'staff') {

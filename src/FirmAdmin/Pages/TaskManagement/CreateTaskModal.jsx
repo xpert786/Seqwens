@@ -602,7 +602,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                               `${tp.first_name || ''} ${tp.last_name || ''}`.trim() ||
                               tp.contact?.email ||
                               tp.email ||
-                              `Staff #${tp.id}`;
+                              `Staff #${tp.first_name} ${tp.last_name}`;
                             return (
                               <div
                                 key={tp.id}
@@ -615,6 +615,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                                         const newErrors = { ...prev };
                                         delete newErrors.tax_preparer_id;
                                         return newErrors;
+                                        
                                       });
                                     }
                                   }}

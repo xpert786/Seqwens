@@ -39,7 +39,6 @@ import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
 import OfficeComparison from './Pages/Offices/OfficeComparison';
 import SecurityCompliance from './Pages/SecurityCompliance';
 import EmailTemplate from './Pages/Email-templates/EmailTemplate';
-import Integrations from './Pages/Integrations/Integrations';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -115,7 +114,6 @@ export default function FirmRoutes() {
         <Route path="workflow" element={<WorkflowTemp />} />
         <Route path="subscription" element={<SubscriptionManagement />} />
         <Route path="email-templates" element={<EmailTemplate />} />
-        <Route path="integrations" element={<Integrations />} />
         
         {/* System Administration routes */}
         <Route path="security" element={<SecurityCompliance />} />
