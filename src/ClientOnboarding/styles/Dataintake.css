@@ -80,7 +80,7 @@
   border-radius: 8px;
   transition: all 0.25s ease;
   margin-bottom: 6px;
-  border: 1px solid transparent;
+  border: 1px solid transparent !important;
   background-color: transparent;
 }
 
@@ -117,16 +117,16 @@
 
 /* Focus wrapper - minimal for accessibility */
 .data-intake-page .form-check:focus-within {
-  outline: 2px solid #F56D2D;
-  outline-offset: -2px;
+  outline: none !important;
+  outline-offset: 0;
 }
 
 /* Selected/checked state - border with background */
 /* Using class approach for better browser compatibility */
 .data-intake-page .radio-item-checked {
-  background-color: #F9FAFB !important;
-  border: 1.5px solid #F56D2D !important;
-  padding: 14px 20px !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  padding: 10px 14px !important;
   padding-left: 30px !important;
 }
 
@@ -150,9 +150,9 @@
 
 .data-intake-page .form-check .form-check-input:focus,
 .data-intake-page .form-check-inline .form-check-input:focus {
-  box-shadow: 0 0 0 4px rgba(245, 109, 45, 0.2);
-  border-color: #F56D2D;
-  outline: none;
+  box-shadow: none !important;
+  border-color: #D1D5DB;
+  outline: none !important;
 }
 
 .data-intake-page .form-check .form-check-input:checked {
@@ -163,4 +163,21 @@
 .data-intake-page .form-check input[type="checkbox"]:checked {
   background-color: #F56D2D;
   border-color: #F56D2D;
+}
+
+/* Remove all borders and outlines on click/focus for checkboxes and radios */
+.data-intake-page .form-check-input:active,
+.data-intake-page .form-check-input:focus,
+.data-intake-page .form-check-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 2px solid #D1D5DB !important;
+}
+
+.data-intake-page .form-check-input:checked:active,
+.data-intake-page .form-check-input:checked:focus,
+.data-intake-page .form-check-input:checked:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #F56D2D !important;
 }

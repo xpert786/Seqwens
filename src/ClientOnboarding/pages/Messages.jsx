@@ -1085,7 +1085,16 @@ export default function Messages() {
             </div>
 
           </div>
-          <div className="flex-grow-1 d-flex flex-column mt-3" style={{ gap: "12px", overflowY: "auto", overflowX: "hidden", maxHeight: "calc(55vh - 150px)" }}>
+          <div 
+            className="flex-grow-1 d-flex flex-column mt-3 conversations-scroll" 
+            style={{ 
+              gap: "12px", 
+              overflowY: "auto", 
+              overflowX: "hidden", 
+              maxHeight: "calc(55vh - 150px)",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none"
+            }}>
             {/* Loading State */}
             {loading && (
               <div className="text-center py-5">
@@ -1221,31 +1230,35 @@ export default function Messages() {
 
               <div
                 ref={messagesContainerRef}
-                className="flex-grow-1 mb-3"
+                className="flex-grow-1 mb-3 messages-scroll"
                 style={{
                   overflowY: "auto",
                   overflowX: "hidden",
                   minHeight: "200px",
                   maxHeight: "calc(55vh - 200px)",
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "#C1C1C1 #F3F7FF"
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none"
                 }}
               >
                 <style>
                   {`
-                    .flex-grow-1.mb-3::-webkit-scrollbar {
-                      width: 8px;
+                    .messages-scroll::-webkit-scrollbar {
+                      display: none;
+                      width: 0;
+                      height: 0;
                     }
-                    .flex-grow-1.mb-3::-webkit-scrollbar-track {
-                      background: #F3F7FF;
-                      border-radius: 10px;
+                    .messages-scroll {
+                      -ms-overflow-style: none;
+                      scrollbar-width: none;
                     }
-                    .flex-grow-1.mb-3::-webkit-scrollbar-thumb {
-                      background: #C1C1C1;
-                      border-radius: 10px;
+                    .conversations-scroll::-webkit-scrollbar {
+                      display: none;
+                      width: 0;
+                      height: 0;
                     }
-                    .flex-grow-1.mb-3::-webkit-scrollbar-thumb:hover {
-                      background: #A0A0A0;
+                    .conversations-scroll {
+                      -ms-overflow-style: none;
+                      scrollbar-width: none;
                     }
                   `}
                 </style>
