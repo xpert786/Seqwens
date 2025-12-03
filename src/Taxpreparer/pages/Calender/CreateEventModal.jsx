@@ -152,6 +152,35 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit }) => {
         throw new Error('No authentication token found');
       }
 
+      // Helper function to convert time to HH:MM:SS format
+      const formatTimeForAPI = (timeStr) => {
+        if (!timeStr) return '';
+        // Remove AM/PM if present and convert to 24-hour
+        const isPM = timeStr.toUpperCase().includes('PM');
+        const isAM = timeStr.toUpperCase().includes('AM');
+
+        let time = timeStr.replace(/\s*(AM|PM)\s*/i, '').trim();
+        const parts = time.split(':');
+
+        if (parts.length >= 2) {
+          let hours = parseInt(parts[0], 10);
+          const minutes = parts[1] || '00';
+
+          if (isPM && hours !== 12) hours += 12;
+          if (isAM && hours === 12) hours = 0;
+
+          // Return in HH:MM:SS format (backend expects seconds)
+          return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+        }
+
+        // If already in HH:MM format, add :00 seconds
+        if (timeStr.match(/^\d{2}:\d{2}$/)) {
+          return `${timeStr}:00`;
+        }
+
+        return timeStr;
+      };
+
       // Prepare payload
       const payload = {
         event_title: formData.event_title,
@@ -159,7 +188,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit }) => {
         timezone: formData.timezone,
         appointment_date: formData.appointment_date,
         slots: validSlots.map(slot => ({
-          time: slot.time,
+          time: formatTimeForAPI(slot.time),
           client_id: slot.client_id
         })),
         meeting_type: formData.meeting_type

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiChevronDown, FiUpload, FiDownload, FiUsers } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -526,21 +528,20 @@ export default function UserManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Phone Number<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    maxLength={10}
-                    value={newAdmin.phoneNumber}
-                    onChange={(e) => {
-                      const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setNewAdmin((prev) => ({ ...prev, phoneNumber: digitsOnly }));
+                  <PhoneInput
+                    country={phoneCountry}
+                    value={newAdmin.phoneNumber || ''}
+                    onChange={(phone) => {
+                      setNewAdmin((prev) => ({ ...prev, phoneNumber: phone }));
                     }}
-                    className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="5551234567"
+                    onCountryChange={(countryCode) => {
+                      setPhoneCountry(countryCode.toLowerCase());
+                    }}
+                    inputClass="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    containerClass="w-100 phone-input-container"
+                    enableSearch={true}
+                    countryCodeEditable={false}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter a 10 digit phone number without country code.
-                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

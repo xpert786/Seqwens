@@ -466,7 +466,7 @@ const SchedulingCalendar = () => {
         return dateStr;
     };
 
-    // Format time to HH:MM format
+    // Format time to HH:MM:SS format (backend expects seconds)
     const formatTimeForAPI = (timeStr) => {
         if (!timeStr) return '';
         // Remove AM/PM if present and convert to 24-hour
@@ -478,12 +478,18 @@ const SchedulingCalendar = () => {
 
         if (parts.length >= 2) {
             let hours = parseInt(parts[0], 10);
-            const minutes = parts[1];
+            const minutes = parts[1] || '00';
 
             if (isPM && hours !== 12) hours += 12;
             if (isAM && hours === 12) hours = 0;
 
-            return `${String(hours).padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+            // Return in HH:MM:SS format (backend expects seconds)
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+        }
+
+        // If already in HH:MM format, add :00 seconds
+        if (timeStr.match(/^\d{2}:\d{2}$/)) {
+            return `${timeStr}:00`;
         }
 
         return timeStr;
