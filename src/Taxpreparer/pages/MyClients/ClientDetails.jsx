@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { useLocation, useParams, useNavigate, Outlet } from "react-router-dom";
 import { BlackEmail, BlackPhone, MailMiniIcon, PhoneMiniIcon, MiniClock, WhiteEdit, Cut } from "../../component/icons";
 import { FaChevronDown, FaChevronRight, FaFolder, FaArrowLeft } from "react-icons/fa";
@@ -78,6 +80,7 @@ export default function ClientDetails() {
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
+  const [phoneCountry, setPhoneCountry] = useState('us');
   const [originalFormData, setOriginalFormData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [canEditClient, setCanEditClient] = useState(false);
@@ -1659,14 +1662,19 @@ export default function ClientDetails() {
                     <span>Phone</span>
                   </div>
                   {isEditMode && editFormData ? (
-                    <input
-                      type="tel"
-                      className="form-control mt-1"
-                      value={editFormData.phone_number}
-                      onChange={(e) => handleEditFormChange('phone_number', e.target.value)}
-                      placeholder="Phone Number"
-                      style={{ borderRadius: "6px", fontSize: "14px" }}
+                    <PhoneInput
+                      country={phoneCountry}
+                      value={editFormData.phone_number || ''}
+                      onChange={(phone) => handleEditFormChange('phone_number', phone)}
+                      onCountryChange={(countryCode) => {
+                        setPhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="form-control mt-1"
+                      containerClass="w-100 phone-input-container"
+                      inputStyle={{ borderRadius: "6px", fontSize: "14px" }}
                       disabled={isFieldLocked('phone')}
+                      enableSearch={true}
+                      countryCodeEditable={false}
                     />
                   ) : (
                     <div className="mt-1 text-[18px] font-semibold" style={{ color: "var(--Palette2-Dark-blue-100, #3B4A66)" }}>

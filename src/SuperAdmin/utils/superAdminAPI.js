@@ -977,6 +977,48 @@ export const superAdminAPI = {
 
       throw error;
     }
+  },
+
+  // Get all role requests (with optional status filter)
+  getRoleRequests: async (status = null) => {
+    try {
+      let endpoint = '/user/superadmin/firm-role-requests/';
+      if (status) {
+        endpoint += `?status=${status}`;
+      }
+      return await apiRequest(endpoint, 'GET');
+    } catch (error) {
+      console.error('Get Role Requests API Request Error:', error);
+      throw error;
+    }
+  },
+
+  // Approve a role request
+  approveRoleRequest: async (requestId, reviewNotes = null) => {
+    try {
+      const data = {};
+      if (reviewNotes) {
+        data.review_notes = reviewNotes;
+      }
+      return await apiRequest(`/user/superadmin/firm-role-requests/${requestId}/approve/`, 'POST', data);
+    } catch (error) {
+      console.error('Approve Role Request API Request Error:', error);
+      throw error;
+    }
+  },
+
+  // Reject a role request
+  rejectRoleRequest: async (requestId, reviewNotes = null) => {
+    try {
+      const data = {};
+      if (reviewNotes) {
+        data.review_notes = reviewNotes;
+      }
+      return await apiRequest(`/user/superadmin/firm-role-requests/${requestId}/reject/`, 'POST', data);
+    } catch (error) {
+      console.error('Reject Role Request API Request Error:', error);
+      throw error;
+    }
   }
 };
 

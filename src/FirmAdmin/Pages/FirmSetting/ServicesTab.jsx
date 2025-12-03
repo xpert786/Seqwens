@@ -97,7 +97,7 @@ export default function ServicesTab() {
         services: services.map(service => ({
           name: service.name,
           enabled: service.enabled,
-          base_price: service.base_price || null
+          base_price: service.base_price ?? null
         })),
         default_late_fee: parseFloat(paymentSettings.default_late_fee),
         interest_rate: parseFloat(paymentSettings.interest_rate),

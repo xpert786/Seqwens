@@ -5,18 +5,14 @@ import { SaveIcon } from "../icons";
 import { securityAPI, handleAPIError } from "../../utils/apiUtils";
 
 const Security = () => {
-  const [twoFactor, setTwoFactor] = useState(false);
   const [loginAlerts, setLoginAlerts] = useState(true);
-  const [sessionTimeout, setSessionTimeout] = useState(30);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   // Initial values to track changes
   const [initialValues, setInitialValues] = useState({
-    twoFactor: false,
     loginAlerts: true,
-    sessionTimeout: 30,
   });
 
   // Password update states
@@ -42,19 +38,13 @@ const Security = () => {
           console.log('Available fields:', Object.keys(securityData));
           console.log('Two factor value:', securityData.two_factor_authentication, securityData.two_factor_enabled);
 
-          const twoFactorValue = securityData.two_factor_authentication || securityData.two_factor_enabled || false;
           const loginAlertsValue = securityData.login_alerts || false;
-          const sessionTimeoutValue = securityData.session_timeout || 30;
 
-          setTwoFactor(twoFactorValue);
           setLoginAlerts(loginAlertsValue);
-          setSessionTimeout(sessionTimeoutValue);
 
           // Store initial values for comparison
           setInitialValues({
-            twoFactor: twoFactorValue,
             loginAlerts: loginAlertsValue,
-            sessionTimeout: sessionTimeoutValue,
           });
         }
       } catch (err) {
@@ -73,9 +63,7 @@ const Security = () => {
 
     // Check if any changes were made
     const hasChanges = 
-      twoFactor !== initialValues.twoFactor ||
-      loginAlerts !== initialValues.loginAlerts ||
-      sessionTimeout !== initialValues.sessionTimeout;
+      loginAlerts !== initialValues.loginAlerts;
 
     if (!hasChanges) {
       // No changes made, show info message
@@ -93,9 +81,7 @@ const Security = () => {
 
     try {
       const apiData = {
-        two_factor_authentication: twoFactor,
         login_alerts: loginAlerts,
-        session_timeout: sessionTimeout,
       };
 
       console.log('Saving security preferences:', apiData);
@@ -104,9 +90,7 @@ const Security = () => {
 
       // Update initial values after successful save
       setInitialValues({
-        twoFactor,
         loginAlerts,
-        sessionTimeout,
       });
 
       // Show success toast
@@ -244,57 +228,6 @@ const Security = () => {
           Manage your account security and privacy
         </p>
       </div>
-
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <strong style={{ color: "#3B4A66", fontSize: "15px", fontFamily: "BasisGrotesquePro", fontWeight: "500", }}>
-            Two-Factor Authentication
-          </strong>
-          <p
-            className="mb-0"
-            style={{
-              color: "#4B5563",
-              fontSize: "13px",
-              fontWeight: "400",
-              fontFamily: "BasisGrotesquePro",
-            }}
-          >
-            Add an extra layer of security to your account
-          </p>
-        </div>
-        <div className="custom-toggle">
-          <input
-            type="checkbox"
-            id="twoFactor"
-            checked={twoFactor}
-            onChange={() => setTwoFactor(!twoFactor)}
-          />
-          <label htmlFor="twoFactor"></label>
-        </div>
-      </div>
-
-
-      <div className="mb-4">
-        <label
-          htmlFor="sessionTimeout"
-          style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}
-        >
-          Session Timeout (minutes)
-        </label>
-        <select
-          id="sessionTimeout"
-          className="form-select mt-2"
-          value={sessionTimeout}
-          onChange={(e) => setSessionTimeout(parseInt(e.target.value))}
-          style={{ maxWidth: "300px", borderRadius: "10px", fontFamily: "BasisGrotesquePro", }}
-        >
-          <option value={15}>15 minutes</option>
-          <option value={30}>30 minutes</option>
-          <option value={60}>60 minutes</option>
-
-        </select>
-      </div>
-
 
       {/* <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>

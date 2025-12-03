@@ -83,7 +83,7 @@ export default function FirmAdminDashboard() {
     Calendar: true
   });
   const [scheduleFrequency, setScheduleFrequency] = useState('Weekly');
-  const [recipients, setRecipients] = useState('admins@firm.com');
+  const [recipients, setRecipients] = useState('');
   const [scheduleLoading, setScheduleLoading] = useState(false);
 
   // Dashboard data state

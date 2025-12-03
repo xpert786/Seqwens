@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from "react-router-dom";
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
@@ -19,6 +21,7 @@ export default function FirmManagement() {
         phone: "",
         plan: ""
     });
+    const [phoneCountry, setPhoneCountry] = useState('us');
 
     // API state management
     const [firms, setFirms] = useState([]);
@@ -1174,12 +1177,17 @@ export default function FirmManagement() {
                             {/* Phone Number */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-0.5">Phone Number</label>
-                                <input
-                                    type="tel"
-                                    value={newFirm.phone}
-                                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                                    placeholder="Enter Phone Number"
-                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                <PhoneInput
+                                    country={phoneCountry}
+                                    value={newFirm.phone || ''}
+                                    onChange={(phone) => handleInputChange('phone', phone)}
+                                    onCountryChange={(countryCode) => {
+                                        setPhoneCountry(countryCode.toLowerCase());
+                                    }}
+                                    inputClass="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    containerClass="w-100 phone-input-container"
+                                    enableSearch={true}
+                                    countryCodeEditable={false}
                                 />
                             </div>
 

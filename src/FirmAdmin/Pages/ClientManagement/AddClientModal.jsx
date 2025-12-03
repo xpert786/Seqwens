@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -14,6 +16,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     assigned_to_staff: '',
     notes: ''
   });
+  const [phoneCountry, setPhoneCountry] = useState('us');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -274,12 +277,17 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
               Phone
             </label>
-            <input
-              type="tel"
-              value={formData.phone_number}
-              onChange={(e) => handleInputChange('phone_number', e.target.value)}
-              placeholder="(555) 123-4567"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+            <PhoneInput
+              country={phoneCountry}
+              value={formData.phone_number || ''}
+              onChange={(phone) => handleInputChange('phone_number', phone)}
+              onCountryChange={(countryCode) => {
+                setPhoneCountry(countryCode.toLowerCase());
+              }}
+              inputClass="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+              containerClass="w-100 phone-input-container"
+              enableSearch={true}
+              countryCodeEditable={false}
             />
           </div>
 

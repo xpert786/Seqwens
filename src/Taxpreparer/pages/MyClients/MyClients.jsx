@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaPlus, FaUserPlus, FaEnvelope, FaSms, FaLink, FaCopy } from "react-icons/fa";
 import { AwaitingIcon, CompletedIcon, Dot, DoubleUserIcon, FaildIcon, FiltIcon, Phone } from "../../component/icons";
@@ -47,6 +49,9 @@ export default function MyClients() {
   const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
   const [activeInviteDetails, setActiveInviteDetails] = useState(null);
   const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState('us');
+  const [invitePhoneCountry, setInvitePhoneCountry] = useState('us');
+  const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
 
   // Create taxpayer form state
   const [createTaxpayerForm, setCreateTaxpayerForm] = useState({
@@ -1210,12 +1215,18 @@ export default function MyClients() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Phone Number</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      value={createTaxpayerForm.phone_number}
-                      onChange={(e) => handleCreateTaxpayerChange('phone_number', e.target.value)}
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    <PhoneInput
+                      country={phoneCountry}
+                      value={createTaxpayerForm.phone_number || ''}
+                      onChange={(phone) => handleCreateTaxpayerChange('phone_number', phone)}
+                      onCountryChange={(countryCode) => {
+                        setPhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="form-control"
+                      containerClass="w-100 phone-input-container"
+                      inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
                     />
                   </div>
                   <div className="mb-3">
@@ -1364,13 +1375,18 @@ export default function MyClients() {
                     We'll text the invite link to the phone number you provide.
                   </p>
                   <div className="d-flex gap-2 mb-2">
-                    <input
-                      type="tel"
-                      className="form-control"
-                      value={smsPhoneOverride}
-                      onChange={(e) => setSmsPhoneOverride(e.target.value)}
-                      placeholder="Enter phone number"
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    <PhoneInput
+                      country={smsPhoneCountry}
+                      value={smsPhoneOverride || ''}
+                      onChange={(phone) => setSmsPhoneOverride(phone)}
+                      onCountryChange={(countryCode) => {
+                        setSmsPhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="form-control"
+                      containerClass="w-100 phone-input-container flex-1"
+                      inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
                     />
                     <button
                       type="button"
@@ -1471,13 +1487,18 @@ export default function MyClients() {
                     <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
                       Phone Number <span className="text-muted" style={{ fontSize: '12px' }}>(Optional)</span>
                     </label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      value={inviteExistingForm.phone_number}
-                      onChange={(e) => setInviteExistingForm(prev => ({ ...prev, phone_number: e.target.value }))}
-                      placeholder="Enter phone number"
-                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    <PhoneInput
+                      country={invitePhoneCountry}
+                      value={inviteExistingForm.phone_number || ''}
+                      onChange={(phone) => setInviteExistingForm(prev => ({ ...prev, phone_number: phone }))}
+                      onCountryChange={(countryCode) => {
+                        setInvitePhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="form-control"
+                      containerClass="w-100 phone-input-container"
+                      inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
                     />
                   </div>
                   <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 0 0 0', marginTop: '16px' }}>

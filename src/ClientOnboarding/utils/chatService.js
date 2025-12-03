@@ -241,5 +241,183 @@ export const chatService = {
 
     return await response.json();
   },
+
+  /**
+   * Send a message in a chat thread
+   * POST /seqwens/api/taxpayer/chat-threads/<thread_id>/send_message/
+   * Supports:
+   * - Text messages (JSON)
+   * - File attachments (multipart/form-data)
+   * - Base64 encoded files (JSON)
+   * 
+   * @param {number} threadId - The thread ID
+   * @param {Object} messageData - Message data
+   * @param {string} [messageData.content] - Message text content (optional)
+   * @param {string} [messageData.message_type] - Type of message: "text" or "file" (default: "text")
+   * @param {File|Blob} [messageData.attachment] - File attachment (for multipart/form-data)
+   * @param {string} [messageData.file] - Base64 encoded file content
+   * @param {string} [messageData.file_name] - Name of the file (required if using base64)
+   * @param {boolean} [messageData.is_internal] - If true, message is only visible to staff (default: false)
+   * @returns {Promise<Object>} Response with created message
+   */
+  sendMessage: async (threadId, messageData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    let config;
+    let response;
+
+    // Check if we have a file attachment (multipart/form-data)
+    const hasFileAttachment = messageData.attachment && messageData.attachment instanceof File || messageData.attachment instanceof Blob;
+    
+    // Check if we have base64 encoded file
+    const hasBase64File = messageData.file || messageData.attachment_base64;
+
+    if (hasFileAttachment) {
+      // Use FormData for file attachments
+      const formData = new FormData();
+
+      if (messageData.content) {
+        formData.append('content', messageData.content);
+      }
+
+      if (messageData.message_type) {
+        formData.append('message_type', messageData.message_type);
+      } else if (hasFileAttachment) {
+        formData.append('message_type', 'file');
+      }
+
+      if (messageData.is_internal !== undefined) {
+        formData.append('is_internal', messageData.is_internal ? 'True' : 'False');
+      }
+
+      if (messageData.attachment) {
+        formData.append('attachment', messageData.attachment);
+      }
+
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - let browser set it with boundary
+        },
+        body: formData
+      };
+    } else if (hasBase64File) {
+      // Use JSON for base64 encoded files
+      const payload = {};
+
+      if (messageData.content) {
+        payload.content = messageData.content;
+      }
+
+      payload.message_type = messageData.message_type || 'file';
+
+      if (messageData.file) {
+        payload.file = messageData.file;
+      } else if (messageData.attachment_base64) {
+        payload.file = messageData.attachment_base64;
+      }
+
+      if (messageData.file_name) {
+        payload.file_name = messageData.file_name;
+      } else if (messageData.attachment_name) {
+        payload.file_name = messageData.attachment_name;
+      } else {
+        throw new Error('file_name is required when using base64 encoded file');
+      }
+
+      if (messageData.is_internal !== undefined) {
+        payload.is_internal = messageData.is_internal;
+      }
+
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      };
+    } else {
+      // Use JSON for text-only messages
+      const payload = {
+        content: messageData.content || '',
+        message_type: messageData.message_type || 'text',
+      };
+
+      if (messageData.is_internal !== undefined) {
+        payload.is_internal = messageData.is_internal;
+      }
+
+      config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      };
+    }
+
+    response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat-threads/${threadId}/send_message/`, config);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      try {
+        const { refreshAccessToken } = await import('./apiUtils');
+        await refreshAccessToken();
+        const newToken = getAccessToken();
+        
+        if (!newToken) {
+          throw new Error('Token refresh failed');
+        }
+
+        if (hasFileAttachment) {
+          config.headers = {
+            'Authorization': `Bearer ${newToken}`,
+          };
+        } else {
+          config.headers = {
+            'Authorization': `Bearer ${newToken}`,
+            'Content-Type': 'application/json',
+          };
+        }
+
+        response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat-threads/${threadId}/send_message/`, config);
+
+        if (response.status === 401) {
+          const { clearUserData } = await import('./userUtils');
+          const { getLoginUrl } = await import('./urlUtils');
+          clearUserData();
+          window.location.href = getLoginUrl();
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        const { clearUserData } = await import('./userUtils');
+        const { getLoginUrl } = await import('./urlUtils');
+        clearUserData();
+        window.location.href = getLoginUrl();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  },
 };
 
