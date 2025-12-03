@@ -299,7 +299,7 @@ const Feature = () => {
                     </div>
                 </div>
 
-                <div className="rounded-lg border border-[#E8F0FF] bg-white p-4 sm:p-6">
+                {/* <div className="rounded-lg border border-[#E8F0FF] bg-white p-4 sm:p-6">
                     <h4 className="text-lg font-semibold text-[#1E293B] mb-4 font-[BasisGrotesquePro]">System Features & Configuration</h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {featureCards.map((card) => (
@@ -338,7 +338,7 @@ const Feature = () => {
                             </div>
                         ))}
                     </div>
-                </div>
+                </div> */}
 
                 <div className="rounded-lg !border border-[#E8F0FF] bg-white">
                     <div className="px-4 sm:px-6 py-4 !border-b border-[#E8F0FF]">

@@ -387,7 +387,32 @@ export default function StaffManagement() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
+        
+        // Parse array format error messages
+        if (Array.isArray(errorMessage)) {
+          errorMessage = errorMessage[0] || errorMessage;
+        } else if (typeof errorMessage === 'string' && errorMessage.trim().startsWith('[')) {
+          try {
+            const parsed = JSON.parse(errorMessage);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              errorMessage = parsed[0];
+            }
+          } catch (e) {
+            // Keep original if parsing fails
+          }
+        }
+        
+        // Also check errorData.errors or errorData.error fields
+        if (errorData.errors) {
+          if (Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors[0] || errorMessage;
+          } else if (typeof errorData.errors === 'string') {
+            errorMessage = errorData.errors;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -400,14 +425,28 @@ export default function StaffManagement() {
         fetchPendingInvites();
         return result;
       } else {
-        throw new Error(result.message || 'Failed to resend invitation');
+        let errorMsg = result.message || 'Failed to resend invitation';
+        
+        // Parse array format error messages
+        if (Array.isArray(errorMsg)) {
+          errorMsg = errorMsg[0] || errorMsg;
+        }
+        
+        throw new Error(errorMsg);
       }
     } catch (err) {
       console.error('Error sending invite notifications:', err);
       const errorMsg = handleAPIError(err);
       toast.error(errorMsg || 'Failed to send invitation notifications. Please try again.', {
         position: "top-right",
-        autoClose: 4000,
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
       });
       throw err;
     } finally {
@@ -1103,7 +1142,6 @@ export default function StaffManagement() {
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Email</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[120px]">Role</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Invited By</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Invited At</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Expires At</th>
@@ -1123,9 +1161,7 @@ export default function StaffManagement() {
                             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.email}</div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 w-[120px]">
-                          <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.role_display || invite.role}</div>
-                        </td>
+                        
                         <td className="px-4 py-4 w-[150px]">
                           <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.invited_by || 'N/A'}</div>
                         </td>
@@ -1171,12 +1207,6 @@ export default function StaffManagement() {
                                       }`}
                                   >
                                     {processingInviteId === invite.id ? 'Processing...' : 'Resend Invite'}
-                                  </button>
-                                  <button
-                                    onClick={() => handleOpenShareInvite(invite)}
-                                    className="block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] text-gray-700 hover:bg-gray-100 transition-colors"
-                                  >
-                                    Share Invite
                                   </button>
                                   <button
                                     onClick={() => {
@@ -1278,7 +1308,6 @@ export default function StaffManagement() {
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Staff Member</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Contact</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[120px]">Role</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Clients</th>
                         {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Performance</th> */}

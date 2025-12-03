@@ -1,114 +1,195 @@
 import React, { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import TabNavigation from '../Integrations/TabNavigation';
 import { firmAdminAnalyticsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
-export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
-  const [segments, setSegments] = useState([]);
-  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
-  const [segmentsError, setSegmentsError] = useState('');
-  const [chartData, setChartData] = useState([]);
-  const [clientSegments, setClientSegments] = useState([]);
+export default function AnalyticsOverview({ activeTab, setActiveTab, tabs, period = '6m' }) {
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function loadSegments() {
+    async function loadAnalyticsData() {
       try {
-        setIsLoadingSegments(true);
-        setSegmentsError(null);
+        setLoading(true);
+        setError(null);
 
-        const response = await firmAdminAnalyticsAPI.getRevenueSegments(365);
-        const segs = response?.data?.segments ?? [];
-        setSegments(segs);
-
-        // Donut chart data: use revenue values
-        setChartData(
-          segs.map(s => ({
-            name: s.label,
-            value: s.revenue,
-            color: s.color
-          }))
-        );
-
-        // Segment list data
-        setClientSegments(
-          segs.map(s => ({
-            name: s.label,
-            value: `$${s.revenue.toLocaleString()}`,
-            average: `$${s.avg_revenue.toLocaleString()} avg`,
-            info: `${s.client_count} clients`,
-            rawColor: s.color
-          }))
-        );
+        const response = await firmAdminAnalyticsAPI.getAnalyticsReports(period);
+        
+        if (response?.success && response?.data) {
+          setAnalyticsData(response.data);
+        } else {
+          throw new Error(response?.message || 'Failed to load analytics data');
+        }
       } catch (error) {
-        console.error('Failed to load segments:', error);
-        setSegmentsError('Failed to load segments.');
-        setSegments([]);
-        setChartData([]);
-        setClientSegments([]);
+        console.error('Failed to load analytics data:', error);
+        setError(error.message || 'Failed to load analytics data.');
+        setAnalyticsData(null);
       } finally {
-        setIsLoadingSegments(false);
+        setLoading(false);
       }
     }
 
-    loadSegments();
-  }, []);
+    loadAnalyticsData();
+  }, [period]);
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-2 border border-gray-200 rounded shadow-lg">
           <p className="font-medium">{payload[0].name}</p>
-          <p className="text-blue-600">${payload[0].value.toLocaleString()}</p>
+          <p className="text-blue-600">${payload[0].value?.toLocaleString() || 0}</p>
         </div>
       );
     }
     return null;
   };
 
-  const kpiData = [
+  const RevenueTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs shadow-lg">
+          <div className="font-semibold text-gray-900 mb-2">{label}</div>
+          <div className="space-y-1">
+            {payload.map((entry, index) => (
+              <div key={index} style={{ color: entry.color }}>
+                {entry.name}: <span className="font-medium">${entry.value?.toLocaleString() || 0}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const ClientGrowthTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs shadow-lg">
+          <div className="font-semibold text-gray-900 mb-2">{label}</div>
+          <div className="space-y-1">
+            {payload.map((entry, index) => (
+              <div key={index} style={{ color: entry.color }}>
+                {entry.name}: <span className="font-medium">{entry.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Extract KPIs from API data
+  const kpiData = analyticsData?.kpis ? [
     {
       title: 'Total Revenue',
-      value: '$338,000',
-      change: '+12.5%',
+      value: analyticsData.kpis.total_revenue?.formatted || '$0',
+      change: analyticsData.kpis.total_revenue?.growth_formatted || '0%',
+      isPositive: analyticsData.kpis.total_revenue?.is_positive ?? true,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-</svg>
+          <path d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       )
     },
     {
       title: 'Active Clients',
-      value: '247',
-      change: '+37',
+      value: analyticsData.kpis.active_clients?.formatted || '0',
+      change: analyticsData.kpis.active_clients?.change_formatted || '+0',
+      isPositive: analyticsData.kpis.active_clients?.is_positive ?? true,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H6C4.93913 15 3.92172 15.4214 3.17157 16.1716C2.42143 16.9217 2 17.9391 2 19V21M22 21V19C21.9993 18.1137 21.7044 17.2528 21.1614 16.5523C20.6184 15.8519 19.8581 15.3516 19 15.13M16 3.13C16.8604 3.3503 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-</svg>
+          <path d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H6C4.93913 15 3.92172 15.4214 3.17157 16.1716C2.42143 16.9217 2 17.9391 2 19V21M22 21V19C21.9993 18.1137 21.7044 17.2528 21.1614 16.5523C20.6184 15.8519 19.8581 15.3516 19 15.13M16 3.13C16.8604 3.3503 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       )
     },
     {
       title: 'Avg. Client Value',
-      value: '$1,369',
-      change: '+8.2%',
+      value: analyticsData.kpis.avg_client_value?.formatted || '$0',
+      change: analyticsData.kpis.avg_client_value?.growth_formatted || '0%',
+      isPositive: analyticsData.kpis.avg_client_value?.is_positive ?? true,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       )
     },
     {
       title: 'Client Retention',
-      value: '96.3%',
-      change: '+1.2%',
+      value: analyticsData.kpis.client_retention?.formatted || '0%',
+      change: analyticsData.kpis.client_retention?.growth_formatted || '0%',
+      isPositive: analyticsData.kpis.client_retention?.is_positive ?? true,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M22 7L14.2071 14.7929C13.8166 15.1834 13.1834 15.1834 12.7929 14.7929L9.20711 11.2071C8.81658 10.8166 8.18342 10.8166 7.79289 11.2071L2 17M22 7H16M22 7V13" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-</svg>
+          <path d="M22 7L14.2071 14.7929C13.8166 15.1834 13.1834 15.1834 12.7929 14.7929L9.20711 11.2071C8.81658 10.8166 8.18342 10.8166 7.79289 11.2071L2 17M22 7H16M22 7V13" stroke="#3AD6F2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       )
     }
-  ];
+  ] : [];
+
+  // Prepare revenue trend chart data
+  const revenueTrendData = analyticsData?.revenue_trend?.map(item => ({
+    month: item.month,
+    monthFull: item.month_full,
+    revenue: item.revenue || 0,
+    expenses: item.expenses || 0,
+    profit: item.profit || 0
+  })) || [];
+
+  // Prepare client growth chart data
+  const clientGrowthData = analyticsData?.client_growth?.map(item => ({
+    month: item.month,
+    monthFull: item.month_full,
+    newClients: item.new_clients || 0,
+    lostClients: item.lost_clients || 0,
+    retentionRate: item.retention_rate || 0
+  })) || [];
+
+  // Prepare client segmentation data
+  const clientSegmentsData = analyticsData?.client_segmentation?.segments?.map(seg => ({
+    name: seg.name,
+    revenue: seg.revenue || 0,
+    revenueFormatted: seg.revenue_formatted || '$0',
+    clientCount: seg.client_count || 0,
+    avgRevenue: seg.avg_revenue || 0,
+    avgRevenueFormatted: seg.avg_revenue_formatted || '$0',
+    percentage: seg.percentage || 0,
+    color: seg.color || '#3b82f6'
+  })) || [];
+
+  // Calculate total revenue for percentage calculation if not provided
+  const totalRevenue = clientSegmentsData.reduce((sum, seg) => sum + (seg.revenue || 0), 0) || 
+                       analyticsData?.client_segmentation?.total_revenue || 0;
+
+  const chartData = clientSegmentsData.map(seg => {
+    const percentage = seg.percentage || (totalRevenue > 0 ? (seg.revenue / totalRevenue * 100) : 0);
+    return {
+      name: seg.name,
+      value: seg.revenue,
+      percentage: percentage,
+      color: seg.color
+    };
+  }).filter(seg => seg.value > 0); // Filter out segments with zero revenue
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading analytics data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -117,15 +198,15 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
         {kpiData.map((kpi, index) => (
           <div key={index} className="bg-white rounded-lg border-1 border-[#E8F0FF] p-4 sm:p-6">
             <div className="flex items-start justify-between">
-            <p className="text-sm font-thin text-gray-600">{kpi.title}</p>
+              <p className="text-sm font-thin text-gray-600">{kpi.title}</p>
               <div className="text-[#3B4A66]">
                 {kpi.icon}
               </div>
             </div>
-             <p className="text-lg font-medium text-gray-900">{kpi.value}</p>
-            <div className="flex items-center text-green-600 text-sm font-medium">
+            <p className="text-lg font-medium text-gray-900">{kpi.value}</p>
+            <div className={`flex items-center text-sm font-medium ${kpi.isPositive ? 'text-green-600' : 'text-red-600'}`}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11.9166 3.79297L7.31242 8.39714L4.60409 5.6888L1.08325 9.20964M11.9166 3.79297H8.66658M11.9166 3.79297L11.9166 7.04297" stroke="#32B582" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.9166 3.79297L7.31242 8.39714L4.60409 5.6888L1.08325 9.20964M11.9166 3.79297H8.66658M11.9166 3.79297L11.9166 7.04297" stroke={kpi.isPositive ? "#32B582" : "#EF4444"} strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className="ml-1">{kpi.change}</span>
             </div>
@@ -150,87 +231,49 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
             <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
             <p className="text-sm text-gray-600">Monthly revenue, expenses, and profit</p>
           </div>
-          <div className="h-56 sm:h-64 relative">
-            {/* Chart Container */}
-            <div className="absolute inset-0 bg-white rounded-lg">
-              {/* Y-axis labels */}
-              <div className="absolute left-0 right-8 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-                <span>80000</span>
-                <span>60000</span>
-                <span>40000</span>
-                <span>20000</span>
-                <span>0</span>
-              </div>
-              
-              {/* Chart Area */}
-              <div className="absolute left-11 right-4 top-4 bottom-8">
-                {/* Grid Lines */}
-                <div className="absolute inset-0">
-                  {/* Horizontal grid lines */}
-                  <div className="absolute top-0 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute top-1/4 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute top-3/4 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute bottom-0 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  
-                  {/* Vertical grid lines */}
-                  <div className="absolute left-0 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-1/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-2/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-3/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-4/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute right-0 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                </div>
-                
-                {/* Stacked Area Chart */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  {/* Expenses Area (Bottom - Red/Pink) */}
-                  <path
-                    d="M 0,75 L 20,78 L 40,75 L 60,68 L 80,69 L 100,64 L 100,100 L 0,100 Z"
-                    fill="rgb(220, 90, 110)"
-                    opacity="0.8"
+          <div className="h-56 sm:h-64">
+            {revenueTrendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
                   />
-                  
-                  {/* Profit Area (Top - Blue) */}
-                  <path
-                    d="M 0,50 L 20,44 L 40,48 L 60,36 L 80,38 L 100,28 L 100,64 L 80,69 L 60,68 L 40,75 L 20,78 L 0,75 Z"
-                    fill="rgb(100, 170, 240)"
-                    opacity="0.8"
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
+                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
                   />
-                  
-                  {/* Revenue Line (Top boundary) */}
-                  <path
-                    d="M 0,50 L 20,44 L 40,48 L 60,36 L 80,38 L 100,28"
-                    fill="none"
-                    stroke="rgb(100, 170, 240)"
-                    strokeWidth="0.5"
+                  <Tooltip content={<RevenueTooltip />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="expenses" 
+                    stackId="1"
+                    stroke="#DC5A6E" 
+                    fill="#DC5A6E" 
+                    fillOpacity={0.8}
+                    name="Expenses"
                   />
-                </svg>
-                
-                {/* Tooltip for April (hover state) */}
-                <div className="absolute top-8 left-3/5 transform -translate-x-1/2 -translate-y-full">
-                  <div className="bg-white rounded-lg  border border-gray-200 p-2 text-xs">
-                    <div className="font-semibold text-gray-900">April</div>
-                    <div className="text-blue-600">$ 61,000</div>
-                    <div className="text-red-500">$ 32,000</div>
-                  </div>
-                  {/* Tooltip connector line */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-px h-2 bg-gray-300 border-dashed border-l"></div>
-                  {/* Data point circle */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-1 bg-white rounded-full border border-gray-300"></div>
-                </div>
+                  <Area 
+                    type="monotone" 
+                    dataKey="profit" 
+                    stackId="1"
+                    stroke="#64AAF0" 
+                    fill="#64AAF0" 
+                    fillOpacity={0.8}
+                    name="Profit"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                No revenue trend data available
               </div>
-              
-              {/* X-axis labels */}
-              <div className="absolute bottom-0 left-8 right-4 flex justify-between text-xs text-gray-500">
-                <span>Jan</span>
-                <span>Feb</span>
-                <span>Mar</span>
-                <span>Apr</span>
-                <span>May</span>
-                <span>Jun</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -240,97 +283,46 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
             <h3 className="text-lg font-semibold text-gray-900">Client Growth</h3>
             <p className="text-sm text-gray-600">New vs lost clients and retention rate</p>
           </div>
-          <div className="h-56 sm:h-64 relative">
-            {/* Chart Container */}
-            <div className="absolute inset-0 bg-white rounded-lg">
-              {/* Y-axis labels */}
-              <div className="absolute left-0 right-8 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-                <span>28</span>
-                <span>21</span>
-                <span>14</span>
-                <span>7</span>
-                <span>0</span>
-              </div>
-              
-              {/* Chart Area */}
-              <div className="absolute left-11 right-4 top-4 bottom-8">
-                {/* Grid Lines */}
-                <div className="absolute inset-0">
-                  {/* Horizontal grid lines */}
-                  <div className="absolute top-0 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute top-1/4 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute top-3/4 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute bottom-0 left-0 right-0 h-px border-t border-dotted border-[#E5E7EB]"></div>
-                  
-                  {/* Vertical grid lines */}
-                  <div className="absolute left-0 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-1/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-2/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-3/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute left-4/5 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                  <div className="absolute right-0 top-0 bottom-0 w-px border-l border-dotted border-[#E5E7EB]"></div>
-                </div>
-                
-                {/* Line Chart */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  {/* New Client Line (Green) */}
-                  <path
-                    d="M 0,46 L 20,32 L 40,21 L 60,25 L 80,4 L 100,54"
-                    fill="none"
-                    stroke="#10B981"
-                    strokeWidth="2"
+          <div className="h-56 sm:h-64">
+            {clientGrowthData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={clientGrowthData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
                   />
-                  
-                  {/* Lost Client Line (Red) */}
-                  <path
-                    d="M 0,89 L 20,93 L 40,89 L 60,86 L 80,89 L 100,93"
-                    fill="none"
-                    stroke="#DC5A6E"
-                    strokeWidth="2"
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280' }}
                   />
-                  
-                  {/* New Client Data Points */}
-                  <circle cx="0" cy="46" r="1.5" fill="#E5E7EB"  strokeWidth="1px" stroke="#10B981" />
-                  <circle cx="20" cy="32" r="1.5" fill="#E5E7EB"  strokeWidth="1px" stroke="#10B981" />
-                  <circle cx="40" cy="21" r="1.5" fill="#E5E7EB"  strokeWidth="1px" stroke="#10B981" />
-                  <circle cx="60" cy="25" r="1.5" fill="#E5E7EB"  strokeWidth="1px" stroke="#10B981" />
-                  <circle cx="80" cy="4" r="1.5" fill="#E5E7EB"  strokeWidth="1px" stroke="#10B981" />
-                  <circle cx="100" cy="54" r="1.5" fill="#E5E7EB"  strokeWidth="1px" stroke="#10B981" />
-                  
-                  {/* Lost Client Data Points */}
-                  <circle cx="0" cy="89" r="1.5" fill="#E5E7EB" strokeWidth="1px" stroke="#DC5A6E" />
-                  <circle cx="20" cy="93" r="1.5" fill="#E5E7EB" strokeWidth="1px" stroke="#DC5A6E" />
-                  <circle cx="40" cy="89" r="1.5" fill="#E5E7EB" strokeWidth="1px" stroke="#DC5A6E" />
-                  <circle cx="60" cy="86" r="1.5" fill="#E5E7EB" strokeWidth="1px" stroke="#DC5A6E" />
-                  <circle cx="80" cy="89" r="1.5" fill="#E5E7EB" strokeWidth="1px" stroke="#DC5A6E" />
-                  <circle cx="100" cy="93" r="1.5" fill="#E5E7EB" strokeWidth="1px" stroke="#DC5A6E" />
-                </svg>
-                
-                {/* Tooltip for March (hover state) */}
-                <div className="absolute top-8 left-2/5 transform -translate-x-1/2 -translate-y-full">
-                  <div className="bg-white rounded-lg  border border-gray-200 p-2 text-xs">
-                    <div className="font-semibold text-gray-900">March</div>
-                    <div className="text-[#3AD6F2]">New Client: 22</div>
-                    <div className="text-[#DC5A6E]">Lost Client: 3</div>
-                  </div>
-                  {/* Tooltip connector line */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-px h-2 bg-gray-300 border-dashed border-l"></div>
-                  {/* Data point circle */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-1 bg-white rounded-full border border-gray-300"></div>
-                </div>
+                  <Tooltip content={<ClientGrowthTooltip />} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="newClients" 
+                    stroke="#10B981" 
+                    strokeWidth={2}
+                    dot={{ fill: '#10B981', r: 3 }}
+                    name="New Clients"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="lostClients" 
+                    stroke="#DC5A6E" 
+                    strokeWidth={2}
+                    dot={{ fill: '#DC5A6E', r: 3 }}
+                    name="Lost Clients"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                No client growth data available
               </div>
-              
-              {/* X-axis labels */}
-              <div className="absolute bottom-0 left-11 right-4 flex justify-between text-xs text-gray-500">
-                <span>Jan</span>
-                <span>Feb</span>
-                <span>Mar</span>
-                <span>Apr</span>
-                <span>May</span>
-                <span>Jun</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -343,22 +335,21 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
             <h3 className="text-lg font-semibold text-gray-900">Client Segmentation</h3>
             <p className="text-sm text-gray-600">Revenue and client distribution by segment</p>
           </div>
-          {segmentsError && (
-            <span className="text-xs text-red-500">{segmentsError}</span>
+          {error && (
+            <span className="text-xs text-red-500">{error}</span>
           )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-
           {/* ----------- Donut Chart ----------- */}
-          <div className="flex items-center justify-center">
-            <div className="w-56 h-56 sm:w-64 sm:h-64">
-              {isLoadingSegments && chartData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-sm text-gray-500">
+          <div className="flex items-center justify-center min-h-[256px] sm:min-h-[320px]">
+            <div className="w-full max-w-sm h-64 sm:h-80 relative">
+              {loading && chartData.length === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">
                   Loading segmentation...
                 </div>
               ) : chartData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">
                   No segmentation data available.
                 </div>
               ) : (
@@ -368,8 +359,9 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={70}
-                      outerRadius={120}
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
                       dataKey="value"
                       stroke="#fff"
                       strokeWidth={2}
@@ -378,7 +370,21 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
+                              <p className="font-medium text-gray-900">{data.name}</p>
+                              <p className="text-blue-600 font-semibold">${data.value?.toLocaleString() || 0}</p>
+                              <p className="text-gray-500 text-sm">{data.percentage?.toFixed(1) || 0}%</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -387,17 +393,17 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
 
           {/* ----------- Segment List ----------- */}
           <div className="space-y-4">
-            {isLoadingSegments && clientSegments.length === 0 && (
+            {loading && clientSegmentsData.length === 0 && (
               <div className="text-sm text-gray-500">Loading segments...</div>
             )}
 
-            {!isLoadingSegments &&
-              clientSegments.length === 0 &&
-              !segmentsError && (
+            {!loading &&
+              clientSegmentsData.length === 0 &&
+              !error && (
                 <div className="text-sm text-gray-500">No segments available.</div>
               )}
 
-            {clientSegments.map((segment, index) => (
+            {clientSegmentsData.map((segment, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between px-2 py-1 border border-[#E8F0FF] rounded-lg"
@@ -405,18 +411,18 @@ export default function AnalyticsOverview({ activeTab, setActiveTab, tabs }) {
                 <div className="flex items-center space-x-3">
                   <div
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: segment.rawColor }}
+                    style={{ backgroundColor: segment.color }}
                   ></div>
 
                   <div>
                     <h6 className="font-medium text-gray-900">{segment.name}</h6>
-                    <p className="text-sm text-gray-600">{segment.average}</p>
+                    <p className="text-sm text-gray-600">{segment.avgRevenueFormatted} avg</p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="font-semibold text-gray-900">{segment.value}</div>
-                  <div className="text-xs text-gray-500">{segment.info}</div>
+                  <div className="font-semibold text-gray-900">{segment.revenueFormatted}</div>
+                  <div className="text-xs text-gray-500">{segment.clientCount} clients</div>
                 </div>
               </div>
             ))}

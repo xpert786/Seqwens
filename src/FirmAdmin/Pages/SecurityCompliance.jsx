@@ -2453,16 +2453,6 @@ export default function SecurityCompliance() {
                             <h4 className="text-2xl font-semibold text-[#1F2937]">Security &amp; Compliance</h4>
                             <p className="text-sm text-[#6B7280]">Monitor security, manage access, and ensure compliance</p>
                         </div>
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2h-3m0-4l3 3m-3-3l-3 3" />
-                            </svg>
-                            Upgrade Plan
-                        </button>
                     </div>
                     <div className="mt-6 flex flex-wrap gap-2 w-fit bg-white rounded-lg p-1 border border-blue-50">
                         {tabs.map((tab) => (

@@ -49,6 +49,39 @@ a {
   backdrop-filter: blur(10px);
 }
 
+/* Phone Input Container - Fix overlap issue */
+.phone-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.phone-input-container .react-phone-input-2 {
+  width: 100% !important;
+}
+
+.phone-input-container .react-phone-input-2 .selected-flag {
+  width: 52px !important;
+  padding: 0 8px !important;
+  border-right: 1px solid #d1d5db !important;
+}
+
+.phone-input-container .react-phone-input-2 input {
+  padding-left: 56px !important;
+  width: 100% !important;
+}
+
+.phone-input-container .react-phone-input-2 .flag-dropdown {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.phone-input-container .react-phone-input-2 .flag-dropdown.open {
+  z-index: 50 !important;
+}
+
 .Toastify__toast {
   font-family: 'BasisGrotesquePro', 'Inter', sans-serif !important;
   border-radius: 8px !important;

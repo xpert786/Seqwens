@@ -82,11 +82,32 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message ||
-          errorData.detail ||
-          `HTTP error! status: ${response.status}`
-        );
+        let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
+        
+        // Parse array format error messages
+        if (Array.isArray(errorMessage)) {
+          errorMessage = errorMessage[0] || errorMessage;
+        } else if (typeof errorMessage === 'string' && errorMessage.trim().startsWith('[')) {
+          try {
+            const parsed = JSON.parse(errorMessage);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              errorMessage = parsed[0];
+            }
+          } catch (e) {
+            // Keep original if parsing fails
+          }
+        }
+        
+        // Also check errorData.errors or errorData.error fields
+        if (errorData.errors) {
+          if (Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors[0] || errorMessage;
+          } else if (typeof errorData.errors === 'string') {
+            errorMessage = errorData.errors;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();

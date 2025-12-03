@@ -101,6 +101,40 @@ export const chatService = {
   },
 
   /**
+   * Delete a chat thread
+   * DELETE /seqwens/api/taxpayer/chat-threads/<thread_id>/
+   * @param {number} threadId - The thread ID
+   * @returns {Promise<Object>} Response
+   */
+  deleteThread: async (threadId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    const response = await fetchWithCors(`${API_BASE_URL}${API_PREFIX}/chat-threads/${threadId}/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    // DELETE requests might not return JSON content
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return { success: true };
+    }
+
+    return await response.json().catch(() => ({ success: true }));
+  },
+
+  /**
    * Get messages in a chat thread (for initial load or pagination)
    * @param {number} threadId - The thread ID
    * @param {number} page - Page number (default: 1)

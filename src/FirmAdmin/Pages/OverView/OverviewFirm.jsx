@@ -66,6 +66,7 @@ export default function FirmAdminDashboard() {
   const [activeTab, setActiveTab] = useState('trend');
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshEnabled, setRefreshEnabled] = useState(true);
   const [dateRange, setDateRange] = useState('Last 30 days');
@@ -682,26 +683,26 @@ export default function FirmAdminDashboard() {
   const handleScheduleReport = async () => {
     // Validate inputs
     if (!recipients || !recipients.trim()) {
-      toast.error('Please enter at least one recipient email address');
+      toast.error('Please enter your email address');
       return;
     }
 
-    // Parse email addresses (comma-separated)
+    // Parse email addresses (comma-separated or single)
     const emailList = recipients
       .split(',')
       .map(email => email.trim())
       .filter(email => email.length > 0);
 
     if (emailList.length === 0) {
-      toast.error('Please enter at least one valid email address');
+      toast.error('Please enter a valid email address');
       return;
     }
 
-    // Validate email format
+    // Validate email format - simple validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const invalidEmails = emailList.filter(email => !emailRegex.test(email));
     if (invalidEmails.length > 0) {
-      toast.error(`Invalid email addresses: ${invalidEmails.join(', ')}`);
+      toast.error(`Invalid email format. Please check and try again.`);
       return;
     }
 
@@ -812,16 +813,18 @@ export default function FirmAdminDashboard() {
 
             {/* Recipients Section */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-800 font-[BasisGrotesquePro]">Recipients</label>
+              <label className="text-sm font-medium text-gray-800 font-[BasisGrotesquePro]">Email</label>
               <input
                 type="text"
                 value={recipients}
                 onChange={(e) => setRecipients(e.target.value)}
                 disabled={scheduleLoading}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 font-[BasisGrotesquePro] focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Enter email addresses (comma-separated)"
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2 font-[BasisGrotesquePro] focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="your.email@example.com"
+                autoComplete="email"
+                maxLength={500}
               />
-              <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Separate multiple emails with commas</p>
+              <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Enter email address (or multiple addresses separated by commas)</p>
             </div>
           </div>
 
@@ -857,10 +860,79 @@ export default function FirmAdminDashboard() {
     );
   };
 
+  // RevenueModal Component - Fullscreen chart view
+  const RevenueModal = () => {
+    if (!isRevenueModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 font-[BasisGrotesquePro]">Revenue Analytics</h3>
+                <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">Your revenue contribution and trends</p>
+              </div>
+              <button
+                onClick={() => setIsRevenueModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-200 transition-colors"
+              >
+                <CrossesIcon />
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Content - Large Chart */}
+          <div className="p-6 flex-1 overflow-auto">
+            <div className="h-[calc(90vh-180px)] min-h-[600px]">
+              {loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-gray-500">Loading revenue data...</div>
+                </div>
+              ) : getRevenueData(dashboardData)?.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={getRevenueData(dashboardData)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 14, fill: '#6B7280', fontWeight: 500 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 14, fill: '#6B7280', fontWeight: 500 }}
+                    />
+                    <Tooltip content={<RevenueTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#3AD6F2"
+                      strokeWidth={4}
+                      dot={{ fill: '#3AD6F2', stroke: '#3AD6F2', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 9, stroke: '#3AD6F2', strokeWidth: 2, fill: '#3AD6F2' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-gray-500">No revenue data available</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <CustomizeModal />
       <ScheduleModal />
+      <RevenueModal />
       <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
@@ -890,7 +962,7 @@ export default function FirmAdminDashboard() {
           </div>
         </div>
 
-      
+
 
         {/* Key Metrics Section */}
         {widgetVisibility.Kpi && (
@@ -984,7 +1056,7 @@ export default function FirmAdminDashboard() {
                     }}
                   ></div>
                 </div>
-               
+
               </div>
             </div>
 
@@ -1056,21 +1128,17 @@ export default function FirmAdminDashboard() {
                   <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Your revenue contribution and trends</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
+                  <select className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
+                    <option>Monthly</option>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                    Filter
-                  </button>
-                  {!advancedReportingEnabled && (
-                    <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Export
-                    </button>
-                  )}
-                  <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50">
+                  </select>
+
+                  <button 
+                    onClick={() => setIsRevenueModalOpen(true)}
+                    className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50"
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>
@@ -1079,21 +1147,6 @@ export default function FirmAdminDashboard() {
               </div>
             </div>
 
-            {/* Tab Navigation and Monthly Dropdown */}
-            <div className="flex justify-between items-center mb-6">
-              <div className="bg-white rounded-lg p-1 border border-gray-200">
-                <div className="flex gap-0">
-
-
-                </div>
-              </div>
-              <select className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50 flex items-center gap-2">
-                <option>Monthly</option>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </select>
-            </div>
 
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">

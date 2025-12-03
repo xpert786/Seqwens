@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { firmAdminEmailSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const stats = [
   {
@@ -46,9 +48,7 @@ const stats = [
   }
 ];
 
-const Toggle = ({ label, description, defaultOn }) => {
-  const [isOn, setIsOn] = useState(defaultOn);
-  
+const Toggle = ({ label, description, checked, onChange }) => {
   return (
     <div className="flex items-start justify-between rounded-lg px-2 py-2">
       <div>
@@ -59,14 +59,14 @@ const Toggle = ({ label, description, defaultOn }) => {
         <input 
           type="checkbox" 
           className="sr-only" 
-          checked={isOn}
-          onChange={() => setIsOn(!isOn)}
+          checked={checked}
+          onChange={onChange}
         />
         <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${
-          isOn ? 'bg-[#FF8A63]' : 'bg-[#CBD5F5]'
+          checked ? 'bg-[#FF8A63]' : 'bg-[#CBD5F5]'
         }`}>
           <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-            isOn ? 'translate-x-5' : 'translate-x-0'
+            checked ? 'translate-x-5' : 'translate-x-0'
           }`} />
         </div>
       </label>
@@ -75,8 +75,136 @@ const Toggle = ({ label, description, defaultOn }) => {
 };
 
 export default function EmailSettingsView() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Compliance Settings State
+  const [complianceSettings, setComplianceSettings] = useState({
+    auto_include_irs_disclaimers: true,
+    auto_include_opt_out_links: false,
+    enable_audit_trails: true,
+    default_irs_disclaimer: 'This communication is for informational purposes only and does not constitute tax advice. Please consult with a qualified tax professional for specific guidance.'
+  });
+
+  // Email Branding State
+  const [emailBranding, setEmailBranding] = useState({
+    email_footer: '© 2024 Tax Practice Pro. All rights reserved.',
+    logo_url: 'https://example.com/logo.png'
+  });
+
+  // Automation Settings State
+  const [automationSettings, setAutomationSettings] = useState({
+    auto_send_welcome_emails: true,
+    auto_send_appointment_confirmations: true,
+    auto_send_document_reminders: true,
+    reminder_frequency_days: 3
+  });
+
+  // Fetch email settings on mount
+  useEffect(() => {
+    fetchEmailSettings();
+  }, []);
+
+  const fetchEmailSettings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await firmAdminEmailSettingsAPI.getEmailSettings();
+      
+      if (response?.success && response?.data) {
+        const data = response.data;
+        
+        // Set compliance settings
+        if (data.compliance_settings) {
+          setComplianceSettings(prev => ({
+            ...prev,
+            ...data.compliance_settings
+          }));
+        }
+        
+        // Set email branding
+        if (data.email_branding) {
+          setEmailBranding(prev => ({
+            ...prev,
+            ...data.email_branding
+          }));
+        }
+        
+        // Set automation settings
+        if (data.automation_settings) {
+          setAutomationSettings(prev => ({
+            ...prev,
+            ...data.automation_settings
+          }));
+        }
+      } else if (response?.data) {
+        // Handle case where response.data is the settings object directly
+        const data = response.data;
+        if (data.compliance_settings) {
+          setComplianceSettings(prev => ({ ...prev, ...data.compliance_settings }));
+        }
+        if (data.email_branding) {
+          setEmailBranding(prev => ({ ...prev, ...data.email_branding }));
+        }
+        if (data.automation_settings) {
+          setAutomationSettings(prev => ({ ...prev, ...data.automation_settings }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch email settings:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to load email settings');
+      toast.error(errorMsg || 'Failed to load email settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      const payload = {
+        compliance_settings: complianceSettings,
+        email_branding: emailBranding,
+        automation_settings: automationSettings
+      };
+
+      const response = await firmAdminEmailSettingsAPI.updateEmailSettings(payload);
+      
+      if (response?.success || response?.data) {
+        toast.success('Email settings saved successfully');
+      } else {
+        throw new Error(response?.message || 'Failed to save email settings');
+      }
+    } catch (err) {
+      console.error('Failed to save email settings:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to save email settings');
+      toast.error(errorMsg || 'Failed to save email settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading email settings...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         
       </div>
@@ -84,71 +212,51 @@ export default function EmailSettingsView() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <div className="rounded-2xl bg-white p-6 !border border-[#E8F0FF]">
-            <div className="mb-5">
-              <h3 className="text-lg font-semibold text-[#1F2A55]">SMTP Configuration</h3>
-              <p className="text-sm text-[#7B8AB2]">Configure your email server settings</p>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">SMTP Host</label>
-                <input
-                  type="text"
-                  defaultValue="smtp.gmail.com"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                <div>
-                  <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Port</label>
-                  <input
-                    type="text"
-                    defaultValue="587"
-                    className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Encryption</label>
-                  <select className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30">
-                    <option>TLS</option>
-                    <option>SSL</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Username</label>
-                <input
-                  type="email"
-                  defaultValue="admin@taxpractice.com"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Password</label>
-                <input
-                  type="password"
-                  defaultValue="********"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-6 !border border-[#E8F0FF]">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-[#1F2A55]">Compliance Settings</h3>
               <p className="text-sm text-[#7B8AB2]">Configure compliance and legal requirements</p>
             </div>
 
             <div className="space-y-3">
-              <Toggle label="Auto-include IRS Disclaimers" description="Automatically add required tax disclaimers" defaultOn />
-              <Toggle label="Auto-include Opt-out Links" description="Add unsubscribe links to marketing emails" defaultOn={false} />
-              <Toggle label="Enable Audit Trails" description="Track all template changes and usage" defaultOn />
+              <Toggle 
+                label="Auto-include IRS Disclaimers" 
+                description="Automatically add required tax disclaimers" 
+                checked={complianceSettings.auto_include_irs_disclaimers}
+                onChange={(e) => setComplianceSettings(prev => ({
+                  ...prev,
+                  auto_include_irs_disclaimers: e.target.checked
+                }))}
+              />
+              <Toggle 
+                label="Auto-include Opt-out Links" 
+                description="Add unsubscribe links to marketing emails" 
+                checked={complianceSettings.auto_include_opt_out_links}
+                onChange={(e) => setComplianceSettings(prev => ({
+                  ...prev,
+                  auto_include_opt_out_links: e.target.checked
+                }))}
+              />
+              <Toggle 
+                label="Enable Audit Trails" 
+                description="Track all template changes and usage" 
+                checked={complianceSettings.enable_audit_trails}
+                onChange={(e) => setComplianceSettings(prev => ({
+                  ...prev,
+                  enable_audit_trails: e.target.checked
+                }))}
+              />
 
               <div>
                 <label className="text-sm font-semibold tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Default IRS Disclaimer</label>
-                <div className="rounded-2xl !border border-[#E8F0FF] bg-[#FFFFFF] p-4 text-sm text-[#1F2A55]">
-                  This communication is for informational purposes only and does not constitute tax advice. Please consult with a qualified tax professional for specific guidance.
-                </div>
+                <textarea
+                  rows={3}
+                  value={complianceSettings.default_irs_disclaimer || ''}
+                  onChange={(e) => setComplianceSettings(prev => ({
+                    ...prev,
+                    default_irs_disclaimer: e.target.value
+                  }))}
+                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+                />
               </div>
             </div>
           </div>
@@ -163,34 +271,14 @@ export default function EmailSettingsView() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">From Name</label>
-                <input
-                  type="text"
-                  defaultValue="Tax Practice Pro"
-                  className="mt-1 w-full rounded-lg !border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">From Email</label>
-                <input
-                  type="email"
-                  defaultValue="noreply@taxpractice.com"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Reply-To Email</label>
-                <input
-                  type="email"
-                  defaultValue="support@taxpractice.com"
-                  className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
-                />
-              </div>
-              <div>
                 <label className="text-sm font-regular tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Email Footer</label>
                 <textarea
                   rows={3}
-                  defaultValue="© 2024 Tax Practice Pro. All rights reserved."
+                  value={emailBranding.email_footer || ''}
+                  onChange={(e) => setEmailBranding(prev => ({
+                    ...prev,
+                    email_footer: e.target.value
+                  }))}
                   className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
                 />
               </div>
@@ -201,7 +289,11 @@ export default function EmailSettingsView() {
                 </label>
                 <input
                   type="url"
-                  defaultValue="https://example.com/logo.png"
+                  value={emailBranding.logo_url || ''}
+                  onChange={(e) => setEmailBranding(prev => ({
+                    ...prev,
+                    logo_url: e.target.value
+                  }))}
                   className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
                 />
               </div>
@@ -221,11 +313,10 @@ export default function EmailSettingsView() {
                 <div className="mt-1 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#C8D5FF] bg-[#F8FBFF] p-6 text-sm">
                   <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#1F2A55] shadow-sm ring-1 ring-[#DDE5FF] hover:bg-[#F0F4FF] transition">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M9.91634 4.66667L6.99967 1.75L4.08301 4.66667" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M7 1.75V8.75" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M12.25 8.75V11.0833C12.25 11.3928 12.1271 11.6895 11.9083 11.9083C11.6895 12.1271 11.3928 12.25 11.0833 12.25H2.91667C2.60725 12.25 2.3105 12.1271 2.09171 11.9083C1.87292 11.6895 1.75 11.3928 1.75 11.0833V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9.91634 4.66667L6.99967 1.75L4.08301 4.66667" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M7 1.75V8.75" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-
                     Upload Logo
                   </button>
                   <p className="text-xs text-[#7B8AB2]">PNG, JPG up to 2MB</p>
@@ -244,42 +335,57 @@ export default function EmailSettingsView() {
               <Toggle
                 label="Auto-send Welcome Emails"
                 description="Send welcome email to new clients"
-                defaultOn
+                checked={automationSettings.auto_send_welcome_emails}
+                onChange={(e) => setAutomationSettings(prev => ({
+                  ...prev,
+                  auto_send_welcome_emails: e.target.checked
+                }))}
               />
               <Toggle
                 label="Auto-send Appointment Confirmations"
                 description="Confirm appointments automatically"
-                defaultOn
+                checked={automationSettings.auto_send_appointment_confirmations}
+                onChange={(e) => setAutomationSettings(prev => ({
+                  ...prev,
+                  auto_send_appointment_confirmations: e.target.checked
+                }))}
               />
               <Toggle
                 label="Auto-send Document Reminders"
                 description="Remind clients about missing documents"
-                defaultOn
+                checked={automationSettings.auto_send_document_reminders}
+                onChange={(e) => setAutomationSettings(prev => ({
+                  ...prev,
+                  auto_send_document_reminders: e.target.checked
+                }))}
               />
 
               <div>
                 <label className="text-sm font-semibold tracking-wide text-[#3B4A66] font-[BasisGrotesquePro]">Reminder Frequency (days)</label>
                 <input
                   type="number"
-                  defaultValue={3}
+                  value={automationSettings.reminder_frequency_days || 3}
+                  onChange={(e) => setAutomationSettings(prev => ({
+                    ...prev,
+                    reminder_frequency_days: parseInt(e.target.value) || 3
+                  }))}
+                  min="1"
                   className="mt-1 w-full rounded-lg border border-[#DDE5FF] px-3 py-2 text-sm text-[#1F2A55] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
                 />
               </div>
             </div>
-
-           
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-              <button className="!rounded-lg px-4 py-2 text-sm font-regular text-[#3B4A66] bg-[#FFFFFF] !border border-[#E8F0FF]">
-                Test Email Configuration
-              </button>
-              <button className="!rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-regular text-white transition hover:bg-[#FF7142]">
-                Save Settings
-              </button>
-            </div>
+            <button 
+              onClick={handleSaveSettings}
+              disabled={saving}
+              className="!rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-regular text-white transition hover:bg-[#FF7142] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
