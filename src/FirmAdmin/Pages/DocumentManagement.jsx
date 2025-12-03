@@ -303,7 +303,7 @@ export default function DocumentManagement() {
       {!isNestedRoute && (
         <div className="mb-6  w-fit">
           <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Folder', 'Compliance', 'Security', 'Audit Trail'].map((tab) => (
+            {['Folder', 'Compliance', 'Security'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

@@ -12,6 +12,7 @@ import { useFirmSettings } from '../../Context/FirmSettingsContext';
 export default function AnalyticsMain() {
   const { advancedReportingEnabled } = useFirmSettings();
   const [activeTab, setActiveTab] = useState('Overview');
+  const [period, setPeriod] = useState('6m'); // Default to 6 months
 
   // Export Analytics Report to PDF
   const exportAnalyticsToPDF = () => {
@@ -153,6 +154,7 @@ export default function AnalyticsMain() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           tabs={tabs}
+          period={period}
         />;
 
       case 'Revenue Analysis':
@@ -160,6 +162,7 @@ export default function AnalyticsMain() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           tabs={tabs}
+          period={period}
         />;
 
       case 'Client Analytics':
@@ -167,6 +170,7 @@ export default function AnalyticsMain() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           tabs={tabs}
+          period={period}
         />;
 
       case 'Service Performance':
@@ -174,6 +178,7 @@ export default function AnalyticsMain() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           tabs={tabs}
+          period={period}
         />;
 
       case 'Staff Productivity':
@@ -234,6 +239,7 @@ export default function AnalyticsMain() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           tabs={tabs}
+          period={period}
         />;
 
       default:
@@ -254,10 +260,16 @@ export default function AnalyticsMain() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             {/* Date Range Dropdown */}
             <div className="relative w-full sm:w-auto">
-              <select className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-10 text-sm focus:outline-none">
-                <option>Last 6 months</option>
-                <option>Last 3 months</option>
-                <option>Last year</option>
+              <select 
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="w-full appearance-none text-[#3B4A66] bg-white border-1 border-[#E8F0FF] rounded-lg px-3 sm:px-4 py-2 pr-10 text-sm focus:outline-none"
+              >
+                <option value="1m">Last 1 month</option>
+                <option value="3m">Last 3 months</option>
+                <option value="6m">Last 6 months</option>
+                <option value="1y">Last year</option>
+                <option value="all">All time</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

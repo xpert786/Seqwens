@@ -44,6 +44,9 @@ const Messages = () => {
   const threadFileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [threadToDelete, setThreadToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // WebSocket hook for real-time messaging (using new chat-threads API)
   const {
@@ -572,12 +575,12 @@ const Messages = () => {
     try {
       setSendingThreadMessage(true);
 
-      // Try WebSocket first if connected
-      if (wsConnected) {
+      // Skip WebSocket if attachment is present - WebSocket doesn't support file attachments
+      // Try WebSocket first only if no attachment and WebSocket is connected
+      if (wsConnected && !threadAttachment) {
         const sent = wsSendMessage(messageText, false);
         if (sent) {
           console.log('✅ Message sent via WebSocket');
-          setThreadAttachment(null);
           toast.success('Message sent successfully');
           // Message will come back via WebSocket, no need to refresh manually
           // Only refresh conversations to update last message timestamp (without loading state)
@@ -591,7 +594,7 @@ const Messages = () => {
         }
       }
 
-      // Fallback to REST API only if WebSocket failed or not connected
+      // Use REST API for attachments or if WebSocket failed/not connected
       const messageData = {
         content: messageText.trim(),
         is_internal: false
@@ -601,10 +604,67 @@ const Messages = () => {
 
       if (response.success) {
         toast.success('Message sent successfully');
+        
+        // Save attachment state before clearing it
+        const hadAttachment = !!threadAttachment;
         setThreadAttachment(null);
 
-        // Only refresh messages if WebSocket is not connected (to avoid duplicates)
-        // If WebSocket is connected, it will receive the message automatically
+        // Always refresh messages after sending attachment to get the attachment URL
+        // WebSocket might not properly handle attachment URLs or might delay
+        if (hadAttachment) {
+          // Wait a moment for server to process the attachment, then refresh
+          setTimeout(async () => {
+            try {
+              const messagesResponse = await firmAdminMessagingAPI.getMessages(selectedThreadId, { page: 1, page_size: 50 });
+              console.log('Refreshed messages after attachment send:', messagesResponse);
+
+              let messagesArray = [];
+              if (messagesResponse.success && messagesResponse.data) {
+                if (Array.isArray(messagesResponse.data.messages)) {
+                  messagesArray = messagesResponse.data.messages;
+                } else if (Array.isArray(messagesResponse.data)) {
+                  messagesArray = messagesResponse.data;
+                } else if (messagesResponse.data.results) {
+                  messagesArray = messagesResponse.data.results;
+                }
+              } else if (Array.isArray(messagesResponse)) {
+                messagesArray = messagesResponse;
+              }
+
+              if (messagesArray.length > 0) {
+                setThreadMessages(messagesArray.map(msg => {
+                  // Handle attachment object from API
+                  const attachmentObj = msg.attachment || null;
+                  const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
+                  const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+                  
+                  return {
+                    id: msg.id,
+                    content: msg.content || msg.message || '',
+                    sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                    sender_role: msg.sender?.role || msg.sender_role || '',
+                    sender_id: msg.sender?.id || msg.sender_id || null,
+                    created_at: msg.created_at,
+                    is_read: msg.is_read || false,
+                    attachment: attachmentUrl,
+                    attachmentObj: attachmentObj,
+                    attachment_name: attachmentName,
+                    hasAttachment: !!(attachmentObj || attachmentUrl),
+                  };
+                }));
+                
+                // Scroll to bottom
+                setTimeout(() => {
+                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 100);
+              }
+            } catch (refreshError) {
+              console.error('Error refreshing messages after attachment send:', refreshError);
+            }
+          }, 1000);
+        }
+
+        // Refresh messages if WebSocket is not connected
         if (!wsConnected) {
           // Scroll to bottom after sending
           setTimeout(() => {
@@ -628,17 +688,26 @@ const Messages = () => {
             }
 
             if (messagesArray.length > 0) {
-              setThreadMessages(messagesArray.map(msg => ({
-                id: msg.id,
-                content: msg.content || msg.message,
-                sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                sender_role: msg.sender?.role || msg.sender_role || '',
-                sender_id: msg.sender?.id || msg.sender_id || null,
-                created_at: msg.created_at,
-                is_read: msg.is_read || false,
-                attachment: msg.attachment || null,
-                attachment_name: msg.attachment_name || null,
-              })));
+              setThreadMessages(messagesArray.map(msg => {
+                // Handle attachment object from API
+                const attachmentObj = msg.attachment || null;
+                const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
+                const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+                
+                return {
+                  id: msg.id,
+                  content: msg.content || msg.message || '',
+                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                  sender_role: msg.sender?.role || msg.sender_role || '',
+                  sender_id: msg.sender?.id || msg.sender_id || null,
+                  created_at: msg.created_at,
+                  is_read: msg.is_read || false,
+                  attachment: attachmentUrl,
+                  attachmentObj: attachmentObj,
+                  attachment_name: attachmentName,
+                  hasAttachment: !!(attachmentObj || attachmentUrl),
+                };
+              }));
             }
           } catch (refreshError) {
             console.error('Error refreshing messages after send:', refreshError);
@@ -650,17 +719,26 @@ const Messages = () => {
                   ? chatResponse.data.messages
                   : (Array.isArray(chatResponse.data) ? chatResponse.data : []);
                 if (messagesArray.length > 0) {
-                  setThreadMessages(messagesArray.map(msg => ({
-                    id: msg.id,
-                    content: msg.content || msg.message,
-                    sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                    sender_role: msg.sender?.role || msg.sender_role || '',
-                    sender_id: msg.sender?.id || msg.sender_id || null,
-                    created_at: msg.created_at,
-                    is_read: msg.is_read || false,
-                    attachment: msg.attachment || null,
-                    attachment_name: msg.attachment_name || null,
-                  })));
+                  setThreadMessages(messagesArray.map(msg => {
+                    // Handle attachment object from API
+                    const attachmentObj = msg.attachment || null;
+                    const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
+                    const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+                    
+                    return {
+                      id: msg.id,
+                      content: msg.content || msg.message || '',
+                      sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                      sender_role: msg.sender?.role || msg.sender_role || '',
+                      sender_id: msg.sender?.id || msg.sender_id || null,
+                      created_at: msg.created_at,
+                      is_read: msg.is_read || false,
+                      attachment: attachmentUrl,
+                      attachmentObj: attachmentObj,
+                      attachment_name: attachmentName,
+                      hasAttachment: !!(attachmentObj || attachmentUrl),
+                    };
+                  }));
                 }
               }
             } catch (fallbackError) {
@@ -718,6 +796,54 @@ const Messages = () => {
     const trimmed = name.trim();
     if (trimmed.length === 0) return '?';
     return trimmed[0].toUpperCase();
+  };
+
+  const handleDeleteThread = async (threadId, e) => {
+    e.stopPropagation(); // Prevent conversation selection
+    setThreadToDelete(threadId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteThread = async () => {
+    if (!threadToDelete) return;
+
+    try {
+      setDeleting(true);
+      
+      // Try chatService first, fallback to firmAdminMessagingAPI
+      try {
+        await chatService.deleteThread(threadToDelete);
+      } catch (error) {
+        console.log('chatService.deleteThread failed, trying alternative method:', error);
+        // Use chatService as primary method since it's standardized
+        throw error;
+      }
+
+      // Remove from conversations list
+      setConversations(prev => prev.filter(conv => conv.id !== threadToDelete));
+      
+      // If deleted conversation was active, clear it
+      if (selectedThreadId === threadToDelete) {
+        setSelectedThreadId(null);
+        setSelectedConversation(null);
+        setThreadMessages([]);
+      }
+
+      toast.success('Thread deleted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (err) {
+      console.error('Error deleting thread:', err);
+      toast.error('Failed to delete thread: ' + (err.message || 'Unknown error'), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      setThreadToDelete(null);
+    }
   };
 
   // Summary cards data
@@ -976,6 +1102,15 @@ const Messages = () => {
                             <span className={`text-xs px-2 py-0.5 rounded-full font-[BasisGrotesquePro] flex-shrink-0 whitespace-nowrap !border border-[#E8F0FF] bg-white text-gray-700`}>
                               {conv.is_staff_conversation ? 'Internal' : 'Client'}
                             </span>
+                            <button
+                              onClick={(e) => handleDeleteThread(conv.id, e)}
+                              className="w-5 h-5 flex items-center justify-center text-red-500 hover:text-red-700 transition-colors flex-shrink-0"
+                              title="Delete thread"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
                           </div>
                           <p className="text-xs text-gray-600 mb-1 line-clamp-2 font-[BasisGrotesquePro]">
                             {conv.last_message_preview?.content || conv.subject || 'No messages'}
@@ -1315,6 +1450,46 @@ const Messages = () => {
                     <path d="M16.5 1.5L8.25 9.75" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   {sending ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-6">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h4 className="text-lg font-bold text-gray-900 mb-3 font-[BasisGrotesquePro]">Delete Thread</h4>
+              <p className="text-sm text-gray-600 mb-6 font-[BasisGrotesquePro]">
+                Are you sure you want to delete this conversation? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setThreadToDelete(null);
+                  }}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteThread}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
                 </button>
               </div>
             </div>

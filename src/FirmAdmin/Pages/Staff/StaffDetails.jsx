@@ -8,7 +8,6 @@ import AssignedClientsTab from './StaffTabs/AssignedClientsTab';
 import CurrentTasksTab from './StaffTabs/CurrentTasksTab';
 import PerformanceTab from './StaffTabs/PerformanceTab';
 import ScheduleTab from './StaffTabs/ScheduleTab';
-import OnboardingTab from './StaffTabs/OnboardingTab';
 import ActivityLogTab from './StaffTabs/ActivityLogTab';
 
 export default function StaffDetails() {
@@ -127,7 +126,6 @@ export default function StaffDetails() {
     'Current Tasks',
     'Performance',
     'Schedule',
-    'Onboarding',
     'Activity log'
   ];
 
@@ -145,25 +143,6 @@ export default function StaffDetails() {
     { id: 3, title: 'Quarterly Filing - Multiple Clients', dueDate: '25-03-2024', progress: 25, priority: 'High', status: 'Pending' }
   ];
 
-  const onboardingSteps = [
-    { id: 1, title: 'Account Invite - Staff Accepted Firm Invite', status: 'Completed', date: 'Aug 10, 2025', action: null },
-    { id: 2, title: 'ID Verification - Gov. ID Verified (Manual Or KBA)', status: 'Completed', date: 'Aug 12, 2025', action: 'View Proof' },
-    { id: 3, title: 'E-Signature - Signed Firm Compliance Agreement', status: 'In Progress', date: null, action: 'Resend Request' },
-    { id: 4, title: 'Compliance Certification - Firm + IRS Due Diligence', status: 'Not Started', date: null, action: 'Assign Task' }
-  ];
-
-  const trainingModules = [
-    { id: 1, title: 'Tax Law Fundamentals', required: true, completed: 12, total: 15 },
-    { id: 2, title: 'Client Communication', required: true, completed: 14, total: 15 },
-    { id: 3, title: 'Advanced Tax Planning', required: false, completed: 8, total: 15 }
-  ];
-
-  const activityLog = [
-    { id: 1, type: 'completed', title: 'Completed tax return', client: 'John Smith', date: '2024-03-18 14:30', icon: 'clock' },
-    { id: 2, type: 'scheduled', title: 'Client meeting scheduled', client: 'ABC Corp', date: '2024-03-18 10:15', icon: 'calendar' },
-    { id: 3, type: 'updated', title: 'Document updated', client: 'Sarah Wilson', date: '2024-03-17 16:45', icon: 'document' },
-    { id: 4, type: 'email', title: 'Email sent to client', client: 'Mike Johnson', date: '2024-03-17 09:20', icon: 'message' }
-  ];
 
   if (loading) {
     return (
@@ -430,7 +409,7 @@ export default function StaffDetails() {
 
 
       {activeTab === 'Activity log' && (
-        <ActivityLogTab staffMember={staffMember} activityLog={activityLog} />
+        <ActivityLogTab staffId={id} staffMember={staffMember} />
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminPaymentMethodsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import AllPlans from './AllPlans';
 import AddOns from './AddOns';
@@ -331,21 +331,10 @@ const SubscriptionManagement = () => {
         }
 
         try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/firm-admin/payment-methods/${paymentId}/`;
+            const response = await firmAdminPaymentMethodsAPI.deletePaymentMethod(paymentId);
 
-            const response = await fetchWithCors(url, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                toast.success(result.message || 'Payment method deleted successfully', {
+            if (response.success) {
+                toast.success(response.message || 'Payment method deleted successfully', {
                     position: 'top-right',
                     autoClose: 3000,
                     pauseOnHover: false
@@ -354,7 +343,7 @@ const SubscriptionManagement = () => {
                 await fetchPaymentMethods();
             } else {
                 // Handle specific error cases
-                let errorMessage = result.message || 'Failed to delete payment method';
+                let errorMessage = response.message || 'Failed to delete payment method';
                 
                 if (errorMessage.includes('primary payment method')) {
                     errorMessage = 'Cannot delete primary payment method. Set another payment method as primary first.';

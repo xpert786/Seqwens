@@ -1184,10 +1184,13 @@ export default function FirmManagement() {
                                     onCountryChange={(countryCode) => {
                                         setPhoneCountry(countryCode.toLowerCase());
                                     }}
-                                    inputClass="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                    containerClass="w-100 phone-input-container"
+                                    inputClass="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    containerClass="w-full phone-input-container"
+                                    buttonClass="!border-r !border-gray-300"
+                                    dropdownClass="!z-50"
                                     enableSearch={true}
                                     countryCodeEditable={false}
+                                    specialLabel=""
                                 />
                             </div>
 
