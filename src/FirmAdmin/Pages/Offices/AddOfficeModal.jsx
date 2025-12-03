@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { toast } from 'react-toastify';
 import { CrossesIcon } from '../../Components/icons';
 import { firmOfficeAPI, handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -73,6 +75,7 @@ const initialFormState = {
 export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState(initialFormState);
+    const [phoneCountry, setPhoneCountry] = useState('us');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [staffOptions, setStaffOptions] = useState([]);
@@ -674,13 +677,19 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Phone Number
                                     </label>
-                                    <input
-                                        type="tel"
-                                        name="phone_number"
-                                        value={formData.phone_number}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                        placeholder="(555) 123-4567"
+                                    <PhoneInput
+                                        country={phoneCountry}
+                                        value={formData.phone_number || ''}
+                                        onChange={(phone) => {
+                                            setFormData(prev => ({ ...prev, phone_number: phone }));
+                                        }}
+                                        onCountryChange={(countryCode) => {
+                                            setPhoneCountry(countryCode.toLowerCase());
+                                        }}
+                                        inputClass="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
+                                        containerClass="w-100 phone-input-container"
+                                        enableSearch={true}
+                                        countryCodeEditable={false}
                                     />
                                 </div>
                                 <div>

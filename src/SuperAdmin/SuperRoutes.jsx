@@ -13,6 +13,7 @@ import SupportCenter from './Pages/SupportCenter/SupportCenter';
 import FirmManagement from './Pages/FirmManagement';
 import FirmDetails from './Pages/FirmDetails';
 import Notifications from './Pages/AccountSettings/Notifications';
+import RoleRequests from './Pages/RoleRequests';
 
 // Protected Route Component for Super Admin
 function SuperAdminProtectedRoute({ children }) {
@@ -100,8 +101,10 @@ function SuperAdminOnlyProtectedRoute({ children }) {
   const storage = getStorage();
   const userType = storage?.getItem("userType");
   
+  console.log('SuperAdminOnlyProtectedRoute - User type:', userType);
+  
   if (userType !== 'super_admin') {
-    console.warn('Unauthorized access attempt - Super Admin only');
+    console.warn('Unauthorized access attempt - Super Admin only. User type:', userType);
     // Redirect to appropriate page based on role
     if (userType === 'support_admin') {
       return <Navigate to="/superadmin/support" replace />;
@@ -114,6 +117,7 @@ function SuperAdminOnlyProtectedRoute({ children }) {
     }
   }
   
+  console.log('SuperAdminOnlyProtectedRoute - Access granted, rendering children');
   return children;
 }
 
@@ -144,6 +148,12 @@ export default function SuperRoutes() {
       }>
         <Route index element={<SuperDashboardContent />} />
         <Route path="dashboard" element={<SuperDashboardContent />} />
+        {/* Role Requests - Only for super_admin - Placed early to ensure proper matching */}
+        <Route path="role-requests" element={
+          <SuperAdminOnlyProtectedRoute>
+            <RoleRequests />
+          </SuperAdminOnlyProtectedRoute>
+        } />
         {/* Super Admin Only Routes */}
         <Route path="users" element={
           <SuperAdminOnlyProtectedRoute>

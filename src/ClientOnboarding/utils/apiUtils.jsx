@@ -191,10 +191,31 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         // If there are specific field errors, show them
         if (errorData.errors) {
           console.error('Field Validation Errors:', errorData.errors);
-          const fieldErrors = Object.entries(errorData.errors)
-            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-            .join('; ');
-          errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+          
+          // Handle non_field_errors specially - show them directly without labels
+          if (errorData.errors.non_field_errors) {
+            const nonFieldErrors = Array.isArray(errorData.errors.non_field_errors) 
+              ? errorData.errors.non_field_errors 
+              : [errorData.errors.non_field_errors];
+            errorMessage = nonFieldErrors.join('. ');
+          } else {
+            // Handle other field errors
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, errors]) => {
+                // Skip non_field_errors as it's handled above
+                if (field === 'non_field_errors') return null;
+                const errorMessages = Array.isArray(errors) ? errors.join(', ') : errors;
+                return `${field}: ${errorMessages}`;
+              })
+              .filter(Boolean) // Remove null entries
+              .join('; ');
+            
+            if (fieldErrors) {
+              errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+            } else {
+              errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+            }
+          }
         } else {
           errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
         }
@@ -1307,7 +1328,7 @@ export const staffAPI = {
 export const threadsAPI = {
   // Get all chat threads for the current taxpayer
   getThreads: async () => {
-    return await apiRequest('/taxpayer/threads/', 'GET');
+    return await apiRequest('/taxpayer/chat-threads/', 'GET');
   },
   // Create a new chat thread (Taxpayer)
   // Supports both text-only (JSON) and with file attachment (FormData)
@@ -1382,7 +1403,7 @@ export const threadsAPI = {
   },
   // Get thread details with messages
   getThreadDetails: async (threadId) => {
-    return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/`, 'GET');
   },
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
@@ -3386,10 +3407,10 @@ export const taxPreparerThreadsAPI = {
     if (unread_only) params.append('unread_only', 'true');
 
     const queryString = params.toString();
-    // Use the same endpoint as taxpayer with query params (as per documentation)
+    // Use the Chat Threads API endpoint
     const endpoint = queryString
-      ? `/taxpayer/threads/?${queryString}`
-      : '/taxpayer/threads/';
+      ? `/taxpayer/chat-threads/?${queryString}`
+      : '/taxpayer/chat-threads/';
     return await apiRequest(endpoint, 'GET');
   },
   // Create a new chat thread (Tax Preparer to client)
@@ -3444,8 +3465,8 @@ export const taxPreparerThreadsAPI = {
 
 
   getThreadDetails: async (threadId) => {
-    // Use the same endpoint as taxpayer (as per documentation)
-    return await apiRequest(`/taxpayer/threads/${threadId}/`, 'GET');
+    // Use the Chat Threads API endpoint
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/`, 'GET');
   },
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
@@ -4351,24 +4372,24 @@ export const firmAdminSettingsAPI = {
     }
   },
 
-  // Get firm business information
+  // Get firm business information (business hours and regional settings)
   getBusinessInfo: async () => {
-    return await apiRequest('/user/firm-admin/settings/business/', 'GET');
+    return await apiRequest('/firm/business-hours-regional-settings/', 'GET');
   },
 
-  // Update firm business information
+  // Update firm business information (business hours and regional settings)
   updateBusinessInfo: async (businessData, method = 'PATCH') => {
-    return await apiRequest('/user/firm-admin/settings/business/', method, businessData);
+    return await apiRequest('/firm/business-hours-regional-settings/', method, businessData);
   },
 
   // Get firm services information
   getServicesInfo: async () => {
-    return await apiRequest('/user/firm-admin/settings/services/', 'GET');
+    return await apiRequest('/firm/services/', 'GET');
   },
 
   // Update firm services information
   updateServicesInfo: async (servicesData, method = 'PATCH') => {
-    return await apiRequest('/user/firm-admin/settings/services/', method, servicesData);
+    return await apiRequest('/firm/services/', method, servicesData);
   },
 
   // Get firm integrations information

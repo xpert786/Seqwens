@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaLink, FaEnvelope, FaSms, FaCopy } from 'react-icons/fa';
@@ -54,6 +56,7 @@ export default function StaffManagement() {
   const [inviteActionMethod, setInviteActionMethod] = useState(null);
   const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
   const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
+  const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [selectedStaffForDelete, setSelectedStaffForDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -1579,12 +1582,17 @@ export default function StaffManagement() {
                     We'll text the invite link to the number you provide.
                   </p>
                   <div className="flex gap-2 mb-3">
-                    <input
-                      type="tel"
-                      value={smsPhoneOverride}
-                      onChange={(e) => setSmsPhoneOverride(e.target.value)}
-                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                      placeholder="+1 408 555 0123"
+                    <PhoneInput
+                      country={smsPhoneCountry}
+                      value={smsPhoneOverride || ''}
+                      onChange={(phone) => setSmsPhoneOverride(phone)}
+                      onCountryChange={(countryCode) => {
+                        setSmsPhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      containerClass="w-100 phone-input-container flex-1"
+                      enableSearch={true}
+                      countryCodeEditable={false}
                     />
                   </div>
                   <button

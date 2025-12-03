@@ -1,5 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import "../styles/AcceptInvite.css";
 import FixedLayout from "../components/FixedLayout";
 import { invitationAPI, handleAPIError, validatePassword } from "../utils/apiUtils";
@@ -22,6 +24,7 @@ export default function AcceptInvite() {
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [phoneCountry, setPhoneCountry] = useState('us');
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -588,35 +591,46 @@ export default function AcceptInvite() {
                                     <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
                                         Phone Number <span style={{ fontSize: "12px", opacity: 0.7 }}>(Optional)</span>
                                     </label>
-                                    <input
-                                        type="tel"
-                                        className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
-                                        placeholder="+1234567890"
-                                        value={phoneNumber}
-                                        onChange={(e) => {
-                                            setPhoneNumber(e.target.value);
+                                    <PhoneInput
+                                        country={phoneCountry}
+                                        value={phoneNumber || ''}
+                                        onChange={(phone) => {
+                                            setPhoneNumber(phone);
                                             if (errors.phoneNumber) {
                                                 setErrors(prev => ({ ...prev, phoneNumber: '' }));
                                             }
                                         }}
-                                        style={{
+                                        onCountryChange={(countryCode) => {
+                                            setPhoneCountry(countryCode.toLowerCase());
+                                        }}
+                                        inputClass={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                                        containerClass="w-100 phone-input-container"
+                                        inputStyle={{
                                             width: "100%",
-                                            padding: "10px 12px",
+                                            padding: "10px 12px 10px 48px",
                                             borderRadius: "5px",
                                             border: errors.phoneNumber ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
                                             backgroundColor: "rgba(255, 255, 255, 0.1)",
                                             color: "#ffffff",
                                             fontSize: "14px"
                                         }}
+                                        buttonStyle={{
+                                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                            border: "1px solid rgba(255, 255, 255, 0.3)",
+                                            borderRadius: "5px 0 0 5px"
+                                        }}
+                                        dropdownStyle={{
+                                            backgroundColor: "#1a1a1a",
+                                            color: "#ffffff"
+                                        }}
+                                        enableSearch={true}
+                                        countryCodeEditable={false}
                                     />
                                     {errors.phoneNumber && (
                                         <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
                                             {errors.phoneNumber}
                                         </div>
                                     )}
-                                    <div style={{ color: "#ffffff", fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
-                                        Format: +1234567890 (include country code)
-                                    </div>
                                 </div>
 
                                 <div className="invitation-actions">

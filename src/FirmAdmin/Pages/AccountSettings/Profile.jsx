@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { toast } from "react-toastify";
 import { firmAdminDashboardAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
@@ -10,6 +12,7 @@ export default function Profile() {
         phone_number: '',
         profile_picture: null
     });
+    const [phoneCountry, setPhoneCountry] = useState('us');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
@@ -253,12 +256,17 @@ export default function Profile() {
                             <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
                                 Phone Number
                             </label>
-                            <input
-                                type="tel"
-                                value={userData.phone_number}
-                                onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                                placeholder="Enter phone number"
+                            <PhoneInput
+                                country={phoneCountry}
+                                value={userData.phone_number || ''}
+                                onChange={(phone) => handleInputChange('phone_number', phone)}
+                                onCountryChange={(countryCode) => {
+                                    setPhoneCountry(countryCode.toLowerCase());
+                                }}
+                                inputClass="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                                containerClass="w-100 phone-input-container"
+                                enableSearch={true}
+                                countryCodeEditable={false}
                             />
                         </div>
                     </div>

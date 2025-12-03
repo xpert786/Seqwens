@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { FaPlus } from "react-icons/fa";
 import { BsCameraVideo } from "react-icons/bs";
 import { toast } from "react-toastify";
@@ -330,7 +332,15 @@ export default function Appointments() {
       // Prefer API start_time from the selected slot; fall back to parsing the display string
       let appointmentTime;
       if (selectedTimeSlot?.start_time) {
-        appointmentTime = selectedTimeSlot.start_time.slice(0, 5);
+        // If start_time is in HH:MM:SS format, use it directly; otherwise convert
+        const timeStr = selectedTimeSlot.start_time;
+        if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+          appointmentTime = timeStr;
+        } else if (timeStr.match(/^\d{2}:\d{2}$/)) {
+          appointmentTime = `${timeStr}:00`;
+        } else {
+          appointmentTime = timeStr.slice(0, 5) + ':00';
+        }
       } else if (selectedTime) {
         const time12Hour = selectedTime;
         const [time, period] = time12Hour.split(' ');
@@ -338,7 +348,8 @@ export default function Appointments() {
         let hour24 = parseInt(hours, 10);
         if (period === 'PM' && hour24 !== 12) hour24 += 12;
         if (period === 'AM' && hour24 === 12) hour24 = 0;
-        appointmentTime = `${hour24.toString().padStart(2, '0')}:${minutes}`;
+        // Convert to HH:MM:SS format (backend expects seconds)
+        appointmentTime = `${hour24.toString().padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
       }
 
       if (!appointmentTime) {
@@ -2148,20 +2159,22 @@ export default function Appointments() {
                     >
                       Phone Number <span style={{ color: "#EF4444" }}>*</span>
                     </h6>
-                    <input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={formData.phone_number}
-                      onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                      style={{
+                    <PhoneInput
+                      country="us"
+                      value={formData.phone_number || ''}
+                      onChange={(phone) => setFormData(prev => ({ ...prev, phone_number: phone }))}
+                      inputClass="form-control"
+                      containerClass="w-100 phone-input-container"
+                      inputStyle={{
                         width: "100%",
                         border: "1px solid #E5E7EB",
                         borderRadius: "6px",
-                        padding: "8px",
+                        padding: "8px 8px 8px 48px",
                         fontSize: "13px",
                         fontFamily: "BasisGrotesquePro",
                       }}
-                      required
+                      enableSearch={true}
+                      countryCodeEditable={false}
                     />
                   </div>
                 )}

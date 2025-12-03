@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { SaveIcon } from "../../component/icons";
 import { toast } from "react-toastify";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
@@ -16,6 +18,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         ptin: companyProfile?.ptin || '',
         efin: companyProfile?.efin || ''
     });
+    const [phoneCountry, setPhoneCountry] = useState('us');
     const [saving, setSaving] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -486,13 +489,20 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                 Phone Number
                             </label>
-                            <input
-                                type="text"
-                                name="phone_number"
-                                className="form-control w-full"
-                                value={formData.phone_number}
-                                onChange={handleChange}
-                                style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                            <PhoneInput
+                                country={phoneCountry}
+                                value={formData.phone_number || ''}
+                                onChange={(phone) => {
+                                    setFormData(prev => ({ ...prev, phone_number: phone }));
+                                }}
+                                onCountryChange={(countryCode) => {
+                                    setPhoneCountry(countryCode.toLowerCase());
+                                }}
+                                inputClass="form-control w-full"
+                                containerClass="w-100 phone-input-container"
+                                inputStyle={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                                enableSearch={true}
+                                countryCodeEditable={false}
                             />
                         </div>
                         <div className="col-12">

@@ -95,15 +95,14 @@ export default function BusinessTab() {
             setBusinessHours(convertedHours);
           }
 
-          // Set regional settings
-          if (response.data.timezone || response.data.currency || response.data.date_format) {
-            setRegionalSettings({
-              timezone: timezoneMap[response.data.timezone] || response.data.timezone || 'UTC',
-              currency: response.data.currency || 'USD',
-              date_format: response.data.date_format || 'mm/dd/yyyy',
-              number_format: response.data.number_format || '1,234.56',
-              current_tax_year: response.data.current_tax_year || new Date().getFullYear()
-            });
+          // Set regional settings from regional_settings object
+          if (response.data.regional_settings) {
+            const regional = response.data.regional_settings;
+            setRegionalSettings(prev => ({
+              ...prev,
+              timezone: timezoneMap[regional.timezone] || regional.timezone || 'UTC',
+              currency: regional.currency || 'USD'
+            }));
           }
         } else {
           throw new Error(response.message || 'Failed to load business information');
@@ -156,13 +155,13 @@ export default function BusinessTab() {
       // Convert timezone display name to timezone identifier
       const timezoneId = timezoneReverseMap[regionalSettings.timezone] || regionalSettings.timezone;
 
+      // Format data according to new API structure
       const businessData = {
         business_hours: businessHoursForAPI,
-        timezone: timezoneId,
-        currency: regionalSettings.currency,
-        date_format: regionalSettings.date_format,
-        number_format: regionalSettings.number_format,
-        current_tax_year: parseInt(regionalSettings.current_tax_year, 10)
+        regional_settings: {
+          timezone: timezoneId,
+          currency: regionalSettings.currency
+        }
       };
 
       const response = await firmAdminSettingsAPI.updateBusinessInfo(businessData, 'PATCH');
@@ -331,57 +330,7 @@ export default function BusinessTab() {
               <option value="CAD">CAD (C$)</option>
             </select>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Date Format
-            </label>
-            <select 
-              value={regionalSettings.date_format}
-              onChange={(e) => handleRegionalChange('date_format', e.target.value)}
-              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
-            >
-              <option value="mm/dd/yyyy">mm/dd/yyyy</option>
-              <option value="dd/mm/yyyy">dd/mm/yyyy</option>
-              <option value="yyyy-mm-dd">yyyy-mm-dd</option>
-              <option value="dd-mm-yyyy">dd-mm-yyyy</option>
-              <option value="yyyy/mm/dd">yyyy/mm/dd</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Number Format
-            </label>
-            <select 
-              value={regionalSettings.number_format}
-              onChange={(e) => handleRegionalChange('number_format', e.target.value)}
-              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
-            >
-              <option value="1,234.56">1,234.56</option>
-              <option value="1.234,56">1.234,56</option>
-              <option value="1234.56">1234.56</option>
-              <option value="1234,56">1234,56</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Current Tax Year
-            </label>
-            <select 
-              value={regionalSettings.current_tax_year}
-              onChange={(e) => handleRegionalChange('current_tax_year', parseInt(e.target.value, 10))}
-              className="w-full !rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#3B4A66] font-regular focus:outline-none font-[BasisGrotesquePro] cursor-pointer bg-white"
-            >
-              {Array.from({ length: 26 }, (_, i) => {
-                const year = 2000 + i;
-                return (
-                  <option key={year} value={year}>{year}</option>
-                );
-              })}
-            </select>
-          </div>
+          
         </div>
       </div>
       </div>

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { toast } from "react-toastify";
 import { CrossesIcon } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
@@ -18,6 +20,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
     sms: false,
     link: false,
   });
+  const [phoneCountry, setPhoneCountry] = useState('us');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -268,13 +271,19 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
               Phone
             </label>
-            <input
-              type="tel"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleChange}
-              placeholder="(555) 123-4567"
-              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
+            <PhoneInput
+              country={phoneCountry}
+              value={formData.phone_number || ''}
+              onChange={(phone) => {
+                setFormData(prev => ({ ...prev, phone_number: phone }));
+              }}
+              onCountryChange={(countryCode) => {
+                setPhoneCountry(countryCode.toLowerCase());
+              }}
+              inputClass="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
+              containerClass="w-100 phone-input-container"
+              enableSearch={true}
+              countryCodeEditable={false}
             />
           </div>
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { SaveIcon } from "../icons";
 import { profileAPI } from "../../utils/apiUtils";
 import { setUserData as persistUserData, getUserData, getStorage } from "../../utils/userUtils";
@@ -13,6 +15,7 @@ export default function Profile() {
         phone_number: '',
         profile_image: null
     });
+    const [phoneCountry, setPhoneCountry] = useState('us');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
@@ -603,12 +606,18 @@ export default function Profile() {
                     </div>
                     <div className="col-md-6">
                         <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Phone</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={userData.phone_number}
-                            onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                            style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                        <PhoneInput
+                            country={phoneCountry}
+                            value={userData.phone_number || ''}
+                            onChange={(phone) => handleInputChange('phone_number', phone)}
+                            onCountryChange={(countryCode) => {
+                                setPhoneCountry(countryCode.toLowerCase());
+                            }}
+                            inputClass="form-control"
+                            containerClass="w-100 phone-input-container"
+                            inputStyle={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
+                            enableSearch={true}
+                            countryCodeEditable={false}
                         />
                     </div>
                 </div>

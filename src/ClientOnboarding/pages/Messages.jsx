@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaPaperPlane, FaSearch } from "react-icons/fa";
 import { ConverIcon, JdIcon, FileIcon, PlusIcon, DiscusIcon, PLusIcon } from "../components/icons";
-import { getAccessToken } from "../utils/userUtils";
+import { getAccessToken, getUserData } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
 import { threadsAPI } from "../utils/apiUtils";
 import { useThreadWebSocket } from "../utils/useThreadWebSocket";
@@ -294,11 +294,28 @@ export default function Messages() {
             const sender = msg.sender || {};
             const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
             const senderRole = sender.role || msg.sender_role || '';
+            const senderId = sender.id || msg.sender_id || null;
 
-            // Determine message type based on sender_role
-            let messageType = "user"; // Default for client messages
-            if (senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant") {
-              messageType = "admin";
+            // Get current user to compare with sender
+            const currentUser = getUserData();
+            const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+            const currentUserEmail = currentUser?.email || '';
+
+            // Determine if message is sent by current user (client) or received from staff/admin
+            let messageType = "admin"; // Default to received (left side)
+            if (senderId && currentUserId) {
+              // If sender ID matches current user ID, it's a sent message (right side)
+              const isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+              messageType = isSentByCurrentUser ? "user" : "admin";
+            } else if (senderName && currentUserEmail) {
+              // Fallback: Compare by email
+              const senderEmail = sender.email || senderName;
+              const isSentByCurrentUser = senderEmail.toLowerCase() === currentUserEmail.toLowerCase();
+              messageType = isSentByCurrentUser ? "user" : "admin";
+            } else {
+              // Final fallback: If sender is staff/admin, it's received (left side)
+              const isStaff = senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant";
+              messageType = isStaff ? "admin" : "user";
             }
 
             // Handle attachment object from API
@@ -439,11 +456,28 @@ export default function Messages() {
           const sender = msg.sender || {};
           const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
           const senderRole = sender.role || msg.sender_role || '';
+          const senderId = sender.id || msg.sender_id || null;
 
-          // Determine message type based on sender_role
-          let messageType = "user"; // Default for client messages
-          if (senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant") {
-            messageType = "admin";
+          // Get current user to compare with sender
+          const currentUser = getUserData();
+          const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+          const currentUserEmail = currentUser?.email || '';
+
+          // Determine if message is sent by current user (client) or received from staff/admin
+          let messageType = "admin"; // Default to received (left side)
+          if (senderId && currentUserId) {
+            // If sender ID matches current user ID, it's a sent message (right side)
+            const isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+            messageType = isSentByCurrentUser ? "user" : "admin";
+          } else if (senderName && currentUserEmail) {
+            // Fallback: Compare by email
+            const senderEmail = sender.email || senderName;
+            const isSentByCurrentUser = senderEmail.toLowerCase() === currentUserEmail.toLowerCase();
+            messageType = isSentByCurrentUser ? "user" : "admin";
+          } else {
+            // Final fallback: If sender is staff/admin, it's received (left side)
+            const isStaff = senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant";
+            messageType = isStaff ? "admin" : "user";
           }
 
           return {
@@ -530,6 +564,10 @@ export default function Messages() {
     if (file) {
       setMessageAttachment(file);
     }
+    // Reset the input so the same file can be selected again
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   const handleSend = async () => {
@@ -598,25 +636,50 @@ export default function Messages() {
 
       // Fallback to REST API (required for attachments)
       console.log('Sending message via REST API');
-      const response = await threadsAPI.sendMessage(activeConversationId, {
+      const messageData = {
         content: messageText,
         message_type: attachment ? 'file' : 'text',
         is_internal: false
-      }, attachment);
+      };
+      
+      // Include attachment in messageData if present
+      if (attachment) {
+        messageData.attachment = attachment;
+      }
+      
+      const response = await threadsAPI.sendMessage(activeConversationId, messageData);
 
       if (response.success) {
         console.log('✅ Message sent successfully via REST API');
+        
+        // Get current user to ensure message type is correct
+        const currentUser = getUserData();
+        const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+        const senderId = response.data?.sender_id || response.data?.sender?.id || null;
+        
+        // Determine message type - sent messages should be "user" (right side)
+        let messageType = "user"; // Default for sent messages
+        if (senderId && currentUserId) {
+          const isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+          messageType = isSentByCurrentUser ? "user" : "admin";
+        }
+        
         // Replace optimistic message with real message
         const realMsg = {
           id: response.data?.id || Date.now(),
-          type: "user",
+          type: messageType,
           text: messageText,
           date: response.data?.created_at || new Date().toISOString(),
           sender: response.data?.sender_name || 'You',
           senderRole: response.data?.sender_role || '',
           isRead: false,
           isEdited: false,
-          messageType: 'text',
+          messageType: attachment ? 'file' : 'text',
+          attachment: response.data?.attachment?.url || null,
+          attachmentObj: response.data?.attachment || null,
+          attachmentName: attachment?.name || response.data?.attachment?.name || null,
+          attachmentSize: response.data?.attachment_size_display || null,
+          hasAttachment: !!(attachment || response.data?.attachment),
         };
 
         setActiveChatMessages(prev => {
@@ -632,8 +695,9 @@ export default function Messages() {
       }
     } catch (err) {
       console.error('Error sending message:', err);
-      // Restore the message to input on error
+      // Restore the message and attachment to input on error
       setNewMessage(messageText);
+      setMessageAttachment(attachment);
       toast.error('Failed to send message: ' + err.message, {
         position: "top-right",
         autoClose: 3000,
@@ -1223,7 +1287,6 @@ export default function Messages() {
                     aria-label="Send message"
                   >
                     <FaPaperPlane
-                      onClick={handleSend}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
@@ -1232,7 +1295,7 @@ export default function Messages() {
                       }}
                       role="button"
                       tabIndex={0}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: (newMessage.trim() || messageAttachment) ? "pointer" : "not-allowed" }}
                     />
                   </button>
                 </div>
