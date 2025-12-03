@@ -64,6 +64,9 @@ export default function MessagePage() {
   const dropdownRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [threadToDelete, setThreadToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isSendButtonActive = newMessage.trim().length > 0;
   const sendButtonStyles = {
@@ -662,16 +665,30 @@ export default function MessagePage() {
 
         const finalMessageType = isSentByCurrentUser ? "user" : "admin";
 
+        // Handle attachment object from API response
+        const attachmentObj = response.data?.attachment || null;
+        const attachmentUrl = attachmentObj?.url || response.data?.attachment_url || null;
+        const attachmentName = attachmentObj?.name || response.data?.attachment_name || attachment?.name || null;
+        const attachmentSize = attachmentObj?.size || response.data?.attachment_size || null;
+        const attachmentSizeDisplay = attachmentSize 
+          ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+          : response.data?.attachment_size_display || null;
+
         const realMsg = {
           id: response.data?.id || Date.now(),
           type: finalMessageType,
-          text: messageText,
+          text: messageText || (attachment ? `📎 ${attachment.name}` : ''),
           date: response.data?.created_at || new Date().toISOString(),
           sender: response.data?.sender_name || 'You',
           senderRole: senderRole,
           isRead: false,
           isEdited: false,
-          messageType: 'text',
+          messageType: attachment ? 'file' : 'text',
+          attachment: attachmentUrl, // Keep URL for backward compatibility
+          attachmentObj: attachmentObj, // Store full attachment object
+          attachmentName: attachmentName,
+          attachmentSize: attachmentSizeDisplay,
+          hasAttachment: !!(attachment || attachmentObj || attachmentUrl),
         };
 
         setActiveChatMessages(prev => {
@@ -681,6 +698,77 @@ export default function MessagePage() {
           if (exists) return filtered;
           return [...filtered, realMsg].sort((a, b) => new Date(a.date) - new Date(b.date));
         });
+
+        // Fetch messages again to ensure attachment is properly loaded
+        setTimeout(async () => {
+          try {
+            const refreshResponse = await chatService.getMessages(activeConversationId);
+            if (refreshResponse.success && refreshResponse.data) {
+              const messagesArray = Array.isArray(refreshResponse.data.messages)
+                ? refreshResponse.data.messages
+                : (Array.isArray(refreshResponse.data) ? refreshResponse.data : []);
+              
+              if (messagesArray.length > 0) {
+                const refreshedMessages = messagesArray.map(msg => {
+                  const sender = msg.sender || {};
+                  const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
+                  const senderRole = sender.role || msg.sender_role || '';
+                  const senderId = sender.id || msg.sender_id || null;
+                  
+                  const currentUser = getUserData();
+                  const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+                  
+                  let isSentByCurrentUser = false;
+                  if (senderId && currentUserId) {
+                    isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+                  } else {
+                    const isClient = senderRole === "Client" || senderRole === "client";
+                    isSentByCurrentUser = !isClient;
+                  }
+
+                  const messageType = isSentByCurrentUser ? "user" : "admin";
+                  
+                  const msgAttachmentObj = msg.attachment || null;
+                  const msgAttachmentUrl = msgAttachmentObj?.url || msg.attachment_url || null;
+                  const msgAttachmentName = msgAttachmentObj?.name || msg.attachment_name || null;
+                  const msgAttachmentSize = msgAttachmentObj?.size || msg.attachment_size || null;
+                  const msgAttachmentSizeDisplay = msgAttachmentSize 
+                    ? `${(msgAttachmentSize / 1024).toFixed(1)} KB` 
+                    : msg.attachment_size_display || null;
+
+                  return {
+                    id: msg.id,
+                    type: messageType,
+                    text: msg.content || "",
+                    date: msg.created_at,
+                    sender: senderName,
+                    senderRole: senderRole,
+                    isRead: msg.is_read || false,
+                    isEdited: msg.is_edited || false,
+                    messageType: msg.message_type || "text",
+                    isInternal: msg.is_internal || false,
+                    attachment: msgAttachmentUrl,
+                    attachmentObj: msgAttachmentObj,
+                    attachmentName: msgAttachmentName,
+                    attachmentSize: msgAttachmentSizeDisplay,
+                    hasAttachment: !!(msgAttachmentObj || msgAttachmentUrl),
+                  };
+                });
+
+                setActiveChatMessages(refreshedMessages);
+                
+                // Auto-scroll to bottom after refresh
+                setTimeout(() => {
+                  if (messagesEndRef.current) {
+                    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+                  }
+                }, 100);
+              }
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing messages after attachment send:', refreshError);
+          }
+        }, 1000); // Increased delay to allow server to process attachment
 
         // Update conversation's last message in conversations list
         const truncatedMessage = messageText.length > 50
@@ -765,6 +853,53 @@ export default function MessagePage() {
 
   const handleTaskInputChange = (value) => {
     setNewTaskText(value);
+  };
+
+  const handleDeleteThread = async (threadId, e) => {
+    e.stopPropagation(); // Prevent conversation selection
+    setThreadToDelete(threadId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteThread = async () => {
+    if (!threadToDelete) return;
+
+    try {
+      setDeleting(true);
+      
+      // Try chatService first, fallback to taxPreparerThreadsAPI
+      try {
+        await chatService.deleteThread(threadToDelete);
+      } catch (error) {
+        console.log('chatService.deleteThread failed, trying taxPreparerThreadsAPI:', error);
+        // Note: taxPreparerThreadsAPI might not have deleteThread, so we'll try chatService only
+        throw error;
+      }
+
+      // Remove from conversations list
+      setConversations(prev => prev.filter(conv => conv.id !== threadToDelete));
+      
+      // If deleted conversation was active, clear it
+      if (activeConversationId === threadToDelete) {
+        setActiveConversationId(null);
+        setActiveChatMessages([]);
+      }
+
+      toast.success('Thread deleted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (err) {
+      console.error('Error deleting thread:', err);
+      toast.error('Failed to delete thread: ' + (err.message || 'Unknown error'), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      setThreadToDelete(null);
+    }
   };
 
   // Fetch threads from API (initial load and periodic polling)
@@ -927,7 +1062,28 @@ export default function MessagePage() {
                           )}
                         </div>
                       </div>
-                      <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                      <div className="d-flex align-items-center gap-2">
+                        <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                        <button
+                          onClick={(e) => handleDeleteThread(conv.id, e)}
+                          className="btn btn-sm"
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            padding: "4px 8px",
+                            color: "#EF4444",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                          title="Delete thread"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334ZM6.667 7.333v4M9.333 7.333v4" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <small style={{ marginLeft: "35px", color: "#4B5563", fontSize: "12px" }}>{conv.lastMessage || 'No message'}</small>
                     {conv.subject && (
@@ -1652,6 +1808,44 @@ export default function MessagePage() {
                 }}
               >
                 Send Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
+          <div className="bg-white p-4" style={{ width: "400px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
+            <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Delete Thread</h5>
+            <p className="mb-4" style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+              Are you sure you want to delete this conversation? This action cannot be undone.
+            </p>
+            <div className="d-flex justify-content-end gap-2">
+              <button
+                className="btn btn-outline-secondary"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setThreadToDelete(null);
+                }}
+                disabled={deleting}
+                style={{ fontFamily: "BasisGrotesquePro" }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                onClick={confirmDeleteThread}
+                disabled={deleting}
+                style={{
+                  backgroundColor: "#EF4444",
+                  color: "#FFFFFF",
+                  fontFamily: "BasisGrotesquePro"
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

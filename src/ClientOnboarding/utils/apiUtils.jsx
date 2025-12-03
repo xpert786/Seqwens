@@ -537,23 +537,68 @@ export const validatePassword = (password) => {
 
 // Error handling utilities
 export const handleAPIError = (error) => {
+  // Handle CORS errors
   if (error.message.includes('CORS')) {
     return 'Network error: Please check your internet connection and try again.';
   }
 
+  // Handle authentication errors
   if (error.message.includes('401')) {
     return 'Authentication failed. Please try again.';
   }
 
+  // Handle bad request errors
   if (error.message.includes('400')) {
     return 'Invalid data provided. Please check your information and try again.';
   }
 
+  // Handle server errors
   if (error.message.includes('500')) {
     return 'Server error. Please try again later.';
   }
 
-  return error.message || 'An unexpected error occurred. Please try again.';
+  // Parse error message - handle array format
+  let errorMessage = error.message || 'An unexpected error occurred. Please try again.';
+
+  // Try to parse array format error messages (e.g., ["Error message"])
+  try {
+    // Check if error message is a string that looks like an array
+    if (typeof errorMessage === 'string' && errorMessage.trim().startsWith('[')) {
+      const parsed = JSON.parse(errorMessage);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        errorMessage = parsed[0];
+      }
+    }
+  } catch (e) {
+    // If parsing fails, use the original message
+    console.log('Could not parse error message as JSON:', errorMessage);
+  }
+
+  // Handle email template errors with user-friendly messages
+  const lowerErrorMessage = errorMessage.toLowerCase();
+  if (lowerErrorMessage.includes('no active template') || 
+      lowerErrorMessage.includes('email template') && lowerErrorMessage.includes('configure') ||
+      lowerErrorMessage.includes('template') && lowerErrorMessage.includes('settings')) {
+    
+    // Extract email type if possible
+    const emailTypeMatch = errorMessage.match(/email type ['"]([^'"]+)['"]/i);
+    const emailType = emailTypeMatch ? emailTypeMatch[1] : '';
+    
+    // Create user-friendly message based on email type
+    let friendlyMessage = 'Email template not configured. ';
+    if (emailType === 'staff_invite') {
+      friendlyMessage += 'Please configure the Staff Invitation email template in Settings → Email Templates before sending invitations.';
+    } else if (emailType) {
+      const formattedEmailType = emailType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      friendlyMessage += `Please configure the ${formattedEmailType} email template in Settings → Email Templates.`;
+    } else {
+      friendlyMessage += 'Please configure the required email template in Settings → Email Templates before sending invitations.';
+    }
+    
+    return friendlyMessage;
+  }
+
+  return errorMessage || 'An unexpected error occurred. Please try again.';
 };
 
 // Firm Admin Analytics API functions
@@ -566,6 +611,76 @@ export const firmAdminAnalyticsAPI = {
     }
     const queryString = params.toString();
     const endpoint = `/user/firm-admin/reports/revenue-segments/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get analytics & reports data (Overview Dashboard)
+  getAnalyticsReports: async (period = '6m') => {
+    const params = new URLSearchParams();
+    if (period) {
+      params.append('period', period);
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/analytics/reports/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get revenue analytics data (Revenue Analysis Dashboard)
+  getRevenueAnalytics: async (period = '6m', taxYear = null, officeId = 'all') => {
+    const params = new URLSearchParams();
+    if (period) {
+      params.append('period', period);
+    }
+    if (taxYear) {
+      params.append('tax_year', taxYear.toString());
+    }
+    if (officeId && officeId !== 'all') {
+      params.append('office_id', officeId.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/analytics/revenue/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get client analytics data (Client Analytics Dashboard)
+  getClientAnalytics: async (period = '6m') => {
+    const params = new URLSearchParams();
+    if (period) {
+      params.append('period', period);
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/analytics/client/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get service performance analytics data (Service Performance Dashboard)
+  getServicePerformance: async (period = '6m', taxYear = null, officeId = 'all') => {
+    const params = new URLSearchParams();
+    if (period) {
+      params.append('period', period);
+    }
+    if (taxYear) {
+      params.append('tax_year', taxYear.toString());
+    }
+    if (officeId && officeId !== 'all') {
+      params.append('office_id', officeId.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/analytics/service-performance/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get compliance reporting analytics data (Compliance Reporting Dashboard)
+  getComplianceReporting: async (period = '6m', taxYear = null) => {
+    const params = new URLSearchParams();
+    if (period) {
+      params.append('period', period);
+    }
+    if (taxYear) {
+      params.append('tax_year', taxYear.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/user/firm-admin/analytics/compliance-reporting/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
   },
 };
@@ -1404,6 +1519,10 @@ export const threadsAPI = {
   // Get thread details with messages
   getThreadDetails: async (threadId) => {
     return await apiRequest(`/taxpayer/chat-threads/${threadId}/`, 'GET');
+  },
+  // Delete a chat thread
+  deleteThread: async (threadId) => {
+    return await apiRequest(`/taxpayer/chat-threads/${threadId}/`, 'DELETE');
   },
   // Send message in thread
   // Supports both text-only (JSON) and with file attachment (FormData)
@@ -2927,6 +3046,19 @@ export const firmAdminEmailTemplatesAPI = {
   },
 };
 
+// Firm Admin Email Settings API functions
+export const firmAdminEmailSettingsAPI = {
+  // Get email settings
+  getEmailSettings: async () => {
+    return await apiRequest('/user/firm-admin/email-settings/', 'GET');
+  },
+
+  // Update email settings (PATCH)
+  updateEmailSettings: async (settingsData) => {
+    return await apiRequest('/user/firm-admin/email-settings/', 'PATCH', settingsData);
+  },
+};
+
 // Firm Admin Staff API functions
 export const firmAdminStaffAPI = {
   // List all staff members (tax preparers) for firm admin
@@ -2958,6 +3090,42 @@ export const firmAdminStaffAPI = {
   // Get firm with tax preparers (for assign staff dropdown)
   getFirmWithTaxPreparers: async () => {
     return await apiRequest('/firm/with-tax-preparers/', 'GET');
+  },
+  // Get activity logs for a staff member
+  getStaffActivityLogs: async (staffId, params = {}) => {
+    const {
+      activity_type,
+      status,
+      start_date,
+      end_date,
+      page = 1,
+      page_size = 50
+    } = params;
+
+    const queryParams = new URLSearchParams();
+
+    if (activity_type) {
+      queryParams.append('activity_type', activity_type);
+    }
+    if (status) {
+      queryParams.append('status', status);
+    }
+    if (start_date) {
+      queryParams.append('start_date', start_date);
+    }
+    if (end_date) {
+      queryParams.append('end_date', end_date);
+    }
+    if (page) {
+      queryParams.append('page', page.toString());
+    }
+    if (page_size) {
+      queryParams.append('page_size', page_size.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/firm/staff/${staffId}/activity-logs/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
   },
 };
 
@@ -4422,6 +4590,16 @@ export const firmAdminSettingsAPI = {
     return await apiRequest(`/firm/subdomain/check/?subdomain=${encodeURIComponent(subdomain)}`, 'GET');
   },
 
+  // Get support email configuration
+  getSupportEmail: async () => {
+    return await apiRequest('/user/firm-admin/settings/support-email/', 'GET');
+  },
+
+  // Update support email configuration
+  updateSupportEmail: async (supportEmailData, method = 'PUT') => {
+    return await apiRequest('/user/firm-admin/settings/support-email/', method, supportEmailData);
+  },
+
   // Update subdomain settings
   updateSubdomainSettings: async (subdomainData, files = {}) => {
     const token = getAccessToken() || AUTH_TOKEN;
@@ -4686,6 +4864,22 @@ export const firmAdminBillingHistoryAPI = {
         return response.json();
       });
   }
+};
+
+// Firm Admin Payment Methods API functions
+export const firmAdminPaymentMethodsAPI = {
+  // Get payment methods
+  getPaymentMethods: async () => {
+    return await apiRequest('/user/firm-admin/payment-methods/', 'GET');
+  },
+  // Add payment method
+  addPaymentMethod: async (paymentMethodData) => {
+    return await apiRequest('/user/firm-admin/payment-methods/', 'POST', paymentMethodData);
+  },
+  // Delete payment method
+  deletePaymentMethod: async (paymentMethodId) => {
+    return await apiRequest(`/firm-admin/payment-methods/${paymentMethodId}/`, 'DELETE');
+  },
 };
 
 // Maintenance Mode API functions

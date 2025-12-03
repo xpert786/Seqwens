@@ -11,7 +11,8 @@ export default function SubdomainTab() {
     portal_title: '',
     portal_description: '',
     primary_color: '#32B582',
-    secondary_color: '#F56D2D'
+    secondary_color: '#F56D2D',
+    support_email: ''
   });
 
   const [portalUrl, setPortalUrl] = useState('');
@@ -32,35 +33,40 @@ export default function SubdomainTab() {
   const logoInputRef = useRef(null);
   const faviconInputRef = useRef(null);
 
-  // Fetch subdomain settings on mount
+  // Fetch subdomain settings and support email on mount
   useEffect(() => {
     const fetchSubdomainSettings = async () => {
       try {
         setLoading(true);
         setError('');
 
-        const response = await firmAdminSettingsAPI.getSubdomainSettings();
+        const [subdomainResponse, supportEmailResponse] = await Promise.all([
+          firmAdminSettingsAPI.getSubdomainSettings(),
+          firmAdminSettingsAPI.getSupportEmail().catch(() => ({ success: false, data: { support_email: '' } })) // Gracefully handle if endpoint doesn't exist yet
+        ]);
 
-        if (response.success && response.data) {
-          setFormData({
-            subdomain: response.data.subdomain || '',
-            portal_enabled: response.data.portal_enabled || false,
-            portal_title: response.data.portal_title || '',
-            portal_description: response.data.portal_description || '',
-            primary_color: response.data.primary_color || '#1a73e8',
-            secondary_color: response.data.secondary_color || '#34a853'
-          });
-          setPortalUrl(response.data.portal_url || '');
-          if (response.data.logo_url) {
-            setLogoUrl(response.data.logo_url);
-            setLogoPreview(response.data.logo_url);
+        if (subdomainResponse.success && subdomainResponse.data) {
+          setFormData(prev => ({
+            ...prev,
+            subdomain: subdomainResponse.data.subdomain || '',
+            portal_enabled: subdomainResponse.data.portal_enabled || false,
+            portal_title: subdomainResponse.data.portal_title || '',
+            portal_description: subdomainResponse.data.portal_description || '',
+            primary_color: subdomainResponse.data.primary_color || '#1a73e8',
+            secondary_color: subdomainResponse.data.secondary_color || '#34a853',
+            support_email: supportEmailResponse.success && supportEmailResponse.data ? (supportEmailResponse.data.support_email || '') : ''
+          }));
+          setPortalUrl(subdomainResponse.data.portal_url || '');
+          if (subdomainResponse.data.logo_url) {
+            setLogoUrl(subdomainResponse.data.logo_url);
+            setLogoPreview(subdomainResponse.data.logo_url);
           }
-          if (response.data.favicon_url) {
-            setFaviconUrl(response.data.favicon_url);
-            setFaviconPreview(response.data.favicon_url);
+          if (subdomainResponse.data.favicon_url) {
+            setFaviconUrl(subdomainResponse.data.favicon_url);
+            setFaviconPreview(subdomainResponse.data.favicon_url);
           }
         } else {
-          throw new Error(response.message || 'Failed to load subdomain settings');
+          throw new Error(subdomainResponse.message || 'Failed to load subdomain settings');
         }
       } catch (err) {
         console.error('Error fetching subdomain settings:', err);
@@ -259,24 +265,34 @@ export default function SubdomainTab() {
       if (logoFile) files.logo = logoFile;
       if (faviconFile) files.favicon = faviconFile;
 
-      const response = await firmAdminSettingsAPI.updateSubdomainSettings(subdomainData, files);
+      // Update subdomain settings and support email in parallel
+      const [subdomainResponse, supportEmailResponse] = await Promise.all([
+        firmAdminSettingsAPI.updateSubdomainSettings(subdomainData, files),
+        formData.support_email ? firmAdminSettingsAPI.updateSupportEmail({ support_email: formData.support_email }) : Promise.resolve({ success: true })
+      ]);
 
-      if (response.success && response.data) {
+      if (subdomainResponse.success && subdomainResponse.data) {
+        // Show success message for subdomain settings
         toast.success('Subdomain settings updated successfully');
 
+        // Show success message for support email if it was updated
+        if (formData.support_email && supportEmailResponse.success) {
+          toast.success('Support email updated successfully');
+        }
+
         // Update portal URL if returned
-        if (response.data.portal_url) {
-          setPortalUrl(response.data.portal_url);
+        if (subdomainResponse.data.portal_url) {
+          setPortalUrl(subdomainResponse.data.portal_url);
         }
 
         // Update previews if new URLs are returned
-        if (response.data.logo_url) {
-          setLogoUrl(response.data.logo_url);
-          setLogoPreview(response.data.logo_url);
+        if (subdomainResponse.data.logo_url) {
+          setLogoUrl(subdomainResponse.data.logo_url);
+          setLogoPreview(subdomainResponse.data.logo_url);
         }
-        if (response.data.favicon_url) {
-          setFaviconUrl(response.data.favicon_url);
-          setFaviconPreview(response.data.favicon_url);
+        if (subdomainResponse.data.favicon_url) {
+          setFaviconUrl(subdomainResponse.data.favicon_url);
+          setFaviconPreview(subdomainResponse.data.favicon_url);
         }
 
         // Clear file selections after successful upload
@@ -286,7 +302,7 @@ export default function SubdomainTab() {
         // Refresh portal colors to apply new colors immediately
         refreshColors();
       } else {
-        throw new Error(response.message || 'Failed to update subdomain settings');
+        throw new Error(subdomainResponse.message || 'Failed to update subdomain settings');
       }
     } catch (err) {
       console.error('Error updating subdomain settings:', err);
@@ -410,6 +426,23 @@ export default function SubdomainTab() {
                 placeholder="Welcome to Acme Tax Services"
                 className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
+                Support Email
+              </label>
+              <input
+                type="email"
+                name="support_email"
+                value={formData.support_email}
+                onChange={handleInputChange}
+                placeholder="support@example.com"
+                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none font-[BasisGrotesquePro]"
+              />
+              <p className="text-xs text-[#4B5563] mt-1 font-regular font-[BasisGrotesquePro]">
+                Email address for client support inquiries
+              </p>
             </div>
           </div>
         </div>

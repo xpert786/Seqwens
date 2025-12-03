@@ -2,33 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { firmAdminCalendarAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import AddStaffModal from '../Staff/AddStaffModal';
 
 export default function Staff() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isConfigureRulesModalOpen, setIsConfigureRulesModalOpen] = useState(false);
   const [isManageOptionsModalOpen, setIsManageOptionsModalOpen] = useState(false);
   const [isSetUpSkillsModalOpen, setIsSetUpSkillsModalOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
-  const [calendarDropdownOpen, setCalendarDropdownOpen] = useState(false);
   const [distributionMethodDropdownOpen, setDistributionMethodDropdownOpen] = useState(false);
   const [resetFrequencyDropdownOpen, setResetFrequencyDropdownOpen] = useState(false);
   const [defaultStaffSortingDropdownOpen, setDefaultStaffSortingDropdownOpen] = useState(false);
   const [skillMatchingRulesDropdownOpen, setSkillMatchingRulesDropdownOpen] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    role: 'Tax Preparer',
-    calendarIntegration: 'Not Connected',
-    active: false
-  });
 
   // Schedule form state
   const [scheduleData, setScheduleData] = useState({
@@ -80,8 +69,6 @@ export default function Staff() {
   };
 
   // Dropdown options
-  const roleOptions = ['Tax Preparer', 'Senior Tax Preparer', 'Tax Consultant', 'Audit Specialist', 'Training Coordinator'];
-  const calendarOptions = ['Not Connected', 'Google Calendar', 'Outlook Calendar', 'Apple Calendar'];
   const distributionMethodOptions = ['Strict rotation', 'Weighted by capacity', 'Based on current workload'];
   const resetFrequencyOptions = ['Never (continuous rotation)', 'Daily', 'Weekly', 'Monthly'];
   const defaultStaffSortingOptions = ['By availability', 'Alphabetically', 'By expertise match', 'By rating'];
@@ -196,8 +183,6 @@ export default function Staff() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.dropdown-container')) {
-        setRoleDropdownOpen(false);
-        setCalendarDropdownOpen(false);
         setDistributionMethodDropdownOpen(false);
         setResetFrequencyDropdownOpen(false);
         setDefaultStaffSortingDropdownOpen(false);
@@ -205,14 +190,14 @@ export default function Staff() {
       }
     };
 
-    if (roleDropdownOpen || calendarDropdownOpen || distributionMethodDropdownOpen || resetFrequencyDropdownOpen || defaultStaffSortingDropdownOpen || skillMatchingRulesDropdownOpen) {
+    if (distributionMethodDropdownOpen || resetFrequencyDropdownOpen || defaultStaffSortingDropdownOpen || skillMatchingRulesDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [roleDropdownOpen, calendarDropdownOpen, distributionMethodDropdownOpen, resetFrequencyDropdownOpen, defaultStaffSortingDropdownOpen, skillMatchingRulesDropdownOpen]);
+  }, [distributionMethodDropdownOpen, resetFrequencyDropdownOpen, defaultStaffSortingDropdownOpen, skillMatchingRulesDropdownOpen]);
 
   // Mock staff data
   const staffMembers = [
@@ -351,7 +336,7 @@ export default function Staff() {
             <p className="text-gray-600 font-[BasisGrotesquePro]">Manage appointments, deadlines, and meetings</p>
           </div>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsAddStaffModalOpen(true)}
             className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] mt-4 lg:mt-0"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -413,7 +398,7 @@ export default function Staff() {
       {/* Staff Management Content */}
       <div className="flex justify-end mb-6">
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsAddStaffModalOpen(true)}
           className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#FF7142] transition font-[BasisGrotesquePro] flex items-center gap-2"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -542,206 +527,19 @@ export default function Staff() {
         </div>
       </div>
 
-      {/* Add New Staff Member Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-lg p-4 w-full max-w-xl mx-auto" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-semibold text-[#1F2A55] font-[BasisGrotesquePro]">
-                Add New Staff Member
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                  <path d="M16.067 8.99502C16.1386 8.92587 16.1958 8.84314 16.2352 8.75165C16.2745 8.66017 16.2952 8.56176 16.2962 8.46218C16.2971 8.3626 16.2781 8.26383 16.2405 8.17164C16.2028 8.07945 16.1472 7.99568 16.0768 7.92523C16.0064 7.85478 15.9227 7.79905 15.8305 7.7613C15.7384 7.72354 15.6396 7.70452 15.54 7.70534C15.4404 7.70616 15.342 7.7268 15.2505 7.76606C15.159 7.80532 15.0762 7.86242 15.007 7.93402L12.001 10.939L8.99597 7.93402C8.92731 7.86033 8.84451 7.80123 8.75251 7.76024C8.66051 7.71925 8.5612 7.69721 8.4605 7.69543C8.35979 7.69365 8.25976 7.71218 8.16638 7.7499C8.07299 7.78762 7.98815 7.84376 7.91694 7.91498C7.84572 7.9862 7.78957 8.07103 7.75185 8.16442C7.71413 8.25781 7.69561 8.35784 7.69738 8.45854C7.69916 8.55925 7.7212 8.65856 7.76219 8.75056C7.80319 8.84256 7.86229 8.92536 7.93597 8.99402L10.939 12L7.93397 15.005C7.80149 15.1472 7.72937 15.3352 7.7328 15.5295C7.73623 15.7238 7.81494 15.9092 7.95235 16.0466C8.08977 16.1841 8.27515 16.2628 8.46945 16.2662C8.66375 16.2696 8.8518 16.1975 8.99397 16.065L12.001 13.06L15.006 16.066C15.1481 16.1985 15.3362 16.2706 15.5305 16.2672C15.7248 16.2638 15.9102 16.1851 16.0476 16.0476C16.185 15.9102 16.2637 15.7248 16.2671 15.5305C16.2706 15.3362 16.1985 15.1482 16.066 15.006L13.063 12L16.067 8.99502Z" fill="#3B4A66" />
-                </svg>
-
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <div className="space-y-2.5">
-              {/* First Name */}
-              <div>
-                <label className="block text-[16px] font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter first name"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] placeholder:text-[#4B5563] placeholder:font-normal"
-                />
-              </div>
-
-              {/* Last Name */}
-              <div>
-                <label className="block text-[16px] font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter last name"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] placeholder:text-[#4B5563] placeholder:font-normal"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-[16px] font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter email address"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] placeholder:text-[#4B5563] placeholder:font-normal"
-                />
-              </div>
-
-              {/* Role Dropdown */}
-              <div className="relative dropdown-container">
-                <label className="block text-[16px] font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-                  Role
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRoleDropdownOpen(!roleDropdownOpen);
-                      setCalendarDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-1.5 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white text-left flex items-center justify-between"
-                  >
-                    <span className="text-[#1F2A55]">{formData.role}</span>
-                    <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {roleDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg">
-                      {roleOptions.map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ ...formData, role: option });
-                            setRoleDropdownOpen(false);
-                          }}
-                          className="w-full px-3 py-1.5 text-sm text-left text-[#1F2A55] font-[BasisGrotesquePro] hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Calendar Integration Dropdown */}
-              <div className="relative dropdown-container">
-                <label className="block text-[16px] font-medium text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
-                  Calendar Integration
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCalendarDropdownOpen(!calendarDropdownOpen);
-                      setRoleDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-1.5 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] bg-white text-left flex items-center justify-between"
-                  >
-                    <span className="text-[#1F2A55]">{formData.calendarIntegration}</span>
-                    <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform ${calendarDropdownOpen ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {calendarDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg">
-                      {calendarOptions.map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ ...formData, calendarIntegration: option });
-                            setCalendarDropdownOpen(false);
-                          }}
-                          className="w-full px-3 py-1.5 text-sm text-left text-[#1F2A55] font-[BasisGrotesquePro] hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Active Checkbox */}
-              <div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.active}
-                    onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                    className="w-4 h-4 !rounded-lg !border border-[#3AD6F2] bg-white focus:outline-none cursor-pointer mt-2"
-                  />
-                  <span className="text-sm text-[#1F2A55] font-[BasisGrotesquePro] ml-3">
-                    Active (available for appointments)
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end gap-2 mt-3">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-3 py-1.5 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  // Handle form submission here
-                  console.log('Form Data:', formData);
-                  setIsModalOpen(false);
-                  // Reset form
-                  setFormData({
-                    firstName: '',
-                    lastName: '',
-                    email: '',
-                    role: 'Tax Preparer',
-                    calendarIntegration: 'Not Connected',
-                    active: false
-                  });
-                }}
-                className="px-3 py-1.5 text-sm font-medium text-white !bg-[#F56D2D] !rounded-lg hover:bg-[#FF7142] transition font-[BasisGrotesquePro]"
-              >
-                Add Staff Member
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Staff Modal */}
+      <AddStaffModal
+        isOpen={isAddStaffModalOpen}
+        onClose={() => setIsAddStaffModalOpen(false)}
+        onInviteCreated={() => {
+          // Optionally refresh staff list or show a message
+          toast.success('Staff invitation sent successfully');
+        }}
+        onRefresh={() => {
+          // Optionally refresh staff list here
+          // You can add a function to fetch staff members if needed
+        }}
+      />
 
       {/* Schedule Modal */}
       {isScheduleModalOpen && selectedStaff && (
