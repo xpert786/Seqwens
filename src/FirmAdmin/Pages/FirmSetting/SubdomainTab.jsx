@@ -565,6 +565,11 @@ export default function SubdomainTab() {
                     src={logoPreview}
                     alt="Logo preview"
                     className="w-20 h-20 object-contain rounded-lg border border-[#E8F0FF]"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.warn('Failed to load logo preview from B2');
+                      // Keep showing broken image or could set to null
+                    }}
                   />
                 ) : (
                   <svg width="80" height="80" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -610,6 +615,11 @@ export default function SubdomainTab() {
                     src={faviconPreview}
                     alt="Favicon preview"
                     className="w-12 h-12 object-contain rounded-lg border border-[#E8F0FF]"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.warn('Failed to load favicon preview from B2');
+                      // Keep showing broken image or could set to null
+                    }}
                   />
                 ) : (
                   <svg width="50" height="50" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">

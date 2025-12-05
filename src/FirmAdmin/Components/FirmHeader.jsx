@@ -229,11 +229,17 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                         {/* Logo */}
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img
-                                // src={logoUrl || logo}
-                                src={logo}
+                                src={logoUrl || logo}
                                 alt="Logo"
                                 className="firm-topbar-logo"
                                 style={{ maxHeight: "40px", width: "auto" }}
+                                crossOrigin="anonymous"
+                                onError={(e) => {
+                                    // Fallback to default logo if B2 image fails to load
+                                    if (e.target.src !== logo) {
+                                        e.target.src = logo;
+                                    }
+                                }}
                             />
                         </Link>
 

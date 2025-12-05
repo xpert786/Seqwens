@@ -860,9 +860,49 @@ export const superAdminAPI = {
   },
 
   // Platform Reporting API functions
-  // List all scheduled reports (custom and firm reports)
+  // Generate report async (returns task_id)
+  generateReport: async (reportData) => {
+    return await apiRequest('/user/admin/reports/generate/', 'POST', reportData);
+  },
+
+  // Check report generation status
+  getReportStatus: async (taskId) => {
+    return await apiRequest(`/user/admin/reports/status/${taskId}/`, 'GET');
+  },
+
+  // Get report configuration options
+  getReportOptions: async () => {
+    return await apiRequest('/user/admin/reports/options/', 'GET');
+  },
+
+  // Schedule recurring report
+  scheduleReport: async (scheduleData) => {
+    return await apiRequest('/user/admin/reports/schedule/', 'POST', scheduleData);
+  },
+
+  // List all scheduled reports
   getScheduledReports: async () => {
     return await apiRequest('/user/admin/reports/scheduled/', 'GET');
+  },
+
+  // Get scheduled report details by ID
+  getScheduledReportById: async (scheduleId) => {
+    return await apiRequest(`/user/admin/reports/scheduled/${scheduleId}/`, 'GET');
+  },
+
+  // Update scheduled report
+  updateScheduledReport: async (scheduleId, updateData) => {
+    return await apiRequest(`/user/admin/reports/scheduled/${scheduleId}/`, 'PUT', updateData);
+  },
+
+  // Delete scheduled report
+  deleteScheduledReport: async (scheduleId) => {
+    return await apiRequest(`/user/admin/reports/scheduled/${scheduleId}/`, 'DELETE');
+  },
+
+  // List generated reports history
+  getGeneratedReports: async () => {
+    return await apiRequest('/user/admin/reports/generated/', 'GET');
   },
 
   // Generate platform report (returns file download)
@@ -893,11 +933,11 @@ export const superAdminAPI = {
         return sanitized;
       };
 
-      console.log('Generate Platform Report API Request URL:', `${API_BASE_URL}/user/admin/reports/platform/generate/`);
+      console.log('Generate Platform Report API Request URL:', `${API_BASE_URL}/admin/user/reports/platform/generate/`);
       console.log('Generate Platform Report API Request Config:', config);
       console.log('Generate Platform Report API Request Data:', sanitizeReportData(reportData));
 
-      let response = await fetchWithCors(`${API_BASE_URL}/user/admin/reports/platform/generate/`, config);
+      let response = await fetchWithCors(`${API_BASE_URL}/admin/user/reports/platform/generate/`, config);
 
       // Handle 401 Unauthorized - try to refresh token
       if (response.status === 401) {
@@ -911,7 +951,7 @@ export const superAdminAPI = {
             'Authorization': `Bearer ${getAccessToken()}`,
             'Content-Type': 'application/json',
           };
-          response = await fetchWithCors(`${API_BASE_URL}/user/admin/reports/platform/generate/`, config);
+          response = await fetchWithCors(`${API_BASE_URL}/admin/user/reports/platform/generate/`, config);
 
           if (response.status === 401) {
             // Refresh failed, redirect to login
@@ -1019,6 +1059,17 @@ export const superAdminAPI = {
       console.error('Reject Role Request API Request Error:', error);
       throw error;
     }
+  },
+
+  // Security Settings API functions
+  // Get security settings
+  getSecuritySettings: async () => {
+    return await apiRequest('/user/superadmin/security-settings/', 'GET');
+  },
+
+  // Update security settings
+  updateSecuritySettings: async (settingsData) => {
+    return await apiRequest('/user/superadmin/security-settings/', 'PATCH', settingsData);
   }
 };
 

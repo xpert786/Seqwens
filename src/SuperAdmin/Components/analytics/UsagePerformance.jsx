@@ -54,29 +54,50 @@ export default function UsagePerformance() {
     }
   };
 
+  // Helper function to extract value from object or return as is
+  const getValue = (data) => {
+    if (data === null || data === undefined) return null;
+    if (typeof data === 'object' && data.value !== undefined) {
+      return data.value;
+    }
+    return data;
+  };
+
+  // Helper function to get label from object or format value
+  const getLabel = (data, defaultFormat) => {
+    if (data === null || data === undefined) return 'N/A';
+    if (typeof data === 'object') {
+      if (data.label) return data.label;
+      if (data.value !== undefined) {
+        return defaultFormat(data.value, data.unit);
+      }
+    }
+    return defaultFormat(data);
+  };
+
   // Format number with commas
-  const formatNumber = (num) => {
+  const formatNumber = (num, unit = '') => {
     if (num === null || num === undefined) return 'N/A';
     if (typeof num === 'number') {
-      return num.toLocaleString();
+      return unit ? `${num.toLocaleString()}${unit}` : num.toLocaleString();
     }
     return num;
   };
 
   // Format percentage
-  const formatPercentage = (num) => {
+  const formatPercentage = (num, unit = '%') => {
     if (num === null || num === undefined) return 'N/A';
     if (typeof num === 'number') {
-      return `${num.toFixed(2)}%`;
+      return `${num.toFixed(2)}${unit}`;
     }
     return num;
   };
 
   // Format time
-  const formatTime = (num) => {
+  const formatTime = (num, unit = 'ms') => {
     if (num === null || num === undefined) return 'N/A';
     if (typeof num === 'number') {
-      return `${num}ms`;
+      return `${num}${unit}`;
     }
     return num;
   };
@@ -100,7 +121,7 @@ export default function UsagePerformance() {
             {/* Uptime */}
             <div className="text-center p-2">
               <div className="text-3xl font-bold" style={{color: '#22C55E'}}>
-                {formatPercentage(metrics.uptime)}
+                {getLabel(metrics.uptime, formatPercentage)}
               </div>
               <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Uptime</div>
             </div>
@@ -108,7 +129,7 @@ export default function UsagePerformance() {
             {/* Avg Response Time */}
             <div className="text-center p-2">
               <div className="text-3xl font-bold" style={{color: '#3AD6F2'}}>
-                {formatTime(metrics.avg_response_time)}
+                {getLabel(metrics.avg_response_time, formatTime)}
               </div>
               <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Avg Response Time</div>
             </div>
@@ -116,7 +137,7 @@ export default function UsagePerformance() {
             {/* Error Rate */}
             <div className="text-center p-2">
               <div className="text-3xl font-bold" style={{color: '#EF4444'}}>
-                {formatPercentage(metrics.error_rate)}
+                {getLabel(metrics.error_rate, formatPercentage)}
               </div>
               <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Error Rate</div>
             </div>
@@ -124,7 +145,7 @@ export default function UsagePerformance() {
             {/* API Calls (24h) */}
             <div className="text-center p-2">
               <div className="text-3xl font-bold" style={{color: '#1E40AF'}}>
-                {formatNumber(metrics.api_calls_24h)}
+                {getLabel(metrics.api_calls_24h, formatNumber)}
               </div>
               <div className="text-sm font-medium" style={{color: '#3B4A66'}}>API Calls (24h)</div>
             </div>
@@ -132,7 +153,9 @@ export default function UsagePerformance() {
             {/* Data Processed */}
             <div className="text-center p-2">
               <div className="text-3xl font-bold" style={{color: '#F49C2D'}}>
-                {metrics.data_processed || 'N/A'}
+                {typeof metrics.data_processed === 'object' && metrics.data_processed?.label 
+                  ? metrics.data_processed.label 
+                  : (metrics.data_processed || 'N/A')}
               </div>
               <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Data Processed</div>
             </div>
@@ -140,7 +163,7 @@ export default function UsagePerformance() {
             {/* Active Connections */}
             <div className="text-center p-2">
               <div className="text-3xl font-bold" style={{color: '#22C55E'}}>
-                {formatNumber(metrics.active_connections)}
+                {getLabel(metrics.active_connections, formatNumber)}
               </div>
               <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Active Connections</div>
             </div>
