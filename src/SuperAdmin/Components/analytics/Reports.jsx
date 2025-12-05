@@ -63,17 +63,34 @@ export default function Reports() {
 
   // Platform Reports state
   const [platformReportForm, setPlatformReportForm] = useState({
-    report_type: 'firm_report',
-    time_period: 'monthly',
-    format: 'pdf'
+    report_type: 'platform_revenue',
+    time_period: 'last_30_days',
+    format: 'csv',
+    include_detailed_breakdowns: false,
+    custom_start_date: '',
+    custom_end_date: ''
   });
   const [platformReportLoading, setPlatformReportLoading] = useState(false);
-  const [platformScheduledReports, setPlatformScheduledReports] = useState({
-    custom_reports: [],
-    firm_reports: []
-  });
+  const [platformReportStatus, setPlatformReportStatus] = useState(null);
+  const [platformReportTaskId, setPlatformReportTaskId] = useState(null);
+  const [platformReportFileUrl, setPlatformReportFileUrl] = useState(null);
+  const [platformReportDetails, setPlatformReportDetails] = useState(null);
+  const [generatedReportsHistory, setGeneratedReportsHistory] = useState([]);
+  const [generatedReportsLoading, setGeneratedReportsLoading] = useState(false);
+  const [platformScheduledReports, setPlatformScheduledReports] = useState([]);
   const [platformScheduledLoading, setPlatformScheduledLoading] = useState(false);
   const [platformScheduledError, setPlatformScheduledError] = useState(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleFormData, setScheduleFormData] = useState({
+    name: '',
+    report_type: 'platform_revenue',
+    time_period: 'last_30_days',
+    format: 'csv',
+    include_detailed_breakdowns: false,
+    frequency: 'monthly',
+    first_delivery: '',
+    is_active: true
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -131,26 +148,41 @@ export default function Reports() {
       setPlatformScheduledLoading(true);
       setPlatformScheduledError(null);
       const response = await superAdminAPI.getScheduledReports();
-      if (response?.success && response?.data) {
-        setPlatformScheduledReports({
-          custom_reports: response.data.custom_reports || [],
-          firm_reports: response.data.firm_reports || []
-        });
+      if (response?.success) {
+        setPlatformScheduledReports(response.scheduled_reports || []);
       } else {
-        setPlatformScheduledReports({ custom_reports: [], firm_reports: [] });
+        setPlatformScheduledReports([]);
       }
     } catch (err) {
       setPlatformScheduledError(handleAPIError(err));
-      setPlatformScheduledReports({ custom_reports: [], firm_reports: [] });
+      setPlatformScheduledReports([]);
     } finally {
       setPlatformScheduledLoading(false);
+    }
+  }, []);
+
+  const fetchGeneratedReportsHistory = useCallback(async () => {
+    try {
+      setGeneratedReportsLoading(true);
+      const response = await superAdminAPI.getGeneratedReports();
+      if (response?.success) {
+        setGeneratedReportsHistory(response.generated_reports || []);
+      } else {
+        setGeneratedReportsHistory([]);
+      }
+    } catch (err) {
+      console.error('Error fetching generated reports:', err);
+      setGeneratedReportsHistory([]);
+    } finally {
+      setGeneratedReportsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchSchedules();
     fetchPlatformScheduledReports();
-  }, [fetchSchedules, fetchPlatformScheduledReports]);
+    fetchGeneratedReportsHistory();
+  }, [fetchSchedules, fetchPlatformScheduledReports, fetchGeneratedReportsHistory]);
 
   useEffect(() => {
     if (!config) return;
@@ -271,30 +303,176 @@ export default function Reports() {
   };
 
   // Handle platform report generation
+  // Poll report status
+  const pollReportStatus = async (taskId) => {
+    try {
+      const response = await superAdminAPI.getReportStatus(taskId);
+      
+      if (response.status === 'SUCCESS') {
+        setPlatformReportStatus('SUCCESS');
+        setPlatformReportFileUrl(response.file_url);
+        setPlatformReportDetails({
+          report_id: response.report_id,
+          rows_count: response.rows_count,
+          generation_time: response.generation_time
+        });
+        setPlatformReportLoading(false);
+        setFeedback({ type: 'success', message: 'Report generated successfully! Click below to download.' });
+        toast.success('Report generated successfully!', superToastOptions);
+        fetchGeneratedReportsHistory(); // Refresh history
+        return true;
+      } else if (response.status === 'FAILURE' || response.status === 'REVOKED') {
+        setPlatformReportStatus('FAILED');
+        setPlatformReportLoading(false);
+        const errorMsg = response.error || 'Report generation failed';
+        setFeedback({ type: 'error', message: errorMsg });
+        toast.error(errorMsg, superToastOptions);
+        return true;
+      } else if (response.status === 'PENDING' || response.status === 'STARTED') {
+        setPlatformReportStatus(response.status);
+        // Continue polling
+        return false;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error checking report status:', err);
+      return false;
+    }
+  };
+
   const handleGeneratePlatformReport = async () => {
     if (!platformReportForm.report_type || !platformReportForm.time_period) {
       setFeedback({ type: 'error', message: 'Please select report type and time period.' });
+      toast.error('Please select report type and time period.', superToastOptions);
       return;
+    }
+
+    // Validate custom date range if selected
+    if (platformReportForm.time_period === 'custom') {
+      if (!platformReportForm.custom_start_date || !platformReportForm.custom_end_date) {
+        setFeedback({ type: 'error', message: 'Please provide custom date range.' });
+        toast.error('Please provide custom date range.', superToastOptions);
+        return;
+      }
     }
 
     try {
       setPlatformReportLoading(true);
+      setPlatformReportStatus('PENDING');
+      setPlatformReportFileUrl(null);
+      setPlatformReportDetails(null);
       setFeedback(null);
-      const response = await superAdminAPI.generatePlatformReport(platformReportForm);
       
-      if (response?.success) {
-        const successMsg = response.message || `Report generated and downloaded successfully: ${response.filename || 'report.pdf'}`;
-        setFeedback({ type: 'success', message: successMsg });
-        toast.success(successMsg, superToastOptions);
+      const requestData = {
+        report_type: platformReportForm.report_type,
+        time_period: platformReportForm.time_period,
+        format: platformReportForm.format,
+        include_detailed_breakdowns: platformReportForm.include_detailed_breakdowns
+      };
+
+      // Add custom dates if time period is custom
+      if (platformReportForm.time_period === 'custom') {
+        requestData.custom_start_date = platformReportForm.custom_start_date;
+        requestData.custom_end_date = platformReportForm.custom_end_date;
+      }
+      
+      const response = await superAdminAPI.generateReport(requestData);
+      
+      if (response?.task_id) {
+        setPlatformReportTaskId(response.task_id);
+        setFeedback({ type: 'info', message: 'Report generation started. Please wait...' });
+        toast.info('Report generation started. Checking status...', superToastOptions);
+        
+        // Start polling for status
+        const pollInterval = setInterval(async () => {
+          const isDone = await pollReportStatus(response.task_id);
+          if (isDone) {
+            clearInterval(pollInterval);
+          }
+        }, 3000); // Poll every 3 seconds
+        
+        // Clear interval after 5 minutes max
+        setTimeout(() => clearInterval(pollInterval), 300000);
       } else {
-        throw new Error(response?.message || 'Failed to generate platform report');
+        throw new Error(response?.message || 'Failed to start report generation');
       }
     } catch (err) {
       const errorMsg = handleAPIError(err);
       setFeedback({ type: 'error', message: errorMsg });
       toast.error(errorMsg, superToastOptions);
-    } finally {
       setPlatformReportLoading(false);
+      setPlatformReportStatus(null);
+    }
+  };
+
+  // Handle schedule new report submission
+  const handleScheduleNewReport = async () => {
+    if (!scheduleFormData.name || !scheduleFormData.report_type || !scheduleFormData.frequency) {
+      toast.error('Please fill in all required fields', superToastOptions);
+      return;
+    }
+
+    try {
+      const payload = {
+        ...scheduleFormData
+      };
+      
+      // Convert first_delivery to ISO string if provided
+      if (scheduleFormData.first_delivery) {
+        payload.first_delivery = new Date(scheduleFormData.first_delivery).toISOString();
+      }
+      
+      const response = await superAdminAPI.scheduleReport(payload);
+      
+      if (response?.success) {
+        toast.success(response.message || 'Report scheduled successfully', superToastOptions);
+        setShowScheduleModal(false);
+        setScheduleFormData({
+          name: '',
+          report_type: 'platform_revenue',
+          time_period: 'last_30_days',
+          format: 'csv',
+          include_detailed_breakdowns: false,
+          frequency: 'monthly',
+          first_delivery: '',
+          is_active: true
+        });
+        fetchPlatformScheduledReports();
+      } else {
+        throw new Error(response?.message || 'Failed to schedule report');
+      }
+    } catch (err) {
+      toast.error(handleAPIError(err), superToastOptions);
+    }
+  };
+
+  // Delete scheduled report
+  const handleDeleteScheduledReport = async (scheduleId) => {
+    if (!confirm('Are you sure you want to delete this scheduled report?')) return;
+
+    try {
+      const response = await superAdminAPI.deleteScheduledReport(scheduleId);
+      if (response?.success) {
+        toast.success('Scheduled report deleted successfully', superToastOptions);
+        fetchPlatformScheduledReports();
+      }
+    } catch (err) {
+      toast.error(handleAPIError(err), superToastOptions);
+    }
+  };
+
+  // Toggle scheduled report active status
+  const handleToggleScheduledReport = async (scheduleId, currentStatus) => {
+    try {
+      const response = await superAdminAPI.updateScheduledReport(scheduleId, {
+        is_active: !currentStatus
+      });
+      if (response?.success) {
+        toast.success(`Scheduled report ${!currentStatus ? 'activated' : 'paused'}`, superToastOptions);
+        fetchPlatformScheduledReports();
+      }
+    } catch (err) {
+      toast.error(handleAPIError(err), superToastOptions);
     }
   };
 
@@ -508,10 +686,15 @@ export default function Reports() {
                 onChange={handlePlatformReportFormChange('report_type')}
                 className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
                 style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                disabled={platformReportLoading}
               >
+                <option value="platform_revenue">Platform Revenue</option>
+                <option value="user_activity">User Activity</option>
                 <option value="firm_report">Firm Report</option>
                 <option value="staff_report">Staff Report</option>
                 <option value="client_report">Client Report</option>
+                <option value="subscription_analytics">Subscription Analytics</option>
+                <option value="document_statistics">Document Statistics</option>
               </select>
             </div>
 
@@ -522,38 +705,245 @@ export default function Reports() {
                 onChange={handlePlatformReportFormChange('time_period')}
                 className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
                 style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                disabled={platformReportLoading}
               >
-                <option value="weekly">Weekly (Last 7 days)</option>
-                <option value="monthly">Monthly (Current month)</option>
-                <option value="quarterly">Quarterly (Current quarter)</option>
-                <option value="yearly">Yearly (Current year)</option>
+                <option value="last_7_days">Last 7 Days</option>
+                <option value="last_30_days">Last 30 Days</option>
+                <option value="last_90_days">Last 90 Days</option>
+                <option value="last_year">Last Year</option>
+                <option value="current_month">Current Month</option>
+                <option value="current_quarter">Current Quarter</option>
+                <option value="current_year">Current Year</option>
+                <option value="custom">Custom Date Range</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format</label>
+              <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format *</label>
               <select
                 value={platformReportForm.format}
                 onChange={handlePlatformReportFormChange('format')}
                 className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
                 style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                disabled={platformReportLoading}
               >
+                <option value="csv">CSV</option>
                 <option value="pdf">PDF</option>
-                <option value="docx">DOCX (Word)</option>
+                <option value="excel">Excel</option>
+                <option value="json">JSON</option>
               </select>
             </div>
           </div>
 
-          <button
-            onClick={handleGeneratePlatformReport}
-            disabled={platformReportLoading}
-            className="flex items-center justify-center gap-2 px-6 py-2 text-white font-medium transition-colors disabled:opacity-60"
-            style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
-          >
-            <FaDownload className="text-sm" />
-            {platformReportLoading ? 'Generating...' : 'Generate Platform Report'}
-          </button>
+          {/* Custom Date Range */}
+          {platformReportForm.time_period === 'custom' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Start Date *</label>
+                <input
+                  type="date"
+                  value={platformReportForm.custom_start_date}
+                  onChange={handlePlatformReportFormChange('custom_start_date')}
+                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  disabled={platformReportLoading}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>End Date *</label>
+                <input
+                  type="date"
+                  value={platformReportForm.custom_end_date}
+                  onChange={handlePlatformReportFormChange('custom_end_date')}
+                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  disabled={platformReportLoading}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Include Detailed Breakdowns */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="detailed-breakdowns"
+              checked={platformReportForm.include_detailed_breakdowns}
+              onChange={(e) => setPlatformReportForm(prev => ({
+                ...prev,
+                include_detailed_breakdowns: e.target.checked
+              }))}
+              disabled={platformReportLoading}
+              className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+            />
+            <label htmlFor="detailed-breakdowns" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+              Include detailed breakdowns
+            </label>
+          </div>
+
+          {/* Status indicator */}
+          {platformReportStatus && (
+            <div className={`p-3 rounded-lg border ${
+              platformReportStatus === 'SUCCESS' ? 'bg-green-50 border-green-200' :
+              platformReportStatus === 'FAILED' ? 'bg-red-50 border-red-200' :
+              'bg-blue-50 border-blue-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                {platformReportStatus === 'SUCCESS' && (
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {(platformReportStatus === 'PENDING' || platformReportStatus === 'STARTED') && (
+                  <svg className="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {platformReportStatus === 'FAILED' && (
+                  <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+                <span className={`text-sm font-medium ${
+                  platformReportStatus === 'SUCCESS' ? 'text-green-800' :
+                  platformReportStatus === 'FAILED' ? 'text-red-800' :
+                  'text-blue-800'
+                }`}>
+                  {platformReportStatus === 'SUCCESS' && 'Report Ready'}
+                  {platformReportStatus === 'PENDING' && 'Report generation pending...'}
+                  {platformReportStatus === 'STARTED' && 'Generating report...'}
+                  {platformReportStatus === 'FAILED' && 'Report generation failed'}
+                </span>
+              </div>
+              {platformReportTaskId && (
+                <p className="text-xs text-gray-600 mt-1">Task ID: {platformReportTaskId}</p>
+              )}
+              {platformReportDetails && platformReportStatus === 'SUCCESS' && (
+                <div className="mt-2 flex gap-4 text-xs text-gray-600">
+                  {platformReportDetails.rows_count && (
+                    <span>📊 {platformReportDetails.rows_count.toLocaleString()} rows</span>
+                  )}
+                  {platformReportDetails.generation_time && (
+                    <span>⏱️ Generated in {platformReportDetails.generation_time}s</span>
+                  )}
+                  {platformReportDetails.report_id && (
+                    <span>ID: #{platformReportDetails.report_id}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleGeneratePlatformReport}
+              disabled={platformReportLoading}
+              className="flex items-center justify-center gap-2 px-6 py-2 text-white font-medium transition-colors disabled:opacity-60"
+              style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
+            >
+              <FaDownload className="text-sm" />
+              {platformReportLoading ? 'Generating...' : 'Generate Report'}
+            </button>
+            
+            {platformReportFileUrl && (
+              <a
+                href={platformReportFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="flex items-center justify-center gap-2 px-6 py-2 text-white font-medium transition-colors hover:opacity-90"
+                style={{backgroundColor: '#22C55E', borderRadius: '7px'}}
+              >
+                <FaDownload className="text-sm" />
+                Download Report
+              </a>
+            )}
+
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="flex items-center justify-center gap-2 px-6 py-2 bg-white border font-medium transition-colors"
+              style={{border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px'}}
+            >
+              <FaBell className="text-sm" />
+              Schedule Report
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Generated Reports History */}
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+        <div className="mb-4">
+          <h4 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Generated Reports History</h4>
+          <p className="text-sm" style={{color: '#3B4A66'}}>Recent reports generated on the platform</p>
+        </div>
+
+        {generatedReportsLoading ? (
+          <div className="text-center py-8 text-sm text-gray-500">Loading report history...</div>
+        ) : generatedReportsHistory.length === 0 ? (
+          <div className="text-center py-8 text-sm text-gray-500">No generated reports found</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#E8F0FF]">
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Report Type</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Period</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Format</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Status</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Created</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Details</th>
+                  <th className="text-left py-2 px-3 font-medium" style={{color: '#3B4A66'}}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {generatedReportsHistory.slice(0, 10).map((report) => (
+                  <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-2 px-3" style={{color: '#3B4A66'}}>
+                      {report.report_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </td>
+                    <td className="py-2 px-3 text-gray-600">
+                      {report.time_period?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                        {report.format?.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        report.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-gray-600 text-xs">
+                      {new Date(report.created_at).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-3 text-xs text-gray-500">
+                      {report.rows_count && <div>{report.rows_count.toLocaleString()} rows</div>}
+                      {report.file_size && <div>{(report.file_size / 1024).toFixed(0)} KB</div>}
+                    </td>
+                    <td className="py-2 px-3">
+                      {report.file_url && (
+                        <a
+                          href={report.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="text-[#F56D2D] hover:underline text-sm"
+                        >
+                          Download
+                        </a>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Scheduled Reports Section */}
@@ -573,166 +963,228 @@ export default function Reports() {
           </div>
         ) : (
           <>
-            {/* Custom Reports */}
-            {platformScheduledReports.custom_reports && platformScheduledReports.custom_reports.length > 0 && (
+            {/* All Scheduled Reports */}
+            {platformScheduledReports && platformScheduledReports.length > 0 ? (
               <div className="mb-6">
                 <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
-                  Custom Reports ({platformScheduledReports.custom_reports.length})
+                  Scheduled Reports ({platformScheduledReports.length})
                 </h5>
                 <div className="space-y-3">
-                  {platformScheduledReports.custom_reports.map((schedule) => (
+                  {platformScheduledReports.map((schedule) => (
                     <div
                       key={schedule.id}
                       className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
                       style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
                     >
-                      <div>
+                      <div className="flex-1">
                         <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
-                          {schedule.report_type_display || schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom Report'}
+                          {schedule.name || schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                         </h6>
                         <p className="text-xs" style={{color: '#6B7280'}}>
-                          {schedule.time_period_display || schedule.time_period?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom period'} • {schedule.format_display || schedule.format?.toUpperCase() || 'PDF'}
+                          {schedule.report_type?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {schedule.time_period?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} • {schedule.format?.toUpperCase()}
                         </p>
                         <p className="text-xs mt-1" style={{color: '#6B7280'}}>
-                          {schedule.last_run_at_formatted 
-                            ? `Last run: ${schedule.last_run_at_formatted}` 
+                          {schedule.last_run 
+                            ? `Last run: ${new Date(schedule.last_run).toLocaleString()}` 
                             : 'Never run'}
-                          {schedule.scheduled_for && (
-                            <span className="ml-2">• Next: {formatDateTime(schedule.scheduled_for)}</span>
+                          {schedule.next_run && (
+                            <span className="ml-2">• Next: {new Date(schedule.next_run).toLocaleString()}</span>
                           )}
                         </p>
-                        {schedule.created_by && (
-                          <p className="text-xs mt-1" style={{color: '#9CA3AF'}}>
-                            Created by: {schedule.created_by}
-                          </p>
-                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
-                          {schedule.frequency_display || schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'One-off'}
+                          {schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                         </span>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          schedule.status === 'active' ? 'bg-green-100 text-green-800' :
-                          schedule.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          schedule.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                          schedule.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {schedule.status_display || schedule.status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
-                        </span>
+                        <button
+                          onClick={() => handleToggleScheduledReport(schedule.id, schedule.is_active)}
+                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                            schedule.is_active 
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          {schedule.is_active ? 'Active' : 'Paused'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteScheduledReport(schedule.id)}
+                          className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-xs"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
-
-            {/* Firm Reports */}
-            {platformScheduledReports.firm_reports && platformScheduledReports.firm_reports.length > 0 && (
-              <div className="mb-6">
-                <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
-                  Firm Reports ({platformScheduledReports.firm_reports.length})
-                </h5>
-                <div className="space-y-3">
-                  {platformScheduledReports.firm_reports.map((schedule) => (
-                    <div
-                      key={schedule.id}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
-                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-                    >
-                      <div>
-                        <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
-                          {schedule.firm_name || `Firm ${schedule.firm_id}`}
-                        </h6>
-                        <p className="text-xs" style={{color: '#6B7280'}}>
-                          Frequency: {schedule.frequency_display || schedule.frequency?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'N/A'}
-                          {schedule.recipient_emails_count && (
-                            <span className="ml-2">• {schedule.recipient_emails_count} recipient(s)</span>
-                          )}
-                        </p>
-                        <p className="text-xs mt-1" style={{color: '#6B7280'}}>
-                          {schedule.last_run_at_formatted 
-                            ? `Last run: ${schedule.last_run_at_formatted}` 
-                            : 'Never run'}
-                          {schedule.next_run_at && (
-                            <span className="ml-2">• Next: {formatDateTime(schedule.next_run_at)}</span>
-                          )}
-                        </p>
-                        {schedule.created_by && (
-                          <p className="text-xs mt-1" style={{color: '#9CA3AF'}}>
-                            Created by: {schedule.created_by}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          schedule.status === 'active' ? 'bg-green-100 text-green-800' :
-                          schedule.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                          schedule.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                          schedule.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {schedule.status_display || schedule.status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Legacy Custom Schedules (from old API) */}
-            {schedules.length > 0 && (
-              <div className="mb-6">
-                <h5 className="text-sm font-semibold mb-3" style={{color: '#3B4A66'}}>
-                  Legacy Custom Schedules ({schedules.length})
-                </h5>
-                <div className="space-y-3">
-                  {schedules.map((schedule) => (
-                    <div
-                      key={schedule.id || `${schedule.report_type}-${schedule.scheduled_for}`}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-3 px-4"
-                      style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}
-                    >
-                      <div>
-                        <h6 className="text-sm font-semibold mb-1" style={{color: '#3B4A66'}}>
-                          {(schedule.report_type || 'Report').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                        </h6>
-                        <p className="text-xs" style={{color: '#6B7280'}}>
-                          {schedule.time_period?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'Custom period'} • {schedule.format?.toUpperCase?.() || schedule.format}
-                        </p>
-                        <p className="text-xs mt-1" style={{color: '#6B7280'}}>
-                          Next run: {formatDateTime(schedule.next_run || schedule.scheduled_for)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
-                          {schedule.frequency?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'One-off'}
-                        </span>
-                        <span className="text-xs font-medium px-2 py-1" style={{border: '1px solid #E8F0FF', borderRadius: '50px', color: '#3B4A66'}}>
-                          {schedule.status?.replace(/_/g, ' ')?.replace(/\b\w/g, (c) => c.toUpperCase()) || 'Pending'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {(!platformScheduledReports.custom_reports || platformScheduledReports.custom_reports.length === 0) &&
-             (!platformScheduledReports.firm_reports || platformScheduledReports.firm_reports.length === 0) &&
-             schedules.length === 0 && (
+            ) : (
               <div className="p-4 border border-dashed border-[#E8F0FF] rounded-lg text-sm text-gray-500 text-center">
-                No scheduled reports yet. Create one using the schedule form above.
+                No scheduled reports yet. Click "Schedule Report" to create one.
               </div>
             )}
           </>
         )}
       </div>
+
+      {/* Schedule Report Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold" style={{color: '#3B4A66'}}>Schedule Recurring Report</h3>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Name *</label>
+                <input
+                  type="text"
+                  value={scheduleFormData.name}
+                  onChange={(e) => setScheduleFormData(prev => ({...prev, name: e.target.value}))}
+                  placeholder="e.g., Monthly Revenue Report"
+                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Report Type *</label>
+                  <select
+                    value={scheduleFormData.report_type}
+                    onChange={(e) => setScheduleFormData(prev => ({...prev, report_type: e.target.value}))}
+                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  >
+                    <option value="platform_revenue">Platform Revenue</option>
+                    <option value="user_activity">User Activity</option>
+                    <option value="firm_report">Firm Report</option>
+                    <option value="staff_report">Staff Report</option>
+                    <option value="client_report">Client Report</option>
+                    <option value="subscription_analytics">Subscription Analytics</option>
+                    <option value="document_statistics">Document Statistics</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Time Period *</label>
+                  <select
+                    value={scheduleFormData.time_period}
+                    onChange={(e) => setScheduleFormData(prev => ({...prev, time_period: e.target.value}))}
+                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  >
+                    <option value="last_7_days">Last 7 Days</option>
+                    <option value="last_30_days">Last 30 Days</option>
+                    <option value="current_month">Current Month</option>
+                    <option value="current_quarter">Current Quarter</option>
+                    <option value="current_year">Current Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Format *</label>
+                  <select
+                    value={scheduleFormData.format}
+                    onChange={(e) => setScheduleFormData(prev => ({...prev, format: e.target.value}))}
+                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  >
+                    <option value="csv">CSV</option>
+                    <option value="pdf">PDF</option>
+                    <option value="excel">Excel</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>Frequency *</label>
+                  <select
+                    value={scheduleFormData.frequency}
+                    onChange={(e) => setScheduleFormData(prev => ({...prev, frequency: e.target.value}))}
+                    className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                    style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{color: '#3B4A66'}}>First Delivery *</label>
+                <input
+                  type="datetime-local"
+                  value={scheduleFormData.first_delivery}
+                  onChange={(e) => setScheduleFormData(prev => ({...prev, first_delivery: e.target.value}))}
+                  className="w-full px-3 py-2 bg-white border rounded-lg text-sm"
+                  style={{border: '1px solid #E8F0FF', color: '#3B4A66'}}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="schedule-detailed"
+                  checked={scheduleFormData.include_detailed_breakdowns}
+                  onChange={(e) => setScheduleFormData(prev => ({
+                    ...prev,
+                    include_detailed_breakdowns: e.target.checked
+                  }))}
+                  className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                />
+                <label htmlFor="schedule-detailed" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                  Include detailed breakdowns
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="schedule-active"
+                  checked={scheduleFormData.is_active}
+                  onChange={(e) => setScheduleFormData(prev => ({
+                    ...prev,
+                    is_active: e.target.checked
+                  }))}
+                  className="w-4 h-4 text-[#F56D2D] border-gray-300 rounded focus:ring-[#F56D2D]"
+                />
+                <label htmlFor="schedule-active" className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                  Activate immediately
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="px-4 py-2 bg-white border font-medium transition-colors"
+                style={{border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '7px'}}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleScheduleNewReport}
+                className="px-4 py-2 text-white font-medium transition-colors"
+                style={{backgroundColor: '#F56D2D', borderRadius: '7px'}}
+              >
+                Schedule Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
-

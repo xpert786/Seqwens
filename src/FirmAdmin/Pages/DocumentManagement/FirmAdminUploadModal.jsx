@@ -53,18 +53,36 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         };
     }, [folderDropdownOpen]);
 
-    // Fetch root folders from API using Firm Admin endpoint
-    useEffect(() => {
-        const fetchRootFolders = async () => {
-            if (!show) return;
+    // Fetch root folders from API using Firm Admin endpoint - extracted to be reusable
+    const fetchRootFolders = useCallback(async () => {
+        if (!show) return;
 
-            try {
-                setLoadingFolders(true);
-                const response = await firmAdminDocumentsAPI.browseDocuments({});
+        try {
+            setLoadingFolders(true);
+            // Use listFoldersWithSync to get latest folder structure from B2
+            const response = await firmAdminDocumentsAPI.listFoldersWithSync();
 
-                if (response.success && response.data) {
-                    const rootFolders = response.data.folders || [];
-                    const foldersTree = rootFolders.map(folder => ({
+            if (response.folders && Array.isArray(response.folders)) {
+                // New API response format: { folders: [...] }
+                const foldersTree = response.folders
+                    .filter(folder => folder.id) // Filter out folders without IDs
+                    .map(folder => ({
+                        id: folder.id,
+                        name: folder.title || folder.name,
+                        title: folder.title || folder.name,
+                        description: folder.description || '',
+                        children: [],
+                        expanded: false,
+                        loaded: false,
+                    }));
+                setFolderTree(foldersTree);
+                setExpandedFolders(new Set());
+            } else if (response.success && response.data) {
+                // Fallback to old response structure
+                const rootFolders = response.data.folders || [];
+                const foldersTree = rootFolders
+                    .filter(folder => folder.id) // Filter out folders without IDs
+                    .map(folder => ({
                         id: folder.id,
                         name: folder.title,
                         title: folder.title,
@@ -73,25 +91,26 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                         expanded: false,
                         loaded: false,
                     }));
-                    setFolderTree(foldersTree);
-                    setExpandedFolders(new Set());
-                } else {
-                    setFolderTree([]);
-                }
-            } catch (error) {
-                console.error('Error fetching root folders:', error);
-                toast.error('Failed to load folders. Please refresh the page.', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
+                setFolderTree(foldersTree);
+                setExpandedFolders(new Set());
+            } else {
                 setFolderTree([]);
-            } finally {
-                setLoadingFolders(false);
             }
-        };
-
-        fetchRootFolders();
+        } catch (error) {
+            console.error('Error fetching root folders:', error);
+            toast.error('Failed to load folders. Please refresh the page.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            setFolderTree([]);
+        } finally {
+            setLoadingFolders(false);
+        }
     }, [show]);
+
+    useEffect(() => {
+        fetchRootFolders();
+    }, [fetchRootFolders]);
 
     // Fetch document categories from API using Firm Admin endpoint
     useEffect(() => {
@@ -427,15 +446,17 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
 
             if (response.success && response.data) {
                 const subfolders = response.data.folders || [];
-                return subfolders.map(folder => ({
-                    id: folder.id,
-                    name: folder.title,
-                    title: folder.title,
-                    description: folder.description || '',
-                    children: [],
-                    expanded: false,
-                    loaded: false,
-                }));
+                return subfolders
+                    .filter(folder => folder.id) // Filter out folders without IDs
+                    .map(folder => ({
+                        id: folder.id,
+                        name: folder.title,
+                        title: folder.title,
+                        description: folder.description || '',
+                        children: [],
+                        expanded: false,
+                        loaded: false,
+                    }));
             }
             return [];
         } catch (error) {
@@ -551,35 +572,32 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                 folderInfo = result.folder;
             }
 
-            const newFolderObj = {
-                name: folderInfo.title || folderInfo.name || newFolderName.trim(),
-                id: folderInfo.id,
-                title: folderInfo.title || folderInfo.name || newFolderName.trim(),
-                description: folderInfo.description || '',
-                children: [],
-                expanded: false,
-                loaded: false
-            };
-
-            let updatedTree;
-            if (parentFolderForNewFolder) {
-                updatedTree = updateFolderWithSubfolders(folderTree, parentFolderForNewFolder, [
-                    ...(findFolderById(folderTree, parentFolderForNewFolder)?.children || []),
-                    newFolderObj
-                ]);
-            } else {
-                updatedTree = [...folderTree, newFolderObj];
+            // Validate that folder has an ID
+            if (!folderInfo.id) {
+                console.error('Created folder missing ID:', folderInfo);
+                toast.warning('Folder created but ID is missing. Refreshing folder list...', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                // Refresh folder list from API to get the correct structure
+                await fetchRootFolders();
+                setNewFolderName("");
+                setCreatingFolder(false);
+                setParentFolderForNewFolder(null);
+                return;
             }
 
-            setFolderTree(updatedTree);
+            toast.success("Folder created successfully! Refreshing folder list...", {
+                position: "top-right",
+                autoClose: 2000,
+            });
+
+            // Refresh folder list from API to ensure we have the latest structure with proper IDs
+            await fetchRootFolders();
+
             setNewFolderName("");
             setCreatingFolder(false);
             setParentFolderForNewFolder(null);
-
-            toast.success("Folder created successfully!", {
-                position: "top-right",
-                autoClose: 3000,
-            });
 
         } catch (error) {
             console.error('Error creating folder:', error);
@@ -619,11 +637,10 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             return;
         }
 
-        // Before upload, ensure we have categoryId and folderId
-        // If missing, try to find them from the selected values
+        // Before upload, ensure we have categoryId and extract folder name
         const filesToUpload = files.map((file) => {
             let categoryId = file.categoryId;
-            let folderId = file.folderId;
+            let folderName = null;
 
             // If categoryId is missing, find it from the category name (case-insensitive)
             if (!categoryId && file.category && file.category.trim() !== '') {
@@ -643,34 +660,19 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                 }
             }
 
-            // If folderId is missing, find it from the folder path
-            if (!folderId && file.folderPath && file.folderPath.trim() !== '') {
-                const findFolderIdByPath = (tree, searchPath, currentPath = []) => {
-                    for (const folder of tree) {
-                        const fullPath = [...currentPath, folder.name].join(' > ');
-                        if (fullPath === searchPath) {
-                            return folder.id;
-                        }
-                        if (folder.children && folder.children.length > 0) {
-                            const found = findFolderIdByPath(folder.children, searchPath, [...currentPath, folder.name]);
-                            if (found) return found;
-                        }
-                    }
-                    return null;
-                };
-                const foundFolderId = findFolderIdByPath(folderTree, file.folderPath);
-                if (foundFolderId) {
-                    folderId = foundFolderId;
-                    console.log('✅ Recovered folderId for', file.name, ':', folderId, 'from path:', file.folderPath);
-                } else {
-                    console.warn('❌ Could not find folderId for', file.name, 'path:', file.folderPath);
+            // Extract folder name from the folder path (use the last part)
+            if (file.folderPath && file.folderPath.trim() !== '') {
+                const pathParts = file.folderPath.split(' > ').map(p => p.trim()).filter(p => p);
+                if (pathParts.length > 0) {
+                    folderName = pathParts[pathParts.length - 1];
+                    console.log('✅ Extracted folderName for', file.name, ':', folderName, 'from path:', file.folderPath);
                 }
             }
 
             return {
                 ...file,
                 categoryId: categoryId || file.categoryId,
-                folderId: folderId || file.folderId
+                folderName
             };
         });
 
@@ -726,39 +728,23 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                     });
                 }
 
-                // ALWAYS try to get folder_id
-                let folderId = null;
+                // Use folder_name (API now accepts folder names!)
+                let folderName = null;
 
-                // First, use the stored folderId if it exists
-                if (file.folderId) {
-                    folderId = file.folderId;
+                // Extract folder name from the folder path (use the last part)
+                if (file.folderPath && file.folderPath.trim() !== '') {
+                    const pathParts = file.folderPath.split(' > ').map(p => p.trim()).filter(p => p);
+                    if (pathParts.length > 0) {
+                        folderName = pathParts[pathParts.length - 1];
+                    }
                 }
 
-                // If no folderId, try to find by folder path
-                if (!folderId && file.folderPath && file.folderPath.trim() !== '') {
-                    const findFolderIdByPath = (tree, searchPath, currentPath = []) => {
-                        for (const folder of tree) {
-                            const fullPath = [...currentPath, folder.name].join(' > ');
-                            if (fullPath === searchPath) {
-                                return folder.id;
-                            }
-                            if (folder.children && folder.children.length > 0) {
-                                const found = findFolderIdByPath(folder.children, searchPath, [...currentPath, folder.name]);
-                                if (found) return found;
-                            }
-                        }
-                        return null;
-                    };
-                    folderId = findFolderIdByPath(folderTree, file.folderPath);
-                }
-
-                // ALWAYS include folder_id if we found one
-                if (folderId) {
-                    metadata.folder_id = folderId;
+                // Include folder_name if we found one
+                if (folderName) {
+                    metadata.folder_name = folderName;
                 } else {
-                    console.error('⚠️ Folder ID not found for file:', file.name, {
-                        selectedFolderPath: file.folderPath,
-                        storedFolderId: file.folderId
+                    console.warn('⚠️ Folder name not found for file:', file.name, {
+                        selectedFolderPath: file.folderPath
                     });
                 }
 
@@ -766,7 +752,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                     category: file.category,
                     categoryId: file.categoryId,
                     folderPath: file.folderPath,
-                    folderId: file.folderId
+                    folderName: metadata.folder_name
                 });
 
                 return metadata;
@@ -777,8 +763,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                 name: f.name,
                 category: f.category,
                 categoryId: f.categoryId,
-                folderPath: f.folderPath,
-                folderId: f.folderId
+                folderPath: f.folderPath
             })));
 
             formData.append('documents_metadata', JSON.stringify(documentsMetadata));
@@ -843,9 +828,12 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
             const hasChildren = folder.children && folder.children.length > 0;
             const isExpanded = expandedFolders.has(folder.id);
             const showExpandIcon = hasChildren || (!folder.loaded && folder.id);
+            
+            // Generate unique key: use ID if available, otherwise use full path + index for uniqueness
+            const uniqueKey = folder.id || `${fullPath}-${idx}` || `folder-${idx}`;
 
             return (
-                <div key={folder.id || idx} style={{ paddingLeft: '8px', marginBottom: '2px' }}>
+                <div key={uniqueKey} style={{ paddingLeft: '8px', marginBottom: '2px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         {showExpandIcon ? (
                             <span
@@ -856,7 +844,18 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                             </span>
                         ) : <span style={{ width: '12px' }} />}
                         <div
-                            onClick={() => handleFolderSelect(fullPath, folder.id)}
+                            onClick={() => {
+                                if (!folder.id) {
+                                    console.error('Folder ID is missing for folder:', fullPath);
+                                    toast.error('This folder is missing an ID. Refreshing folder list...', {
+                                        position: "top-right",
+                                        autoClose: 3000,
+                                    });
+                                    fetchRootFolders();
+                                    return;
+                                }
+                                handleFolderSelect(fullPath, folder.id);
+                            }}
                             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '2px 0' }}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -1062,11 +1061,14 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
                                                     onChange={handleCategoryChange}
                                                     disabled={loadingCategories || creatingCategory}
                                                 >
-                                                    <option value="">
+                                                    <option value="" key="select-category-default">
                                                         {loadingCategories ? "Loading categories..." : "Select a Category"}
                                                     </option>
-                                                    {categories.map((category) => (
-                                                        <option key={category.id} value={category.name}>
+                                                    {categories.map((category, catIdx) => (
+                                                        <option 
+                                                            key={category.id || `category-${catIdx}-${category.name}`} 
+                                                            value={category.name}
+                                                        >
                                                             {category.name}
                                                         </option>
                                                     ))}

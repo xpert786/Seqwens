@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -216,12 +217,18 @@ export default function FirmManagement() {
 
     const handleExportReport = async () => {
         if (!pdfRef.current) {
-            alert('No data available to export.');
+            toast.warning('No data available to export.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
         
         if (firms.length === 0) {
-            alert('No firms available to export.');
+            toast.warning('No firms available to export.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
         
@@ -265,7 +272,10 @@ export default function FirmManagement() {
             }, 100);
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Failed to generate PDF. Please try again.');
+            toast.error('Failed to generate PDF. Please try again.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
         }
     };
 

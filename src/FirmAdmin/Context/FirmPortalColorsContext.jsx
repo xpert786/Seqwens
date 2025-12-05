@@ -103,6 +103,17 @@ export const FirmPortalColorsProvider = ({ children }) => {
       }
       faviconLink.href = faviconUrl;
       faviconLink.type = faviconUrl.includes('.ico') ? 'image/x-icon' : 'image/png';
+      
+      // Add crossorigin attribute for B2 images
+      if (faviconUrl.includes('backblazeb2.com') || faviconUrl.includes('s3.us-')) {
+        faviconLink.crossOrigin = 'anonymous';
+      }
+      
+      // Handle favicon load errors
+      faviconLink.onerror = () => {
+        console.warn('Failed to load custom favicon, using default');
+        faviconLink.href = '/vite.svg';
+      };
     } else {
       // Remove custom favicon if none provided
       if (faviconLink && faviconLink.href !== '/vite.svg') {

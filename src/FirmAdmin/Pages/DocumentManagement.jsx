@@ -303,7 +303,7 @@ export default function DocumentManagement() {
       {!isNestedRoute && (
         <div className="mb-6  w-fit">
           <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Folder', 'Compliance', 'Security'].map((tab) => (
+            {['Folder', 'Security'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -486,8 +486,8 @@ export default function DocumentManagement() {
         </div>
       )}
 
-      {/* Compliance Tab Content */}
-      {!isNestedRoute && activeTab === 'Compliance' && (
+      {/* Compliance Tab Content - COMMENTED OUT */}
+      {false && !isNestedRoute && activeTab === 'Compliance' && (
         <div className="space-y-6">
           {/* Header Section */}
           <div className="bg-white rounded-lg p-6">

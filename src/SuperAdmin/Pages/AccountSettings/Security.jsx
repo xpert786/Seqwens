@@ -24,10 +24,8 @@ export default function Security() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentOnly, setCurrentOnly] = useState(false);
     // Modal states
-    const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showRevealModal, setShowRevealModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedKey, setSelectedKey] = useState(null);
     const [revealedKey, setRevealedKey] = useState(null);
 
@@ -40,7 +38,7 @@ export default function Security() {
     const [formErrors, setFormErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
 
-    // Supported services
+    // Supported services for filtering
     const supportedServices = [
         { value: "stripe", label: "Stripe Integration" },
         { value: "email", label: "Email Service" },
@@ -89,7 +87,7 @@ export default function Security() {
     const getStatusColor = (status) => {
         const statusLower = (status || "").toLowerCase();
         if (statusLower === "active") return "#22C55E";
-        if (statusLower === "inactive") return "#EF4444";
+        if (statusLower === "inactive" || statusLower === "not configured") return "#EF4444";
         return "#6B7280";
     };
 
@@ -108,79 +106,34 @@ export default function Security() {
         return `${first4}${masked}${last4}`;
     };
 
-    // Handle create API key
-    const handleCreate = async () => {
-        setFormErrors({});
-
-        // Validation
-        if (!formData.service) {
-            setFormErrors({ service: "Service is required" });
-            return;
-        }
-        if (!formData.key) {
-            setFormErrors({ key: "API key is required" });
-            return;
-        }
-
-        try {
-            setSubmitting(true);
-            const response = await superAdminAPI.createAPIKey(formData);
-
-            if (response.success) {
-                toast.success(response.message || "API key created successfully", superToastOptions);
-                setShowCreateModal(false);
-                setFormData({ service: "", key: "", status: "active" });
-                fetchAPIKeys();
-            }
-        } catch (err) {
-            // Don't log full error details that might contain API keys
-            const errorMsg = handleAPIError(err);
-            console.error('Error creating API key');
-            toast.error(errorMsg, superToastOptions);
-
-            // Handle validation errors
-            if (err.message && err.message.includes("errors")) {
-                try {
-                    const errorData = JSON.parse(err.message);
-                    if (errorData.errors) {
-                        setFormErrors(errorData.errors);
-                    }
-                } catch (e) {
-                    // Not JSON, ignore
-                }
-            }
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
     // Handle update API key
     const handleUpdate = async () => {
-        if (!selectedKey) return;
+        if (!selectedKey || !selectedKey.service) return;
+        
+        if (selectedKey.service === 'undefined') {
+            toast.error('Invalid API key identifier. Please provide a valid service name.', superToastOptions);
+            return;
+        }
 
         setFormErrors({});
 
-        // Validation
-        if (!formData.service) {
-            setFormErrors({ service: "Service is required" });
+        // Validation - key is required for update
+        if (!formData.key || !formData.key.trim()) {
+            setFormErrors({ key: "API key value is required" });
+            toast.error('Key value is required', superToastOptions);
             return;
         }
-        // Key is optional for updates (can update just status)
 
         try {
             setSubmitting(true);
-            // Only include key if it's provided
             const updateData = {
-                service: formData.service,
-                status: formData.status
+                key: formData.key.trim()
             };
-            if (formData.key && formData.key.trim()) {
-                updateData.key = formData.key.trim();
-            }
-            const response = await superAdminAPI.updateAPIKey(selectedKey.id, updateData);
+            
+            const response = await superAdminAPI.updateAPIKey(selectedKey.service, updateData);
 
             if (response.success) {
-                toast.success(response.message || "API key updated successfully", superToastOptions);
+                toast.success(response.message || "API key updated successfully in backend settings", superToastOptions);
                 setShowEditModal(false);
                 setSelectedKey(null);
                 setFormData({ service: "", key: "", status: "active" });
@@ -190,18 +143,14 @@ export default function Security() {
             // Don't log full error details that might contain API keys
             const errorMsg = handleAPIError(err);
             console.error('Error updating API key');
-            toast.error(errorMsg, superToastOptions);
-
-            // Handle validation errors
-            if (err.message && err.message.includes("errors")) {
-                try {
-                    const errorData = JSON.parse(err.message);
-                    if (errorData.errors) {
-                        setFormErrors(errorData.errors);
-                    }
-                } catch (e) {
-                    // Not JSON, ignore
-                }
+            
+            // Handle specific error cases
+            if (err.message?.includes('404') || err.message?.toLowerCase().includes('not found')) {
+                toast.error('API key not found. Only keys configured in backend settings are available.', superToastOptions);
+            } else if (err.message?.includes('400') || err.message?.toLowerCase().includes('invalid')) {
+                toast.error(errorMsg || 'Invalid API key identifier. Please provide a valid service name.', superToastOptions);
+            } else {
+                toast.error(errorMsg, superToastOptions);
             }
         } finally {
             setSubmitting(false);
@@ -209,9 +158,14 @@ export default function Security() {
     };
 
     // Handle reveal API key
-    const handleReveal = async (keyId) => {
+    const handleReveal = async (serviceName) => {
+        if (!serviceName || serviceName === 'undefined') {
+            toast.error('Invalid service name', superToastOptions);
+            return;
+        }
+        
         try {
-            const response = await superAdminAPI.revealAPIKey(keyId);
+            const response = await superAdminAPI.revealAPIKey(serviceName);
 
             if (response.success && response.data) {
                 setRevealedKey(response.data.key);
@@ -225,31 +179,17 @@ export default function Security() {
         }
     };
 
-    // Handle delete API key
-    const handleDelete = async () => {
-        if (!selectedKey) return;
-
-        try {
-            const response = await superAdminAPI.deleteAPIKey(selectedKey.id);
-
-            if (response.success) {
-                toast.success(response.message || "API key deleted successfully", superToastOptions);
-                setShowDeleteModal(false);
-                setSelectedKey(null);
-                fetchAPIKeys();
-            }
-        } catch (err) {
-            console.error('Error deleting API key:', err);
-            toast.error(handleAPIError(err), superToastOptions);
-        }
-    };
-
     // Handle toggle status
     const handleToggleStatus = async (apiKey) => {
+        if (!apiKey.service || apiKey.service === 'undefined') {
+            toast.error('Invalid API key identifier', superToastOptions);
+            return;
+        }
+        
         const newStatus = apiKey.status === "active" ? "inactive" : "active";
 
         try {
-            const response = await superAdminAPI.updateAPIKey(apiKey.id, { status: newStatus });
+            const response = await superAdminAPI.updateAPIKey(apiKey.service, { status: newStatus });
 
             if (response.success) {
                 toast.success(`API key ${newStatus === "active" ? "activated" : "deactivated"}`, superToastOptions);
@@ -271,19 +211,6 @@ export default function Security() {
         });
         setFormErrors({});
         setShowEditModal(true);
-    };
-
-    // Open delete modal
-    const openDeleteModal = (apiKey) => {
-        setSelectedKey(apiKey);
-        setShowDeleteModal(true);
-    };
-
-    // Open create modal
-    const openCreateModal = () => {
-        setFormData({ service: "", key: "", status: "active" });
-        setFormErrors({});
-        setShowCreateModal(true);
     };
 
     return (
@@ -350,11 +277,22 @@ export default function Security() {
                             fontSize: "14px",
                             fontWeight: "400",
                             fontFamily: "BasisGrotesquePro",
-                            margin: "0"
+                            margin: "0 0 8px 0"
                         }}
                     >
-                        Manage third-party service integrations
+                        Manage third-party service integrations configured in backend settings
                     </p>
+                    <div style={{
+                        backgroundColor: "#FEF3C7",
+                        border: "1px solid #FDE047",
+                        borderRadius: "6px",
+                        padding: "12px",
+                        fontSize: "13px",
+                        fontFamily: "BasisGrotesquePro",
+                        color: "#92400E"
+                    }}>
+                        ℹ️ <strong>Note:</strong> You can only update API keys that are configured in the backend settings. Creating new keys or deleting existing configurations is not allowed through this interface.
+                    </div>
                 </div>
 
                 {/* Filters and Actions */}
@@ -429,24 +367,6 @@ export default function Security() {
                         />
                         Current Only
                     </label>
-                    <button
-                        type="button"
-                        onClick={openCreateModal}
-                        style={{
-                            backgroundColor: "#F56D2D",
-                            color: "#ffffff",
-                            fontSize: "14px",
-                            fontWeight: "400",
-                            fontFamily: "BasisGrotesquePro",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap"
-                        }}
-                    >
-                        Add API Key
-                    </button>
                 </div>
 
                 {/* Summary */}
@@ -617,7 +537,7 @@ export default function Security() {
                                             <div style={{ display: "flex", gap: "8px" }}>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleReveal(apiKey.id)}
+                                                    onClick={() => handleReveal(apiKey.service)}
                                                     title="Reveal Key"
                                                     style={{
                                                         backgroundColor: "transparent",
@@ -626,27 +546,14 @@ export default function Security() {
                                                         padding: "4px",
                                                         cursor: "pointer"
                                                     }}
+                                                    disabled={!apiKey.service || apiKey.service === 'undefined'}
                                                 >
                                                     <EyeIcon />
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleToggleStatus(apiKey)}
-                                                    title={apiKey.status === "active" ? "Deactivate" : "Activate"}
-                                                    style={{
-                                                        backgroundColor: "transparent",
-                                                        border: "none",
-                                                        color: "#6B7280",
-                                                        padding: "4px",
-                                                        cursor: "pointer"
-                                                    }}
-                                                >
-                                                    <RefreshIcon1 />
-                                                </button>
-                                                <button
-                                                    type="button"
                                                     onClick={() => openEditModal(apiKey)}
-                                                    title="Edit"
+                                                    title="Update Key"
                                                     style={{
                                                         backgroundColor: "transparent",
                                                         border: "none",
@@ -654,22 +561,9 @@ export default function Security() {
                                                         padding: "4px",
                                                         cursor: "pointer"
                                                     }}
+                                                    disabled={!apiKey.service || apiKey.service === 'undefined'}
                                                 >
                                                     <SaveIcon />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openDeleteModal(apiKey)}
-                                                    title="Delete"
-                                                    style={{
-                                                        backgroundColor: "transparent",
-                                                        border: "none",
-                                                        color: "#6B7280",
-                                                        padding: "4px",
-                                                        cursor: "pointer"
-                                                    }}
-                                                >
-                                                    <TrashIcon1 />
                                                 </button>
                                             </div>
                                         </td>
@@ -681,116 +575,36 @@ export default function Security() {
                 )}
             </div>
 
-            {/* Create API Key Modal */}
-            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title style={{ fontFamily: "BasisGrotesquePro" }}>Create API Key</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Service *</Form.Label>
-                            <Form.Select
-                                value={formData.service}
-                                onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                                isInvalid={!!formErrors.service}
-                            >
-                                <option value="">Select a service</option>
-                                {supportedServices.map(service => (
-                                    <option key={service.value} value={service.value}>{service.label}</option>
-                                ))}
-                            </Form.Select>
-                            {formErrors.service && (
-                                <Form.Control.Feedback type="invalid">{formErrors.service}</Form.Control.Feedback>
-                            )}
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>API Key *</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={formData.key}
-                                onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-                                placeholder="Enter API key"
-                                isInvalid={!!formErrors.key}
-                            />
-                            {formErrors.key && (
-                                <Form.Control.Feedback type="invalid">{formErrors.key}</Form.Control.Feedback>
-                            )}
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Status</Form.Label>
-                            <Form.Select
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </Form.Select>
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={handleCreate}
-                        disabled={submitting}
-                        style={{ backgroundColor: "#F56D2D", border: "none" }}
-                    >
-                        {submitting ? "Creating..." : "Create"}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
             {/* Edit API Key Modal */}
             <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title style={{ fontFamily: "BasisGrotesquePro" }}>Edit API Key</Modal.Title>
+                    <Modal.Title style={{ fontFamily: "BasisGrotesquePro" }}>Update API Key</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
+                        <div style={{ marginBottom: "16px", fontFamily: "BasisGrotesquePro" }}>
+                            <strong>Service:</strong> {selectedKey?.service_display || selectedKey?.service}
+                        </div>
+                        {selectedKey?.env_variable && (
+                            <div style={{ marginBottom: "16px", fontFamily: "BasisGrotesquePro", fontSize: "12px", color: "#6B7280" }}>
+                                <strong>Environment Variable:</strong> {selectedKey.env_variable}
+                            </div>
+                        )}
                         <Form.Group className="mb-3">
-                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Service *</Form.Label>
-                            <Form.Select
-                                value={formData.service}
-                                onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                                isInvalid={!!formErrors.service}
-                            >
-                                {supportedServices.map(service => (
-                                    <option key={service.value} value={service.value}>{service.label}</option>
-                                ))}
-                            </Form.Select>
-                            {formErrors.service && (
-                                <Form.Control.Feedback type="invalid">{formErrors.service}</Form.Control.Feedback>
-                            )}
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>API Key</Form.Label>
+                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>New API Key *</Form.Label>
                             <Form.Control
                                 type="text"
                                 value={formData.key}
                                 onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-                                placeholder="Enter new API key (leave empty to keep current)"
+                                placeholder="Enter new API key value"
                                 isInvalid={!!formErrors.key}
                             />
                             <Form.Text className="text-muted" style={{ fontFamily: "BasisGrotesquePro" }}>
-                                Leave empty to keep current key, or enter a new key to update
+                                Enter the new API key to update the backend settings
                             </Form.Text>
                             {formErrors.key && (
                                 <Form.Control.Feedback type="invalid">{formErrors.key}</Form.Control.Feedback>
                             )}
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>Status</Form.Label>
-                            <Form.Select
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </Form.Select>
                         </Form.Group>
                     </Form>
                 </Modal.Body>
@@ -804,7 +618,7 @@ export default function Security() {
                         disabled={submitting}
                         style={{ backgroundColor: "#F56D2D", border: "none" }}
                     >
-                        {submitting ? "Updating..." : "Update"}
+                        {submitting ? "Updating..." : "Update Key"}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -818,16 +632,46 @@ export default function Security() {
                     <div style={{ fontFamily: "BasisGrotesquePro", marginBottom: "16px" }}>
                         <strong>Service:</strong> {selectedKey?.service_display || selectedKey?.service}
                     </div>
-                    <div style={{
-                        padding: "12px",
-                        backgroundColor: "#F9FAFB",
-                        borderRadius: "6px",
-                        border: "1px solid #E5E7EB",
-                        fontFamily: "monospace",
-                        fontSize: "14px",
-                        wordBreak: "break-all"
-                    }}>
-                        {revealedKey || "N/A"}
+                    {selectedKey?.env_variable && (
+                        <div style={{ fontFamily: "BasisGrotesquePro", marginBottom: "16px", fontSize: "12px", color: "#6B7280" }}>
+                            <strong>Environment Variable:</strong> {selectedKey.env_variable}
+                        </div>
+                    )}
+                    <div style={{ position: "relative" }}>
+                        <div style={{
+                            padding: "12px",
+                            paddingRight: "48px",
+                            backgroundColor: "#F9FAFB",
+                            borderRadius: "6px",
+                            border: "1px solid #E5E7EB",
+                            fontFamily: "monospace",
+                            fontSize: "14px",
+                            wordBreak: "break-all"
+                        }}>
+                            {revealedKey || "N/A"}
+                        </div>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(revealedKey || "");
+                                toast.success("API key copied to clipboard", superToastOptions);
+                            }}
+                            style={{
+                                position: "absolute",
+                                top: "12px",
+                                right: "12px",
+                                backgroundColor: "#F56D2D",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                cursor: "pointer",
+                                fontFamily: "BasisGrotesquePro"
+                            }}
+                            title="Copy to clipboard"
+                        >
+                            Copy
+                        </button>
                     </div>
                     <div style={{
                         marginTop: "12px",
@@ -838,7 +682,7 @@ export default function Security() {
                         fontSize: "12px",
                         color: "#92400E"
                     }}>
-                        ⚠️ Warning: This is your full API key. Keep it secure and do not share it.
+                        ⚠️ <strong>Warning:</strong> This is your full API key. Keep it secure and do not share it.
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
@@ -851,29 +695,6 @@ export default function Security() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Delete API Key Modal */}
-            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title style={{ fontFamily: "BasisGrotesquePro" }}>Delete API Key</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p style={{ fontFamily: "BasisGrotesquePro" }}>
-                        Are you sure you want to delete the API key for <strong>{selectedKey?.service_display || selectedKey?.service}</strong>?
-                        This action cannot be undone.
-                    </p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="danger"
-                        onClick={handleDelete}
-                    >
-                        Delete
-                    </Button>
-                </Modal.Footer>
-            </Modal>
         </div>
     );
 }

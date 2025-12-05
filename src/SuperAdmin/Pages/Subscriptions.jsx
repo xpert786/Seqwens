@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaChevronDown, FaDownload, FaEdit, FaEllipsisV } from 'react-icons/fa';
 import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
@@ -144,12 +145,18 @@ export default function Subscriptions() {
 
   const handleExportReport = async () => {
     if (!pdfRef.current) {
-      alert('No data available to export.');
+      toast.warning('No data available to export.', {
+        position: "top-right",
+        autoClose: 3000,
+      });
       return;
     }
     
     if (subscriptions.length === 0) {
-      alert('No subscriptions available to export.');
+      toast.warning('No subscriptions available to export.', {
+        position: "top-right",
+        autoClose: 3000,
+      });
       return;
     }
     
@@ -193,7 +200,10 @@ export default function Subscriptions() {
       }, 100);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      toast.error('Failed to generate PDF. Please try again.', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
