@@ -3127,6 +3127,14 @@ export const firmAdminStaffAPI = {
     const endpoint = `/firm/staff/${staffId}/activity-logs/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
   },
+  // Set tax preparer as inactive
+  setInactive: async (staffId) => {
+    return await apiRequest(`/user/firm-admin/staff/tax-preparers/${staffId}/set-inactive/`, 'PATCH');
+  },
+  // Reactivate tax preparer (set as active)
+  reactivateStaff: async (staffId) => {
+    return await apiRequest(`/user/firm-admin/staff/tax-preparers/${staffId}/set-active/`, 'PATCH');
+  },
 };
 
 // Firm Admin Office Locations API functions

@@ -7,7 +7,7 @@ import { FaLink, FaEnvelope, FaSms, FaCopy } from 'react-icons/fa';
 import { TwouserIcon, Mails2Icon, CallIcon, PowersIcon, DownsIcon, UpperDownsIcon, CrossesIcon } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import BulkImportModal from './BulkImportModal';
 import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
@@ -57,9 +57,10 @@ export default function StaffManagement() {
   const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
   const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
   const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [selectedStaffForDelete, setSelectedStaffForDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const [showInactiveConfirmModal, setShowInactiveConfirmModal] = useState(false);
+  const [showReactivateConfirmModal, setShowReactivateConfirmModal] = useState(false);
+  const [selectedStaffForAction, setSelectedStaffForAction] = useState(null);
+  const [processingStatus, setProcessingStatus] = useState(false);
 
   const handleInviteCreated = (inviteData) => {
     fetchPendingInvites();
@@ -235,48 +236,65 @@ export default function StaffManagement() {
     }
   };
 
-  // Soft Delete Tax Preparer
-  const handleSoftDelete = async (staffId) => {
+  // Set Tax Preparer as Inactive
+  const handleSetInactive = async (staffId) => {
     try {
-      setDeleting(true);
-      const token = getAccessToken();
-      const response = await fetchWithCors(`${API_BASE_URL}/firm/tax-preparers/${staffId}/soft-delete/`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      setProcessingStatus(true);
+      const response = await firmAdminStaffAPI.setInactive(staffId);
       
-      if (result.success) {
-        toast.success(result.message || 'Staff member deleted successfully', {
+      if (response?.success) {
+        toast.success(response.message || 'Staff member has been set as inactive', {
           position: "top-right",
           autoClose: 3000,
         });
-        setShowDeleteConfirmModal(false);
-        setSelectedStaffForDelete(null);
+        setShowInactiveConfirmModal(false);
+        setSelectedStaffForAction(null);
         setShowDropdown(null);
         // Refresh staff list
         await fetchStaffMembers();
       } else {
-        throw new Error(result.message || 'Failed to delete staff member');
+        throw new Error(response?.message || 'Failed to set staff member as inactive');
       }
     } catch (err) {
-      console.error('Error deleting staff member:', err);
+      console.error('Error setting staff member as inactive:', err);
       const errorMsg = handleAPIError(err);
-      toast.error(errorMsg || 'Failed to delete staff member', {
+      toast.error(errorMsg || 'Failed to set staff member as inactive', {
         position: "top-right",
         autoClose: 3000,
       });
     } finally {
-      setDeleting(false);
+      setProcessingStatus(false);
+    }
+  };
+
+  // Reactivate Tax Preparer
+  const handleReactivate = async (staffId) => {
+    try {
+      setProcessingStatus(true);
+      const response = await firmAdminStaffAPI.reactivateStaff(staffId);
+      
+      if (response?.success) {
+        toast.success(response.message || 'Staff member has been reactivated', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowReactivateConfirmModal(false);
+        setSelectedStaffForAction(null);
+        setShowDropdown(null);
+        // Refresh staff list
+        await fetchStaffMembers();
+      } else {
+        throw new Error(response?.message || 'Failed to reactivate staff member');
+      }
+    } catch (err) {
+      console.error('Error reactivating staff member:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to reactivate staff member', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setProcessingStatus(false);
     }
   };
 
@@ -1488,22 +1506,43 @@ export default function StaffManagement() {
               >
                 Reassign Clients
               </button> */}
-              <button
-                onClick={() => {
-                  const staff = staffData.find(s => {
-                    const mapped = mapStaffData(s);
-                    return mapped.id === showDropdown;
-                  });
-                  if (staff) {
-                    setSelectedStaffForDelete(staff.id);
-                    setShowDeleteConfirmModal(true);
-                    setShowDropdown(null);
-                  }
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-              >
-                Remove Staff
-              </button>
+              {(() => {
+                const staff = staffData.find(s => {
+                  const mapped = mapStaffData(s);
+                  return mapped.id === showDropdown;
+                });
+                if (!staff) return null;
+                const mappedStaff = mapStaffData(staff);
+                const isActive = mappedStaff.isActive || mappedStaff.statusValue === 'active';
+                
+                if (isActive) {
+                  return (
+                    <button
+                      onClick={() => {
+                        setSelectedStaffForAction(staff.id);
+                        setShowInactiveConfirmModal(true);
+                        setShowDropdown(null);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
+                    >
+                      Set Inactive
+                    </button>
+                  );
+                } else {
+                  return (
+                    <button
+                      onClick={() => {
+                        setSelectedStaffForAction(staff.id);
+                        setShowReactivateConfirmModal(true);
+                        setShowDropdown(null);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 font-[BasisGrotesquePro] rounded transition-colors"
+                    >
+                      Reactivate
+                    </button>
+                  );
+                }
+              })()}
             </div>
           </div>
         )}
@@ -1651,15 +1690,15 @@ export default function StaffManagement() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirmModal && (
+      {/* Set Inactive Confirmation Modal */}
+      {showInactiveConfirmModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           style={{ zIndex: 9999 }}
           onClick={() => {
-            if (!deleting) {
-              setShowDeleteConfirmModal(false);
-              setSelectedStaffForDelete(null);
+            if (!processingStatus) {
+              setShowInactiveConfirmModal(false);
+              setSelectedStaffForAction(null);
             }
           }}
         >
@@ -1671,16 +1710,16 @@ export default function StaffManagement() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Remove Staff</h2>
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Set Staff as Inactive</h2>
               <button
                 onClick={() => {
-                  if (!deleting) {
-                    setShowDeleteConfirmModal(false);
-                    setSelectedStaffForDelete(null);
+                  if (!processingStatus) {
+                    setShowInactiveConfirmModal(false);
+                    setSelectedStaffForAction(null);
                   }
                 }}
                 className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                disabled={deleting}
+                disabled={processingStatus}
               >
                 <CrossesIcon />
               </button>
@@ -1688,32 +1727,101 @@ export default function StaffManagement() {
 
             <div className="mb-6">
               <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
-                Are you sure you want to remove this staff member? This action will soft delete the staff member and cannot be undone.
+                Are you sure you want to set this staff member as inactive? They will no longer be able to access the system, but their data will be preserved.
               </p>
             </div>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
-                  setShowDeleteConfirmModal(false);
-                  setSelectedStaffForDelete(null);
+                  setShowInactiveConfirmModal(false);
+                  setSelectedStaffForAction(null);
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
-                disabled={deleting}
+                disabled={processingStatus}
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  if (selectedStaffForDelete) {
-                    handleSoftDelete(selectedStaffForDelete);
+                  if (selectedStaffForAction) {
+                    handleSetInactive(selectedStaffForAction);
                   }
                 }}
                 className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
-                style={{ background: 'var(--color-red-500, #EF4444)' }}
-                disabled={deleting}
+                style={{ background: '#F59E0B' }}
+                disabled={processingStatus}
               >
-                {deleting ? 'Removing...' : 'Remove'}
+                {processingStatus ? 'Setting Inactive...' : 'Set Inactive'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reactivate Confirmation Modal */}
+      {showReactivateConfirmModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ zIndex: 9999 }}
+          onClick={() => {
+            if (!processingStatus) {
+              setShowReactivateConfirmModal(false);
+              setSelectedStaffForAction(null);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            style={{
+              borderRadius: '12px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Reactivate Staff</h2>
+              <button
+                onClick={() => {
+                  if (!processingStatus) {
+                    setShowReactivateConfirmModal(false);
+                    setSelectedStaffForAction(null);
+                  }
+                }}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={processingStatus}
+              >
+                <CrossesIcon />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                Are you sure you want to reactivate this staff member? They will regain access to the system.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowReactivateConfirmModal(false);
+                  setSelectedStaffForAction(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                disabled={processingStatus}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedStaffForAction) {
+                    handleReactivate(selectedStaffForAction);
+                  }
+                }}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                style={{ background: '#22C55E' }}
+                disabled={processingStatus}
+              >
+                {processingStatus ? 'Reactivating...' : 'Reactivate'}
               </button>
             </div>
           </div>
