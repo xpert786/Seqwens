@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiChevronDown, FiUpload, FiDownload, FiUsers } from 'react-icons/fi';
+import { FiChevronDown, FiUpload, FiDownload, FiUsers } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { superToastOptions } from '../utils/toastConfig';
@@ -38,6 +38,7 @@ export default function UserManagement() {
     role: 'support_admin',
     sendWelcomeEmail: true,
   });
+  const [phoneCountry, setPhoneCountry] = useState('us');
 
   // Client-side pagination for displaying user cards
   const [userCardsCurrentPage, setUserCardsCurrentPage] = useState(1);
@@ -177,8 +178,9 @@ export default function UserManagement() {
       return;
     }
 
-    if (newAdmin.phoneNumber.replace(/\D/g, '').length !== 10) {
-      setCreateAdminError('Phone number must be exactly 10 digits.');
+    const phoneDigits = newAdmin.phoneNumber.replace(/\D/g, '').length;
+    if (phoneDigits < 10 || phoneDigits > 15) {
+      setCreateAdminError('Phone number must be between 10 and 15 digits.');
       return;
     }
 
@@ -259,24 +261,9 @@ export default function UserManagement() {
           </div>
         </div>
       )}
-      {/* Search and Filters Bar */}
+      {/* Filters Bar */}
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          {/* Search Input */}
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={12} />
-            <input
-              type="text"
-              placeholder="Search platform users"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-[220px] pl-8 bg-white pr-3 py-1.5 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
           {/* Status Dropdown */}
           <div className="relative">
             <select
@@ -537,10 +524,24 @@ export default function UserManagement() {
                     onCountryChange={(countryCode) => {
                       setPhoneCountry(countryCode.toLowerCase());
                     }}
-                    inputClass="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    containerClass="w-100 phone-input-container"
+                    inputStyle={{
+                      width: '100%',
+                      paddingLeft: '48px',
+                      height: '38px',
+                      fontSize: '14px',
+                      border: '1px solid #E8F0FF',
+                      borderRadius: '8px'
+                    }}
+                    buttonStyle={{
+                      border: '1px solid #E8F0FF',
+                      borderRadius: '8px 0 0 8px',
+                      backgroundColor: 'white'
+                    }}
+                    containerClass="w-full"
                     enableSearch={true}
                     countryCodeEditable={false}
+                    prefix="+"
+                    disableDropdown={false}
                   />
                 </div>
                 <div>

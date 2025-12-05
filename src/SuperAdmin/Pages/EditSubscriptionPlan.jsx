@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl } from '../../ClientOnboarding/utils/corsConfig';
 
@@ -390,13 +391,19 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                           throw new Error(errData?.detail || 'Failed to update subscription plan');
                         }
                         setSuccess(true);
-                        alert('Subscription plan updated successfully!');
+                        toast.success('Subscription plan updated successfully!', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
                         setTimeout(() => {
                           onClose();
                         }, 500);
                       } catch (e) {
                         setError(e.message || 'Error occurred');
-                        alert(`Error: ${e.message || 'Error occurred'}`);
+                        toast.error(e.message || 'Error occurred', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
                       } finally {
                         setLoading(false);
                       }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl } from '../../ClientOnboarding/utils/corsConfig';
 
@@ -343,13 +344,19 @@ export default function AddSubscription({ planType, onClose }) {
                           throw new Error(errData?.detail || 'Failed to add subscription plan');
                         }
                         setSuccess(true);
-                        alert('Subscription plan added successfully!');
+                        toast.success('Subscription plan added successfully!', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
                         setTimeout(() => {
                           onClose();
                         }, 500);
                       } catch (e) {
                         setError(e.message || 'Error occurred');
-                        alert(`Error: ${e.message || 'Error occurred'}`);
+                        toast.error(e.message || 'Error occurred', {
+                          position: "top-right",
+                          autoClose: 3000,
+                        });
                       } finally {
                         setLoading(false);
                       }

@@ -29,6 +29,7 @@ import {
   SecurityGreenIcon,
   SecurityYellowIcon
 } from '../Components/icons';
+import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { getStorage } from '../../ClientOnboarding/utils/userUtils';
 
@@ -52,6 +53,11 @@ export default function SuperDashboardContent() {
   const [firmsCurrentPage, setFirmsCurrentPage] = useState(1);
   const [showAllFirms, setShowAllFirms] = useState(false);
   const FIRMS_PER_PAGE = 3;
+  
+  // Security settings state
+  const [securitySettings, setSecuritySettings] = useState(null);
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [updatingSecuritySetting, setUpdatingSecuritySetting] = useState(null);
 
   // Redirect based on user role
   useEffect(() => {
@@ -126,9 +132,60 @@ export default function SuperDashboardContent() {
     }
   };
 
+  // Fetch security settings
+  const fetchSecuritySettings = async () => {
+    try {
+      setSecurityLoading(true);
+      const response = await superAdminAPI.getSecuritySettings();
+
+      if (response.success && response.data) {
+        setSecuritySettings(response.data);
+      } else {
+        throw new Error(response.message || 'Failed to fetch security settings');
+      }
+    } catch (err) {
+      console.error('Error fetching security settings:', err);
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  // Update individual security setting
+  const handleSecuritySettingToggle = async (settingKey, currentValue) => {
+    try {
+      setUpdatingSecuritySetting(settingKey);
+      const newValue = !currentValue;
+      
+      const updateData = {
+        admin_2fa_required: securitySettings?.admin_2fa_required?.enabled ?? false,
+        password_complexity_enabled: securitySettings?.password_complexity_enabled?.enabled ?? false,
+        ip_whitelisting_enabled: securitySettings?.ip_whitelisting_enabled?.enabled ?? false,
+        audit_logging_enabled: securitySettings?.audit_logging_enabled?.enabled ?? false,
+        [settingKey]: newValue
+      };
+
+      const response = await superAdminAPI.updateSecuritySettings(updateData);
+
+      if (response.success && response.data) {
+        setSecuritySettings(response.data);
+      } else {
+        throw new Error(response.message || 'Failed to update security setting');
+      }
+    } catch (err) {
+      console.error('Error updating security setting:', err);
+      toast.error(handleAPIError(err), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setUpdatingSecuritySetting(null);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchDashboardData();
+    fetchSecuritySettings();
   }, []);
 
   // Handle refresh button click
@@ -380,22 +437,61 @@ export default function SuperDashboardContent() {
 
   const maxActivityValue = activityData.reduce((max, item) => Math.max(max, item.count || 0), 0);
   const activityUpperBound = maxActivityValue > 0 ? Math.ceil(maxActivityValue * 1.2) : 1;
-  const securityItems = [
+  
+  // Use securitySettings from API if available, fallback to dashboardData
+  const securityItems = securitySettings ? [
     {
       name: 'Admin 2FA',
-      enabled: securityStatus.admin_2fa_required
+      key: 'admin_2fa_required',
+      enabled: securitySettings?.admin_2fa_required?.enabled ?? false,
+      status: securitySettings?.admin_2fa_required?.status ?? 'disabled',
+      description: securitySettings?.admin_2fa_required?.description ?? ''
     },
     {
       name: 'Password Complexity',
-      enabled: securityStatus.password_complexity_enabled
+      key: 'password_complexity_enabled',
+      enabled: securitySettings?.password_complexity_enabled?.enabled ?? false,
+      status: securitySettings?.password_complexity_enabled?.status ?? 'disabled',
+      description: securitySettings?.password_complexity_enabled?.description ?? ''
     },
     {
       name: 'IP Whitelisting',
-      enabled: securityStatus.ip_whitelisting_enabled
+      key: 'ip_whitelisting_enabled',
+      enabled: securitySettings?.ip_whitelisting_enabled?.enabled ?? false,
+      status: securitySettings?.ip_whitelisting_enabled?.status ?? 'disabled',
+      description: securitySettings?.ip_whitelisting_enabled?.description ?? ''
     },
     {
       name: 'Audit Logging',
-      enabled: securityStatus.audit_logging_enabled
+      key: 'audit_logging_enabled',
+      enabled: securitySettings?.audit_logging_enabled?.enabled ?? false,
+      status: securitySettings?.audit_logging_enabled?.status ?? 'disabled',
+      description: securitySettings?.audit_logging_enabled?.description ?? ''
+    }
+  ] : [
+    {
+      name: 'Admin 2FA',
+      key: 'admin_2fa_required',
+      enabled: securityStatus?.admin_2fa_required ?? false,
+      status: 'loading'
+    },
+    {
+      name: 'Password Complexity',
+      key: 'password_complexity_enabled',
+      enabled: securityStatus?.password_complexity_enabled ?? false,
+      status: 'loading'
+    },
+    {
+      name: 'IP Whitelisting',
+      key: 'ip_whitelisting_enabled',
+      enabled: securityStatus?.ip_whitelisting_enabled ?? false,
+      status: 'loading'
+    },
+    {
+      name: 'Audit Logging',
+      key: 'audit_logging_enabled',
+      enabled: securityStatus?.audit_logging_enabled ?? false,
+      status: 'loading'
     }
   ];
 
@@ -784,26 +880,55 @@ export default function SuperDashboardContent() {
             <h4 className="text-base font-semibold text-gray-900 mb-1">Security Status</h4>
             <p className="text-sm text-gray-600 mb-4">Platform security overview</p>
             <div className="flex-1 space-y-3">
-              {securityItems.map((item, index) => {
-                const itemEnabled = Boolean(item.enabled);
-                const backgroundClass = itemEnabled ? 'bg-green-50' : 'bg-yellow-50';
-                const badgeClass = itemEnabled ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white';
-                const StatusIcon = itemEnabled ? SecurityGreenIcon : SecurityYellowIcon;
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-center justify-between p-4 rounded-lg ${backgroundClass}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <StatusIcon className="w-5 h-5" />
-                      <span className="text-sm font-medium text-gray-700">{item.name}</span>
+              {securityLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A63]"></div>
+                </div>
+              ) : (
+                securityItems.map((item, index) => {
+                  const itemEnabled = Boolean(item.enabled);
+                  const backgroundClass = itemEnabled ? 'bg-green-50' : 'bg-yellow-50';
+                  const StatusIcon = itemEnabled ? SecurityGreenIcon : SecurityYellowIcon;
+                  const isUpdating = updatingSecuritySetting === item.key;
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-4 rounded-lg ${backgroundClass} transition-all`}
+                    >
+                      <div className="flex items-center gap-2 flex-1">
+                        <StatusIcon className="w-5 h-5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-gray-700 block">{item.name}</span>
+                          {item.description && (
+                            <span className="text-xs text-gray-500 block mt-0.5">{item.description}</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Toggle Switch */}
+                      <label className="relative inline-flex cursor-pointer items-center ml-3">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only" 
+                          checked={itemEnabled}
+                          onChange={() => handleSecuritySettingToggle(item.key, itemEnabled)}
+                          disabled={isUpdating || securityLoading}
+                        />
+                        <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${
+                          isUpdating ? 'opacity-50 cursor-wait' : ''
+                        } ${itemEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              itemEnabled ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </label>
                     </div>
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${badgeClass}`}>
-                      {itemEnabled ? 'Enabled' : 'Check Settings'}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

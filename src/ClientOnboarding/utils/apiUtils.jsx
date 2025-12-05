@@ -2318,6 +2318,30 @@ export const firmAdminDocumentsAPI = {
       });
   },
 
+  // List all folders (without sync)
+  // GET /api/firm/folders/list/
+  listAllFolders: async () => {
+    return await apiRequest('/firm/folders/list/', 'GET');
+  },
+
+  // List folders with B2 sync
+  // GET /api/firm/folders/list/?sync=true
+  listFoldersWithSync: async () => {
+    return await apiRequest('/firm/folders/list/?sync=true', 'GET');
+  },
+
+  // Manual B2 sync
+  // POST /api/firm/folders/sync-b2/
+  syncFoldersWithB2: async () => {
+    return await apiRequest('/firm/folders/sync-b2/', 'POST');
+  },
+
+  // List folders with auto-sync
+  // GET /api/firm/folders/b2-list/
+  listB2Folders: async () => {
+    return await apiRequest('/firm/folders/b2-list/', 'GET');
+  },
+
   // Create new folder
   // POST /firm/document-folders/
   createFolder: async (folderData) => {
