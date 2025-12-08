@@ -13,7 +13,6 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { superAdminAPI, handleAPIError } from '../../utils/superAdminAPI';
-import DateRangePicker from '../../../components/DateRangePicker';
 
 const formatCurrency = (value) => {
   const numericValue = Number(value);
@@ -120,9 +119,6 @@ export default function Overview() {
   const [filterYear, setFilterYear] = useState(currentYear.toString());
   const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth.toString());
   const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear.toString());
-  // Add date range state
-  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
-  const [appliedDateRange, setAppliedDateRange] = useState({ startDate: '', endDate: '' });
 
   // Generate month options (1-12)
   const monthOptions = Array.from({ length: 12 }, (_, i) => {
@@ -143,18 +139,8 @@ export default function Overview() {
 
   // Handle apply filter button click
   const handleApplyFilter = () => {
-    // If we have a date range, use that; otherwise, use month/year filters
-    if (dateRange.startDate && dateRange.endDate) {
-      setAppliedDateRange({ ...dateRange });
-      // Clear month/year filters
-      setAppliedFilterMonth('');
-      setAppliedFilterYear('');
-    } else {
-      setAppliedFilterMonth(filterMonth);
-      setAppliedFilterYear(filterYear);
-      // Clear date range
-      setAppliedDateRange({ startDate: '', endDate: '' });
-    }
+    setAppliedFilterMonth(filterMonth);
+    setAppliedFilterYear(filterYear);
   };
 
   useEffect(() => {
@@ -165,12 +151,7 @@ export default function Overview() {
         setLoading(true);
         setError(null);
         const params = {};
-              
-        // If we have a date range, use that; otherwise, use month/year filters
-        if (appliedDateRange.startDate && appliedDateRange.endDate) {
-          params.start_date = appliedDateRange.startDate;
-          params.end_date = appliedDateRange.endDate;
-        } else if (appliedFilterMonth && appliedFilterYear) {
+        if (appliedFilterMonth && appliedFilterYear) {
           params.month = parseInt(appliedFilterMonth);
           params.year = parseInt(appliedFilterYear);
         }
@@ -199,7 +180,7 @@ export default function Overview() {
     return () => {
       isMounted = false;
     };
-  }, [appliedFilterMonth, appliedFilterYear, appliedDateRange]);
+  }, [appliedFilterMonth, appliedFilterYear]);
 
   // Process revenue trend data from API
   const revenueData = useMemo(() => {
@@ -209,23 +190,18 @@ export default function Overview() {
       month: item.month || '',
       value: item.revenue ?? 0,
       formattedRevenue: formatCurrency(item.revenue ?? 0)
-    }));
+    })).filter(item => item.value > 0 || item.month); // Ensure we include items with data
   }, [analytics]);
 
   // Get filter info
   const filters = analytics?.filters;
   const dateRangeLabel = useMemo(() => {
-    // If we have a custom date range applied, show that
-    if (appliedDateRange.startDate && appliedDateRange.endDate) {
-      return `${appliedDateRange.startDate} to ${appliedDateRange.endDate}`;
-    }
-    
     if (!filters) return 'Current Month';
     if (filters.month_label) {
       return filters.month_label;
     }
     return 'Current Month';
-  }, [filters, appliedDateRange]);
+  }, [filters]);
 
   // Get KPIs
   const kpis = analytics?.kpis;
@@ -357,24 +333,50 @@ export default function Overview() {
     <div className="space-y-8 mb-8">
       {/* Filter Section - Top Right */}
       <div className="flex justify-end items-center gap-2 mb-4">
-        <DateRangePicker
-          onDateRangeChange={(newDateRange) => setDateRange(newDateRange)}
-          initialStartDate={dateRange.startDate}
-          initialEndDate={dateRange.endDate}
-        />
+        <select
+          value={filterMonth}
+          onChange={(e) => {
+            setFilterMonth(e.target.value);
+            if (!e.target.value) setFilterYear('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+        >
+          <option value="">All Months</option>
+          {monthOptions.map(month => (
+            <option key={month.value} value={month.value}>{month.label}</option>
+          ))}
+        </select>
+        <select
+          value={filterYear}
+          onChange={(e) => {
+            setFilterYear(e.target.value);
+            if (!e.target.value) setFilterMonth('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+          disabled={!filterMonth}
+        >
+          <option value="">Year</option>
+          {yearOptions.map(year => (
+            <option key={year.value} value={year.value}>{year.label}</option>
+          ))}
+        </select>
         <button
           onClick={handleApplyFilter}
-          disabled={!(dateRange.startDate && dateRange.endDate)}
+          disabled={!filterMonth || !filterYear}
           className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: '#3B82F6' }}
         >
           Apply
         </button>
-        {(dateRange.startDate && dateRange.endDate) && (
+        {(filterMonth && filterYear) && (
           <button
             onClick={() => {
-              setDateRange({ startDate: '', endDate: '' });
-              setAppliedDateRange({ startDate: '', endDate: '' });
+              setFilterMonth('');
+              setFilterYear('');
+              setAppliedFilterMonth('');
+              setAppliedFilterYear('');
             }}
             className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
             title="Clear filter"
@@ -422,14 +424,14 @@ export default function Overview() {
         <div className="mb-6">
           <div>
             <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
-            <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue and growth rate over time</p>
+            <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue displayed as bar chart</p>
           </div>
         </div>
 
         <div className="h-80">
           {revenueData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
+              <BarChart
                 data={revenueData}
                 margin={{
                   top: 10,
@@ -438,12 +440,6 @@ export default function Overview() {
                   bottom: 0,
                 }}
               >
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
                 <XAxis
                   dataKey="month"
@@ -456,24 +452,17 @@ export default function Overview() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : 1]}
+                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
+                <Tooltip content={<BarTooltip />} />
+                <Bar
                   dataKey="value"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
-                  activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
-                  connectNulls={false}
-                  isAnimationActive={true}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  fill="#3B82F6"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                  barSize={30}
                 />
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
@@ -619,7 +608,7 @@ export default function Overview() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : 1]}
+                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
                 <Tooltip content={<BarTooltip />} />
                 <Bar
@@ -627,6 +616,7 @@ export default function Overview() {
                   fill="#4285F4"
                   radius={[4, 4, 0, 0]}
                   maxBarSize={40}
+                  barSize={30}
                 />
               </BarChart>
             </ResponsiveContainer>

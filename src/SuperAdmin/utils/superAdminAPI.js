@@ -249,9 +249,9 @@ export const superAdminAPI = {
   },
 
   // Get superadmin plan performance metrics
-  // Optional params: mrr_month, mrr_year, churn_month, churn_year, start_date, end_date
+  // Optional params: mrr_month, mrr_year, churn_month, churn_year
   getSuperadminPlanPerformance: async (params = {}) => {
-    const { mrr_month, mrr_year, churn_month, churn_year, start_date, end_date } = params;
+    const { mrr_month, mrr_year, churn_month, churn_year } = params;
     const queryParams = new URLSearchParams();
     
     if (mrr_month !== undefined && mrr_year !== undefined) {
@@ -262,15 +262,6 @@ export const superAdminAPI = {
     if (churn_month !== undefined && churn_year !== undefined) {
       queryParams.append('churn_month', churn_month.toString());
       queryParams.append('churn_year', churn_year.toString());
-    }
-    
-    // Add support for custom date ranges
-    if (start_date !== undefined) {
-      queryParams.append('start_date', start_date);
-    }
-    
-    if (end_date !== undefined) {
-      queryParams.append('end_date', end_date);
     }
     
     const queryString = queryParams.toString();

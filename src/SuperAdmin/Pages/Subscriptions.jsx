@@ -7,8 +7,6 @@ import AddSubscription from './AddSubscription';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import DateRangePicker from '../../components/DateRangePicker';
 
 export default function Subscriptions() {
   const [showPlanDetails, setShowPlanDetails] = useState(true);
@@ -33,16 +31,12 @@ export default function Subscriptions() {
   const currentDate = new Date();
   const currentMonth = (currentDate.getMonth() + 1).toString(); // getMonth() returns 0-11, so add 1
   const currentYear = currentDate.getFullYear().toString();
-  const formattedCurrentDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
 
   const [planPerformance, setPlanPerformance] = useState(null);
   const [filterMonth, setFilterMonth] = useState(currentMonth);
   const [filterYear, setFilterYear] = useState(currentYear);
   const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth);
   const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear);
-  // Add date range state
-  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
-  const [appliedDateRange, setAppliedDateRange] = useState({ startDate: '', endDate: '' });
   const filtersEffectInitializedRef = useRef(false);
   const searchEffectInitializedRef = useRef(false);
   const pdfRef = useRef(null);
@@ -299,44 +293,28 @@ export default function Subscriptions() {
 
   // Handle apply filter button click
   const handleApplyFilter = () => {
-    // If we have a date range, use that; otherwise, use month/year filters
-    if (dateRange.startDate && dateRange.endDate) {
-      setAppliedDateRange({ ...dateRange });
-      // Clear month/year filters
-      setAppliedFilterMonth('');
-      setAppliedFilterYear('');
-    } else {
-      setAppliedFilterMonth(filterMonth);
-      setAppliedFilterYear(filterYear);
-      // Clear date range
-      setAppliedDateRange({ startDate: '', endDate: '' });
-    }
+    setAppliedFilterMonth(filterMonth);
+    setAppliedFilterYear(filterYear);
   };
 
   // Fetch plan performance data with applied filters
   const fetchPlanPerformance = useCallback(async () => {
     try {
       const params = {};
-      
-      // If we have a date range, use that; otherwise, use month/year filters
-      if (appliedDateRange.startDate && appliedDateRange.endDate) {
-        params.start_date = appliedDateRange.startDate;
-        params.end_date = appliedDateRange.endDate;
-      } else if (appliedFilterMonth && appliedFilterYear) {
+      if (appliedFilterMonth && appliedFilterYear) {
         // Apply same filter to both MRR and Churn Rate
         params.mrr_month = parseInt(appliedFilterMonth);
         params.mrr_year = parseInt(appliedFilterYear);
         params.churn_month = parseInt(appliedFilterMonth);
         params.churn_year = parseInt(appliedFilterYear);
       }
-      
       const planPerformanceResponse = await superAdminAPI.getSuperadminPlanPerformance(params);
       setPlanPerformance(planPerformanceResponse.data || null);
     } catch (err) {
       console.error('Error fetching plan performance data:', err);
       // Don't set main error, just log it
     }
-  }, [appliedFilterMonth, appliedFilterYear, appliedDateRange]);
+  }, [appliedFilterMonth, appliedFilterYear]);
 
   // Fetch data from APIs
   useEffect(() => {
@@ -347,12 +325,7 @@ export default function Subscriptions() {
 
         // Fetch plans, chart data, plan performance, and revenue insights in parallel
         const params = {};
-        
-        // If we have a date range, use that; otherwise, use month/year filters
-        if (appliedDateRange.startDate && appliedDateRange.endDate) {
-          params.start_date = appliedDateRange.startDate;
-          params.end_date = appliedDateRange.endDate;
-        } else if (appliedFilterMonth && appliedFilterYear) {
+        if (appliedFilterMonth && appliedFilterYear) {
           // Apply same filter to both MRR and Churn Rate
           params.mrr_month = parseInt(appliedFilterMonth);
           params.mrr_year = parseInt(appliedFilterYear);
@@ -389,7 +362,7 @@ export default function Subscriptions() {
     if (filtersInitialized) {
       fetchPlanPerformance();
     }
-  }, [appliedFilterMonth, appliedFilterYear, appliedDateRange, filtersInitialized, fetchPlanPerformance]);
+  }, [appliedFilterMonth, appliedFilterYear, filtersInitialized, fetchPlanPerformance]);
 
   const handleNotificationUpdate = async (updates = {}) => {
     if (savingNotifications) return;
@@ -962,26 +935,52 @@ export default function Subscriptions() {
               <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              {/* Date Range Picker - Upper Right */}
+              {/* Filter Dropdowns - Upper Right */}
               <div className="flex gap-2 items-end">
-                <DateRangePicker
-                  onDateRangeChange={(newDateRange) => setDateRange(newDateRange)}
-                  initialStartDate={dateRange.startDate}
-                  initialEndDate={dateRange.endDate}
-                />
+                <select
+                  value={filterMonth}
+                  onChange={(e) => {
+                    setFilterMonth(e.target.value);
+                    if (!e.target.value) setFilterYear('');
+                  }}
+                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                >
+                  <option value="">All Months</option>
+                  {monthOptions.map(month => (
+                    <option key={month.value} value={month.value}>{month.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterYear}
+                  onChange={(e) => {
+                    setFilterYear(e.target.value);
+                    if (!e.target.value) setFilterMonth('');
+                  }}
+                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  disabled={!filterMonth}
+                >
+                  <option value="">Year</option>
+                  {yearOptions.map(year => (
+                    <option key={year.value} value={year.value}>{year.label}</option>
+                  ))}
+                </select>
                 <button
                   onClick={handleApplyFilter}
-                  disabled={!(dateRange.startDate && dateRange.endDate)}
+                  disabled={!filterMonth || !filterYear}
                   className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#3B82F6' }}
                 >
                   Apply
                 </button>
-                {(dateRange.startDate && dateRange.endDate) && (
+                {(filterMonth && filterYear) && (
                   <button
                     onClick={() => {
-                      setDateRange({ startDate: '', endDate: '' });
-                      setAppliedDateRange({ startDate: '', endDate: '' });
+                      setFilterMonth('');
+                      setFilterYear('');
+                      setAppliedFilterMonth('');
+                      setAppliedFilterYear('');
                     }}
                     className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
                     title="Clear filter"
@@ -1003,106 +1002,172 @@ export default function Subscriptions() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="border border-[#E8F0FF] rounded-[10px] p-4">
               <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
-              {mrrTrend.length > 0 ? (
-                <div className="h-48 mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={mrrTrend.map(item => ({
-                        month: item.month || '',
-                        value: Number(item?.value ?? 0)
-                      }))}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: '#6B7280' }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: '#6B7280' }}
-                        tickFormatter={(value) => formatCurrency(value)}
-                      />
-                      <Tooltip 
-                        formatter={(value) => [formatCurrency(value), 'Revenue']}
-                        labelFormatter={(label) => `Month: ${label}`}
-                        contentStyle={{ 
-                          backgroundColor: '#fff', 
-                          border: '1px solid #E5E7EB', 
-                          borderRadius: '4px',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-                      />
-                      <Bar 
-                        dataKey="value" 
-                        fill="#3B4A66" 
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
+              {mrrTrend.length > 0 ? (() => {
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 40;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = mrrTrend.length ? innerWidth / mrrTrend.length : innerWidth;
+                const barWidth = stepWidth * 0.5;
+                const range = mrrMax - mrrMin || Math.max(mrrMax, 1);
+                
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = mrrMax - (range / 4) * step;
+                        return (
+                          <g key={`mrr-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {formatCurrency(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {mrrTrend.map((item, index) => {
+                        const value = Number(item?.value ?? 0);
+                        const height = range > 0 ? ((value - mrrMin) / range) * innerHeight : (value > 0 ? innerHeight * 0.3 : 0);
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`mrr-bar-${item.month}-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#3B4A66"
+                              rx="6"
+                            />
+                            <text
+                              x={x + barWidth / 2}
+                              y={y - 6}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#3B4A66"
+                              fontWeight="600"
+                            >
+                              {formatCurrency(value)}
+                            </text>
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {item.month || `M${index + 1}`}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+              })() : (
                 <p className="text-xs text-gray-500 mt-4">No revenue trend data available.</p>
               )}
             </div>
 
             <div className="border border-[#E8F0FF] rounded-[10px] p-4">
               <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
-              {churnTrend.length > 0 ? (
-                <div className="h-48 mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={churnTrend.map(item => ({
-                        month: item.month || '',
-                        value: Number(item?.value ?? 0)
-                      }))}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: '#6B7280' }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: '#6B7280' }}
-                        tickFormatter={(value) => formatPercentage(value)}
-                      />
-                      <Tooltip 
-                        formatter={(value) => [formatPercentage(value), 'Churn Rate']}
-                        labelFormatter={(label) => `Month: ${label}`}
-                        contentStyle={{ 
-                          backgroundColor: '#fff', 
-                          border: '1px solid #E5E7EB', 
-                          borderRadius: '4px',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-                      />
-                      <Bar 
-                        dataKey="value" 
-                        fill="#6366F1" 
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
+              {churnTrend.length > 0 ? (() => {
+                const svgWidth = 400;
+                const svgHeight = 180;
+                const paddingX = 40;
+                const paddingY = 24;
+                const innerWidth = svgWidth - paddingX * 2;
+                const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = churnTrend.length ? innerWidth / churnTrend.length : innerWidth;
+                const barWidth = stepWidth * 0.5;
+                return (
+                  <div className="relative h-48 mt-2">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                      {[0, 1, 2, 3, 4].map((step) => {
+                        const y = paddingY + (innerHeight / 4) * step;
+                        const labelValue = churnMax - ((churnMax / 4) * step);
+                        return (
+                          <g key={`churn-grid-${step}`}>
+                            <line
+                              x1={paddingX}
+                              y1={y}
+                              x2={svgWidth - paddingX}
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeWidth="1"
+                              opacity="0.6"
+                            />
+                            <text
+                              x={paddingX - 8}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {formatPercentage(labelValue)}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {churnTrend.map((item, index) => {
+                        const value = Number(item?.value ?? 0);
+                        const height = churnMax ? (value / churnMax) * innerHeight : 0;
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`churn-bar-${item.month}-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#6366F1"
+                              rx="6"
+                            />
+                            <text
+                              x={x + barWidth / 2}
+                              y={y - 6}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#4C1D95"
+                              fontWeight="600"
+                            >
+                              {formatPercentage(value)}
+                            </text>
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {item.month || `M${index + 1}`}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+              })() : (
                 <p className="text-xs text-gray-500 mt-4">No churn trend data available.</p>
               )}
             </div>

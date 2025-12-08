@@ -17,7 +17,6 @@ import {
 import { superAdminAPI, handleAPIError } from '../../utils/superAdminAPI';
 import { toast } from 'react-toastify';
 import { superToastOptions } from '../../utils/toastConfig';
-import DateRangePicker from '../../../components/DateRangePicker';
 
 export default function FirmPerformance() {
   // Get current month and year for default filter
@@ -29,9 +28,6 @@ export default function FirmPerformance() {
   const [filterYear, setFilterYear] = useState(currentYear.toString());
   const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth.toString());
   const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear.toString());
-  // Add date range state
-  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
-  const [appliedDateRange, setAppliedDateRange] = useState({ startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -60,18 +56,8 @@ export default function FirmPerformance() {
 
   // Handle apply filter button click
   const handleApplyFilter = () => {
-    // If we have a date range, use that; otherwise, use month/year filters
-    if (dateRange.startDate && dateRange.endDate) {
-      setAppliedDateRange({ ...dateRange });
-      // Clear month/year filters
-      setAppliedFilterMonth('');
-      setAppliedFilterYear('');
-    } else {
-      setAppliedFilterMonth(filterMonth);
-      setAppliedFilterYear(filterYear);
-      // Clear date range
-      setAppliedDateRange({ startDate: '', endDate: '' });
-    }
+    setAppliedFilterMonth(filterMonth);
+    setAppliedFilterYear(filterYear);
   };
 
   // Fetch analytics data
@@ -80,12 +66,7 @@ export default function FirmPerformance() {
       setLoading(true);
       setError(null);
       const params = {};
-      
-      // If we have a date range, use that; otherwise, use month/year filters
-      if (appliedDateRange.startDate && appliedDateRange.endDate) {
-        params.start_date = appliedDateRange.startDate;
-        params.end_date = appliedDateRange.endDate;
-      } else if (appliedFilterMonth && appliedFilterYear) {
+      if (appliedFilterMonth && appliedFilterYear) {
         params.month = parseInt(appliedFilterMonth);
         params.year = parseInt(appliedFilterYear);
       }
@@ -152,7 +133,7 @@ export default function FirmPerformance() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [appliedFilterMonth, appliedFilterYear, appliedDateRange]);
+  }, [appliedFilterMonth, appliedFilterYear]);
 
   // Format number for display
   const formatNumber = (num) => {
@@ -280,26 +261,52 @@ export default function FirmPerformance() {
 
   return (
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
-      {/* Date Range Picker - Top Right */}
+      {/* Month/Year Filter Selector - Top Right */}
       <div className="mb-6 flex justify-end items-center gap-2">
-        <DateRangePicker
-          onDateRangeChange={(newDateRange) => setDateRange(newDateRange)}
-          initialStartDate={dateRange.startDate}
-          initialEndDate={dateRange.endDate}
-        />
+        <select
+          value={filterMonth}
+          onChange={(e) => {
+            setFilterMonth(e.target.value);
+            if (!e.target.value) setFilterYear('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+        >
+          <option value="">All Months</option>
+          {monthOptions.map(month => (
+            <option key={month.value} value={month.value}>{month.label}</option>
+          ))}
+        </select>
+        <select
+          value={filterYear}
+          onChange={(e) => {
+            setFilterYear(e.target.value);
+            if (!e.target.value) setFilterMonth('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+          disabled={!filterMonth}
+        >
+          <option value="">Year</option>
+          {yearOptions.map(year => (
+            <option key={year.value} value={year.value}>{year.label}</option>
+          ))}
+        </select>
         <button
           onClick={handleApplyFilter}
-          disabled={!(dateRange.startDate && dateRange.endDate)}
+          disabled={!filterMonth || !filterYear}
           className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: '#3B82F6' }}
         >
           Apply
         </button>
-        {(dateRange.startDate && dateRange.endDate) && (
+        {(filterMonth && filterYear) && (
           <button
             onClick={() => {
-              setDateRange({ startDate: '', endDate: '' });
-              setAppliedDateRange({ startDate: '', endDate: '' });
+              setFilterMonth('');
+              setFilterYear('');
+              setAppliedFilterMonth('');
+              setAppliedFilterYear('');
             }}
             className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
             title="Clear filter"
