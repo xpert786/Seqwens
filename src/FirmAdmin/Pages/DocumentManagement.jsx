@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { DocumentUpload, DocumentDownload, DocumentMoreIcon, DocumentCriticalIssuesIcon, DocumentWarningIcon, DocumentSuccessIcon, DocumentOverdueIcon, PdfDocumentIconLight, DocumentWarningIconCompliance, DocumentTextIcon, DocumentPostion, DocumentOpacity, DocumentRotation, DocumentEye } from '../Components/icons';
-import { firmAdminDocumentsAPI } from '../../ClientOnboarding/utils/apiUtils';
-import { handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import { firmAdminDocumentsAPI, firmAdminSettingsAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import FirmAdminUploadModal from './DocumentManagement/FirmAdminUploadModal';
 
@@ -31,6 +30,8 @@ export default function DocumentManagement() {
   const [includeTimestamp, setIncludeTimestamp] = useState(true);
   const [includeDocumentInfo, setIncludeDocumentInfo] = useState(true);
   const [showPreview, setShowPreview] = useState(true);
+  const [loadingWatermark, setLoadingWatermark] = useState(false);
+  const [savingWatermark, setSavingWatermark] = useState(false);
 
   // API state
   const [folders, setFolders] = useState([]);
@@ -184,6 +185,113 @@ export default function DocumentManagement() {
       return () => clearTimeout(timer);
     }
   }, [searchQuery, isNestedRoute, fetchDocuments]);
+
+  // Helper functions to map position values between display and API format
+  const mapPositionToAPI = (displayPosition) => {
+    const positionMap = {
+      'Top Left': 'top_left',
+      'Top Center': 'top_center',
+      'Top Right': 'top_right',
+      'Center': 'center',
+      'Bottom Left': 'bottom_left',
+      'Bottom Center': 'bottom_center',
+      'Bottom Right': 'bottom_right',
+    };
+    return positionMap[displayPosition] || 'center';
+  };
+
+  const mapPositionFromAPI = (apiPosition) => {
+    const positionMap = {
+      'top_left': 'Top Left',
+      'top_center': 'Top Center',
+      'top_right': 'Top Right',
+      'center': 'Center',
+      'bottom_left': 'Bottom Left',
+      'bottom_center': 'Bottom Center',
+      'bottom_right': 'Bottom Right',
+    };
+    return positionMap[apiPosition] || 'Center';
+  };
+
+  // Fetch watermark settings
+  const fetchWatermarkSettings = useCallback(async () => {
+    try {
+      setLoadingWatermark(true);
+      const response = await firmAdminSettingsAPI.getWatermarkSettings();
+
+      if (response.success && response.data) {
+        const settings = response.data;
+        setEnableWatermarking(settings.enabled || false);
+        setWatermarkText(settings.watermark_text || 'CONFIDENTIAL');
+        setWatermarkPosition(mapPositionFromAPI(settings.position || 'center'));
+        setWatermarkOpacity(`${settings.opacity || 30}%`);
+        setWatermarkTextSize(`${settings.text_size || 22}px`);
+        setWatermarkRotation(`${settings.rotation || -45}°`);
+        setWatermarkColor(settings.color || '#FF0000');
+        setIncludeUserInfo(settings.include_user_info !== undefined ? settings.include_user_info : true);
+        setIncludeTimestamp(settings.include_timestamp !== undefined ? settings.include_timestamp : true);
+        setIncludeDocumentInfo(settings.include_document_info !== undefined ? settings.include_document_info : true);
+      }
+    } catch (err) {
+      console.error('Error fetching watermark settings:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to load watermark settings');
+    } finally {
+      setLoadingWatermark(false);
+    }
+  }, []);
+
+  // Fetch watermark settings when Security tab is active
+  useEffect(() => {
+    if (!isNestedRoute && activeTab === 'Security') {
+      fetchWatermarkSettings();
+    }
+  }, [activeTab, isNestedRoute, fetchWatermarkSettings]);
+
+  // Save watermark settings
+  const handleSaveWatermarkSettings = async () => {
+    try {
+      setSavingWatermark(true);
+
+      // Parse values from display format to API format
+      const opacityValue = parseInt(watermarkOpacity.replace('%', ''));
+      const textSizeValue = parseInt(watermarkTextSize.replace('px', ''));
+      const rotationValue = parseInt(watermarkRotation.replace('°', ''));
+
+      const watermarkData = {
+        enabled: enableWatermarking,
+        watermark_text: watermarkText,
+        position: mapPositionToAPI(watermarkPosition),
+        opacity: opacityValue,
+        text_size: textSizeValue,
+        rotation: rotationValue,
+        color: watermarkColor,
+        include_user_info: includeUserInfo,
+        include_timestamp: includeTimestamp,
+        include_document_info: includeDocumentInfo,
+      };
+
+      const response = await firmAdminSettingsAPI.updateWatermarkSettings(watermarkData);
+
+      if (response.success) {
+        toast.success('Watermark settings saved successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      } else {
+        throw new Error(response.message || 'Failed to save watermark settings');
+      }
+    } catch (err) {
+      console.error('Error saving watermark settings:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to save watermark settings', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setSavingWatermark(false);
+    }
+  };
 
   const handleFolderClick = (folderId) => {
     navigate(`/firmadmin/documents/folder/${folderId}`);
@@ -1751,8 +1859,9 @@ export default function DocumentManagement() {
               </div>
               <button
                 onClick={() => setEnableWatermarking(!enableWatermarking)}
+                disabled={loadingWatermark}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableWatermarking ? 'bg-orange-500' : 'bg-gray-300'
-                  }`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableWatermarking ? 'translate-x-6' : 'translate-x-1'
@@ -1770,24 +1879,15 @@ export default function DocumentManagement() {
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
                   Watermark Text
                 </label>
-                <div className="relative">
-                  <select
-                    value={watermarkText}
-                    onChange={(e) => setWatermarkText(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
-                    style={{ fontFamily: 'BasisGrotesquePro' }}
-                  >
-                    <option>CONFIDENTIAL</option>
-                    <option>DRAFT</option>
-                    <option>PROPRIETARY</option>
-                    <option>INTERNAL</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
+                <input
+                  type="text"
+                  value={watermarkText}
+                  onChange={(e) => setWatermarkText(e.target.value)}
+                  placeholder="Enter watermark text"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
+                  style={{ fontFamily: 'BasisGrotesquePro' }}
+                  disabled={loadingWatermark}
+                />
               </div>
 
               {/* Position */}
@@ -1801,6 +1901,7 @@ export default function DocumentManagement() {
                     onChange={(e) => setWatermarkPosition(e.target.value)}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
+                    disabled={loadingWatermark}
                   >
                     <option>Top Left</option>
                     <option>Top Center</option>
@@ -1821,79 +1922,69 @@ export default function DocumentManagement() {
               {/* Opacity */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Opacity
+                  Opacity (1-100)
                 </label>
                 <div className="relative">
-                  <select
-                    value={watermarkOpacity}
-                    onChange={(e) => setWatermarkOpacity(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={parseInt(watermarkOpacity.replace('%', '')) || 30}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 30;
+                      setWatermarkOpacity(`${Math.min(100, Math.max(1, value))}%`);
+                    }}
+                    className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
-                  >
-                    <option>25%</option>
-                    <option>30%</option>
-                    <option>35%</option>
-                    <option>40%</option>
-                    <option>50%</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                    disabled={loadingWatermark}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">%</span>
                 </div>
               </div>
 
               {/* Text Size */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Text Size
+                  Text Size (8-200px)
                 </label>
                 <div className="relative">
-                  <select
-                    value={watermarkTextSize}
-                    onChange={(e) => setWatermarkTextSize(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
+                  <input
+                    type="number"
+                    min="8"
+                    max="200"
+                    value={parseInt(watermarkTextSize.replace('px', '')) || 22}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 22;
+                      setWatermarkTextSize(`${Math.min(200, Math.max(8, value))}px`);
+                    }}
+                    className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
-                  >
-                    <option>16px</option>
-                    <option>18px</option>
-                    <option>20px</option>
-                    <option>22px</option>
-                    <option>24px</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                    disabled={loadingWatermark}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">px</span>
                 </div>
               </div>
 
               {/* Rotation */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Rotation (-45°)
+                  Rotation (-180° to 180°)
                 </label>
                 <div className="relative">
-                  <select
-                    value={watermarkRotation}
-                    onChange={(e) => setWatermarkRotation(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm appearance-none bg-white"
+                  <input
+                    type="number"
+                    min="-180"
+                    max="180"
+                    value={parseInt(watermarkRotation.replace('°', '')) || -45}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || -45;
+                      setWatermarkRotation(`${Math.min(180, Math.max(-180, value))}°`);
+                    }}
+                    className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
                     style={{ fontFamily: 'BasisGrotesquePro' }}
-                  >
-                    <option>-90°</option>
-                    <option>-45°</option>
-                    <option>-40°</option>
-                    <option>0°</option>
-                    <option>45°</option>
-                    <option>90°</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 6L8 10L12 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                    disabled={loadingWatermark}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">°</span>
                 </div>
               </div>
 
@@ -1934,8 +2025,9 @@ export default function DocumentManagement() {
                 </div>
                 <button
                   onClick={() => setIncludeUserInfo(!includeUserInfo)}
+                  disabled={loadingWatermark}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeUserInfo ? 'bg-orange-500' : 'bg-gray-300'
-                    }`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeUserInfo ? 'translate-x-6' : 'translate-x-1'
@@ -1954,8 +2046,9 @@ export default function DocumentManagement() {
                 </div>
                 <button
                   onClick={() => setIncludeTimestamp(!includeTimestamp)}
+                  disabled={loadingWatermark}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeTimestamp ? 'bg-orange-500' : 'bg-gray-300'
-                    }`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeTimestamp ? 'translate-x-6' : 'translate-x-1'
@@ -1974,8 +2067,9 @@ export default function DocumentManagement() {
                 </div>
                 <button
                   onClick={() => setIncludeDocumentInfo(!includeDocumentInfo)}
+                  disabled={loadingWatermark}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeDocumentInfo ? 'bg-orange-500' : 'bg-gray-300'
-                    }`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeDocumentInfo ? 'translate-x-6' : 'translate-x-1'
@@ -2037,11 +2131,28 @@ export default function DocumentManagement() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Download With Watermark
+            <button
+              onClick={handleSaveWatermarkSettings}
+              disabled={savingWatermark || loadingWatermark}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2FC5DF] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
+            >
+              {savingWatermark ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Save Settings
+                </>
+              )}
             </button>
             <button
               onClick={() => setShowPreview(!showPreview)}

@@ -33,10 +33,35 @@ const formatNumber = (value) => {
   return numericValue.toLocaleString();
 };
 
+// Generate last 6 months for dropdown
+const getLast6Months = () => {
+  const months = [];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const currentDate = new Date();
+  
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+    const monthIndex = date.getMonth();
+    const year = date.getFullYear();
+    const monthName = monthNames[monthIndex];
+    const monthValue = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+    
+    months.push({
+      value: monthValue,
+      label: `${monthName} ${year}`,
+      shortLabel: monthName
+    });
+  }
+  
+  return months;
+};
+
 export default function Overview() {
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedRevenueMonth, setSelectedRevenueMonth] = useState('all');
 
   useEffect(() => {
     let isMounted = true;
@@ -72,30 +97,61 @@ export default function Overview() {
     };
   }, []);
 
+  const last6Months = getLast6Months();
+
   const revenueData = useMemo(() => {
     const breakdown = insights?.monthly_breakdown;
     if (!breakdown) return [];
 
+    let data = [];
     if (Array.isArray(breakdown.series) && breakdown.series.length) {
-      return breakdown.series.map((item) => ({
+      data = breakdown.series.map((item) => ({
         month: item.month,
         value: item.revenue ?? 0,
         formattedRevenue: item.formatted_revenue || formatCurrency(item.revenue)
       }));
+    } else {
+      const labels = breakdown?.labels ?? [];
+      const values = breakdown?.values ?? [];
+
+      data = labels.map((label, index) => {
+        const value = values[index] ?? 0;
+        return {
+          month: label,
+          value,
+          formattedRevenue: formatCurrency(value)
+        };
+      });
     }
 
-    const labels = breakdown?.labels ?? [];
-    const values = breakdown?.values ?? [];
+    // Filter by selected month
+    if (selectedRevenueMonth !== 'all') {
+      const selectedMonth = last6Months.find(m => m.value === selectedRevenueMonth);
+      if (selectedMonth) {
+        const [year, monthNum] = selectedMonth.value.split('-');
+        const monthIndex = parseInt(monthNum) - 1;
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const fullMonthName = monthNames[monthIndex];
+        const abbrMonthName = monthAbbrs[monthIndex];
+        
+        data = data.filter(item => {
+          if (!item.month) return false;
+          const monthLabel = item.month.toString().toLowerCase();
+          // Check for various formats: "September 2024", "Sep 2024", "2024-09", etc.
+          return monthLabel.includes(fullMonthName.toLowerCase()) ||
+                 monthLabel.includes(abbrMonthName.toLowerCase()) ||
+                 monthLabel.includes(`${year}-${monthNum}`) ||
+                 monthLabel.includes(`${monthNum}/${year}`) ||
+                 monthLabel.includes(`${year}-${monthNum.padStart(2, '0')}`);
+        });
+      }
+    }
 
-    return labels.map((label, index) => {
-      const value = values[index] ?? 0;
-      return {
-        month: label,
-        value,
-        formattedRevenue: formatCurrency(value)
-      };
-    });
-  }, [insights]);
+    return data;
+  }, [insights, selectedRevenueMonth]);
 
   const revenueSummary = insights?.revenue_summary;
   const filters = insights?.filters;
@@ -284,8 +340,28 @@ export default function Overview() {
       {/* First Chart - Area Chart */}
       <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue and growth rate over time</p>
+          <div className="flex justify-between items-center mb-2">
+            <div>
+              <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
+              <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue and growth rate over time</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="overview-revenue-month-select" className="text-sm" style={{ color: '#3B4A66' }}>Filter by month:</label>
+              <select
+                id="overview-revenue-month-select"
+                value={selectedRevenueMonth}
+                onChange={(e) => setSelectedRevenueMonth(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Months</option>
+                {last6Months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="h-80">

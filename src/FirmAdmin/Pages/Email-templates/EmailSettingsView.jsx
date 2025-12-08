@@ -382,8 +382,8 @@ export default function EmailSettingsView() {
               className="!rounded-lg bg-[#F56D2D] px-4 py-2 text-sm font-regular text-white transition hover:bg-[#FF7142] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
+              </button>
+            </div>
         </div>
       </div>
     </div>

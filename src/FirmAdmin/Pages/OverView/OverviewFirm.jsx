@@ -962,7 +962,7 @@ export default function FirmAdminDashboard() {
           </div>
         </div>
 
-
+      
 
         {/* Key Metrics Section */}
         {widgetVisibility.Kpi && (
@@ -1056,7 +1056,7 @@ export default function FirmAdminDashboard() {
                     }}
                   ></div>
                 </div>
-
+               
               </div>
             </div>
 

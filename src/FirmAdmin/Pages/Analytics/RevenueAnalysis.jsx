@@ -190,20 +190,20 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs, period 
   }
 
   if (loading && !analyticsData) {
-    return (
+      return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">Loading revenue analytics data...</div>
-      </div>
-    );
-  }
+        </div>
+      );
+    }
 
   if (error && !analyticsData) {
-    return (
+      return (
       <div className="flex items-center justify-center h-64">
         <div className="text-red-500">Error: {error}</div>
-      </div>
-    );
-  }
+        </div>
+      );
+    }
 
   return (
     <>
@@ -287,52 +287,52 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs, period 
         </div>
         <div className="h-80 sm:h-96">
           {revenueTrendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
                 data={revenueTrendData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                />
-                <YAxis 
-                  yAxisId="left"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
+              <XAxis 
+                dataKey="month" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+              />
+              <YAxis 
+                yAxisId="left"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
                   tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                />
-                <YAxis 
-                  yAxisId="right"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+              />
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
                   domain={[0, 100]}
                   ticks={[0, 20, 40, 60, 80, 100]}
                   tickFormatter={(value) => `${value}%`}
-                />
-                <Tooltip content={<RevenueTooltip />} />
-                
-                {/* Stacked Bars */}
-                <Bar yAxisId="left" dataKey="collected" stackId="a" fill="#1E40AF" name="Collected" />
-                <Bar yAxisId="left" dataKey="outstanding" stackId="a" fill="#3B82F6" name="Outstanding" />
-                <Bar yAxisId="left" dataKey="refundTransfer" fill="#EF4444" name="Refund Transfer" />
-                
-                {/* Lines */}
-                <Line yAxisId="left" type="monotone" dataKey="netProfit" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} name="Net Profit" />
+              />
+              <Tooltip content={<RevenueTooltip />} />
+              
+              {/* Stacked Bars */}
+              <Bar yAxisId="left" dataKey="collected" stackId="a" fill="#1E40AF" name="Collected" />
+              <Bar yAxisId="left" dataKey="outstanding" stackId="a" fill="#3B82F6" name="Outstanding" />
+              <Bar yAxisId="left" dataKey="refundTransfer" fill="#EF4444" name="Refund Transfer" />
+              
+              {/* Lines */}
+              <Line yAxisId="left" type="monotone" dataKey="netProfit" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} name="Net Profit" />
                 <Line yAxisId="right" type="monotone" dataKey="bankAdoptionPercentage" stroke="#F97316" strokeWidth={2} strokeDasharray="4 4" dot={{ fill: '#F97316', r: 4 }} name="Bank Adoption %" />
-              </ComposedChart>
-            </ResponsiveContainer>
+            </ComposedChart>
+          </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-full text-sm text-gray-500">
               No revenue trend data available
@@ -373,38 +373,38 @@ export default function RevenueAnalysis({ activeTab, setActiveTab, tabs, period 
         </div>
         <div className="h-72 sm:h-80">
           {feesByOfficeData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
                 data={feesByOfficeData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
-                <XAxis 
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
+              <XAxis 
                   dataKey="officeName" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
                   tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip content={<FeesTooltip />} />
-                
-                {/* Bars */}
+              />
+              <Tooltip content={<FeesTooltip />} />
+              
+              {/* Bars */}
                 <Bar dataKey="feesCollected" fill="#3B82F6" name="Fees Collected" radius={[4, 4, 0, 0]} />
-                
-                {/* Net Profit Line */}
-                <Line type="monotone" dataKey="netProfit" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} name="Net Profit" />
-              </ComposedChart>
-            </ResponsiveContainer>
+              
+              {/* Net Profit Line */}
+              <Line type="monotone" dataKey="netProfit" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} name="Net Profit" />
+            </ComposedChart>
+          </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-full text-sm text-gray-500">
               No fees data available

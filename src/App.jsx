@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 // import Homepage from "./pages/Homepage";
+import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
 import ESignatureModal from './ClientOnboarding/components/ESignatureModal';
 import NotificationPanel from './ClientOnboarding/components/Notifications/NotificationPanel';
@@ -54,8 +55,11 @@ export default function App() {
         <Route path="/select-role" element={<RoleSelectionScreen />} />
         {/* Tailwind test route */}
         <Route path="/tw-test" element={<TailwindTest />} />
-        {/* Root path - Authentication check */}
-        <Route path="/" element={<RootAuthCheck />} />
+        {/* Root path - Home page (public landing page) */}
+        <Route path="/" element={<Home />} />
+        
+        {/* Authenticated users redirect route */}
+        <Route path="/home-redirect" element={<RootAuthCheck />} />
         <Route path="/create-account" element={
           <AuthRedirect>
             <CreateAccount />

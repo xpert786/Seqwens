@@ -1063,7 +1063,7 @@ export default function MessagePage() {
                         </div>
                       </div>
                       <div className="d-flex align-items-center gap-2">
-                        <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                      <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
                         <button
                           onClick={(e) => handleDeleteThread(conv.id, e)}
                           className="btn btn-sm"

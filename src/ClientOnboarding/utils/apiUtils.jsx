@@ -4748,7 +4748,17 @@ export const firmAdminSettingsAPI = {
     }
 
     return await response.json();
-  }
+  },
+
+  // Get watermark settings
+  getWatermarkSettings: async () => {
+    return await apiRequest('/user/firm-admin/settings/watermark/', 'GET');
+  },
+
+  // Update watermark settings
+  updateWatermarkSettings: async (watermarkData) => {
+    return await apiRequest('/user/firm-admin/settings/watermark/', 'PATCH', watermarkData);
+  },
 };
 
 // Firm Admin Invoice Management API functions
