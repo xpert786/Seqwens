@@ -943,6 +943,19 @@ const Messages = () => {
 
   return (
     <div className="min-h-screen bg-[#F3F7FF] p-6">
+      <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+      </style>
       <div className=" mx-auto">
         {/* Header Section */}
         <div className="mb-6">
@@ -1053,7 +1066,7 @@ const Messages = () => {
             </div>
 
             {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 hide-scrollbar">
               {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="text-gray-500">Loading conversations...</div>
