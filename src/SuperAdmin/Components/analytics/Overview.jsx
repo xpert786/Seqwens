@@ -190,7 +190,7 @@ export default function Overview() {
       month: item.month || '',
       value: item.revenue ?? 0,
       formattedRevenue: formatCurrency(item.revenue ?? 0)
-    }));
+    })).filter(item => item.value > 0 || item.month); // Ensure we include items with data
   }, [analytics]);
 
   // Get filter info
@@ -424,14 +424,14 @@ export default function Overview() {
         <div className="mb-6">
           <div>
             <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
-            <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue and growth rate over time</p>
+            <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue displayed as bar chart</p>
           </div>
         </div>
 
         <div className="h-80">
           {revenueData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
+              <BarChart
                 data={revenueData}
                 margin={{
                   top: 10,
@@ -440,12 +440,6 @@ export default function Overview() {
                   bottom: 0,
                 }}
               >
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
                 <XAxis
                   dataKey="month"
@@ -458,24 +452,17 @@ export default function Overview() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : 1]}
+                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
+                <Tooltip content={<BarTooltip />} />
+                <Bar
                   dataKey="value"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
-                  activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
-                  connectNulls={false}
-                  isAnimationActive={true}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  fill="#3B82F6"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                  barSize={30}
                 />
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
@@ -621,7 +608,7 @@ export default function Overview() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : 1]}
+                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
                 <Tooltip content={<BarTooltip />} />
                 <Bar
@@ -629,6 +616,7 @@ export default function Overview() {
                   fill="#4285F4"
                   radius={[4, 4, 0, 0]}
                   maxBarSize={40}
+                  barSize={30}
                 />
               </BarChart>
             </ResponsiveContainer>

@@ -4422,6 +4422,21 @@ export const firmAdminMessagingAPI = {
     return await apiRequest(url, 'GET');
   },
 
+  // Check Feedback Status
+  // GET /accounts/feedback/status/
+  getFeedbackStatus: async () => {
+    const url = `/accounts/feedback/status/`;
+    return await apiRequest(url, 'GET');
+  },
+
+  // Submit Feedback
+  // POST /seqwens/api/user/feedback/
+  // Body: { stars: string (1-5), comment: string, role: string }
+  submitFeedback: async (feedbackData) => {
+    const url = `/user/feedback/`;
+    return await apiRequest(url, 'POST', feedbackData);
+  },
+
   // Send a Message to a Thread
   // POST /taxpayer/chat-threads/{id}/send_message/
   // Accepts: { content, is_internal }
