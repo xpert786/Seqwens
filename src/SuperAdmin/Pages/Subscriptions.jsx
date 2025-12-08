@@ -8,6 +8,7 @@ import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import DateRangePicker from '../../components/DateRangePicker';
 
 export default function Subscriptions() {
   const [showPlanDetails, setShowPlanDetails] = useState(true);
@@ -32,12 +33,16 @@ export default function Subscriptions() {
   const currentDate = new Date();
   const currentMonth = (currentDate.getMonth() + 1).toString(); // getMonth() returns 0-11, so add 1
   const currentYear = currentDate.getFullYear().toString();
+  const formattedCurrentDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
 
   const [planPerformance, setPlanPerformance] = useState(null);
   const [filterMonth, setFilterMonth] = useState(currentMonth);
   const [filterYear, setFilterYear] = useState(currentYear);
   const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth);
   const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear);
+  // Add date range state
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
+  const [appliedDateRange, setAppliedDateRange] = useState({ startDate: '', endDate: '' });
   const filtersEffectInitializedRef = useRef(false);
   const searchEffectInitializedRef = useRef(false);
   const pdfRef = useRef(null);
@@ -294,28 +299,44 @@ export default function Subscriptions() {
 
   // Handle apply filter button click
   const handleApplyFilter = () => {
-    setAppliedFilterMonth(filterMonth);
-    setAppliedFilterYear(filterYear);
+    // If we have a date range, use that; otherwise, use month/year filters
+    if (dateRange.startDate && dateRange.endDate) {
+      setAppliedDateRange({ ...dateRange });
+      // Clear month/year filters
+      setAppliedFilterMonth('');
+      setAppliedFilterYear('');
+    } else {
+      setAppliedFilterMonth(filterMonth);
+      setAppliedFilterYear(filterYear);
+      // Clear date range
+      setAppliedDateRange({ startDate: '', endDate: '' });
+    }
   };
 
   // Fetch plan performance data with applied filters
   const fetchPlanPerformance = useCallback(async () => {
     try {
       const params = {};
-      if (appliedFilterMonth && appliedFilterYear) {
+      
+      // If we have a date range, use that; otherwise, use month/year filters
+      if (appliedDateRange.startDate && appliedDateRange.endDate) {
+        params.start_date = appliedDateRange.startDate;
+        params.end_date = appliedDateRange.endDate;
+      } else if (appliedFilterMonth && appliedFilterYear) {
         // Apply same filter to both MRR and Churn Rate
         params.mrr_month = parseInt(appliedFilterMonth);
         params.mrr_year = parseInt(appliedFilterYear);
         params.churn_month = parseInt(appliedFilterMonth);
         params.churn_year = parseInt(appliedFilterYear);
       }
+      
       const planPerformanceResponse = await superAdminAPI.getSuperadminPlanPerformance(params);
       setPlanPerformance(planPerformanceResponse.data || null);
     } catch (err) {
       console.error('Error fetching plan performance data:', err);
       // Don't set main error, just log it
     }
-  }, [appliedFilterMonth, appliedFilterYear]);
+  }, [appliedFilterMonth, appliedFilterYear, appliedDateRange]);
 
   // Fetch data from APIs
   useEffect(() => {
@@ -326,7 +347,12 @@ export default function Subscriptions() {
 
         // Fetch plans, chart data, plan performance, and revenue insights in parallel
         const params = {};
-        if (appliedFilterMonth && appliedFilterYear) {
+        
+        // If we have a date range, use that; otherwise, use month/year filters
+        if (appliedDateRange.startDate && appliedDateRange.endDate) {
+          params.start_date = appliedDateRange.startDate;
+          params.end_date = appliedDateRange.endDate;
+        } else if (appliedFilterMonth && appliedFilterYear) {
           // Apply same filter to both MRR and Churn Rate
           params.mrr_month = parseInt(appliedFilterMonth);
           params.mrr_year = parseInt(appliedFilterYear);
@@ -363,7 +389,7 @@ export default function Subscriptions() {
     if (filtersInitialized) {
       fetchPlanPerformance();
     }
-  }, [appliedFilterMonth, appliedFilterYear, filtersInitialized, fetchPlanPerformance]);
+  }, [appliedFilterMonth, appliedFilterYear, appliedDateRange, filtersInitialized, fetchPlanPerformance]);
 
   const handleNotificationUpdate = async (updates = {}) => {
     if (savingNotifications) return;
@@ -936,52 +962,26 @@ export default function Subscriptions() {
               <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              {/* Filter Dropdowns - Upper Right */}
+              {/* Date Range Picker - Upper Right */}
               <div className="flex gap-2 items-end">
-                <select
-                  value={filterMonth}
-                  onChange={(e) => {
-                    setFilterMonth(e.target.value);
-                    if (!e.target.value) setFilterYear('');
-                  }}
-                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                >
-                  <option value="">All Months</option>
-                  {monthOptions.map(month => (
-                    <option key={month.value} value={month.value}>{month.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={filterYear}
-                  onChange={(e) => {
-                    setFilterYear(e.target.value);
-                    if (!e.target.value) setFilterMonth('');
-                  }}
-                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
-                  disabled={!filterMonth}
-                >
-                  <option value="">Year</option>
-                  {yearOptions.map(year => (
-                    <option key={year.value} value={year.value}>{year.label}</option>
-                  ))}
-                </select>
+                <DateRangePicker
+                  onDateRangeChange={(newDateRange) => setDateRange(newDateRange)}
+                  initialStartDate={dateRange.startDate}
+                  initialEndDate={dateRange.endDate}
+                />
                 <button
                   onClick={handleApplyFilter}
-                  disabled={!filterMonth || !filterYear}
+                  disabled={!(dateRange.startDate && dateRange.endDate)}
                   className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#3B82F6' }}
                 >
                   Apply
                 </button>
-                {(filterMonth && filterYear) && (
+                {(dateRange.startDate && dateRange.endDate) && (
                   <button
                     onClick={() => {
-                      setFilterMonth('');
-                      setFilterYear('');
-                      setAppliedFilterMonth('');
-                      setAppliedFilterYear('');
+                      setDateRange({ startDate: '', endDate: '' });
+                      setAppliedDateRange({ startDate: '', endDate: '' });
                     }}
                     className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
                     title="Clear filter"
