@@ -4393,6 +4393,50 @@ export const firmAdminMessagingAPI = {
     return await apiRequest(`/firm-admin/messages/recipients/search/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
+  // Get Active Users
+  // GET /seqwens/api/firm/users/active/
+  // Query params: search (string), role (string: 'client', 'staff', 'admin')
+  getActiveUsers: async (params = {}) => {
+    const { search, role } = params;
+    const queryParams = new URLSearchParams();
+
+    if (search) queryParams.append('search', search);
+    if (role) queryParams.append('role', role);
+
+    const queryString = queryParams.toString();
+    const url = `/firm/users/active/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(url, 'GET');
+  },
+
+  // Get Active Service Pricing
+  // GET /seqwens/api/firm/services/pricing/
+  // Query params: search (string)
+  getActiveServicePricing: async (params = {}) => {
+    const { search } = params;
+    const queryParams = new URLSearchParams();
+
+    if (search) queryParams.append('search', search);
+
+    const queryString = queryParams.toString();
+    const url = `/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(url, 'GET');
+  },
+
+  // Check Feedback Status
+  // GET /accounts/feedback/status/
+  getFeedbackStatus: async () => {
+    const url = `/accounts/feedback/status/`;
+    return await apiRequest(url, 'GET');
+  },
+
+  // Submit Feedback
+  // POST /seqwens/api/user/feedback/
+  // Body: { stars: string (1-5), comment: string, role: string }
+  submitFeedback: async (feedbackData) => {
+    const url = `/user/feedback/`;
+    return await apiRequest(url, 'POST', feedbackData);
+  },
+
   // Send a Message to a Thread
   // POST /taxpayer/chat-threads/{id}/send_message/
   // Accepts: { content, is_internal }
@@ -4748,7 +4792,17 @@ export const firmAdminSettingsAPI = {
     }
 
     return await response.json();
-  }
+  },
+
+  // Get watermark settings
+  getWatermarkSettings: async () => {
+    return await apiRequest('/user/firm-admin/settings/watermark/', 'GET');
+  },
+
+  // Update watermark settings
+  updateWatermarkSettings: async (watermarkData) => {
+    return await apiRequest('/user/firm-admin/settings/watermark/', 'PATCH', watermarkData);
+  },
 };
 
 // Firm Admin Invoice Management API functions

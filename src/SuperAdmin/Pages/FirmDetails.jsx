@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
+import { setTokens } from '../../ClientOnboarding/utils/userUtils';
+import { toast } from 'react-toastify';
 
 const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) {
@@ -53,6 +55,7 @@ export default function FirmDetails() {
     const [billingOverview, setBillingOverview] = useState(null);
     const [billingLoading, setBillingLoading] = useState(false);
     const [billingError, setBillingError] = useState(null);
+    const [loggingIn, setLoggingIn] = useState(false);
 
     const fetchFirmDetails = async () => {
         try {
@@ -380,6 +383,53 @@ export default function FirmDetails() {
         }
     };
 
+    const handleFirmLogin = async () => {
+        if (!firmId) return;
+        
+        try {
+            setLoggingIn(true);
+            const response = await superAdminAPI.generateFirmLogin(firmId);
+
+            if (response.success && response.data) {
+                const { access_token, refresh_token, user, firm } = response.data;
+                
+                // Store tokens and user data in current session (this will log out superadmin and log in as firm admin)
+                setTokens(access_token, refresh_token, true);
+                localStorage.setItem('userData', JSON.stringify(user));
+                localStorage.setItem('userType', user.user_type || 'admin');
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                // Also set in sessionStorage
+                sessionStorage.setItem('accessToken', access_token);
+                sessionStorage.setItem('refreshToken', refresh_token);
+                sessionStorage.setItem('userData', JSON.stringify(user));
+                sessionStorage.setItem('userType', user.user_type || 'admin');
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('rememberMe', 'true');
+
+                toast.success(response.message || 'Login successful. Redirecting to firm dashboard...', {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
+
+                // Navigate to firm admin dashboard in current tab
+                setTimeout(() => {
+                    navigate('/firmadmin');
+                }, 500);
+            } else {
+                throw new Error(response.message || 'Failed to generate login credentials');
+            }
+        } catch (err) {
+            console.error('Error generating firm login:', err);
+            toast.error(handleAPIError(err), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setLoggingIn(false);
+        }
+    };
+
     const quickActions = [
         {
             id: 'upgrade', label: 'Upgrade Plan', icon: (<svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -418,16 +468,7 @@ export default function FirmDetails() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                            style={{ borderRadius: '8px' }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M12.75 6.5L9 2.75M9 2.75L5.25 6.5M9 2.75V11.75" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Import Report
-                        </button>
+                        
                         <button
                             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             style={{ borderRadius: '8px' }}
@@ -789,6 +830,34 @@ export default function FirmDetails() {
                             </div>
                         )}
                     </>
+                )}
+
+                {/* Login Button at Bottom */}
+                {!loading && firmDetails && (
+                    <div className="flex justify-center pt-6 pb-4">
+                        <button
+                            type="button"
+                            onClick={handleFirmLogin}
+                            disabled={loggingIn}
+                            className="inline-flex items-center gap-2 rounded-lg bg-[#3B4A66] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2D3A52] focus:outline-none focus:ring-2 focus:ring-[#3B4A66] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ borderRadius: '8px' }}
+                        >
+                            {loggingIn ? (
+                                <>
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent border-white"></div>
+                                    Logging in...
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 2C4.89543 2 4 2.89543 4 4V6H2V14H10V6H8V4C8 2.89543 7.10457 2 6 2ZM6 3C6.55228 3 7 3.44772 7 4V6H5V4C5 3.44772 5.44772 3 6 3Z" fill="currentColor"/>
+                                        <path d="M11 5V7H13V13H11V15H14C14.5523 15 15 14.5523 15 14V6C15 5.44772 14.5523 5 14 5H11Z" fill="currentColor"/>
+                                    </svg>
+                                    Login
+                                </>
+                            )}
+                        </button>
+                    </div>
                 )}
             </div>
         </div>

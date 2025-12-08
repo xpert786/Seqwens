@@ -33,26 +33,136 @@ const formatNumber = (value) => {
   return numericValue.toLocaleString();
 };
 
+// Format month label for x-axis display
+const formatMonthLabel = (label) => {
+  if (!label) return '';
+  
+  const labelStr = String(label).trim();
+  
+  // Try to parse various formats
+  // Format: "Sep 2024" or "September 2024"
+  const monthYearMatch = labelStr.match(/(\w+)\s+(\d{4})/i);
+  if (monthYearMatch) {
+    const monthName = monthYearMatch[1];
+    // Get short month name (first 3 letters)
+    const shortMonth = monthName.substring(0, 3);
+    return shortMonth;
+  }
+  
+  // Format: "2024-09" or "2024-9"
+  const dateMatch = labelStr.match(/(\d{4})-(\d{1,2})/);
+  if (dateMatch) {
+    const monthIndex = parseInt(dateMatch[2]) - 1;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return monthNames[monthIndex] || labelStr;
+  }
+  
+  // Format: "09/2024" or "9/2024"
+  const slashMatch = labelStr.match(/(\d{1,2})\/(\d{4})/);
+  if (slashMatch) {
+    const monthIndex = parseInt(slashMatch[1]) - 1;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return monthNames[monthIndex] || labelStr;
+  }
+  
+  // If it's already a short month name, return as is
+  const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (monthAbbrs.some(abbr => labelStr.toLowerCase().startsWith(abbr.toLowerCase()))) {
+    return labelStr.substring(0, 3);
+  }
+  
+  // Return first 3 characters if it looks like a month name
+  if (labelStr.length > 3) {
+    return labelStr.substring(0, 3);
+  }
+  
+  return labelStr;
+};
+
+// Generate last 6 months for dropdown
+const getLast6Months = () => {
+  const months = [];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const currentDate = new Date();
+  
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+    const monthIndex = date.getMonth();
+    const year = date.getFullYear();
+    const monthName = monthNames[monthIndex];
+    const monthValue = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+    
+    months.push({
+      value: monthValue,
+      label: `${monthName} ${year}`,
+      shortLabel: monthName
+    });
+  }
+  
+  return months;
+};
+
 export default function Overview() {
-  const [insights, setInsights] = useState(null);
+  // Get current month and year for default filter
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11, so add 1
+  const currentYear = currentDate.getFullYear();
+
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterMonth, setFilterMonth] = useState(currentMonth.toString());
+  const [filterYear, setFilterYear] = useState(currentYear.toString());
+  const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth.toString());
+  const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear.toString());
+
+  // Generate month options (1-12)
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const monthNum = i + 1;
+    const date = new Date(2000, monthNum - 1, 1);
+    return {
+      value: monthNum.toString(),
+      label: date.toLocaleString('default', { month: 'short' })
+    };
+  });
+
+  // Generate year options (current year and 5 years back)
+  const currentYearNum = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => {
+    const year = currentYearNum - i;
+    return { value: year.toString(), label: year.toString() };
+  });
+
+  // Handle apply filter button click
+  const handleApplyFilter = () => {
+    setAppliedFilterMonth(filterMonth);
+    setAppliedFilterYear(filterYear);
+  };
 
   useEffect(() => {
     let isMounted = true;
 
-    const fetchInsights = async () => {
+    const fetchAnalytics = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await superAdminAPI.getRevenueInsights({ days: 30 });
+        const params = {};
+        if (appliedFilterMonth && appliedFilterYear) {
+          params.month = parseInt(appliedFilterMonth);
+          params.year = parseInt(appliedFilterYear);
+        }
+        const response = await superAdminAPI.getPlatformAnalytics(params);
 
         if (response?.success && response?.data) {
           if (isMounted) {
-            setInsights(response.data);
+            setAnalytics(response.data);
           }
         } else {
-          throw new Error(response?.message || 'Failed to fetch revenue insights');
+          throw new Error(response?.message || 'Failed to fetch platform analytics');
         }
       } catch (err) {
         if (isMounted) {
@@ -65,85 +175,66 @@ export default function Overview() {
       }
     };
 
-    fetchInsights();
+    fetchAnalytics();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [appliedFilterMonth, appliedFilterYear]);
 
+  // Process revenue trend data from API
   const revenueData = useMemo(() => {
-    const breakdown = insights?.monthly_breakdown;
-    if (!breakdown) return [];
+    if (!analytics?.revenue_trend || !Array.isArray(analytics.revenue_trend)) return [];
+    
+    return analytics.revenue_trend.map((item) => ({
+      month: item.month || '',
+      value: item.revenue ?? 0,
+      formattedRevenue: formatCurrency(item.revenue ?? 0)
+    })).filter(item => item.value > 0 || item.month); // Ensure we include items with data
+  }, [analytics]);
 
-    if (Array.isArray(breakdown.series) && breakdown.series.length) {
-      return breakdown.series.map((item) => ({
-        month: item.month,
-        value: item.revenue ?? 0,
-        formattedRevenue: item.formatted_revenue || formatCurrency(item.revenue)
-      }));
-    }
-
-    const labels = breakdown?.labels ?? [];
-    const values = breakdown?.values ?? [];
-
-    return labels.map((label, index) => {
-      const value = values[index] ?? 0;
-      return {
-        month: label,
-        value,
-        formattedRevenue: formatCurrency(value)
-      };
-    });
-  }, [insights]);
-
-  const revenueSummary = insights?.revenue_summary;
-  const filters = insights?.filters;
-
+  // Get filter info
+  const filters = analytics?.filters;
   const dateRangeLabel = useMemo(() => {
-    if (!filters) return 'Last 30 days';
-    if (filters.start_date && filters.end_date) {
-      return `${filters.start_date} - ${filters.end_date}`;
+    if (!filters) return 'Current Month';
+    if (filters.month_label) {
+      return filters.month_label;
     }
-    if (filters.range_days) {
-      return `Last ${filters.range_days} days`;
-    }
-    return 'Last 30 days';
+    return 'Current Month';
   }, [filters]);
 
-  const revenueHighlight = insights?.monthly_breakdown?.highlight;
-
-  const topPlan = useMemo(() => {
-    if (!Array.isArray(insights?.revenue_by_plan)) {
-      return null;
+  // Get KPIs
+  const kpis = analytics?.kpis;
+  
+  // Calculate total revenue from revenue_trend (sum all months if multiple, or use first entry)
+  const totalRevenue = useMemo(() => {
+    if (!analytics?.revenue_trend || !Array.isArray(analytics.revenue_trend)) {
+      return kpis?.monthly_recurring_revenue ?? 0;
     }
-    return [...insights.revenue_by_plan]
-      .sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0))[0] || null;
-  }, [insights]);
+    // Sum all revenue values in the trend, or use the first one if only one month
+    return analytics.revenue_trend.reduce((sum, item) => sum + (item.revenue ?? 0), 0);
+  }, [analytics, kpis]);
 
-  const topFirm = useMemo(() => {
-    if (!Array.isArray(insights?.top_revenue_firms)) {
-      return null;
-    }
-    return [...insights.top_revenue_firms]
-      .sort((a, b) => {
-        const rankDiff = (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER);
-        if (rankDiff !== 0) {
-          return rankDiff;
-        }
-        return (b.revenue ?? 0) - (a.revenue ?? 0);
-      })[0] || null;
-  }, [insights]);
+  const revenueSummary = {
+    total_revenue: totalRevenue,
+    formatted_total_revenue: formatCurrency(totalRevenue)
+  };
 
-  // Data for the second chart (Multi-line Chart) - Dynamic from API
+  const revenueHighlight = analytics?.revenue_trend?.[0] ? {
+    month: analytics.revenue_trend[0].month || '',
+    revenue: analytics.revenue_trend[0].revenue ?? 0,
+    formatted_revenue: formatCurrency(analytics.revenue_trend[0].revenue ?? 0)
+  } : null;
+
+  // Data for the engagement chart (Multi-line Chart)
   const engagementData = useMemo(() => {
-    const metrics = insights?.user_engagement_metrics;
-    if (!metrics) return [];
+    const engagement = analytics?.engagement;
+    if (!engagement) return [];
 
-    const labels = metrics.labels || [];
-    const activeUsers = metrics.active_users || [];
-    const newUsers = metrics.new_users || [];
-    const sessions = metrics.sessions || [];
+    const labels = engagement.labels || [];
+    const activeUsers = engagement.active_users || [];
+    const newUsers = engagement.new_users || [];
+    const sessions = engagement.sessions || [];
 
     // Transform API data into chart format
     return labels.map((label, index) => ({
@@ -152,7 +243,7 @@ export default function Overview() {
       newUsers: newUsers[index] ?? 0,
       sessions: sessions[index] ?? 0
     }));
-  }, [insights]);
+  }, [analytics]);
 
   const monthlyRevenueData = revenueData;
 
@@ -240,6 +331,61 @@ export default function Overview() {
 
   return (
     <div className="space-y-8 mb-8">
+      {/* Filter Section - Top Right */}
+      <div className="flex justify-end items-center gap-2 mb-4">
+        <select
+          value={filterMonth}
+          onChange={(e) => {
+            setFilterMonth(e.target.value);
+            if (!e.target.value) setFilterYear('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+        >
+          <option value="">All Months</option>
+          {monthOptions.map(month => (
+            <option key={month.value} value={month.value}>{month.label}</option>
+          ))}
+        </select>
+        <select
+          value={filterYear}
+          onChange={(e) => {
+            setFilterYear(e.target.value);
+            if (!e.target.value) setFilterMonth('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+          disabled={!filterMonth}
+        >
+          <option value="">Year</option>
+          {yearOptions.map(year => (
+            <option key={year.value} value={year.value}>{year.label}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleApplyFilter}
+          disabled={!filterMonth || !filterYear}
+          className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: '#3B82F6' }}
+        >
+          Apply
+        </button>
+        {(filterMonth && filterYear) && (
+          <button
+            onClick={() => {
+              setFilterMonth('');
+              setFilterYear('');
+              setAppliedFilterMonth('');
+              setAppliedFilterYear('');
+            }}
+            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
+            title="Clear filter"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white p-4 border border-[#E8F0FF] rounded-lg">
           <p className="text-xs font-medium text-gray-500 mb-1">Total Revenue ({dateRangeLabel})</p>
@@ -257,41 +403,35 @@ export default function Overview() {
           </p>
         </div>
         <div className="bg-white p-4 border border-[#E8F0FF] rounded-lg">
-          <p className="text-xs font-medium text-gray-500 mb-1">Top Plan</p>
+          <p className="text-xs font-medium text-gray-500 mb-1">Active Firms</p>
           <p className="text-lg font-semibold text-gray-900">
-            {topPlan?.label || topPlan?.plan || '—'}
-          </p>
-          <p className="text-sm text-gray-700">
-            {topPlan?.formatted_revenue || formatCurrency(topPlan?.revenue ?? 0)}
+            {formatNumber(kpis?.active_firms ?? 0)}
           </p>
         </div>
         <div className="bg-white p-4 border border-[#E8F0FF] rounded-lg">
-          <p className="text-xs font-medium text-gray-500 mb-1">Top Firm</p>
+          <p className="text-xs font-medium text-gray-500 mb-1">Total Users</p>
           <p className="text-lg font-semibold text-gray-900">
-            {topFirm?.name || '—'}
+            {formatNumber(kpis?.total_users ?? 0)}
           </p>
           <p className="text-sm text-gray-700">
-            {topFirm?.formatted_revenue || formatCurrency(topFirm?.revenue ?? 0)}
+            Churn Rate: {kpis?.churn_rate?.toFixed(1) ?? '0.0'}%
           </p>
-          {topFirm && (
-            <p className="text-xs text-gray-500 mt-2">
-              {formatNumber(topFirm.users)} users • {topFirm.invoice_count || 0} invoices
-            </p>
-          )}
         </div>
       </div>
 
       {/* First Chart - Area Chart */}
       <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
-          <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
-          <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue and growth rate over time</p>
+          <div>
+            <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
+            <p className="text-sm" style={{ color: '#3B4A66' }}>Monthly recurring revenue displayed as bar chart</p>
+          </div>
         </div>
 
         <div className="h-80">
           {revenueData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
+              <BarChart
                 data={revenueData}
                 margin={{
                   top: 10,
@@ -300,41 +440,33 @@ export default function Overview() {
                   bottom: 0,
                 }}
               >
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tickFormatter={(value) => formatMonthLabel(value)}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : 1]}
+                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
+                <Tooltip content={<BarTooltip />} />
+                <Bar
                   dataKey="value"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
-                  activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
+                  fill="#3B82F6"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                  barSize={30}
                 />
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
-              No revenue trend data available for this period.
+              No data available
             </div>
           )}
         </div>
@@ -358,6 +490,7 @@ export default function Overview() {
                   left: 0,
                   bottom: 0,
                 }}
+                style={{ filter: 'drop-shadow(0 0 0 transparent)' }}
               >
               <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
               <XAxis
@@ -365,6 +498,7 @@ export default function Overview() {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                tickFormatter={(value) => formatMonthLabel(value)}
               />
               <YAxis
                 axisLine={false}
@@ -382,6 +516,10 @@ export default function Overview() {
                 strokeWidth={3}
                 dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
                 activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
+                connectNulls={false}
+                isAnimationActive={true}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
 
               {/* New Users Line - Orange */}
@@ -392,6 +530,10 @@ export default function Overview() {
                 strokeWidth={3}
                 dot={{ fill: 'white', stroke: '#FF7043', strokeWidth: 3, r: 5 }}
                 activeDot={{ r: 7, stroke: '#FF7043', strokeWidth: 2, fill: 'white' }}
+                connectNulls={false}
+                isAnimationActive={true}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
 
               {/* Sessions Line - Green */}
@@ -402,12 +544,16 @@ export default function Overview() {
                 strokeWidth={3}
                 dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
                 activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
+                connectNulls={false}
+                isAnimationActive={true}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </LineChart>
           </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
-              No user engagement data available for this period.
+              No data available
             </div>
           )}
         </div>
@@ -456,12 +602,13 @@ export default function Overview() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                  tickFormatter={(value) => formatMonthLabel(value)}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : 1]}
+                  domain={[0, maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.1) : (revenueData.length > 0 ? 1 : 0)]}
                 />
                 <Tooltip content={<BarTooltip />} />
                 <Bar
@@ -469,12 +616,13 @@ export default function Overview() {
                   fill="#4285F4"
                   radius={[4, 4, 0, 0]}
                   maxBarSize={40}
+                  barSize={30}
                 />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
-              No monthly revenue data available for this period.
+              No data available
             </div>
           )}
         </div>

@@ -502,7 +502,7 @@ export default function Revenue() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, maxMonthlyRevenue > 0 ? Math.ceil(maxMonthlyRevenue * 1.1) : 1]}
+                  domain={[0, maxMonthlyRevenue > 0 ? Math.ceil(maxMonthlyRevenue * 1.1) : (monthlyRevenueData.length > 0 ? 1 : 0)]}
                 />
                 <Tooltip content={<BarTooltip />} />
                 <Bar
@@ -510,6 +510,7 @@ export default function Revenue() {
                   fill="#4285F4"
                   radius={[4, 4, 0, 0]}
                   maxBarSize={40}
+                  barSize={30}
                 />
               </BarChart>
             </ResponsiveContainer>

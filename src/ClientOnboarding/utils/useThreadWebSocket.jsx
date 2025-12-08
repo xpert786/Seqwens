@@ -158,7 +158,7 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setError('WebSocket connection error');
+        // setError('WebSocket connection error');
         setIsConnected(false);
       };
 
@@ -167,16 +167,16 @@ export const useThreadWebSocket = (threadId, enabled = true) => {
         setIsConnected(false);
 
         // Attempt to reconnect if not a normal closure
-        if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          reconnectAttemptsRef.current += 1;
-          console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
+        // if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
+        //   reconnectAttemptsRef.current += 1;
+        //   console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
           
-          reconnectTimeoutRef.current = setTimeout(() => {
-            connect();
-          }, reconnectDelay);
-        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-          setError('Failed to connect. Please refresh the page.');
-        }
+        //   reconnectTimeoutRef.current = setTimeout(() => {
+        //     connect();
+        //   }, reconnectDelay);
+        // } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+        //   setError('Failed to connect. Please refresh the page.');
+        // }
       };
 
       wsRef.current = ws;

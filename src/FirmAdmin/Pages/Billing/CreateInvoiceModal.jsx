@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminMessagingAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -13,7 +13,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
   });
 
   const [invoiceItems, setInvoiceItems] = useState([
-    { description: '', value: '' }
+    { description: '', value: '', service_id: null, service_search: '' }
   ]);
 
   const [clients, setClients] = useState([]);
@@ -26,6 +26,11 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+  const [services, setServices] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [serviceSearchQueries, setServiceSearchQueries] = useState({});
+  const [showServiceDropdowns, setShowServiceDropdowns] = useState({});
+  const serviceDropdownRefs = useRef({});
 
   // Fetch clients when modal opens
   useEffect(() => {
@@ -66,6 +71,73 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
 
     fetchClients();
   }, []);
+
+  // Fetch active service pricing when modal opens
+  useEffect(() => {
+    const fetchServices = async () => {
+    try {
+      setLoadingServices(true);
+        const response = await firmAdminMessagingAPI.getActiveServicePricing();
+
+      if (response.success && response.data && response.data.services) {
+        setServices(response.data.services || []);
+          console.log('Services loaded:', response.data.services);
+      } else {
+        setServices([]);
+      }
+    } catch (err) {
+        console.error('Error fetching services:', err);
+      setServices([]);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
+    fetchServices();
+  }, []);
+
+  // Debounced search for services
+  useEffect(() => {
+    const searchTimeouts = {};
+    
+    Object.keys(serviceSearchQueries).forEach((index) => {
+      const query = serviceSearchQueries[index];
+      if (query && query.trim()) {
+        searchTimeouts[index] = setTimeout(async () => {
+          try {
+            const response = await firmAdminMessagingAPI.getActiveServicePricing({ search: query });
+            if (response.success && response.data && response.data.services) {
+              setServices(response.data.services || []);
+            }
+          } catch (err) {
+            console.error('Error searching services:', err);
+          }
+    }, 300);
+      }
+    });
+
+    return () => {
+      Object.values(searchTimeouts).forEach(timeout => clearTimeout(timeout));
+    };
+  }, [serviceSearchQueries]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      Object.keys(showServiceDropdowns).forEach((index) => {
+        if (showServiceDropdowns[index] && serviceDropdownRefs.current[index]) {
+          if (!serviceDropdownRefs.current[index].contains(event.target)) {
+            setShowServiceDropdowns(prev => ({ ...prev, [index]: false }));
+          }
+        }
+      });
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showServiceDropdowns]);
 
   // Format date input with automatic slashes (MM/DD/YYYY)
   const formatDateInput = (value) => {
@@ -115,8 +187,35 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
     setInvoiceItems(updatedItems);
   };
 
+  const handleServiceSelect = (index, service) => {
+    const updatedItems = [...invoiceItems];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      description: service.name,
+      value: service.base_price.toString(),
+      service_id: service.id,
+      service_search: service.name
+    };
+    setInvoiceItems(updatedItems);
+    setShowServiceDropdowns(prev => ({ ...prev, [index]: false }));
+    setServiceSearchQueries(prev => ({ ...prev, [index]: service.name }));
+  };
+
+  const handleServiceSearchChange = (index, value) => {
+    setServiceSearchQueries(prev => ({ ...prev, [index]: value }));
+    setShowServiceDropdowns(prev => ({ ...prev, [index]: true }));
+    
+    const updatedItems = [...invoiceItems];
+    updatedItems[index].service_search = value;
+    // Clear service_id if user is typing manually
+    if (value !== updatedItems[index].description) {
+      updatedItems[index].service_id = null;
+    }
+    setInvoiceItems(updatedItems);
+  };
+
   const handleAddItem = () => {
-    setInvoiceItems([...invoiceItems, { description: '', value: '' }]);
+    setInvoiceItems([...invoiceItems, { description: '', value: '', service_id: null, service_search: '' }]);
   };
 
   const handleRemoveItem = (index) => {
@@ -425,24 +524,108 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
               </h5>
             </div>
             <div className="space-y-3">
-              {invoiceItems.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-3 items-end">
-                  <div className="col-span-12 md:col-span-5">
-                    <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                      Description
-                    </label>
-                    <input
-                      type="text"
-                      value={item.description}
-                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                      placeholder="Enter item description"
-                      className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
+              {invoiceItems.map((item, index) => {
+                const filteredServices = services.filter(service => {
+                  const searchQuery = (serviceSearchQueries[index] || '').toLowerCase();
+                  if (!searchQuery) return true;
+                  return (
+                    service.name.toLowerCase().includes(searchQuery) ||
+                    (service.description || '').toLowerCase().includes(searchQuery)
+                  );
+                });
+
+                return (
+                  <div key={index} className="space-y-2">
+                    {/* Service Selection */}
+                    <div className="relative" ref={el => serviceDropdownRefs.current[index] = el}>
+                      <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                        Select Service (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={serviceSearchQueries[index] || item.service_search || ''}
+                        onChange={(e) => handleServiceSearchChange(index, e.target.value)}
+                        onFocus={() => setShowServiceDropdowns(prev => ({ ...prev, [index]: true }))}
+                        placeholder="Search services..."
+                        className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      {loadingServices && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </div>
+                      )}
+
+                      {/* Service Dropdown */}
+                      {showServiceDropdowns[index] && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {filteredServices.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
+                              {loadingServices ? 'Loading...' : 'No services found'}
+                            </div>
+                          ) : (
+                            filteredServices.map((service) => {
+                              const isSelected = item.service_id === service.id;
+                                return (
+                                <div
+                                  key={service.id}
+                                  onClick={() => handleServiceSelect(index, service)}
+                                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                    isSelected ? 'bg-[#FFF4E6]' : ''
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
+                                        {service.name}
+                                      </p>
+                                        {isSelected && (
+                                          <svg className="w-4 h-4 text-[#F56D2D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        )}
+                                      </div>
+                                      {service.description && (
+                                        <p className="text-xs text-gray-600 font-[BasisGrotesquePro] truncate mt-1">
+                                          {service.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="ml-3 flex-shrink-0">
+                                      <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                                        {service.formatted_price}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Item Details */}
+                    <div className="grid grid-cols-12 gap-3 items-end">
+                      <div className="col-span-12 md:col-span-5">
+                        <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                          Description <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                          placeholder="Enter item description"
+                          className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
                   </div>
                   <div className="col-span-12 md:col-span-4">
                     <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                      Amount ($)
+                          Amount ($) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -459,7 +642,21 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
                     {invoiceItems.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveItem(index)}
+                            onClick={() => {
+                              handleRemoveItem(index);
+                              // Clean up refs and state for removed item
+                              delete serviceDropdownRefs.current[index];
+                              setServiceSearchQueries(prev => {
+                                const newQueries = { ...prev };
+                                delete newQueries[index];
+                                return newQueries;
+                              });
+                              setShowServiceDropdowns(prev => {
+                                const newDropdowns = { ...prev };
+                                delete newDropdowns[index];
+                                return newDropdowns;
+                              });
+                            }}
                         className="w-full px-3 py-2 text-red-600 !rounded-lg text-sm font-medium !border border-red-200 hover:bg-red-50 transition"
                       >
                         Remove
@@ -467,7 +664,9 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
                     )}
                   </div>
                 </div>
-              ))}
+                  </div>
+                );
+              })}
               <button
                 onClick={handleAddItem}
                 className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] hover:bg-gray-50 transition"

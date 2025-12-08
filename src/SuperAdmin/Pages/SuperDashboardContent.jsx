@@ -58,6 +58,18 @@ export default function SuperDashboardContent() {
   const [securitySettings, setSecuritySettings] = useState(null);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [updatingSecuritySetting, setUpdatingSecuritySetting] = useState(null);
+  
+  // Generate current month value for default
+  const getCurrentMonthValue = () => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  };
+
+  // Month filter states - default to current month
+  const [selectedRevenueMonth, setSelectedRevenueMonth] = useState(getCurrentMonthValue());
+  const [selectedSubscriptionMonth, setSelectedSubscriptionMonth] = useState('all');
 
   // Redirect based on user role
   useEffect(() => {
@@ -99,6 +111,32 @@ export default function SuperDashboardContent() {
     return numericValue.toLocaleString();
   };
 
+  // Generate last 6 months for dropdown
+  const getLast6Months = () => {
+    const months = [];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentDate = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthIndex = date.getMonth();
+      const year = date.getFullYear();
+      const monthName = monthNames[monthIndex];
+      const monthValue = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+      
+      months.push({
+        value: monthValue,
+        label: `${monthName} ${year}`,
+        shortLabel: monthName
+      });
+    }
+    
+    return months;
+  };
+
+  const last6Months = getLast6Months();
+
   const getQuickActionIcon = (labelOrIcon = '') => {
     const normalized = (labelOrIcon || '').toLowerCase();
     if (normalized.includes('user') || normalized === 'user') return <UserManage />;
@@ -114,7 +152,25 @@ export default function SuperDashboardContent() {
     try {
       setLoading(true);
       setError(null);
-      const response = await superAdminAPI.getAdminDashboard();
+      
+      // Prepare API parameters based on selected months
+      const apiParams = {};
+      
+      // Parse revenue month filter
+      if (selectedRevenueMonth !== 'all') {
+        const [revenueYear, revenueMonth] = selectedRevenueMonth.split('-');
+        apiParams.revenue_month = parseInt(revenueMonth);
+        apiParams.revenue_year = parseInt(revenueYear);
+      }
+      
+      // Parse subscription distribution month filter
+      if (selectedSubscriptionMonth !== 'all') {
+        const [distributionYear, distributionMonth] = selectedSubscriptionMonth.split('-');
+        apiParams.distribution_month = parseInt(distributionMonth);
+        apiParams.distribution_year = parseInt(distributionYear);
+      }
+      
+      const response = await superAdminAPI.getAdminDashboard(apiParams);
 
       if (response.success && response.data) {
         setDashboardData(response.data);
@@ -182,18 +238,74 @@ export default function SuperDashboardContent() {
     }
   };
 
-  // Load data on component mount
+  // Load security settings on component mount only
   useEffect(() => {
-    fetchDashboardData();
     fetchSecuritySettings();
   }, []);
+
+  // Load dashboard data on component mount and when filters change
+  useEffect(() => {
+    fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRevenueMonth, selectedSubscriptionMonth]);
 
   // Handle refresh button click
   const handleRefresh = () => {
     fetchDashboardData();
   };
 
+  // Format month label for x-axis display
+  const formatMonthLabel = (label) => {
+    if (!label) return '';
+    
+    const labelStr = String(label).trim();
+    
+    // Try to parse various formats
+    // Format: "Sep 2024" or "September 2024"
+    const monthYearMatch = labelStr.match(/(\w+)\s+(\d{4})/i);
+    if (monthYearMatch) {
+      const monthName = monthYearMatch[1];
+      const year = monthYearMatch[2];
+      // Get short month name (first 3 letters)
+      const shortMonth = monthName.substring(0, 3);
+      return shortMonth;
+    }
+    
+    // Format: "2024-09" or "2024-9"
+    const dateMatch = labelStr.match(/(\d{4})-(\d{1,2})/);
+    if (dateMatch) {
+      const monthIndex = parseInt(dateMatch[2]) - 1;
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return monthNames[monthIndex] || labelStr;
+    }
+    
+    // Format: "09/2024" or "9/2024"
+    const slashMatch = labelStr.match(/(\d{1,2})\/(\d{4})/);
+    if (slashMatch) {
+      const monthIndex = parseInt(slashMatch[1]) - 1;
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return monthNames[monthIndex] || labelStr;
+    }
+    
+    // If it's already a short month name, return as is
+    const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (monthAbbrs.some(abbr => labelStr.toLowerCase().startsWith(abbr.toLowerCase()))) {
+      return labelStr.substring(0, 3);
+    }
+    
+    // Return first 3 characters if it looks like a month name
+    if (labelStr.length > 3) {
+      return labelStr.substring(0, 3);
+    }
+    
+    return labelStr;
+  };
+
   // Process data for charts
+  // Note: Filtering is now handled by the API, so we just process the returned data
   const processChartData = () => {
     if (!dashboardData) {
       return {
@@ -206,12 +318,35 @@ export default function SuperDashboardContent() {
     const labels = dashboardData.revenue_growth?.labels || [];
     const revenueValues = dashboardData.revenue_growth?.revenue || [];
     const subscriberValues = dashboardData.revenue_growth?.subscribers || [];
+    const revenueGrowthValues = dashboardData.revenue_growth?.revenue_growth || [];
+    const subscriberGrowthValues = dashboardData.revenue_growth?.subscriber_growth || [];
 
-    const revenueData = labels.map((label, index) => ({
-      month: label,
-      revenue: revenueValues[index] ?? 0,
-      subscribers: subscriberValues[index] ?? 0
-    }));
+    const revenueData = labels.map((label, index) => {
+      const revenue = revenueValues[index] ?? 0;
+      const subscribers = subscriberValues[index] ?? 0;
+      const revenueGrowth = revenueGrowthValues[index] ?? 0;
+      const subscriberGrowth = subscriberGrowthValues[index] ?? 0;
+      
+      // Debug: Log to ensure data is being processed
+      if (index === 0) {
+        console.log('Revenue Growth Chart Data:', {
+          label,
+          revenue,
+          subscribers,
+          revenueGrowth,
+          subscriberGrowth
+        });
+      }
+      
+      return {
+        month: label,
+        monthDisplay: formatMonthLabel(label),
+        revenue: revenue,
+        subscribers: subscribers,
+        revenueGrowth: revenueGrowth,
+        subscriberGrowth: subscriberGrowth
+      };
+    });
 
     const subscriptionData = (dashboardData.subscription_distribution || []).map((item, index) => {
       const planKey = item.plan?.toLowerCase?.() || `plan-${index}`;
@@ -410,10 +545,17 @@ export default function SuperDashboardContent() {
     : defaultQuickActions;
 
   const showRecentFirmsSection = (recentFirms || []).length > 0;
-  const maxRevenueValue = revenueData.reduce((max, item) => Math.max(max, item.revenue || 0), 0);
-  const maxSubscriberValue = revenueData.reduce((max, item) => Math.max(max, item.subscribers || 0), 0);
+  const maxRevenueValue = revenueData.length > 0 ? revenueData.reduce((max, item) => Math.max(max, item.revenue || 0), 0) : 0;
+  const maxSubscriberValue = revenueData.length > 0 ? revenueData.reduce((max, item) => Math.max(max, item.subscribers || 0), 0) : 0;
+  const minSubscriberValue = revenueData.length > 0 ? revenueData.reduce((min, item) => Math.min(min, item.subscribers !== undefined ? item.subscribers : Infinity, Infinity), Infinity) : 0;
   const revenueUpperBound = maxRevenueValue > 0 ? Math.ceil(maxRevenueValue * 1.2) : 1;
-  const subscriberUpperBound = maxSubscriberValue > 0 ? Math.ceil(maxSubscriberValue * 1.2) : 1;
+  // Ensure subscriber axis has proper range - add padding and ensure minimum visibility
+  const subscriberUpperBound = maxSubscriberValue > 0 
+    ? Math.max(Math.ceil(maxSubscriberValue * 1.2), maxSubscriberValue + Math.max(2, Math.ceil(maxSubscriberValue * 0.2))) 
+    : 10;
+  const subscriberLowerBound = (minSubscriberValue !== Infinity && minSubscriberValue > 0) 
+    ? Math.max(0, Math.floor(minSubscriberValue * 0.9)) 
+    : 0;
 
   // Pagination logic for Recent Firms
   const totalFirms = recentFirms.length;
@@ -666,71 +808,120 @@ export default function SuperDashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* User Registration Trend */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
-          <p className="text-sm text-gray-600 mb-4">Monthly recurring revenue and user growth</p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
+              <p className="text-sm text-gray-600">Monthly recurring revenue and user growth</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="revenue-month-select" className="text-sm text-gray-600">Filter by month:</label>
+              <select
+                id="revenue-month-select"
+                value={selectedRevenueMonth}
+                onChange={(e) => setSelectedRevenueMonth(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Months</option>
+                {last6Months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={revenueData}
-                margin={{
-                  top: 10,
-                  right: 30,
-                  left: 0,
-                  bottom: 0,
-                }}
-              >
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                />
-                <YAxis
-                  yAxisId="left"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, revenueUpperBound]}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
-                  domain={[0, subscriberUpperBound]}
-                />
-                <Tooltip content={<RevenueTooltip />} />
-                <Area
-                  type="monotone"
-                  yAxisId="left"
-                  dataKey="revenue"
-                  stroke="#10B981"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
-                  activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
-                />
-                <Line
-                  type="monotone"
-                  yAxisId="right"
-                  dataKey="subscribers"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  dot={{ fill: 'white', stroke: '#3B82F6', strokeWidth: 3, r: 5 }}
-                  activeDot={{ r: 7, stroke: '#3B82F6', strokeWidth: 2, fill: 'white' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {revenueData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={revenueData}
+                  margin={{
+                    top: 10,
+                    right: 30,
+                    left: 0,
+                    bottom: 0,
+                  }}
+                  style={{ filter: 'drop-shadow(0 0 0 transparent)' }}
+                >
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.3} />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    tickFormatter={(value) => formatMonthLabel(value)}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    domain={[0, revenueUpperBound]}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }}
+                    domain={[subscriberLowerBound, subscriberUpperBound]}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<RevenueTooltip />} />
+                  <Area
+                    type="monotone"
+                    yAxisId="left"
+                    dataKey="revenue"
+                    stroke="#10B981"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)"
+                    dot={{ fill: 'white', stroke: '#10B981', strokeWidth: 3, r: 5 }}
+                    activeDot={{ r: 7, stroke: '#10B981', strokeWidth: 2, fill: 'white' }}
+                    connectNulls={true}
+                    isAnimationActive={true}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <Line
+                    type="monotone"
+                    yAxisId="right"
+                    dataKey="subscribers"
+                    stroke="#3B82F6"
+                    strokeWidth={3}
+                    dot={{ 
+                      fill: '#3B82F6', 
+                      stroke: 'white', 
+                      strokeWidth: 3, 
+                      r: 6,
+                      cursor: 'pointer'
+                    }}
+                    activeDot={{ 
+                      r: 8, 
+                      stroke: '#3B82F6', 
+                      strokeWidth: 3, 
+                      fill: 'white',
+                      cursor: 'pointer'
+                    }}
+                    connectNulls={true}
+                    isAnimationActive={true}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+                No data available
+              </div>
+            )}
           </div>
 
           <div className="mt-4 text-sm text-gray-600">
@@ -743,45 +934,160 @@ export default function SuperDashboardContent() {
               <span>Subscribers</span>
             </div>
           </div>
+
+          {/* Growth Metrics Display - Show when a specific month is selected */}
+          {selectedRevenueMonth !== 'all' && revenueData.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Growth Metrics</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {revenueData.map((item, index) => {
+                  const revenueGrowth = item.revenueGrowth ?? 0;
+                  const subscriberGrowth = item.subscriberGrowth ?? 0;
+                  const isRevenuePositive = revenueGrowth > 0;
+                  const isRevenueNegative = revenueGrowth < 0;
+                  const isSubscriberPositive = subscriberGrowth > 0;
+                  const isSubscriberNegative = subscriberGrowth < 0;
+
+                  return (
+                    <React.Fragment key={index}>
+                      {/* Revenue Growth Card */}
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">Revenue Growth</span>
+                          </div>
+                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                            isRevenuePositive ? 'bg-green-200 text-green-800' : 
+                            isRevenueNegative ? 'bg-red-200 text-red-800' : 
+                            'bg-gray-200 text-gray-800'
+                          }`}>
+                            {isRevenuePositive ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              </svg>
+                            ) : isRevenueNegative ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                              </svg>
+                            ) : null}
+                            <span className="text-sm font-bold">
+                              {revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">Compared to previous month</p>
+                      </div>
+
+                      {/* Subscriber Growth Card */}
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">Subscriber Growth</span>
+                          </div>
+                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                            isSubscriberPositive ? 'bg-green-200 text-green-800' : 
+                            isSubscriberNegative ? 'bg-red-200 text-red-800' : 
+                            'bg-gray-200 text-gray-800'
+                          }`}>
+                            {isSubscriberPositive ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              </svg>
+                            ) : isSubscriberNegative ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                              </svg>
+                            ) : null}
+                            <span className="text-sm font-bold">
+                              {subscriberGrowth > 0 ? '+' : ''}{subscriberGrowth.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">Compared to previous month</p>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* User Role Distribution */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
-          <p className="text-sm text-gray-600 mb-4">Revenue breakdown by plan typee</p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
+              <p className="text-sm text-gray-600">Revenue breakdown by plan type</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="subscription-month-select" className="text-sm text-gray-600">Filter by month:</label>
+              <select
+                id="subscription-month-select"
+                value={selectedSubscriptionMonth}
+                onChange={(e) => setSelectedSubscriptionMonth(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Months</option>
+                {last6Months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={subscriptionData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {subscriptionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<SubscriptionTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
+            {subscriptionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={subscriptionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    stroke="#fff"
+                    strokeWidth={2}
+                  >
+                    {subscriptionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<SubscriptionTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-gray-500 border border-dashed border-[#E8F0FF] rounded-lg">
+                No data available
+              </div>
+            )}
           </div>
 
           {/* Legend */}
-          <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-            {subscriptionData.map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
-                <span>{item.name}: {formatNumber(item.value)}</span>
-              </div>
-            ))}
-          </div>
+          {subscriptionData.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+              {subscriptionData.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }}></div>
+                  <span>{item.name}: {formatNumber(item.value)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
