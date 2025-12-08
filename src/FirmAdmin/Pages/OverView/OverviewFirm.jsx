@@ -70,6 +70,7 @@ export default function FirmAdminDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshEnabled, setRefreshEnabled] = useState(true);
   const [dateRange, setDateRange] = useState('Last 30 days');
+  const [selectedDateRange, setSelectedDateRange] = useState('Last 30 days');
   const [refreshInterval, setRefreshInterval] = useState('30 seconds');
   const [imageAsEmail, setImageAsEmail] = useState('PDF');
   const [widgetVisibility, setWidgetVisibility] = useState({
@@ -96,6 +97,11 @@ export default function FirmAdminDashboard() {
   const revenueChartRef = useRef(null);
   const engagementChartRef = useRef(null);
   const complianceChartRef = useRef(null);
+
+  // Handle date range apply
+  const handleApplyDateRange = () => {
+    setDateRange(selectedDateRange);
+  };
 
   // Fetch dashboard data
   useEffect(() => {
@@ -209,7 +215,7 @@ export default function FirmAdminDashboard() {
           body: keyMetrics,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
 
@@ -259,7 +265,7 @@ export default function FirmAdminDashboard() {
           body: revenueSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
 
@@ -289,7 +295,7 @@ export default function FirmAdminDashboard() {
           body: breakdownSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
 
@@ -339,7 +345,7 @@ export default function FirmAdminDashboard() {
           body: engagementSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
 
@@ -371,7 +377,7 @@ export default function FirmAdminDashboard() {
           body: staffSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
 
@@ -402,7 +408,7 @@ export default function FirmAdminDashboard() {
           body: preparersSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
 
@@ -452,7 +458,7 @@ export default function FirmAdminDashboard() {
           body: complianceSummary,
           theme: "grid",
           headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9 },
+          styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
           margin: { left: 14, right: 14 }
         });
       }
@@ -604,15 +610,15 @@ export default function FirmAdminDashboard() {
               <label className="text-sm font-medium text-gray-800 font-[BasisGrotesquePro]">Time Range</label>
               <div className="relative">
                 <select
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
+                  value={selectedDateRange}
+                  onChange={(e) => setSelectedDateRange(e.target.value)}
                   className="w-full text-sm !border border-gray-300 !rounded px-3 py-2 font-[BasisGrotesquePro] focus:ring-2 focus:ring-orange-500 focus:border-orange-500 appearance-none bg-white"
                 >
-                  <option value="Last 7 Days">Last 7 days</option>
-                  <option value="Last 30 Days">Last 30 days</option>
-                  <option value="Last 90 Days">Last 90 days</option>
-                  <option value="Last 6 Months">Last 6 months</option>
-                  <option value="Last Year">Last year</option>
+                  <option value="Last 7 days">Last 7 days</option>
+                  <option value="Last 30 days">Last 30 days</option>
+                  <option value="Last 90 days">Last 90 days</option>
+                  <option value="Last 6 months">Last 6 months</option>
+                  <option value="Last year">Last year</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -620,6 +626,15 @@ export default function FirmAdminDashboard() {
                   </svg>
                 </div>
               </div>
+              <button
+                onClick={() => {
+                  handleApplyDateRange();
+                  setIsCustomizeModalOpen(false);
+                }}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro] transition-colors"
+              >
+                Apply Date Range
+              </button>
             </div>
 
             {/* Widget Visibility & Order Section */}
@@ -943,6 +958,36 @@ export default function FirmAdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
+            {/* Date Range Selector */}
+            <div className="flex items-center gap-2 bg-white border border-[#E5E7EB] !rounded-[7px] px-2 xl:px-3 py-1 xl:py-2">
+              <label className="text-[10px] xl:text-xs text-[#6B7280] font-[BasisGrotesquePro] whitespace-nowrap">Date Range:</label>
+              <div className="relative">
+                <select
+                  value={selectedDateRange}
+                  onChange={(e) => setSelectedDateRange(e.target.value)}
+                  className="text-[10px] xl:text-sm text-[#3B4A66] font-[BasisGrotesquePro] bg-transparent border-none focus:outline-none cursor-pointer appearance-none pr-6"
+                  style={{ minWidth: '120px' }}
+                >
+                  <option value="Last 7 days">Last 7 days</option>
+                  <option value="Last 30 days">Last 30 days</option>
+                  <option value="Last 90 days">Last 90 days</option>
+                  <option value="Last 6 months">Last 6 months</option>
+                  <option value="Last year">Last year</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none pr-1">
+                  <svg className="w-3 h-3 xl:w-4 xl:h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <button
+                onClick={handleApplyDateRange}
+                disabled={selectedDateRange === dateRange}
+                className="px-2 xl:px-3 py-1 text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] bg-[#3B4A66] text-white !rounded-[5px] hover:bg-[#2d3a52] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition-colors"
+              >
+                Apply
+              </button>
+            </div>
             {!advancedReportingEnabled && (
               <button
                 onClick={exportDashboardToPDF}
@@ -1001,7 +1046,7 @@ export default function FirmAdminDashboard() {
                   ></div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
+                  {/* <div>
                     <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
                       ${dashboardData?.key_metrics?.revenue?.breakdown?.prep_fees?.toLocaleString() || '0'}
                     </div>
@@ -1012,13 +1057,13 @@ export default function FirmAdminDashboard() {
                       ${dashboardData?.key_metrics?.revenue?.breakdown?.add_ons?.toLocaleString() || '0'}
                     </div>
                     <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Add Ons</div>
-                  </div>
-                  <div>
+                  </div> */}
+                  {/* <div>
                     <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
                       ${dashboardData?.key_metrics?.revenue?.breakdown?.training?.toLocaleString() || '0'}
                     </div>
                     <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Training</div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -1094,7 +1139,7 @@ export default function FirmAdminDashboard() {
                   ></div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
+                  {/* <div>
                     <div className="text-xs font-bold text-[#4B5563] font-[BasisGrotesquePro]">
                       {dashboardData?.key_metrics?.tasks?.breakdown?.tax_prep || 0}
                     </div>
@@ -1111,7 +1156,7 @@ export default function FirmAdminDashboard() {
                       {dashboardData?.key_metrics?.tasks?.breakdown?.followups || 0}
                     </div>
                     <div className="text-xs text-[#6B7280] font-[BasisGrotesquePro]">Followups</div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

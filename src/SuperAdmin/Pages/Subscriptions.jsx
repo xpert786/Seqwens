@@ -27,7 +27,16 @@ export default function Subscriptions() {
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [tableError, setTableError] = useState(null);
   const debounceRef = useRef(null);
+  // Get current month and year for default filter
+  const currentDate = new Date();
+  const currentMonth = (currentDate.getMonth() + 1).toString(); // getMonth() returns 0-11, so add 1
+  const currentYear = currentDate.getFullYear().toString();
+
   const [planPerformance, setPlanPerformance] = useState(null);
+  const [filterMonth, setFilterMonth] = useState(currentMonth);
+  const [filterYear, setFilterYear] = useState(currentYear);
+  const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth);
+  const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear);
   const filtersEffectInitializedRef = useRef(false);
   const searchEffectInitializedRef = useRef(false);
   const pdfRef = useRef(null);
@@ -95,6 +104,23 @@ export default function Subscriptions() {
         return { badgeClass: 'bg-gray-500', textClass: 'text-white' };
     }
   };
+
+  // Generate month options (1-12)
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const monthNum = i + 1;
+    const date = new Date(2000, monthNum - 1, 1);
+    return {
+      value: monthNum.toString(),
+      label: date.toLocaleString('default', { month: 'short' })
+    };
+  });
+
+  // Generate year options (current year and 5 years back)
+  const currentYearNum = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => {
+    const year = currentYearNum - i;
+    return { value: year.toString(), label: year.toString() };
+  });
 
   const formatCurrency = (value) => {
     const numeric = Number(value);
@@ -265,6 +291,31 @@ export default function Subscriptions() {
     }
   };
 
+  // Handle apply filter button click
+  const handleApplyFilter = () => {
+    setAppliedFilterMonth(filterMonth);
+    setAppliedFilterYear(filterYear);
+  };
+
+  // Fetch plan performance data with applied filters
+  const fetchPlanPerformance = useCallback(async () => {
+    try {
+      const params = {};
+      if (appliedFilterMonth && appliedFilterYear) {
+        // Apply same filter to both MRR and Churn Rate
+        params.mrr_month = parseInt(appliedFilterMonth);
+        params.mrr_year = parseInt(appliedFilterYear);
+        params.churn_month = parseInt(appliedFilterMonth);
+        params.churn_year = parseInt(appliedFilterYear);
+      }
+      const planPerformanceResponse = await superAdminAPI.getSuperadminPlanPerformance(params);
+      setPlanPerformance(planPerformanceResponse.data || null);
+    } catch (err) {
+      console.error('Error fetching plan performance data:', err);
+      // Don't set main error, just log it
+    }
+  }, [appliedFilterMonth, appliedFilterYear]);
+
   // Fetch data from APIs
   useEffect(() => {
     const fetchData = async () => {
@@ -273,10 +324,19 @@ export default function Subscriptions() {
         setError(null);
 
         // Fetch plans, chart data, plan performance, and revenue insights in parallel
+        const params = {};
+        if (appliedFilterMonth && appliedFilterYear) {
+          // Apply same filter to both MRR and Churn Rate
+          params.mrr_month = parseInt(appliedFilterMonth);
+          params.mrr_year = parseInt(appliedFilterYear);
+          params.churn_month = parseInt(appliedFilterMonth);
+          params.churn_year = parseInt(appliedFilterYear);
+        }
+
         const [plansResponse, chartsResponse, planPerformanceResponse, revenueInsightsResponse] = await Promise.all([
           superAdminAPI.getSubscriptionPlans(),
           superAdminAPI.getSubscriptionCharts('revenue', 30),
-          superAdminAPI.getSuperadminPlanPerformance(),
+          superAdminAPI.getSuperadminPlanPerformance(params),
           superAdminAPI.getRevenueInsights({ days: 30 })
         ]);
 
@@ -296,6 +356,13 @@ export default function Subscriptions() {
 
     fetchData();
   }, [fetchSubscriptionsData, searchTerm, statusFilter, planFilter]);
+
+  // Fetch plan performance when applied filters change
+  useEffect(() => {
+    if (filtersInitialized) {
+      fetchPlanPerformance();
+    }
+  }, [appliedFilterMonth, appliedFilterYear, filtersInitialized, fetchPlanPerformance]);
 
   const handleNotificationUpdate = async (updates = {}) => {
     if (savingNotifications) return;
@@ -887,16 +954,74 @@ export default function Subscriptions() {
 
       {/* Plan Performance Section */}
       <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <div>
-            <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
-            <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
+              <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              {/* Filter Dropdowns - Upper Right */}
+              <div className="flex gap-2 items-end">
+                <select
+                  value={filterMonth}
+                  onChange={(e) => {
+                    setFilterMonth(e.target.value);
+                    if (!e.target.value) setFilterYear('');
+                  }}
+                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                >
+                  <option value="">All Months</option>
+                  {monthOptions.map(month => (
+                    <option key={month.value} value={month.value}>{month.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterYear}
+                  onChange={(e) => {
+                    setFilterYear(e.target.value);
+                    if (!e.target.value) setFilterMonth('');
+                  }}
+                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                  disabled={!filterMonth}
+                >
+                  <option value="">Year</option>
+                  {yearOptions.map(year => (
+                    <option key={year.value} value={year.value}>{year.label}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleApplyFilter}
+                  disabled={!filterMonth || !filterYear}
+                  className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#3B82F6' }}
+                >
+                  Apply
+                </button>
+                {(filterMonth && filterYear) && (
+                  <button
+                    onClick={() => {
+                      setFilterMonth('');
+                      setFilterYear('');
+                      setAppliedFilterMonth('');
+                      setAppliedFilterYear('');
+                    }}
+                    className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
+                    title="Clear filter"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {planPerformance?.timestamp && (
+                <span className="text-xs text-gray-500">
+                  Last updated: {formatDateTime(planPerformance.timestamp)}
+                </span>
+              )}
+            </div>
           </div>
-          {planPerformance?.timestamp && (
-            <span className="text-xs text-gray-500">
-              Last updated: {formatDateTime(planPerformance.timestamp)}
-            </span>
-          )}
         </div>
 
         {planPerformance ? (

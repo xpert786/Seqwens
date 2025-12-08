@@ -1,6 +1,6 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { isLoggedIn, getStorage, setTokens } from '../ClientOnboarding/utils/userUtils';
 
 // Layouts
 import FirmDashboardLayout from './Components/FirmDashboardLayout';
@@ -42,6 +42,48 @@ import EmailTemplate from './Pages/Email-templates/EmailTemplate';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
+  const location = useLocation();
+  
+  // Check for superadmin-initiated login BEFORE checking authentication
+  const params = new URLSearchParams(location.search);
+  const isSuperadminLogin = params.get('superadmin_login') === 'true';
+  
+  if (isSuperadminLogin) {
+    // Check for firm login data in localStorage
+    const firmLoginDataStr = localStorage.getItem('firmLoginData');
+    
+    if (firmLoginDataStr) {
+      try {
+        const loginData = JSON.parse(firmLoginDataStr);
+        const { access_token, refresh_token, user } = loginData;
+        
+        if (access_token && refresh_token && user) {
+          // Store tokens and user data for this tab
+          setTokens(access_token, refresh_token, true);
+          localStorage.setItem('userData', JSON.stringify(user));
+          localStorage.setItem('userType', user.user_type || 'admin');
+          localStorage.setItem('isLoggedIn', 'true');
+          
+          // Also set in sessionStorage to ensure it's available
+          sessionStorage.setItem('accessToken', access_token);
+          sessionStorage.setItem('refreshToken', refresh_token);
+          sessionStorage.setItem('userData', JSON.stringify(user));
+          sessionStorage.setItem('userType', user.user_type || 'admin');
+          sessionStorage.setItem('isLoggedIn', 'true');
+          sessionStorage.setItem('rememberMe', 'true');
+          
+          // Clear the temporary login data
+          localStorage.removeItem('firmLoginData');
+          
+          // Remove query parameters from URL
+          window.history.replaceState({}, '', location.pathname);
+        }
+      } catch (error) {
+        console.error('Error processing firm login data:', error);
+      }
+    }
+  }
+  
   // Check if user is logged in
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;

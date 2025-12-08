@@ -19,7 +19,15 @@ import { toast } from 'react-toastify';
 import { superToastOptions } from '../../utils/toastConfig';
 
 export default function FirmPerformance() {
-  const [selectedDays, setSelectedDays] = useState(30);
+  // Get current month and year for default filter
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11, so add 1
+  const currentYear = currentDate.getFullYear();
+
+  const [filterMonth, setFilterMonth] = useState(currentMonth.toString());
+  const [filterYear, setFilterYear] = useState(currentYear.toString());
+  const [appliedFilterMonth, setAppliedFilterMonth] = useState(currentMonth.toString());
+  const [appliedFilterYear, setAppliedFilterYear] = useState(currentYear.toString());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -29,12 +37,40 @@ export default function FirmPerformance() {
   const [irsEfileStats, setIrsEfileStats] = useState(null);
   const [clientAdoptionRates, setClientAdoptionRates] = useState(null);
 
+  // Generate month options (1-12)
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const monthNum = i + 1;
+    const date = new Date(2000, monthNum - 1, 1);
+    return {
+      value: monthNum.toString(),
+      label: date.toLocaleString('default', { month: 'short' })
+    };
+  });
+
+  // Generate year options (current year and 5 years back)
+  const currentYearNum = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => {
+    const year = currentYearNum - i;
+    return { value: year.toString(), label: year.toString() };
+  });
+
+  // Handle apply filter button click
+  const handleApplyFilter = () => {
+    setAppliedFilterMonth(filterMonth);
+    setAppliedFilterYear(filterYear);
+  };
+
   // Fetch analytics data
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await superAdminAPI.getPlatformAnalytics(selectedDays);
+      const params = {};
+      if (appliedFilterMonth && appliedFilterYear) {
+        params.month = parseInt(appliedFilterMonth);
+        params.year = parseInt(appliedFilterYear);
+      }
+      const response = await superAdminAPI.getPlatformAnalytics(params);
       
       if (response.success && response.data) {
         // Set API Calls Per Firm table data
@@ -97,7 +133,7 @@ export default function FirmPerformance() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [selectedDays]);
+  }, [appliedFilterMonth, appliedFilterYear]);
 
   // Format number for display
   const formatNumber = (num) => {
@@ -225,18 +261,59 @@ export default function FirmPerformance() {
 
   return (
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
-      {/* Days Selector */}
-      <div className="mb-6 flex justify-end">
+      {/* Month/Year Filter Selector - Top Right */}
+      <div className="mb-6 flex justify-end items-center gap-2">
         <select
-          value={selectedDays}
-          onChange={(e) => setSelectedDays(parseInt(e.target.value))}
-          className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:outline-none focus:ring-2 focus:ring-blue-500"
-          style={{ color: '#3B4A66' }}
+          value={filterMonth}
+          onChange={(e) => {
+            setFilterMonth(e.target.value);
+            if (!e.target.value) setFilterYear('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
         >
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
+          <option value="">All Months</option>
+          {monthOptions.map(month => (
+            <option key={month.value} value={month.value}>{month.label}</option>
+          ))}
         </select>
+        <select
+          value={filterYear}
+          onChange={(e) => {
+            setFilterYear(e.target.value);
+            if (!e.target.value) setFilterMonth('');
+          }}
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+          disabled={!filterMonth}
+        >
+          <option value="">Year</option>
+          {yearOptions.map(year => (
+            <option key={year.value} value={year.value}>{year.label}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleApplyFilter}
+          disabled={!filterMonth || !filterYear}
+          className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: '#3B82F6' }}
+        >
+          Apply
+        </button>
+        {(filterMonth && filterYear) && (
+          <button
+            onClick={() => {
+              setFilterMonth('');
+              setFilterYear('');
+              setAppliedFilterMonth('');
+              setAppliedFilterYear('');
+            }}
+            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
+            title="Clear filter"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Error Message */}
@@ -269,7 +346,11 @@ export default function FirmPerformance() {
               <div className="mb-6">
                 <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>API Calls Per Firm</h3>
                 <p className="text-sm" style={{color: '#6B7280'}}>
-                  Showing data for the last {selectedDays} days
+                  {appliedFilterMonth && appliedFilterYear ? (
+                    <>Showing data for {monthOptions.find(m => m.value === appliedFilterMonth)?.label} {appliedFilterYear}</>
+                  ) : (
+                    <>Showing data for current month</>
+                  )}
                 </p>
               </div>
               

@@ -175,8 +175,24 @@ export const handleAPIError = (error) => {
 // SuperAdmin Dashboard API functions
 export const superAdminAPI = {
   // Get admin dashboard data
-  getAdminDashboard: async () => {
-    return await apiRequest('/user/admin/platform-overview/', 'GET');
+  // Optional params: revenue_month, revenue_year, distribution_month, distribution_year
+  getAdminDashboard: async (params = {}) => {
+    const { revenue_month, revenue_year, distribution_month, distribution_year } = params;
+    const queryParams = new URLSearchParams();
+    
+    if (revenue_month !== undefined && revenue_year !== undefined) {
+      queryParams.append('revenue_month', revenue_month.toString());
+      queryParams.append('revenue_year', revenue_year.toString());
+    }
+    
+    if (distribution_month !== undefined && distribution_year !== undefined) {
+      queryParams.append('distribution_month', distribution_month.toString());
+      queryParams.append('distribution_year', distribution_year.toString());
+    }
+    
+    const queryString = queryParams.toString();
+    const endpoint = `/user/admin/platform-overview/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
   },
 
   // Get user management data
@@ -233,8 +249,24 @@ export const superAdminAPI = {
   },
 
   // Get superadmin plan performance metrics
-  getSuperadminPlanPerformance: async () => {
-    return await apiRequest('/user/superadmin/subscriptions/plan-performance/', 'GET');
+  // Optional params: mrr_month, mrr_year, churn_month, churn_year
+  getSuperadminPlanPerformance: async (params = {}) => {
+    const { mrr_month, mrr_year, churn_month, churn_year } = params;
+    const queryParams = new URLSearchParams();
+    
+    if (mrr_month !== undefined && mrr_year !== undefined) {
+      queryParams.append('mrr_month', mrr_month.toString());
+      queryParams.append('mrr_year', mrr_year.toString());
+    }
+    
+    if (churn_month !== undefined && churn_year !== undefined) {
+      queryParams.append('churn_month', churn_month.toString());
+      queryParams.append('churn_year', churn_year.toString());
+    }
+    
+    const queryString = queryParams.toString();
+    const endpoint = `/user/superadmin/subscriptions/plan-performance/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
   },
 
   // Get subscription plans analytics 
@@ -415,6 +447,11 @@ export const superAdminAPI = {
   // Delete firm
   deleteFirm: async (firmId) => {
     return await apiRequest(`/user/superadmin/firms/${firmId}/`, 'DELETE');
+  },
+
+  // Generate login credentials for firm admin
+  generateFirmLogin: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/login/`, 'POST');
   },
 
   // Create new firm
@@ -851,12 +888,19 @@ export const superAdminAPI = {
 
   // Platform Analytics & Reporting API functions
   // Get platform analytics and reporting data
-  getPlatformAnalytics: async (days = 30) => {
-    const params = new URLSearchParams();
-    if (days) params.append('days', days.toString());
+  // Optional params: month, year
+  getPlatformAnalytics: async (params = {}) => {
+    const { month, year } = params;
+    const queryParams = new URLSearchParams();
     
-    const query = params.toString();
-    return await apiRequest(`/user/admin/platform-analytics-reporting/${query ? `?${query}` : ''}`, 'GET');
+    if (month !== undefined && year !== undefined) {
+      queryParams.append('month', month.toString());
+      queryParams.append('year', year.toString());
+    }
+    
+    const queryString = queryParams.toString();
+    const endpoint = `/user/admin/platform-analytics/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
   },
 
   // Platform Reporting API functions
