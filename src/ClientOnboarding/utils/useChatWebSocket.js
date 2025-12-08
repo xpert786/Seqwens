@@ -163,7 +163,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setError('WebSocket connection error');
+        // setError('WebSocket connection error');
         setIsConnected(false);
       };
 
@@ -171,18 +171,18 @@ export const useChatWebSocket = (threadId, enabled = true) => {
         console.log('WebSocket disconnected:', event.code, event.reason);
         setIsConnected(false);
 
-        // Attempt to reconnect if not a normal closure (with exponential backoff)
-        if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          reconnectAttemptsRef.current += 1;
-          const delay = getReconnectDelay(reconnectAttemptsRef.current);
-          console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${delay}ms...`);
+        // // Attempt to reconnect if not a normal closure (with exponential backoff)
+        // if (event.code !== 1000 && enabled && reconnectAttemptsRef.current < maxReconnectAttempts) {
+        //   reconnectAttemptsRef.current += 1;
+        //   const delay = getReconnectDelay(reconnectAttemptsRef.current);
+        //   console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${delay}ms...`);
 
-          reconnectTimeoutRef.current = setTimeout(() => {
-            connect();
-          }, delay);
-        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-          setError('Failed to connect. Please refresh the page.');
-        }
+        //   reconnectTimeoutRef.current = setTimeout(() => {
+        //     connect();
+        //   }, delay);
+        // } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+        //   setError('Failed to connect. Please refresh the page.');
+        // }
       };
 
       wsRef.current = ws;

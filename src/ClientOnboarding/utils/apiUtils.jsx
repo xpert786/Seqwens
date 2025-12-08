@@ -4393,6 +4393,35 @@ export const firmAdminMessagingAPI = {
     return await apiRequest(`/firm-admin/messages/recipients/search/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
+  // Get Active Users
+  // GET /seqwens/api/firm/users/active/
+  // Query params: search (string), role (string: 'client', 'staff', 'admin')
+  getActiveUsers: async (params = {}) => {
+    const { search, role } = params;
+    const queryParams = new URLSearchParams();
+
+    if (search) queryParams.append('search', search);
+    if (role) queryParams.append('role', role);
+
+    const queryString = queryParams.toString();
+    const url = `/firm/users/active/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(url, 'GET');
+  },
+
+  // Get Active Service Pricing
+  // GET /seqwens/api/firm/services/pricing/
+  // Query params: search (string)
+  getActiveServicePricing: async (params = {}) => {
+    const { search } = params;
+    const queryParams = new URLSearchParams();
+
+    if (search) queryParams.append('search', search);
+
+    const queryString = queryParams.toString();
+    const url = `/seqwens/api/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(url, 'GET');
+  },
+
   // Send a Message to a Thread
   // POST /taxpayer/chat-threads/{id}/send_message/
   // Accepts: { content, is_internal }

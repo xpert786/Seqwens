@@ -729,16 +729,16 @@ export default function ClientManage() {
         body: tableData,
         theme: "grid",
         headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-        styles: { fontSize: 8 },
+        styles: { fontSize: 7, overflow: 'linebreak', cellPadding: 2 },
         margin: { left: 14, right: 14 },
         columnStyles: {
-          0: { cellWidth: 40 },
-          1: { cellWidth: 45 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 25 },
-          6: { cellWidth: 25 }
+          0: { cellWidth: 30, overflow: 'linebreak' },
+          1: { cellWidth: 35, overflow: 'linebreak' },
+          2: { cellWidth: 25, overflow: 'linebreak' },
+          3: { cellWidth: 20, overflow: 'linebreak' },
+          4: { cellWidth: 18, overflow: 'linebreak' },
+          5: { cellWidth: 22, overflow: 'linebreak' },
+          6: { cellWidth: 25, overflow: 'linebreak' }
         },
         alternateRowStyles: { fillColor: [249, 250, 251] },
         didDrawPage: (data) => {

@@ -38,6 +38,12 @@ const Messages = () => {
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [avgResponseTime, setAvgResponseTime] = useState(null);
   const [responseTimeLoading, setResponseTimeLoading] = useState(false);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [activeUsersLoading, setActiveUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const recipientInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -47,6 +53,7 @@ const Messages = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const userDropdownRef = useRef(null);
 
   // WebSocket hook for real-time messaging (using new chat-threads API)
   const {
@@ -376,7 +383,7 @@ const Messages = () => {
     }
   }, [selectedThreadId]);
 
-  // Fetch staff members
+  // Fetch staff members (kept for backward compatibility)
   const fetchStaffMembers = async () => {
     try {
       setStaffLoading(true);
@@ -410,14 +417,69 @@ const Messages = () => {
     }
   };
 
-  // Fetch staff members when compose modal opens
+  // Fetch active users using new API
+  const fetchActiveUsers = async (search = '', role = '') => {
+    try {
+      setActiveUsersLoading(true);
+      const params = {};
+      if (search) params.search = search;
+      if (role) params.role = role;
+
+      const response = await firmAdminMessagingAPI.getActiveUsers(params);
+
+      if (response.success && response.data && response.data.users) {
+        setActiveUsers(response.data.users || []);
+      } else {
+        setActiveUsers([]);
+      }
+    } catch (err) {
+      console.error('Error fetching active users:', err);
+      setActiveUsers([]);
+    } finally {
+      setActiveUsersLoading(false);
+    }
+  };
+
+  // Fetch active users when compose modal opens
   useEffect(() => {
     if (isComposeModalOpen) {
-      fetchStaffMembers();
+      fetchActiveUsers();
       // Reset selection when modal opens
       setSelectedStaffId('');
+      setSelectedUserId('');
+      setUserSearchQuery('');
+      setUserRoleFilter('');
+      setShowUserDropdown(false);
     }
   }, [isComposeModalOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    if (showUserDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
+
+  // Debounced search for active users
+  useEffect(() => {
+    if (!isComposeModalOpen) return;
+
+    const timeoutId = setTimeout(() => {
+      fetchActiveUsers(userSearchQuery, userRoleFilter);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [userSearchQuery, userRoleFilter, isComposeModalOpen]);
 
   // Search recipients (kept for backward compatibility if needed)
   const searchRecipients = async (query) => {
@@ -466,17 +528,18 @@ const Messages = () => {
 
   // Handle compose message
   const handleComposeMessage = async () => {
-    if (!selectedStaffId) {
-      toast.error('Please select a staff member');
+    const userId = selectedUserId || selectedStaffId;
+    if (!userId) {
+      toast.error('Please select a user');
       return;
     }
 
     try {
       setSending(true);
 
-      // Convert selectedStaffId to number for target_user_id
+      // Convert userId to number for target_user_id
       // Backend expects: { target_user_id: 123 }
-      const targetUserId = Number(selectedStaffId);
+      const targetUserId = Number(userId);
       const messageData = {
         target_user_id: targetUserId
       };
@@ -492,8 +555,12 @@ const Messages = () => {
         setSubject('');
         setMessage('');
         setSelectedStaffId('');
+        setSelectedUserId('');
+        setUserSearchQuery('');
+        setUserRoleFilter('');
         setRecipientInput('');
         setAttachment(null);
+        setShowUserDropdown(false);
         // Refresh conversations using consistent API (without loading state)
         fetchConversations(false);
       } else {
@@ -506,6 +573,13 @@ const Messages = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  // Handle user selection
+  const handleUserSelect = (user) => {
+    setSelectedUserId(user.id);
+    setUserSearchQuery(user.full_name || `${user.first_name} ${user.last_name}`.trim() || user.email);
+    setShowUserDropdown(false);
   };
 
   // Add recipient
@@ -1353,43 +1427,122 @@ const Messages = () => {
             {/* Modal Body - Scrollable */}
             <div className="p-3 space-y-3 overflow-y-auto hide-scrollbar flex-1">
 
-              {/* Select Staff Member */}
+              {/* Select User (Client, Staff, or Admin) */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Select Staff Member</label>
-                <div className="relative">
-                  {staffLoading ? (
-                    <div className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg text-sm text-gray-500 font-[BasisGrotesquePro]">
-                      Loading staff members...
-                    </div>
-                  ) : (
-                    <>
-                      <select
-                        value={selectedStaffId}
-                        onChange={(e) => handleStaffChange(e.target.value)}
-                        className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] cursor-pointer"
-                      >
-                        <option value="">Select a staff member</option>
-                        {staffMembers.map((staff) => {
-                          const staffId = staff.id || staff.user_id || staff.staff_member?.id;
-                          const staffName = staff.name || `${staff.first_name || ''} ${staff.last_name || ''}`.trim() || staff.email || 'Unknown';
-                          const staffEmail = staff.email || '';
-                          const staffRole = staff.role_display || staff.role?.primary || 'Staff';
+                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Select User</label>
+                
+                {/* Role Filter */}
+                <div className="mb-2">
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => {
+                      setUserRoleFilter(e.target.value);
+                      setShowUserDropdown(true);
+                    }}
+                    className="w-full appearance-none bg-white !border border-[#E8F0FF] rounded-lg px-3 py-2 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] cursor-pointer"
+                  >
+                    <option value="">All Users</option>
+                    <option value="client">Clients Only</option>
+                    <option value="staff">Staff Only</option>
+                    <option value="admin">Admins Only</option>
+                  </select>
+                </div>
 
+                {/* User Search Input */}
+                <div className="relative" ref={userDropdownRef}>
+                  <input
+                    type="text"
+                    value={userSearchQuery}
+                    onChange={(e) => {
+                      setUserSearchQuery(e.target.value);
+                      setShowUserDropdown(true);
+                    }}
+                    onFocus={() => setShowUserDropdown(true)}
+                    placeholder="Search by name, email, or phone..."
+                    className="w-full px-3 py-2 !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  />
+                  {activeUsersLoading && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* User Dropdown */}
+                  {showUserDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {activeUsers.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
+                          {activeUsersLoading ? 'Loading...' : 'No users found'}
+                        </div>
+                      ) : (
+                        activeUsers.map((user) => {
+                          const isSelected = selectedUserId === user.id;
                           return (
-                            <option key={staffId} value={String(staffId)}>
-                              {staffName} ({staffEmail}) - {staffRole}
-                            </option>
+                            <div
+                              key={user.id}
+                              onClick={() => handleUserSelect(user)}
+                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                isSelected ? 'bg-[#FFF4E6]' : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Avatar */}
+                                <div className="flex-shrink-0">
+                                  {user.profile_picture ? (
+                                    <img
+                                      src={user.profile_picture}
+                                      alt={user.full_name}
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-[#3AD6F2] flex items-center justify-center text-white font-semibold text-sm">
+                                      {user.full_name ? user.full_name.charAt(0).toUpperCase() : '?'}
+                                    </div>
+                                  )}
+                                </div>
+                                {/* User Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
+                                      {user.full_name || `${user.first_name} ${user.last_name}`.trim() || user.email}
+                                    </p>
+                                    {isSelected && (
+                                      <svg className="w-4 h-4 text-[#F56D2D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-600 font-[BasisGrotesquePro] truncate">{user.email}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-[BasisGrotesquePro]">
+                                      {user.role_display || user.role}
+                                    </span>
+                                    {user.phone_number && (
+                                      <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">{user.phone_number}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           );
-                        })}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </>
+                        })
+                      )}
+                    </div>
                   )}
                 </div>
+
+                {/* Selected User Display */}
+                {selectedUserId && (
+                  <div className="mt-2 p-2 bg-[#FFF4E6] rounded-lg border border-[#FFE0B2]">
+                    <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1">Selected:</p>
+                    <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">
+                      {activeUsers.find(u => u.id === selectedUserId)?.full_name || userSearchQuery}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Subject */}
@@ -1455,7 +1608,7 @@ const Messages = () => {
                 </button>
                 <button
                   onClick={handleComposeMessage}
-                  disabled={sending || !subject.trim() || !message.trim() || !selectedStaffId}
+                  disabled={sending || !subject.trim() || !message.trim() || (!selectedUserId && !selectedStaffId)}
                   className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

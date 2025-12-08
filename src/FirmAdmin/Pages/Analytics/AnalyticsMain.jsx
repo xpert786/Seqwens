@@ -106,11 +106,11 @@ export default function AnalyticsMain() {
         body: summaryData,
         theme: "grid",
         headStyles: { fillColor: [59, 74, 102], textColor: 255, fontStyle: "bold" },
-        styles: { fontSize: 9 },
+        styles: { fontSize: 9, overflow: 'linebreak', cellPadding: 2 },
         margin: { left: 14, right: 14 },
         columnStyles: {
-          0: { cellWidth: 100 },
-          1: { cellWidth: 80 }
+          0: { cellWidth: 100, overflow: 'linebreak' },
+          1: { cellWidth: 80, overflow: 'linebreak' }
         }
       });
 
