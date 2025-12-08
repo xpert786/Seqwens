@@ -7,6 +7,7 @@ import AddSubscription from './AddSubscription';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Subscriptions() {
   const [showPlanDetails, setShowPlanDetails] = useState(true);
@@ -644,33 +645,7 @@ export default function Subscriptions() {
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
                 {metrics?.active_subscribers?.formatted || '0'}
               </p>
-              {/* {metrics?.active_subscribers && (
-                <div className="flex items-center gap-1">
-                  {metrics.active_subscribers.trend === 'up' && (
-                    <>
-                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                        +{metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
-                      </span>
-                    </>
-                  )}
-                  {metrics.active_subscribers.trend === 'down' && (
-                    <>
-                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
-                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
-                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
-                      </span>
-                    </>
-                  )}
-                  {metrics.active_subscribers.trend === 'neutral' && (
-                    <>
-                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
-                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
-                      </span>
-                    </>
-                  )}
-                </div>
-              )} */}
+             
             </div>
             <BlueUserIcon className="text-lg" />
           </div>
@@ -1028,179 +1003,106 @@ export default function Subscriptions() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="border border-[#E8F0FF] rounded-[10px] p-4">
               <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
-              {mrrTrend.length > 0 ? (() => {
-                const svgWidth = 400;
-                const svgHeight = 180;
-                const paddingX = 30;
-                const paddingY = 24;
-                const innerWidth = svgWidth - paddingX * 2;
-                const innerHeight = svgHeight - paddingY * 2;
-                const range = mrrMax - mrrMin || Math.max(mrrMax, 1);
-                const points = mrrTrend.map((item, index) => {
-                  const value = Number(item?.value ?? 0);
-                  const x = mrrTrend.length === 1
-                    ? paddingX + innerWidth / 2
-                    : paddingX + (innerWidth / (mrrTrend.length - 1)) * index;
-                  const normalized = range === 0 ? 0.5 : (value - mrrMin) / range;
-                  const y = paddingY + innerHeight - normalized * innerHeight;
-                  return {
-                    x,
-                    y,
-                    month: item.month || `M${index + 1}`,
-                    value
-                  };
-                });
-                const path = points.map((point, idx) => `${idx === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-                return (
-                  <div className="relative h-48 mt-2">
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
-                      {[0, 1, 2, 3, 4].map((step) => {
-                        const y = paddingY + (innerHeight / 4) * step;
-                        const labelValue = mrrMax - (range / 4) * step;
-                        return (
-                          <g key={`mrr-grid-${step}`}>
-                            <line
-                              x1={paddingX}
-                              y1={y}
-                              x2={svgWidth - paddingX}
-                              y2={y}
-                              stroke="#E5E7EB"
-                              strokeWidth="1"
-                              opacity="0.6"
-                            />
-                            <text
-                              x={paddingX - 8}
-                              y={y + 4}
-                              textAnchor="end"
-                              fontSize="10"
-                              fill="#6B7280"
-                            >
-                              {formatCurrency(labelValue)}
-                            </text>
-                          </g>
-                        );
-                      })}
-                      <path
-                        d={path}
-                        fill="none"
-                        stroke="#3B4A66"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+              {mrrTrend.length > 0 ? (
+                <div className="h-48 mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={mrrTrend.map(item => ({
+                        month: item.month || '',
+                        value: Number(item?.value ?? 0)
+                      }))}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: '#6B7280' }}
                       />
-                      {points.map((point, idx) => (
-                        <g key={`mrr-point-${point.month}-${idx}`}>
-                          <circle cx={point.x} cy={point.y} r="4" fill="#3B4A66" />
-                          <text
-                            x={point.x}
-                            y={point.y - 8}
-                            textAnchor="middle"
-                            fontSize="10"
-                            fill="#3B4A66"
-                            fontWeight="600"
-                          >
-                            {formatCurrency(point.value)}
-                          </text>
-                          <text
-                            x={point.x}
-                            y={svgHeight - 8}
-                            textAnchor="middle"
-                            fontSize="10"
-                            fill="#6B7280"
-                          >
-                            {point.month}
-                          </text>
-                        </g>
-                      ))}
-                    </svg>
-                  </div>
-                );
-              })() : (
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: '#6B7280' }}
+                        tickFormatter={(value) => formatCurrency(value)}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [formatCurrency(value), 'Revenue']}
+                        labelFormatter={(label) => `Month: ${label}`}
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          border: '1px solid #E5E7EB', 
+                          borderRadius: '4px',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Bar 
+                        dataKey="value" 
+                        fill="#3B4A66" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
                 <p className="text-xs text-gray-500 mt-4">No revenue trend data available.</p>
               )}
             </div>
 
             <div className="border border-[#E8F0FF] rounded-[10px] p-4">
               <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
-              {churnTrend.length > 0 ? (() => {
-                const svgWidth = 400;
-                const svgHeight = 180;
-                const paddingX = 40;
-                const paddingY = 24;
-                const innerWidth = svgWidth - paddingX * 2;
-                const innerHeight = svgHeight - paddingY * 2;
-                const stepWidth = churnTrend.length ? innerWidth / churnTrend.length : innerWidth;
-                const barWidth = stepWidth * 0.5;
-                return (
-                  <div className="relative h-48 mt-2">
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
-                      {[0, 1, 2, 3, 4].map((step) => {
-                        const y = paddingY + (innerHeight / 4) * step;
-                        const labelValue = churnMax - ((churnMax / 4) * step);
-                        return (
-                          <g key={`churn-grid-${step}`}>
-                            <line
-                              x1={paddingX}
-                              y1={y}
-                              x2={svgWidth - paddingX}
-                              y2={y}
-                              stroke="#E5E7EB"
-                              strokeWidth="1"
-                              opacity="0.6"
-                            />
-                            <text
-                              x={paddingX - 8}
-                              y={y + 4}
-                              textAnchor="end"
-                              fontSize="10"
-                              fill="#6B7280"
-                            >
-                              {formatPercentage(labelValue)}
-                            </text>
-                          </g>
-                        );
-                      })}
-                      {churnTrend.map((item, index) => {
-                        const value = Number(item?.value ?? 0);
-                        const height = churnMax ? (value / churnMax) * innerHeight : 0;
-                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
-                        const y = paddingY + innerHeight - height;
-                        return (
-                          <g key={`churn-bar-${item.month}-${index}`}>
-                            <rect
-                              x={x}
-                              y={y}
-                              width={barWidth}
-                              height={height}
-                              fill="#6366F1"
-                              rx="6"
-                            />
-                            <text
-                              x={x + barWidth / 2}
-                              y={y - 6}
-                              textAnchor="middle"
-                              fontSize="10"
-                              fill="#4C1D95"
-                              fontWeight="600"
-                            >
-                              {formatPercentage(value)}
-                            </text>
-                            <text
-                              x={x + barWidth / 2}
-                              y={svgHeight - 8}
-                              textAnchor="middle"
-                              fontSize="10"
-                              fill="#6B7280"
-                            >
-                              {item.month || `M${index + 1}`}
-                            </text>
-                          </g>
-                        );
-                      })}
-                    </svg>
-                  </div>
-                );
-              })() : (
+              {churnTrend.length > 0 ? (
+                <div className="h-48 mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={churnTrend.map(item => ({
+                        month: item.month || '',
+                        value: Number(item?.value ?? 0)
+                      }))}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: '#6B7280' }}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: '#6B7280' }}
+                        tickFormatter={(value) => formatPercentage(value)}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [formatPercentage(value), 'Churn Rate']}
+                        labelFormatter={(label) => `Month: ${label}`}
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          border: '1px solid #E5E7EB', 
+                          borderRadius: '4px',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Bar 
+                        dataKey="value" 
+                        fill="#6366F1" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
                 <p className="text-xs text-gray-500 mt-4">No churn trend data available.</p>
               )}
             </div>
