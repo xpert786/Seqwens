@@ -34,10 +34,11 @@ import TailwindTest from "./TailwindTest";
 import TaxRoutes from "./Taxpreparer/TaxRoutes";
 import SuperRoutes from "./SuperAdmin/SuperRoutes";
 import FirmRoutes from "./FirmAdmin/FirmRoutes";
+import FeedbackWrapper from "./ClientOnboarding/components/FeedbackWrapper";
 
 export default function App() {
   return (
-    <>
+    <FeedbackWrapper>
       <Routes>
         {/* Old users login */}
         <Route path="/login" element={
@@ -172,7 +173,7 @@ export default function App() {
         {/* Firm Admin Routes - No authentication required */}
         <Route path="/firmadmin/*" element={<FirmRoutes />} />
       </Routes>
-    </>
+    </FeedbackWrapper>
   );
 }
 
