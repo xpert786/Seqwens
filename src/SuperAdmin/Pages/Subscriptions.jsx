@@ -644,33 +644,7 @@ export default function Subscriptions() {
               <p className="text-xl font-bold mb-1" style={{ color: '#3B4A66' }}>
                 {metrics?.active_subscribers?.formatted || '0'}
               </p>
-              {/* {metrics?.active_subscribers && (
-                <div className="flex items-center gap-1">
-                  {metrics.active_subscribers.trend === 'up' && (
-                    <>
-                      <ArrowgreenIcon className="text-xs" style={{ color: '#10B981' }} />
-                      <span className="text-xs font-medium" style={{ color: '#10B981' }}>
-                        +{metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
-                      </span>
-                    </>
-                  )}
-                  {metrics.active_subscribers.trend === 'down' && (
-                    <>
-                      <RedDownIcon className="text-xs" style={{ color: '#EF4444' }} />
-                      <span className="text-xs font-medium" style={{ color: '#EF4444' }}>
-                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
-                      </span>
-                    </>
-                  )}
-                  {metrics.active_subscribers.trend === 'neutral' && (
-                    <>
-                      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
-                        {metrics.active_subscribers.percentage_increase?.toFixed(1) || '0'}%
-                      </span>
-                    </>
-                  )}
-                </div>
-              )} */}
+             
             </div>
             <BlueUserIcon className="text-lg" />
           </div>
@@ -1031,26 +1005,14 @@ export default function Subscriptions() {
               {mrrTrend.length > 0 ? (() => {
                 const svgWidth = 400;
                 const svgHeight = 180;
-                const paddingX = 30;
+                const paddingX = 40;
                 const paddingY = 24;
                 const innerWidth = svgWidth - paddingX * 2;
                 const innerHeight = svgHeight - paddingY * 2;
+                const stepWidth = mrrTrend.length ? innerWidth / mrrTrend.length : innerWidth;
+                const barWidth = stepWidth * 0.5;
                 const range = mrrMax - mrrMin || Math.max(mrrMax, 1);
-                const points = mrrTrend.map((item, index) => {
-                  const value = Number(item?.value ?? 0);
-                  const x = mrrTrend.length === 1
-                    ? paddingX + innerWidth / 2
-                    : paddingX + (innerWidth / (mrrTrend.length - 1)) * index;
-                  const normalized = range === 0 ? 0.5 : (value - mrrMin) / range;
-                  const y = paddingY + innerHeight - normalized * innerHeight;
-                  return {
-                    x,
-                    y,
-                    month: item.month || `M${index + 1}`,
-                    value
-                  };
-                });
-                const path = points.map((point, idx) => `${idx === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+                
                 return (
                   <div className="relative h-48 mt-2">
                     <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
@@ -1080,38 +1042,43 @@ export default function Subscriptions() {
                           </g>
                         );
                       })}
-                      <path
-                        d={path}
-                        fill="none"
-                        stroke="#3B4A66"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      {points.map((point, idx) => (
-                        <g key={`mrr-point-${point.month}-${idx}`}>
-                          <circle cx={point.x} cy={point.y} r="4" fill="#3B4A66" />
-                          <text
-                            x={point.x}
-                            y={point.y - 8}
-                            textAnchor="middle"
-                            fontSize="10"
-                            fill="#3B4A66"
-                            fontWeight="600"
-                          >
-                            {formatCurrency(point.value)}
-                          </text>
-                          <text
-                            x={point.x}
-                            y={svgHeight - 8}
-                            textAnchor="middle"
-                            fontSize="10"
-                            fill="#6B7280"
-                          >
-                            {point.month}
-                          </text>
-                        </g>
-                      ))}
+                      {mrrTrend.map((item, index) => {
+                        const value = Number(item?.value ?? 0);
+                        const height = range > 0 ? ((value - mrrMin) / range) * innerHeight : (value > 0 ? innerHeight * 0.3 : 0);
+                        const x = paddingX + stepWidth * index + (stepWidth - barWidth) / 2;
+                        const y = paddingY + innerHeight - height;
+                        return (
+                          <g key={`mrr-bar-${item.month}-${index}`}>
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              fill="#3B4A66"
+                              rx="6"
+                            />
+                            <text
+                              x={x + barWidth / 2}
+                              y={y - 6}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#3B4A66"
+                              fontWeight="600"
+                            >
+                              {formatCurrency(value)}
+                            </text>
+                            <text
+                              x={x + barWidth / 2}
+                              y={svgHeight - 8}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#6B7280"
+                            >
+                              {item.month || `M${index + 1}`}
+                            </text>
+                          </g>
+                        );
+                      })}
                     </svg>
                   </div>
                 );
