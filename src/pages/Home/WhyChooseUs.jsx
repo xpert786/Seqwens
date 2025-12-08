@@ -44,26 +44,34 @@ export default function WhyChooseUs() {
 
  
   const scrollLeft = () => {
-    scrollRef.current.scrollBy({ left: -320, behavior: "smooth" });
+    if (scrollRef.current) {
+      const cardWidth = window.innerWidth < 640 ? 180 : window.innerWidth < 768 ? 200 : 220;
+      const gap = window.innerWidth < 640 ? 16 : window.innerWidth < 768 ? 24 : 32;
+      scrollRef.current.scrollBy({ left: -(cardWidth + gap), behavior: "smooth" });
+    }
   };
 
   const scrollRight = () => {
-    scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+    if (scrollRef.current) {
+      const cardWidth = window.innerWidth < 640 ? 180 : window.innerWidth < 768 ? 200 : 220;
+      const gap = window.innerWidth < 640 ? 16 : window.innerWidth < 768 ? 24 : 32;
+      scrollRef.current.scrollBy({ left: cardWidth + gap, behavior: "smooth" });
+    }
   };
 
   return (
-    <section className="py-10 px-6 overflow-visible">
-      <div className="max-w-9xl mx-auto bg-[#3B4A66] rounded-3xl p-14 md:p-20 relative overflow-visible">
+    <section className="py-6 sm:py-8 md:py-10 px-3 sm:px-4 md:px-6 overflow-visible">
+      <div className="max-w-9xl mx-auto bg-[#3B4A66] rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 lg:p-20 relative overflow-visible">
 
         {/* TOP */}
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-white text-sm mb-3">Features</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug">
-              EVERYTHING YOU NEED IN <br />
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
+          <div className="flex-1 w-full sm:w-auto">
+            <p className="text-white text-xs sm:text-sm mb-2 sm:mb-3">Features</p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight sm:leading-snug">
+              EVERYTHING YOU NEED IN <br className="hidden sm:block" />
               <span className="text-[#F49C2D]">ONE PLATFORM</span>
             </h2>
-            <p className="text-[#D1D5DB] text-sm mt-3 max-w-md">
+            <p className="text-[#D1D5DB] text-xs sm:text-sm mt-2 sm:mt-3 max-w-md">
               From client onboarding to final billing, our comprehensive platform
               handles every aspect of your tax practice.
             </p>
@@ -71,16 +79,16 @@ export default function WhyChooseUs() {
 
         
           {/* ARROW BUTTONS */}
-          <div className="flex gap-3 mt-30">
-            <button onClick={scrollLeft}>
-              <svg width="42" height="30" viewBox="0 0 42 30" fill="none">
+          <div className="flex gap-2 sm:gap-3 mt-0 sm:mt-0 self-start sm:self-auto !mt-20">
+            <button onClick={scrollLeft} className="hover:opacity-80 transition-opacity active:opacity-70">
+              <svg className="w-8 h-6 sm:w-10 sm:h-7 md:w-12 md:h-8" viewBox="0 0 42 30" fill="none">
                 <rect width="42" height="30" rx="15" fill="#F56D2D" />
                 <path d="M19 19L15 15M15 15L19 11M15 15H27" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
 
-            <button onClick={scrollRight}>
-              <svg width="42" height="30" viewBox="0 0 42 30" fill="none">
+            <button onClick={scrollRight} className="hover:opacity-80 transition-opacity active:opacity-70">
+              <svg className="w-8 h-6 sm:w-10 sm:h-7 md:w-12 md:h-8" viewBox="0 0 42 30" fill="none">
                 <rect width="42" height="30" rx="15" transform="matrix(-1 0 0 1 42 0)" fill="#F56D2D" />
                 <path d="M23 19L27 15M27 15L23 11M27 15H15" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
@@ -91,7 +99,7 @@ export default function WhyChooseUs() {
         {/* FIXED HORIZONTAL CARD SCROLLER */}
         <div
           ref={scrollRef}
-          className="flex gap-8 mt-16 overflow-x-auto scrollbar-hide -mx-14 md:-mx-20 px-14 md:px-20"
+          className="flex gap-4 sm:gap-6 md:gap-8 mt-8 sm:mt-12 md:mt-16 overflow-x-auto scrollbar-hide -mx-6 sm:-mx-10 md:-mx-14 lg:-mx-20 px-6 sm:px-10 md:px-14 lg:px-20"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -100,11 +108,11 @@ export default function WhyChooseUs() {
         >
 
           {/* CARD 1 */}
-          <div className="min-w-[280px] bg-[#FFF4E6] border border-[#F5D8BB] rounded-2xl p-7 h-[330px] flex flex-col">
-            <div>{Icon1}</div>
-            <h3 className="!text-xl !font-bold text-[#3B4A66] !mt-10">USER MANAGEMENT</h3>
-            <p className="text-sm text-[#3B4A66] mt-3 flex-grow">Role-based access control with 2FA and granular permissions.</p>
-            <button className="mt-auto px-3 py-2 bg-[#F56D2D] text-white !rounded-lg text-sm w-fit">
+          <div className="min-w-[180px] sm:min-w-[200px] md:min-w-[220px] bg-[#FFF4E6] border border-[#F5D8BB] rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7 h-[280px] sm:h-[300px] md:h-[330px] flex flex-col flex-shrink-0">
+            <div className="scale-75 sm:scale-90 md:scale-100 origin-top-left">{Icon1}</div>
+            <h3 className="!text-base sm:!text-lg md:!text-xl !font-bold text-[#3B4A66] !mt-4 sm:!mt-6 md:!mt-10 leading-tight">USER MANAGEMENT</h3>
+            <p className="text-xs sm:text-sm text-[#3B4A66] mt-2 sm:mt-3 flex-grow">Role-based access control with 2FA and granular permissions.</p>
+            <button className="mt-auto px-3 py-1.5 sm:py-2 bg-[#F56D2D] text-white !rounded-lg text-xs sm:text-sm w-fit hover:bg-[#E55D1D] transition-colors active:scale-95">
               Learn More
             </button>
 
@@ -112,24 +120,24 @@ export default function WhyChooseUs() {
           
 
           {/* CARD 2 */}
-          <div className="min-w-[280px] bg-white rounded-2xl p-7  border border-gray-100 h-[330px] flex flex-col">
-            <div>{Icon2}</div>
-            <h3 className="!text-xl !font-bold text-[#3B4A66] !mt-30">CLIENT PORTAL</h3>
-            <p className="text-sm text-[#3B4A66] mt-3 flex-grow">Secure, branded dashboards with real-time updates.</p>
+          <div className="min-w-[180px] sm:min-w-[200px] md:min-w-[220px] bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7 border border-gray-100 h-[280px] sm:h-[300px] md:h-[330px] flex flex-col flex-shrink-0">
+            <div className="scale-75 sm:scale-90 md:scale-100 origin-top-left">{Icon2}</div>
+            <h3 className="!text-base sm:!text-lg md:!text-xl !font-bold text-[#3B4A66] !mt-4 sm:!mt-6 md:!mt-10 leading-tight">CLIENT PORTAL</h3>
+            <p className="text-xs sm:text-sm text-[#3B4A66] mt-2 sm:mt-3 flex-grow">Secure, branded dashboards with real-time updates.</p>
           </div>
 
           {/* CARD 3 */}
-          <div className="min-w-[280px] bg-white rounded-2xl p-7  border border-gray-100 h-[330px] flex flex-col">
-            <div>{Icon3}</div>
-            <h3 className="!text-xl !font-bold text-[#1F2A55] !mt-30">CRM INTEGRATION</h3>
-            <p className="text-sm text-gray-600 mt-3 flex-grow">Comprehensive relationship management with timeline views.</p>
+          <div className="min-w-[180px] sm:min-w-[200px] md:min-w-[220px] bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7 border border-gray-100 h-[280px] sm:h-[300px] md:h-[330px] flex flex-col flex-shrink-0">
+            <div className="scale-75 sm:scale-90 md:scale-100 origin-top-left">{Icon3}</div>
+            <h3 className="!text-base sm:!text-lg md:!text-xl !font-bold text-[#1F2A55] !mt-4 sm:!mt-6 md:!mt-10 leading-tight">CRM INTEGRATION</h3>
+            <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 flex-grow">Comprehensive relationship management with timeline views.</p>
           </div>
 
           {/* CARD 4 */}
-          <div className="min-w-[280px] bg-white rounded-2xl p-7  border border-gray-100 h-[330px] flex flex-col">
-            <div>{Icon4}</div>
-            <h3 className="!text-xl !font-bold text-[#1F2A55] !mt-30">DOCUMENT MANAGEMENT</h3>
-            <p className="text-sm text-gray-600 mt-2 flex-grow">Advanced document handling with e-signatures and version control.</p>
+          <div className="min-w-[180px] sm:min-w-[200px] md:min-w-[220px] bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7 border border-gray-100 h-[280px] sm:h-[300px] md:h-[330px] flex flex-col flex-shrink-0">
+            <div className="scale-75 sm:scale-90 md:scale-100 origin-top-left">{Icon4}</div>
+            <h3 className="!text-base sm:!text-lg md:!text-xl !font-bold text-[#1F2A55] !mt-4 sm:!mt-6 md:!mt-10 leading-tight">DOCUMENT MANAGEMENT</h3>
+            <p className="text-xs sm:text-sm text-gray-600 mt-2 flex-grow">Advanced document handling with e-signatures and version control.</p>
           </div>
 
           
