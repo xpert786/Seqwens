@@ -1507,10 +1507,10 @@ export default function StaffManagement() {
                 Reassign Clients
               </button> */}
               {(() => {
-                const staff = staffData.find(s => {
-                  const mapped = mapStaffData(s);
-                  return mapped.id === showDropdown;
-                });
+                  const staff = staffData.find(s => {
+                    const mapped = mapStaffData(s);
+                    return mapped.id === showDropdown;
+                  });
                 if (!staff) return null;
                 const mappedStaff = mapStaffData(staff);
                 const isActive = mappedStaff.isActive || mappedStaff.statusValue === 'active';
@@ -1521,12 +1521,12 @@ export default function StaffManagement() {
                       onClick={() => {
                         setSelectedStaffForAction(staff.id);
                         setShowInactiveConfirmModal(true);
-                        setShowDropdown(null);
-                      }}
+                    setShowDropdown(null);
+                }}
                       className="block w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors"
-                    >
+              >
                       Set Inactive
-                    </button>
+              </button>
                   );
                 } else {
                   return (

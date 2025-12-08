@@ -281,24 +281,24 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
       <div className="mb-8">
         {/* Service Adoption Heatmap */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h4 className="text-xl font-thin text-[#3B4A66] mb-2">Service Performance</h4>
-          <p className="text-sm text-gray-600 mb-6">Revenue and growth by service type</p>
+        <h4 className="text-xl font-thin text-[#3B4A66] mb-2">Service Performance</h4>
+        <p className="text-sm text-gray-600 mb-6">Revenue and growth by service type</p>
           <h5 className="text-lg font-thin text-[#3B4A66] mb-4">Service Adoption Heatmap</h5>
           {serviceAdoptionData.length > 0 && serviceNames.length > 0 ? (
             <div className="overflow-x-auto">
               <div className="space-y-2 min-w-[800px]">
-                {/* Header */}
+              {/* Header */}
                 <div className={`grid gap-4 py-1 px-3 text-sm font-thin text-gray-600`} style={{ gridTemplateColumns: `150px repeat(${serviceNames.length}, 1fr)` }}>
-                  <div>Month</div>
+                <div>Month</div>
                   {serviceNames.map((service) => (
                     <div key={service}>{service}</div>
                   ))}
-                </div>
-                
-                {/* Rows */}
-                {serviceAdoptionData.map((row, index) => (
+              </div>
+              
+              {/* Rows */}
+              {serviceAdoptionData.map((row, index) => (
                   <div key={index} className={`grid gap-4 py-2 px-3 border border-[#E8F0FF] rounded-md bg-white`} style={{ gridTemplateColumns: `150px repeat(${serviceNames.length}, 1fr)` }}>
-                    <div className="font-medium text-gray-900 flex items-center">{row.month}</div>
+                  <div className="font-medium text-gray-900 flex items-center">{row.month}</div>
                     {serviceNames.map((service) => {
                       const serviceKey = getServiceKey(service);
                       const value = row[serviceKey] || 0;
@@ -306,20 +306,20 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                         <div key={service} className="flex items-center">
                           <div 
                             className="w-20 h-8 rounded flex items-center justify-center text-xs font-medium" 
-                            style={{ 
+                         style={{ 
                               backgroundColor: `rgba(59, 130, 246, ${Math.max(0.1, Math.min(1, value / 100))})`,
                               color: value > 30 ? 'white' : 'black'
                             }}
                           >
                             {value}%
-                          </div>
-                        </div>
+                    </div>
+                  </div>
                       );
                     })}
                   </div>
                 ))}
-              </div>
-            </div>
+                    </div>
+                  </div>
           ) : (
             <div className="flex items-center justify-center h-32 text-sm text-gray-500">
               No service adoption data available
@@ -337,9 +337,9 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
           </div>
           <div className="h-64">
             {upsellData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={upsellData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={upsellData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
                   <XAxis 
                     dataKey="service" 
                     angle={-45}
@@ -349,10 +349,10 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                     tick={{ fontSize: 12 }}
                   />
                   <YAxis domain={[0, 'dataMax + 10']} />
-                  <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="rate" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                </BarChart>
-              </ResponsiveContainer>
+              </BarChart>
+            </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-gray-500">
                 No upsell performance data available
@@ -368,9 +368,9 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Avg Turnaround Time (Days)</h3>
             <div className="h-64">
               {turnaroundData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={turnaroundData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={turnaroundData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" opacity={0.5} />
                     <XAxis 
                       dataKey="service" 
                       angle={-45}
@@ -380,10 +380,10 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                       tick={{ fontSize: 12 }}
                     />
                     <YAxis domain={[0, 'dataMax + 1']} />
-                    <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="days" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                  </BarChart>
-                </ResponsiveContainer>
+                </BarChart>
+              </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-sm text-gray-500">
                   No turnaround time data available
@@ -426,7 +426,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
             ) : (
               <div className="flex items-center justify-center h-64 text-sm text-gray-500">
                 No conversion funnel data available
-              </div>
+            </div>
             )}
           </div>
         </div>
@@ -434,3 +434,4 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
     </>
   );
 }
+    

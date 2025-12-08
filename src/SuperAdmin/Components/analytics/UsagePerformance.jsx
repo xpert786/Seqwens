@@ -63,23 +63,74 @@ export default function UsagePerformance() {
     return data;
   };
 
-  // Helper function to get label from object or format value
-  const getLabel = (data, defaultFormat) => {
+  // Helper function to get formatted display value from object
+  const getFormattedValue = (data, defaultFormat) => {
     if (data === null || data === undefined) return 'N/A';
-    if (typeof data === 'object') {
-      if (data.label) return data.label;
-      if (data.value !== undefined) {
-        return defaultFormat(data.value, data.unit);
+    
+    // If it's an object with value, unit, and label structure
+    if (typeof data === 'object' && data.value !== undefined) {
+      const value = data.value;
+      const unit = data.unit || '';
+      const label = data.label || '';
+      
+      // Format based on label or unit type
+      const labelLower = label.toLowerCase();
+      
+      // Percentage formatting
+      if (labelLower.includes('percentage') || labelLower.includes('uptime') || labelLower.includes('error rate') || unit === '%') {
+        return formatPercentage(value, '%');
       }
+      
+      // Time formatting
+      if (labelLower.includes('time') || labelLower.includes('response') || unit === 'ms' || unit === 's') {
+        return formatTime(value, unit || 'ms');
+      }
+      
+      // Number formatting
+      if (typeof value === 'number') {
+        // Handle decimal values (like data_processed with TB)
+        if (value % 1 !== 0 || (value === 0 && unit && unit.toLowerCase().includes('tb'))) {
+          // For decimal numbers, show appropriate precision
+          if (unit && unit.trim()) {
+            return `${value.toFixed(2)}${unit}`;
+          }
+          return value.toFixed(2);
+        }
+        
+        // Integer values
+        if (unit && unit.trim()) {
+          // Add space before unit if it's not empty
+          return formatNumber(value, ` ${unit}`);
+        }
+        return formatNumber(value);
+      }
+      
+      return value;
     }
-    return defaultFormat(data);
+    
+    // Fallback to default format
+    return defaultFormat ? defaultFormat(data) : data;
   };
 
-  // Format number with commas
+  // Helper function to get label from object
+  const getMetricLabel = (data, defaultLabel) => {
+    if (data === null || data === undefined) return defaultLabel;
+    if (typeof data === 'object' && data.label) {
+      return data.label;
+    }
+    return defaultLabel;
+  };
+
+  // Format number with commas and optional unit
   const formatNumber = (num, unit = '') => {
     if (num === null || num === undefined) return 'N/A';
     if (typeof num === 'number') {
-      return unit ? `${num.toLocaleString()}${unit}` : num.toLocaleString();
+      const formatted = num.toLocaleString();
+      // Handle decimal places for large numbers
+      if (num >= 1000 && num % 1 === 0) {
+        return unit ? `${formatted}${unit}` : formatted;
+      }
+      return unit ? `${formatted}${unit}` : formatted;
     }
     return num;
   };
@@ -88,12 +139,13 @@ export default function UsagePerformance() {
   const formatPercentage = (num, unit = '%') => {
     if (num === null || num === undefined) return 'N/A';
     if (typeof num === 'number') {
+      // For percentages, show 2 decimal places
       return `${num.toFixed(2)}${unit}`;
     }
     return num;
   };
 
-  // Format time
+  // Format time with unit
   const formatTime = (num, unit = 'ms') => {
     if (num === null || num === undefined) return 'N/A';
     if (typeof num === 'number') {
@@ -117,55 +169,65 @@ export default function UsagePerformance() {
             <p className="text-sm text-[#6B7280] mt-2" style={{fontFamily: 'BasisGrotesquePro'}}>Loading metrics...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-4">
             {/* Uptime */}
-            <div className="text-center p-2">
-              <div className="text-3xl font-bold" style={{color: '#22C55E'}}>
-                {getLabel(metrics.uptime, formatPercentage)}
+            <div className="text-center p-4 border border-gray-100 rounded-lg">
+              <div className="text-3xl font-bold mb-1" style={{color: '#22C55E'}}>
+                {getFormattedValue(metrics.uptime, formatPercentage)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Uptime</div>
+              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                {getMetricLabel(metrics.uptime, 'Uptime')}
+              </div>
             </div>
             
             {/* Avg Response Time */}
-            <div className="text-center p-2">
-              <div className="text-3xl font-bold" style={{color: '#3AD6F2'}}>
-                {getLabel(metrics.avg_response_time, formatTime)}
+            <div className="text-center p-4 border border-gray-100 rounded-lg">
+              <div className="text-3xl font-bold mb-1" style={{color: '#3AD6F2'}}>
+                {getFormattedValue(metrics.avg_response_time, formatTime)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Avg Response Time</div>
+              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                {getMetricLabel(metrics.avg_response_time, 'Avg Response Time')}
+              </div>
             </div>
             
             {/* Error Rate */}
-            <div className="text-center p-2">
-              <div className="text-3xl font-bold" style={{color: '#EF4444'}}>
-                {getLabel(metrics.error_rate, formatPercentage)}
+            <div className="text-center p-4 border border-gray-100 rounded-lg">
+              <div className="text-3xl font-bold mb-1" style={{color: '#EF4444'}}>
+                {getFormattedValue(metrics.error_rate, formatPercentage)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Error Rate</div>
+              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                {getMetricLabel(metrics.error_rate, 'Error Rate')}
+              </div>
             </div>
             
             {/* API Calls (24h) */}
-            <div className="text-center p-2">
-              <div className="text-3xl font-bold" style={{color: '#1E40AF'}}>
-                {getLabel(metrics.api_calls_24h, formatNumber)}
+            <div className="text-center p-4 border border-gray-100 rounded-lg">
+              <div className="text-3xl font-bold mb-1" style={{color: '#1E40AF'}}>
+                {getFormattedValue(metrics.api_calls_24h, formatNumber)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>API Calls (24h)</div>
+              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                {getMetricLabel(metrics.api_calls_24h, 'API Calls (24h)')}
+              </div>
             </div>
             
             {/* Data Processed */}
-            <div className="text-center p-2">
-              <div className="text-3xl font-bold" style={{color: '#F49C2D'}}>
-                {typeof metrics.data_processed === 'object' && metrics.data_processed?.label 
-                  ? metrics.data_processed.label 
-                  : (metrics.data_processed || 'N/A')}
+            <div className="text-center p-4 border border-gray-100 rounded-lg">
+              <div className="text-3xl font-bold mb-1" style={{color: '#F49C2D'}}>
+                {getFormattedValue(metrics.data_processed, formatNumber)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Data Processed</div>
+              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                {getMetricLabel(metrics.data_processed, 'Data Processed')}
+              </div>
             </div>
             
             {/* Active Connections */}
-            <div className="text-center p-2">
-              <div className="text-3xl font-bold" style={{color: '#22C55E'}}>
-                {getLabel(metrics.active_connections, formatNumber)}
+            <div className="text-center p-4 border border-gray-100 rounded-lg">
+              <div className="text-3xl font-bold mb-1" style={{color: '#22C55E'}}>
+                {getFormattedValue(metrics.active_connections, formatNumber)}
               </div>
-              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>Active Connections</div>
+              <div className="text-sm font-medium" style={{color: '#3B4A66'}}>
+                {getMetricLabel(metrics.active_connections, 'Active Connections')}
+              </div>
             </div>
           </div>
         )}

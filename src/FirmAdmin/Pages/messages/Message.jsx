@@ -695,13 +695,13 @@ const Messages = () => {
                 const attachmentName = attachmentObj?.name || msg.attachment_name || null;
                 
                 return {
-                  id: msg.id,
+                id: msg.id,
                   content: msg.content || msg.message || '',
-                  sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                  sender_role: msg.sender?.role || msg.sender_role || '',
-                  sender_id: msg.sender?.id || msg.sender_id || null,
-                  created_at: msg.created_at,
-                  is_read: msg.is_read || false,
+                sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                sender_role: msg.sender?.role || msg.sender_role || '',
+                sender_id: msg.sender?.id || msg.sender_id || null,
+                created_at: msg.created_at,
+                is_read: msg.is_read || false,
                   attachment: attachmentUrl,
                   attachmentObj: attachmentObj,
                   attachment_name: attachmentName,
@@ -726,13 +726,13 @@ const Messages = () => {
                     const attachmentName = attachmentObj?.name || msg.attachment_name || null;
                     
                     return {
-                      id: msg.id,
+                    id: msg.id,
                       content: msg.content || msg.message || '',
-                      sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
-                      sender_role: msg.sender?.role || msg.sender_role || '',
-                      sender_id: msg.sender?.id || msg.sender_id || null,
-                      created_at: msg.created_at,
-                      is_read: msg.is_read || false,
+                    sender_name: msg.sender?.name || msg.sender_name || 'Unknown',
+                    sender_role: msg.sender?.role || msg.sender_role || '',
+                    sender_id: msg.sender?.id || msg.sender_id || null,
+                    created_at: msg.created_at,
+                    is_read: msg.is_read || false,
                       attachment: attachmentUrl,
                       attachmentObj: attachmentObj,
                       attachment_name: attachmentName,

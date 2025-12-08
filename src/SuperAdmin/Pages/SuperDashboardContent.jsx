@@ -58,6 +58,10 @@ export default function SuperDashboardContent() {
   const [securitySettings, setSecuritySettings] = useState(null);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [updatingSecuritySetting, setUpdatingSecuritySetting] = useState(null);
+  
+  // Month filter states
+  const [selectedRevenueMonth, setSelectedRevenueMonth] = useState('all');
+  const [selectedSubscriptionMonth, setSelectedSubscriptionMonth] = useState('all');
 
   // Redirect based on user role
   useEffect(() => {
@@ -98,6 +102,32 @@ export default function SuperDashboardContent() {
     if (Number.isNaN(numericValue)) return String(value);
     return numericValue.toLocaleString();
   };
+
+  // Generate last 6 months for dropdown
+  const getLast6Months = () => {
+    const months = [];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentDate = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthIndex = date.getMonth();
+      const year = date.getFullYear();
+      const monthName = monthNames[monthIndex];
+      const monthValue = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+      
+      months.push({
+        value: monthValue,
+        label: `${monthName} ${year}`,
+        shortLabel: monthName
+      });
+    }
+    
+    return months;
+  };
+
+  const last6Months = getLast6Months();
 
   const getQuickActionIcon = (labelOrIcon = '') => {
     const normalized = (labelOrIcon || '').toLowerCase();
@@ -207,20 +237,59 @@ export default function SuperDashboardContent() {
     const revenueValues = dashboardData.revenue_growth?.revenue || [];
     const subscriberValues = dashboardData.revenue_growth?.subscribers || [];
 
-    const revenueData = labels.map((label, index) => ({
+    let revenueData = labels.map((label, index) => ({
       month: label,
       revenue: revenueValues[index] ?? 0,
       subscribers: subscriberValues[index] ?? 0
     }));
 
-    const subscriptionData = (dashboardData.subscription_distribution || []).map((item, index) => {
+    // Filter revenue data by selected month
+    if (selectedRevenueMonth !== 'all') {
+      const selectedMonth = last6Months.find(m => m.value === selectedRevenueMonth);
+      if (selectedMonth) {
+        const [year, monthNum] = selectedMonth.value.split('-');
+        const monthIndex = parseInt(monthNum) - 1;
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const fullMonthName = monthNames[monthIndex];
+        const abbrMonthName = monthAbbrs[monthIndex];
+        
+        revenueData = revenueData.filter(item => {
+          if (!item.month) return false;
+          const monthLabel = item.month.toString().toLowerCase();
+          // Check for various formats: "September 2024", "Sep 2024", "2024-09", etc.
+          return monthLabel.includes(fullMonthName.toLowerCase()) ||
+                 monthLabel.includes(abbrMonthName.toLowerCase()) ||
+                 monthLabel.includes(`${year}-${monthNum}`) ||
+                 monthLabel.includes(`${monthNum}/${year}`) ||
+                 monthLabel.includes(`${year}-${monthNum.padStart(2, '0')}`);
+        });
+      }
+    }
+
+    let subscriptionData = (dashboardData.subscription_distribution || []).map((item, index) => {
       const planKey = item.plan?.toLowerCase?.() || `plan-${index}`;
       return {
         name: item.label || item.plan || `Plan ${index + 1}`,
         value: item.count ?? 0,
-        color: SUBSCRIPTION_COLOR_MAP[planKey] || FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+        color: SUBSCRIPTION_COLOR_MAP[planKey] || FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+        month: item.month || null // Assuming subscription data might have month info
       };
     });
+
+    // Filter subscription data by selected month if needed
+    // Note: This assumes subscription_distribution might have month data
+    // If not, we'll keep all data but the filtering logic is ready
+    if (selectedSubscriptionMonth !== 'all') {
+      const selectedMonthName = last6Months.find(m => m.value === selectedSubscriptionMonth)?.shortLabel;
+      if (selectedMonthName) {
+        subscriptionData = subscriptionData.filter(item => {
+          return !item.month || item.month.includes(selectedMonthName);
+        });
+      }
+    }
 
     const activityData = (dashboardData.activity?.timeline || []).map(item => ({
       hour: item.hour,
@@ -666,8 +735,28 @@ export default function SuperDashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
         {/* User Registration Trend */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
-          <p className="text-sm text-gray-600 mb-4">Monthly recurring revenue and user growth</p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="taxdashboardr-titler text-base font-medium text-gray-900 mb-1">Revenue Growth Trend</h3>
+              <p className="text-sm text-gray-600">Monthly recurring revenue and user growth</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="revenue-month-select" className="text-sm text-gray-600">Filter by month:</label>
+              <select
+                id="revenue-month-select"
+                value={selectedRevenueMonth}
+                onChange={(e) => setSelectedRevenueMonth(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Months</option>
+                {last6Months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -747,8 +836,28 @@ export default function SuperDashboardContent() {
 
         {/* User Role Distribution */}
         <div className="bg-white rounded-xl border border-[#E8F0FF] p-6">
-          <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
-          <p className="text-sm text-gray-600 mb-4">Revenue breakdown by plan typee</p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-base font-medium text-gray-900 mb-1">Subscription Distribution</h3>
+              <p className="text-sm text-gray-600">Revenue breakdown by plan type</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="subscription-month-select" className="text-sm text-gray-600">Filter by month:</label>
+              <select
+                id="subscription-month-select"
+                value={selectedSubscriptionMonth}
+                onChange={(e) => setSelectedSubscriptionMonth(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Months</option>
+                {last6Months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
