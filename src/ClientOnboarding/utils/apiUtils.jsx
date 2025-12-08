@@ -4418,7 +4418,7 @@ export const firmAdminMessagingAPI = {
     if (search) queryParams.append('search', search);
 
     const queryString = queryParams.toString();
-    const url = `/seqwens/api/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
+    const url = `/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(url, 'GET');
   },
 
