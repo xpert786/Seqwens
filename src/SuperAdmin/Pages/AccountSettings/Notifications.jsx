@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { superAdminNotificationAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 
 const TABS = [
   { label: "All", key: "all" },
@@ -247,16 +248,24 @@ const Notifications = () => {
     }
   };
 
+  const [showDeleteNotificationConfirm, setShowDeleteNotificationConfirm] = useState(false);
+  const [notificationToDelete, setNotificationToDelete] = useState(null);
+
   // Delete notification
   const handleDelete = async (notificationId) => {
-    if (!window.confirm("Are you sure you want to delete this notification?")) {
-      return;
-    }
+    setNotificationToDelete(notificationId);
+    setShowDeleteNotificationConfirm(true);
+  };
+
+  const confirmDeleteNotification = async () => {
+    if (!notificationToDelete) return;
 
     try {
-      await superAdminNotificationAPI.deleteNotification(notificationId);
-      setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+      await superAdminNotificationAPI.deleteNotification(notificationToDelete);
+      setNotifications((prev) => prev.filter((notif) => notif.id !== notificationToDelete));
       toast.success("Notification deleted");
+      setShowDeleteNotificationConfirm(false);
+      setNotificationToDelete(null);
     } catch (err) {
       console.error("Error deleting notification:", err);
       toast.error(handleAPIError(err));
@@ -273,6 +282,7 @@ const Notifications = () => {
   const totalPages = Math.ceil(total / limit);
 
   return (
+    <>
     <div className="card">
       <div className="card-body" style={{
         padding: "28px",
@@ -737,10 +747,8 @@ const Notifications = () => {
                   <button
                     className="btn btn-sm"
                     onClick={() => {
-                      if (window.confirm("Are you sure you want to delete this notification?")) {
-                        handleDelete(selectedNotification.id);
-                        setShowDetailsModal(false);
-                      }
+                      handleDelete(selectedNotification.id);
+                      setShowDetailsModal(false);
                     }}
                     style={{
                       backgroundColor: "#EF4444",
@@ -776,6 +784,22 @@ const Notifications = () => {
         </div>
       )}
     </div>
+
+    {/* Delete Notification Confirmation Modal */}
+    <ConfirmationModal
+      isOpen={showDeleteNotificationConfirm}
+      onClose={() => {
+        setShowDeleteNotificationConfirm(false);
+        setNotificationToDelete(null);
+      }}
+      onConfirm={confirmDeleteNotification}
+      title="Delete Notification"
+      message="Are you sure you want to delete this notification?"
+      confirmText="Delete"
+      cancelText="Cancel"
+      isDestructive={true}
+    />
+    </>
   );
 };
 

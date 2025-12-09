@@ -3,6 +3,7 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { firmOfficeAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { FaSearch, FaUserPlus, FaUserMinus, FaCheck, FaTimes } from 'react-icons/fa';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 export default function TaxpayerManagementModal({ show, onClose, officeId, officeName, onUpdate }) {
   const [taxpayers, setTaxpayers] = useState([]);
@@ -13,6 +14,8 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
   const [assigning, setAssigning] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [showAssignedOnly, setShowAssignedOnly] = useState(false);
+  const [showRemoveTaxpayerConfirm, setShowRemoveTaxpayerConfirm] = useState(false);
+  const [taxpayerToRemove, setTaxpayerToRemove] = useState(null);
 
   // Fetch taxpayers
   useEffect(() => {
@@ -119,13 +122,16 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
   };
 
   const handleRemoveTaxpayer = async (taxpayerId) => {
-    if (!window.confirm('Are you sure you want to remove this taxpayer from the office?')) {
-      return;
-    }
+    setTaxpayerToRemove(taxpayerId);
+    setShowRemoveTaxpayerConfirm(true);
+  };
+
+  const confirmRemoveTaxpayer = async () => {
+    if (!taxpayerToRemove) return;
 
     try {
       setRemoving(true);
-      const response = await firmOfficeAPI.removeTaxpayerFromOffice(officeId, taxpayerId);
+      const response = await firmOfficeAPI.removeTaxpayerFromOffice(officeId, taxpayerToRemove);
 
       if (response.success) {
         toast.success('Taxpayer removed from office successfully', {
@@ -135,6 +141,8 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
         fetchTaxpayers();
         fetchAssignedTaxpayers();
         onUpdate?.();
+        setShowRemoveTaxpayerConfirm(false);
+        setTaxpayerToRemove(null);
       } else {
         toast.error(response.message || 'Failed to remove taxpayer', {
           position: 'top-right',
@@ -315,6 +323,24 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
         )}
       </Modal.Footer>
     </Modal>
+
+    {/* Remove Taxpayer Confirmation Modal */}
+    <ConfirmationModal
+      isOpen={showRemoveTaxpayerConfirm}
+      onClose={() => {
+        if (!removing) {
+          setShowRemoveTaxpayerConfirm(false);
+          setTaxpayerToRemove(null);
+        }
+      }}
+      onConfirm={confirmRemoveTaxpayer}
+      title="Remove Taxpayer"
+      message="Are you sure you want to remove this taxpayer from the office?"
+      confirmText="Remove"
+      cancelText="Cancel"
+      isLoading={removing}
+      isDestructive={true}
+    />
     </>
   );
 }

@@ -4,6 +4,7 @@ import { DocumentUpload, DocumentDownload, DocumentMoreIcon, DocumentCriticalIss
 import { firmAdminDocumentsAPI, firmAdminSettingsAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import FirmAdminUploadModal from './DocumentManagement/FirmAdminUploadModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 // Search icon
 const SearchIcon = () => (
@@ -307,15 +308,21 @@ export default function DocumentManagement() {
     handleFolderClick(folderId);
   };
 
+  const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState(null);
+
   // Handle delete folder
   const handleDeleteFolder = async (folderId, folderName) => {
-    if (!window.confirm(`Are you sure you want to delete the folder "${folderName}"? This action cannot be undone.`)) {
-      return;
-    }
+    setFolderToDelete({ id: folderId, name: folderName });
+    setShowDeleteFolderConfirm(true);
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!folderToDelete) return;
 
     try {
       setLoading(true);
-      const response = await firmAdminDocumentsAPI.deleteFolder(folderId);
+      const response = await firmAdminDocumentsAPI.deleteFolder(folderToDelete.id);
 
       if (response.success) {
         toast.success(response.message || 'Folder deleted successfully', {
@@ -364,6 +371,8 @@ export default function DocumentManagement() {
       });
     } finally {
       setLoading(false);
+      setShowDeleteFolderConfirm(false);
+      setFolderToDelete(null);
     }
   };
 
@@ -2237,6 +2246,24 @@ export default function DocumentManagement() {
             fetchDocuments(null, searchQuery);
           }
         }}
+      />
+
+      {/* Delete Folder Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteFolderConfirm}
+        onClose={() => {
+          if (!loading) {
+            setShowDeleteFolderConfirm(false);
+            setFolderToDelete(null);
+          }
+        }}
+        onConfirm={confirmDeleteFolder}
+        title="Delete Folder"
+        message={folderToDelete ? `Are you sure you want to delete the folder "${folderToDelete.name}"? This action cannot be undone.` : "Are you sure you want to delete this folder? This action cannot be undone."}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={loading}
+        isDestructive={true}
       />
     </div>
   );

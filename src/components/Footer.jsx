@@ -5,10 +5,10 @@ export default function Footer() {
     return (
         <footer className="w-full bg-[#3B4A66] text-white rounded-t-2xl sm:rounded-t-3xl">
             <div className="max-w-[1300px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 sm:py-10 md:py-12 lg:py-16">
-                <div className="grid grid-cols-1 lg:grid-cols-[420px_auto] gap-8 sm:gap-10 lg:gap-16 items-start">
+                <div className="flex justify-center items-start">
 
                     {/* Left Section - Company Info and Social Media (White Box) */}
-                    <div className="w-full">
+                    <div className="w-full max-w-[420px]">
                         <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10 shadow-sm">
                             {/* Logo */}
                             <Link to="/" className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -93,112 +93,6 @@ export default function Footer() {
 
                                 </a>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Right Section - Navigation Links */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 mt-6 sm:mt-8">
-
-                        {/* PRODUCT Column */}
-                        <div>
-                            <h3 className="text-white font-bold text-xs sm:text-sm md:text-base mb-3 sm:mb-4 font-[BasisGrotesquePro] uppercase tracking-wider ml-0 sm:ml-6">
-                                PRODUCT
-                            </h3>
-                            <ul className="space-y-2 sm:space-y-3">
-                                <li>
-                                    <Link to="/features" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Features
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/capabilities" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        AI Capabilities
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/pricing" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Pricing
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/security" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Security
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/integrations" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Integrations
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* RESOURCES Column */}
-                        <div>
-                            <h3 className="text-white font-bold text-xs sm:text-sm md:text-base mb-3 sm:mb-4 font-[BasisGrotesquePro] uppercase tracking-wider ml-0 sm:ml-6">
-                                RESOURCES
-                            </h3>
-                            <ul className="space-y-2 sm:space-y-3">
-                                <li>
-                                    <Link to="/case-studies" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Case Studies
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/articles" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Articles
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/help" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Help Center
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/documentation" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Documentation
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/api" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        API Reference
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* COMPANY Column */}
-                        <div>
-                            <h3 className="text-white font-bold text-xs sm:text-sm md:text-base mb-3 sm:mb-4 font-[BasisGrotesquePro] uppercase tracking-wider ml-0 sm:ml-6">
-                                COMPANY
-                            </h3>
-                            <ul className="space-y-2 sm:space-y-3">
-                                <li>
-                                    <Link to="/about" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        About
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/careers" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Careers
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/contact" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Contact
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/partners" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Partners
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/press" className="text-white hover:text-white/90 text-sm sm:text-base md:text-lg font-[BasisGrotesquePro] transition-colors">
-                                        Press
-                                    </Link>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </div>

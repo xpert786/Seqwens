@@ -136,7 +136,7 @@ export default function AiAutomation() {
                 PREDICTIVE ANALYTICS
               </h5>
               <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-                Forecast client needs and optimize practice workflow based on<br className="hidden sm:block" />historical patterns.
+                Forecast taxpayer needs and optimize practice workflow based on<br className="hidden sm:block" />historical patterns.
               </p>
             </div>
           </div>

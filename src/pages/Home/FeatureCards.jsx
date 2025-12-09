@@ -67,7 +67,7 @@ export default function FeatureCards() {
           frustrated with the fragmented tools available for managing modern tax practices.
           <br /><br />
           Our mission is to create the most comprehensive, secure, and intuitive platform
-          that helps tax professionals focus on what matters most: serving their clients
+          that helps tax professionals focus on what matters most: serving their taxpayers
           and growing their practice.
         </p>
 

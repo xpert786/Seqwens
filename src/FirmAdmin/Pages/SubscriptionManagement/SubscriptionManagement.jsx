@@ -15,6 +15,7 @@ import EnterpriseConsolidatedBilling from './Enterprise/EnterpriseConsolidatedBi
 import EnterpriseCostAllocation from './Enterprise/EnterpriseCostAllocation';
 import EnterpriseContracts from './Enterprise/EnterpriseContracts';
 import UpgradePlanModal from './UpgradePlanModal';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -32,6 +33,9 @@ const SubscriptionManagement = () => {
     const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
     const [cancellingSubscription, setCancellingSubscription] = useState(false);
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+    const [showDeletePaymentConfirm, setShowDeletePaymentConfirm] = useState(false);
+    const [paymentMethodToDelete, setPaymentMethodToDelete] = useState(null);
+    const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
 
     // Form state for adding payment method
     const [newPaymentMethod, setNewPaymentMethod] = useState({
@@ -328,12 +332,15 @@ const SubscriptionManagement = () => {
 
     // Handle delete payment method
     const handleDeletePaymentMethod = async (paymentId) => {
-        if (!window.confirm('Are you sure you want to delete this payment method?')) {
-            return;
-        }
+        setPaymentMethodToDelete(paymentId);
+        setShowDeletePaymentConfirm(true);
+    };
+
+    const confirmDeletePaymentMethod = async () => {
+        if (!paymentMethodToDelete) return;
 
         try {
-            const response = await firmAdminPaymentMethodsAPI.deletePaymentMethod(paymentId);
+            const response = await firmAdminPaymentMethodsAPI.deletePaymentMethod(paymentMethodToDelete);
 
             if (response.success) {
                 toast.success(response.message || 'Payment method deleted successfully', {
@@ -369,6 +376,8 @@ const SubscriptionManagement = () => {
                 autoClose: 3000,
                 pauseOnHover: false
             });
+        } finally {
+            setDeletingPaymentMethod(false);
         }
     };
 
@@ -1228,6 +1237,24 @@ const SubscriptionManagement = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Payment Method Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeletePaymentConfirm}
+                onClose={() => {
+                    if (!deletingPaymentMethod) {
+                        setShowDeletePaymentConfirm(false);
+                        setPaymentMethodToDelete(null);
+                    }
+                }}
+                onConfirm={confirmDeletePaymentMethod}
+                title="Delete Payment Method"
+                message="Are you sure you want to delete this payment method?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deletingPaymentMethod}
+                isDestructive={true}
+            />
         </div>
     );
 };

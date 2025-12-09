@@ -323,8 +323,10 @@
 // }
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function PricingSection() {
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [plans, setPlans] = useState([]);
 
@@ -469,6 +471,7 @@ export default function PricingSection() {
                 {/* Button */}
 
                 <button
+                  onClick={() => navigate("/create-account")}
                   className={`mt-8 w-full py-3 !rounded-xl font-semibold 
     ${cardBg === "bg-white" ? "bg-[#FF8A00] text-white" : "bg-white text-black"}
   `}
@@ -489,7 +492,10 @@ export default function PricingSection() {
           <p className="text-gray-600 text-xs sm:text-sm max-w-xl mx-auto mb-4 sm:mb-6 px-2">
             For large firms or franchise networks, we offer tailored solutions with dedicated hosting, white-labeling, and custom integrations.
           </p>
-          <button className="bg-[#F56D2D] text-white px-6 sm:px-8 py-2 sm:py-3 !rounded-lg font-semibold text-sm sm:text-base hover:bg-[#E55D1D] transition-colors">
+          <button 
+            onClick={() => navigate("/create-account")}
+            className="bg-[#F56D2D] text-white px-6 sm:px-8 py-2 sm:py-3 !rounded-lg font-semibold text-sm sm:text-base hover:bg-[#E55D1D] transition-colors"
+          >
             Contact Our Sales Team
           </button>
         </div>

@@ -302,6 +302,35 @@ import imgss1 from "../../assets/imgss1.png";
 import imgss2 from "../../assets/imgss2.png";
 import imgss3 from "../../assets/imgss3.png";
 
+// Map technical role names to user-friendly display names
+const getDisplayRole = (role) => {
+  const roleMap = {
+    'tax_preparer': 'Tax Preparer',
+    'staff': 'Tax Preparer',
+    'firm': 'Firm Admin',
+    'firm_admin': 'Firm Admin',
+    'client': 'Taxpayer',
+    'taxpayer': 'Taxpayer',
+    'super_admin': 'Administrator',
+    'superadmin': 'Administrator',
+  };
+  
+  if (!role) return '';
+  
+  // Convert to lowercase for case-insensitive matching
+  const lowerRole = role.toLowerCase();
+  
+  // Check if it's already a display-friendly name (contains space or is capitalized)
+  if (role.includes(' ') || (role[0] === role[0].toUpperCase() && !role.includes('_'))) {
+    return role;
+  }
+  
+  // Return mapped role or capitalize the original if no mapping exists
+  return roleMap[lowerRole] || role.split('_').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+};
+
 export default function Testimonials() {
   const scrollContainerRef = useRef(null);
 
@@ -441,7 +470,7 @@ export default function Testimonials() {
                         <h6 className="font-semibold text-[#3B4A66] text-sm">
                           {item.user_name}
                         </h6>
-                        <p className="text-xs text-gray-600">{item.user_role}</p>
+                        <p className="text-xs text-gray-600">{getDisplayRole(item.user_role)}</p>
                       </div>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
 import { toast } from "react-toastify";
 import { superToastOptions } from "../../utils/toastConfig";
 import { Modal, Button, Form } from "react-bootstrap";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 
 export default function PlatformControl() {
     const [platformName, setPlatformName] = useState("Acme Tax Suite");
@@ -188,22 +189,34 @@ export default function PlatformControl() {
         }
     };
 
+    const [showDeleteIPConfirm, setShowDeleteIPConfirm] = useState(false);
+    const [ipToDelete, setIpToDelete] = useState(null);
+    const [deletingIP, setDeletingIP] = useState(false);
+
     // Handle delete IP restriction
     const handleDeleteIPRestriction = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this IP restriction?")) {
-            return;
-        }
+        setIpToDelete(id);
+        setShowDeleteIPConfirm(true);
+    };
+
+    const confirmDeleteIPRestriction = async () => {
+        if (!ipToDelete) return;
 
         try {
-            const response = await superAdminAPI.deleteIPRestriction(id);
+            setDeletingIP(true);
+            const response = await superAdminAPI.deleteIPRestriction(ipToDelete);
             
             if (response.success) {
                 toast.success(response.message || "IP restriction deleted successfully", superToastOptions);
                 fetchIPRestrictions();
+                setShowDeleteIPConfirm(false);
+                setIpToDelete(null);
             }
         } catch (err) {
             console.error('Error deleting IP restriction:', err);
             toast.error(handleAPIError(err), superToastOptions);
+        } finally {
+            setDeletingIP(false);
         }
     };
 
@@ -1037,6 +1050,24 @@ export default function PlatformControl() {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {/* Delete IP Restriction Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteIPConfirm}
+                onClose={() => {
+                    if (!deletingIP) {
+                        setShowDeleteIPConfirm(false);
+                        setIpToDelete(null);
+                    }
+                }}
+                onConfirm={confirmDeleteIPRestriction}
+                title="Delete IP Restriction"
+                message="Are you sure you want to delete this IP restriction?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deletingIP}
+                isDestructive={true}
+            />
         </div>
     );
 }

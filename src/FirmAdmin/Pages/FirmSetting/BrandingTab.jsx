@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getMediaUrl } from '../../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 export default function BrandingTab() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function BrandingTab() {
   const [logoPreview, setLogoPreview] = useState(null);
   const [faviconPreview, setFaviconPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [showResetBrandingConfirm, setShowResetBrandingConfirm] = useState(false);
   const [faviconFile, setFaviconFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -158,10 +160,10 @@ export default function BrandingTab() {
 
   // Handle reset branding
   const handleResetBranding = async () => {
-    if (!window.confirm('Are you sure you want to reset all branding settings to default?')) {
-      return;
-    }
+    setShowResetBrandingConfirm(true);
+  };
 
+  const confirmResetBranding = async () => {
     try {
       setSaving(true);
       const defaultData = {
@@ -620,6 +622,23 @@ export default function BrandingTab() {
           )}
         </button>
       </div>
+
+      {/* Reset Branding Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showResetBrandingConfirm}
+        onClose={() => {
+          if (!saving) {
+            setShowResetBrandingConfirm(false);
+          }
+        }}
+        onConfirm={confirmResetBranding}
+        title="Reset Branding Settings"
+        message="Are you sure you want to reset all branding settings to default?"
+        confirmText="Reset"
+        cancelText="Cancel"
+        isLoading={saving}
+        isDestructive={true}
+      />
     </div>
   );
 }

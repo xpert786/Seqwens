@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { taskDetailAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const TaskDetails = () => {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ const TaskDetails = () => {
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const [timeTrackingLoading, setTimeTrackingLoading] = useState(false);
     const [currentTime, setCurrentTime] = useState(null);
+    const [showResetTimerConfirm, setShowResetTimerConfirm] = useState(false);
 
     // Fetch task details
     const fetchTaskDetails = useCallback(async () => {
@@ -168,10 +170,11 @@ const TaskDetails = () => {
     // Handle reset timer
     const handleResetTimer = async () => {
         if (!id) return;
+        setShowResetTimerConfirm(true);
+    };
 
-        if (!window.confirm('Are you sure you want to reset all time tracking records? This action cannot be undone.')) {
-            return;
-        }
+    const confirmResetTimer = async () => {
+        if (!id) return;
 
         try {
             setTimeTrackingLoading(true);
@@ -181,6 +184,7 @@ const TaskDetails = () => {
                 toast.success(response.message || 'Time tracking reset successfully');
                 fetchTaskDetails(); // Refresh task data
                 fetchTimeTrackingStatus(); // Refresh time tracking status
+                setShowResetTimerConfirm(false);
             } else {
                 throw new Error(response.message || 'Failed to reset time tracking');
             }
@@ -978,6 +982,23 @@ const TaskDetails = () => {
                     </div>
                 </div>
             )}
+
+            {/* Reset Timer Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showResetTimerConfirm}
+                onClose={() => {
+                    if (!timeTrackingLoading) {
+                        setShowResetTimerConfirm(false);
+                    }
+                }}
+                onConfirm={confirmResetTimer}
+                title="Reset Time Tracking"
+                message="Are you sure you want to reset all time tracking records? This action cannot be undone."
+                confirmText="Reset"
+                cancelText="Cancel"
+                isLoading={timeTrackingLoading}
+                isDestructive={true}
+            />
         </div>
     );
 };

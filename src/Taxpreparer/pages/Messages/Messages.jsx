@@ -62,6 +62,7 @@ export default function MessagePage() {
   const messageFileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -563,7 +564,16 @@ export default function MessagePage() {
   };
 
   const handleSend = async () => {
+    // Prevent double-sending
+    if (sendingMessage) {
+      console.log('⚠️ Message send already in progress, ignoring duplicate call');
+      return;
+    }
+
     if ((newMessage.trim() === "" && !messageAttachment) || !activeConversationId) return;
+
+    // Set sending flag immediately to prevent double-sending
+    setSendingMessage(true);
 
     const messageText = newMessage.trim();
     const attachment = messageAttachment;
@@ -633,6 +643,7 @@ export default function MessagePage() {
         if (sent) {
           console.log('✅ Message sent via WebSocket');
           // Message will come back via WebSocket and replace optimistic message
+          setSendingMessage(false); // Reset sending flag
           return;
         }
       }
@@ -800,10 +811,14 @@ export default function MessagePage() {
     } catch (err) {
       console.error('Error sending message:', err);
       setNewMessage(messageText);
+      setMessageAttachment(attachment);
       toast.error('Failed to send message: ' + err.message, {
         position: "top-right",
         autoClose: 3000,
       });
+    } finally {
+      // Always reset sending flag
+      setSendingMessage(false);
     }
   };
 
@@ -1341,25 +1356,30 @@ export default function MessagePage() {
                         placeholder="Write a message..."
                         value={newMessage}
                         onChange={handleTyping}
-                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !sendingMessage) {
+                            e.preventDefault();
+                            handleSend();
+                          }
+                        }}
                         style={{ fontFamily: "BasisGrotesquePro" }}
                       />
                       <button
                         type="button"
                         className="btn"
                         style={{
-                          background: (newMessage.trim() || messageAttachment) ? "#F56D2D" : "#E5E7EB",
-                          color: (newMessage.trim() || messageAttachment) ? "#fff" : "#9CA3AF",
-                          cursor: (newMessage.trim() || messageAttachment) ? "pointer" : "not-allowed"
+                          background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
+                          color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
+                          cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
                         }}
                         onClick={handleSend}
-                        disabled={!(newMessage.trim() || messageAttachment)}
+                        disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
                         aria-label="Send message"
                       >
                         <FaPaperPlane
                           onClick={handleSend}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
+                            if ((e.key === "Enter" || e.key === " ") && !sendingMessage) {
                               e.preventDefault();
                               handleSend();
                             }

@@ -41,6 +41,7 @@ export default function Messages() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const isSendButtonActive = newMessage.trim().length > 0 || messageAttachment;
   const sendButtonStyles = {
@@ -574,7 +575,16 @@ export default function Messages() {
   };
 
   const handleSend = async () => {
+    // Prevent double-sending
+    if (sendingMessage) {
+      console.log('⚠️ Message send already in progress, ignoring duplicate call');
+      return;
+    }
+
     if ((newMessage.trim() === "" && !messageAttachment) || !activeConversationId) return;
+
+    // Set sending flag immediately to prevent double-sending
+    setSendingMessage(true);
 
     const messageText = newMessage.trim();
     const attachment = messageAttachment;
@@ -633,6 +643,7 @@ export default function Messages() {
         if (sent) {
           console.log('✅ Message sent via WebSocket');
           // Message will come back via WebSocket and replace optimistic message
+          setSendingMessage(false); // Reset sending flag
           return;
         }
       }
@@ -798,6 +809,9 @@ export default function Messages() {
         className: "custom-toast-error",
         bodyClassName: "custom-toast-body",
       });
+    } finally {
+      // Always reset sending flag
+      setSendingMessage(false);
     }
   };
 
@@ -1442,19 +1456,24 @@ export default function Messages() {
                     placeholder="Write a message..."
                     value={newMessage}
                     onChange={handleTyping}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !sendingMessage) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
                     style={{ fontFamily: "BasisGrotesquePro" }}
                   />
                   <button
                     type="button"
                     className="btn"
                     style={{
-                      background: (newMessage.trim() || messageAttachment) ? "#F56D2D" : "#E5E7EB",
-                      color: (newMessage.trim() || messageAttachment) ? "#fff" : "#9CA3AF",
-                      cursor: (newMessage.trim() || messageAttachment) ? "pointer" : "not-allowed"
+                      background: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#F56D2D" : "#E5E7EB",
+                      color: (newMessage.trim() || messageAttachment) && !sendingMessage ? "#fff" : "#9CA3AF",
+                      cursor: (newMessage.trim() || messageAttachment) && !sendingMessage ? "pointer" : "not-allowed"
                     }}
                     onClick={handleSend}
-                    disabled={!(newMessage.trim() || messageAttachment)}
+                    disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
                     aria-label="Send message"
                   >
                     <FaPaperPlane
