@@ -4968,6 +4968,25 @@ export const firmAdminPaymentMethodsAPI = {
   },
 };
 
+// Firm Admin Subscription API functions
+export const firmAdminSubscriptionAPI = {
+  // Cancel subscription
+  cancelSubscription: async (subscriptionType) => {
+    return await apiRequest('/user/firm-admin/subscription/cancel/', 'POST', {
+      subscription_type: subscriptionType
+    });
+  },
+  // Change subscription plan
+  changeSubscription: async (subscriptionPlanId, billingCycle, paymentMethod = 'stripe', changeImmediately = true) => {
+    return await apiRequest('/user/firm-admin/subscription/change/', 'POST', {
+      subscription_plan_id: subscriptionPlanId,
+      billing_cycle: billingCycle,
+      payment_method: paymentMethod,
+      change_immediately: changeImmediately
+    });
+  },
+};
+
 // Maintenance Mode API functions
 export const maintenanceModeAPI = {
   // Get maintenance mode status
