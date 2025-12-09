@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import TabNavigation from '../Integrations/TabNavigation';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const statusClasses = {
     active: '!border border-[#22C55E] bg-transparent text-[#198754]',
@@ -158,19 +159,32 @@ export default function EmailTemplate() {
         }
     };
 
+    const [showDeleteTemplateConfirm, setShowDeleteTemplateConfirm] = useState(false);
+    const [templateToDelete, setTemplateToDelete] = useState(null);
+    const [deletingTemplate, setDeletingTemplate] = useState(false);
+
     const handleDeleteTemplate = async (templateId) => {
-        if (!window.confirm('Are you sure you want to delete this template?')) {
-            return false;
-        }
+        setTemplateToDelete(templateId);
+        setShowDeleteTemplateConfirm(true);
+    };
+
+    const confirmDeleteTemplate = async () => {
+        if (!templateToDelete) return false;
+
         try {
-            await firmAdminEmailTemplatesAPI.deleteTemplate(templateId);
+            setDeletingTemplate(true);
+            await firmAdminEmailTemplatesAPI.deleteTemplate(templateToDelete);
             toast.success('Template deleted successfully');
             fetchTemplates();
+            setShowDeleteTemplateConfirm(false);
+            setTemplateToDelete(null);
             return true;
         } catch (err) {
             handleAPIError(err);
             toast.error(err.message || 'Failed to delete template');
             return false;
+        } finally {
+            setDeletingTemplate(false);
         }
     };
 
@@ -210,6 +224,7 @@ export default function EmailTemplate() {
     };
 
     return (
+        <>
         <div className="w-full bg-[#F3F6FD] px-4 py-6 text-[#1F2A55] sm:px-6 lg:px-8">
             <div className="mx-auto space-y-6">
                 <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -291,6 +306,25 @@ export default function EmailTemplate() {
                 />
             )}
         </div>
+
+        {/* Delete Template Confirmation Modal */}
+        <ConfirmationModal
+            isOpen={showDeleteTemplateConfirm}
+            onClose={() => {
+                if (!deletingTemplate) {
+                    setShowDeleteTemplateConfirm(false);
+                    setTemplateToDelete(null);
+                }
+            }}
+            onConfirm={confirmDeleteTemplate}
+            title="Delete Template"
+            message="Are you sure you want to delete this template?"
+            confirmText="Delete"
+            cancelText="Cancel"
+            isLoading={deletingTemplate}
+            isDestructive={true}
+        />
+        </>
     );
 }
 
@@ -1204,6 +1238,7 @@ function TemplatesView({
     }
 
     return (
+        <>
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#E8F0FF]">
             <div className="border-b border-[#E8F0FF] px-5 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
                 <div>
@@ -1388,6 +1423,7 @@ function TemplatesView({
                 />
             )}
         </div>
+        </>
     );
 }
 

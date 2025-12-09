@@ -639,6 +639,12 @@ const Messages = () => {
 
   // Handle sending message in thread
   const handleSendThreadMessage = async () => {
+    // Prevent double-sending
+    if (sendingThreadMessage) {
+      console.log('⚠️ Message send already in progress, ignoring duplicate call');
+      return;
+    }
+
     if (!selectedThreadId || (!threadMessageInput.trim() && !threadAttachment)) {
       return;
     }

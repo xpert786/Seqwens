@@ -7,6 +7,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
 import { toast } from "react-toastify";
 import Pagination from "../Pagination";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 import "../../styles/Folders.css";
 
 export default function Folders({ onFolderSelect }) {
@@ -18,6 +19,8 @@ export default function Folders({ onFolderSelect }) {
     const [error, setError] = useState(null);
     const [selectedDocIndex, setSelectedDocIndex] = useState(null);
     const [activeButton, setActiveButton] = useState("folder"); // "folder" or "trash"
+    const [showTrashFolderConfirm, setShowTrashFolderConfirm] = useState(false);
+    const [folderToTrash, setFolderToTrash] = useState(null);
     const [folders, setFolders] = useState([]);
     const [currentFolder, setCurrentFolder] = useState(null);
     const [folderPath, setFolderPath] = useState([]);
@@ -183,21 +186,26 @@ export default function Folders({ onFolderSelect }) {
 
     // Handle trash folder action
     const handleTrashFolder = async (folderId, folderTitle) => {
-        if (!window.confirm(`Are you sure you want to move "${folderTitle}" to trash? This will also move all documents and subfolders inside it to trash.`)) {
-            return;
-        }
+        setFolderToTrash({ folderId, folderTitle });
+        setShowTrashFolderConfirm(true);
+    };
+
+    const confirmTrashFolder = async () => {
+        if (!folderToTrash) return;
 
         try {
-            setTrashingFolder(folderId);
-            const result = await folderTrashAPI.trashFolder(folderId);
+            setTrashingFolder(folderToTrash.folderId);
+            const result = await folderTrashAPI.trashFolder(folderToTrash.folderId);
 
             if (result.success) {
-                toast.success(result.message || `Folder "${folderTitle}" moved to trash successfully`, {
+                toast.success(result.message || `Folder "${folderToTrash.folderTitle}" moved to trash successfully`, {
                     position: "top-right",
                     autoClose: 3000,
                 });
                 // Refresh folders list
                 fetchFolders(null);
+                setShowTrashFolderConfirm(false);
+                setFolderToTrash(null);
             } else {
                 throw new Error(result.message || 'Failed to trash folder');
             }
@@ -751,6 +759,7 @@ export default function Folders({ onFolderSelect }) {
 
     // Default folders view
     return (
+        <>
         <div className="folders-wrapper" style={{ minHeight: '400px', padding: '0' }}>
             {/* Top Controls */}
             <div className="d-flex justify-content-between align-items-center flex-wrap px-2 pt-4">
@@ -1442,5 +1451,24 @@ export default function Folders({ onFolderSelect }) {
                 </div>
             </div>
         </div>
+
+        {/* Trash Folder Confirmation Modal */}
+        <ConfirmationModal
+            isOpen={showTrashFolderConfirm}
+            onClose={() => {
+                if (!trashingFolder) {
+                    setShowTrashFolderConfirm(false);
+                    setFolderToTrash(null);
+                }
+            }}
+            onConfirm={confirmTrashFolder}
+            title="Move Folder to Trash"
+            message={folderToTrash ? `Are you sure you want to move "${folderToTrash.folderTitle}" to trash? This will also move all documents and subfolders inside it to trash.` : "Are you sure you want to move this folder to trash? This will also move all documents and subfolders inside it to trash."}
+            confirmText="Move to Trash"
+            cancelText="Cancel"
+            isLoading={!!trashingFolder}
+            isDestructive={true}
+        />
+        </>
     );
 }

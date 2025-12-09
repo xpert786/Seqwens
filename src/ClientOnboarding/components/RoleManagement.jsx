@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { roleAPI, handleAPIError } from "../utils/apiUtils";
 import RoleRequestModal from "./RoleRequestModal";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const ROLE_DISPLAY_NAMES = {
   super_admin: "Super Admin",
@@ -13,6 +14,8 @@ const ROLE_DISPLAY_NAMES = {
 export default function RoleManagement() {
   const [roles, setRoles] = useState(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showRemoveRoleConfirm, setShowRemoveRoleConfirm] = useState(false);
+  const [roleToRemove, setRoleToRemove] = useState(null);
   const [loading, setLoading] = useState(true);
   const [removingRole, setRemovingRole] = useState(null);
 
@@ -39,21 +42,26 @@ export default function RoleManagement() {
   };
 
   const handleRemoveRole = async (role) => {
-    if (!window.confirm(`Are you sure you want to remove the ${ROLE_DISPLAY_NAMES[role] || role} role? This action cannot be undone.`)) {
-      return;
-    }
+    setRoleToRemove(role);
+    setShowRemoveRoleConfirm(true);
+  };
+
+  const confirmRemoveRole = async () => {
+    if (!roleToRemove) return;
 
     try {
-      setRemovingRole(role);
-      const response = await roleAPI.removeRole(role);
+      setRemovingRole(roleToRemove);
+      const response = await roleAPI.removeRole(roleToRemove);
       
       if (response.success) {
         const { toast } = await import("react-toastify");
-        toast.success(`Role '${ROLE_DISPLAY_NAMES[role] || role}' removed successfully`, {
+        toast.success(`Role '${ROLE_DISPLAY_NAMES[roleToRemove] || roleToRemove}' removed successfully`, {
           position: "top-right",
           autoClose: 3000,
         });
         fetchRoles(); // Refresh roles
+        setShowRemoveRoleConfirm(false);
+        setRoleToRemove(null);
       } else {
         const { toast } = await import("react-toastify");
         toast.error(response.message || "Failed to remove role", {
@@ -223,6 +231,24 @@ export default function RoleManagement() {
         onSuccess={handleAddRoleSuccess}
         userRoles={allRoles}
         primaryRole={primaryRole}
+      />
+
+      {/* Remove Role Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showRemoveRoleConfirm}
+        onClose={() => {
+          if (!removingRole) {
+            setShowRemoveRoleConfirm(false);
+            setRoleToRemove(null);
+          }
+        }}
+        onConfirm={confirmRemoveRole}
+        title="Remove Role"
+        message={roleToRemove ? `Are you sure you want to remove the ${ROLE_DISPLAY_NAMES[roleToRemove] || roleToRemove} role? This action cannot be undone.` : "Are you sure you want to remove this role? This action cannot be undone."}
+        confirmText="Remove"
+        cancelText="Cancel"
+        isLoading={!!removingRole}
+        isDestructive={true}
       />
     </div>
   );

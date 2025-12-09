@@ -14,6 +14,7 @@ import AddStaffModal from './AddStaffModal';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -42,6 +43,8 @@ export default function StaffManagement() {
   });
   const [processingInviteId, setProcessingInviteId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [showCancelInviteConfirm, setShowCancelInviteConfirm] = useState(false);
+  const [inviteToCancel, setInviteToCancel] = useState(null);
   const [summary, setSummary] = useState({
     active_staff: 0,
     pending_invites: 0,
@@ -1228,9 +1231,8 @@ export default function StaffManagement() {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      if (window.confirm('Are you sure you want to cancel this invitation? This action cannot be undone.')) {
-                                        handleCancelInvite(invite.id);
-                                      }
+                                      setInviteToCancel(invite.id);
+                                      setShowCancelInviteConfirm(true);
                                     }}
                                     disabled={processingInviteId === invite.id || invite.is_expired}
                                     className={`block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] transition-colors ${processingInviteId === invite.id || invite.is_expired
@@ -1827,6 +1829,23 @@ export default function StaffManagement() {
           </div>
         </div>
       )}
+      {/* Cancel Invite Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showCancelInviteConfirm}
+        onClose={() => {
+          if (!processingInviteId) {
+            setShowCancelInviteConfirm(false);
+            setInviteToCancel(null);
+          }
+        }}
+        onConfirm={confirmCancelInvite}
+        title="Cancel Invitation"
+        message="Are you sure you want to cancel this invitation? This action cannot be undone."
+        confirmText="Cancel Invite"
+        cancelText="Keep Invitation"
+        isLoading={!!processingInviteId}
+        isDestructive={true}
+      />
     </>
   );
 }

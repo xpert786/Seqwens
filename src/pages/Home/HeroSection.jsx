@@ -37,15 +37,12 @@ export default function HeroSection() {
             </h1>
 
             <p className="text-[14px] sm:text-[16px] md:text-[18px] text-[#D9E8FF] max-w-2xl leading-relaxed mt-1 sm:mt-2 px-2">
-              The all-in-one platform with AI-powered tools to streamline client management,
+              The all-in-one platform with AI-powered tools to streamline taxpayer management,
               automate workflows, and scale your practice.
             </p>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-2 sm:mt-4 w-full sm:w-auto px-2">
-              <button className="w-full sm:w-auto px-6 sm:px-7 py-2.5 sm:py-2 !rounded-lg bg-white text-[#0B1F3A] font-semibold text-[14px] sm:text-[15px] hover:bg-gray-100 transition-colors">
-                Request Demo
-              </button>
 
               <button className="w-full sm:w-auto px-6 sm:px-7 py-2.5 sm:py-2 !rounded-lg bg-[#FF7A2E] text-white font-semibold shadow-lg flex items-center justify-center gap-2 text-[14px] sm:text-[15px] hover:bg-[#FF6A1E] transition-colors">
                 Take a Tour

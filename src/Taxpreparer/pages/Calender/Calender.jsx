@@ -6,6 +6,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 
 export default function CalendarPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("Monthly");
@@ -17,6 +18,8 @@ export default function CalendarPage() {
   const [calendarData, setCalendarData] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [appointmentsByDate, setAppointmentsByDate] = useState({});
+  const [showApproveEventConfirm, setShowApproveEventConfirm] = useState(false);
+  const [eventToApprove, setEventToApprove] = useState(null);
   const [statistics, setStatistics] = useState({
     total_events: 0,
     today: 0,
@@ -363,9 +366,15 @@ export default function CalendarPage() {
 
   // Handle approve appointment
   const handleApproveAppointment = async (event) => {
-    if (window.confirm(`Are you sure you want to approve "${event.title}"?`)) {
-      await updateAppointmentStatus(event.id, 'approve');
-    }
+    setEventToApprove(event);
+    setShowApproveEventConfirm(true);
+  };
+
+  const confirmApproveEvent = async () => {
+    if (!eventToApprove) return;
+    await updateAppointmentStatus(eventToApprove.id, 'approve');
+    setShowApproveEventConfirm(false);
+    setEventToApprove(null);
   };
 
   // Handle cancel appointment
@@ -865,6 +874,20 @@ export default function CalendarPage() {
           </div>
         </div>
       )}
+
+      {/* Approve Event Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showApproveEventConfirm}
+        onClose={() => {
+          setShowApproveEventConfirm(false);
+          setEventToApprove(null);
+        }}
+        onConfirm={confirmApproveEvent}
+        title="Approve Appointment"
+        message={eventToApprove ? `Are you sure you want to approve "${eventToApprove.title}"?` : "Are you sure you want to approve this appointment?"}
+        confirmText="Approve"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

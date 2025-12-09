@@ -24,6 +24,8 @@ const LicenseManagement = () => {
     const [selectedStaff, setSelectedStaff] = useState(null);
     const [selectedFeatureIds, setSelectedFeatureIds] = useState([]);
     const [assigning, setAssigning] = useState(false);
+    const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
+    const [licenseToRemove, setLicenseToRemove] = useState(null);
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [selectedStaffIds, setSelectedStaffIds] = useState([]);
 
@@ -183,13 +185,12 @@ const LicenseManagement = () => {
 
     // Handle remove licenses
     const handleRemoveLicenses = async (staffId, featureId = null) => {
-        const confirmMessage = featureId
-            ? 'Are you sure you want to remove this license?'
-            : 'Are you sure you want to remove all licenses from this staff member?';
+        setLicenseToRemove({ staffId, featureId });
+        setShowRemoveLicenseConfirm(true);
+    };
 
-        if (!window.confirm(confirmMessage)) {
-            return;
-        }
+    const confirmRemoveLicenses = async () => {
+        if (!licenseToRemove) return;
 
         try {
             setAssigning(true);
@@ -197,11 +198,11 @@ const LicenseManagement = () => {
             let url = `${API_BASE_URL}/user/firm-admin/subscriptions/licenses/`;
 
             const payload = {
-                staff_id: staffId
+                staff_id: licenseToRemove.staffId
             };
 
-            if (featureId) {
-                payload.license_feature_id = featureId;
+            if (licenseToRemove.featureId) {
+                payload.license_feature_id = licenseToRemove.featureId;
             }
 
             const response = await fetchWithCors(url, {
@@ -223,6 +224,8 @@ const LicenseManagement = () => {
             if (result.success) {
                 toast.success(result.message || 'License(s) removed successfully!');
                 await fetchLicenseData();
+                setShowRemoveLicenseConfirm(false);
+                setLicenseToRemove(null);
             } else {
                 throw new Error(result.message || 'Failed to remove licenses');
             }
@@ -536,6 +539,26 @@ const LicenseManagement = () => {
                     </div>
                 </div>
             )}
+
+            {/* Remove License Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showRemoveLicenseConfirm}
+                onClose={() => {
+                    if (!assigning) {
+                        setShowRemoveLicenseConfirm(false);
+                        setLicenseToRemove(null);
+                    }
+                }}
+                onConfirm={confirmRemoveLicenses}
+                title="Remove License"
+                message={licenseToRemove?.featureId 
+                    ? "Are you sure you want to remove this license?"
+                    : "Are you sure you want to remove all licenses from this staff member?"}
+                confirmText="Remove"
+                cancelText="Cancel"
+                isLoading={assigning}
+                isDestructive={true}
+            />
         </div>
     );
 };

@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/Login.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validateEmail, handleAPIError } from "../utils/apiUtils";
-import { setTokens } from "../utils/userUtils";
+import { setTokens, getStorage } from "../utils/userUtils";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,6 +15,32 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Restore rememberMe state and email from storage on component mount
+  useEffect(() => {
+    // Check localStorage first (persistent)
+    const localRememberMe = localStorage.getItem("rememberMe");
+    const localEmail = localStorage.getItem("rememberedEmail");
+    
+    // Check sessionStorage (session-based)
+    const sessionRememberMe = sessionStorage.getItem("rememberMe");
+    const sessionEmail = sessionStorage.getItem("rememberedEmail");
+    
+    // Restore rememberMe state (prefer localStorage if exists)
+    if (localRememberMe !== null) {
+      setRememberMe(localRememberMe === "true");
+      // Restore email if rememberMe was true
+      if (localRememberMe === "true" && localEmail) {
+        setEmail(localEmail);
+      }
+    } else if (sessionRememberMe !== null) {
+      setRememberMe(sessionRememberMe === "true");
+      // Restore email if rememberMe was true
+      if (sessionRememberMe === "true" && sessionEmail) {
+        setEmail(sessionEmail);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -59,6 +85,18 @@ export default function Login() {
       // Store user data
       storage.setItem("isLoggedIn", "true");
       storage.setItem("userData", JSON.stringify(response.user));
+      
+      // Store email if rememberMe is checked
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+        // Clear from sessionStorage if it exists
+        sessionStorage.removeItem("rememberedEmail");
+      } else {
+        // Store in sessionStorage for current session only
+        sessionStorage.setItem("rememberedEmail", email);
+        // Clear from localStorage if it exists
+        localStorage.removeItem("rememberedEmail");
+      }
       
       // Store tokens using the utility function
       setTokens(response.access_token, response.refresh_token, rememberMe);
@@ -198,7 +236,19 @@ export default function Login() {
                   type="checkbox" 
                   className="form-check-input" 
                   checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  onChange={(e) => {
+                    const newRememberMe = e.target.checked;
+                    setRememberMe(newRememberMe);
+                    
+                    // If unchecking rememberMe, clear stored email from localStorage
+                    if (!newRememberMe) {
+                      localStorage.removeItem("rememberedEmail");
+                      // Move email to sessionStorage for current session
+                      if (email) {
+                        sessionStorage.setItem("rememberedEmail", email);
+                      }
+                    }
+                  }}
                 />
                 <label className="form-check-label">Remember Me</label>
               </div>

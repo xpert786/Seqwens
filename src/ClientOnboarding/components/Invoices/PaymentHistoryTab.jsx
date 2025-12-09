@@ -12,6 +12,8 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
   const invoiceRef = useRef(null);
   const [firmLogo, setFirmLogo] = useState(null);
   const [firmName, setFirmName] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Filter and map invoices to display format - show only paid invoices
   const paidInvoices = invoices
@@ -50,6 +52,18 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
       };
     });
 
+  // Calculate pagination
+  const totalPages = Math.ceil(paidInvoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = paidInvoices.slice(startIndex, endIndex);
+
+  // Reset selected index when page changes
+  useEffect(() => {
+    setSelectedIndex(null);
+    setShowPopup(false);
+  }, [currentPage]);
+
   // Fetch firm logo
   useEffect(() => {
     const fetchFirmLogo = async () => {
@@ -69,14 +83,15 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
 
   const handleDownload = async () => {
     const element = invoiceRef.current;
-    if (!element) return;
+    if (!element || selectedIndex === null) return;
     const canvas = await html2canvas(element);
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     const width = pdf.internal.pageSize.getWidth();
     const height = pdf.internal.pageSize.getHeight();
     pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save(`${invoices[selectedIndex].id}.pdf`);
+    const invoiceId = paidInvoices[selectedIndex]?.id || invoices[selectedIndex]?.id || 'invoice';
+    pdf.save(`${invoiceId}.pdf`);
   };
 
   return (
@@ -112,18 +127,22 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
           </p>
         </div>
       ) : (
-        paidInvoices.map((invoice, index) => (
+        <>
+        {paginatedInvoices.map((invoice, index) => {
+          // Calculate the original index in paidInvoices array
+          const originalIndex = startIndex + index;
+          return (
           <div
-            key={index}
+            key={invoice.id || originalIndex}
             className="border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center position-relative"
             style={{
               cursor: 'pointer',
-              backgroundColor: selectedIndex === index ? '#FFF4E6' : '#ffffff',
-              borderColor: selectedIndex === index ? '#f7c491' : '#dee2e6',
+              backgroundColor: selectedIndex === originalIndex ? '#FFF4E6' : '#ffffff',
+              borderColor: selectedIndex === originalIndex ? '#f7c491' : '#dee2e6',
               marginLeft: "10px"
 
             }}
-            onClick={() => setSelectedIndex(index)}
+            onClick={() => setSelectedIndex(originalIndex)}
           >
 
 
@@ -163,8 +182,9 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
               <div className="d-flex mt-auto">
                 <button
                   className="btn btn-sm me-2"
-                  onClick={() => {
-                    setSelectedIndex(index);
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedIndex(originalIndex);
                     setShowPopup(true);
                   }}
                 >
@@ -172,8 +192,9 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
                 </button>
                 <button
                   className="btn  btn-sm"
-                  onClick={async () => {
-                    setSelectedIndex(index);
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setSelectedIndex(originalIndex);
                     setShowPopup(true);
                     setTimeout(await handleDownload, 300);
                     setTimeout(() => setShowPopup(false), 500);
@@ -184,7 +205,93 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
               </div>
             </div>
           </div>
-        )))}
+        );
+        })}
+
+        {/* Pagination Controls */}
+        {paidInvoices.length > itemsPerPage && (
+          <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
+            <div className="d-flex align-items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
+                  borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
+                  color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
+                  fontFamily: "BasisGrotesquePro",
+                  fontSize: "14px",
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  opacity: currentPage === 1 ? 0.5 : 1
+                }}
+              >
+                Previous
+              </button>
+              
+              <div className="d-flex align-items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className="btn btn-sm"
+                        style={{
+                          backgroundColor: currentPage === page ? '#3B82F6' : 'white',
+                          borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
+                          color: currentPage === page ? 'white' : '#6B7280',
+                          fontFamily: "BasisGrotesquePro",
+                          fontSize: "14px",
+                          minWidth: "36px"
+                        }}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="px-2" style={{ color: '#6B7280', fontFamily: "BasisGrotesquePro" }}>
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
+                  borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
+                  color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
+                  fontFamily: "BasisGrotesquePro",
+                  fontSize: "14px",
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  opacity: currentPage === totalPages ? 0.5 : 1
+                }}
+              >
+                Next
+              </button>
+            </div>
+
+            <div style={{ color: '#6B7280', fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+              Showing {startIndex + 1}-{Math.min(endIndex, paidInvoices.length)} of {paidInvoices.length}
+            </div>
+          </div>
+        )}
+        </>
+      )}
 
       {showPopup && selectedIndex !== null && (
         <div
@@ -234,7 +341,7 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
 
                 <div className="d-flex justify-content-between">
                   <div>
-                    <h5 className="mb-1" style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Invoice {invoices[selectedIndex].id}</h5>
+                    <h5 className="mb-1" style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "700", fontFamily: "BasisGrotesquePro" }}>Invoice {paidInvoices[selectedIndex]?.id || invoices[selectedIndex]?.id}</h5>
                     <p className="text-muted mb-3">Invoice details and payment information</p>
 
                     <div
@@ -282,7 +389,7 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
 
                   <div style={{ marginTop: "65px" }}>
                     <h6 style={{ color: "#3B4A66", fontSize: "18px", fontWeight: "600" }}>INVOICE</h6>
-                    <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{invoices[selectedIndex].id}</p>
+                    <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{paidInvoices[selectedIndex]?.id || invoices[selectedIndex]?.id}</p>
                     <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>Phone: (855) 123-4567</p>
                     <p style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>Email: billing@cpaservices.com</p>
                   </div>
@@ -292,9 +399,9 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
 
                 <div className="mb-3 mt-2">
                   <h5 style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Bill To:</h5>
-                  <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{invoices[selectedIndex].client.name}</p>
-                  <p className=" mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{invoices[selectedIndex].client.address}</p>
-                  <p style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{invoices[selectedIndex].client.email}</p>
+                  <p className="mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{paidInvoices[selectedIndex]?.client?.name || invoices[selectedIndex]?.client?.name}</p>
+                  <p className=" mb-1" style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{paidInvoices[selectedIndex]?.client?.address || invoices[selectedIndex]?.client?.address}</p>
+                  <p style={{ fontFamily: "BasisGrotesquePro", color: "#4B5563", fontSize: "10px", fontWeight: "400" }}>{paidInvoices[selectedIndex]?.client?.email || invoices[selectedIndex]?.client?.email}</p>
                 </div>
 
                 <hr style={{ borderTop: "2px solid #4B5563", margin: "4px 0" }} />
@@ -326,15 +433,15 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
                     className="d-flex align-items-center border-bottom pb-1 mb-1"
                     style={{ fontSize: "11px", borderColor: "#000" }}
                   >
-                    <div className="flex-grow-1" style={{ fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>{invoices[selectedIndex].description}</div>
+                    <div className="flex-grow-1" style={{ fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>{paidInvoices[selectedIndex]?.description || invoices[selectedIndex]?.description}</div>
                     <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                      {invoices[selectedIndex].quantity}
+                      {paidInvoices[selectedIndex]?.quantity || invoices[selectedIndex]?.quantity}
                     </div>
                     <div style={{ width: "80px", textAlign: "center", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                      {invoices[selectedIndex].rate}
+                      {paidInvoices[selectedIndex]?.rate || invoices[selectedIndex]?.rate}
                     </div>
                     <div style={{ width: "80px", textAlign: "end", fontSize: "10px", fontWeight: 400, color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
-                      {invoices[selectedIndex].amount}
+                      {paidInvoices[selectedIndex]?.amount || invoices[selectedIndex]?.amount}
                     </div>
                   </div>
 
@@ -365,7 +472,7 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
                         fontFamily: "BasisGrotesquePro",
                       }}
                     >
-                      {invoices[selectedIndex].subtotal}
+                      {paidInvoices[selectedIndex]?.subtotal || invoices[selectedIndex]?.subtotal}
                     </div>
                   </div>
 
@@ -395,7 +502,7 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
                         fontFamily: "BasisGrotesquePro",
                       }}
                     >
-                      {invoices[selectedIndex].tax}
+                      {paidInvoices[selectedIndex]?.tax || invoices[selectedIndex]?.tax}
                     </div>
                   </div>
 
@@ -426,7 +533,7 @@ const InvoicePopupWithPDF = ({ invoices = [] }) => {
                       }}
 
                     >
-                      {invoices[selectedIndex].total}
+                      {paidInvoices[selectedIndex]?.total || invoices[selectedIndex]?.total}
                     </div>
                   </div>
 

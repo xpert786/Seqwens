@@ -46,6 +46,26 @@ export default function AddSubscription({ planType, onClose }) {
     setActiveTab(normalizePlanType(planType));
   }, [planType]);
 
+  // Calculate yearly price automatically based on monthly price and discount
+  useEffect(() => {
+    const monthly = parseFloat(pricing.monthly) || 0;
+    const discount = parseFloat(pricing.discount) || 0;
+    
+    if (monthly > 0) {
+      // Yearly price = (Monthly price * 12) * (1 - discount/100)
+      const yearlyPrice = (monthly * 12) * (1 - discount / 100);
+      setPricing(prev => ({
+        ...prev,
+        yearly: yearlyPrice.toFixed(2)
+      }));
+    } else {
+      setPricing(prev => ({
+        ...prev,
+        yearly: ''
+      }));
+    }
+  }, [pricing.monthly, pricing.discount]);
+
   const getFeatures = (plan) => {
     const features = {
       Solo: [
@@ -160,18 +180,19 @@ export default function AddSubscription({ planType, onClose }) {
                       step="0.01"
                       min="0"
                       value={pricing.yearly ?? ''}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setPricing({ ...pricing, yearly: v === '' ? '' : v });
-                      }}
-                      onBlur={(e) => {
-                        const n = parseFloat(e.target.value);
-                        setPricing({ ...pricing, yearly: isNaN(n) ? 0 : Math.max(0, Number(n.toFixed(2))) });
-                      }}
+                      disabled
+                      readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                      style={{ 
+                        border: '1px solid #E8F0FF', 
+                        color: '#3B4A66',
+                        backgroundColor: '#F3F4F6',
+                        cursor: 'not-allowed'
+                      }}
                     />
-
+                    <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                      Auto-calculated from monthly price and discount
+                    </p>
                   </div>
                 </div>
                 <div>
@@ -212,11 +233,27 @@ export default function AddSubscription({ planType, onClose }) {
                       value={limits.maxUsers ?? ''}
                       onChange={(e) => {
                         const v = e.target.value;
-                        setLimits({ ...limits, maxUsers: v === '' ? '' : v });
+                        const newMaxUsers = v === '' ? '' : parseInt(v) || 0;
+                        setLimits(prev => {
+                          const updated = { ...prev, maxUsers: v === '' ? '' : v };
+                          // If max clients exceeds new max users, cap it to max users
+                          if (newMaxUsers !== '' && prev.maxClients !== '' && parseInt(prev.maxClients) > newMaxUsers) {
+                            updated.maxClients = newMaxUsers;
+                          }
+                          return updated;
+                        });
                       }}
                       onBlur={(e) => {
                         const n = parseInt(e.target.value);
-                        setLimits({ ...limits, maxUsers: isNaN(n) ? 0 : Math.max(0, n) });
+                        const maxUsers = isNaN(n) ? 0 : Math.max(0, n);
+                        setLimits(prev => {
+                          const updated = { ...prev, maxUsers: maxUsers };
+                          // Ensure max clients doesn't exceed max users
+                          if (prev.maxClients !== '' && parseInt(prev.maxClients) > maxUsers) {
+                            updated.maxClients = maxUsers;
+                          }
+                          return updated;
+                        });
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
@@ -236,11 +273,26 @@ export default function AddSubscription({ planType, onClose }) {
                       }}
                       onBlur={(e) => {
                         const n = parseInt(e.target.value);
-                        setLimits({ ...limits, maxClients: isNaN(n) ? 0 : Math.max(0, n) });
+                        const maxClients = isNaN(n) ? 0 : Math.max(0, n);
+                        const maxUsers = parseInt(limits.maxUsers) || 0;
+                        // Cap max clients to max users if it exceeds
+                        const cappedMaxClients = maxClients > maxUsers ? maxUsers : maxClients;
+                        setLimits({ ...limits, maxClients: cappedMaxClients });
+                        if (maxClients > maxUsers) {
+                          toast.warning(`Max clients cannot exceed max users. Set to ${maxUsers}.`, {
+                            position: "top-right",
+                            autoClose: 3000,
+                          });
+                        }
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                     />
+                    {limits.maxUsers !== '' && limits.maxClients !== '' && parseInt(limits.maxClients) > parseInt(limits.maxUsers) && (
+                      <p className="text-xs mt-1" style={{ color: '#EF4444' }}>
+                        Max clients cannot exceed max users ({limits.maxUsers})
+                      </p>
+                    )}
 
                   </div>
                 </div>

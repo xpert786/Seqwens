@@ -4,11 +4,14 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/seqwens-frontend',
+  // base: '/seqwens-frontend', // Commented out for local development - uncomment for production
   optimizeDeps: {
     include: ['jspdf', 'jspdf-autotable'],
   },
   server: {
+    port: 5173,
+    host: true,
+    strictPort: false,
     proxy: {
       '/api': {
         target: 'http://168.231.121.7/seqwens',
