@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminSubscriptionAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -10,6 +11,9 @@ const AllPlans = ({ currentPlanName }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
+    const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
+    const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
+    const [processing, setProcessing] = useState(false);
 
     // Fetch subscription plans from API
     const fetchPlans = useCallback(async () => {
@@ -147,6 +151,67 @@ const AllPlans = ({ currentPlanName }) => {
             addons.push('Priority Support');
         }
         return addons;
+    };
+
+    // Handle upgrade button click
+    const handleUpgradeClick = (plan) => {
+        setSelectedPlanForUpgrade(plan);
+        setShowUpgradeConfirmModal(true);
+    };
+
+    // Handle upgrade confirmation
+    const handleUpgradeConfirm = async () => {
+        if (!selectedPlanForUpgrade) return;
+
+        try {
+            setProcessing(true);
+            setShowUpgradeConfirmModal(false);
+
+            // Call the change subscription API
+            const response = await firmAdminSubscriptionAPI.changeSubscription(
+                selectedPlanForUpgrade.id,
+                billingCycle, // "monthly" or "yearly"
+                "stripe", // payment_method
+                true // change_immediately
+            );
+
+            if (response.success) {
+                // Check if checkout URL is provided (Stripe checkout flow)
+                if (response.data?.checkout_url) {
+                    // Redirect to Stripe checkout
+                    window.location.href = response.data.checkout_url;
+                } else {
+                    // If no checkout URL, show success message and reload
+                    const planName = response.data?.new_plan?.subscription_type_display || 
+                                    response.data?.new_plan?.subscription_type || 
+                                    selectedPlanForUpgrade.subscription_type || 
+                                    'selected plan';
+                    
+                    toast.success(response.message || `Subscription plan changed to ${planName} successfully!`, {
+                        position: 'top-right',
+                        autoClose: 5000,
+                        pauseOnHover: false
+                    });
+                    
+                    // Refresh the page to show updated subscription details
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            } else {
+                throw new Error(response.message || 'Failed to change subscription plan');
+            }
+        } catch (err) {
+            console.error('Error changing subscription plan:', err);
+            toast.error(handleAPIError(err) || 'Failed to change subscription plan. Please try again.', {
+                position: 'top-right',
+                autoClose: 5000,
+                pauseOnHover: false
+            });
+        } finally {
+            setProcessing(false);
+            setSelectedPlanForUpgrade(null);
+        }
     };
 
     return (
@@ -371,6 +436,7 @@ const AllPlans = ({ currentPlanName }) => {
 
                                     {/* Action Button */}
                                     <button
+                                        onClick={() => !isCurrent && !isCustomPricing && handleUpgradeClick(plan)}
                                         className={`w-full px-3 sm:px-4 py-2 !rounded-lg transition-colors font-[BasisGrotesquePro] text-xs sm:text-sm font-medium ${
                                             isCurrent
                                                 ? 'bg-[#3AD6F2] text-white hover:bg-[#2BC5E0] cursor-default'
@@ -380,13 +446,102 @@ const AllPlans = ({ currentPlanName }) => {
                                                 ? 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
                                                 : 'bg-white !border border-[#E8F0FF] text-gray-700 hover:bg-gray-50'
                                             }`}
-                                        disabled={isCurrent}
+                                        disabled={isCurrent || isCustomPricing}
                                     >
                                         {isCurrent ? 'Current Plan' : isCustomPricing ? 'Contact Sales' : isMostPopular ? 'Upgrade' : 'Upgrade'}
                                     </button>
                                 </div>
                             );
                         })}
+                </div>
+            )}
+
+            {/* Upgrade Confirmation Modal */}
+            {showUpgradeConfirmModal && selectedPlanForUpgrade && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+                    onClick={() => {
+                        if (!processing) {
+                            setShowUpgradeConfirmModal(false);
+                            setSelectedPlanForUpgrade(null);
+                        }
+                    }}
+                >
+                    <div
+                        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+                        style={{
+                            borderRadius: '12px',
+                            border: '1px solid #E8F0FF'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
+                            <h2 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                                Upgrade Plan
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    if (!processing) {
+                                        setShowUpgradeConfirmModal(false);
+                                        setSelectedPlanForUpgrade(null);
+                                    }
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                                disabled={processing}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M15 5L5 15M5 5L15 15" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6">
+                            <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-2">
+                                Are you sure you want to upgrade to the <span className="font-semibold">{formatPlanType(selectedPlanForUpgrade.subscription_type)}</span> plan?
+                            </p>
+                            <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Billing Cycle:</span>
+                                    <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro capitalize">{billingCycle}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Price:</span>
+                                    <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                                        ${(billingCycle === 'monthly' 
+                                            ? parseFloat(selectedPlanForUpgrade.monthly_price || 0)
+                                            : parseFloat(selectedPlanForUpgrade.yearly_price || 0)
+                                        ).toFixed(2)} per {billingCycle === 'monthly' ? 'month' : 'year'}
+                                    </span>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mt-4">
+                                Your subscription will be changed immediately and you will be charged accordingly.
+                            </p>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+                            <button
+                                onClick={() => {
+                                    setShowUpgradeConfirmModal(false);
+                                    setSelectedPlanForUpgrade(null);
+                                }}
+                                disabled={processing}
+                                className="px-6 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUpgradeConfirm}
+                                disabled={processing}
+                                className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {processing ? 'Processing...' : 'Confirm Upgrade'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

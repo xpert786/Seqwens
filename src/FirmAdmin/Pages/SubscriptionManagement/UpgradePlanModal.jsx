@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminSubscriptionAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -12,6 +12,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
     const [error, setError] = useState('');
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
+    const [userBillingCycle, setUserBillingCycle] = useState(null); // User's current billing cycle from API
     const [processing, setProcessing] = useState(false);
 
     // Fetch subscription plans from API
@@ -51,12 +52,19 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
             const result = await response.json();
 
             // Handle different response structures
+            let plansData = [];
             if (result.success && result.data) {
-                setPlans(Array.isArray(result.data) ? result.data : []);
+                plansData = Array.isArray(result.data) ? result.data : [];
             } else if (Array.isArray(result)) {
-                setPlans(result);
-            } else {
-                setPlans([]);
+                plansData = result;
+            }
+
+            setPlans(plansData);
+
+            // Extract user_billing_cycle from response and set initial billing cycle
+            if (result.user_billing_cycle) {
+                setUserBillingCycle(result.user_billing_cycle);
+                setBillingCycle(result.user_billing_cycle);
             }
         } catch (err) {
             console.error('Error fetching subscription plans:', err);
@@ -73,9 +81,13 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         if (isOpen) {
             fetchPlans();
             setSelectedPlan(null);
-            setBillingCycle('monthly');
+            // billingCycle will be set from API response (user_billing_cycle)
+            // Fallback to 'monthly' if API doesn't provide it
+            if (!userBillingCycle) {
+                setBillingCycle('monthly');
+            }
         }
-    }, [isOpen, fetchPlans]);
+    }, [isOpen, fetchPlans, userBillingCycle]);
 
     // Format plan type name
     const formatPlanType = (type) => {
@@ -83,12 +95,21 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         return type.charAt(0).toUpperCase() + type.slice(1);
     };
 
-    // Check if a plan is the current plan
+    // Check if a plan is the current plan (must match both plan type and billing cycle)
     const isCurrentPlan = (plan) => {
-        if (!currentPlanName) return false;
+        if (!currentPlanName || !userBillingCycle) return false;
+        
+        // Check if plan type matches
         const planType = formatPlanType(plan.subscription_type).toLowerCase();
         const currentPlan = currentPlanName.toLowerCase();
-        return planType === currentPlan;
+        const planTypeMatches = planType === currentPlan;
+        
+        // Check if billing cycle matches (compare against user's actual billing cycle, not the toggle state)
+        // A plan is current only if it matches the user's billing cycle
+        const billingCycleMatches = billingCycle === userBillingCycle;
+        
+        // Plan is current only if both plan type AND billing cycle match
+        return planTypeMatches && billingCycleMatches;
     };
 
     // Get plan description based on subscription type
@@ -153,58 +174,47 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         try {
             setProcessing(true);
 
-            const token = getAccessToken();
-            
-            // Prepare request body according to API specification
-            const requestBody = {
-                subscription_plan_id: selectedPlan.id,
-                billing_cycle: billingCycle, // "monthly" or "yearly"
-                payment_method: "stripe" // optional, but including it
-            };
+            // Call the change subscription API
+            const response = await firmAdminSubscriptionAPI.changeSubscription(
+                selectedPlan.id,
+                billingCycle, // "monthly" or "yearly"
+                "stripe", // payment_method
+                true // change_immediately
+            );
 
-            const upgradeUrl = `${API_BASE_URL}/firm-admin/subscription/upgrade/`;
-            
-            const response = await fetchWithCors(upgradeUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || 'Failed to upgrade subscription plan');
-            }
-
-            const result = await response.json();
-
-            if (result.success) {
-                const planName = result.data?.new_plan?.subscription_type_display || 
-                                result.data?.new_plan?.subscription_type || 
-                                'selected plan';
-                
-                toast.success(result.message || `Subscription plan upgraded to ${planName} successfully!`, {
-                    position: 'top-right',
-                    autoClose: 3000,
-                    pauseOnHover: false
-                });
-                
-                onClose();
-                
-                // Refresh the page to show updated subscription details
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+            if (response.success) {
+                // Check if checkout URL is provided (Stripe checkout flow)
+                if (response.data?.checkout_url) {
+                    // Redirect to Stripe checkout
+                    window.location.href = response.data.checkout_url;
+                } else {
+                    // If no checkout URL, show success message and reload
+                    const planName = response.data?.new_plan?.subscription_type_display || 
+                                    response.data?.new_plan?.subscription_type || 
+                                    selectedPlan.subscription_type || 
+                                    'selected plan';
+                    
+                    toast.success(response.message || `Subscription plan changed to ${planName} successfully!`, {
+                        position: 'top-right',
+                        autoClose: 5000,
+                        pauseOnHover: false
+                    });
+                    
+                    onClose();
+                    
+                    // Refresh the page to show updated subscription details
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
             } else {
-                throw new Error(result.message || 'Failed to upgrade subscription plan');
+                throw new Error(response.message || 'Failed to change subscription plan');
             }
         } catch (err) {
-            console.error('Error upgrading subscription plan:', err);
-            toast.error(handleAPIError(err) || 'Failed to upgrade subscription plan. Please try again.', {
+            console.error('Error changing subscription plan:', err);
+            toast.error(handleAPIError(err) || 'Failed to change subscription plan. Please try again.', {
                 position: 'top-right',
-                autoClose: 3000,
+                autoClose: 5000,
                 pauseOnHover: false
             });
         } finally {
@@ -215,7 +225,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
