@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // base: '/seqwens-frontend', // Commented out for local development - uncomment for production
+  base: '/seqwens-frontend', // Base path for the application
   optimizeDeps: {
     include: ['jspdf', 'jspdf-autotable'],
   },
