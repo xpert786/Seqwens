@@ -19,6 +19,101 @@ export default function Header() {
 
   const isActive = (path) => location.pathname === path;
 
+  // Handle navigation to AI Capabilities section
+  const handleAICapabilitiesClick = (e) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      // If on home page, scroll to section
+      const element = document.getElementById("capabilities");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      // If on another page, navigate to home with hash
+      navigate("/#capabilities");
+      // Wait for navigation then scroll
+      setTimeout(() => {
+        const element = document.getElementById("capabilities");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  };
+
+  // Handle navigation to Pricing section
+  const handlePricingClick = (e) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      // If on home page, scroll to section
+      const element = document.getElementById("pricing");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      // If on another page, navigate to home with hash
+      navigate("/#pricing");
+      // Wait for navigation then scroll
+      setTimeout(() => {
+        const element = document.getElementById("pricing");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  };
+
+  // Handle navigation to FAQ section
+  const handleFAQClick = (e) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      // If on home page, scroll to section
+      const element = document.getElementById("faq");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      // If on another page, navigate to home with hash
+      navigate("/#faq");
+      // Wait for navigation then scroll
+      setTimeout(() => {
+        const element = document.getElementById("faq");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  };
+
+  // Handle hash navigation on page load
+  useEffect(() => {
+    if (location.pathname === "/") {
+      const hash = window.location.hash;
+      if (hash === "#capabilities") {
+        setTimeout(() => {
+          const element = document.getElementById("capabilities");
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      } else if (hash === "#pricing") {
+        setTimeout(() => {
+          const element = document.getElementById("pricing");
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      } else if (hash === "#faq") {
+        setTimeout(() => {
+          const element = document.getElementById("faq");
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      }
+    }
+  }, [location.pathname]);
+
   // Check if user is logged in
   useEffect(() => {
     const checkAndUpdate = () => {
@@ -118,26 +213,41 @@ export default function Header() {
             Home
           </Link>
 
-          <Link
-            to="/capabilities"
-            className="text-lg text-black font-[BasisGrotesquePro]"
+          <a
+            href="#capabilities"
+            onClick={handleAICapabilitiesClick}
+            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${
+              location.pathname === "/" && window.location.hash === "#capabilities"
+                ? "!text-[#3AD6F2]"
+                : "text-black hover:!text-[#3AD6F2]"
+            }`}
           >
             AI Capabilities
-          </Link>
+          </a>
 
-          <Link
-            to="/pricing"
-            className="text-lg text-black font-[BasisGrotesquePro]"
+          <a
+            href="#pricing"
+            onClick={handlePricingClick}
+            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${
+              location.pathname === "/" && window.location.hash === "#pricing"
+                ? "!text-[#3AD6F2]"
+                : "text-black hover:!text-[#3AD6F2]"
+            }`}
           >
             Pricing
-          </Link>
+          </a>
 
-          <Link
-            to="/case-studies"
-            className="text-lg text-black font-[BasisGrotesquePro]"
+          <a
+            href="#faq"
+            onClick={handleFAQClick}
+            className={`text-lg font-[BasisGrotesquePro] cursor-pointer transition-colors ${
+              location.pathname === "/" && window.location.hash === "#faq"
+                ? "!text-[#3AD6F2]"
+                : "text-black hover:!text-[#3AD6F2]"
+            }`}
           >
-            Case Studies
-          </Link>
+            FAQ
+          </a>
         </nav>
 
         {/* Right Buttons */}
@@ -179,24 +289,48 @@ export default function Header() {
           >
             Home
           </Link>
-          <Link
-            to="/capabilities"
-            className="block text-black font-[BasisGrotesquePro]"
+          <a
+            href="#capabilities"
+            onClick={(e) => {
+              handleAICapabilitiesClick(e);
+              setMobileMenuOpen(false);
+            }}
+            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${
+              location.pathname === "/" && window.location.hash === "#capabilities"
+                ? "text-[#3AD6F2]"
+                : "text-black hover:text-[#3AD6F2]"
+            }`}
           >
             AI Capabilities
-          </Link>
-          <Link
-            to="/pricing"
-            className="block text-black font-[BasisGrotesquePro]"
+          </a>
+          <a
+            href="#pricing"
+            onClick={(e) => {
+              handlePricingClick(e);
+              setMobileMenuOpen(false);
+            }}
+            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${
+              location.pathname === "/" && window.location.hash === "#pricing"
+                ? "text-[#3AD6F2]"
+                : "text-black hover:text-[#3AD6F2]"
+            }`}
           >
             Pricing
-          </Link>
-          <Link
-            to="/case-studies"
-            className="block text-black font-[BasisGrotesquePro]"
+          </a>
+          <a
+            href="#faq"
+            onClick={(e) => {
+              handleFAQClick(e);
+              setMobileMenuOpen(false);
+            }}
+            className={`block font-[BasisGrotesquePro] cursor-pointer transition-colors ${
+              location.pathname === "/" && window.location.hash === "#faq"
+                ? "text-[#3AD6F2]"
+                : "text-black hover:text-[#3AD6F2]"
+            }`}
           >
-            Case Studies
-          </Link>
+            FAQ
+          </a>
 
           {isUserLoggedIn ? (
             <button
