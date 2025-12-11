@@ -8,6 +8,7 @@ import BulkActionModal from './BulkAction';
 import BulkImportModal from './BulkImportModal';
 import AddClientModal from "./AddClientModal";
 import IntakeFormBuilderModal from './IntakeFormBuilderModal';
+import StartWorkflowModal from '../Workflow/StartWorkflowModal';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
@@ -34,6 +35,8 @@ export default function ClientManage() {
   const [selectedClientForDelete, setSelectedClientForDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [reassigning, setReassigning] = useState(false);
+  const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
+  const [selectedClientForWorkflow, setSelectedClientForWorkflow] = useState(null);
 
   // Staff members state
   const [staffMembers, setStaffMembers] = useState([]);
@@ -487,23 +490,27 @@ export default function ClientManage() {
   };
 
   // Reassign/Assign Tax Preparer (uses same API for both)
-  const handleReassignTaxPreparer = async (clientId, taxPreparerId) => {
+  const handleReassignTaxPreparer = async (clientId, selectedStaffId, isFirm = false) => {
     try {
       setReassigning(true);
       const token = getAccessToken();
+      
+      // Build payload based on whether it's a firm or tax preparer
+      const payload = isFirm 
+        ? { firm_id: parseInt(selectedStaffId) }
+        : { tax_preparer_id: parseInt(selectedStaffId) };
+      
       const response = await fetchWithCors(`${API_BASE_URL}/firm/taxpayers/${clientId}/reassign-tax-preparer/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          tax_preparer_id: parseInt(taxPreparerId)
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({}));  
         throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
@@ -1126,6 +1133,20 @@ export default function ClientManage() {
                                       Assign Staff
                                     </button>
                                   )}
+                                  <button 
+                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    onClick={() => {
+                                      setSelectedClientForWorkflow({
+                                        id: client.id,
+                                        name: client.name || client.company || 'Client',
+                                        assignedPreparerId: client.assignedStaff?.[0]?.id || null
+                                      });
+                                      setShowStartWorkflowModal(true);
+                                      setShowDropdown(null);
+                                    }}
+                                  >
+                                    Start Workflow
+                                  </button>
                                   <div style={{ borderTop: '0.2px solid #000000' }}></div>
                                   <button
                                     className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -1445,6 +1466,22 @@ export default function ClientManage() {
         onClose={() => setShowFormBuilder(false)}
       />
 
+      {/* Start Workflow Modal */}
+      <StartWorkflowModal
+        isOpen={showStartWorkflowModal}
+        onClose={() => {
+          setShowStartWorkflowModal(false);
+          setSelectedClientForWorkflow(null);
+        }}
+        onSuccess={() => {
+          toast.success('Workflow started successfully!');
+          // Optionally refresh data or navigate
+        }}
+        clientId={selectedClientForWorkflow?.id}
+        clientName={selectedClientForWorkflow?.name}
+        assignedPreparerId={selectedClientForWorkflow?.assignedPreparerId}
+      />
+
       {/* Reassign/Assign Staff Modal */}
       {showReassignStaffModal && (
         <div
@@ -1535,7 +1572,10 @@ export default function ClientManage() {
                       const selectElement = document.getElementById('reassign-staff-select');
                       const selectedValue = selectElement?.value;
                       if (selectedValue && selectedClientForReassign) {
-                        handleReassignTaxPreparer(selectedClientForReassign, selectedValue);
+                        // Find the selected staff member to check if it's a firm
+                        const selectedStaff = staffMembers.find(staff => staff.id.toString() === selectedValue);
+                        const isFirm = selectedStaff?.type === 'firm';
+                        handleReassignTaxPreparer(selectedClientForReassign, selectedValue, isFirm);
                       } else {
                         toast.error('Please select a tax preparer', {
                           position: "top-right",

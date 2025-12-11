@@ -64,6 +64,7 @@ export default function ClientDetails() {
   const isDocuments = currentPath.includes('/documents');
   const isInvoices = currentPath.includes('/invoices');
   const isSchedulePath = currentPath.includes('/schedule');
+  const isESignLogs = currentPath.includes('/esign-logs');
   // If user is on invoices with ?view=schedule, treat Schedules as active
   const viewParam = new URLSearchParams(location.search).get('view');
   const isScheduleViaQuery = isInvoices && viewParam === 'schedule';
@@ -1455,11 +1456,40 @@ export default function ClientDetails() {
           >
             Schedules
           </button>
+
+          {/* E-Sign Activity */}
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              display: "inline-flex",
+              width: "auto",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              backgroundColor: isESignLogs ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
+              color: isESignLogs ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
+              borderRadius: "7px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "var(--Palette2-TealBlue-900, #00C0C6)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isESignLogs
+                ? "var(--Palette2-TealBlue-900, #00C0C6)"
+                : "#fff";
+              e.currentTarget.style.color = isESignLogs ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+            }}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/esign-logs`)}
+          >
+            E-Sign Activity
+          </button>
         </div>
       </div>
       <Outlet />
 
-      {!(isDocuments || isInvoices || isSchedule) && (
+      {!(isDocuments || isInvoices || isSchedule || isESignLogs) && (
         <div className="flex flex-col gap-6 mt-6">
           {/* Personal Information */}
           <div className="bg-white rounded-xl p-6 ">

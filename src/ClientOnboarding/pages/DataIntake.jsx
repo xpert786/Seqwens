@@ -319,13 +319,47 @@ export default function DataIntakeForm() {
   };
 
   // Validate phone number - extract number part (without country code) and check if exactly 10 digits
+  // Handles country codes of 1, 2, or 3 digits
   const validatePhoneNumber = (phoneValue) => {
     if (!phoneValue) return { valid: false, error: 'Phone number is required' };
     
     // Extract all digits from the phone value (react-phone-input-2 includes country code)
     const digitsOnly = phoneValue.replace(/\D/g, '');
     
-    // Extract the number part (last 10 digits) - this is the actual phone number without country code
+    // Determine country code length by checking the phone value format
+    // react-phone-input-2 formats phone as: +[countryCode][phoneNumber]
+    const phoneWithPlus = phoneValue.startsWith('+') ? phoneValue : `+${phoneValue}`;
+    
+    let countryCodeLength = 1; // Default to 1 digit
+    
+    // Check for 3-digit country codes (mostly African countries starting with +2)
+    // Pattern: +2XX where XX is 12-99 (but not 20 which is Egypt with 2 digits)
+    // Examples: +212 (Morocco), +234 (Nigeria), +254 (Kenya), etc.
+    if (/^\+2(1[2-9]|2[1-9]|3[0-9]|4[0-9]|5[0-9]|6[0-9]|7[0-9]|8[0-9]|9[0-7])/.test(phoneWithPlus)) {
+      countryCodeLength = 3;
+    }
+    // Check for 2-digit country codes (most countries)
+    // Pattern: +[3-9]X or +20 (Egypt) or +27 (South Africa)
+    else if (/^\+([3-9]\d|20|27)/.test(phoneWithPlus)) {
+      countryCodeLength = 2;
+    }
+    // 1-digit country codes (US, Canada, etc. starting with +1)
+    else if (phoneWithPlus.startsWith('+1')) {
+      countryCodeLength = 1;
+    }
+    
+    // Total digits should be: countryCodeLength + 10 (phone number)
+    const expectedTotalDigits = countryCodeLength + 10;
+    
+    if (digitsOnly.length < expectedTotalDigits) {
+      return { valid: false, error: `Phone number must be exactly 10 digits (excluding country code)` };
+    }
+    
+    // Extract the last 10 digits (phone number without country code)
+    // This works for all country code lengths: 
+    // - 1 digit: 11 total (1 + 10) -> last 10 = phone number ✓
+    // - 2 digits: 12 total (2 + 10) -> last 10 = phone number ✓
+    // - 3 digits: 13 total (3 + 10) -> last 10 = phone number ✓
     const numberPart = digitsOnly.slice(-10);
     
     if (numberPart.length !== 10) {
