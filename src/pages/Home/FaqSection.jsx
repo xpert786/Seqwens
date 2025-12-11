@@ -28,7 +28,7 @@ export default function FaqSection() {
   }, []);
 
   return (
-    <section className="py-10 sm:py-14 md:py-16 lg:py-20 px-3 sm:px-4 md:px-6 bg-[#FFFFFF]">
+    <section id="faq" className="py-10 sm:py-14 md:py-16 lg:py-20 px-3 sm:px-4 md:px-6 bg-[#FFFFFF]">
       <h6 className="text-center text-xs sm:text-sm font-semibold text-[#4B5563] tracking-wide">
         FAQ
       </h6>
