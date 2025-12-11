@@ -63,11 +63,11 @@ export default function FeedbackWrapper({ children }) {
           console.log('FeedbackWrapper: ✅ User has not submitted feedback and modal not shown before, showing modal in 1 second');
           // Mark as shown in localStorage to prevent showing again
           storage?.setItem(feedbackShownKey, 'true');
-          // Small delay to ensure page is loaded
-          setTimeout(() => {
-            console.log('FeedbackWrapper: ✅ Setting showFeedbackModal to true');
-            setShowFeedbackModal(true);
-          }, 1000);
+            // Small delay to ensure page is loaded
+            setTimeout(() => {
+              console.log('FeedbackWrapper: ✅ Setting showFeedbackModal to true');
+              setShowFeedbackModal(true);
+            }, 1000);
         } else {
           console.log('FeedbackWrapper: API response was not successful:', response);
         }

@@ -41,6 +41,7 @@ import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
 import OfficeComparison from './Pages/Offices/OfficeComparison';
 import SecurityCompliance from './Pages/SecurityCompliance';
 import EmailTemplate from './Pages/Email-templates/EmailTemplate';
+import CustomRolesManagement from './Pages/CustomRoles/CustomRolesManagement';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -165,6 +166,7 @@ export default function FirmRoutes() {
         <Route path="settings" element={<FirmSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="account-settings" element={<AccountSettings />} />
+        <Route path="custom-roles" element={<CustomRolesManagement />} />
         <Route path="offices" element={<Offices />} />
         <Route path="offices/:officeId" element={<OfficeOverview />} />
         <Route path="offices/:officeId/dashboard-view" element={<OfficeDashboardView />} />
