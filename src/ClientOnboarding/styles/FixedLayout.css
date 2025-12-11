@@ -25,3 +25,40 @@
     overflow-y: auto !important;  
   }
 }
+
+/* Tablet styles */
+@media (max-width: 768px) {
+  .top img {
+    width: 250px !important;
+    padding: 25px 30px !important;
+  }
+
+  .content-rap {
+    padding: 15px !important;
+  }
+}
+
+/* Mobile phone styles */
+@media (max-width: 480px) {
+  .top img {
+    width: 180px !important;
+    padding: 20px 15px !important;
+  }
+
+  .content-rap {
+    padding: 10px !important;
+    align-items: flex-start !important;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 360px) {
+  .top img {
+    width: 150px !important;
+    padding: 15px 10px !important;
+  }
+
+  .content-rap {
+    padding: 8px !important;
+  }
+}

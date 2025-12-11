@@ -189,13 +189,20 @@ export default function ArchivedDocuments() {
                     ? categoryMapRef.current[selectedCategory] || null
                     : null;
                 fetchArchivedDocuments(searchQuery, categoryId);
-                alert('Document recovered successfully');
+                toast.success('Document recovered successfully', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             } else {
                 throw new Error(result.message || 'Failed to recover document');
             }
         } catch (error) {
             console.error('Error recovering document:', error);
-            alert(handleAPIError(error));
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to recover document'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
         }
     };
 

@@ -56,6 +56,8 @@ export default function TasksPage() {
   const [showCustomize, setShowCustomize] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState(null);
   const [active, setActive] = useState("kanban");
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState([]);
@@ -760,6 +762,164 @@ export default function TasksPage() {
     }
   };
 
+  // Prepare form data for API
+  const prepareFormData = () => {
+    const formDataToSend = new FormData();
+
+    // Required fields
+    formDataToSend.append('task_type', formData.task_type || 'signature_request');
+    formDataToSend.append('task_title', formData.task_title);
+    // client_ids must be sent as JSON string array like: "[\"96\"]"
+    formDataToSend.append('client_ids', JSON.stringify(formData.client_ids));
+
+    // Optional fields (only append if they have values)
+    if (formData.due_date) {
+      formDataToSend.append('due_date', formData.due_date);
+    }
+
+    if (formData.priority) {
+      formDataToSend.append('priority', formData.priority);
+    }
+
+    if (formData.folder_id) {
+      formDataToSend.append('folder_id', formData.folder_id);
+    }
+
+    if (formData.estimated_hours) {
+      formDataToSend.append('estimated_hours', formData.estimated_hours.toString());
+    }
+
+    if (formData.description) {
+      formDataToSend.append('description', formData.description);
+    }
+
+    // Add spouse signature requirement for signature requests
+    // Always send this field for signature requests, even if false
+    if (formData.task_type === 'signature_request') {
+      // Get the raw value from formData
+      const rawValue = formData.spouse_signature_required;
+      console.log('Raw spouse_signature_required value before processing:', rawValue, 'type:', typeof rawValue);
+
+      // Convert to boolean - check multiple possible truthy values
+      const spouseSignValue = !!(rawValue === true ||
+        rawValue === 'true' ||
+        rawValue === 'True' ||
+        rawValue === 1 ||
+        rawValue === '1');
+
+      console.log('Processed spouse_signature_required value:', spouseSignValue);
+
+      // The API expects 'spouse_sign' field name (based on API response)
+      // Django FormData boolean fields often expect "1"/"0" or "True"/"False"
+      // Try "1"/"0" first as it's more commonly accepted
+      const spouseSignString = spouseSignValue ? '1' : '0';
+      formDataToSend.append('spouse_sign', spouseSignString);
+      // Also send the alternative field name for compatibility
+      formDataToSend.append('spouse_signature_required', spouseSignString);
+
+      console.log('Sending spouse_sign as:', spouseSignString, '(1 = true, 0 = false)');
+      console.log('FormData entries for spouse fields:');
+      for (let pair of formDataToSend.entries()) {
+        if (pair[0].includes('spouse')) {
+          console.log('  ', pair[0] + ':', pair[1]);
+        }
+      }   
+    }
+
+    // Append files (can be multiple files)
+    if (formData.files && formData.files.length > 0) {
+      formData.files.forEach((file) => {
+        formDataToSend.append('files', file);
+      });
+    }
+
+    return formDataToSend;
+  };
+
+  // Update task API call
+  const updateTask = async (e) => {
+    e.preventDefault();
+
+    if (!formData.task_title || !formData.client_ids || formData.client_ids.length === 0) {
+      toast.error('Please fill in all required fields', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    if (!editingTaskId) {
+      toast.error('Task ID is missing', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const formDataToSend = prepareFormData();
+
+      const config = {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
+        body: formDataToSend
+      };
+
+      const apiUrl = `${API_BASE_URL}/taxpayer/tax-preparer/tasks/${editingTaskId}/`;
+      console.log('Updating task at:', apiUrl);
+
+      const response = await fetchWithCors(apiUrl, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Task updated successfully:', result);
+
+      // Reset form and close modal
+      setFormData({
+        task_type: 'signature_request',
+        task_title: '',
+        client_ids: [],
+        folder_id: '',
+        due_date: '',
+        priority: '',
+        estimated_hours: '',
+        description: '',
+        files: [],
+        spouse_signature_required: false
+      });
+      setSelectedFolderPath('');
+      setCreatingFolder(false);
+      setNewFolderName('');
+      setParentFolderForNewFolder(null);
+      setShowAddTaskModal(false);
+      setIsEditMode(false);
+      setEditingTaskId(null);
+
+      // Show success message
+      toast.success('Task updated successfully!', { position: "top-right", autoClose: 3000 });
+
+      // Refresh tasks list
+      fetchReceivedTasks();
+
+    } catch (error) {
+      console.error('Error updating task:', error);
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to update task. Please try again.'), { position: "top-right", autoClose: 3000 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Create task API call
   const createTask = async (e) => {
     e.preventDefault();
@@ -779,75 +939,7 @@ export default function TasksPage() {
         throw new Error('No authentication token found');
       }
 
-      // Create FormData for multipart/form-data request
-      const formDataToSend = new FormData();
-
-      // Required fields
-      formDataToSend.append('task_type', formData.task_type || 'signature_request');
-      formDataToSend.append('task_title', formData.task_title);
-      // client_ids must be sent as JSON string array like: "[\"96\"]"
-      formDataToSend.append('client_ids', JSON.stringify(formData.client_ids));
-
-      // Optional fields (only append if they have values)
-      if (formData.due_date) {
-        formDataToSend.append('due_date', formData.due_date);
-      }
-
-      if (formData.priority) {
-        formDataToSend.append('priority', formData.priority);
-      }
-
-      if (formData.folder_id) {
-        formDataToSend.append('folder_id', formData.folder_id);
-      }
-
-      if (formData.estimated_hours) {
-        formDataToSend.append('estimated_hours', formData.estimated_hours.toString());
-      }
-
-      if (formData.description) {
-        formDataToSend.append('description', formData.description);
-      }
-
-      // Add spouse signature requirement for signature requests
-      // Always send this field for signature requests, even if false
-      if (formData.task_type === 'signature_request') {
-        // Get the raw value from formData
-        const rawValue = formData.spouse_signature_required;
-        console.log('Raw spouse_signature_required value before processing:', rawValue, 'type:', typeof rawValue);
-
-        // Convert to boolean - check multiple possible truthy values
-        const spouseSignValue = !!(rawValue === true ||
-          rawValue === 'true' ||
-          rawValue === 'True' ||
-          rawValue === 1 ||
-          rawValue === '1');
-
-        console.log('Processed spouse_signature_required value:', spouseSignValue);
-
-        // The API expects 'spouse_sign' field name (based on API response)
-        // Django FormData boolean fields often expect "1"/"0" or "True"/"False"
-        // Try "1"/"0" first as it's more commonly accepted
-        const spouseSignString = spouseSignValue ? '1' : '0';
-        formDataToSend.append('spouse_sign', spouseSignString);
-        // Also send the alternative field name for compatibility
-        formDataToSend.append('spouse_signature_required', spouseSignString);
-
-        console.log('Sending spouse_sign as:', spouseSignString, '(1 = true, 0 = false)');
-        console.log('FormData entries for spouse fields:');
-        for (let pair of formDataToSend.entries()) {
-          if (pair[0].includes('spouse')) {
-            console.log('  ', pair[0] + ':', pair[1]);
-          }
-        }   
-      }
-
-      // Append files (can be multiple files)
-      if (formData.files && formData.files.length > 0) {
-        formData.files.forEach((file) => {
-          formDataToSend.append('files', file);
-        });
-      }
+      const formDataToSend = prepareFormData();
 
       // Log FormData for debugging (matching curl format)
       console.log('Creating task with data:');
@@ -908,12 +1000,14 @@ export default function TasksPage() {
       setNewFolderName('');
       setParentFolderForNewFolder(null);
       setShowAddTaskModal(false);
+      setIsEditMode(false);
+      setEditingTaskId(null);
 
       // Show success message
       toast.success('Task created successfully!', { position: "top-right", autoClose: 3000 });
 
-      // Optionally refresh tasks list here
-      // fetchTasks();
+      // Refresh tasks list
+      fetchReceivedTasks();
 
     } catch (error) {
       console.error('Error creating task:', error);
@@ -981,7 +1075,11 @@ export default function TasksPage() {
           <small className="text-muted">Manage your assigned tasks and workflow</small>
         </div>
         <button
-          onClick={() => setShowAddTaskModal(true)}
+          onClick={() => {
+            setIsEditMode(false);
+            setEditingTaskId(null);
+            setShowAddTaskModal(true);
+          }}
           className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
         >
           <AddTask />
@@ -1225,15 +1323,22 @@ export default function TasksPage() {
               <div className="mt-3" style={{
                 width: '100%',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
                 gap: '12px',
-                maxWidth: '1400px'
+                alignItems: 'start'
               }}>
                 {order.map((k) => (
-                  <div key={k} style={{ display: 'flex' }}>
+                  <div key={k} style={{ display: 'flex', alignSelf: 'flex-start' }}>
                     <div className="card" style={{ background: bgForCol(k), borderRadius: 18, border: "1px solid #E8F0FF", width: '100%' }}>
-                      <div className="card-body">
-                        <h6 className="fw-semibold d-flex align-items-center mb-3" style={{ color: "#3B4A66", gap: 8 }}>
+                      <div className="card-body" style={{ 
+                        padding: '1rem',
+                        paddingBottom: tasks[k].length === 0 ? '0.75rem' : '1rem'
+                      }}>
+                        <h6 className="fw-semibold d-flex align-items-center" style={{ 
+                          color: "#3B4A66", 
+                          gap: 8,
+                          marginBottom: tasks[k].length === 0 ? '0.75rem' : '1rem'
+                        }}>
                           {iconFor(k)} {titleFor(k)} ({tasks[k].length})
                         </h6>
                         {tasks[k].length > 0 ? (
@@ -1275,12 +1380,30 @@ export default function TasksPage() {
                                   <span className="icon-circle" style={{ width: 28, height: 28, borderRadius: 8, background: "#EAF7FF", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#00C0C6" }}><Doc /></span>
                                   <div style={{ minWidth: 0, flex: 1, marginLeft: 10 }}>
                                     <div className="fw-semibold" style={{ color: "#3B4A66", whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', fontSize: 14, lineHeight: '20px', paddingRight: 60 }}>{t.title}</div>
-                                    <div className="text-muted small d-flex align-items-center justify-content-between w-100 flex-wrap" style={{ gap: 12, marginTop: 6, marginBottom: 4 }}>
-                                      <span className="d-inline-flex align-items-center" style={{ gap: 6 }}>
-                                        <MiniContact /> {t.client}
-                                        <span className="ms-3">{t.due}</span>
+                                    <div className="text-muted small d-flex align-items-center justify-content-between w-100" style={{ gap: 12, marginTop: 6, marginBottom: 4, flexWrap: 'nowrap' }}>
+                                      <span className="d-inline-flex align-items-center" style={{ gap: 6, minWidth: 0, flex: 1 }}>
+                                        <MiniContact /> <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.client}</span>
+                                        <span className="ms-3" style={{ whiteSpace: 'nowrap' }}>{t.due}</span>
                                       </span>
-                                      <button className="btn btn-sm btn-light" style={{ backgroundColor: '#fff', borderRadius: 8, border: '1px solid #E8F0FF' }} aria-label="More options">
+                                      <button 
+                                        className="btn btn-sm btn-light" 
+                                        style={{ 
+                                          backgroundColor: '#fff', 
+                                          borderRadius: 8, 
+                                          border: '1px solid #E8F0FF',
+                                          flexShrink: 0,
+                                          minWidth: '32px',
+                                          padding: '4px 8px',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        }} 
+                                        aria-label="More options"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedTask(t);
+                                        }}
+                                      >
                                         <Dot />
                                       </button>
                                     </div>
@@ -1291,7 +1414,7 @@ export default function TasksPage() {
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-4 text-muted small">
+                          <div className="text-center text-muted small" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem', lineHeight: '1.4' }}>
                             No {titleFor(k).toLowerCase()} tasks
                           </div>
                         )}
@@ -1403,6 +1526,33 @@ export default function TasksPage() {
                   type="button"
                   className="btn btn-primary"
                   style={{ backgroundColor: '#FF7A2F', borderColor: '#FF7A2F', borderRadius: '8px' }}
+                  onClick={() => {
+                    // Populate form with selected task data
+                    if (selectedTask) {
+                      const taskClientIds = selectedTask.clients_info && selectedTask.clients_info.length > 0
+                        ? selectedTask.clients_info.map(c => c.id.toString())
+                        : [];
+                      
+                      setFormData({
+                        task_type: selectedTask.task_type || 'signature_request',
+                        task_title: selectedTask.title || '',
+                        client_ids: taskClientIds,
+                        folder_id: selectedTask.folder_info?.id || '',
+                        due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : '',
+                        priority: selectedTask.priority?.toLowerCase() || '',
+                        estimated_hours: selectedTask.estimated_hours || '',
+                        description: selectedTask.note || '',
+                        files: [],
+                        spouse_signature_required: selectedTask.signature_requests_info?.some(sr => sr.spouse_signature_required) || false
+                      });
+                      
+                      setSelectedFolderPath(selectedTask.folder_info?.title || selectedTask.folder_info?.name || '');
+                      setEditingTaskId(selectedTask.id);
+                      setIsEditMode(true);
+                      setShowAddTaskModal(true);
+                      setSelectedTask(null); // Close the details modal
+                    }
+                  }}
                 >
                   Edit Task
                 </button>
@@ -1458,13 +1608,13 @@ export default function TasksPage() {
                   fontWeight: '600',
                   color: '#3B4A66',
                   lineHeight: '24px'
-                }}>Create New Task</h5>
+                }}>{isEditMode ? 'Edit Task' : 'Create New Task'}</h5>
                 <p style={{
                   margin: '4px 0 0',
                   fontSize: '12px',
                   color: '#6B7280',
                   lineHeight: '16px'
-                }}>Add a new task to your workflow</p>
+                }}>{isEditMode ? 'Update task details' : 'Add a new task to your workflow'}</p>
               </div>
               <button
                 type="button"
@@ -1486,6 +1636,8 @@ export default function TasksPage() {
                   setCreatingFolder(false);
                   setNewFolderName('');
                   setParentFolderForNewFolder(null);
+                  setIsEditMode(false);
+                  setEditingTaskId(null);
                 }}
                 style={{
                   background: 'none',
@@ -1502,7 +1654,7 @@ export default function TasksPage() {
 
             {/* Form */}
             <div style={{ padding: '24px' }}>
-              <form onSubmit={createTask}>
+              <form onSubmit={isEditMode ? updateTask : createTask}>
                 {/* Task Type */}
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{
@@ -2232,6 +2384,8 @@ export default function TasksPage() {
                   setCreatingFolder(false);
                   setNewFolderName('');
                   setParentFolderForNewFolder(null);
+                  setIsEditMode(false);
+                  setEditingTaskId(null);
                 }}
                 style={{
                   padding: '10px 16px',
@@ -2257,7 +2411,7 @@ export default function TasksPage() {
               </button>
               <button
                 type="submit"
-                onClick={createTask}
+                onClick={isEditMode ? updateTask : createTask}
                 disabled={loading}
                 style={{
                   padding: '10px 16px',
@@ -2290,7 +2444,7 @@ export default function TasksPage() {
                   e.target.style.transform = 'scale(1)';
                 }}
               >
-                {loading ? 'Creating...' : 'Create Task'}
+                {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Task' : 'Create Task')}
               </button>
             </div>
           </div>

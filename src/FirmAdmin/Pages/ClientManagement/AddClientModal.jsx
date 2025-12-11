@@ -284,8 +284,20 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               onCountryChange={(countryCode) => {
                 setPhoneCountry(countryCode.toLowerCase());
               }}
-              inputClass="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm"
+              inputClass="form-control"
               containerClass="w-100 phone-input-container"
+              inputStyle={{
+                height: '45px',
+                paddingLeft: '48px',
+                paddingRight: '12px',
+                paddingTop: '6px',
+                paddingBottom: '6px',
+                width: '100%',
+                fontSize: '1rem',
+                border: '1px solid #ced4da',
+                borderRadius: '0.375rem',
+                backgroundColor: '#fff'
+              }}
               enableSearch={true}
               countryCodeEditable={false}
             />
@@ -357,7 +369,8 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
+              className="px-6 py-2 bg-[#F56D2D] text-white hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
+              style={{ borderRadius: '8px' }}
             >
               {loading ? 'Creating...' : 'Add Client'}
             </button>
