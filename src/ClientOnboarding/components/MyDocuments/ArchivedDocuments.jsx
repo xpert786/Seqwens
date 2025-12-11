@@ -3,6 +3,8 @@ import { handleAPIError } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
 import { UpIcon } from '../icons';
+import { toast } from "react-toastify";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 import "../../styles/Document.css";
 import Pagination from "../Pagination";
 
@@ -17,6 +19,8 @@ export default function ArchivedDocuments() {
     const categoryMapRef = useRef({}); // Map category names to IDs (using ref to avoid re-renders)
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 3;
+    const [showDeleteDocumentConfirm, setShowDeleteDocumentConfirm] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState(null);
 
     // Fetch archived documents from the API
     const fetchArchivedDocuments = async (search = '', categoryId = null) => {
@@ -196,9 +200,12 @@ export default function ArchivedDocuments() {
     };
 
     const handleDelete = async (docId) => {
-        if (!window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-            return;
-        }
+        setDocumentToDelete(docId);
+        setShowDeleteDocumentConfirm(true);
+    };
+
+    const confirmDeleteDocument = async () => {
+        if (!documentToDelete) return;
 
         try {
             const API_BASE_URL = getApiBaseUrl();
@@ -209,7 +216,7 @@ export default function ArchivedDocuments() {
                 return;
             }
 
-            const url = `${API_BASE_URL}/taxpayer/documents/${docId}/`;
+            const url = `${API_BASE_URL}/taxpayer/documents/${documentToDelete}/`;
 
             const config = {
                 method: 'DELETE',
@@ -230,10 +237,19 @@ export default function ArchivedDocuments() {
                 ? categoryMapRef.current[selectedCategory] || null
                 : null;
             fetchArchivedDocuments(searchQuery, categoryId);
-            alert('Document deleted successfully');
+            toast.success('Document deleted successfully', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            setShowDeleteDocumentConfirm(false);
+            setDocumentToDelete(null);
         } catch (error) {
             console.error('Error deleting document:', error);
-            alert(handleAPIError(error));
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to delete document'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
         }
     };
 
@@ -278,6 +294,7 @@ export default function ArchivedDocuments() {
     }
 
     return (
+        <>
         <div className="container-fluid px-0 mt-3">
             <div className="bg-white p-4 rounded-3">
                 <div className="mb-3">
@@ -497,6 +514,22 @@ export default function ArchivedDocuments() {
                 )}
             </div>
         </div>
+
+        {/* Delete Document Confirmation Modal */}
+        <ConfirmationModal
+            isOpen={showDeleteDocumentConfirm}
+            onClose={() => {
+                setShowDeleteDocumentConfirm(false);
+                setDocumentToDelete(null);
+            }}
+            onConfirm={confirmDeleteDocument}
+            title="Delete Document"
+            message="Are you sure you want to delete this document? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            isDestructive={true}
+        />
+        </>
     );
 }
 

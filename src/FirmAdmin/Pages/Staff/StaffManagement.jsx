@@ -14,6 +14,7 @@ import AddStaffModal from './AddStaffModal';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -42,6 +43,8 @@ export default function StaffManagement() {
   });
   const [processingInviteId, setProcessingInviteId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [showCancelInviteConfirm, setShowCancelInviteConfirm] = useState(false);
+  const [inviteToCancel, setInviteToCancel] = useState(null);
   const [summary, setSummary] = useState({
     active_staff: 0,
     pending_invites: 0,
@@ -538,6 +541,66 @@ export default function StaffManagement() {
         position: "top-right",
         autoClose: 4000,
       });
+    } finally {
+      setProcessingInviteId(null);
+    }
+  };
+
+  // Confirm cancel invite from modal
+  const confirmCancelInvite = async () => {
+    if (!inviteToCancel) {
+      return;
+    }
+    
+    const inviteId = inviteToCancel;
+    
+    try {
+      setProcessingInviteId(inviteId);
+      setShowDropdown(null); // Close dropdown
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/firm-admin/staff/invites/${inviteId}/cancel/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Invitation cancelled successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        // Refresh the pending invites list
+        fetchPendingInvites();
+        // Close modal and reset state after successful cancellation
+        setShowCancelInviteConfirm(false);
+        setInviteToCancel(null);
+      } else {
+        throw new Error(result.message || 'Failed to cancel invitation');
+      }
+    } catch (err) {
+      console.error('Error cancelling invite:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to cancel invitation. Please try again.', {
+        position: "top-right",
+        autoClose: 4000,
+      });
+      // Keep modal open if there's an error so user can retry
     } finally {
       setProcessingInviteId(null);
     }
@@ -1228,9 +1291,8 @@ export default function StaffManagement() {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      if (window.confirm('Are you sure you want to cancel this invitation? This action cannot be undone.')) {
-                                        handleCancelInvite(invite.id);
-                                      }
+                                      setInviteToCancel(invite.id);
+                                      setShowCancelInviteConfirm(true);
                                     }}
                                     disabled={processingInviteId === invite.id || invite.is_expired}
                                     className={`block w-full text-left px-4 py-2 text-sm font-[BasisGrotesquePro] transition-colors ${processingInviteId === invite.id || invite.is_expired
@@ -1827,6 +1889,23 @@ export default function StaffManagement() {
           </div>
         </div>
       )}
+      {/* Cancel Invite Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showCancelInviteConfirm}
+        onClose={() => {
+          if (!processingInviteId) {
+            setShowCancelInviteConfirm(false);
+            setInviteToCancel(null);
+          }
+        }}
+        onConfirm={confirmCancelInvite}
+        title="Cancel Invitation"
+        message="Are you sure you want to cancel this invitation? This action cannot be undone."
+        confirmText="Cancel Invite"
+        cancelText="Keep Invitation"
+        isLoading={!!processingInviteId}
+        isDestructive={true}
+      />
     </>
   );
 }

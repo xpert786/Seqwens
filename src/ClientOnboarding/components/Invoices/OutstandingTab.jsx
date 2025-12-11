@@ -13,6 +13,8 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [firmLogo, setFirmLogo] = useState(null);
     const [firmName, setFirmName] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     const handlePayNowClick = async (invoice) => {
         try {
@@ -134,6 +136,19 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
         : 0;
     
     const currentYear = new Date().getFullYear();
+
+    // Calculate pagination
+    const totalPages = Math.ceil(allInvoices.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedInvoices = allInvoices.slice(startIndex, endIndex);
+
+    // Reset modals when page changes
+    useEffect(() => {
+        setShowModal(false);
+        setShowInvoiceDetailsModal(false);
+        setSelectedInvoice(null);
+    }, [currentPage]);
 
     // Get status badge style
     const getStatusBadgeStyle = (status, statusColor, isPaid) => {
@@ -366,7 +381,8 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                     </p>
                 </div>
             ) : (
-                allInvoices.map((inv, idx) => {
+                <>
+                {paginatedInvoices.map((inv, idx) => {
                     const statusStyle = getStatusBadgeStyle(inv.status, inv.status_color, inv.isPaid);
                     return (
                         <div
@@ -459,7 +475,91 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                             </div>
                         </div>
                     );
-                })
+                })}
+
+                {/* Pagination Controls */}
+                {allInvoices.length > itemsPerPage && (
+                    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
+                        <div className="d-flex align-items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="btn btn-sm"
+                                style={{
+                                    backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white',
+                                    borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
+                                    color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "14px",
+                                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                    opacity: currentPage === 1 ? 0.5 : 1
+                                }}
+                            >
+                                Previous
+                            </button>
+                            
+                            <div className="d-flex align-items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                    if (
+                                        page === 1 ||
+                                        page === totalPages ||
+                                        (page >= currentPage - 1 && page <= currentPage + 1)
+                                    ) {
+                                        return (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className="btn btn-sm"
+                                                style={{
+                                                    backgroundColor: currentPage === page ? '#3B82F6' : 'white',
+                                                    borderColor: currentPage === page ? '#3B82F6' : '#D1D5DB',
+                                                    color: currentPage === page ? 'white' : '#6B7280',
+                                                    fontFamily: "BasisGrotesquePro",
+                                                    fontSize: "14px",
+                                                    minWidth: "36px"
+                                                }}
+                                            >
+                                                {page}
+                                            </button>
+                                        );
+                                    } else if (
+                                        page === currentPage - 2 ||
+                                        page === currentPage + 2
+                                    ) {
+                                        return (
+                                            <span key={page} className="px-2" style={{ color: '#6B7280', fontFamily: "BasisGrotesquePro" }}>
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="btn btn-sm"
+                                style={{
+                                    backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white',
+                                    borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
+                                    color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "14px",
+                                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                    opacity: currentPage === totalPages ? 0.5 : 1
+                                }}
+                            >
+                                Next
+                            </button>
+                        </div>
+
+                        <div style={{ color: '#6B7280', fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+                            Showing {startIndex + 1}-{Math.min(endIndex, allInvoices.length)} of {allInvoices.length}
+                        </div>
+                    </div>
+                )}
+                </>
             )}
 
             {showModal && selectedInvoice && (

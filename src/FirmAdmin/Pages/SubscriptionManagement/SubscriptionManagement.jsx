@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError, firmAdminPaymentMethodsAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminPaymentMethodsAPI, firmAdminSubscriptionAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import AllPlans from './AllPlans';
 import AddOns from './AddOns';
@@ -15,6 +15,7 @@ import EnterpriseConsolidatedBilling from './Enterprise/EnterpriseConsolidatedBi
 import EnterpriseCostAllocation from './Enterprise/EnterpriseCostAllocation';
 import EnterpriseContracts from './Enterprise/EnterpriseContracts';
 import UpgradePlanModal from './UpgradePlanModal';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -30,6 +31,11 @@ const SubscriptionManagement = () => {
     const [currentPlan, setCurrentPlan] = useState(null);
     const [subscriptionOverview, setSubscriptionOverview] = useState(null);
     const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
+    const [cancellingSubscription, setCancellingSubscription] = useState(false);
+    const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+    const [showDeletePaymentConfirm, setShowDeletePaymentConfirm] = useState(false);
+    const [paymentMethodToDelete, setPaymentMethodToDelete] = useState(null);
+    const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
 
     // Form state for adding payment method
     const [newPaymentMethod, setNewPaymentMethod] = useState({
@@ -326,12 +332,15 @@ const SubscriptionManagement = () => {
 
     // Handle delete payment method
     const handleDeletePaymentMethod = async (paymentId) => {
-        if (!window.confirm('Are you sure you want to delete this payment method?')) {
-            return;
-        }
+        setPaymentMethodToDelete(paymentId);
+        setShowDeletePaymentConfirm(true);
+    };
+
+    const confirmDeletePaymentMethod = async () => {
+        if (!paymentMethodToDelete) return;
 
         try {
-            const response = await firmAdminPaymentMethodsAPI.deletePaymentMethod(paymentId);
+            const response = await firmAdminPaymentMethodsAPI.deletePaymentMethod(paymentMethodToDelete);
 
             if (response.success) {
                 toast.success(response.message || 'Payment method deleted successfully', {
@@ -367,6 +376,85 @@ const SubscriptionManagement = () => {
                 autoClose: 3000,
                 pauseOnHover: false
             });
+        } finally {
+            setDeletingPaymentMethod(false);
+        }
+    };
+
+    // Show cancel confirmation modal
+    const handleCancelSubscriptionClick = () => {
+        setShowCancelConfirmModal(true);
+    };
+
+    // Handle cancel subscription (after confirmation)
+    const handleCancelSubscription = async () => {
+        // Get subscription type from current plan
+        const planName = subscriptionOverview?.overview?.plan?.name || currentPlan || '';
+        
+        // Map plan names to subscription types (case-insensitive)
+        const planToSubscriptionType = {
+            'solo': 'solo',
+            'professional': 'professional',
+            'enterprise': 'enterprise',
+            'business': 'business',
+            'starter': 'starter',
+            'basic': 'basic',
+            'premium': 'premium'
+        };
+        
+        // Determine subscription type (default to 'professional' if not found)
+        const subscriptionType = planToSubscriptionType[planName.toLowerCase()] || 'professional';
+        
+        // Close confirmation modal
+        setShowCancelConfirmModal(false);
+        
+        try {
+            setCancellingSubscription(true);
+            const response = await firmAdminSubscriptionAPI.cancelSubscription(subscriptionType);
+            
+            if (response.success) {
+                const data = response.data || {};
+                let message = response.message || 'Subscription cancelled successfully';
+                
+                // Provide more detailed message based on cancellation type
+                if (data.cancelled_immediately === true) {
+                    message = 'Your subscription has been cancelled immediately. Access will be revoked shortly.';
+                } else if (data.cancelled_immediately === false) {
+                    message = 'Your subscription has been scheduled for cancellation at the end of the current billing period. You will continue to have access until then.';
+                    
+                    // Add subscription end date if available
+                    if (data.subscription_end_date) {
+                        const endDate = new Date(data.subscription_end_date);
+                        const formattedDate = endDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        message += ` Your subscription will end on ${formattedDate}.`;
+                    }
+                }
+                
+                toast.success(message, {
+                    position: 'top-right',
+                    autoClose: 7000,
+                    pauseOnHover: true
+                });
+                
+                // Refresh subscription overview to reflect the cancellation
+                await fetchSubscriptionOverview();
+            } else {
+                throw new Error(response.message || 'Failed to cancel subscription');
+            }
+        } catch (err) {
+            console.error('Error cancelling subscription:', err);
+            const errorMsg = handleAPIError(err);
+            toast.error(errorMsg || 'Failed to cancel subscription. Please try again.', {
+                position: 'top-right',
+                autoClose: 5000,
+                pauseOnHover: false
+            });
+        } finally {
+            setCancellingSubscription(false);
         }
     };
 
@@ -569,8 +657,12 @@ const SubscriptionManagement = () => {
                                     <button className="px-4 sm:px-5 py-2 bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium">
                                         Change Plan
                                     </button>
-                                    <button className="px-4 sm:px-5 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium">
-                                        Cancel Subscription
+                                    <button 
+                                        onClick={handleCancelSubscriptionClick}
+                                        disabled={cancellingSubscription}
+                                        className="px-4 sm:px-5 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {cancellingSubscription ? 'Cancelling...' : 'Cancel Subscription'}
                                     </button>
                                 </div>
                             </div>
@@ -1075,6 +1167,93 @@ const SubscriptionManagement = () => {
                 isOpen={isUpgradePlanModalOpen}
                 onClose={() => setIsUpgradePlanModalOpen(false)}
                 currentPlanName={currentPlan}
+            />
+
+            {/* Cancel Subscription Confirmation Modal */}
+            {showCancelConfirmModal && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+                    onClick={() => {
+                        if (!cancellingSubscription) {
+                            setShowCancelConfirmModal(false);
+                        }
+                    }}
+                >
+                    <div
+                        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+                        style={{
+                            borderRadius: '12px',
+                            border: '1px solid #E8F0FF'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-[#E8F0FF]">
+                            <h2 className="text-xl font-bold font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                                Cancel Subscription
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    if (!cancellingSubscription) {
+                                        setShowCancelConfirmModal(false);
+                                    }
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                                disabled={cancellingSubscription}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M15 5L5 15M5 5L15 15" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6">
+                            <p className="text-sm text-gray-700 font-[BasisGrotesquePro] mb-2">
+                                Are you sure you want to cancel your <span className="font-semibold">{subscriptionOverview?.overview?.plan?.name || currentPlan || 'subscription'}</span> subscription?
+                            </p>
+                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                                This action cannot be undone. Your subscription will be cancelled and you may lose access to premium features.
+                            </p>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+                            <button
+                                onClick={() => setShowCancelConfirmModal(false)}
+                                disabled={cancellingSubscription}
+                                className="px-6 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Keep Subscription
+                            </button>
+                            <button
+                                onClick={handleCancelSubscription}
+                                disabled={cancellingSubscription}
+                                className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {cancellingSubscription ? 'Cancelling...' : 'Yes, Cancel Subscription'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Payment Method Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeletePaymentConfirm}
+                onClose={() => {
+                    if (!deletingPaymentMethod) {
+                        setShowDeletePaymentConfirm(false);
+                        setPaymentMethodToDelete(null);
+                    }
+                }}
+                onConfirm={confirmDeletePaymentMethod}
+                title="Delete Payment Method"
+                message="Are you sure you want to delete this payment method?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deletingPaymentMethod}
+                isDestructive={true}
             />
         </div>
     );

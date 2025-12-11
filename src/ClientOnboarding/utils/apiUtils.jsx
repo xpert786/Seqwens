@@ -184,8 +184,9 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
 
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
+      let errorData = null;
       try {
-        const errorData = await response.json();
+        errorData = await response.json();
         console.error('API Error Response:', errorData);
 
         // If there are specific field errors, show them
@@ -238,7 +239,14 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
       }
-      throw new Error(errorMessage);
+      
+      // Create error with full error data preserved
+      const error = new Error(errorMessage);
+      if (errorData) {
+        error.response = { data: errorData };
+        error.errors = errorData.errors;
+      }
+      throw error;
     }
 
     const result = await response.json();
@@ -3587,6 +3595,117 @@ export const taxPreparerClientAPI = {
   // Send invite to client (new API)
   sendInvite: async (payload) => {
     return await apiRequest('/user/tax-preparer/clients/invite/send/', 'POST', payload);
+  },
+
+  // Get eSign activity logs for a client
+  // GET /taxpayer/tax-preparer/clients/{client_id}/esign-logs/
+  getESignLogs: async (clientId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/esign-logs/`, 'GET');
+  }
+};
+
+// Tax Preparer Document Manager API functions
+export const taxPreparerDocumentsAPI = {
+  // Browse shared documents (documents shared by Firm Admin)
+  // GET /firm/staff/documents/browse/
+  browseSharedDocuments: async (params = {}) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const { folder_id, show_archived, search, category_id, sort_by } = params;
+    const queryParams = new URLSearchParams();
+
+    if (folder_id !== undefined && folder_id !== null) {
+      queryParams.append('folder_id', folder_id);
+    }
+    if (show_archived !== undefined) {
+      queryParams.append('show_archived', show_archived);
+    }
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (category_id !== undefined && category_id !== null) {
+      queryParams.append('category_id', category_id);
+    }
+    if (sort_by) {
+      queryParams.append('sort_by', sort_by);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/firm/staff/documents/browse/${queryString ? `?${queryString}` : ''}`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Create folder in shared documents
+  // POST /firm/staff/documents/folders/create/
+  createFolder: async (folderData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(folderData)
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/staff/documents/folders/create/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Upload documents to shared folder
+  // POST /taxpayer/tax-preparer/documents/upload/
+  uploadDocument: async (formData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type for FormData, browser will set it with boundary
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
   }
 };
 
@@ -4418,8 +4537,23 @@ export const firmAdminMessagingAPI = {
     if (search) queryParams.append('search', search);
 
     const queryString = queryParams.toString();
-    const url = `/seqwens/api/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
+    const url = `/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(url, 'GET');
+  },
+
+  // Check Feedback Status
+  // GET /accounts/feedback/status/
+  getFeedbackStatus: async () => {
+    const url = `/accounts/feedback/status/`;
+    return await apiRequest(url, 'GET');
+  },
+
+  // Submit Feedback
+  // POST /seqwens/api/user/feedback/
+  // Body: { stars: string (1-5), comment: string, role: string }
+  submitFeedback: async (feedbackData) => {
+    const url = `/user/feedback/`;
+    return await apiRequest(url, 'POST', feedbackData);
   },
 
   // Send a Message to a Thread
@@ -4951,6 +5085,189 @@ export const firmAdminPaymentMethodsAPI = {
   deletePaymentMethod: async (paymentMethodId) => {
     return await apiRequest(`/firm-admin/payment-methods/${paymentMethodId}/`, 'DELETE');
   },
+};
+
+// Firm Admin Subscription API functions
+export const firmAdminSubscriptionAPI = {
+  // Cancel subscription
+  cancelSubscription: async (subscriptionType) => {
+    return await apiRequest('/user/firm-admin/subscription/cancel/', 'POST', {
+      subscription_type: subscriptionType
+    });
+  },
+  // Change subscription plan
+  changeSubscription: async (subscriptionPlanId, billingCycle, paymentMethod = 'stripe', changeImmediately = true) => {
+    return await apiRequest('/user/firm-admin/subscription/change/', 'POST', {
+      subscription_plan_id: subscriptionPlanId,
+      billing_cycle: billingCycle,
+      payment_method: paymentMethod,
+      change_immediately: changeImmediately
+    });
+  },
+};
+
+// Workflow Management API functions
+export const workflowAPI = {
+  // Get available tax form types
+  getFormTypes: async () => {
+    return await apiRequest('/taxpayer/firm/workflows/form-types/', 'GET');
+  },
+
+  // Workflow Templates
+  // List all workflow templates
+  listTemplates: async (params = {}) => {
+    const { search, tax_form_type, is_active } = params;
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+    if (tax_form_type) queryParams.append('tax_form_type', tax_form_type);
+    if (is_active !== undefined) queryParams.append('is_active', is_active);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get workflow template details
+  getTemplate: async (templateId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/`, 'GET');
+  },
+
+  // Create workflow template
+  createTemplate: async (templateData) => {
+    return await apiRequest('/taxpayer/firm/workflows/templates/', 'POST', templateData);
+  },
+
+  // Update workflow template
+  updateTemplate: async (templateId, templateData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/`, 'PATCH', templateData);
+  },
+
+  // Delete workflow template
+  deleteTemplate: async (templateId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/`, 'DELETE');
+  },
+
+  // Clone workflow template
+  cloneTemplate: async (templateId, name) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/clone/`, 'POST', { name });
+  },
+
+  // Add stage to template
+  addStage: async (templateId, stageData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/`, 'POST', stageData);
+  },
+
+  // Update stage
+  updateStage: async (templateId, stageId, stageData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/`, 'PATCH', stageData);
+  },
+
+  // Delete stage
+  deleteStage: async (templateId, stageId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/`, 'DELETE');
+  },
+
+  // Reorder stages
+  reorderStages: async (templateId, stageOrders) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/reorder-stages/`, 'POST', { stage_orders: stageOrders });
+  },
+
+  // Add action to stage
+  addAction: async (templateId, stageId, actionData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/actions/`, 'POST', actionData);
+  },
+
+  // Update action
+  updateAction: async (templateId, stageId, actionId, actionData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/actions/${actionId}/`, 'PATCH', actionData);
+  },
+
+  // Delete action
+  deleteAction: async (templateId, stageId, actionId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/actions/${actionId}/`, 'DELETE');
+  },
+
+  // Add trigger to stage
+  addTrigger: async (templateId, stageId, triggerData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/triggers/`, 'POST', triggerData);
+  },
+
+  // Update trigger
+  updateTrigger: async (templateId, stageId, triggerId, triggerData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/triggers/${triggerId}/`, 'PATCH', triggerData);
+  },
+
+  // Delete trigger
+  deleteTrigger: async (templateId, stageId, triggerId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/triggers/${triggerId}/`, 'DELETE');
+  },
+
+  // Add reminder to stage
+  addReminder: async (templateId, stageId, reminderData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/reminders/`, 'POST', reminderData);
+  },
+
+  // Update reminder
+  updateReminder: async (templateId, stageId, reminderId, reminderData) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/reminders/${reminderId}/`, 'PATCH', reminderData);
+  },
+
+  // Delete reminder
+  deleteReminder: async (templateId, stageId, reminderId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/templates/${templateId}/stages/${stageId}/reminders/${reminderId}/`, 'DELETE');
+  },
+
+  // Workflow Instances
+  // List workflow instances
+  listInstances: async (params = {}) => {
+    const { status, search, tax_case_id, assigned_preparer_id } = params;
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    if (search) queryParams.append('search', search);
+    if (tax_case_id) queryParams.append('tax_case_id', tax_case_id);
+    if (assigned_preparer_id) queryParams.append('assigned_preparer_id', assigned_preparer_id);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get workflow instance details
+  getInstance: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'GET');
+  },
+
+  // Start workflow for tax case
+  startWorkflow: async (workflowData) => {
+    return await apiRequest('/taxpayer/firm/workflows/instances/', 'POST', workflowData);
+  },
+
+  // Advance workflow to next stage
+  advanceWorkflow: async (instanceId, targetStageId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/advance/`, 'POST', { target_stage_id: targetStageId });
+  },
+
+  // Pause workflow
+  pauseWorkflow: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/pause/`, 'POST');
+  },
+
+  // Resume workflow
+  resumeWorkflow: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/resume/`, 'POST');
+  },
+
+  // Complete workflow
+  completeWorkflow: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/complete/`, 'POST');
+  },
+
+  // Tax Preparer Workflows
+  // List workflows for tax preparer
+  listTaxPreparerWorkflows: async (params = {}) => {
+    const { status, search } = params;
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    if (search) queryParams.append('search', search);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/tax-preparer/workflows/${queryString ? `?${queryString}` : ''}`, 'GET');
+  }
 };
 
 // Maintenance Mode API functions

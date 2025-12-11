@@ -3,6 +3,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -15,6 +16,8 @@ const AddOns = () => {
     const [totalAddonCost, setTotalAddonCost] = useState(0);
     const [addingAddon, setAddingAddon] = useState(null);
     const [removingAddon, setRemovingAddon] = useState(null);
+    const [showRemoveAddonConfirm, setShowRemoveAddonConfirm] = useState(false);
+    const [addonToRemove, setAddonToRemove] = useState(null);
 
     // Fetch marketplace add-ons
     const fetchMarketplaceAddOns = useCallback(async () => {
@@ -154,14 +157,17 @@ const AddOns = () => {
 
     // Remove add-on from subscription
     const handleRemoveAddon = async (firmAddonId, addonName) => {
-        if (!window.confirm(`Are you sure you want to remove "${addonName}" from your subscription?`)) {
-            return;
-        }
+        setAddonToRemove({ firmAddonId, addonName });
+        setShowRemoveAddonConfirm(true);
+    };
+
+    const confirmRemoveAddon = async () => {
+        if (!addonToRemove) return;
 
         try {
-            setRemovingAddon(firmAddonId);
+            setRemovingAddon(addonToRemove.firmAddonId);
             const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/add-ons/${firmAddonId}/remove/`;
+            const url = `${API_BASE_URL}/user/firm-admin/add-ons/${addonToRemove.firmAddonId}/remove/`;
 
             const response = await fetchWithCors(url, {
                 method: 'DELETE',
@@ -179,12 +185,14 @@ const AddOns = () => {
             const result = await response.json();
 
             if (result.success) {
-                toast.success(result.message || `Add-on '${addonName}' removed successfully!`);
+                toast.success(result.message || `Add-on '${addonToRemove.addonName}' removed successfully!`);
                 // Refresh both lists
                 await Promise.all([
                     fetchMarketplaceAddOns(),
                     fetchActiveAddOns()
                 ]);
+                setShowRemoveAddonConfirm(false);
+                setAddonToRemove(null);
             } else {
                 throw new Error(result.message || 'Failed to remove add-on');
             }
@@ -441,6 +449,24 @@ const AddOns = () => {
                     )}
                 </>
             )}
+
+            {/* Remove Addon Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showRemoveAddonConfirm}
+                onClose={() => {
+                    if (!removingAddon) {
+                        setShowRemoveAddonConfirm(false);
+                        setAddonToRemove(null);
+                    }
+                }}
+                onConfirm={confirmRemoveAddon}
+                title="Remove Add-on"
+                message={addonToRemove ? `Are you sure you want to remove "${addonToRemove.addonName}" from your subscription?` : "Are you sure you want to remove this add-on from your subscription?"}
+                confirmText="Remove"
+                cancelText="Cancel"
+                isLoading={!!removingAddon}
+                isDestructive={true}
+            />
         </div>
     );
 };

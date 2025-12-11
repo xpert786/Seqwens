@@ -622,11 +622,13 @@ export default function OfficeOverview() {
         }
     };
 
-    const handleSetPrimaryOffice = async () => {
-        if (!window.confirm('Are you sure you want to set this office as the primary office?')) {
-            return;
-        }
+    const [showSetPrimaryConfirm, setShowSetPrimaryConfirm] = useState(false);
 
+    const handleSetPrimaryOffice = async () => {
+        setShowSetPrimaryConfirm(true);
+    };
+
+    const confirmSetPrimaryOffice = async () => {
         try {
             setSettingPrimary(true);
             const response = await firmOfficeAPI.setPrimaryOffice(officeId);
@@ -654,10 +656,11 @@ export default function OfficeOverview() {
                 position: 'top-right',
                 autoClose: 3000
             });
-        } finally {
-            setSettingPrimary(false);
-        }
-    };
+            } finally {
+                setSettingPrimary(false);
+                setShowSetPrimaryConfirm(false);
+            }
+        };
 
     const handleTaxpayerUpdate = () => {
         // Refresh clients count when taxpayers are updated

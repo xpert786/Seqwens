@@ -457,13 +457,26 @@ export default function DocumentsPage() {
             <h3 className="fw-semibold">Documents</h3>
             <small className="text-muted">Manage client documents and files</small>
           </div>
-          <button
-            className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
-            onClick={() => setShowUpload(true)}
-          >
-            <UpIcon />
-            Upload Documents
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-outline-primary d-flex align-items-center gap-2"
+              onClick={() => navigate('/taxdashboard/documents/manager')}
+              style={{
+                borderColor: "#00C0C6",
+                color: "#00C0C6"
+              }}
+            >
+              <i className="bi bi-folder2-open me-1"></i>
+              Document Manager
+            </button>
+            <button
+              className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+              onClick={() => setShowUpload(true)}
+            >
+              <UpIcon />
+              Upload Documents
+            </button>
+          </div>
         </div>
       )}
 

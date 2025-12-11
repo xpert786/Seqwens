@@ -67,6 +67,7 @@ export const clearUserData = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("rememberMe");
+  localStorage.removeItem("rememberedEmail");
   localStorage.removeItem("userRegistrationData");
   localStorage.removeItem("resetEmail");
   localStorage.removeItem("resetOtp");
@@ -78,6 +79,7 @@ export const clearUserData = () => {
   sessionStorage.removeItem("accessToken");
   sessionStorage.removeItem("refreshToken");
   sessionStorage.removeItem("rememberMe");
+  sessionStorage.removeItem("rememberedEmail");
 };
 
 /**

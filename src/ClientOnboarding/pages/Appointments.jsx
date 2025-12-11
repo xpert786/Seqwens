@@ -9,6 +9,7 @@ import { appointmentsAPI, adminAvailabilityAPI, timeSlotsAPI, staffAPI, handleAP
 import { getApiBaseUrl, fetchWithCors } from "../utils/corsConfig";
 import { getAccessToken } from "../utils/userUtils";
 import Pagination from "../components/Pagination";
+import ConfirmationModal from "../../components/ConfirmationModal";
 import "../styles/Icon.css"
 import "../styles/fonts.css"
 export default function Appointments() {
@@ -435,15 +436,20 @@ export default function Appointments() {
     }
   };
 
+  const [showCancelAppointmentConfirm, setShowCancelAppointmentConfirm] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+
   // Function to cancel appointment
   const cancelAppointment = async (appointmentId) => {
-    // Use toast for confirmation instead of window.confirm
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) {
-      return;
-    }
+    setAppointmentToCancel(appointmentId);
+    setShowCancelAppointmentConfirm(true);
+  };
+
+  const confirmCancelAppointment = async () => {
+    if (!appointmentToCancel) return;
 
     try {
-      const response = await appointmentsAPI.deleteAppointment(appointmentId);
+      const response = await appointmentsAPI.deleteAppointment(appointmentToCancel);
 
       if (response.success) {
         // Refresh appointments list
@@ -454,6 +460,8 @@ export default function Appointments() {
           className: "custom-toast-success",
           bodyClassName: "custom-toast-body",
         });
+        setShowCancelAppointmentConfirm(false);
+        setAppointmentToCancel(null);
       } else {
         throw new Error(response.message || 'Failed to cancel appointment');
       }
@@ -2405,6 +2413,21 @@ export default function Appointments() {
           </div>
         )
       }
+
+      {/* Cancel Appointment Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showCancelAppointmentConfirm}
+        onClose={() => {
+          setShowCancelAppointmentConfirm(false);
+          setAppointmentToCancel(null);
+        }}
+        onConfirm={confirmCancelAppointment}
+        title="Cancel Appointment"
+        message="Are you sure you want to cancel this appointment?"
+        confirmText="Cancel Appointment"
+        cancelText="Keep Appointment"
+        isDestructive={true}
+      />
     </div >
   );
 }

@@ -39,10 +39,11 @@
   background-color: #fff;
   width: auto;
   min-width: 48px;
+  cursor: pointer;
 }
 
 .react-phone-input-2 .flag-dropdown.open {
-  z-index: 9999;
+  z-index: 10000 !important;
 }
 
 .react-phone-input-2 .selected-flag {
@@ -51,6 +52,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .react-phone-input-2 .selected-flag .flag {
@@ -59,16 +61,73 @@
 
 .phone-input-container {
   position: relative;
+  overflow: visible !important;
+}
+
+/* Ensure parent containers don't clip the dropdown */
+.phone-input-container,
+.phone-input-container .react-phone-input-2 {
+  overflow: visible !important;
+}
+
+/* Ensure Bootstrap columns and rows don't clip the dropdown */
+.col-md-6 .phone-input-container,
+.col-md-5 .phone-input-container,
+.col-md-12 .phone-input-container,
+.row .phone-input-container {
+  overflow: visible !important;
+}
+
+/* Country List Dropdown - Fix for dropdown not showing */
+.react-phone-input-2 .country-list {
+  position: absolute !important;
+  z-index: 10001 !important;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  margin-top: 4px;
+  width: 100%;
+  min-width: 300px;
 }
 
 /* Search field padding in country dropdown */
 .react-phone-input-2 .country-list .search-box {
-  padding-bottom: 10px !important;
+  padding: 10px !important;
   margin-bottom: 8px !important;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 1;
 }
 
 .react-phone-input-2 .country-list .search-box input {
-  padding-bottom: 8px !important;
+  padding: 8px 12px !important;
+  width: 100% !important;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.react-phone-input-2 .country-list .country {
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.react-phone-input-2 .country-list .country:hover {
+  background-color: #f3f4f6;
+}
+
+.react-phone-input-2 .country-list .country.highlight {
+  background-color: #e5e7eb;
 }
 
 /* Accessibility fixes for form-check-label radio buttons and checkboxes */

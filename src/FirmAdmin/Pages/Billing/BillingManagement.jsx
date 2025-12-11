@@ -29,6 +29,8 @@ export default function BillingManagement() {
     status: "",
     client_id: ""
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -103,6 +105,17 @@ export default function BillingManagement() {
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = invoices.slice(startIndex, endIndex);
 
   // Format date helper
   const formatDate = (dateString) => {
@@ -481,13 +494,20 @@ export default function BillingManagement() {
 
       {/* Invoice List */}
       <div className="bg-white rounded-lg p-6">
-        <div className="mb-6">
-          <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
-            All Invoices ({invoices.length})
-          </h5>
-          <p className="text-sm" style={{ color: '#6B7280' }}>
-            Complete list of invoices with payment status and details
-          </p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h5 className="text-xl font-bold mb-1" style={{ color: '#1F2937' }}>
+              All Invoices ({invoices.length})
+            </h5>
+            <p className="text-sm" style={{ color: '#6B7280' }}>
+              Complete list of invoices with payment status and details
+            </p>
+          </div>
+          {invoices.length > itemsPerPage && (
+            <div className="text-sm" style={{ color: '#6B7280' }}>
+              Showing {startIndex + 1}-{Math.min(endIndex, invoices.length)} of {invoices.length}
+            </div>
+          )}
         </div>
 
         {/* Loading State */}
@@ -518,7 +538,7 @@ export default function BillingManagement() {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((invoice) => {
+                {paginatedInvoices.map((invoice) => {
                   // Map API response fields to display fields
                   const invoiceNumber = invoice.invoice_number || invoice.invoiceNumber || `INV-${invoice.id}`;
                   const clientName = invoice.client_name ||
@@ -579,6 +599,87 @@ export default function BillingManagement() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && invoices.length > itemsPerPage && (
+          <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: '#E5E7EB' }}>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  borderColor: currentPage === 1 ? '#D1D5DB' : '#3B82F6',
+                  color: currentPage === 1 ? '#9CA3AF' : '#3B82F6',
+                  backgroundColor: currentPage === 1 ? '#F9FAFB' : 'white'
+                }}
+              >
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-2 !rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === page
+                            ? 'text-white'
+                            : 'border'
+                        }`}
+                        style={
+                          currentPage === page
+                            ? { backgroundColor: '#3B82F6' }
+                            : {
+                                borderColor: '#D1D5DB',
+                                color: '#6B7280',
+                                backgroundColor: 'white'
+                              }
+                        }
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="px-2 text-sm" style={{ color: '#6B7280' }}>
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 !rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  borderColor: currentPage === totalPages ? '#D1D5DB' : '#3B82F6',
+                  color: currentPage === totalPages ? '#9CA3AF' : '#3B82F6',
+                  backgroundColor: currentPage === totalPages ? '#F9FAFB' : 'white'
+                }}
+              >
+                Next
+              </button>
+            </div>
+
+            <div className="text-sm" style={{ color: '#6B7280' }}>
+              Page {currentPage} of {totalPages}
+            </div>
           </div>
         )}
       </div>
