@@ -1,15 +1,99 @@
 /* Firm Portal Colors - Applied via CSS Variables */
 
-/* Active icon wrapper background uses secondary color */
+/* Active icon wrapper background - FIXED COLOR (not affected by secondary color changes) */
 .firm-sidebar .icon-wrapper-active {
-  background-color: var(--firm-secondary-color, #F56D2D) !important;
+  background-color: #F56D2D !important;
 }
 
-/* Buttons and primary actions use primary color */
-.firm-panel button[class*="bg-"],
+/* Main background theme uses secondary color */
+.firm-dashboard-layout main {
+  background-color: var(--firm-secondary-color, #F3F7FF) !important;
+}
+
+/* Target specific background color classes and replace with secondary color */
+.firm-dashboard-layout [class*="bg-[#F3F7FF]"],
+.firm-dashboard-layout [class*="bg-[rgb(243,247,255)]"],
+.firm-dashboard-layout [class*="bg-[#F6F7FF]"],
+.firm-dashboard-layout [class*="bg-\\[\\#F3F7FF\\]"],
+.firm-dashboard-layout [class*="bg-\\[rgb\\(243,247,255\\)\\]"],
+.firm-dashboard-layout [class*="bg-\\[\\#F6F7FF\\]"],
+.firm-dashboard-layout [class*="F3F7FF"],
+.firm-dashboard-layout [class*="F6F7FF"],
+.firm-dashboard-layout [class*="243,247,255"] {
+  background-color: var(--firm-secondary-color, #F3F7FF) !important;
+}
+
+/* Target inline styles with specific background colors */
+.firm-dashboard-layout [style*="background-color: rgb(243, 247, 255)"],
+.firm-dashboard-layout [style*="background-color: rgb(246, 247, 255)"],
+.firm-dashboard-layout [style*="background-color: #F3F7FF"],
+.firm-dashboard-layout [style*="background-color: #f3f7ff"],
+.firm-dashboard-layout [style*="background-color: #F6F7FF"],
+.firm-dashboard-layout [style*="background-color: #f6f7ff"],
+.firm-dashboard-layout [style*="backgroundColor: #F3F7FF"],
+.firm-dashboard-layout [style*="backgroundColor: #F6F7FF"],
+.firm-dashboard-layout [style*="243, 247, 255"],
+.firm-dashboard-layout [style*="246, 247, 255"],
+.firm-dashboard-layout [style*="243,247,255"] {
+  background-color: var(--firm-secondary-color, #F3F7FF) !important;
+}
+
+/* Target hover states with background colors */
+.firm-dashboard-layout [class*="hover:bg-[#F3F7FF]"]:hover,
+.firm-dashboard-layout [class*="hover:bg-[#F6F7FF]"]:hover {
+  background-color: var(--firm-secondary-color, #F3F7FF) !important;
+}
+
+/* Buttons with primary color classes use primary color */
 .firm-panel .btn-primary,
-.firm-panel [class*="primary"] {
+.firm-dashboard-layout .btn-primary,
+.firm-panel button[class*="primary"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-blue"]):not([class*="bg-yellow"]),
+.firm-dashboard-layout button[class*="primary"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-blue"]):not([class*="bg-yellow"]) {
   background-color: var(--firm-primary-color, #32B582) !important;
+  color: white !important;
+}
+
+/* Target buttons with orange color (#F56D2D) in inline styles - these should use primary color */
+.firm-panel button[style*="background-color: rgb(245, 109, 45)"],
+.firm-dashboard-layout button[style*="background-color: rgb(245, 109, 45)"],
+.firm-panel button[style*="background-color: #F56D2D"],
+.firm-dashboard-layout button[style*="background-color: #F56D2D"],
+.firm-panel button[style*="background-color: #f56d2d"],
+.firm-dashboard-layout button[style*="background-color: #f56d2d"],
+.firm-panel button[style*="245, 109, 45"],
+.firm-dashboard-layout button[style*="245, 109, 45"] {
+  background-color: var(--firm-primary-color, #32B582) !important;
+  color: white !important;
+}
+
+/* Target buttons with Tailwind arbitrary value bg-[#F56D2D] - use attribute selector for class */
+.firm-panel button[class*="bg-\\[\\#F56D2D\\]"],
+.firm-dashboard-layout button[class*="bg-\\[\\#F56D2D\\]"],
+.firm-panel button[class*="bg-\\[\\#f56d2d\\]"],
+.firm-dashboard-layout button[class*="bg-\\[\\#f56d2d\\]"] {
+  background-color: var(--firm-primary-color, #32B582) !important;
+  color: white !important;
+}
+
+/* Buttons with explicit white/gray/red/green/blue/yellow backgrounds should keep their colors */
+.firm-panel button[class*="bg-white"],
+.firm-dashboard-layout button[class*="bg-white"],
+.firm-panel button[class*="bg-gray"],
+.firm-dashboard-layout button[class*="bg-gray"],
+.firm-panel button[class*="bg-red"],
+.firm-dashboard-layout button[class*="bg-red"],
+.firm-panel button[class*="bg-green"],
+.firm-dashboard-layout button[class*="bg-green"],
+.firm-panel button[class*="bg-blue"],
+.firm-dashboard-layout button[class*="bg-blue"],
+.firm-panel button[class*="bg-yellow"],
+.firm-dashboard-layout button[class*="bg-yellow"],
+.firm-panel button[style*="background-color: white"],
+.firm-dashboard-layout button[style*="background-color: white"],
+.firm-panel button[style*="background-color: #ffffff"],
+.firm-dashboard-layout button[style*="background-color: #ffffff"] {
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
 /* Secondary buttons and accents use secondary color */
@@ -25,7 +109,7 @@
 .firm-dashboard-layout .text-gray-600,
 .firm-dashboard-layout .text-gray-700,
 .firm-dashboard-layout .text-muted {
-  color: var(--firm-secondary-color, #6c757d) !important;
+  color: #6c757d !important;
 }
 
 /* Headings can use secondary color but allow overrides */
@@ -35,12 +119,12 @@
 .firm-dashboard-layout h4:not([class*="text-"]):not([style*="color"]),
 .firm-dashboard-layout h5:not([class*="text-"]):not([style*="color"]),
 .firm-dashboard-layout h6:not([class*="text-"]):not([style*="color"]) {
-  color: var(--firm-secondary-color, #6c757d) !important;
+  color: #6c757d !important;
 }
 
 /* Text color utility class */
 .text-firm-secondary {
-  color: var(--firm-secondary-color, #6c757d) !important;
+  color: #6c757d !important;
 }
 
 /* Links and hover states */

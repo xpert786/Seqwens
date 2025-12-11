@@ -1327,7 +1327,10 @@ export default function MessagePage() {
                         }}
                         title="Attach file"
                       >
-                        <FileIcon />
+                       <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2"/>
+</svg>
+
                       </button>
                       {messageAttachment && (
                         <span className="me-2 text-muted small" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={messageAttachment.name}>
@@ -1376,18 +1379,7 @@ export default function MessagePage() {
                         disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
                         aria-label="Send message"
                       >
-                        <FaPaperPlane
-                          onClick={handleSend}
-                          onKeyDown={(e) => {
-                            if ((e.key === "Enter" || e.key === " ") && !sendingMessage) {
-                              e.preventDefault();
-                              handleSend();
-                            }
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          style={{ cursor: "pointer" }}
-                        />
+                        <FaPaperPlane />
                       </button>
                     </div>
                   </div>
