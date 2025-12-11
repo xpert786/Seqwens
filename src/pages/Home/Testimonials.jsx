@@ -400,6 +400,15 @@ export default function Testimonials() {
 
   return (
     <section className="py-16 px-4 overflow-hidden">
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       {/* Header */}
       <div className="text-center mb-12">
         <p className="text-sm text-gray-600 mb-2">Testimonials</p>
@@ -431,7 +440,7 @@ export default function Testimonials() {
           <div className="relative mb-16">
             <div
               ref={scrollContainerRef}
-              className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-10"
+              className="flex gap-6 overflow-x-auto scroll-smooth pb-10 hide-scrollbar"
             >
               {feedbacks.map((item) => (
                 <div key={item.id} className="flex-shrink-0 w-[350px] min-w-[350px]">

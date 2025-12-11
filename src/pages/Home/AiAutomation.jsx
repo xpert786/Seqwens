@@ -4,7 +4,7 @@ export default function AiAutomation() {
   const [activeFeature, setActiveFeature] = useState(0);
 
   return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-5 py-8 sm:py-12 md:py-16">
+    <section id="capabilities" className="max-w-7xl mx-auto px-3 sm:px-4 md:px-5 py-8 sm:py-12 md:py-16">
 
       {/* Top Titles */}
       <div className="text-center space-y-2 sm:space-y-3 mb-8 sm:mb-12 md:mb-16">
