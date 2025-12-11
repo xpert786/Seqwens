@@ -2025,7 +2025,7 @@ export default function ESignatureManagement() {
               {/* Folder Selection */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                  Folder (Optional)
+                  Folder
                 </label>
                 <div ref={folderDropdownRef} className="relative">
                   <div

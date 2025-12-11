@@ -22,6 +22,7 @@ import SchedulePage from './pages/MyClients/SchedulePage';
 import ClientESignLogs from './pages/MyClients/ClientESignLogs';
 import CalendarPage from './pages/Calender/Calender';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
+import ESignatureDashboard from './pages/ESignature/ESignatureDashboard';
 
 // Protected Route Component for Admin/Tax Preparer
 function AdminProtectedRoute({ children }) {
@@ -81,6 +82,9 @@ export default function TaxRoutes() {
         
         {/* Calendar */}
         <Route path="calendar" element={<CalendarPage />} />
+        
+        {/* E-Signature Dashboard */}
+        <Route path="e-signatures" element={<ESignatureDashboard />} />
         
         {/* Account Settings */}
         <Route path="account" element={<AccountSettings />} />

@@ -215,6 +215,20 @@ export default function SuperSidebar({ isSidebarOpen = true }) {
                     </Link>
                   </li>
                 )}
+                {/* Blocked Accounts - Only for super_admin */}
+                {userType === 'super_admin' && (
+                  <li className="mb-2">
+                    <Link to="/superadmin/blocked-accounts" className={linkClass("/superadmin/blocked-accounts")}>
+                      <span className={iconWrapperClass("/superadmin/blocked-accounts")}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8.00065 1.32812L2.66602 4.32812V7.66146C2.66602 10.3281 4.66602 12.6615 8.00065 13.9948C11.3353 12.6615 13.3353 10.3281 13.3353 7.66146V4.32812L8.00065 1.32812Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M6.00065 8.66146L7.33398 9.99479L10.0007 6.66146" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                      Blocked Accounts
+                    </Link>
+                  </li>
+                )}
               </ul>
             )}
           </li>

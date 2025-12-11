@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { useNavigate } from "react-router-dom";
-import { FaSearch, FaPlus, FaUserPlus, FaEnvelope, FaSms, FaLink, FaCopy } from "react-icons/fa";
+import { FaSearch, FaPlus, FaUserPlus, FaEnvelope, FaSms, FaLink, FaCopy, FaClock } from "react-icons/fa";
 import { AwaitingIcon, CompletedIcon, Dot, DoubleUserIcon, FaildIcon, FiltIcon, Phone } from "../../component/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
@@ -25,6 +25,20 @@ export default function MyClients() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('clients'); // 'clients' or 'pending-invites'
+
+  // Pending invites state
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [loadingInvites, setLoadingInvites] = useState(false);
+  const [invitesError, setInvitesError] = useState(null);
+  const [invitesPagination, setInvitesPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1
+  });
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -88,6 +102,37 @@ export default function MyClients() {
     setShowInviteActionsModal(false);
     setActiveInviteDetails(null);
     setSmsPhoneOverride("");
+  };
+
+  // Fetch pending invites from API
+  const fetchPendingInvites = async (page = 1) => {
+    try {
+      setLoadingInvites(true);
+      setInvitesError(null);
+
+      const response = await taxPreparerClientAPI.getPendingInvites({
+        page,
+        page_size: invitesPagination.page_size
+      });
+
+      if (response.success && response.data) {
+        setPendingInvites(response.data.invites || []);
+        setInvitesPagination({
+          page: response.data.page || page,
+          page_size: response.data.page_size || 20,
+          total_count: response.data.total_count || 0,
+          total_pages: response.data.total_pages || 1
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch pending invites');
+      }
+    } catch (error) {
+      console.error('Error fetching pending invites:', error);
+      setInvitesError(handleAPIError(error));
+      setPendingInvites([]);
+    } finally {
+      setLoadingInvites(false);
+    }
   };
 
   // Fetch clients from API
@@ -168,6 +213,13 @@ export default function MyClients() {
   useEffect(() => {
     fetchClients();
   }, [searchQuery, statusFilter, priorityFilter]);
+
+  // Fetch pending invites when tab is switched to pending invites
+  useEffect(() => {
+    if (activeTab === 'pending-invites') {
+      fetchPendingInvites();
+    }
+  }, [activeTab]);
 
   // Handle click outside for dropdowns
   useEffect(() => {
@@ -821,7 +873,60 @@ export default function MyClients() {
         ))}
       </div>
 
-      {/* Search & Filter */}
+      {/* Tabs */}
+      <div className="d-flex gap-2 mb-4 align-items-center" style={{ 
+        borderBottom: '2px solid #E8F0FF',
+        paddingBottom: '0',
+        marginTop: '20px',
+        minHeight: '50px'
+      }}>
+        <button
+          className={`btn border-0 ${activeTab === 'clients' ? '' : ''}`}
+          onClick={() => setActiveTab('clients')}
+          style={{
+            borderRadius: '8px 8px 0 0',
+            borderBottom: activeTab === 'clients' ? '3px solid #00C0C6' : '3px solid transparent',
+            marginBottom: '-2px',
+            fontWeight: activeTab === 'clients' ? '600' : '500',
+            padding: '10px 20px',
+            fontSize: '14px',
+            color: activeTab === 'clients' ? '#00C0C6' : '#6B7280',
+            backgroundColor: activeTab === 'clients' ? '#F0FDFF' : 'transparent',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          All Clients
+        </button>
+        <button
+          className={`btn border-0 position-relative`}
+          onClick={() => setActiveTab('pending-invites')}
+          style={{
+            borderRadius: '8px 8px 0 0',
+            borderBottom: activeTab === 'pending-invites' ? '3px solid #00C0C6' : '3px solid transparent',
+            marginBottom: '-2px',
+            fontWeight: activeTab === 'pending-invites' ? '600' : '500',
+            padding: '10px 20px',
+            fontSize: '14px',
+            color: activeTab === 'pending-invites' ? '#00C0C6' : '#6B7280',
+            backgroundColor: activeTab === 'pending-invites' ? '#F0FDFF' : 'transparent',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Pending Invites
+          {(pendingInvites.length > 0 || invitesPagination.total_count > 0) && (
+            <span className="badge bg-danger ms-2" style={{ 
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '10px'
+            }}>
+              {invitesPagination.total_count > 0 ? invitesPagination.total_count : pendingInvites.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Search & Filter - Only show for clients tab */}
+      {activeTab === 'clients' && (
       <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
         <div className="position-relative " style={{ width: '260px', flexShrink: 0 }}>
           <input
@@ -966,13 +1071,15 @@ export default function MyClients() {
           )}
         </div>
       </div>
+      )}
 
-      {/* Client List Card */}
-      <div className="card client-list-card p-3" style={{
-        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-      }}>
-        <h6 className="fw-semibold mb-3">Client List</h6>
-        <div className="mb-3">All clients assigned to you</div>
+      {/* Client List Card - Only show for clients tab */}
+      {activeTab === 'clients' && (
+        <div className="card client-list-card p-3" style={{
+          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+        }}>
+          <h6 className="fw-semibold mb-3">Client List</h6>
+          <div className="mb-3">All clients assigned to you</div>
 
         {processedClients.length === 0 ? (
           <div className="text-center py-5">
@@ -1146,7 +1253,154 @@ export default function MyClients() {
             ))}
           </div>
         )}
-      </div>
+        </div>
+      )}
+
+      {/* Pending Invites Card - Only show for pending invites tab */}
+      {activeTab === 'pending-invites' && (
+        <div className="card client-list-card p-3" style={{
+          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+        }}>
+          <h6 className="fw-semibold mb-3">Pending Invites</h6>
+          <div className="mb-3">Client invites awaiting acceptance</div>
+
+          {loadingInvites ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3 text-muted">Loading pending invites...</p>
+            </div>
+          ) : invitesError ? (
+            <div className="alert alert-danger" role="alert">
+              <strong>Error:</strong> {invitesError}
+              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+                Retry
+              </button>
+            </div>
+          ) : pendingInvites.length === 0 ? (
+            <div className="text-center py-5">
+              <p className="text-muted">No pending invites found</p>
+            </div>
+          ) : (
+            <div className="row g-3">
+              {pendingInvites.map((invite) => (
+                <div key={invite.id} className="col-md-6 col-12">
+                  <div
+                    className="card client-card"
+                    style={{
+                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)"
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div className="d-flex gap-3">
+                        <div
+                          className="client-initials"
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#00C0C6",
+                            color: "white",
+                            fontWeight: "600",
+                            fontSize: "16px",
+                            flexShrink: 0
+                          }}
+                        >
+                          {invite.first_name?.[0]?.toUpperCase() || ''}{invite.last_name?.[0]?.toUpperCase() || ''}
+                        </div>
+                        <div>
+                          <div className="fw-semibold mb-1">
+                            {invite.first_name} {invite.last_name}
+                          </div>
+                          <div className="text-muted small mb-2">
+                            <FaEnvelope className="me-1" size={12} />
+                            {invite.email}
+                          </div>
+                          {invite.phone_number && (
+                            <div className="text-muted small mb-2">
+                              <Phone className="me-1" />
+                              {invite.phone_number}
+                            </div>
+                          )}
+                          <div className="d-flex flex-wrap gap-2 mt-2">
+                            <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                              {invite.firm_name}
+                            </span>
+                            {invite.is_expired ? (
+                              <span className="badge bg-danger" style={{ fontSize: '10px' }}>
+                                Expired
+                              </span>
+                            ) : (
+                              <span className="badge bg-warning" style={{ fontSize: '10px' }}>
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-muted small mt-2">
+                            <div>Invited by: {invite.invited_by_name}</div>
+                            <div>Invited: {new Date(invite.invited_at).toLocaleDateString()}</div>
+                            {invite.expires_at && (
+                              <div>
+                                Expires: {new Date(invite.expires_at).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="d-flex gap-2">
+                        {invite.invite_link && (
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(invite.invite_link);
+                              toast.success('Invite link copied to clipboard!');
+                            }}
+                            title="Copy invite link"
+                          >
+                            <FaCopy size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination for invites */}
+          {invitesPagination.total_pages > 1 && (
+            <div className="d-flex justify-content-between align-items-center mt-4">
+              <div className="text-muted small">
+                Showing {((invitesPagination.page - 1) * invitesPagination.page_size) + 1} to{' '}
+                {Math.min(invitesPagination.page * invitesPagination.page_size, invitesPagination.total_count)} of{' '}
+                {invitesPagination.total_count} invites
+              </div>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => fetchPendingInvites(invitesPagination.page - 1)}
+                  disabled={invitesPagination.page === 1 || loadingInvites}
+                >
+                  Previous
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => fetchPendingInvites(invitesPagination.page + 1)}
+                  disabled={invitesPagination.page >= invitesPagination.total_pages || loadingInvites}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Taxpayer Modal */}
       {showCreateTaxpayerModal && (

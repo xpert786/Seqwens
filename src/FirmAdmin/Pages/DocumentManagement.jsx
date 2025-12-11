@@ -5,6 +5,8 @@ import { firmAdminDocumentsAPI, firmAdminSettingsAPI, handleAPIError } from '../
 import { toast } from 'react-toastify';
 import FirmAdminUploadModal from './DocumentManagement/FirmAdminUploadModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import ShareDocumentsModal from './DocumentManagement/ShareDocumentsModal';
+import SharedDocumentsList from './DocumentManagement/SharedDocumentsList';
 
 // Search icon
 const SearchIcon = () => (
@@ -50,6 +52,8 @@ export default function DocumentManagement() {
   const [currentFolder, setCurrentFolder] = useState(null);
   const [parentFolder, setParentFolder] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedDocumentsForShare, setSelectedDocumentsForShare] = useState([]);
 
   // Check if we're in a nested route (folder contents)
   const isNestedRoute = location.pathname.includes('/folder/');
@@ -420,7 +424,7 @@ export default function DocumentManagement() {
       {!isNestedRoute && (
         <div className="mb-6  w-fit">
           <div className="flex flex-wrap gap-2 sm:gap-3 bg-white rounded-lg p-1 border border-blue-50 w-full">
-            {['Folder', 'Security'].map((tab) => (
+            {['Folder', 'Shared Documents', 'Security'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -2224,8 +2228,13 @@ export default function DocumentManagement() {
         </div>
       )}
 
+      {/* Shared Documents Tab */}
+      {!isNestedRoute && activeTab === 'Shared Documents' && (
+        <SharedDocumentsList />
+      )}
+
       {/* Other tabs content (Audit Trail) */}
-      {!isNestedRoute && activeTab !== 'Folder' && activeTab !== 'Compliance' && activeTab !== 'Security' && (
+      {!isNestedRoute && activeTab !== 'Folder' && activeTab !== 'Compliance' && activeTab !== 'Security' && activeTab !== 'Shared Documents' && (
         <div className="bg-white rounded-lg p-6">
           <p className="text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
             {activeTab} content coming soon...
@@ -2235,6 +2244,22 @@ export default function DocumentManagement() {
 
       {/* Render nested routes - Always render Outlet, it will show FolderContents when route matches */}
       <Outlet />
+
+      {/* Share Documents Modal */}
+      <ShareDocumentsModal
+        show={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setSelectedDocumentsForShare([]);
+        }}
+        selectedDocuments={selectedDocumentsForShare}
+        onSuccess={() => {
+          // Refresh shared documents list if on that tab
+          if (activeTab === 'Shared Documents') {
+            // The SharedDocumentsList component will handle its own refresh
+          }
+        }}
+      />
 
       {/* Upload Document Modal */}
       <FirmAdminUploadModal
