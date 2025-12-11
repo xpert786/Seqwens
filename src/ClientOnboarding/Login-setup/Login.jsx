@@ -237,7 +237,7 @@ export default function Login() {
                   className="form-check-input" 
                   checked={rememberMe}
                   onChange={(e) => {
-                    const newRememberMe = e.target.checked;
+                    const newRememberMe = e.target.checked; 
                     setRememberMe(newRememberMe);
                     
                     // If unchecking rememberMe, clear stored email from localStorage

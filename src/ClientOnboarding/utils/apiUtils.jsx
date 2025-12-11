@@ -606,6 +606,9 @@ export const handleAPIError = (error) => {
     return friendlyMessage;
   }
 
+  // Remove "Login failed. email: " prefix from error messages if present
+  errorMessage = errorMessage.replace(/^Login failed\.?\s*email:\s*/i, '');
+
   return errorMessage || 'An unexpected error occurred. Please try again.';
 };
 
