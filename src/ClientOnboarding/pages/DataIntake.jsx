@@ -1566,19 +1566,19 @@ export default function DataIntakeForm() {
               Phone
             </label>
             <PhoneInput
-              country={personalPhoneCountry}
-              value={personalInfo.phone || ''}
+              country={spousePhoneCountry}
+              value={spouseInfo.phone || ''}
               onChange={(phone) => {
-                handlePersonalInfoChange('phone', phone);
+                handleSpouseInfoChange('phone', phone);
                 // Clear error when user starts typing
                 if (getFieldError('personalInfo.phone')) {
                   clearFieldError('personalInfo.phone');
                 }
               }}
               onCountryChange={(countryCode) => {
-                setPersonalPhoneCountry(countryCode.toLowerCase());
+                setSpousePhoneCountry(countryCode.toLowerCase());
               }}
-              inputClass={`form-control ${getFieldError('personalInfo.phone') ? 'is-invalid' : ''}`}
+              inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
               containerClass="w-100 phone-input-container"
               inputStyle={{
                 height: '45px',
@@ -1588,28 +1588,28 @@ export default function DataIntakeForm() {
                 paddingBottom: '6px',
                 width: '100%',
                 fontSize: '1rem',
-                border: getFieldError('personalInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
+                border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
                 borderRadius: '0.375rem',
                 backgroundColor: '#fff'
               }}
               enableSearch={true}
               countryCodeEditable={false}
-              data-field="personalInfo.phone"
+              data-field="spouseInfo.phone"
               ref={(el) => {
                 if (el && el.inputElement) {
-                  if (!fieldRefs.current['personalInfo.phone']) {
-                    fieldRefs.current['personalInfo.phone'] = el.inputElement;
+                  if (!fieldRefs.current['spouseInfo.phone']) {
+                    fieldRefs.current['spouseInfo.phone'] = el.inputElement;
                   }
                 }
               }}
             />
-            {getFieldError('personalInfo.phone') && (
+            {getFieldError('spouseInfo.phone') && (
               <div className="invalid-feedback d-block" style={{
                 fontSize: "12px",
                 color: "#EF4444",
                 marginTop: "4px"
               }}>
-                {getFieldError('personalInfo.phone')}
+                {getFieldError('spouseInfo.phone')}
               </div>
             )}
           </div>
