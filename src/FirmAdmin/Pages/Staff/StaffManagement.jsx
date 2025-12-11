@@ -546,6 +546,66 @@ export default function StaffManagement() {
     }
   };
 
+  // Confirm cancel invite from modal
+  const confirmCancelInvite = async () => {
+    if (!inviteToCancel) {
+      return;
+    }
+    
+    const inviteId = inviteToCancel;
+    
+    try {
+      setProcessingInviteId(inviteId);
+      setShowDropdown(null); // Close dropdown
+
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const url = `${API_BASE_URL}/firm-admin/staff/invites/${inviteId}/cancel/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Invitation cancelled successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        // Refresh the pending invites list
+        fetchPendingInvites();
+        // Close modal and reset state after successful cancellation
+        setShowCancelInviteConfirm(false);
+        setInviteToCancel(null);
+      } else {
+        throw new Error(result.message || 'Failed to cancel invitation');
+      }
+    } catch (err) {
+      console.error('Error cancelling invite:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to cancel invitation. Please try again.', {
+        position: "top-right",
+        autoClose: 4000,
+      });
+      // Keep modal open if there's an error so user can retry
+    } finally {
+      setProcessingInviteId(null);
+    }
+  };
+
   const handleCopyInviteLink = async () => {
     if (!activeInviteDetails?.invite_link) return;
     try {

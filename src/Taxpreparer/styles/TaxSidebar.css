@@ -11,11 +11,36 @@
   flex-direction: column !important;
   justify-content: space-between !important;
   overflow: hidden !important;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 .tsb-container.collapsed {
   transform: translateX(-100%);
+}
+
+/* Mobile and Tablet Responsive */
+@media (max-width: 1024px) {
+  .tsb-container {
+    z-index: 1050 !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .tsb-container.collapsed {
+    transform: translateX(-100%) !important;
+  }
+
+  .tsb-container:not(.collapsed) {
+    transform: translateX(0) !important;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .tsb-container {
+    width: 260px !important;
+    z-index: 1050 !important;
+  }
 }
 
 /* Remove underline from all links inside sidebar */
@@ -156,6 +181,31 @@
   .tsb-icon-wrapper svg {
     width: 16px !important;
     height: 16px !important;
+  }
+}
+
+/* Sidebar Overlay for Mobile/Tablet */
+.tsb-overlay {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tsb-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+@media (max-width: 1024px) {
+  .tsb-overlay.show {
+    display: block;
   }
 }
 

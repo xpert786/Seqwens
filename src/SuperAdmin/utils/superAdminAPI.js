@@ -764,6 +764,24 @@ export const superAdminAPI = {
     return await apiRequest(`/user/superadmin/users/${userId}/assign-role/`, 'POST', { role_id: roleId });
   },
 
+  // Blocked Accounts API functions
+  // Get blocked accounts
+  getBlockedAccounts: async ({ search = '', page = 1, pageSize = 20 } = {}) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+    if (search) {
+      params.append('search', search);
+    }
+    return await apiRequest(`/user/superadmin/blocked-accounts/?${params}`, 'GET');
+  },
+
+  // Unblock account
+  unblockAccount: async (userId) => {
+    return await apiRequest(`/user/superadmin/blocked-accounts/${userId}/unblock/`, 'POST');
+  },
+
   // Audit Logs API functions
   // Get audit logs
   getAuditLogs: async ({ page = 1, pageSize = 20, level = '', service = '', userId = '', startDate = '', endDate = '' } = {}) => {
@@ -1114,6 +1132,12 @@ export const superAdminAPI = {
   // Update security settings
   updateSecuritySettings: async (settingsData) => {
     return await apiRequest('/user/superadmin/security-settings/', 'PATCH', settingsData);
+  },
+
+  // Archive Monitoring API functions
+  // Get archive monitoring data
+  getArchiveMonitoring: async () => {
+    return await apiRequest('/user/superadmin/archive-monitoring/', 'GET');
   }
 };
 

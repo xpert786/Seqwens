@@ -929,8 +929,7 @@ export default function Messages() {
           messages: [],
         };
 
-        // Add the new chat to the beginning of conversations list
-        setConversations(prev => sortConversationsByRecent([newChat, ...prev]));
+        // Set active conversation first
         setActiveConversationId(newChat.id);
 
         // Reset form
@@ -940,6 +939,169 @@ export default function Messages() {
         setAttachedFiles([]);
 
         console.log('✅ Thread created successfully:', newChat);
+
+        // Wait a bit for the thread to be fully saved, then refresh conversations list from API
+        // This ensures the new conversation shows in Conversations area with subject and message
+        setTimeout(() => {
+          console.log('Refreshing conversations list from API...');
+          fetchChats(false).then(() => {
+            console.log('Conversations list refreshed');
+            // Ensure the newly created conversation is still active after refresh
+            setActiveConversationId(newChat.id);
+          }).catch((err) => {
+            console.error('Error refreshing conversations:', err);
+            // Fallback: Add the new chat manually if API refresh fails
+            setConversations(prev => {
+              const exists = prev.find(c => c.id === newChat.id);
+              if (!exists) {
+                return sortConversationsByRecent([newChat, ...prev]);
+              }
+              return prev;
+            });
+          });
+        }, 500); // Wait 500ms for thread to be fully saved
+
+        // Get current user info for message transformation
+        const currentUser = getUserData();
+        const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
+        const currentUserEmail = currentUser?.email || '';
+
+        // Create initial message from thread response if available
+        // This ensures the message sent during thread creation is displayed immediately
+        const initialMessages = [];
+        if (thread.last_message_preview && thread.last_message_preview.content) {
+          // Create a message object from the last_message_preview
+          const initialMessage = {
+            id: thread.last_message_preview.id || `temp-${Date.now()}`,
+            type: "user", // Initial message is always from the user who created the thread
+            text: thread.last_message_preview.content,
+            date: thread.last_message_at || thread.created_at || new Date().toISOString(),
+            sender: 'You',
+            senderRole: '',
+            isRead: false,
+            isEdited: false,
+            messageType: 'text',
+            attachment: null,
+            attachmentObj: null,
+            attachmentName: null,
+            attachmentSize: null,
+            hasAttachment: false,
+          };
+          initialMessages.push(initialMessage);
+          console.log('Created initial message from thread response:', initialMessage);
+        }
+
+        // Set initial messages immediately so they show up right away
+        if (initialMessages.length > 0) {
+          setActiveChatMessages(initialMessages);
+          console.log('Set initial messages:', initialMessages);
+        }
+
+        // Wait a bit for the message to be fully saved, then fetch all messages
+        // This ensures we get the complete message list including the initial message
+        setTimeout(async () => {
+          try {
+            setLoadingMessages(true);
+            console.log('Fetching messages for newly created thread:', newChat.id);
+            
+            // Try new chat-threads API first, fallback to old threads API
+            let messagesResponse;
+            try {
+              messagesResponse = await chatService.getMessages(newChat.id);
+            } catch (newApiError) {
+              console.log('New chat API failed, trying old API:', newApiError);
+              messagesResponse = await threadsAPI.getThreadDetails(newChat.id);
+            }
+            
+            console.log('Messages response for new thread:', messagesResponse);
+
+            // Handle both new and old API response formats
+            let messagesArray = [];
+            if (messagesResponse && messagesResponse.success === true && messagesResponse.data) {
+              if (Array.isArray(messagesResponse.data.messages)) {
+                messagesArray = messagesResponse.data.messages;
+              } else if (Array.isArray(messagesResponse.data)) {
+                messagesArray = messagesResponse.data;
+              } else if (messagesResponse.data.messages) {
+                messagesArray = Array.isArray(messagesResponse.data.messages) ? messagesResponse.data.messages : [];
+              }
+            }
+
+            if (messagesArray.length > 0) {
+              // Transform messages to match component structure
+              const transformedMessages = messagesArray.map(msg => {
+                const sender = msg.sender || {};
+                const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
+                const senderRole = sender.role || msg.sender_role || '';
+                const senderId = sender.id || msg.sender_id || null;
+
+                // Determine if message is sent by current user (client) or received from staff/admin
+                let messageType = "admin";
+                if (senderId && currentUserId) {
+                  const isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+                  messageType = isSentByCurrentUser ? "user" : "admin";
+                } else if (senderName && currentUserEmail) {
+                  const senderEmail = sender.email || senderName;
+                  const isSentByCurrentUser = senderEmail.toLowerCase() === currentUserEmail.toLowerCase();
+                  messageType = isSentByCurrentUser ? "user" : "admin";
+                } else {
+                  const isStaff = senderRole === "staff" || senderRole === "Admin" || senderRole === "Staff" || senderRole === "Accountant" || senderRole === "Bookkeeper" || senderRole === "Assistant";
+                  messageType = isStaff ? "admin" : "user";
+                }
+
+                // Handle attachment object from API
+                const attachmentObj = msg.attachment || null;
+                const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
+                const attachmentName = attachmentObj?.name || msg.attachment_name || null;
+                const attachmentSize = attachmentObj?.size || msg.attachment_size || null;
+                const attachmentSizeDisplay = attachmentSize 
+                  ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+                  : msg.attachment_size_display || null;
+
+                return {
+                  id: msg.id,
+                  type: messageType,
+                  text: msg.content || '',
+                  date: msg.created_at,
+                  sender: senderName,
+                  senderRole: senderRole,
+                  isRead: msg.is_read || false,
+                  isEdited: msg.is_edited || false,
+                  messageType: msg.message_type || 'text',
+                  attachment: attachmentUrl,
+                  attachmentObj: attachmentObj,
+                  attachmentName: attachmentName,
+                  attachmentSize: attachmentSizeDisplay,
+                  hasAttachment: !!(attachmentObj || attachmentUrl),
+                };
+              });
+
+              console.log('Setting messages for new thread:', transformedMessages);
+              setActiveChatMessages(transformedMessages);
+
+              // Auto-scroll to bottom after loading messages
+              setTimeout(() => {
+                if (messagesEndRef.current) {
+                  messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+                }
+              }, 100);
+            } else if (initialMessages.length > 0) {
+              // If API doesn't return messages yet but we have initial message, keep it
+              console.log('No messages from API yet, keeping initial message');
+            } else {
+              // If no messages at all, set empty array
+              setActiveChatMessages([]);
+            }
+          } catch (messagesError) {
+            console.error('Error fetching messages for new thread:', messagesError);
+            // Keep initial messages if we have them
+            if (initialMessages.length === 0) {
+              setActiveChatMessages([]);
+            }
+          } finally {
+            setLoadingMessages(false);
+          }
+        }, 500); // Wait 500ms for message to be saved
       } else {
         throw new Error(response.message || 'Failed to create thread');
       }

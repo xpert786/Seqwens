@@ -32,6 +32,8 @@ import Appointments from './Pages/Scheduling & calendar/Appointments';
 import Staff from './Pages/Scheduling & calendar/Staff';
 import Feature from './Pages/Scheduling & calendar/Feature';
 import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
+import WorkflowManagement from './Pages/Workflow/WorkflowManagement';
+import WorkflowInstanceView from './Pages/Workflow/WorkflowInstanceView';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
 import Offices from './Pages/Offices';
 import OfficeOverview from './Pages/Offices/OfficeOverview';
@@ -39,6 +41,7 @@ import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
 import OfficeComparison from './Pages/Offices/OfficeComparison';
 import SecurityCompliance from './Pages/SecurityCompliance';
 import EmailTemplate from './Pages/Email-templates/EmailTemplate';
+import CustomRolesManagement from './Pages/CustomRoles/CustomRolesManagement';
 
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
@@ -153,7 +156,8 @@ export default function FirmRoutes() {
         {/* Business Operations routes */}
         <Route path="billing" element={<BillingManagement />} />
         <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
-        <Route path="workflow" element={<WorkflowTemp />} />
+        <Route path="workflow" element={<WorkflowManagement />} />
+        <Route path="workflow/instances/:instanceId" element={<WorkflowInstanceView />} />
         <Route path="subscription" element={<SubscriptionManagement />} />
         <Route path="email-templates" element={<EmailTemplate />} />
         
@@ -162,6 +166,7 @@ export default function FirmRoutes() {
         <Route path="settings" element={<FirmSettings />} />
         <Route path="support" element={<SupportCenter />} />
         <Route path="account-settings" element={<AccountSettings />} />
+        <Route path="custom-roles" element={<CustomRolesManagement />} />
         <Route path="offices" element={<Offices />} />
         <Route path="offices/:officeId" element={<OfficeOverview />} />
         <Route path="offices/:officeId/dashboard-view" element={<OfficeDashboardView />} />

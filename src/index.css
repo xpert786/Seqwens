@@ -214,3 +214,48 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
+
+/* Modal Z-Index Overrides - Ensure modals appear above sidebar and header */
+/* Sidebar: z-index 1000 (desktop), 1050 (mobile) */
+/* Header: z-index 1030 */
+/* Modals should be above everything */
+
+/* Bootstrap Modal Overrides */
+.modal {
+  z-index: 1070 !important;
+}
+
+.modal-backdrop {
+  z-index: 1060 !important;
+}
+
+.modal-dialog {
+  z-index: 1070 !important;
+}
+
+.modal-content {
+  z-index: 1070 !important;
+  position: relative;
+}
+
+/* Custom Modal Overlays - Ensure they're above sidebar and header */
+[class*="modal"],
+[class*="Modal"],
+[class*="popup"],
+[class*="Popup"] {
+  z-index: 1070 !important;
+}
+
+/* Fixed position overlays for modals */
+.fixed.inset-0[style*="zIndex"],
+.fixed.inset-0[style*="z-index"],
+div[style*="zIndex"][style*="fixed"],
+div[style*="z-index"][style*="fixed"] {
+  z-index: 1070 !important;
+}
+
+/* Ensure React Bootstrap Modal components are above everything */
+.react-bootstrap-modal,
+.bootstrap-modal {
+  z-index: 1070 !important;
+}

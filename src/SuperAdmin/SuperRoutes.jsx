@@ -14,6 +14,7 @@ import FirmManagement from './Pages/FirmManagement';
 import FirmDetails from './Pages/FirmDetails';
 import Notifications from './Pages/AccountSettings/Notifications';
 import RoleRequests from './Pages/RoleRequests';
+import BlockedAccounts from './Pages/BlockedAccounts';
 
 // Protected Route Component for Super Admin
 function SuperAdminProtectedRoute({ children }) {
@@ -207,6 +208,11 @@ export default function SuperRoutes() {
         <Route path="firms/:firmId" element={
           <SuperAdminOnlyProtectedRoute>
             <FirmDetails />
+          </SuperAdminOnlyProtectedRoute>
+        } />
+        <Route path="blocked-accounts" element={
+          <SuperAdminOnlyProtectedRoute>
+            <BlockedAccounts />
           </SuperAdminOnlyProtectedRoute>
         } />
         

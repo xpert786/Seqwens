@@ -137,6 +137,16 @@ export default function DataIntakeForm() {
             setHasExistingData(true);
 
             // Pre-fill ALL form fields with existing data
+            // Extract only country code from phone number if it exists
+            let phoneValue = "";
+            if (data.phone_number) {
+              // Extract country code from phone number (format: +1XXXXXXXXXX)
+              const phoneMatch = data.phone_number.match(/^\+(\d{1,3})/);
+              if (phoneMatch) {
+                phoneValue = `+${phoneMatch[1]}`; // Only keep country code
+              }
+            }
+            
             setPersonalInfo({
               firstName: data.first_name || "",
               middleInitial: data.middle_name || "",
@@ -144,7 +154,7 @@ export default function DataIntakeForm() {
               dateOfBirth: formatDateToYYYYMMDD(data.dateOfBirth),
               ssn: data.ssn || "",
               email: data.email || "",
-              phone: data.phone_number || "",
+              phone: phoneValue, // Only country code, not full number
               address: data.address || "",
               city: data.city || "",
               state: data.state || "",
@@ -153,12 +163,22 @@ export default function DataIntakeForm() {
               businessType: data.business_type || "individual",
             });
             // If phone exists, mark country as selected
-            if (data.phone_number) {
+            if (phoneValue) {
               setPersonalPhoneCountrySelected(true);
             }
 
             // Pre-fill spouse information
             if (data.spouse_info) {
+              // Extract only country code from spouse phone number if it exists
+              let spousePhoneValue = "";
+              if (data.spouse_info.spouse_phone_number) {
+                // Extract country code from phone number (format: +1XXXXXXXXXX)
+                const phoneMatch = data.spouse_info.spouse_phone_number.match(/^\+(\d{1,3})/);
+                if (phoneMatch) {
+                  spousePhoneValue = `+${phoneMatch[1]}`; // Only keep country code
+                }
+              }
+              
               setSpouseInfo({
                 firstName: data.spouse_info.spouse_first_name || "",
                 middleInitial: "",
@@ -166,10 +186,10 @@ export default function DataIntakeForm() {
                 dateOfBirth: formatDateToYYYYMMDD(data.spouse_info.spouse_dateOfBirth),
                 ssn: data.spouse_info.spouse_ssn || "",
                 email: data.spouse_info.spouse_email || "",
-                phone: data.spouse_info.spouse_phone_number || "",
+                phone: spousePhoneValue, // Only country code, not full number
               });
               // If spouse phone exists, mark country as selected
-              if (data.spouse_info.spouse_phone_number) {
+              if (spousePhoneValue) {
                 setSpousePhoneCountrySelected(true);
               }
             }
@@ -319,13 +339,47 @@ export default function DataIntakeForm() {
   };
 
   // Validate phone number - extract number part (without country code) and check if exactly 10 digits
+  // Handles country codes of 1, 2, or 3 digits
   const validatePhoneNumber = (phoneValue) => {
     if (!phoneValue) return { valid: false, error: 'Phone number is required' };
     
     // Extract all digits from the phone value (react-phone-input-2 includes country code)
     const digitsOnly = phoneValue.replace(/\D/g, '');
     
-    // Extract the number part (last 10 digits) - this is the actual phone number without country code
+    // Determine country code length by checking the phone value format
+    // react-phone-input-2 formats phone as: +[countryCode][phoneNumber]
+    const phoneWithPlus = phoneValue.startsWith('+') ? phoneValue : `+${phoneValue}`;
+    
+    let countryCodeLength = 1; // Default to 1 digit
+    
+    // Check for 3-digit country codes (mostly African countries starting with +2)
+    // Pattern: +2XX where XX is 12-99 (but not 20 which is Egypt with 2 digits)
+    // Examples: +212 (Morocco), +234 (Nigeria), +254 (Kenya), etc.
+    if (/^\+2(1[2-9]|2[1-9]|3[0-9]|4[0-9]|5[0-9]|6[0-9]|7[0-9]|8[0-9]|9[0-7])/.test(phoneWithPlus)) {
+      countryCodeLength = 3;
+    }
+    // Check for 2-digit country codes (most countries)
+    // Pattern: +[3-9]X or +20 (Egypt) or +27 (South Africa)
+    else if (/^\+([3-9]\d|20|27)/.test(phoneWithPlus)) {
+      countryCodeLength = 2;
+    }
+    // 1-digit country codes (US, Canada, etc. starting with +1)
+    else if (phoneWithPlus.startsWith('+1')) {
+      countryCodeLength = 1;
+    }
+    
+    // Total digits should be: countryCodeLength + 10 (phone number)
+    const expectedTotalDigits = countryCodeLength + 10;
+    
+    if (digitsOnly.length < expectedTotalDigits) {
+      return { valid: false, error: `Phone number must be exactly 10 digits (excluding country code)` };
+    }
+    
+    // Extract the last 10 digits (phone number without country code)
+    // This works for all country code lengths: 
+    // - 1 digit: 11 total (1 + 10) -> last 10 = phone number ✓
+    // - 2 digits: 12 total (2 + 10) -> last 10 = phone number ✓
+    // - 3 digits: 13 total (3 + 10) -> last 10 = phone number ✓
     const numberPart = digitsOnly.slice(-10);
     
     if (numberPart.length !== 10) {
@@ -1485,6 +1539,7 @@ export default function DataIntakeForm() {
               value={personalInfo.email}
               onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
               data-field="personalInfo.email"
+              disabled={true}
               ref={(el) => {
                 if (!fieldRefs.current['personalInfo.email']) {
                   fieldRefs.current['personalInfo.email'] = el;
@@ -1511,41 +1566,19 @@ export default function DataIntakeForm() {
               Phone
             </label>
             <PhoneInput
-              country={personalPhoneCountry}
-              value={personalInfo.phone || ''}
+              country={spousePhoneCountry}
+              value={spouseInfo.phone || ''}
               onChange={(phone) => {
-                handlePersonalInfoChange('phone', phone);
+                handleSpouseInfoChange('phone', phone);
                 // Clear error when user starts typing
                 if (getFieldError('personalInfo.phone')) {
                   clearFieldError('personalInfo.phone');
                 }
               }}
-              onCountryChange={(countryCode, countryData) => {
-                setPersonalPhoneCountry(countryCode.toLowerCase());
-                setPersonalPhoneCountrySelected(true);
-                // When country changes, set the dial code and clear any existing number
-                // User will need to enter the 10-digit number
-                handlePersonalInfoChange('phone', `+${countryData.dialCode}`);
-                clearFieldError('personalInfo.phone');
+              onCountryChange={(countryCode) => {
+                setSpousePhoneCountry(countryCode.toLowerCase());
               }}
-              onBlur={() => {
-                // Validate on blur if phone number is entered
-                if (personalInfo.phone && personalInfo.phone.trim()) {
-                  const phoneValidation = validatePhoneNumber(personalInfo.phone);
-                  if (!phoneValidation.valid) {
-                    setFieldErrors(prev => ({
-                      ...prev,
-                      'personalInfo.phone': [phoneValidation.error]
-                    }));
-                  }
-                }
-              }}
-              onFocus={() => {
-                if (!personalInfo.phone && !personalPhoneCountrySelected) {
-                  // Keep empty, user must select country first
-                }
-              }}
-              inputClass={`form-control ${getFieldError('personalInfo.phone') ? 'is-invalid' : ''}`}
+              inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
               containerClass="w-100 phone-input-container"
               inputStyle={{
                 height: '45px',
@@ -1555,23 +1588,28 @@ export default function DataIntakeForm() {
                 paddingBottom: '6px',
                 width: '100%',
                 fontSize: '1rem',
-                border: getFieldError('personalInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
+                border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
                 borderRadius: '0.375rem',
                 backgroundColor: '#fff'
               }}
               enableSearch={true}
               countryCodeEditable={false}
-              disabled={false}
-              specialLabel=""
-              data-field="personalInfo.phone"
+              data-field="spouseInfo.phone"
+              ref={(el) => {
+                if (el && el.inputElement) {
+                  if (!fieldRefs.current['spouseInfo.phone']) {
+                    fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                  }
+                }
+              }}
             />
-            {getFieldError('personalInfo.phone') && (
+            {getFieldError('spouseInfo.phone') && (
               <div className="invalid-feedback d-block" style={{
                 fontSize: "12px",
                 color: "#EF4444",
                 marginTop: "4px"
               }}>
-                {getFieldError('personalInfo.phone')}
+                {getFieldError('spouseInfo.phone')}
               </div>
             )}
           </div>
@@ -1958,6 +1996,7 @@ export default function DataIntakeForm() {
               style={{ height: '45px' }}
               value={spouseInfo.email}
               onChange={(e) => handleSpouseInfoChange('email', e.target.value)}
+              disabled={true}
             />
           </div>
           <div className="col-md-6">
@@ -1979,31 +2018,8 @@ export default function DataIntakeForm() {
                   clearFieldError('spouseInfo.phone');
                 }
               }}
-              onCountryChange={(countryCode, countryData) => {
+              onCountryChange={(countryCode) => {
                 setSpousePhoneCountry(countryCode.toLowerCase());
-                setSpousePhoneCountrySelected(true);
-                // When country changes, set the dial code and clear any existing number
-                // User will need to enter the 10-digit number
-                handleSpouseInfoChange('phone', `+${countryData.dialCode}`);
-                clearFieldError('spouseInfo.phone');
-              }}
-              onBlur={() => {
-                // Validate on blur if phone number is entered
-                if (spouseInfo.phone && spouseInfo.phone.trim()) {
-                  const phoneValidation = validatePhoneNumber(spouseInfo.phone);
-                  if (!phoneValidation.valid) {
-                    setFieldErrors(prev => ({
-                      ...prev,
-                      'spouseInfo.phone': [phoneValidation.error]
-                    }));
-                  }
-                }
-              }}
-              onFocus={() => {
-                // If field is empty and country not selected, ensure we have a default
-                if (!spouseInfo.phone && !spousePhoneCountrySelected) {
-                  // Keep empty, user must select country first
-                }
               }}
               inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
               containerClass="w-100 phone-input-container"
@@ -2021,9 +2037,14 @@ export default function DataIntakeForm() {
               }}
               enableSearch={true}
               countryCodeEditable={false}
-              disabled={false}
-              specialLabel=""
               data-field="spouseInfo.phone"
+              ref={(el) => {
+                if (el && el.inputElement) {
+                  if (!fieldRefs.current['spouseInfo.phone']) {
+                    fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                  }
+                }
+              }}
             />
             {getFieldError('spouseInfo.phone') && (
               <div className="invalid-feedback d-block" style={{
@@ -2163,7 +2184,14 @@ export default function DataIntakeForm() {
                           First Name
                         </label>
                         <input
-                          ref={index === 0 ? firstDependentFirstNameRef : null}
+                          ref={(el) => {
+                            if (index === 0) {
+                              firstDependentFirstNameRef.current = el;
+                            }
+                            if (!fieldRefs.current[`dependents.${index}.firstName`]) {
+                              fieldRefs.current[`dependents.${index}.firstName`] = el;
+                            }
+                          }}
                           type="text"
                           className={`form-control ${getFieldError(`dependents.${index}.firstName`) ? 'is-invalid' : ''}`}
                           value={dep.firstName}
@@ -2215,6 +2243,11 @@ export default function DataIntakeForm() {
                           onChange={(e) => handleInputChange(index, 'lastName', e.target.value)}
                           placeholder="Johnson"
                           data-field={`dependents.${index}.lastName`}
+                          ref={(el) => {
+                            if (!fieldRefs.current[`dependents.${index}.lastName`]) {
+                              fieldRefs.current[`dependents.${index}.lastName`] = el;
+                            }
+                          }}
                         />
                         {getFieldError(`dependents.${index}.lastName`) && (
                           <div className="invalid-feedback d-block" style={{
@@ -2242,6 +2275,11 @@ export default function DataIntakeForm() {
                           value={dep.dob}
                           onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
                           data-field={`dependents.${index}.dob`}
+                          ref={(el) => {
+                            if (!fieldRefs.current[`dependents.${index}.dob`]) {
+                              fieldRefs.current[`dependents.${index}.dob`] = el;
+                            }
+                          }}
                         />
                         {getFieldError(`dependents.${index}.dob`) && (
                           <div className="invalid-feedback d-block" style={{
@@ -2269,6 +2307,11 @@ export default function DataIntakeForm() {
                           onChange={(e) => handleInputChange(index, 'ssn', e.target.value)}
                           placeholder="123-45-6789"
                           data-field={`dependents.${index}.ssn`}
+                          ref={(el) => {
+                            if (!fieldRefs.current[`dependents.${index}.ssn`]) {
+                              fieldRefs.current[`dependents.${index}.ssn`] = el;
+                            }
+                          }}
                         />
                         {getFieldError(`dependents.${index}.ssn`) && (
                           <div className="invalid-feedback d-block" style={{

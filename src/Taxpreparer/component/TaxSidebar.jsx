@@ -9,7 +9,7 @@ import {
   AccountIcon,
   LogOutIcon,
 } from "./icons";
-import { Clients, Task } from "./icons";
+import { Clients, Task, SignatureIcon } from "./icons";
 import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
@@ -114,6 +114,14 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
             </Link>
           </li>
 
+          <li className="mb-2">
+            <Link to="/taxdashboard/e-signatures" className={linkClass("/taxdashboard/e-signatures")}>
+              <span className={iconWrapperClass("/taxdashboard/e-signatures")}>
+                <SignatureIcon />
+              </span>
+              E-Signatures
+            </Link>
+          </li>
 
         </ul>
       </div>

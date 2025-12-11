@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { isLoggedIn, getStorage } from '../utils/userUtils';
-import { maintenanceModeAPI, firmAdminMessagingAPI } from '../utils/apiUtils';
+import { firmAdminMessagingAPI } from '../utils/apiUtils';
 import FeedbackModal from './FeedbackModal';
 
 export default function FeedbackWrapper({ children }) {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [checkedFeedback, setCheckedFeedback] = useState(false);
-
-  // Debug: Log when component mounts
-  useEffect(() => {
-    console.log('FeedbackWrapper: Component mounted');
-  }, []);
 
   useEffect(() => {
     const checkFeedbackStatus = async () => {
@@ -36,47 +31,48 @@ export default function FeedbackWrapper({ children }) {
       }
 
       try {
-        console.log('FeedbackWrapper: Calling maintenance mode status API...');
-        const response = await maintenanceModeAPI.getMaintenanceStatus();
+        console.log('FeedbackWrapper: Calling feedback status API...');
+        const response = await firmAdminMessagingAPI.getFeedbackStatus();
         console.log('FeedbackWrapper: API response:', response);
         
         if (response.success) {
-          const accountAgeDays = response.account_age_days || 0;
-          const hasFeedback = response.has_feedback || false;
+          // Check if feedback has been submitted (API is the source of truth)
+          // The API might return has_feedback, submitted, or feedback_submitted
+          const hasFeedback = response.has_feedback || response.submitted || response.feedback_submitted || false;
           
-          console.log('FeedbackWrapper: Account age (days):', accountAgeDays);
           console.log('FeedbackWrapper: Has feedback:', hasFeedback);
           
-          // Show modal if:
-          // 1. Account age >= 4 days
-          // 2. User has not submitted feedback
-          console.log('FeedbackWrapper: Checking conditions - accountAgeDays:', accountAgeDays, 'hasFeedback:', hasFeedback);
-          console.log('FeedbackWrapper: accountAgeDays >= 4?', accountAgeDays >= 4);
-          console.log('FeedbackWrapper: !hasFeedback?', !hasFeedback);
-          console.log('FeedbackWrapper: Combined condition?', accountAgeDays >= 4 && !hasFeedback);
+          // If feedback is already submitted, never show the modal
+          if (hasFeedback) {
+            console.log('FeedbackWrapper: ❌ User has already submitted feedback, not showing modal');
+            setCheckedFeedback(true);
+            return;
+          }
           
-          if (accountAgeDays >= 4 && !hasFeedback) {
-            console.log('FeedbackWrapper: ✅ User meets criteria (age >= 4 days, no feedback), showing modal in 1 second');
+          // Feedback not submitted - check localStorage to see if we've shown it before
+          const feedbackShownKey = 'feedback_modal_shown';
+          const hasShownBefore = storage?.getItem(feedbackShownKey) === 'true';
+          
+          if (hasShownBefore) {
+            console.log('FeedbackWrapper: Modal already shown before, skipping');
+            setCheckedFeedback(true);
+            return;
+          }
+          
+          // Show modal only if feedback has NOT been submitted AND we haven't shown it before
+          console.log('FeedbackWrapper: ✅ User has not submitted feedback and modal not shown before, showing modal in 1 second');
+          // Mark as shown in localStorage to prevent showing again
+          storage?.setItem(feedbackShownKey, 'true');
             // Small delay to ensure page is loaded
             setTimeout(() => {
               console.log('FeedbackWrapper: ✅ Setting showFeedbackModal to true');
               setShowFeedbackModal(true);
-              console.log('FeedbackWrapper: showFeedbackModal state after set:', true);
             }, 1000);
-          } else {
-            if (accountAgeDays < 4) {
-              console.log('FeedbackWrapper: ❌ Account age is less than 4 days, not showing modal');
-            } else if (hasFeedback) {
-              console.log('FeedbackWrapper: ❌ User has already submitted feedback, not showing modal');
-            } else {
-              console.log('FeedbackWrapper: ❌ Condition not met for unknown reason');
-            }
-          }
         } else {
           console.log('FeedbackWrapper: API response was not successful:', response);
         }
       } catch (err) {
-        console.error('FeedbackWrapper: Error checking maintenance status:', err);
+        console.error('FeedbackWrapper: Error checking feedback status:', err);
         // Don't show modal on error
       } finally {
         setCheckedFeedback(true);
@@ -87,10 +83,16 @@ export default function FeedbackWrapper({ children }) {
   }, []);
 
   const handleFeedbackSubmitted = () => {
+    // Mark feedback as submitted in localStorage to prevent showing again
+    const storage = getStorage();
+    storage?.setItem('feedback_modal_shown', 'true');
     setShowFeedbackModal(false);
   };
 
   const handleCloseModal = () => {
+    // Mark as shown in localStorage to prevent showing again even if closed without submitting
+    const storage = getStorage();
+    storage?.setItem('feedback_modal_shown', 'true');
     setShowFeedbackModal(false);
   };
 

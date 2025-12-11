@@ -11,6 +11,7 @@ import TaxDashboardFirst from './pages/TaxDashboardFirst';
 import DocumentsPage from './pages/Documents/DocumentsPage';
 import AllDocumentsPage from './pages/Documents/AllDocumentsPage';
 import ArchivedFilesPage from './pages/Documents/ArchivedFilesPage';
+import DocumentManager from './pages/Documents/DocumentManager';
 import TasksPage from './pages/Tasks/TasksPage';
 import MessagePage from './pages/Messages/Messages';
 import MyClients from './pages/MyClients/MyClients';
@@ -18,8 +19,10 @@ import ClientDetails from './pages/MyClients/ClientDetails';
 import ClientDocuments from './pages/MyClients/ClientDocuments';
 import InvoicesPage from './pages/MyClients/InvoicesPage';
 import SchedulePage from './pages/MyClients/SchedulePage';
+import ClientESignLogs from './pages/MyClients/ClientESignLogs';
 import CalendarPage from './pages/Calender/Calender';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
+import ESignatureDashboard from './pages/ESignature/ESignatureDashboard';
 
 // Protected Route Component for Admin/Tax Preparer
 function AdminProtectedRoute({ children }) {
@@ -64,6 +67,7 @@ export default function TaxRoutes() {
         {/* Documents routes */}
         <Route path="documents">
           <Route index element={<DocumentsPage />} />
+          <Route path="manager" element={<DocumentManager />} />
           <Route path="all" element={<AllDocumentsPage />}>
             <Route path=":documentId" element={<AllDocumentsPage />} />
           </Route>
@@ -79,6 +83,9 @@ export default function TaxRoutes() {
         {/* Calendar */}
         <Route path="calendar" element={<CalendarPage />} />
         
+        {/* E-Signature Dashboard */}
+        <Route path="e-signatures" element={<ESignatureDashboard />} />
+        
         {/* Account Settings */}
         <Route path="account" element={<AccountSettings />} />
         <Route path="settings" element={<AccountSettings />} />
@@ -93,6 +100,7 @@ export default function TaxRoutes() {
             <Route path="documents" element={<ClientDocuments />} />
             <Route path="invoices" element={<InvoicesPage />} />
             <Route path="schedule" element={<SchedulePage />} />
+            <Route path="esign-logs" element={<ClientESignLogs />} />
           </Route>
         </Route>
         
