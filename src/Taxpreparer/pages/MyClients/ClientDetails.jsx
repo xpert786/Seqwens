@@ -8,7 +8,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError, taxPreparerClientAPI, firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
-
+import "../../styles/clientdetails.css";
 const FILING_STATUS_OPTIONS = [
   { value: "single", label: "Single" },
   { value: "married_filing_jointly", label: "Married Filing Jointly" },
@@ -1105,7 +1105,7 @@ export default function ClientDetails() {
   };
 
   return (
-    <div className="p-4 font-['BasisGrotesquePro']">
+    <div className="lg:p-4 md:p-2 px-1 font-['BasisGrotesquePro']">
       {/* Back Button */}
       <div className="mb-4">
         <button

@@ -358,7 +358,7 @@ export default function DocumentManager() {
   };
 
   return (
-    <div className="p-4">
+    <div className="lg:p-4 md:p-2 px-1">
       {/* Upload Modal */}
       <TaxUploadModal
         show={showUpload}
@@ -383,7 +383,7 @@ export default function DocumentManager() {
 
       {/* Statistics Cards */}
       <div className="row g-3 mb-3">
-        <div className="col-md-3 col-sm-6">
+        <div className="col-md-3 col-sm-12">
           <div className="stat-card">
             <div className="d-flex justify-content-between align-items-center">
               <div className="stat-icon" style={{ color: "#00bcd4" }}>
@@ -396,7 +396,7 @@ export default function DocumentManager() {
             </div>
           </div>
         </div>
-        <div className="col-md-3 col-sm-6">
+        <div className="col-md-3 col-sm-12">
           <div className="stat-card">
             <div className="d-flex justify-content-between align-items-center">
               <div className="stat-icon" style={{ color: "#4caf50" }}>
@@ -409,7 +409,7 @@ export default function DocumentManager() {
             </div>
           </div>
         </div>
-        <div className="col-md-3 col-sm-6">
+        <div className="col-md-3 col-sm-12">
           <div className="stat-card">
             <div className="d-flex justify-content-between align-items-center">
               <div className="stat-icon" style={{ color: "#3f51b5" }}>
@@ -422,7 +422,7 @@ export default function DocumentManager() {
             </div>
           </div>
         </div>
-        <div className="col-md-3 col-sm-6">
+        <div className="col-md-3 col-sm-12">
           <div className="stat-card">
             <div className="d-flex justify-content-between align-items-center">
               <div className="stat-icon" style={{ color: "#EF4444" }}>

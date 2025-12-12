@@ -227,3 +227,73 @@
     max-width: 500px;
   }
 }
+
+/* Responsive for screens 420px and below */
+@media (max-width: 767px) {
+  .custom-topbar .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .custom-topbar .container-fluid > div:first-child {
+    gap: 0.5rem !important;
+  }
+
+  .custom-topbar .topbar-logo {
+    height: 32px;
+    margin-right: 4px;
+  }
+
+  .sidebar-toggle-btn {
+    padding: 4px;
+  }
+
+  .sidebar-toggle-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sd {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .custom-topbar .topbar-search {
+    display: none;
+  }
+
+  .custom-topbar .notification-belling {
+    width: 32px;
+    height: 32px;
+  }
+
+  .custom-topbar .notification-belling svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .topbar-user-avatar,
+  .topbar-user-initials {
+    height: 32px;
+    width: 32px;
+    font-size: 12px;
+  }
+
+  .topbar-user svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .topbar-user {
+    gap: 0.5rem !important;
+  }
+
+  .custom-topbar .container-fluid > div:first-child > div:last-child {
+    gap: 0.5rem !important;
+  }
+  
+}
+
+

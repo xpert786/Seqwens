@@ -286,6 +286,23 @@ p.card-contented {
 
 }
 
+/* Section Title and Subtitle */
+.section-title {
+  font-family: "BasisGrotesquePro", sans-serif;
+  color: #3B4A66;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.section-subtitle {
+  font-family: "BasisGrotesquePro", sans-serif;
+  color: #4B5563;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0;
+}
+
 /* View All Button */
 .view-all-btn {
   background: var(--White-900, #FFFFFF);
@@ -425,4 +442,214 @@ p.card-contented {
   border-radius: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
+}
+
+/* Responsive for screens 420px and below */
+@media (max-width: 420px) {
+  .taxdashboard-header {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .taxdashboard-header > div {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+
+  .taxdashboard-title {
+    font-size: 20px;
+  }
+
+  .taxdashboard-subtitle {
+    font-size: 13px;
+  }
+
+  .taxdashboard-header > div > div:last-child {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.5rem !important;
+    margin-top: 0 !important;
+  }
+
+  .taxdashboard-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .taxdashboard-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Dashboard Cards Responsive */
+  .row.g-3 {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+
+  .row.g-3 > * {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .row.g-3 > .col-sm-6.col-md-3 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 0.75rem;
+  }
+
+  .carded.dashboard-carded {
+    min-height: 160px;
+    padding: 16px;
+  }
+
+  .dashboarded-carded-labeled {
+    font-size: 13px;
+  }
+
+  .dashboarded-carded-valued {
+    font-size: 22px !important;
+  }
+
+  .card-contented {
+    font-size: 12px !important;
+  }
+
+  .carded.dashboard-carded svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* My Tasks and Upcoming Deadlines Sections */
+  .row.mt-1.g-3 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right:0 !important;
+  }
+
+  .row.mt-1.g-3 > .col-12.col-md-6 {
+    padding-left: 0;
+    padding-right:0;
+    margin-bottom: 1rem;
+  }
+
+  .card.custom-card {
+    padding: 12px !important;
+  }
+
+  .card.custom-card > div:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+    margin-bottom: 1rem !important;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+  }
+
+  .view-all-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+    min-height: 24px;
+    align-self: flex-start;
+  }
+
+  /* Task Cards */
+  .car {
+    padding: 12px !important;
+    gap: 0.75rem;
+  }
+
+  .bother {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .task-title {
+    font-size: 13px;
+  }
+
+  .task-due {
+    font-size: 11px;
+  }
+
+  .db-user {
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .icon-circle {
+    width: 24px;
+    height: 24px;
+  }
+
+  .icon-circle svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .db-user-icon-wrapper {
+    width: 14px;
+    height: 14px;
+  }
+
+  .db-user-icon-wrapper svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .task-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  /* Upcoming Deadlines Container */
+  .upcoming-deadlines-container {
+    gap: 0.75rem;
+  }
+
+  .upcoming-deadline-task {
+    padding: 12px;
+    gap: 0.75rem;
+  }
+
+  /* Gap adjustments */
+  .d-flex.flex-column.gap-3 {
+    gap: 0.75rem !important;
+  }
+
+  /* Quick Actions Section */
+  .quick-action-container {
+    gap: 12px;
+    margin-top: 8px;
+    justify-content: flex-start;
+  }
+
+  .quick-action-card {
+    width: calc(50% - 6px);
+    min-width: 0;
+    padding: 10px 8px;
+    gap: 6px;
+    flex-shrink: 1;
+  }
+
+  .quick-action-card span {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .quick-action-card .action-icon,
+  .quick-action-card svg {
+    width: 20px;
+    height: 20px;
+  }
 }

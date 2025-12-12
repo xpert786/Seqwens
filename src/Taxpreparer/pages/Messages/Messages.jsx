@@ -10,7 +10,7 @@ import { chatService } from "../../../ClientOnboarding/utils/chatService";
 import { useChatWebSocket } from "../../../ClientOnboarding/utils/useChatWebSocket";
 import { getUserData } from "../../../ClientOnboarding/utils/userUtils";
 import { toast } from "react-toastify";
-
+import "../../styles/message.css";
 export default function MessagePage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -345,8 +345,8 @@ export default function MessagePage() {
             const attachmentUrl = attachmentObj?.url || msg.attachment_url || null;
             const attachmentName = attachmentObj?.name || msg.attachment_name || null;
             const attachmentSize = attachmentObj?.size || msg.attachment_size || null;
-            const attachmentSizeDisplay = attachmentSize 
-              ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+            const attachmentSizeDisplay = attachmentSize
+              ? `${(attachmentSize / 1024).toFixed(1)} KB`
               : msg.attachment_size_display || null;
 
             return {
@@ -681,8 +681,8 @@ export default function MessagePage() {
         const attachmentUrl = attachmentObj?.url || response.data?.attachment_url || null;
         const attachmentName = attachmentObj?.name || response.data?.attachment_name || attachment?.name || null;
         const attachmentSize = attachmentObj?.size || response.data?.attachment_size || null;
-        const attachmentSizeDisplay = attachmentSize 
-          ? `${(attachmentSize / 1024).toFixed(1)} KB` 
+        const attachmentSizeDisplay = attachmentSize
+          ? `${(attachmentSize / 1024).toFixed(1)} KB`
           : response.data?.attachment_size_display || null;
 
         const realMsg = {
@@ -718,17 +718,17 @@ export default function MessagePage() {
               const messagesArray = Array.isArray(refreshResponse.data.messages)
                 ? refreshResponse.data.messages
                 : (Array.isArray(refreshResponse.data) ? refreshResponse.data : []);
-              
+
               if (messagesArray.length > 0) {
                 const refreshedMessages = messagesArray.map(msg => {
                   const sender = msg.sender || {};
                   const senderName = sender.name || msg.sender_name || sender.email || 'Unknown';
                   const senderRole = sender.role || msg.sender_role || '';
                   const senderId = sender.id || msg.sender_id || null;
-                  
+
                   const currentUser = getUserData();
                   const currentUserId = currentUser?.id || currentUser?.user_id || currentUser?.userId;
-                  
+
                   let isSentByCurrentUser = false;
                   if (senderId && currentUserId) {
                     isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
@@ -738,13 +738,13 @@ export default function MessagePage() {
                   }
 
                   const messageType = isSentByCurrentUser ? "user" : "admin";
-                  
+
                   const msgAttachmentObj = msg.attachment || null;
                   const msgAttachmentUrl = msgAttachmentObj?.url || msg.attachment_url || null;
                   const msgAttachmentName = msgAttachmentObj?.name || msg.attachment_name || null;
                   const msgAttachmentSize = msgAttachmentObj?.size || msg.attachment_size || null;
-                  const msgAttachmentSizeDisplay = msgAttachmentSize 
-                    ? `${(msgAttachmentSize / 1024).toFixed(1)} KB` 
+                  const msgAttachmentSizeDisplay = msgAttachmentSize
+                    ? `${(msgAttachmentSize / 1024).toFixed(1)} KB`
                     : msg.attachment_size_display || null;
 
                   return {
@@ -767,7 +767,7 @@ export default function MessagePage() {
                 });
 
                 setActiveChatMessages(refreshedMessages);
-                
+
                 // Auto-scroll to bottom after refresh
                 setTimeout(() => {
                   if (messagesEndRef.current) {
@@ -881,7 +881,7 @@ export default function MessagePage() {
 
     try {
       setDeleting(true);
-      
+
       // Try chatService first, fallback to taxPreparerThreadsAPI
       try {
         await chatService.deleteThread(threadToDelete);
@@ -893,7 +893,7 @@ export default function MessagePage() {
 
       // Remove from conversations list
       setConversations(prev => prev.filter(conv => conv.id !== threadToDelete));
-      
+
       // If deleted conversation was active, clear it
       if (activeConversationId === threadToDelete) {
         setActiveConversationId(null);
@@ -948,7 +948,7 @@ export default function MessagePage() {
   }, []);
 
   return (
-    <div className="px-4">
+    <div className="lg:px-4 md:px-2 px-1">
       <style>
         {`
           @keyframes slideUp {
@@ -964,13 +964,18 @@ export default function MessagePage() {
         `}
       </style>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-3 px-2">
+      <div className="message-header d-flex justify-content-between align-items-center mb-3 px-2">
         <div>
-          <h5 className="mb-0" style={{ color: "#3B4A66", fontSize: "26px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}>Messages</h5>
-          <small style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>Communicate with clients and team members</small>
+          <h5 className="mb-0" style={{ color: "#3B4A66", fontSize: "26px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+            Messages
+          </h5>
+          <small style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>
+            Communicate with clients and team members
+          </small>
         </div>
+
         <button
-          className="btn d-flex align-items-center"
+          className="btn d-flex align-items-center new-message-btn"
           style={{ backgroundColor: "#F56D2D", color: "#FFFFFF", fontFamily: "BasisGrotesquePro" }}
           onClick={handleOpenComposeModal}
         >
@@ -979,8 +984,9 @@ export default function MessagePage() {
         </button>
       </div>
 
+
       {/* Two Column Layout */}
-      <div className="d-flex flex-grow-1 overflow-hidden">
+      <div className="d-flex chat-wrapper flex-grow-1 overflow-hidden">
 
         {/* Left Column - Conversations */}
         <div className="p-3 me-3 d-flex flex-column" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
@@ -1078,7 +1084,7 @@ export default function MessagePage() {
                         </div>
                       </div>
                       <div className="d-flex align-items-center gap-2">
-                      <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
+                        <small style={{ color: "#3B4A66", fontSize: "12px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}>{conv.time}</small>
                         <button
                           onClick={(e) => handleDeleteThread(conv.id, e)}
                           className="btn btn-sm"
@@ -1202,8 +1208,8 @@ export default function MessagePage() {
                                         href={msg.attachment || msg.attachmentObj?.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ 
-                                          fontSize: "12px", 
+                                        style={{
+                                          fontSize: "12px",
                                           color: "#3B82F6",
                                           textDecoration: "underline",
                                           cursor: "pointer"
@@ -1247,8 +1253,8 @@ export default function MessagePage() {
                                         href={msg.attachment || msg.attachmentObj?.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ 
-                                          fontSize: "12px", 
+                                        style={{
+                                          fontSize: "12px",
                                           color: "#3B82F6",
                                           textDecoration: "underline",
                                           cursor: "pointer"
@@ -1320,16 +1326,16 @@ export default function MessagePage() {
                         type="button"
                         className="btn me-2"
                         onClick={() => messageFileInputRef.current?.click()}
-                        style={{ 
-                          background: "transparent", 
+                        style={{
+                          background: "transparent",
                           border: "1px solid #E8F0FF",
                           color: "#3B4A66"
                         }}
                         title="Attach file"
                       >
-                       <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2"/>
-</svg>
+                        <svg width="20" height="20" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M1.95117 5.62544V3.37544C1.95117 3.21017 2.08517 3.07617 2.25044 3.07617C2.41571 3.07617 2.54971 3.21017 2.54971 3.37544V5.62544C2.54971 6.70283 3.42307 7.57619 4.50044 7.57619C5.57783 7.57619 6.45119 6.70283 6.45119 5.62544V2.62529C6.4511 1.96226 5.91362 1.42479 5.25059 1.42471C4.58747 1.42471 4.04964 1.96221 4.04956 2.62529V5.62544C4.04956 5.87438 4.2515 6.07634 4.50044 6.07634C4.74938 6.07634 4.95134 5.87438 4.95134 5.62544V3.37544C4.95134 3.21017 5.0853 3.07617 5.25059 3.07617C5.41578 3.07625 5.54984 3.21022 5.54984 3.37544V5.62544C5.54984 6.2049 5.0799 6.67484 4.50044 6.67484C3.92096 6.67484 3.45103 6.2049 3.45103 5.62544V2.62529C3.4511 1.63166 4.25694 0.826172 5.25059 0.826172C6.24419 0.826253 7.04964 1.63171 7.04969 2.62529V5.62544C7.04969 7.03335 5.90835 8.17469 4.50044 8.17469C3.09253 8.17469 1.95117 7.03335 1.95117 5.62544Z" fill="#3AD6F2" />
+                        </svg>
 
                       </button>
                       {messageAttachment && (
@@ -1342,8 +1348,8 @@ export default function MessagePage() {
                           type="button"
                           className="btn me-2"
                           onClick={() => setMessageAttachment(null)}
-                          style={{ 
-                            background: "transparent", 
+                          style={{
+                            background: "transparent",
                             border: "none",
                             color: "#EF4444",
                             padding: "0 5px"
@@ -1398,7 +1404,7 @@ export default function MessagePage() {
 
       {/* Compose Message Modal */}
       {showComposeModal && (
-        <div style={{
+        <div  className="compose-modal-wrapper" style={{
           position: "fixed",
           top: 0,
           left: 0,
@@ -1413,7 +1419,7 @@ export default function MessagePage() {
         }}
           onClick={handleCloseComposeModal}
         >
-          <div style={{
+          <div className="compose-modal-box" style={{
             backgroundColor: "white",
             borderRadius: "16px",
             padding: "40px",
