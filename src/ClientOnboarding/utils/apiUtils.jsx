@@ -4403,6 +4403,62 @@ export const invoicesAPI = {
   }
 };
 
+// Payments API functions
+export const paymentsAPI = {
+  // Get completed payments only
+  getCompletedPayments: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('status', 'completed');
+    
+    // Add optional query parameters
+    if (params.page) {
+      queryParams.append('page', params.page);
+    }
+    if (params.page_size) {
+      queryParams.append('page_size', params.page_size);
+    }
+    if (params.start_date) {
+      queryParams.append('start_date', params.start_date);
+    }
+    if (params.end_date) {
+      queryParams.append('end_date', params.end_date);
+    }
+    if (params.search) {
+      queryParams.append('search', params.search);
+    }
+    
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/payments/?${queryString}`, 'GET');
+  },
+  
+  // Get all payments (with optional status filter)
+  getPayments: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.status) {
+      queryParams.append('status', params.status);
+    }
+    if (params.page) {
+      queryParams.append('page', params.page);
+    }
+    if (params.page_size) {
+      queryParams.append('page_size', params.page_size);
+    }
+    if (params.start_date) {
+      queryParams.append('start_date', params.start_date);
+    }
+    if (params.end_date) {
+      queryParams.append('end_date', params.end_date);
+    }
+    if (params.search) {
+      queryParams.append('search', params.search);
+    }
+    
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/payments/${queryString ? `?${queryString}` : ''}`, 'GET');
+  }
+};
+
 // Signature Requests API functions
 export const signatureRequestsAPI = {
   // Get all signature requests for the current taxpayer
