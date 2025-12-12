@@ -63,6 +63,7 @@ export const clearUserData = () => {
   localStorage.removeItem("userData");
   localStorage.removeItem("userStatus");
   localStorage.removeItem("userType");
+  localStorage.removeItem("customRole");
   localStorage.removeItem("isLoggedIn");
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -75,6 +76,7 @@ export const clearUserData = () => {
   // Also clear from sessionStorage
   sessionStorage.removeItem("userData");
   sessionStorage.removeItem("userType");
+  sessionStorage.removeItem("customRole");
   sessionStorage.removeItem("isLoggedIn");
   sessionStorage.removeItem("accessToken");
   sessionStorage.removeItem("refreshToken");

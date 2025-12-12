@@ -156,6 +156,25 @@ export default function AcceptInvite() {
                     localStorage.setItem("userData", JSON.stringify(user));
 
                     const roles = user.role; // Array of roles from API response
+                        const customRole = user.custom_role; // Custom role object if exists
+                        
+                        // Check if user has custom role and role is tax_preparer
+                        // If custom_role exists, user should use tax preparer dashboard
+                        if (customRole && roles && Array.isArray(roles) && roles.includes('tax_preparer')) {
+                            // Store custom role data
+                            localStorage.setItem("userType", 'tax_preparer');
+                            localStorage.setItem("customRole", JSON.stringify(customRole));
+                            
+                            toast.success(response.message || "Account created successfully! Welcome to the team!", {
+                                position: "top-right",
+                                autoClose: 3000,
+                            });
+                            
+                            setTimeout(() => {
+                                navigate("/taxdashboard", { replace: true });
+                            }, 2000);
+                            return;
+                        }
                     
                     // Check if user has multiple roles
                     if (roles && Array.isArray(roles) && roles.length > 1) {

@@ -91,7 +91,25 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
   const handleTaxPreparerChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions);
     const selectedIds = selectedOptions.map(option => parseInt(option.value));
-    setSelectedTaxPreparerIds(selectedIds);
+    
+    // Limit to maximum 2 tax preparers
+    if (selectedIds.length > 2) {
+      toast.warning('You can select a maximum of 2 tax preparers', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      // Keep only the first 2 selected
+      const limitedIds = selectedIds.slice(0, 2);
+      setSelectedTaxPreparerIds(limitedIds);
+      
+      // Update the select element to reflect the limit
+      const selectElement = e.target;
+      Array.from(selectElement.options).forEach(option => {
+        option.selected = limitedIds.includes(parseInt(option.value));
+      });
+    } else {
+      setSelectedTaxPreparerIds(selectedIds);
+    }
   };
 
   const handleSubmit = async () => {
@@ -246,7 +264,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
           )}
           {taxPreparers.length > 0 && (
             <small className="text-muted d-block mt-2" style={{ fontSize: '12px' }}>
-              Hold Ctrl (Windows) or Cmd (Mac) to select multiple tax preparers
+              Hold Ctrl (Windows) or Cmd (Mac) to select multiple tax preparers. Maximum 2 selections allowed.
             </small>
           )}
         </div>

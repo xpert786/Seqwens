@@ -1,6 +1,6 @@
 .dashboard-layout {
   display: flex;
-  --client-sidebar-width: 280px;
+  --client-sidebar-width: 240px;
 }
 
 .dashboard-main {
@@ -21,6 +21,72 @@
 
 @media (max-width: 1366px) {
   .dashboard-layout {
+    --client-sidebar-width: 200px;
+  }
+}
+
+/* Tablet styles */
+@media (max-width: 768px) {
+  .dashboard-layout {
     --client-sidebar-width: 240px;
+  }
+
+  .dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 15px !important;
+    margin-top: 60px !important;
+    height: calc(100vh - 60px) !important;
+  }
+
+  .dashboard-layout.dashboard-collapsed .dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Mobile phone styles */
+@media (max-width: 480px) {
+  .dashboard-main {
+    padding: 12px !important;
+    margin-top: 60px !important;
+    height: calc(100vh - 60px) !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .dashboard-layout.dashboard-collapsed .dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 360px) {
+  .dashboard-main {
+    padding: 10px !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .dashboard-layout.dashboard-collapsed .dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Extra small mobile phones - starting from 320px */
+@media (max-width: 320px) {
+  .dashboard-main {
+    padding: 8px !important;
+    margin-top: 60px !important;
+    height: calc(100vh - 60px) !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .dashboard-layout.dashboard-collapsed .dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 }
