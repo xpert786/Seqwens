@@ -16,10 +16,17 @@ import { userAPI } from "../utils/apiUtils";
 import { clearUserData } from "../utils/userUtils";
 import { navigateToLogin } from "../utils/urlUtils";
 
-export default function Sidebar({ isSidebarOpen = true }) {
+export default function Sidebar({ isSidebarOpen = true, onLinkClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Handle link click - close sidebar on mobile if needed
+  const handleLinkClick = () => {
+    if (onLinkClick && window.innerWidth < 768) {
+      onLinkClick();
+    }
+  };
 
   // Check if a path is active - handles both top-level and nested dashboard routes
   const isActive = (path) => {
@@ -88,7 +95,7 @@ export default function Sidebar({ isSidebarOpen = true }) {
       <div className="sidebar-top">
         <ul className="nav flex-column px-3">
           <li className="nav-item mb-2">
-            <Link to="/dashboard" className={linkClass("/dashboard")}>
+            <Link to="/dashboard" className={linkClass("/dashboard")} onClick={handleLinkClick}>
               <span className={iconWrapperClass("/dashboard")}>
                 <DashIcon />
               </span>
@@ -97,7 +104,7 @@ export default function Sidebar({ isSidebarOpen = true }) {
           </li>
 
           <li className="mb-2">
-            <Link to="/documents" className={linkClass("/documents")}>
+            <Link to="/documents" className={linkClass("/documents")} onClick={handleLinkClick}>
               <span className={iconWrapperClass("/documents")}>
                 <FileIcon />
               </span>
@@ -106,7 +113,7 @@ export default function Sidebar({ isSidebarOpen = true }) {
           </li>
 
           <li className="mb-2">
-            <Link to="/dataintake" className={linkClass("/dataintake")}>
+            <Link to="/dataintake" className={linkClass("/dataintake")} onClick={handleLinkClick}>
               <span className={iconWrapperClass("/dataintake")}>
                 <IntakeIcon />
               </span>
@@ -115,7 +122,7 @@ export default function Sidebar({ isSidebarOpen = true }) {
           </li>
 
           <li className="mb-2">
-            <Link to="/invoices" className={linkClass("/invoices")}>
+            <Link to="/invoices" className={linkClass("/invoices")} onClick={handleLinkClick}>
               <span className={iconWrapperClass("/invoices")}>
                 <BalanceIcon />
               </span>
@@ -124,7 +131,7 @@ export default function Sidebar({ isSidebarOpen = true }) {
           </li>
 
           <li className="mb-2">
-            <Link to="/messages" className={linkClass("/messages")}>
+            <Link to="/messages" className={linkClass("/messages")} onClick={handleLinkClick}>
               <span className={iconWrapperClass("/messages")}>
                 <MesIcon />
               </span>
@@ -133,7 +140,7 @@ export default function Sidebar({ isSidebarOpen = true }) {
           </li>
 
           <li>
-            <Link to="/appointments" className={linkClass("/appointments")}>
+            <Link to="/appointments" className={linkClass("/appointments")} onClick={handleLinkClick}>
               <span className={iconWrapperClass("/appointments")}>
                 <MonthIcon />
               </span>
@@ -145,14 +152,14 @@ export default function Sidebar({ isSidebarOpen = true }) {
 
       {/* Fixed Bottom Box */}
       <div className="sidebar-bottom-boxs">
-        <Link to="/accounts" className={bottomLinkClass("/accounts")}>
+        <Link to="/accounts" className={bottomLinkClass("/accounts")} onClick={handleLinkClick}>
           <span className={`bottom-icon-wrapper ${isActive("/accounts") ? "active" : ""}`}>
             <AccountIcon />
           </span>
           Account Settings
         </Link>
 
-        <Link to="/helpers" className={bottomLinkClass("/helpers")}>
+        <Link to="/helpers" className={bottomLinkClass("/helpers")} onClick={handleLinkClick}>
           <span className={`bottom-icon-wrapper ${isActive("/helpers") ? "active" : ""}`}>
             <HelpsIcon />
           </span>
