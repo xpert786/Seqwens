@@ -141,6 +141,15 @@ export default function RoleSelectionScreen() {
       userType = 'admin';
     }
 
+    // Check if user has custom role and selected role is tax_preparer
+    const customRole = user?.custom_role;
+    if (customRole && (role === 'staff' || role === 'tax_preparer')) {
+      // Store custom role data
+      if (storage) {
+        storage.setItem("customRole", JSON.stringify(customRole));
+      }
+    }
+
     // Determine route based on role
     if (role === 'super_admin' || role === 'support_admin' || role === 'billing_admin') {
       route = "/superadmin";

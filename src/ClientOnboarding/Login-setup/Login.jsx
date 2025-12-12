@@ -105,9 +105,23 @@ export default function Login() {
       const user = response.user;
       const userType = user.user_type;
       const roles = user.role; // Array of roles from API response
+      const customRole = user.custom_role; // Custom role object if exists
       
       console.log('User logged in with type:', userType);
       console.log('User roles:', roles);
+      console.log('Custom role:', customRole);
+      
+      // Check if user has custom role and role is tax_preparer
+      // If custom_role exists, user should use tax preparer dashboard
+      if (customRole && roles && Array.isArray(roles) && roles.includes('tax_preparer')) {
+        // Store custom role data
+        storage.setItem("userType", 'tax_preparer');
+        storage.setItem("customRole", JSON.stringify(customRole));
+        
+        // Redirect to tax preparer dashboard
+        navigate("/taxdashboard");
+        return;
+      }
       
       // Check if user has multiple roles
       if (roles && Array.isArray(roles) && roles.length > 1) {
