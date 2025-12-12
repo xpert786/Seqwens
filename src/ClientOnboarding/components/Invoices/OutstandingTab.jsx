@@ -18,10 +18,10 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
     const handlePayNowClick = async (invoice) => {
         try {
-            // Build success and cancel URLs
+            // Build success and cancel URLs - redirect to invoices page with success parameter
             const baseUrl = window.location.origin;
-            const successUrl = `${baseUrl}/invoices/${invoice.id}/payment-success`;
-            const cancelUrl = `${baseUrl}/invoices/${invoice.id}/payment-cancelled`;
+            const successUrl = `${baseUrl}/invoices?payment_success=true&invoice_id=${invoice.id}`;
+            const cancelUrl = `${baseUrl}/invoices?payment_cancelled=true`;
             
             // Call the payment API with success and cancel URLs
             const response = await invoicesAPI.payInvoice(invoice.id, successUrl, cancelUrl);
@@ -67,10 +67,10 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const handlePaymentSubmit = async () => {
         try {
             const invoiceId = selectedInvoice.id;
-            // Build success and cancel URLs
+            // Build success and cancel URLs - redirect to invoices page with success parameter
             const baseUrl = window.location.origin;
-            const successUrl = `${baseUrl}/invoices/${invoiceId}/payment-success`;
-            const cancelUrl = `${baseUrl}/invoices/${invoiceId}/payment-cancelled`;
+            const successUrl = `${baseUrl}/invoices?payment_success=true&invoice_id=${invoiceId}`;
+            const cancelUrl = `${baseUrl}/invoices?payment_cancelled=true`;
             
             // Call the payment API with success and cancel URLs
             const response = await invoicesAPI.payInvoice(invoiceId, successUrl, cancelUrl);

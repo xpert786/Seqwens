@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import OutstandingTab from './OutstandingTab';
-import PaymentHistoryTab from './PaymentHistoryTab';
+import PaymentHistoryTab from './PaymentHistoryTabWrapper';
 import { BalanceIcon, DateIcons } from "../icons";
 import { invoicesAPI, handleAPIError } from '../../utils/apiUtils';
 import { toast } from 'react-toastify';
+import PaymentSuccessModal from './PaymentSuccessModal';
 
 const InvoicesMain = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('outstanding');
   const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState({
@@ -17,6 +21,8 @@ const InvoicesMain = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [paymentSuccessInvoice, setPaymentSuccessInvoice] = useState(null);
 
   const tabs = [
     { id: "outstanding", label: `Outstanding (${summary.outstanding_count})` },
@@ -40,48 +46,79 @@ const InvoicesMain = () => {
     }).format(amount);
   };
 
-  // Fetch invoices data
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await invoicesAPI.getInvoices();
+  // Fetch invoices function (extracted for reuse)
+  const fetchInvoices = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await invoicesAPI.getInvoices();
 
-        if (response.success && response.data) {
-          setInvoices(response.data.invoices || []);
-          setSummary(response.data.summary || {
-            outstanding_balance: 0.0,
-            paid_this_year: 0.0,
-            next_due_date: null,
-            total_invoices: 0,
-            outstanding_count: 0
-          });
-        } else {
-          setError('Failed to load invoices');
-        }
-      } catch (err) {
-        console.error('Error fetching invoices:', err);
-        const errorMessage = handleAPIError(err);
-        setError(errorMessage);
-        toast.error(errorMessage, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: false,
-          className: "custom-toast-error",
-          bodyClassName: "custom-toast-body",
+      if (response.success && response.data) {
+        setInvoices(response.data.invoices || []);
+        setSummary(response.data.summary || {
+          outstanding_balance: 0.0,
+          paid_this_year: 0.0,
+          next_due_date: null,
+          total_invoices: 0,
+          outstanding_count: 0
         });
-      } finally {
-        setLoading(false);
+      } else {
+        setError('Failed to load invoices');
       }
-    };
-
-    fetchInvoices();
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch invoices data on mount
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  // Check for payment success in URL parameters
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success');
+    const invoiceId = searchParams.get('invoice_id');
+    const paymentCancelled = searchParams.get('payment_cancelled');
+
+    if (paymentSuccess === 'true' && invoiceId) {
+      // Find the invoice that was paid
+      const paidInvoice = invoices.find(inv => inv.id === parseInt(invoiceId));
+      if (paidInvoice) {
+        setPaymentSuccessInvoice(paidInvoice);
+        setShowPaymentSuccessModal(true);
+        // Remove query parameters from URL
+        setSearchParams({});
+        // Refresh invoices to get updated data
+        fetchInvoices();
+      } else if (invoices.length > 0) {
+        // Invoices loaded but invoice not found - still show success
+        setShowPaymentSuccessModal(true);
+        setSearchParams({});
+      }
+    } else if (paymentCancelled === 'true') {
+      toast.info('Payment was cancelled', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setSearchParams({});
+    }
+  }, [searchParams, invoices, fetchInvoices, setSearchParams]);
 
   return (
     <div className='px-4' >
@@ -207,8 +244,22 @@ const InvoicesMain = () => {
 
 
       <div>
-        {!loading && (activeTab === 'outstanding' ? <OutstandingTab invoices={invoices} summary={summary} /> : <PaymentHistoryTab invoices={invoices} />)}
+        {activeTab === 'outstanding' ? (
+          !loading && <OutstandingTab invoices={invoices} summary={summary} />
+        ) : (
+          <PaymentHistoryTab />
+        )}
       </div>
+
+      {/* Payment Success Modal */}
+      <PaymentSuccessModal
+        show={showPaymentSuccessModal}
+        onClose={() => {
+          setShowPaymentSuccessModal(false);
+          setPaymentSuccessInvoice(null);
+        }}
+        invoice={paymentSuccessInvoice}
+      />
     </div>
   );
 };

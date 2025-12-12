@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaEye, } from "react-icons/fa";
+import { Modal } from 'react-bootstrap';
 import "../../styles/Popup.css";
 import "../../styles/Esignpop.css"
 import ESignatureModal from "../../components/ESignatureModal";
@@ -9,6 +10,7 @@ import page3Image from "../../../assets/page3.png";
 import page4Image from "../../../assets/page4.png";
 import { signatureRequestsAPI, handleAPIError } from "../../utils/apiUtils";
 import { toast } from "react-toastify";
+import PDFViewer from "../../../components/PDFViewer";
 
 import { FileIcon, ProfileIcon, LegalIcon, SignatureIcon, DateIcon, InitialIcon, CompletedIcon, AwaitingIcon, Sign2WhiteIcon } from "../icons";
 import Pagination from "../Pagination";
@@ -677,88 +679,53 @@ export default function ESignature() {
         />
       )}
 
-      {showPreviewModal && (
-        <div className="esign-preview-overlay">
-          <div className="esign-preview-modal">
-            <div className="esign-preview-header">
-              E-Signature – Tax_Return_2023_DRAFT.pdf
+      {/* PDF Preview Modal */}
+      <Modal
+        show={showPreviewModal}
+        onHide={() => {
+          setShowPreviewModal(false);
+          setSelectedIndex(null);
+        }}
+        size="xl"
+        centered
+        fullscreen="lg-down"
+        style={{ fontFamily: 'BasisGrotesquePro' }}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
+            {selectedIndex !== null && signatureRequests[selectedIndex]
+              ? `E-Signature – ${signatureRequests[selectedIndex].document_name || signatureRequests[selectedIndex].title || 'Document'}`
+              : 'E-Signature – Document Preview'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+          {selectedIndex !== null && signatureRequests[selectedIndex]?.document_url ? (
+            <PDFViewer
+              pdfUrl={signatureRequests[selectedIndex].document_url}
+              height="70vh"
+              showThumbnails={true}
+            />
+          ) : (
+            <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+              <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                No document available for preview.
+              </p>
             </div>
-            <h6 className='pre'>Documents preview</h6>
-
-            <div className="esign-preview-body">
-              <div className="esign-preview-sidebar">
-                {previewPages.map((p, idx) => (
-                  <div
-                    key={p.id}
-                    className={`esign-preview-thumb ${activePage === idx ? "active" : ""}`}
-                    onClick={() => setActivePage(idx)}
-                  >
-                    <img src={p.image} alt={`Page ${p.id}`} />
-                  </div>
-                ))}
-              </div>
-
-              <div className="esign-preview-main">
-                <img
-                  className="esign-preview-page"
-                  src={previewPages[activePage].image}
-                  alt={`Page ${previewPages[activePage].id}`}
-                />
-
-                {highlights
-                  .filter((h) => h.page === activePage)
-                  .map((h, i) => (
-                    <div
-                      key={i}
-                      className="highlight-overlay"
-                      style={{
-                        top: h.top,
-                        left: h.left,
-                        width: h.width,
-                        height: h.height
-                      }}
-                      onClick={() => handleHighlightClick(h)}
-                    ></div>
-                  ))}
-
-                {markers
-                  .filter((m) => m.page === activePage)
-                  .map((m) => (
-                    <div
-                      key={m.id}
-                      className="teal-marker"
-                      style={{
-                        top: m.top,
-                        left: `calc(${m.left} + ${m.width} + 5px)`
-                      }}
-                      onClick={() => setSelectedMarker(m.id)}
-                    ></div>
-                  ))}
-              </div>
-
-              {selectedMarker !== null && (
-                <div className="comment-panel-outside">
-                  <textarea
-                    placeholder="Type your comment..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                  ></textarea>
-                  <div className="comment-buttons">
-                    <button onClick={() => setSelectedMarker(null)}>Cancel</button>
-                    <button>Comment</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="esign-preview-footer">
-              <button className="btn-cancel" onClick={() => setShowPreviewModal(false)}>Cancel</button>
-              {/* <button className="btn-preview">Preview</button> */}
-              {/* <button className="btn-complete">Complete Signature</button> */}
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowPreviewModal(false);
+              setSelectedIndex(null);
+            }}
+            style={{ fontFamily: 'BasisGrotesquePro' }}
+          >
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
 
 
 

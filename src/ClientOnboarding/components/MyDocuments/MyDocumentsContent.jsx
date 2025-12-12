@@ -5,7 +5,9 @@ import "../../styles/Document.css";
 import { handleAPIError } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
+import { toast } from "react-toastify";
 import Pagination from "../Pagination";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 
 export default function MyDocumentsContent() {
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -26,6 +28,10 @@ export default function MyDocumentsContent() {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const itemsPerPage = 3;
+    const [showDeleteDocumentConfirm, setShowDeleteDocumentConfirm] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState(null);
+    const [deletingDocumentId, setDeletingDocumentId] = useState(null);
+    const [showMenuIndex, setShowMenuIndex] = useState(null);
 
     // Fetch all documents from the documents API
     const fetchAllDocuments = async () => {
@@ -155,6 +161,81 @@ export default function MyDocumentsContent() {
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         } catch {
             return dateString;
+        }
+    };
+
+    // Handle delete document
+    const handleDeleteDocument = (doc) => {
+        setDocumentToDelete(doc);
+        setShowDeleteDocumentConfirm(true);
+        setShowMenuIndex(null);
+    };
+
+    const confirmDeleteDocument = async () => {
+        if (!documentToDelete) return;
+
+        try {
+            setDeletingDocumentId(documentToDelete.id || documentToDelete.document_id);
+            const API_BASE_URL = getApiBaseUrl();
+            const token = getAccessToken();
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const docId = documentToDelete.id || documentToDelete.document_id;
+            const url = `${API_BASE_URL}/taxpayer/documents/${docId}/`;
+
+            const config = {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            const response = await fetchWithCors(url, config);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Remove document from list
+            setDocuments(prevDocuments =>
+                prevDocuments.filter(doc =>
+                    (doc.id !== docId && doc.document_id !== docId)
+                )
+            );
+
+            // Close modal if deleted document was selected
+            if (selectedDocument && (selectedDocument.id === docId || selectedDocument.document_id === docId)) {
+                setShowPdfModal(false);
+                setSelectedDocument(null);
+            }
+
+            // Update stats
+            setStats(prevStats => ({
+                ...prevStats,
+                uploaded: Math.max(0, prevStats.uploaded - 1)
+            }));
+
+            toast.success('Document deleted successfully', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+
+            setShowDeleteDocumentConfirm(false);
+            setDocumentToDelete(null);
+        } catch (error) {
+            console.error('Error deleting document:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to delete document'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setDeletingDocumentId(null);
         }
     };
 
@@ -288,6 +369,19 @@ export default function MyDocumentsContent() {
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedFilter, searchTerm]);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showMenuIndex !== null && !event.target.closest('[data-menu-container]')) {
+                setShowMenuIndex(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [showMenuIndex]);
 
     // Memoize filtered documents to ensure reactivity
     const filteredDocuments = useMemo(() => {
@@ -517,6 +611,11 @@ export default function MyDocumentsContent() {
                                                 transition: "background-color 0.3s ease",
                                             }}
                                             onClick={() => {
+                                                // Close menu if clicking on document
+                                                if (showMenuIndex === (startIndex + index)) {
+                                                    setShowMenuIndex(null);
+                                                    return;
+                                                }
                                                 setSelectedIndex(startIndex + index);
                                                 // Check if document is a PDF
                                                 const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
@@ -613,21 +712,64 @@ export default function MyDocumentsContent() {
                                                         </span>
                                                     )}
 
-                                                    <button
-                                                        className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
-                                                        style={{
-                                                            width: "32px",
-                                                            height: "32px",
-                                                            borderRadius: "50%",
-                                                            fontFamily: "BasisGrotesquePro",
-                                                        }}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            // Handle menu click
-                                                        }}
-                                                    >
-                                                        <i className="bi bi-three-dots-vertical" />
-                                                    </button>
+                                                    <div style={{ position: 'relative' }} data-menu-container>
+                                                        <button
+                                                            className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
+                                                            style={{
+                                                                width: "32px",
+                                                                height: "32px",
+                                                                borderRadius: "50%",
+                                                                fontFamily: "BasisGrotesquePro",
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setShowMenuIndex(showMenuIndex === (startIndex + index) ? null : (startIndex + index));
+                                                            }}
+                                                        >
+                                                            <i className="bi bi-three-dots-vertical" />
+                                                        </button>
+                                                        {showMenuIndex === (startIndex + index) && (
+                                                            <div
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    right: 0,
+                                                                    top: '100%',
+                                                                    marginTop: '4px',
+                                                                    backgroundColor: 'white',
+                                                                    border: '1px solid #E5E7EB',
+                                                                    borderRadius: '8px',
+                                                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                                                    zIndex: 1000,
+                                                                    minWidth: '150px',
+                                                                    padding: '4px 0'
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                <button
+                                                                    className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                                    style={{
+                                                                        fontFamily: 'BasisGrotesquePro',
+                                                                        fontSize: '14px',
+                                                                        color: '#EF4444',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.target.style.backgroundColor = '#FEF2F2';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.target.style.backgroundColor = 'white';
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteDocument(doc);
+                                                                    }}
+                                                                >
+                                                                    <i className="bi bi-trash me-2"></i>
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -852,6 +994,24 @@ export default function MyDocumentsContent() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Document Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteDocumentConfirm}
+                onClose={() => {
+                    if (!deletingDocumentId) {
+                        setShowDeleteDocumentConfirm(false);
+                        setDocumentToDelete(null);
+                    }
+                }}
+                onConfirm={confirmDeleteDocument}
+                title="Delete Document"
+                message={documentToDelete ? `Are you sure you want to delete "${documentToDelete.file_name || documentToDelete.name || documentToDelete.document_name || 'this document'}"? This action cannot be undone.` : "Are you sure you want to delete this document? This action cannot be undone."}
+                confirmText="Delete"
+                cancelText="Cancel"
+                confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
+                isLoading={!!deletingDocumentId}
+            />
         </div>
     );
 }
