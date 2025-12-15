@@ -387,7 +387,7 @@ export default function DocumentManagement() {
   );
 
   return (
-    <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
+    <div className="lg:p-6 md:p-4 sm:p-2 px-1 bg-[rgb(243,247,255)] min-h-screen">
       {/* Header Section */}
       {!isViewingDocument && (
         <div className="mb-6">
@@ -444,7 +444,7 @@ export default function DocumentManagement() {
 
       {/* Document Folders Section - Only show if NOT in nested route */}
       {!isNestedRoute && activeTab === 'Folder' && (
-        <div className='bg-white rounded-lg p-5 border border-gray-100'>
+        <div className='bg-white rounded-lg lg:p-5 md:p-3 sm:p-1 border border-gray-100'>
           <div className="mb-6">
             <h5 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
               Document Folders
@@ -465,7 +465,7 @@ export default function DocumentManagement() {
                 placeholder="Search Folder..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-1/2 pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 bg-blue-50"
+                className="w-full lg:w-1/2 lg:pl-10 lg:pr-4 lg:py-2.5 sm:p-2 sm:text-center md:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 bg-blue-50 search-folder-document-management"
                 style={{ fontFamily: 'BasisGrotesquePro' }}
               />
             </div>
