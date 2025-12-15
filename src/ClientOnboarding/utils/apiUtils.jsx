@@ -3284,8 +3284,12 @@ export const firmAdminCustomRolesAPI = {
   },
 
   // Create custom role
-  createCustomRole: async (name, description) => {
-    return await apiRequest('/user/firm-admin/custom-roles/', 'POST', { name, description });
+  createCustomRole: async (name, description, permission_groups) => {
+    return await apiRequest('/user/firm-admin/custom-roles/', 'POST', { 
+      name, 
+      description, 
+      permission_groups 
+    });
   },
 
   // Get role details
@@ -4532,6 +4536,75 @@ export const signatureRequestsAPI = {
     }
 
     return await apiRequest('/taxpayer/signatures/requests/submit/', 'POST', requestBody);
+  },
+};
+
+// SignWell API functions
+export const signWellAPI = {
+  // Extract signature fields from PDF
+  extractFields: async (data) => {
+    const { document_id, pdf_path } = data;
+    
+    if (!document_id && !pdf_path) {
+      throw new Error('Either document_id or pdf_path is required');
+    }
+    
+    const requestBody = {};
+    if (document_id) {
+      requestBody.document_id = document_id;
+    } else if (pdf_path) {
+      requestBody.pdf_path = pdf_path;
+    }
+    
+    return await apiRequest('/taxpayer/signwell/extract-fields/', 'POST', requestBody);
+  },
+
+  // Apply signature via SignWell
+  applySignature: async (data) => {
+    const {
+      document_id,
+      signature_fields,
+      signer_email,
+      signer_name,
+      document_name,
+      test_mode = true
+    } = data;
+    
+    if (!document_id) {
+      throw new Error('document_id is required');
+    }
+    
+    if (!signature_fields || !Array.isArray(signature_fields) || signature_fields.length === 0) {
+      throw new Error('signature_fields array is required');
+    }
+    
+    if (!signer_email) {
+      throw new Error('signer_email is required');
+    }
+    
+    if (!signer_name) {
+      throw new Error('signer_name is required');
+    }
+    
+    const requestBody = {
+      document_id,
+      signature_fields,
+      signer_email,
+      signer_name,
+      document_name: document_name || 'Document',
+      test_mode
+    };
+    
+    return await apiRequest('/taxpayer/signwell/apply-signature/', 'POST', requestBody);
+  },
+
+  // Check document status
+  checkDocumentStatus: async (signwellDocumentId) => {
+    if (!signwellDocumentId) {
+      throw new Error('signwell_document_id is required');
+    }
+    
+    return await apiRequest(`/taxpayer/signwell/document-status/${signwellDocumentId}/`, 'GET');
   },
 };
 

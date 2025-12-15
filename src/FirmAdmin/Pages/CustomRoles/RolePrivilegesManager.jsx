@@ -14,7 +14,8 @@ const PRIVILEGE_CATEGORIES = [
   { value: 'billing', label: 'Billing' },
   { value: 'workflows', label: 'Workflows' },
   { value: 'communications', label: 'Communications' },
-  { value: 'analytics', label: 'Analytics' }
+  { value: 'analytics', label: 'Analytics' },
+  { value: 'esignature', label: 'E-Signature / SignWell' }
 ];
 
 const PRIVILEGE_ACTIONS = [
@@ -78,6 +79,16 @@ const RESOURCE_EXAMPLES = {
   analytics: [
     { value: 'view_analytics', label: 'View Analytics', description: 'View analytics and reports' },
     { value: 'export_analytics', label: 'Export Analytics', description: 'Export analytics data' }
+  ],
+  esignature: [
+    { value: 'extract_signature_fields', label: 'Extract Signature Fields', description: 'Use OCR to automatically detect signature fields in PDF documents' },
+    { value: 'apply_signwell_signature', label: 'Apply SignWell Signature', description: 'Send documents to SignWell for electronic signing' },
+    { value: 'view_signwell_documents', label: 'View SignWell Documents', description: 'View documents sent via SignWell' },
+    { value: 'manage_signwell_documents', label: 'Manage SignWell Documents', description: 'Manage and track SignWell document status' },
+    { value: 'check_document_status', label: 'Check Document Status', description: 'Check signing status of SignWell documents' },
+    { value: 'create_signature_requests', label: 'Create Signature Requests', description: 'Create new e-signature requests for clients' },
+    { value: 'manage_signature_requests', label: 'Manage Signature Requests', description: 'Manage existing signature requests' },
+    { value: 'view_signature_history', label: 'View Signature History', description: 'View history of all signature requests and completions' }
   ]
 };
 

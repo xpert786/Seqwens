@@ -105,6 +105,26 @@ export default function PdfViewer() {
   // In production, this should come from the API based on documentId
   const pdfUrl = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
   
+  // Helper function to convert backend URL to proxy URL if needed
+  const getProxyUrl = (url) => {
+    if (!url) return url;
+    
+    try {
+      const urlObj = new URL(url);
+      // Check if URL is from the backend server (168.231.121.7)
+      if (urlObj.hostname === '168.231.121.7' && urlObj.pathname.includes('/seqwens/media')) {
+        // Convert to proxy URL: http://localhost:5173/seqwens/media/...
+        const proxyPath = urlObj.pathname; // e.g., /seqwens/media/tax_documents/...
+        return `${window.location.origin}${proxyPath}${urlObj.search}`;
+      }
+    } catch (e) {
+      // If URL parsing fails, return original URL
+      console.warn('Failed to parse URL:', url, e);
+    }
+    
+    return url;
+  };
+
   // Load PDF file
   useEffect(() => {
     const loadPdf = async () => {
@@ -114,8 +134,11 @@ export default function PdfViewer() {
         setPdfLoading(true);
         setPdfError(null);
         
+        // Convert to proxy URL if needed to avoid CORS issues
+        const proxiedUrl = getProxyUrl(pdfUrl);
+        
         // Fetch PDF as blob
-        const response = await fetch(pdfUrl);
+        const response = await fetch(proxiedUrl);
         if (!response.ok) throw new Error('Failed to fetch PDF');
         const blob = await response.blob();
         const file = new File([blob], 'document.pdf', { type: 'application/pdf' });
