@@ -2256,6 +2256,7 @@ export default function DocumentManagement() {
         onSuccess={() => {
           // Refresh shared documents list if on that tab
           if (activeTab === 'Shared Documents') {
+           
             // The SharedDocumentsList component will handle its own refresh
           }
         }}

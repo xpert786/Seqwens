@@ -350,10 +350,14 @@ export default function SharedDocumentsList() {
         show={showDocumentSelectionModal}
         onClose={() => {
           setShowDocumentSelectionModal(false);
-          setSelectedDocumentsForShare([]);
+          // setSelectedDocumentsForShare([]);
         }}
         onSelectDocuments={(docs) => {
-          setSelectedDocumentsForShare(docs);
+          console.log(docs,'checkdocs hereeee')
+          if(docs.length){
+
+            setSelectedDocumentsForShare(docs);
+          }
           setShowDocumentSelectionModal(false);
           setShowShareModal(true);
         }}
@@ -371,7 +375,7 @@ export default function SharedDocumentsList() {
         onSuccess={() => {
           fetchShares();
           setShowShareModal(false);
-          setSelectedDocumentsForShare([]); // Clear only on success
+          // setSelectedDocumentsForShare([]); // Clear only on success
         }}
       />
 

@@ -783,12 +783,11 @@ export default function ESignature() {
             setShowSignModal(false);
             setSelectedIndex(null);
           }}
-          pages={[
-            { id: 1, title: "Page 1", image: page1Image },
-            { id: 2, title: "Page 2", image: page2Image },
-            { id: 3, title: "Page 3", image: page3Image },
-            { id: 4, title: "Page 4", image: page4Image },
-          ]}
+          pages={ <PDFViewer
+            pdfUrl={signatureRequests[selectedIndex]?.document_url}
+            height="70vh"
+            showThumbnails={true}
+          />}
           requestId={signatureRequests[selectedIndex]?.id}
           signatureRequest={signatureRequests[selectedIndex]}
           onSignatureComplete={async (result) => {
@@ -815,6 +814,7 @@ export default function ESignature() {
         fullscreen="lg-down"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
+
         <Modal.Header closeButton>
           <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             {selectedIndex !== null && signatureRequests[selectedIndex]
@@ -825,7 +825,7 @@ export default function ESignature() {
         <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
           {selectedIndex !== null && signatureRequests[selectedIndex]?.document_url ? (
             <PDFViewer
-              pdfUrl={signatureRequests[selectedIndex].document_url}
+              pdfUrl={signatureRequests[selectedIndex]?.document_url}
               height="70vh"
               showThumbnails={true}
             />
