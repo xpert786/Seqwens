@@ -6,7 +6,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
-
+import "../../styles/taskpage.css";
 // Custom checkbox styles
 const checkboxStyle = `
   input[type="checkbox"] {
@@ -1076,9 +1076,9 @@ export default function TasksPage() {
   const bgForCol = (key) => "#fff";
 
   return (
-    <div className="p-4">
+    <div className="lg:p-4 md:px-2 px-1">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="tasks-header d-flex justify-content-between align-items-center mb-4 tasks-header-wrapper">
         <div>
           <h3 className="fw-semibold" style={{ marginBottom: 4 }}>My Tasks</h3>
           <small className="text-muted">Manage your assigned tasks and workflow</small>
@@ -1097,7 +1097,7 @@ export default function TasksPage() {
       </div>
 
       {/* Stat cards row (Bootstrap grid) */}
-      <div className="row g-3 mb-4">
+      <div className="tasks-stats-row row g-3 mb-4">
         {stats.map((s, i) => (
           <div key={i} className="col-12 col-sm-6 col-md-4 col-lg">
             <div className="card h-100 " style={{
@@ -1141,11 +1141,11 @@ export default function TasksPage() {
 
       {/* Options: Client-style two buttons */}
       <div
-        className="inline-block mt-4 w-100 position-relative"
+        className="options-wrapper inline-block mt-4 w-100 position-relative"
         style={{ border: "none" }}
       >
         <div className="d-flex align-items-center justify-content-between w-100">
-          <div className="d-inline-flex align-items-center gap-2 p-2 rounded-3"
+          <div className="btn-group-custom d-inline-flex align-items-center gap-2 p-2 rounded-3"
             style={{ background: '#fff', border: '1px solid #E8F0FF' }}>
             {/* Kanban Board */}
             <button
@@ -1208,7 +1208,7 @@ export default function TasksPage() {
           {/* Customize button on the right */}
           <button
             ref={buttonRef}
-            className="d-inline-flex align-items-center gap-2"
+            className="customize-btn d-inline-flex align-items-center gap-2"
             style={{
               padding: "8px 14px",
               background: "#fff",
@@ -1231,7 +1231,7 @@ export default function TasksPage() {
         {showCustomize && (
           <div
             ref={modalRef}
-            className="p-3"
+            className="customize-modal p-3"
             style={{
               position: "fixed",
               right: 32,
@@ -1328,111 +1328,53 @@ export default function TasksPage() {
 
           {/* Kanban Board */}
           {!tasksLoading && !tasksError && (
-            <div className="d-flex justify-content-center">
-              <div className="mt-3" style={{
-                width: '100%',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-                gap: '12px',
-                alignItems: 'start'
-              }}>
-                {order.map((k) => (
-                  <div key={k} style={{ display: 'flex', alignSelf: 'flex-start' }}>
-                    <div className="card" style={{ background: bgForCol(k), borderRadius: 18, border: "1px solid #E8F0FF", width: '100%' }}>
-                      <div className="card-body" style={{ 
-                        padding: '1rem',
-                        paddingBottom: tasks[k].length === 0 ? '0.75rem' : '1rem'
-                      }}>
-                        <h6 className="fw-semibold d-flex align-items-center" style={{ 
-                          color: "#3B4A66", 
-                          gap: 8,
-                          marginBottom: tasks[k].length === 0 ? '0.75rem' : '1rem'
-                        }}>
-                          {iconFor(k)} {titleFor(k)} ({tasks[k].length})
-                        </h6>
-                        {tasks[k].length > 0 ? (
-                          tasks[k].map((t) => (
-                            <div
-                              key={t.id}
-                              className="card mb-3 task-item"
-                              style={{ border: "1px solid #E8F0FF", borderRadius: 14 }}
-                              onClick={() => setSelectedTask(t)}
-                            >
-                              <div className="card-body position-relative p-3">
-                                <div className="position-absolute" style={{ top: 10, right: 10, zIndex: 1 }}>
-                                  <span
-                                    className="badge text-white"
-                                    style={{
-                                      background: t.priority.toLowerCase() === 'high' ? '#EF4444' :
-                                        t.priority.toLowerCase() === 'medium' ? '#F59E0B' :
-                                          t.priority.toLowerCase() === 'low' ? '#10B981' : '#6B7280',
-                                      color: '#FFFFFF !important',
-                                      borderRadius: '20px',
-                                      padding: '3px 9px',
-                                      fontSize: '10px',
-                                      fontWeight: 700,
-                                      lineHeight: '14px',
-                                      whiteSpace: 'nowrap',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      height: '20px',
-                                      border: 'none',
-                                      textTransform: 'uppercase',
-                                      WebkitFontSmoothing: 'antialiased',
-                                      // MozOsxFontSmoothing: 'grayscale'
-                                    }}
-                                  >
-                                    {t.priority}
-                                  </span>
-                                </div>
-                                <div className="d-flex align-items-start">
-                                  <span className="icon-circle" style={{ width: 28, height: 28, borderRadius: 8, background: "#EAF7FF", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#00C0C6" }}><Doc /></span>
-                                  <div style={{ minWidth: 0, flex: 1, marginLeft: 10 }}>
-                                    <div className="fw-semibold" style={{ color: "#3B4A66", whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', fontSize: 14, lineHeight: '20px', paddingRight: 60 }}>{t.title}</div>
-                                    <div className="text-muted small d-flex align-items-center justify-content-between w-100" style={{ gap: 12, marginTop: 6, marginBottom: 4, flexWrap: 'nowrap' }}>
-                                      <span className="d-inline-flex align-items-center" style={{ gap: 6, minWidth: 0, flex: 1 }}>
-                                        <MiniContact /> <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.client}</span>
-                                        <span className="ms-3" style={{ whiteSpace: 'nowrap' }}>{t.due}</span>
-                                      </span>
-                                      <button 
-                                        className="btn btn-sm btn-light" 
-                                        style={{ 
-                                          backgroundColor: '#fff', 
-                                          borderRadius: 8, 
-                                          border: '1px solid #E8F0FF',
-                                          flexShrink: 0,
-                                          minWidth: '32px',
-                                          padding: '4px 8px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center'
-                                        }} 
-                                        aria-label="More options"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedTask(t);
-                                        }}
-                                      >
-                                        <Dot />
-                                      </button>
-                                    </div>
-                                    <div className="text-muted small" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{t.note}</div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-center text-muted small" style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem', lineHeight: '1.4' }}>
-                            No {titleFor(k).toLowerCase()} tasks
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+           <div className="tasks-container d-flex justify-content-center">
+           <div className="tasks-grid mt-3 w-100">
+             {order.map((k) => (
+               <div key={k} className="task-column">
+                 <div className="task-column-card" style={{ background: bgForCol(k) }}>
+                   <div className="task-column-body">
+                     <h6 className="fw-semibold d-flex align-items-center task-column-title">
+                       {iconFor(k)} {titleFor(k)} ({tasks[k].length})
+                     </h6>
+                     {tasks[k].length > 0 ? (
+                       tasks[k].map((t) => (
+                         <div key={t.id} className="card task-item" onClick={() => setSelectedTask(t)}>
+                           <div className="card-body position-relative">
+                             <div className="priority-badge">
+                               {t.priority.toUpperCase()}
+                             </div>
+                             <div className="task-item-content d-flex align-items-start">
+                               <span className="icon-circle"><Doc /></span>
+                               <div className="task-text">
+                                 <div className="task-title">{t.title}</div>
+                                 <div className="task-meta d-flex align-items-center justify-content-between">
+                                   <span className="client-info d-flex align-items-center">
+                                     <MiniContact /> <span className="client-name">{t.client}</span>
+                                     <span className="ms-3 due-date">{t.due}</span>
+                                   </span>
+                                   <button className="btn btn-sm btn-light more-btn" onClick={(e) => { e.stopPropagation(); setSelectedTask(t); }}>
+                                     <Dot />
+                                   </button>
+                                 </div>
+                                 <div className="task-note">{t.note}</div>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       ))
+                     ) : (
+                       <div className="text-center text-muted small no-tasks">
+                         No {titleFor(k).toLowerCase()} tasks
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             ))}
+           </div>
+         </div>
+         
           )}
 
           {/* Pagination */}

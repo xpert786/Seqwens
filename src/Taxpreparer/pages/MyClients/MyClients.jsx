@@ -855,7 +855,7 @@ export default function MyClients() {
       {/* Stats */}
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (
-          <div className="col-md-3 col-sm-6" key={index}>
+          <div className="col-md-3 col-sm-12" key={index}>
             <div className="stat-card ">
               <div className="d-flex justify-content-between align-items-start">
                 <div className="stat-icon" style={{ color: item.color }}>

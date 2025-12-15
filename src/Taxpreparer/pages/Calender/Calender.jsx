@@ -7,6 +7,7 @@ import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import "../../styles/Calendar.css";
 
 export default function CalendarPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("Monthly");
@@ -436,7 +437,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-[#F3F7FF]">
+    <div className="lg:p-6 md:p-2 px-1 min-h-screen bg-[#F3F7FF]">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

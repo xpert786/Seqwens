@@ -151,7 +151,7 @@ const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleSta
 
   return (
     <div
-      className="rounded-3 p-3 car"
+      className="rounded-3 lg:p-3 md:p-2 sm:p-2 sm:px-1 px-0 car"
       onClick={onClick}
       style={{
         cursor: "pointer",
@@ -402,13 +402,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container-fluid px-2 px-md-2">
+    <div className="container-fluid px-2 sm:px-0 px-md-2">
       <TaxDashboardWidget />
 
-      <div className="row mt-1 g-3 px-4">
+      <div className="row mt-1 g-3 lg:px-4 md:px-2 px-1">
         {/* My Tasks */}
         <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
+          <div className="card custom-card p-3 p-md-4 rounded-3 h-100 sdfsdf">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h1 className="section-title mb-1">My Tasks</h1>
@@ -564,7 +564,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={msg.id || i}
-                      className={`rounded-3 p-3 car recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
+                      className={`rounded-3 lg:p-3 md:p-2 px-1 car recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"} p-2 rounded`}
                       style={{
                         display: "flex",
                         alignItems: "center",

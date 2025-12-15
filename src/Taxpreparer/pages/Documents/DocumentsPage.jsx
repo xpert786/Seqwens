@@ -443,7 +443,7 @@ export default function DocumentsPage() {
     }
   };
 
-  const wrapperClass = isNestedUnderClient ? "mt-6" : "p-4";
+  const wrapperClass = isNestedUnderClient ? "mt-6" : "lg:p-4 md:p-2 px-1";
 
   return (
     <div className={wrapperClass}>

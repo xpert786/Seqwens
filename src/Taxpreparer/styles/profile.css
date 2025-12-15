@@ -1,0 +1,94 @@
+/* ===============================
+   MOBILE RESPONSIVE ONLY
+=============================== */
+@media (max-width: 600px) {
+
+    /* Outer Wrapper */
+    .mobile-wrapper {
+        padding: 8px !important;
+    }
+
+    /* Section Box */
+    .mobile-section {
+        padding: 12px !important;
+        gap: 12px !important;
+    }
+
+    /* Titles Center */
+    .mobile-title {
+        font-size: 20px !important;
+        text-align: center !important;
+    }
+
+    .mobile-subtitle {
+        font-size: 13px !important;
+        text-align: center !important;
+    }
+
+    /* Profile Image Center */
+    .mobile-profile-img-row {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+
+    .mobile-profile-img {
+        width: 90px !important;
+        height: 90px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Input Full Width */
+    .mobile-input {
+        width: 100% !important;
+        font-size: 14px !important;
+        height: 42px !important;
+    }
+
+    /* Buttons Full Width */
+    .mobile-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin-top: 6px !important;
+    }
+
+    /* Phone Input Fix */
+    .phone-input-container {
+        width: 100% !important;
+    }
+
+    .phone-input-container .form-control {
+        width: 100% !important;
+    }
+
+    .react-tel-input .form-control {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .react-tel-input {
+        width: 100% !important;
+    }
+
+    .tabs-mobile {
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .tabs-mobile ul {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .tabs-mobile ul li {
+        width: 100% !important;
+    }
+
+    .tabs-mobile button {
+        width: 100% !important;
+        text-align: center !important;
+        padding: 12px !important;
+    }
+}

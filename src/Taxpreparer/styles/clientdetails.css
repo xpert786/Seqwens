@@ -1,0 +1,62 @@
+@media (max-width: 767px) {
+
+    /* MAIN HEADER: stack vertically */
+    .bg-white > .flex.items-center.justify-between,
+    .bg-white .flex.items-center.justify-between {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 16px !important;
+      width: 100% !important;
+    }
+  
+    /* AVATAR + DETAILS container */
+    .flex.items-start.gap-4 {
+      flex-direction: column !important;
+      width: 100% !important;
+      gap: 16px !important;
+    }
+  
+    /* EMAIL / PHONE / SSN line */
+    .mt-2 .flex.items-start.gap-8 {
+      flex-direction: column !important;
+      gap: 16px !important;
+    }
+  
+    /* ACTION BUTTONS */
+    .flex.gap-3.align-items-center {
+      flex-direction: column !important;
+      width: 100% !important;
+      gap: 12px !important;
+    }
+  
+    /* Make all buttons full-width */
+    .flex.gap-3.align-items-center button,
+    .d-flex.gap-2 button {
+      width: 100% !important;
+    }
+  
+    /* EDIT BUTTONS WRAP */
+    .d-flex.gap-2 {
+      flex-direction: column !important;
+      width: 100% !important;
+      gap: 12px !important;
+    }
+  
+    /* TAB SECTION */
+    .inline-block.bg-white.rounded-xl.mt-10.p-4 > .flex.gap-3,
+    .flex.gap-3 {
+      flex-wrap: wrap !important;
+      width: 100% !important;
+      gap: 10px !important;
+    }
+  
+    /* Each tab button responsive */
+    .flex.gap-3 button {
+      width: 100% !important;
+      padding: 10px !important;
+      font-size: 13px !important;
+      text-align: center !important;
+      white-space: normal !important;
+    }
+  }
+  

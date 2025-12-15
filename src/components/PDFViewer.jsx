@@ -172,6 +172,9 @@ export default function PDFViewer({
     window.addEventListener('resize', updatePageWidth);
     return () => window.removeEventListener('resize', updatePageWidth);
   }, []);
+
+
+  console.log(pdfFileData,'test owener is hereeeeeeee===========>>>>>>>>>>>>>>');
   
   return (
     <div className={`flex border border-gray-200 rounded-lg overflow-hidden ${className}`} style={{ height }}>
@@ -236,7 +239,7 @@ export default function PDFViewer({
               </p>
             </div>
           </div>
-        ) : pdfFileData && numPages ? (
+        ) : pdfFileData || numPages ? (
           <div
             ref={pdfContainerRef}
             className="flex-1 overflow-y-auto p-6"

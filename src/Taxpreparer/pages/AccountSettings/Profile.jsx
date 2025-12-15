@@ -3,6 +3,7 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { SaveIcon } from "../../component/icons";
 import { toast } from "react-toastify";
+import "../../styles/profile.css";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 const DEFAULT_AVATAR_URL = "https://i.pravatar.cc/120";
@@ -310,17 +311,18 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
     const fullName = profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || 'User';
 
     return (
-        <div style={{
+        <div   className="mobile-wrapper" style={{
             backgroundColor: "#F3F7FF",
             padding: "10px",
             borderRadius: "12px",
             border: "none"
         }}>
             {/* Personal Information Section */}
-            <div className="flex flex-col gap-4 border border-[#E8F0FF] p-4 rounded-lg bg-white mb-4">
+            <div className="flex flex-col gap-4 border border-[#E8F0FF] p-4 rounded-lg bg-white mb-4 mobile-section">
+
                 <div className="align-items-center">
                     <h5
-                        className="mb-0 me-3"
+                        className="mb-0 me-3 mobile-title"
                         style={{
                             color: "#3B4A66",
                             fontSize: "24px",
@@ -331,7 +333,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                         Personal Information
                     </h5>
                     <p
-                        className="mb-0"
+                        className="mb-0 mobile-subtitle"
                         style={{
                             color: "#4B5563",
                             fontSize: "14px",
@@ -344,12 +346,13 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 </div>
 
                 {/* Profile Image */}
-                <div className="d-flex align-items-center mb-4 mt-6">
+                <div className="d-flex align-items-center mb-4 mt-6 mobile-profile-img-row">
                     {effectiveProfilePicture && effectiveProfilePicture !== 'null' && effectiveProfilePicture !== 'undefined' ? (
                         <div className="me-3" style={{ position: 'relative' }}>
                             <img
                                 src={effectiveProfilePicture}
                                 alt={fullName}
+                                className="mobile-profile-img"
                                 style={{
                                     width: '100px',
                                     height: '100px',
@@ -410,7 +413,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             <div className="mb-2">
                                 <button
                                     type="button"
-                                    className="btn btn-success btn-sm me-2"
+                                    className="btn btn-success btn-sm me-2 mobile-btn"
                                     onClick={handleImageUpload}
                                     disabled={uploadingImage}
                                     style={{ fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
@@ -428,7 +431,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-secondary btn-sm"
+                                    className="btn btn-secondary btn-sm mobile-btn"
                                     onClick={() => {
                                         setSelectedImage(null);
                                         setImagePreview(null);
@@ -466,7 +469,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             <input
                                 type="text"
                                 name="name"
-                                className="form-control w-full"
+                                className="form-control w-full mobile-input"
                                 value={formData.name}
                                 onChange={handleChange}
                                 style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
@@ -479,7 +482,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             <input
                                 type="email"
                                 name="email"
-                                className="form-control w-full"
+                                className="form-control w-full mobile-input"
                                 value={formData.email}
                                 onChange={handleChange}
                                 style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
@@ -498,8 +501,8 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                 onCountryChange={(countryCode) => {
                                     setPhoneCountry(countryCode.toLowerCase());
                                 }}
-                                inputClass="form-control w-full"
-                                containerClass="w-100 phone-input-container"
+                                inputClass="form-control w-full mobile-input"
+                                containerClass="phone-input-container"
                                 inputStyle={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                                 enableSearch={true}
                                 countryCodeEditable={false}
@@ -511,7 +514,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             </label>
                             <select
                                 name="availability"
-                                className="form-control w-full"
+                                className="form-control w-full mobile-input"
                                 value={formData.availability}
                                 onChange={handleChange}
                                 style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
@@ -531,7 +534,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                     <div className="mt-1">
                         <button
                             type="submit"
-                            className="btn d-flex align-items-center gap-2"
+                            className="btn d-flex align-items-center gap-2 mobile-btn"
                             style={{ backgroundColor: "#F56D2D", color: "#ffffff", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                             disabled={saving}
                         >
