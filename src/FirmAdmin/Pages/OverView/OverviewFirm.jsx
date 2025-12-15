@@ -950,62 +950,93 @@ export default function FirmAdminDashboard() {
       <RevenueModal />
       <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex-1 min-w-0 pr-4 xl:pr-2">
-            <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">Firm Dashboard</h4>
-            <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base xl:whitespace-nowrap leading-tight">
-              <span className="block xl:inline">Welcome Back</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1">
-            {/* Date Range Selector */}
-            <div className="flex items-center gap-2 bg-white border border-[#E5E7EB] !rounded-[7px] px-2 xl:px-3 py-1 xl:py-2">
-              <label className="text-[10px] xl:text-xs text-[#6B7280] font-[BasisGrotesquePro] whitespace-nowrap">Date Range:</label>
-              <div className="relative">
-                <select
-                  value={selectedDateRange}
-                  onChange={(e) => setSelectedDateRange(e.target.value)}
-                  className="text-[10px] xl:text-sm text-[#3B4A66] font-[BasisGrotesquePro] bg-transparent border-none focus:outline-none cursor-pointer appearance-none pr-6"
-                  style={{ minWidth: '120px' }}
-                >
-                  <option value="Last 7 days">Last 7 days</option>
-                  <option value="Last 30 days">Last 30 days</option>
-                  <option value="Last 90 days">Last 90 days</option>
-                  <option value="Last 6 months">Last 6 months</option>
-                  <option value="Last year">Last year</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none pr-1">
-                  <svg className="w-3 h-3 xl:w-4 xl:h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-              <button
-                onClick={handleApplyDateRange}
-                disabled={selectedDateRange === dateRange}
-                className="px-2 xl:px-3 py-1 text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] bg-[#3B4A66] text-white !rounded-[5px] hover:bg-[#2d3a52] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition-colors"
-              >
-                Apply
-              </button>
-            </div>
-            {!advancedReportingEnabled && (
-              <button
-                onClick={exportDashboardToPDF}
-                className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
-              >
-                <DownsIcon />
-                Export Report
-              </button>
-            )}
-            <button
-              onClick={() => setIsScheduleModalOpen(true)}
-              className="px-1 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white border border-[#E5E7EB] !rounded-[7px] text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-50 whitespace-nowrap flex items-center gap-1"
-            >
-              <SceheIcon />
-              Schedule Reports
-            </button>
-          </div>
+        <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-3">
+  
+  {/* Left Section */}
+  <div className="flex-1 min-w-0 pr-4 xl:pr-2 max-md:pr-0">
+    <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
+      Firm Dashboard
+    </h4>
+    <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base leading-tight">
+      Welcome Back
+    </p>
+  </div>
+
+  {/* Right Section */}
+  <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1 
+                  max-md:w-full max-md:flex-wrap max-md:gap-2">
+
+    {/* Date Range */}
+    <div className="flex items-center gap-2 bg-white border border-[#E5E7EB] 
+                    !rounded-[7px] px-2 xl:px-3 py-1 xl:py-2
+                    max-md:w-full max-md:justify-between">
+      
+      <label className="text-[10px] xl:text-xs text-[#6B7280] font-[BasisGrotesquePro] whitespace-nowrap">
+        Date Range:
+      </label>
+
+      <div className="relative flex-1 max-md:max-w-[140px]">
+        <select
+          value={selectedDateRange}
+          onChange={(e) => setSelectedDateRange(e.target.value)}
+          className="text-[10px] xl:text-sm text-[#3B4A66] font-[BasisGrotesquePro]
+                     bg-transparent border-none focus:outline-none cursor-pointer
+                     appearance-none pr-6 w-full"
+        >
+          <option value="Last 7 days">Last 7 days</option>
+          <option value="Last 30 days">Last 30 days</option>
+          <option value="Last 90 days">Last 90 days</option>
+          <option value="Last 6 months">Last 6 months</option>
+          <option value="Last year">Last year</option>
+        </select>
+
+        <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none pr-1">
+          <svg className="w-3 h-3 xl:w-4 xl:h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
+      </div>
+
+      <button
+        onClick={handleApplyDateRange}
+        disabled={selectedDateRange === dateRange}
+        className="px-2 xl:px-3 py-1 text-[10px] xl:text-sm font-medium
+                   font-[BasisGrotesquePro] bg-[#3B4A66] text-white
+                   !rounded-[5px] hover:bg-[#2d3a52]
+                   disabled:opacity-50 whitespace-nowrap"
+      >
+        Apply
+      </button>
+    </div>
+
+    {!advancedReportingEnabled && (
+      <button
+        onClick={exportDashboardToPDF}
+        className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
+                   border border-[#E5E7EB] !rounded-[7px]
+                   text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro]
+                   hover:bg-gray-50 whitespace-nowrap flex items-center gap-1
+                   max-md:flex-1 max-md:justify-center"
+      >
+        <DownsIcon />
+        Export
+      </button>
+    )}
+
+    <button
+      onClick={() => setIsScheduleModalOpen(true)}
+      className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
+                 border border-[#E5E7EB] !rounded-[7px]
+                 text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro]
+                 hover:bg-gray-50 whitespace-nowrap flex items-center gap-1
+                 max-md:flex-1 max-md:justify-center"
+    >
+      <SceheIcon />
+      Schedule
+    </button>
+  </div>
+</div>
+
 
       
 
