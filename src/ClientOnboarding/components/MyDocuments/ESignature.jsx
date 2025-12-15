@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaEye, } from "react-icons/fa";
+import { Modal } from 'react-bootstrap';
 import "../../styles/Popup.css";
 import "../../styles/Esignpop.css"
 import ESignatureModal from "../../components/ESignatureModal";
@@ -7,8 +8,10 @@ import page1Image from "../../../assets/page1.png";
 import page2Image from "../../../assets/page2.png";
 import page3Image from "../../../assets/page3.png";
 import page4Image from "../../../assets/page4.png";
-import { signatureRequestsAPI, handleAPIError } from "../../utils/apiUtils";
+import { signatureRequestsAPI, signWellAPI, handleAPIError } from "../../utils/apiUtils";
+import { getUserData } from "../../utils/userUtils";
 import { toast } from "react-toastify";
+import PDFViewer from "../../../components/PDFViewer";
 
 import { FileIcon, ProfileIcon, LegalIcon, SignatureIcon, DateIcon, InitialIcon, CompletedIcon, AwaitingIcon, Sign2WhiteIcon } from "../icons";
 import Pagination from "../Pagination";
@@ -640,7 +643,130 @@ export default function ESignature() {
               <button className="esign-btn-cancel" onClick={() => setShowModal(false)}>
                 Cancel
               </button>
-              <button className="esign-btn-proceed" onClick={() => setShowSignModal(true)}>
+              <button 
+                className="esign-btn-proceed" 
+                onClick={async () => {
+                  try {
+                    const selectedRequest = selectedIndex !== null ? signatureRequests[selectedIndex] : null;
+                    if (!selectedRequest) {
+                      toast.error('No document selected');
+                      return;
+                    }
+
+                    // Show loading toast
+                    const loadingToast = toast.loading('Extracting signature fields...');
+
+                    // Step 1: Extract signature fields
+                    let signatureFields = [];
+                    try {
+                      // Try to get document_id from the request
+                      const documentId = selectedRequest.document_id || selectedRequest.document?.id;
+                      
+                      if (!documentId) {
+                        throw new Error('Document ID not found in signature request');
+                      }
+
+                      const extractResponse = await signWellAPI.extractFields({ document_id: documentId });
+                      
+                      if (extractResponse.success && extractResponse.fields && extractResponse.fields.length > 0) {
+                        signatureFields = extractResponse.fields;
+                        toast.update(loadingToast, {
+                          render: `Found ${signatureFields.length} signature field(s)`,
+                          type: 'success',
+                          isLoading: false,
+                          autoClose: 2000
+                        });
+                      } else {
+                        toast.update(loadingToast, {
+                          render: 'No signature fields detected. Proceeding with manual signature...',
+                          type: 'info',
+                          isLoading: false,
+                          autoClose: 3000
+                        });
+                        // If no fields detected, proceed with regular signature modal
+                        setShowSignModal(true);
+                        return;
+                      }
+                    } catch (extractError) {
+                      console.error('Error extracting signature fields:', extractError);
+                      toast.update(loadingToast, {
+                        render: extractError.message || 'Failed to extract signature fields. Proceeding with manual signature...',
+                        type: 'warning',
+                        isLoading: false,
+                        autoClose: 3000
+                      });
+                      // If extraction fails, proceed with regular signature modal
+                      setShowSignModal(true);
+                      return;
+                    }
+
+                    // Step 2: Apply SignWell signature
+                    try {
+                      const userData = getUserData();
+                      const signerEmail = userData?.email || selectedRequest.client_email || '';
+                      const signerName = userData?.full_name || userData?.name || selectedRequest.client_name || 'Signer';
+                      const documentName = selectedRequest.document_name || selectedRequest.title || 'Document';
+
+                      if (!signerEmail) {
+                        throw new Error('Signer email is required for SignWell signature');
+                      }
+
+                      const sendingToast = toast.loading('Sending document to SignWell...');
+
+                      const documentId = selectedRequest.document_id || selectedRequest.document?.id;
+                      const applyResponse = await signWellAPI.applySignature({
+                        document_id: documentId,
+                        signature_fields: signatureFields,
+                        signer_email: signerEmail,
+                        signer_name: signerName,
+                        document_name: documentName,
+                        test_mode: true // TODO: Set to false in production environment
+                      });
+
+                      if (applyResponse.success && applyResponse.data && applyResponse.data.signing_url) {
+                        toast.dismiss(sendingToast);
+                        toast.success('Document sent to SignWell. Opening signing page...', {
+                          autoClose: 3000
+                        });
+
+                        // Open SignWell signing URL in new tab
+                        window.open(applyResponse.data.signing_url, '_blank');
+
+                        // Optionally, you can poll for status
+                        // pollSignWellStatus(applyResponse.data.document_id);
+
+                        // Close the modal
+                        setShowModal(false);
+                        setSelectedIndex(null);
+
+                        // Refresh signature requests after a delay
+                        setTimeout(async () => {
+                          const response = await signatureRequestsAPI.getSignatureRequests();
+                          if (response.success && response.data && response.data.requests) {
+                            setSignatureRequests(response.data.requests);
+                          }
+                        }, 2000);
+                      } else {
+                        throw new Error(applyResponse.message || 'Failed to apply SignWell signature');
+                      }
+                    } catch (applyError) {
+                      console.error('Error applying SignWell signature:', applyError);
+                      toast.error(applyError.message || 'Failed to send document to SignWell. You can still sign manually.', {
+                        autoClose: 5000
+                      });
+                      // Fallback to regular signature modal
+                      setShowSignModal(true);
+                    }
+                  } catch (error) {
+                    console.error('Error in SignWell workflow:', error);
+                    toast.error(handleAPIError(error) || 'An error occurred. You can still sign manually.', {
+                      autoClose: 5000
+                    });
+                    // Fallback to regular signature modal
+                    setShowSignModal(true);
+                  }
+                }}
+              >
                 <Sign2WhiteIcon />
                 Proceed signature
               </button>
@@ -677,88 +803,53 @@ export default function ESignature() {
         />
       )}
 
-      {showPreviewModal && (
-        <div className="esign-preview-overlay">
-          <div className="esign-preview-modal">
-            <div className="esign-preview-header">
-              E-Signature – Tax_Return_2023_DRAFT.pdf
+      {/* PDF Preview Modal */}
+      <Modal
+        show={showPreviewModal}
+        onHide={() => {
+          setShowPreviewModal(false);
+          setSelectedIndex(null);
+        }}
+        size="xl"
+        centered
+        fullscreen="lg-down"
+        style={{ fontFamily: 'BasisGrotesquePro' }}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
+            {selectedIndex !== null && signatureRequests[selectedIndex]
+              ? `E-Signature – ${signatureRequests[selectedIndex].document_name || signatureRequests[selectedIndex].title || 'Document'}`
+              : 'E-Signature – Document Preview'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+          {selectedIndex !== null && signatureRequests[selectedIndex]?.document_url ? (
+            <PDFViewer
+              pdfUrl={signatureRequests[selectedIndex].document_url}
+              height="70vh"
+              showThumbnails={true}
+            />
+          ) : (
+            <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+              <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                No document available for preview.
+              </p>
             </div>
-            <h6 className='pre'>Documents preview</h6>
-
-            <div className="esign-preview-body">
-              <div className="esign-preview-sidebar">
-                {previewPages.map((p, idx) => (
-                  <div
-                    key={p.id}
-                    className={`esign-preview-thumb ${activePage === idx ? "active" : ""}`}
-                    onClick={() => setActivePage(idx)}
-                  >
-                    <img src={p.image} alt={`Page ${p.id}`} />
-                  </div>
-                ))}
-              </div>
-
-              <div className="esign-preview-main">
-                <img
-                  className="esign-preview-page"
-                  src={previewPages[activePage].image}
-                  alt={`Page ${previewPages[activePage].id}`}
-                />
-
-                {highlights
-                  .filter((h) => h.page === activePage)
-                  .map((h, i) => (
-                    <div
-                      key={i}
-                      className="highlight-overlay"
-                      style={{
-                        top: h.top,
-                        left: h.left,
-                        width: h.width,
-                        height: h.height
-                      }}
-                      onClick={() => handleHighlightClick(h)}
-                    ></div>
-                  ))}
-
-                {markers
-                  .filter((m) => m.page === activePage)
-                  .map((m) => (
-                    <div
-                      key={m.id}
-                      className="teal-marker"
-                      style={{
-                        top: m.top,
-                        left: `calc(${m.left} + ${m.width} + 5px)`
-                      }}
-                      onClick={() => setSelectedMarker(m.id)}
-                    ></div>
-                  ))}
-              </div>
-
-              {selectedMarker !== null && (
-                <div className="comment-panel-outside">
-                  <textarea
-                    placeholder="Type your comment..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                  ></textarea>
-                  <div className="comment-buttons">
-                    <button onClick={() => setSelectedMarker(null)}>Cancel</button>
-                    <button>Comment</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="esign-preview-footer">
-              <button className="btn-cancel" onClick={() => setShowPreviewModal(false)}>Cancel</button>
-              {/* <button className="btn-preview">Preview</button> */}
-              {/* <button className="btn-complete">Complete Signature</button> */}
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowPreviewModal(false);
+              setSelectedIndex(null);
+            }}
+            style={{ fontFamily: 'BasisGrotesquePro' }}
+          >
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
 
 
 

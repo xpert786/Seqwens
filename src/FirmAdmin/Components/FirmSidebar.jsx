@@ -364,6 +364,15 @@ export default function FirmSidebar({ isSidebarOpen = true }) {
                   </span>
                   Firm Settings & Branding
                 </Link>
+                <Link to="/firmadmin/custom-roles" className={linkClass("/firmadmin/custom-roles")}>
+                  <span className={iconWrapperClass("/firmadmin/custom-roles")}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8.00065 1.32812L2.66602 4.32812V7.66146C2.66602 10.3281 4.66602 12.6615 8.00065 13.9948C11.3353 12.6615 13.3353 10.3281 13.3353 7.66146V4.32812L8.00065 1.32812Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M6.00065 8.66146L7.33398 9.99479L10.0007 6.66146" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                  Custom Roles
+                </Link>
               </div>
             )}
           </div>

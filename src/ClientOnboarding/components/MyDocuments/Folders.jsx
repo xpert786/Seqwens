@@ -34,6 +34,9 @@ export default function Folders({ onFolderSelect }) {
     const [recoveringFolder, setRecoveringFolder] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 3;
+    const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState(false);
+    const [folderToDelete, setFolderToDelete] = useState(null);
+    const [deletingFolder, setDeletingFolder] = useState(null);
 
     // Fetch folders from API
     const fetchFolders = async (folderId = null) => {
@@ -181,6 +184,67 @@ export default function Folders({ onFolderSelect }) {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Handle delete folder action (permanent delete)
+    const handleDeleteFolder = async (folderId, folderTitle) => {
+        setFolderToDelete({ folderId, folderTitle });
+        setShowDeleteFolderConfirm(true);
+    };
+
+    const confirmDeleteFolder = async () => {
+        if (!folderToDelete) return;
+
+        try {
+            setDeletingFolder(folderToDelete.folderId);
+            const API_BASE_URL = getApiBaseUrl();
+            const token = getAccessToken();
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const url = `${API_BASE_URL}/taxpayer/document-folders/${folderToDelete.folderId}/`;
+
+            const config = {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            const response = await fetchWithCors(url, config);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Refresh folders list
+            if (activeButton === "trash") {
+                fetchTrashedFolders();
+            } else {
+                fetchFolders(currentFolder?.id || null);
+            }
+
+            toast.success(`Folder "${folderToDelete.folderTitle}" deleted successfully`, {
+                position: "top-right",
+                autoClose: 3000,
+            });
+
+            setShowDeleteFolderConfirm(false);
+            setFolderToDelete(null);
+        } catch (error) {
+            console.error('Error deleting folder:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to delete folder'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setDeletingFolder(null);
         }
     };
 
@@ -973,16 +1037,17 @@ export default function Folders({ onFolderSelect }) {
                                                         {folder.title}
                                                     </div>
                                                 </div>
-                                                <button
-                                                    className="btn btn-sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleRecoverFolder(folder.id, folder.title);
-                                                    }}
-                                                    disabled={recoveringFolder === folder.id}
-                                                    style={{
-                                                        backgroundColor: "#10B981",
-                                                        color: "white",
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        className="btn btn-sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRecoverFolder(folder.id, folder.title);
+                                                        }}
+                                                        disabled={recoveringFolder === folder.id}
+                                                        style={{
+                                                            backgroundColor: "#10B981",
+                                                            color: "white",
                                                         border: "none",
                                                         padding: "4px 12px",
                                                         borderRadius: "6px",
@@ -1005,6 +1070,39 @@ export default function Folders({ onFolderSelect }) {
                                                         </>
                                                     )}
                                                 </button>
+                                                    <button
+                                                        className="btn btn-sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteFolder(folder.id, folder.title);
+                                                        }}
+                                                        disabled={deletingFolder === folder.id}
+                                                        style={{
+                                                            backgroundColor: "#EF4444",
+                                                            color: "white",
+                                                            border: "none",
+                                                            padding: "4px 12px",
+                                                            borderRadius: "6px",
+                                                            fontSize: "12px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "4px"
+                                                        }}
+                                                        title="Permanently Delete Folder"
+                                                    >
+                                                        {deletingFolder === folder.id ? (
+                                                            <>
+                                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                Deleting...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <FaTrash size={12} />
+                                                                Delete
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div style={{ marginLeft: "32px" }}>
                                                 {folder.description && (
@@ -1155,35 +1253,66 @@ export default function Folders({ onFolderSelect }) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button
-                                                className="btn btn-sm"
-                                                onClick={() => handleRecoverFolder(folder.id, folder.title)}
-                                                disabled={recoveringFolder === folder.id}
-                                                style={{
-                                                    backgroundColor: "#10B981",
-                                                    color: "white",
-                                                    border: "none",
-                                                    padding: "6px 16px",
-                                                    borderRadius: "6px",
-                                                    fontSize: "12px",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "6px"
-                                                }}
-                                                title="Recover Folder"
-                                            >
-                                                {recoveringFolder === folder.id ? (
-                                                    <>
-                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                        Recovering...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <FaUndo size={12} />
-                                                        Recover
-                                                    </>
-                                                )}
-                                            </button>
+                                            <div className="d-flex gap-2">
+                                                <button
+                                                    className="btn btn-sm"
+                                                    onClick={() => handleRecoverFolder(folder.id, folder.title)}
+                                                    disabled={recoveringFolder === folder.id}
+                                                    style={{
+                                                        backgroundColor: "#10B981",
+                                                        color: "white",
+                                                        border: "none",
+                                                        padding: "6px 16px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "6px"
+                                                    }}
+                                                    title="Recover Folder"
+                                                >
+                                                    {recoveringFolder === folder.id ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                            Recovering...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FaUndo size={12} />
+                                                            Recover
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    onClick={() => handleDeleteFolder(folder.id, folder.title)}
+                                                    disabled={deletingFolder === folder.id}
+                                                    style={{
+                                                        backgroundColor: "#EF4444",
+                                                        color: "white",
+                                                        border: "none",
+                                                        padding: "6px 16px",
+                                                        borderRadius: "6px",
+                                                        fontSize: "12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "6px"
+                                                    }}
+                                                    title="Permanently Delete Folder"
+                                                >
+                                                    {deletingFolder === folder.id ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                            Deleting...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FaTrash size={12} />
+                                                            Delete
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -1467,6 +1596,25 @@ export default function Folders({ onFolderSelect }) {
             confirmText="Move to Trash"
             cancelText="Cancel"
             isLoading={!!trashingFolder}
+            isDestructive={true}
+        />
+
+        {/* Delete Folder Confirmation Modal */}
+        <ConfirmationModal
+            isOpen={showDeleteFolderConfirm}
+            onClose={() => {
+                if (!deletingFolder) {
+                    setShowDeleteFolderConfirm(false);
+                    setFolderToDelete(null);
+                }
+            }}
+            onConfirm={confirmDeleteFolder}
+            title="Delete Folder Permanently"
+            message={folderToDelete ? `Are you sure you want to permanently delete "${folderToDelete.folderTitle}"? This action cannot be undone and will delete all documents and subfolders inside it.` : "Are you sure you want to permanently delete this folder? This action cannot be undone and will delete all documents and subfolders inside it."}
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
+            isLoading={!!deletingFolder}
             isDestructive={true}
         />
         </>

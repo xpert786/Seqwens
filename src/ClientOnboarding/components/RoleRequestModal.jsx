@@ -3,7 +3,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { roleAPI, handleAPIError } from "../utils/apiUtils";
 import { toast } from "react-toastify";
 
-export default function RoleRequestModal({ show, onClose, onSuccess, userRoles = [], primaryRole = "" }) {
+export default function RoleRequestModal({ show, onClose, onSuccess, userRoles = [], primaryRole = "", preselectedRole = null, preselectedRoleName = null, preselectedRoleDescription = null }) {
   const [requestedRole, setRequestedRole] = useState("");
   const [firmName, setFirmName] = useState("");
   const [message, setMessage] = useState("");
@@ -11,6 +11,9 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
   const [loading, setLoading] = useState(false);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [errors, setErrors] = useState({});
+  
+  // Check if preselected role is a custom role
+  const isCustomRole = preselectedRole && (preselectedRole.startsWith('custom_role_') || preselectedRoleName);
 
   // Fetch available roles from API
   useEffect(() => {
@@ -18,6 +21,13 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
       fetchAvailableRoles();
     }
   }, [show]);
+
+  // Set preselected role when modal opens or preselectedRole changes
+  useEffect(() => {
+    if (show && preselectedRole) {
+      setRequestedRole(preselectedRole);
+    }
+  }, [show, preselectedRole]);
 
   const fetchAvailableRoles = async () => {
     try {
@@ -27,9 +37,16 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
       if (response.success && response.data) {
         // Filter out roles user already has
         const currentRoles = response.data.current_roles || [];
-        const available = (response.data.available_roles || []).filter(
+        let available = (response.data.available_roles || []).filter(
           role => !currentRoles.includes(role.role)
         );
+        
+        // Filter out duplicate roles - if both staff and tax_preparer exist, keep only tax_preparer
+        const hasTaxPreparer = available.some(r => r.role === "tax_preparer");
+        if (hasTaxPreparer) {
+          available = available.filter(r => r.role !== "staff");
+        }
+        
         setAvailableRoles(available);
       } else {
         toast.error(response.message || "Failed to load available roles", {
@@ -61,6 +78,18 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
 
   // Get selected role details
   const selectedRoleData = availableRoles.find(r => r.role === requestedRole);
+  
+  // For custom roles, create a role data object
+  const customRoleData = isCustomRole && preselectedRole ? {
+    role: preselectedRole,
+    display_name: preselectedRoleName || preselectedRole,
+    description: preselectedRoleDescription || "Custom Firm Role",
+    requires_firm_name: false,
+    requires_superadmin_approval: false
+  } : null;
+  
+  // Use custom role data if it's a custom role, otherwise use selectedRoleData
+  const effectiveRoleData = customRoleData || selectedRoleData;
 
   const validateForm = () => {
     const newErrors = {};
@@ -70,7 +99,7 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
     }
 
     // Check if firm name is required
-    if (selectedRoleData?.requires_firm_name && !firmName.trim()) {
+    if (effectiveRoleData?.requires_firm_name && !firmName.trim()) {
       newErrors.firmName = "Firm name is required for this role";
     }
 
@@ -89,7 +118,7 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
       setSubmitting(true);
       const response = await roleAPI.addRole(
         requestedRole,
-        selectedRoleData?.requires_firm_name ? firmName.trim() : null,
+        effectiveRoleData?.requires_firm_name ? firmName.trim() : null,
         message.trim() || null
       );
 
@@ -145,14 +174,19 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
               <Form.Select
                 value={requestedRole}
                 onChange={(e) => {
-                  setRequestedRole(e.target.value);
-                  setFirmName(""); // Reset firm name when role changes
-                  setErrors(prev => ({ ...prev, requestedRole: "", firmName: "" }));
+                  if (!preselectedRole) {
+                    setRequestedRole(e.target.value);
+                    setFirmName(""); // Reset firm name when role changes
+                    setErrors(prev => ({ ...prev, requestedRole: "", firmName: "" }));
+                  }
                 }}
                 isInvalid={!!errors.requestedRole}
+                disabled={!!preselectedRole || (!!requestedRole && !isCustomRole)}
                 style={{
                   borderColor: errors.requestedRole ? "#EF4444" : "#ced4da",
-                  fontFamily: "BasisGrotesquePro"
+                  fontFamily: "BasisGrotesquePro",
+                  backgroundColor: (preselectedRole || (requestedRole && !isCustomRole)) ? "#F9FAFB" : "white",
+                  cursor: (preselectedRole || (requestedRole && !isCustomRole)) ? "not-allowed" : "pointer"
                 }}
               >
                 <option value="">Choose a role...</option>
@@ -162,23 +196,34 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
                     {role.has_pending_request && " (Request Pending)"}
                   </option>
                 ))}
+                {/* Show custom role in dropdown if preselected */}
+                {isCustomRole && preselectedRole && !availableRoles.find(r => r.role === preselectedRole) && (
+                  <option value={preselectedRole} disabled>
+                    {preselectedRoleName || preselectedRole}
+                  </option>
+                )}
               </Form.Select>
+              {(preselectedRole || requestedRole) && (
+                <Form.Text className="text-muted" style={{ fontSize: "12px", display: "block", marginTop: "4px" }}>
+                  Role selected: {effectiveRoleData?.display_name || availableRoles.find(r => r.role === (preselectedRole || requestedRole))?.display_name || (preselectedRole || requestedRole)}
+                </Form.Text>
+              )}
               {errors.requestedRole && (
                 <Form.Text className="text-danger" style={{ fontSize: "12px" }}>
                   {errors.requestedRole}
                 </Form.Text>
               )}
-              {selectedRoleData && (
+              {effectiveRoleData && (
                 <Form.Text className="text-muted" style={{ fontSize: "12px", display: "block", marginTop: "8px" }}>
-                  {selectedRoleData.description}
-                  {selectedRoleData.requires_superadmin_approval && (
+                  {effectiveRoleData.description}
+                  {effectiveRoleData.requires_superadmin_approval && (
                     <span className="d-block mt-1" style={{ color: "#F59E0B" }}>
                       ⚠️ Requires superadmin approval
                     </span>
                   )}
                 </Form.Text>
               )}
-              {availableRoles.length === 0 && !loading && (
+              {availableRoles.length === 0 && !loading && !isCustomRole && (
                 <Form.Text className="text-muted" style={{ fontSize: "12px" }}>
                   You already have all available roles.
                 </Form.Text>
@@ -186,7 +231,7 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
             </Form.Group>
 
             {/* Firm Name Field - Show only if required */}
-            {selectedRoleData?.requires_firm_name && (
+            {effectiveRoleData?.requires_firm_name && (
               <Form.Group className="mb-3">
                 <Form.Label style={{ color: "#3B4A66", fontWeight: "500" }}>
                   Firm Name <span className="text-danger">*</span>
@@ -245,7 +290,7 @@ export default function RoleRequestModal({ show, onClose, onSuccess, userRoles =
             </Button>
             <Button
               type="submit"
-              disabled={submitting || availableRoles.length === 0 || selectedRoleData?.has_pending_request}
+              disabled={submitting || (!isCustomRole && availableRoles.length === 0) || effectiveRoleData?.has_pending_request}
               style={{
                 backgroundColor: "#00C0C6",
                 border: "none",

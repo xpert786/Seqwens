@@ -46,6 +46,23 @@ export default defineConfig({
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         }
+      },
+      '/seqwens/media': {
+        target: 'http://168.231.121.7',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path, // Keep /seqwens/media in the path
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('media proxy error', err);
+          });
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Add CORS headers for media files
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS';
+            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type';
+          });
+        }
       }
     }
   }

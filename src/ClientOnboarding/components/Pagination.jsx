@@ -1,14 +1,15 @@
 import React from 'react';
+import '../styles/Pagination.css';
 
 export default function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, startIndex, endIndex }) {
   if (totalPages <= 1) return null;
 
   return (
-    <div className="d-flex justify-content-between align-items-center mt-4 pt-3" style={{ borderTop: '1px solid #E8F0FF' }}>
-      <div className="text-muted" style={{ fontSize: '14px', fontFamily: 'BasisGrotesquePro' }}>
+    <div className="pagination-container mt-4 pt-3" style={{ borderTop: '1px solid #E8F0FF' }}>
+      <div className="pagination-showing text-muted" style={{ fontSize: '14px', fontFamily: 'BasisGrotesquePro' }}>
         Showing {startIndex + 1} to {endIndex} of {totalItems} items
       </div>
-      <div className="d-flex align-items-center gap-2">
+      <div className="pagination-controls d-flex align-items-center gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}

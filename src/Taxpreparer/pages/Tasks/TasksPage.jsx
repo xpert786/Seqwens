@@ -182,11 +182,20 @@ export default function TasksPage() {
 
       const result = await response.json();
 
-      // The API returns an array directly
-      if (Array.isArray(result)) {
+      // Handle API response structure: { success: true, data: [...] }
+      if (result.success && Array.isArray(result.data)) {
+        setClients(result.data);
+        console.log('Clients fetched successfully:', result.data.length);
+      } else if (Array.isArray(result)) {
+        // Fallback: if API returns array directly
         setClients(result);
         console.log('Clients fetched successfully:', result.length);
+      } else if (result.data && Array.isArray(result.data)) {
+        // Another fallback: if result has data property
+        setClients(result.data);
+        console.log('Clients fetched successfully:', result.data.length);
       } else {
+        console.warn('Unexpected API response structure:', result);
         setClients([]);
       }
     } catch (error) {

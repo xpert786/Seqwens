@@ -1,6 +1,7 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
+import { hasPermissionGroup, isFeatureVisible } from '../ClientOnboarding/utils/privilegeUtils';
 
 // Layouts
 import TaxDashboardLayout from './component/TaxDashboardLayout';
@@ -22,6 +23,7 @@ import SchedulePage from './pages/MyClients/SchedulePage';
 import ClientESignLogs from './pages/MyClients/ClientESignLogs';
 import CalendarPage from './pages/Calender/Calender';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
+import ESignatureDashboard from './pages/ESignature/ESignatureDashboard';
 
 // Protected Route Component for Admin/Tax Preparer
 function AdminProtectedRoute({ children }) {
@@ -50,6 +52,41 @@ function AdminProtectedRoute({ children }) {
   return children;
 }
 
+// Permission-based route protection component
+function PermissionProtectedRoute({ children, requiredGroup }) {
+  // If no custom role, allow access (default behavior)
+  const storage = getStorage();
+  const userDataStr = storage?.getItem("userData");
+  if (!userDataStr) {
+    return children;
+  }
+  
+  try {
+    const userData = JSON.parse(userDataStr);
+    const customRole = userData?.custom_role;
+    
+    // If no custom role, allow access
+    if (!customRole || !customRole.permission_groups) {
+      return children;
+    }
+    
+    // full_control grants access to everything
+    if (customRole.permission_groups.includes('full_control')) {
+      return children;
+    }
+    
+    // Check if user has the required permission group
+    if (requiredGroup && !hasPermissionGroup(requiredGroup)) {
+      return <Navigate to="/taxdashboard" replace />;
+    }
+    
+    return children;
+  } catch (error) {
+    console.error('Error checking permissions:', error);
+    return children; // Allow access on error
+  }
+}
+
 export default function TaxRoutes() {
   return (
     <Routes>
@@ -64,7 +101,11 @@ export default function TaxRoutes() {
         <Route path="dashboard-first" element={<TaxDashboardFirst />} />
         
         {/* Documents routes */}
-        <Route path="documents">
+        <Route path="documents" element={
+          <PermissionProtectedRoute requiredGroup="document">
+            <Outlet />
+          </PermissionProtectedRoute>
+        }>
           <Route index element={<DocumentsPage />} />
           <Route path="manager" element={<DocumentManager />} />
           <Route path="all" element={<AllDocumentsPage />}>
@@ -74,13 +115,32 @@ export default function TaxRoutes() {
         </Route>
          
         {/* Tasks */}
-        <Route path="tasks" element={<TasksPage />} />
+        <Route path="tasks" element={
+          <PermissionProtectedRoute requiredGroup="todo">
+            <TasksPage />
+          </PermissionProtectedRoute>
+        } />
         
         {/* Messages */}
-        <Route path="messages" element={<MessagePage />} />
+        <Route path="messages" element={
+          <PermissionProtectedRoute requiredGroup="messages">
+            <MessagePage />
+          </PermissionProtectedRoute>
+        } />
         
         {/* Calendar */}
-        <Route path="calendar" element={<CalendarPage />} />
+        <Route path="calendar" element={
+          <PermissionProtectedRoute requiredGroup="appointment">
+            <CalendarPage />
+          </PermissionProtectedRoute>
+        } />
+        
+        {/* E-Signature Dashboard */}
+        <Route path="e-signatures" element={
+          <PermissionProtectedRoute requiredGroup="esign">
+            <ESignatureDashboard />
+          </PermissionProtectedRoute>
+        } />
         
         {/* Account Settings */}
         <Route path="account" element={<AccountSettings />} />
@@ -90,7 +150,11 @@ export default function TaxRoutes() {
         <Route path="invoices" element={<InvoicesPage />} />
         
         {/* My Clients */}
-        <Route path="clients">
+        <Route path="clients" element={
+          <PermissionProtectedRoute requiredGroup="client">
+            <Outlet />
+          </PermissionProtectedRoute>
+        }>
           <Route index element={<MyClients />} />
           <Route path=":clientId" element={<ClientDetails />}>
             <Route path="documents" element={<ClientDocuments />} />

@@ -366,58 +366,7 @@ export default function PlatformControl() {
             </div>
 
             {/* Platform Controls */}
-            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
-                <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
-                    Platform Controls
-                </h3>
-                <p className="text-gray-600 text-sm font-normal font-[BasisGrotesquePro] mb-6">
-                    Global controls for branding, retention, security, and storage allocation.
-                </p>
-
-                {/* Storage Allocation per Plan */}
-                <div className="mb-8">
-                    <h4 className="text-gray-800 text-lg font-semibold font-[BasisGrotesquePro] mb-2">
-                        Storage Allocation per Plan
-                    </h4>
-                    <p className="text-gray-600 text-sm font-normal font-[BasisGrotesquePro] mb-4">
-                        Control system-level storage that maps to subscription plans.
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {storagePlans.map((plan, index) => {
-                            const percentage = (plan.used / plan.total) * 100;
-                            return (
-                                <div key={index} className="border border-[#E8F0FF] rounded-lg p-3">
-                                    <div className="mb-2 flex flex-row justify-between items-center">
-                                        <div>
-                                            <div className="text-[#4B5563] text-sm font-thin font-[BasisGrotesquePro] mb-1">
-                                                {plan.name}
-                                            </div>
-                                            <div className="text-[#4B5563] text-xs font-thin font-[BasisGrotesquePro]">
-                                                {plan.planId}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="mb-2">
-                                                <div className="text-[#4B5563] text-xs font-thin font-[BasisGrotesquePro]">
-                                                    Allocation: {plan.used} GB/{plan.total} GB
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-[#3B4A66] rounded-full transition-all duration-300"
-                                            style={{ width: `${percentage}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
+            
 
             {/* Global Branding */}
             <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
@@ -891,63 +840,6 @@ export default function PlatformControl() {
                             )}
                         </div>
                     )}
-                </div>
-            </div>
-
-            {/* Security Enforcement */}
-            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mt-6">
-                <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
-                    Security Enforcement
-                </h3>
-                <p className="text-gray-600 text-sm font-normal font-[BasisGrotesquePro] mb-6">
-                    Mandate policies across all firms.
-                </p>
-
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="require2FA"
-                            checked={require2FA}
-                            onChange={(e) => setRequire2FA(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="require2FA" className="text-gray-700 text-sm font-medium font-[BasisGrotesquePro]">
-                            Require 2-Factor Authentication For All Staff
-                        </label>
-                    </div>
-
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium font-[BasisGrotesquePro] mb-2">
-                            Minimum password length
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                value={minPasswordLength}
-                                onChange={(e) => setMinPasswordLength(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] pr-8"
-                            />
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="requireSpecialChar"
-                            checked={requireSpecialChar}
-                            onChange={(e) => setRequireSpecialChar(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="requireSpecialChar" className="text-gray-700 text-sm font-medium font-[BasisGrotesquePro]">
-                            Require Special Character In Passwords
-                        </label>
-                    </div>
                 </div>
             </div>
 

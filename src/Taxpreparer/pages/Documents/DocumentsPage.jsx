@@ -8,6 +8,8 @@ import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import { Modal } from "react-bootstrap";
+import FirmSharedDocuments from "./FirmSharedDocuments";
+import SharedDocuments from "./SharedDocuments";
 
 const SUPPORTED_PREVIEW_TYPES = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
 
@@ -143,6 +145,7 @@ export default function DocumentsPage() {
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const previewTriggerRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('my-documents'); // 'my-documents' or 'firm-shared'
   const documents = [
     {
       id: 1,
@@ -469,17 +472,86 @@ export default function DocumentsPage() {
               <i className="bi bi-folder2-open me-1"></i>
               Document Manager
             </button>
-            <button
-              className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
-              onClick={() => setShowUpload(true)}
-            >
-              <UpIcon />
-              Upload Documents
-            </button>
+          <button
+            className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
+            onClick={() => setShowUpload(true)}
+          >
+            <UpIcon />
+            Upload Documents
+          </button>
           </div>
         </div>
       )}
 
+      {/* Tabs (hide when nested under client) */}
+      {!isNestedUnderClient && (
+        <div className="mb-4">
+          <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #E5E7EB' }}>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'my-documents' ? 'active' : ''}`}
+                onClick={() => setActiveTab('my-documents')}
+                style={{
+                  border: 'none',
+                  borderBottom: activeTab === 'my-documents' ? '2px solid #00C0C6' : '2px solid transparent',
+                  color: activeTab === 'my-documents' ? '#00C0C6' : '#6B7280',
+                  fontWeight: activeTab === 'my-documents' ? '600' : '400',
+                  backgroundColor: 'transparent',
+                  padding: '12px 24px',
+                  fontFamily: 'BasisGrotesquePro',
+                  cursor: 'pointer'
+                }}
+              >
+                My Documents
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'firm-shared' ? 'active' : ''}`}
+                onClick={() => setActiveTab('firm-shared')}
+                style={{
+                  border: 'none',
+                  borderBottom: activeTab === 'firm-shared' ? '2px solid #00C0C6' : '2px solid transparent',
+                  color: activeTab === 'firm-shared' ? '#00C0C6' : '#6B7280',
+                  fontWeight: activeTab === 'firm-shared' ? '600' : '400',
+                  backgroundColor: 'transparent',
+                  padding: '12px 24px',
+                  fontFamily: 'BasisGrotesquePro',
+                  cursor: 'pointer'
+                }}
+              >
+                Firm Shared Documents
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'shared-with-me' ? 'active' : ''}`}
+                onClick={() => setActiveTab('shared-with-me')}
+                style={{
+                  border: 'none',
+                  borderBottom: activeTab === 'shared-with-me' ? '2px solid #00C0C6' : '2px solid transparent',
+                  color: activeTab === 'shared-with-me' ? '#00C0C6' : '#6B7280',
+                  fontWeight: activeTab === 'shared-with-me' ? '600' : '400',
+                  backgroundColor: 'transparent',
+                  padding: '12px 24px',
+                  fontFamily: 'BasisGrotesquePro',
+                  cursor: 'pointer'
+                }}
+              >
+                Shared with Me
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* Render content based on active tab */}
+      {!isNestedUnderClient && activeTab === 'firm-shared' ? (
+        <FirmSharedDocuments />
+      ) : !isNestedUnderClient && activeTab === 'shared-with-me' ? (
+        <SharedDocuments />
+      ) : (
+        <>
       {/* Stats (hide when nested under client) */}
       {!isNestedUnderClient && (
         <div className="row g-3 mb-3">
@@ -885,9 +957,13 @@ export default function DocumentsPage() {
       )}
 
       {/* Render nested routes */}
+          {isNestedUnderClient && (
       <div className="mt-4">
         <Outlet />
       </div>
+          )}
+        </>
+      )}
 
       <Modal show={showPreview} onHide={closePreviewModal} size="xl" centered>
         <Modal.Header closeButton>

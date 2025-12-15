@@ -9,10 +9,11 @@ import {
   AccountIcon,
   LogOutIcon,
 } from "./icons";
-import { Clients, Task } from "./icons";
+import { Clients, Task, SignatureIcon } from "./icons";
 import { userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
+import { isFeatureVisible } from "../../ClientOnboarding/utils/privilegeUtils";
 
 export default function TaxSidebar({ isSidebarOpen = true }) {
   const location = useLocation();
@@ -72,21 +73,28 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
     >
       <div className="tsb-top">
         <ul className="nav flex-column px-3">
+          {isFeatureVisible('dashboard') && (
           <Link to="/taxdashboard" className={linkClass("/taxdashboard")}>
             <span className={iconWrapperClass("/taxdashboard")}><DashIconed /></span>
             Dashboard
           </Link>
+          )}
 
+          {isFeatureVisible('clients') && (
           <Link to="/taxdashboard/clients" className={linkClass("/taxdashboard/clients")}>
             <span className={iconWrapperClass("/taxdashboard/clients")}><Clients /></span>
             My Clients
           </Link>
+          )}
 
+          {isFeatureVisible('documents') && (
           <Link to="/taxdashboard/documents" className={linkClass("/taxdashboard/documents")}>
             <span className={iconWrapperClass("/taxdashboard/documents")}><FileIconed /></span>
             Documents
           </Link>
+          )}
 
+          {isFeatureVisible('tasks') && (
           <li className="mb-2">
             <Link to="/taxdashboard/tasks" className={linkClass("/taxdashboard/tasks")}>
               <span className={iconWrapperClass("/taxdashboard/tasks")}>
@@ -95,7 +103,9 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
               Tasks / To-Dos
             </Link>
           </li>
+          )}
 
+          {isFeatureVisible('messages') && (
           <li className="mb-2">
             <Link to="/taxdashboard/messages" className={linkClass("/taxdashboard/messages")}>
               <span className={iconWrapperClass("/taxdashboard/messages")}>
@@ -104,7 +114,9 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
               Messages
             </Link>
           </li>
+          )}
 
+          {isFeatureVisible('calendar') && (
           <li className="mb-2">
             <Link to="/taxdashboard/calendar" className={linkClass("/taxdashboard/calendar")}>
               <span className={iconWrapperClass("/taxdashboard/calendar")}>
@@ -113,7 +125,18 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
               Calendar / Appointments
             </Link>
           </li>
+          )}
 
+          {isFeatureVisible('eSignatures') && (
+          <li className="mb-2">
+            <Link to="/taxdashboard/e-signatures" className={linkClass("/taxdashboard/e-signatures")}>
+              <span className={iconWrapperClass("/taxdashboard/e-signatures")}>
+                <SignatureIcon />
+              </span>
+              E-Signatures
+            </Link>
+          </li>
+          )}
 
         </ul>
       </div>
