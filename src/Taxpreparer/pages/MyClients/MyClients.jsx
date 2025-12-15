@@ -1749,7 +1749,7 @@ export default function MyClients() {
                         setInvitePhoneCountry(countryCode.toLowerCase());
                       }}
                       inputClass="form-control"
-                      containerClass="w-100 phone-input-container"
+                      containerClass="w-100 phone-input-container invite-taxpayer-phone-container"
                       inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
                       enableSearch={true}
                       countryCodeEditable={false}

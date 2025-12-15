@@ -20,8 +20,6 @@ const TABS = [
   { label: "Read", key: "read" },
 ];
 
-const READ_TAB_LIMIT = 5;
-
 const PRIORITY_COLOR = {
   high: "#EF4444",
   medium: "#FBBF24",
@@ -165,12 +163,8 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showAllNotifications, setShowAllNotifications] = useState(false);
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
-  
-  // Limit for recent notifications
-  const RECENT_NOTIFICATIONS_LIMIT = 3;
 
   // Determine which API to use based on user type
   const notificationAPI = userType === "firm_admin" ? firmAdminNotificationAPI : clientNotificationAPI;
@@ -261,7 +255,6 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   // Fetch notifications on mount and when tab changes
   useEffect(() => {
     fetchNotifications();
-    setShowAllNotifications(false); // Reset to show recent when tab changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab]); // Only refetch when selectedTab changes
 
@@ -325,52 +318,14 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
     } else if (selectedTab === "read") {
       return sortByRecent(
         notifications.filter((notification) => notification.read)
-      ).slice(0, READ_TAB_LIMIT);
+      );
     }
-    // "all" tab shows only recent messages
-    return sortByRecent(
-      notifications.filter((notification) =>
-        (notification.notification_type || "").toLowerCase().includes("message")
-      )
-    );
+    // "all" tab shows all notifications
+    return sortByRecent(notifications);
   }, [notifications, selectedTab]);
 
   const groupedNotifications = useMemo(() => {
-    const grouped = groupNotificationsByDate(filteredNotifications);
-    
-    // If not showing all, limit to 5 notifications
-    if (!showAllNotifications) {
-      const limited = {};
-      let count = 0;
-      
-      // Sort groups by date (Today first, then Yesterday, etc.)
-      const sortedGroups = Object.keys(grouped).sort((a, b) => {
-        const order = ['Today', 'Yesterday'];
-        const aIndex = order.indexOf(a);
-        const bIndex = order.indexOf(b);
-        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-        if (aIndex !== -1) return -1;
-        if (bIndex !== -1) return 1;
-        return 0;
-      });
-      
-      for (const group of sortedGroups) {
-        if (count >= RECENT_NOTIFICATIONS_LIMIT) break;
-        const groupNotifications = grouped[group];
-        const remaining = RECENT_NOTIFICATIONS_LIMIT - count;
-        limited[group] = groupNotifications.slice(0, remaining);
-        count += groupNotifications.length;
-      }
-      
-      return limited;
-    }
-    
-    return grouped;
-  }, [filteredNotifications, showAllNotifications]);
-  
-  // Check if there are more notifications to show
-  const hasMoreNotifications = useMemo(() => {
-    return filteredNotifications.length > RECENT_NOTIFICATIONS_LIMIT;
+    return groupNotificationsByDate(filteredNotifications);
   }, [filteredNotifications]);
 
   const markAsRead = useCallback(async (notificationId) => {
@@ -667,27 +622,6 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
         </div>
       )}
       
-      {/* Show Less Button */}
-      {!loading && !error && showAllNotifications && (
-        <div className="text-center mt-3 mb-2">
-          <button
-            className="btn btn-sm"
-            style={{
-              backgroundColor: "#F56D2D",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "8px",
-              padding: "8px 24px",
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: "500",
-              cursor: "pointer"
-            }}
-            onClick={() => setShowAllNotifications(false)}
-          >
-            Show Less
-          </button>
-        </div>
-      )}
     </div>
   );
 }
