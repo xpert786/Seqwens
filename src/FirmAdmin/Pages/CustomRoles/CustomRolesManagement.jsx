@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { FiPlus, FiEdit2, FiTrash2, FiShield, FiUsers, FiChevronRight } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiShield, FiUsers } from 'react-icons/fi';
 import { firmAdminCustomRolesAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import CustomRoleModal from './CustomRoleModal';
-import RolePrivilegesManager from './RolePrivilegesManager';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 
 export default function CustomRolesManagement() {
@@ -12,8 +11,6 @@ export default function CustomRolesManagement() {
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [showPrivileges, setShowPrivileges] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -47,9 +44,9 @@ export default function CustomRolesManagement() {
     }
   };
 
-  const handleCreateRole = async (name, description) => {
+  const handleCreateRole = async (name, description, permission_groups) => {
     try {
-      const response = await firmAdminCustomRolesAPI.createCustomRole(name, description);
+      const response = await firmAdminCustomRolesAPI.createCustomRole(name, description, permission_groups);
       if (response.success) {
         toast.success(response.message || 'Custom role created successfully!', {
           position: "top-right",
@@ -72,11 +69,12 @@ export default function CustomRolesManagement() {
     }
   };
 
-  const handleUpdateRole = async (roleId, name, description, isActive) => {
+  const handleUpdateRole = async (roleId, name, description, permission_groups, isActive) => {
     try {
       const response = await firmAdminCustomRolesAPI.updateCustomRole(roleId, {
         name,
         description,
+        permission_groups,
         is_active: isActive
       });
       if (response.success) {
@@ -138,10 +136,6 @@ export default function CustomRolesManagement() {
     }
   };
 
-  const handleViewPrivileges = (role) => {
-    setSelectedRole(role);
-    setShowPrivileges(true);
-  };
 
   const handleEditRole = (role) => {
     setEditingRole(role);
@@ -309,13 +303,44 @@ export default function CustomRolesManagement() {
                         {role.description}
                       </p>
                     )}
-                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                      <div className="flex items-center gap-2">
-                        <FiShield size={14} color="#6B7280" />
-                        <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
-                          {role.privileges_count || 0} {role.privileges_count === 1 ? 'privilege' : 'privileges'}
-                        </span>
+                    {/* Permission Groups Display */}
+                    {role.permission_groups && role.permission_groups.length > 0 && (
+                      <div className="mb-3">
+                        <div className="flex flex-wrap gap-2">
+                          {role.permission_groups_display ? (
+                            role.permission_groups_display.map((group, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full font-[BasisGrotesquePro]"
+                              >
+                                {group}
+                              </span>
+                            ))
+                          ) : (
+                            role.permission_groups.map((group, idx) => {
+                              const groupLabels = {
+                                'client': 'Client',
+                                'todo': 'Todo',
+                                'appointment': 'Appointment',
+                                'document': 'Document',
+                                'esign': 'E-Sign',
+                                'messages': 'Messages',
+                                'full_control': 'Full Control'
+                              };
+                              return (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full font-[BasisGrotesquePro]"
+                                >
+                                  {groupLabels[group] || group}
+                                </span>
+                              );
+                            })
+                          )}
+                        </div>
                       </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                       <div className="flex items-center gap-2">
                         <FiUsers size={14} color="#6B7280" />
                         <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
@@ -330,13 +355,6 @@ export default function CustomRolesManagement() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <button
-                      onClick={() => handleViewPrivileges(role)}
-                      className="flex items-center gap-1 px-3 py-2 bg-white border border-[#3B4A66] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
-                    >
-                      Manage Privileges
-                      <FiChevronRight size={14} />
-                    </button>
                     <button
                       onClick={() => handleEditRole(role)}
                       className="flex items-center gap-1 px-3 py-2 bg-white border border-[#3B4A66] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
@@ -373,23 +391,11 @@ export default function CustomRolesManagement() {
         <CustomRoleModal
           show={!!editingRole}
           onClose={() => setEditingRole(null)}
-          onSave={(name, description, isActive) => handleUpdateRole(editingRole.id, name, description, isActive)}
+          onSave={(name, description, permission_groups, isActive) => handleUpdateRole(editingRole.id, name, description, permission_groups, isActive)}
           role={editingRole}
         />
       )}
 
-      {/* Privileges Manager Modal */}
-      {showPrivileges && selectedRole && (
-        <RolePrivilegesManager
-          show={showPrivileges}
-          onClose={() => {
-            setShowPrivileges(false);
-            setSelectedRole(null);
-          }}
-          role={selectedRole}
-          onUpdate={loadRoles}
-        />
-      )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

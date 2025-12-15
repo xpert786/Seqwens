@@ -39,7 +39,19 @@ export const getCustomRole = () => {
 };
 
 /**
- * Get user privileges from custom role
+ * Get user permission groups from custom role
+ * @returns {Array<string>} Array of permission group strings (e.g., ["client", "document", "full_control"])
+ */
+export const getPermissionGroups = () => {
+  const customRole = getCustomRole();
+  if (customRole && customRole.permission_groups && Array.isArray(customRole.permission_groups)) {
+    return customRole.permission_groups;
+  }
+  return [];
+};
+
+/**
+ * Get user privileges from custom role (legacy support)
  * @returns {Array<string>} Array of privilege strings
  */
 export const getUserPrivileges = () => {
@@ -48,6 +60,20 @@ export const getUserPrivileges = () => {
     return customRole.privileges;
   }
   return [];
+};
+
+/**
+ * Check if user has a specific permission group
+ * @param {string} group - The permission group to check (e.g., "client", "document", "full_control")
+ * @returns {boolean} True if user has the permission group
+ */
+export const hasPermissionGroup = (group) => {
+  const groups = getPermissionGroups();
+  // full_control grants access to everything
+  if (groups.includes('full_control')) {
+    return true;
+  }
+  return groups.includes(group);
 };
 
 /**
@@ -121,7 +147,22 @@ export const isCustomRole = () => {
 };
 
 /**
- * Feature to privilege mapping
+ * Feature to permission group mapping
+ * Maps sidebar features to required permission groups
+ */
+export const FEATURE_PERMISSION_GROUPS = {
+  dashboard: null, // Always visible
+  clients: 'client', // Requires 'client' permission group
+  documents: 'document', // Requires 'document' permission group
+  tasks: 'todo', // Requires 'todo' permission group
+  messages: 'messages', // Requires 'messages' permission group
+  calendar: 'appointment', // Requires 'appointment' permission group
+  eSignatures: 'esign', // Requires 'esign' permission group
+  account: null, // Always visible
+};
+
+/**
+ * Feature to privilege mapping (legacy support)
  * Maps sidebar features to required privilege patterns
  * Privilege format: {category}.{action}.{resource} (e.g., "staff.view.view_staff")
  */
@@ -207,15 +248,18 @@ export const canAssign = () => {
 };
 
 /**
- * Check if a feature should be visible based on privileges
+ * Check if a feature should be visible based on permission groups or privileges
  * @param {string} feature - Feature name (e.g., "clients", "documents")
  * @returns {boolean} True if feature should be visible
  */
 export const isFeatureVisible = (feature) => {
   const hasCustomRole = isCustomRole();
+  const customRole = getCustomRole();
+  
   console.log(`isFeatureVisible(${feature}):`, {
     hasCustomRole,
-    customRole: getCustomRole()
+    customRole,
+    permissionGroups: getPermissionGroups()
   });
   
   // If user doesn't have custom role, show all features (default behavior)
@@ -224,6 +268,31 @@ export const isFeatureVisible = (feature) => {
     return true;
   }
   
+  // Check permission groups first (new system)
+  const permissionGroups = getPermissionGroups();
+  if (permissionGroups.length > 0) {
+    // full_control grants access to everything
+    if (permissionGroups.includes('full_control')) {
+      console.log(`isFeatureVisible(${feature}): Has full_control permission, showing feature`);
+      return true;
+    }
+    
+    const requiredGroup = FEATURE_PERMISSION_GROUPS[feature];
+    
+    // If no permission group required, always show
+    if (!requiredGroup) {
+      console.log(`isFeatureVisible(${feature}): No permission group required, showing feature`);
+      return true;
+    }
+    
+    // Check if user has the required permission group
+    const hasGroup = hasPermissionGroup(requiredGroup);
+    console.log(`isFeatureVisible(${feature}): Required permission group "${requiredGroup}", hasGroup =`, hasGroup);
+    
+    return hasGroup;
+  }
+  
+  // Fallback to legacy privilege system for backward compatibility
   // If user has staff privileges, show all tax preparer features
   // Staff privileges (staff.view, staff.create, etc.) grant access to all features
   const hasStaff = hasStaffPrivileges();

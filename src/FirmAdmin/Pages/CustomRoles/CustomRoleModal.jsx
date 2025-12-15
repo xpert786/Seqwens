@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 
+// Permission groups configuration
+const PERMISSION_GROUPS = [
+  { value: 'client', label: 'Client', description: 'Manage clients - view, create, edit, assign clients' },
+  { value: 'todo', label: 'Todo', description: 'Manage to-dos - create, view, edit, delete tasks' },
+  { value: 'appointment', label: 'Appointment', description: 'Manage appointments - request, view, delete appointments' },
+  { value: 'document', label: 'Document', description: 'Manage documents - request, view, delete documents' },
+  { value: 'esign', label: 'E-Sign', description: 'Manage e-signatures - create e-sign requests, manage signatures' },
+  { value: 'messages', label: 'Messages', description: 'Manage messages - send, view, manage conversations' },
+  { value: 'full_control', label: 'Full Control', description: 'All permissions - grants access to everything (firm admin level)' }
+];
+
 export default function CustomRoleModal({ show, onClose, onSave, role = null }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    permission_groups: [],
     is_active: true
   });
   const [errors, setErrors] = useState({});
@@ -15,12 +27,14 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
       setFormData({
         name: role.name || '',
         description: role.description || '',
+        permission_groups: role.permission_groups || [],
         is_active: role.is_active !== undefined ? role.is_active : true
       });
     } else {
       setFormData({
         name: '',
         description: '',
+        permission_groups: [],
         is_active: true
       });
     }
@@ -43,10 +57,52 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     }
   };
 
+  const handlePermissionGroupChange = (groupValue, checked) => {
+    setFormData(prev => {
+      let newGroups = [...prev.permission_groups];
+      
+      if (groupValue === 'full_control') {
+        // If Full Control is checked, clear all others
+        if (checked) {
+          newGroups = ['full_control'];
+        } else {
+          newGroups = newGroups.filter(g => g !== 'full_control');
+        }
+      } else {
+        // If any other group is checked, remove full_control
+        if (checked) {
+          newGroups = newGroups.filter(g => g !== 'full_control');
+          if (!newGroups.includes(groupValue)) {
+            newGroups.push(groupValue);
+          }
+        } else {
+          newGroups = newGroups.filter(g => g !== groupValue);
+        }
+      }
+      
+      return { ...prev, permission_groups: newGroups };
+    });
+    
+    // Clear permission groups error
+    if (errors.permission_groups) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.permission_groups;
+        return newErrors;
+      });
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Role name is required';
+    }
+    if (formData.name.trim().length > 100) {
+      newErrors.name = 'Role name must be 100 characters or less';
+    }
+    if (formData.permission_groups.length === 0) {
+      newErrors.permission_groups = 'At least one permission group is required';
     }
     return newErrors;
   };
@@ -62,9 +118,9 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     setSaving(true);
     try {
       if (role) {
-        await onSave(formData.name.trim(), formData.description.trim(), formData.is_active);
+        await onSave(formData.name.trim(), formData.description.trim(), formData.permission_groups, formData.is_active);
       } else {
-        await onSave(formData.name.trim(), formData.description.trim());
+        await onSave(formData.name.trim(), formData.description.trim(), formData.permission_groups);
       }
     } finally {
       setSaving(false);
@@ -145,12 +201,20 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
                   color: '#1F2A55'
                 }}
                 placeholder="e.g., Senior Tax Preparer"
+                maxLength={100}
               />
-              {errors.name && (
-                <p className="mt-1 mb-0" style={{ color: '#DC2626', fontSize: '12px' }}>
-                  {errors.name}
+              <div className="d-flex justify-content-between align-items-center mt-1">
+                {errors.name ? (
+                  <p className="mb-0" style={{ color: '#DC2626', fontSize: '12px' }}>
+                    {errors.name}
+                  </p>
+                ) : (
+                  <div></div>
+                )}
+                <p className="mb-0" style={{ color: '#9CA3AF', fontSize: '12px' }}>
+                  {formData.name.length}/100
                 </p>
-              )}
+              </div>
             </div>
 
             {/* Description */}
@@ -182,6 +246,94 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
                 }}
                 placeholder="Describe the role and its responsibilities..."
               />
+            </div>
+
+            {/* Permission Groups */}
+            <div className="mb-4">
+              <label
+                className="d-block mb-2"
+                style={{
+                  color: '#3B4A66',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  fontFamily: 'BasisGrotesquePro'
+                }}
+              >
+                Permission Groups <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <div
+                className="p-3 rounded-lg border"
+                style={{
+                  borderColor: errors.permission_groups ? '#DC2626' : '#E8F0FF',
+                  backgroundColor: '#FAFBFC'
+                }}
+              >
+                {PERMISSION_GROUPS.map((group) => {
+                  const isChecked = formData.permission_groups.includes(group.value);
+                  const isDisabled = saving || 
+                    (group.value !== 'full_control' && formData.permission_groups.includes('full_control')) ||
+                    (group.value === 'full_control' && formData.permission_groups.length > 0 && !formData.permission_groups.includes('full_control'));
+                  
+                  return (
+                    <div
+                      key={group.value}
+                      className="mb-3"
+                      style={{
+                        opacity: isDisabled && !isChecked ? 0.5 : 1
+                      }}
+                    >
+                      <label
+                        className="d-flex align-items-start gap-2"
+                        style={{
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          marginBottom: 0
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => handlePermissionGroupChange(group.value, e.target.checked)}
+                          disabled={isDisabled}
+                          style={{
+                            cursor: isDisabled ? 'not-allowed' : 'pointer',
+                            marginTop: '4px'
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              color: '#1F2A55',
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              fontFamily: 'BasisGrotesquePro',
+                              marginBottom: '2px'
+                            }}
+                          >
+                            {group.label}
+                          </div>
+                          <div
+                            style={{
+                              color: '#6B7280',
+                              fontSize: '12px',
+                              fontFamily: 'BasisGrotesquePro'
+                            }}
+                          >
+                            {group.description}
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+              {errors.permission_groups && (
+                <p className="mt-1 mb-0" style={{ color: '#DC2626', fontSize: '12px' }}>
+                  {errors.permission_groups}
+                </p>
+              )}
+              <p className="mt-2 mb-0" style={{ color: '#6B7280', fontSize: '12px' }}>
+                Select one or more permission groups. "Full Control" grants all permissions and cannot be combined with other groups.
+              </p>
             </div>
 
             {/* Active Status (only for edit) */}
