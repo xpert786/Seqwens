@@ -1,6 +1,520 @@
-@media screen max-width < 500 {
-    .search-folder-document-management{
-          width: 100%;
-        
-    }
+/* Document Management Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .docmanage-main-container {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Header Section - stack vertically */
+  .docmanage-header {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .docmanage-header-content {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+  }
+
+  .docmanage-header-text {
+    width: 100% !important;
+  }
+
+  .docmanage-header-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-header-subtitle {
+    font-size: 0.875rem !important;
+  }
+
+  /* Upload Button */
+  .docmanage-upload-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .docmanage-upload-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Navigation Tabs */
+  .docmanage-tabs-container {
+    width: 100% !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .docmanage-tabs-wrapper {
+    width: 100% !important;
+    padding: 0.5rem !important;
+  }
+
+  .docmanage-tab-button {
+    flex: 1 !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
+    text-align: center !important;
+  }
+
+  /* Document Folders Section */
+  .docmanage-folders-section {
+    padding: 1rem !important;
+  }
+
+  .docmanage-folders-header {
+    margin-bottom: 1rem !important;
+  }
+
+  .docmanage-folders-title {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-folders-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  /* Search Bar */
+  .docmanage-search-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .docmanage-search-input {
+    width: 100% !important;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem !important;
+    font-size: 0.875rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .docmanage-search-icon {
+    left: 0.75rem !important;
+  }
+
+  /* Folder Grid - single column */
+  .docmanage-folder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Folder Card */
+  .docmanage-folder-card {
+    padding: 0.875rem !important;
+  }
+
+  .docmanage-folder-header {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .docmanage-folder-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .docmanage-folder-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-folder-badges {
+    gap: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-folder-badge {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .docmanage-folder-description {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .docmanage-folder-footer {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+    padding-top: 0.75rem !important;
+  }
+
+  .docmanage-folder-footer-left {
+    font-size: 0.7rem !important;
+  }
+
+  .docmanage-folder-footer-right {
+    font-size: 0.7rem !important;
+    text-align: left !important;
+  }
+
+  /* Actions Menu Dropdown */
+  .docmanage-actions-menu {
+    width: calc(100vw - 2rem) !important;
+    max-width: 200px !important;
+    right: 0 !important;
+    left: auto !important;
+  }
+
+  /* Loading and Error States */
+  .docmanage-loading,
+  .docmanage-error {
+    padding: 2rem 0 !important;
+  }
+
+  .docmanage-error {
+    padding: 0.875rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .docmanage-error p {
+    font-size: 0.875rem !important;
+  }
+
+  .docmanage-error button {
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Security Tab */
+  .docmanage-security-section {
+    padding: 1rem !important;
+  }
+
+  .docmanage-security-header h5 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-security-header p {
+    font-size: 0.8rem !important;
+  }
+
+  /* Watermark Settings */
+  .docmanage-watermark-toggle {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+
+  .docmanage-watermark-settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .docmanage-watermark-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-watermark-input,
+  .docmanage-watermark-select {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* Additional Information Toggles */
+  .docmanage-info-toggle {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+    padding: 0.75rem 0 !important;
+  }
+
+  .docmanage-info-toggle label {
+    font-size: 0.875rem !important;
+  }
+
+  /* Watermark Preview Info */
+  .docmanage-preview-info {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    padding: 0.875rem !important;
+  }
+
+  .docmanage-preview-info-item {
+    font-size: 0.8rem !important;
+  }
+
+  /* Action Buttons */
+  .docmanage-action-buttons {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .docmanage-action-button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    justify-content: center !important;
+  }
+
+  .docmanage-action-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Watermark Preview */
+  .docmanage-preview-section {
+    padding-top: 1rem !important;
+  }
+
+  .docmanage-preview-title {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-preview-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  .docmanage-preview-container {
+    padding: 0.75rem !important;
+  }
+
+  .docmanage-preview-document {
+    padding: 1rem !important;
+    min-height: 300px !important;
+  }
+
+  .docmanage-preview-document .space-y-3 > div {
+    height: 0.75rem !important;
+  }
+
+  /* Watermark Overlay in Preview */
+  .docmanage-preview-document > div[class*="absolute"] {
+    font-size: 1.5rem !important;
+  }
+
+  .docmanage-preview-document > div[class*="absolute"] > div > div {
+    font-size: 0.75rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Additional Information Section Title */
+  .docmanage-security-section h5.text-base {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Enable Watermarking Info Section */
+  .docmanage-preview-info-section {
+    padding: 0.875rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .docmanage-preview-info-section > div:first-child {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .docmanage-preview-info-label {
+    font-size: 0.8rem !important;
+  }
+
+  /* Preview Info Icons */
+  .docmanage-preview-info-item svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .docmanage-preview-info-item span {
+    font-size: 0.75rem !important;
+  }
+
+  /* Select Dropdown Arrow */
+  .docmanage-watermark-select + div svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Input Suffixes (% px °) */
+  .docmanage-watermark-input + span {
+    font-size: 0.75rem !important;
+    right: 0.5rem !important;
+  }
+
+  /* Color Preview Box */
+  .docmanage-watermark-input + div > div {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Compliance Tab (if enabled) */
+  .docmanage-compliance-section {
+    padding: 1rem !important;
+  }
+
+  .docmanage-compliance-header h5 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-compliance-header p {
+    font-size: 0.8rem !important;
+  }
+
+  .docmanage-compliance-cards {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .docmanage-compliance-card {
+    padding: 0.875rem !important;
+  }
+
+  .docmanage-compliance-card-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-compliance-card-value {
+    font-size: 1.125rem !important;
+  }
+
+  /* Compliance Issues */
+  .docmanage-compliance-issue {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    padding: 0.875rem !important;
+  }
+
+  .docmanage-compliance-issue-content {
+    width: 100% !important;
+  }
+
+  .docmanage-compliance-issue-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-compliance-issue-badge {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .docmanage-compliance-issue-text {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .docmanage-compliance-issue-date {
+    font-size: 0.7rem !important;
+  }
+
+  .docmanage-compliance-issue-button {
+    width: 100% !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Tables - make scrollable */
+  .docmanage-table-container {
+    overflow-x: auto !important;
+  }
+
+  .docmanage-table {
+    min-width: 800px !important;
+  }
+
+  .docmanage-table th,
+  .docmanage-table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Mobile Card Views */
+  .docmanage-mobile-card {
+    padding: 0.875rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .docmanage-mobile-card-header {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .docmanage-mobile-card-title {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .docmanage-mobile-card-subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  .docmanage-mobile-card-badge {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .docmanage-mobile-card-info {
+    gap: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .docmanage-mobile-card-info-item {
+    font-size: 0.7rem !important;
+  }
+
+  .docmanage-mobile-card-button {
+    width: 100% !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Security Rules */
+  .docmanage-security-rule {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    padding: 0.875rem !important;
+  }
+
+  .docmanage-security-rule-content {
+    width: 100% !important;
+  }
+
+  .docmanage-security-rule-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-security-rule-text {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .docmanage-security-rule-tags {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .docmanage-security-rule-tag {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .docmanage-security-rule-buttons {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .docmanage-security-rule-button {
+    width: 100% !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
 }
+

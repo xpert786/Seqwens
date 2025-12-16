@@ -5,6 +5,7 @@ import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils'
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
+import '../../styles/FolderContents.css';
 
 // Search icon
 const SearchIcon = () => (
@@ -337,39 +338,13 @@ export default function FolderContents() {
   };
 
   return (
-    <div className="p-6 bg-[rgb(243,247,255)] min-h-screen">
+    <div className="p-6 bg-[rgb(243,247,255)] min-h-screen foldercontents-main-container">
       {/* Conditionally render folder contents only when NOT viewing a document */}
       {!isViewingDocument && (
         <>
-          {/* Header Section */}
-          {/* <div className="mb-6">
-            <div className="flex justify-between items-start">
-            <div>
-                <h1 className="text-3xl font-semibold text-gray-800 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Document Management
-                </h1>
-                <p className="text-gray-600 text-base" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Manage all firm documents and client files
-                </p>
-                <p className="text-sm text-blue-600 mt-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                Current Folder: {folderName} (ID: {folderId})
-                </p>
-            </div>
-            <div className="flex gap-3">
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                <DocumentBrowseFolder />
-                <span>Browse Folders</span>
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                <DocumentUpload />
-                <span>Upload Documents</span>
-                </button>
-            </div>
-            </div>
-        </div> */}
 
           {/* Back Button and Breadcrumbs */}
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-4 flex items-center gap-3 foldercontents-back-section">
             {/* Back Button */}
             <button
               onClick={() => {
@@ -386,7 +361,7 @@ export default function FolderContents() {
                   navigate('/firmadmin/documents');
                 }
               }}
-              className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium foldercontents-back-button"
               style={{ fontFamily: 'BasisGrotesquePro' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,7 +372,7 @@ export default function FolderContents() {
 
             {/* Breadcrumbs */}
             {breadcrumbs.length > 0 && (
-              <div className="flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              <div className="flex items-center gap-2 text-sm foldercontents-breadcrumbs" style={{ fontFamily: 'BasisGrotesquePro' }}>
                 {breadcrumbs.map((crumb, index) => (
                   <React.Fragment key={index}>
                     {index > 0 && <span className="text-gray-400">/</span>}
@@ -421,7 +396,7 @@ export default function FolderContents() {
 
           {/* Loading State */}
           {loading && (
-            <div className="flex justify-center items-center py-12">
+            <div className="flex justify-center items-center py-12 foldercontents-loading">
               <div className="spinner-border text-primary" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
@@ -430,7 +405,7 @@ export default function FolderContents() {
 
           {/* Error State */}
           {error && !loading && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 foldercontents-error">
               <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
               <button
                 onClick={fetchFolderContents}
@@ -443,46 +418,46 @@ export default function FolderContents() {
 
           {/* Summary Cards */}
           {!loading && !error && (
-            <div className="grid grid-cols-5 gap-4 mb-6">
-              <div className="bg-white rounded-lg p-5 ">
-                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
-                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
+            <div className="grid grid-cols-5 gap-4 mb-6 foldercontents-summary-cards">
+              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
+                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Documents</p>
+                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.total_documents}</p>
               </div>
-              <div className="bg-white rounded-lg p-5">
-                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
-                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
+              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
+                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Pending Review</p>
+                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.pending}</p>
               </div>
-              <div className="bg-white rounded-lg p-5">
-                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
-                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
+              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
+                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Approved</p>
+                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>{statistics.approved}</p>
               </div>
-              <div className="bg-white rounded-lg p-5">
-                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
-                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
+                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>IRS Required</p>
+                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
               </div>
-              <div className="bg-white rounded-lg p-5">
-                <p className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
-                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
+              <div className="bg-white rounded-lg p-5 foldercontents-summary-card">
+                <p className="text-sm text-gray-600 mb-2 foldercontents-summary-label" style={{ fontFamily: 'BasisGrotesquePro' }}>Total Storage</p>
+                <p className="text-2xl font-semibold text-gray-900 foldercontents-summary-value" style={{ fontFamily: 'BasisGrotesquePro' }}>—</p>
               </div>
             </div>
           )}
 
       {/* Document List Section */}
       {!loading && !error && (
-        <div className="bg-white rounded-lg p-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
+        <div className="bg-white rounded-lg p-6 foldercontents-document-section">
+          <div className="mb-6 foldercontents-document-header">
+            <h2 className="text-xl font-semibold text-gray-800 mb-1 foldercontents-document-title" style={{ fontFamily: 'BasisGrotesquePro' }}>
               All Documents ({showAllDocuments ? documents.length : `${displayedDocuments.length} of ${documents.length}`})
             </h2>
-            <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
-              Complete list of documents with review status and metadata
+            <p className="text-sm text-gray-600 foldercontents-document-subtitle" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Complete list of documents with review status and metadata jjj
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="flex gap-3 mb-6">
-            <div className="flex relative bg-blue-50">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+          <div className="flex gap-3 mb-6 foldercontents-search-section">
+            <div className="flex relative bg-blue-50 foldercontents-search-container">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 foldercontents-search-icon">
                 <SearchIcon />
               </div>
               <input
@@ -490,15 +465,15 @@ export default function FolderContents() {
                 placeholder="Search documents by name, client, or uploader..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-[450px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 foldercontents-search-input"
                 style={{ fontFamily: 'BasisGrotesquePro' }}
               />
             </div>
           </div>
 
         {/* Document Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto foldercontents-table-container">
+          <table className="w-full foldercontents-table">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Document</th>
@@ -518,13 +493,13 @@ export default function FolderContents() {
                   className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${index < displayedDocuments.length - 1 ? '' : ''}`}
                 >
                   <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
+                    <div className="flex items-center gap-3 foldercontents-document-name">
+                      <div className="flex-shrink-0 foldercontents-document-icon">
                         <FileIcon />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
-                        <p className="text-xs text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
+                        <p className="text-sm font-medium text-gray-900 foldercontents-document-name-text" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.name}</p>
+                        <p className="text-xs text-gray-500 foldercontents-document-type" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.type}</p>
                       </div>
                     </div>
                   </td>
@@ -532,7 +507,7 @@ export default function FolderContents() {
                     <p className="text-sm text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>{doc.client}</p>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 foldercontents-category-badge" style={{ fontFamily: 'BasisGrotesquePro' }}>
                       {doc.category}
                     </span>
                   </td>
@@ -552,7 +527,7 @@ export default function FolderContents() {
                           e.stopPropagation();
                           setOpenActionsMenu(openActionsMenu === doc.id ? null : doc.id);
                         }}
-                        className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                        className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer foldercontents-actions-button"
                         title="Actions"
                       >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -562,7 +537,7 @@ export default function FolderContents() {
                         </svg>
                       </button>
                       {openActionsMenu === doc.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1" style={{ borderRadius: '8px' }}>
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-10 py-1 foldercontents-actions-menu" style={{ borderRadius: '8px' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -605,41 +580,43 @@ export default function FolderContents() {
           </table>
         </div>
         {documents.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 foldercontents-empty-state">
             <p className="text-gray-600 font-[BasisGrotesquePro]">No documents found</p>
           </div>
         )}
 
         {/* Pagination Controls */}
         {documents.length > DOCUMENTS_PER_PAGE && (
-          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
+          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 foldercontents-pagination">
+            <div className="flex items-center gap-2 foldercontents-pagination-controls">
               {!showAllDocuments ? (
                 <>
-                  <button
-                    onClick={() => handleDocumentsPageChange(documentsCurrentPage - 1)}
-                    disabled={documentsCurrentPage === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                    Page {documentsCurrentPage} of {totalDocumentsPages}
-                  </span>
-                  <button
-                    onClick={() => handleDocumentsPageChange(documentsCurrentPage + 1)}
-                    disabled={documentsCurrentPage === totalDocumentsPages}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
-                  >
-                    Next
-                  </button>
+                  <div className="flex items-center gap-2 foldercontents-pagination-buttons">
+                    <button
+                      onClick={() => handleDocumentsPageChange(documentsCurrentPage - 1)}
+                      disabled={documentsCurrentPage === 1}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors foldercontents-pagination-button"
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] foldercontents-pagination-info">
+                      Page {documentsCurrentPage} of {totalDocumentsPages}
+                    </span>
+                    <button
+                      onClick={() => handleDocumentsPageChange(documentsCurrentPage + 1)}
+                      disabled={documentsCurrentPage === totalDocumentsPages}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors foldercontents-pagination-button"
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </>
               ) : (
                 <button
                   onClick={handleShowLessDocuments}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors foldercontents-pagination-button"
                   style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                 >
                   Show Less
@@ -649,7 +626,7 @@ export default function FolderContents() {
             {!showAllDocuments && (
               <button
                 onClick={handleViewAllDocuments}
-                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors foldercontents-view-all-button"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
               >
                 View All ({documents.length})

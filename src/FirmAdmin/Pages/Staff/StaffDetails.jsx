@@ -146,7 +146,7 @@ export default function StaffDetails() {
 
   if (loading) {
     return (
-      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+      <div className="w-full lg:px-4 px-2 py-4 bg-[#F6F7FF] min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -159,7 +159,7 @@ export default function StaffDetails() {
 
   if (error) {
     return (
-      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+      <div className="w-full lg:px-4 px-2 py-4 bg-[#F6F7FF] min-h-screen">
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-3">
             <button

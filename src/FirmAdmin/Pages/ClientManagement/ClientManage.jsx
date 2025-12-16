@@ -4,6 +4,7 @@ import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEl
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
 import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action, CrossesIcon } from '../../Components/icons';
 import '../../../Taxpreparer/styles/taxdashboard.css';
+import '../../styles/ClientManage.css';
 import BulkActionModal from './BulkAction';
 import BulkImportModal from './BulkImportModal';
 import AddClientModal from "./AddClientModal";
@@ -779,29 +780,29 @@ export default function ClientManage() {
   return (
     <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <h2 className="taxdashboard-title">Client Management</h2>
-          <h5 className="taxdashboard-subtitle">Manage all firm clients and assignments</h5>
+      <div className="d-flex justify-content-between align-items-center clientmanage-header">
+        <div className="clientmanage-header-content">
+          <h2 className="taxdashboard-title clientmanage-header-title">Client Management</h2>
+          <h5 className="taxdashboard-subtitle clientmanage-header-subtitle">Manage all firm clients and assignments</h5>
         </div>
-        <div className="d-flex gap-3">
-          {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
+        <div className="d-flex gap-3 clientmanage-buttons-container">
+          {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
             <SettingIcon />
             Build Intake Forms
           </button> */}
           {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }}
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }}
               onClick={() => setShowBulkImportModal(true)}>
               <BulkImport />
               Bulk Import
             </button>
           )}
-          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
+          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
             <AddClient />
             Add Client
           </button>
           {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
               <ExportReport />
               Export Report
             </button>
