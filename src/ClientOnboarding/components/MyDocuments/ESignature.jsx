@@ -507,138 +507,69 @@ export default function ESignature() {
                         e.stopPropagation();
                         setSelectedIndex(originalIndex);
                         
-                        try {
-                          const selectedRequest = signatureRequests[originalIndex];
-                          if (!selectedRequest) {
-                            toast.error('No document selected');
-                            return;
-                          }
+                    try {
+                      const selectedRequest = signatureRequests[originalIndex];
+                      if (!selectedRequest) {
+                        toast.error('No document selected');
+                        return;
+                      }
 
-                          // Show loading toast
-                          const loadingToast = toast.loading('Extracting signature fields...');
+                      const sendingToast = toast.loading('Sending document to SignWell...');
 
-                          // Step 1: Extract signature fields
-                          let signatureFields = [];
-                          try {
-                            // Extract pdf_path from document_url or use esign_id
-                            let extractData = {};
-                            
-                            // Priority 1: Extract pdf_path from document_url
-                            if (selectedRequest.document_url) {
-                              // Use the full document URL as pdf_path (backend will handle it)
-                              // The backend expects the full URL with base URL
-                              extractData.pdf_path = selectedRequest.document_url;
-                            }
-                            
-                            // Priority 2: Use esign_id (signature request id)
-                            if (!extractData.pdf_path && selectedRequest.id) {
-                              extractData.esign_id = selectedRequest.id;
-                            }
-                            
-                            // Priority 3: Fallback to document_id
-                            if (!extractData.pdf_path && !extractData.esign_id) {
-                              const documentId = selectedRequest.document_id || selectedRequest.document?.id;
-                              if (documentId) {
-                                extractData.document_id = documentId;
-                              }
-                            }
-                            
-                            if (!extractData.pdf_path && !extractData.esign_id && !extractData.document_id) {
-                              throw new Error('PDF path or signature request ID not found');
-                            }
+                      try {
+                        const userData = getUserData();
+                        const signerEmail = userData?.email || selectedRequest.client_email || '';
+                        const signerName = userData?.full_name || userData?.name || selectedRequest.client_name || 'Signer';
+                        const documentName = selectedRequest.document_name || selectedRequest.title || 'Document';
 
-                            const extractResponse = await signWellAPI.extractFields(extractData);
-                            
-                            if (extractResponse.success && extractResponse.fields && extractResponse.fields.length > 0) {
-                              signatureFields = extractResponse.fields;
-                              toast.update(loadingToast, {
-                                render: `Found ${signatureFields.length} signature field(s)`,
-                                type: 'success',
-                                isLoading: false,
-                                autoClose: 2000
-                              });
-                            } else {
-                              toast.update(loadingToast, {
-                                render: 'No signature fields detected. Opening signature modal...',
-                                type: 'info',
-                                isLoading: false,
-                                autoClose: 3000
-                              });
-                              // If no fields detected, proceed with regular signature modal
-                              setShowModal(true);
-                              return;
-                            }
-                          } catch (extractError) {
-                            console.error('Error extracting signature fields:', extractError);
-                            toast.update(loadingToast, {
-                              render: extractError.message || 'Failed to extract signature fields. Opening signature modal...',
-                              type: 'warning',
-                              isLoading: false,
-                              autoClose: 3000
-                            });
-                            // If extraction fails, proceed with regular signature modal
-                            setShowModal(true);
-                            return;
-                          }
-
-                          // Step 2: Apply SignWell signature
-                          try {
-                            const userData = getUserData();
-                            const signerEmail = userData?.email || selectedRequest.client_email || '';
-                            const signerName = userData?.full_name || userData?.name || selectedRequest.client_name || 'Signer';
-                            const documentName = selectedRequest.document_name || selectedRequest.title || 'Document';
-
-                            if (!signerEmail) {
-                              throw new Error('Signer email is required for SignWell signature');
-                            }
-
-                            const sendingToast = toast.loading('Sending document to SignWell...');
-
-                            const documentId = selectedRequest.document_id || selectedRequest.document?.id;
-                            const applyResponse = await signWellAPI.applySignature({
-                              document_id: documentId,
-                              signature_fields: signatureFields,
-                              signer_email: signerEmail,
-                              signer_name: signerName,
-                              document_name: documentName,
-                              test_mode: true // TODO: Set to false in production environment
-                            });
-
-                            if (applyResponse.success && applyResponse.data && applyResponse.data.signing_url) {
-                              toast.dismiss(sendingToast);
-                              toast.success('Document sent to SignWell. Opening signing page...', {
-                                autoClose: 3000
-                              });
-
-                              // Open SignWell signing URL in new tab
-                              window.open(applyResponse.data.signing_url, '_blank');
-
-                              // Refresh signature requests after a delay
-                              setTimeout(async () => {
-                                const response = await signatureRequestsAPI.getSignatureRequests();
-                                if (response.success && response.data && response.data.requests) {
-                                  setSignatureRequests(response.data.requests);
-                                }
-                              }, 2000);
-                            } else {
-                              throw new Error(applyResponse.message || 'Failed to apply SignWell signature');
-                            }
-                          } catch (applyError) {
-                            console.error('Error applying SignWell signature:', applyError);
-                            toast.error(applyError.message || 'Failed to send document to SignWell. Opening signature modal...', {
-                              autoClose: 5000
-                            });
-                            // Fallback to regular signature modal
-                            setShowModal(true);
-                          }
-                        } catch (error) {
-                          console.error('Error in SignWell workflow:', error);
-                          toast.error(handleAPIError(error) || 'An error occurred. Opening signature modal...', {
-                            autoClose: 5000
-                          });
-                          // Fallback to regular signature modal
-                          setShowModal(true);
+                        if (!signerEmail) {
+                          throw new Error('Signer email is required for SignWell signature');
                         }
+
+                        const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
+                        const applyResponse = await signWellAPI.applySignature({
+                          document_id: documentId,
+                          signer_email: signerEmail,
+                          signer_name: signerName,
+                          document_name: documentName,
+                          test_mode: true // TODO: Set to false in production environment
+                        });
+
+                        if (applyResponse.success && applyResponse.data && applyResponse.data.signing_url) {
+                          toast.dismiss(sendingToast);
+                          toast.success('Document sent to SignWell. Opening signing page...', {
+                            autoClose: 3000
+                          });
+
+                          // Open SignWell signing URL in new tab
+                          window.open(applyResponse.data.signing_url, '_blank');
+
+                          // Refresh signature requests after a delay
+                          setTimeout(async () => {
+                            const response = await signatureRequestsAPI.getSignatureRequests();
+                            if (response.success && response.data && response.data.requests) {
+                              setSignatureRequests(response.data.requests);
+                            }
+                          }, 2000);
+                        } else {
+                          throw new Error(applyResponse.message || 'Failed to apply SignWell signature');
+                        }
+                      } catch (applyError) {
+                        console.error('Error applying SignWell signature:', applyError);
+                        toast.error(applyError.message || 'Failed to send document to SignWell. Opening signature modal...', {
+                          autoClose: 5000
+                        });
+                        // Fallback to regular signature modal
+                        setShowModal(true);
+                      }
+                    } catch (error) {
+                      console.error('Error in SignWell workflow:', error);
+                      toast.error(handleAPIError(error) || 'An error occurred. Opening signature modal...', {
+                        autoClose: 5000
+                      });
+                      // Fallback to regular signature modal
+                      setShowModal(true);
+                    }
                       }}
                     >
                       <div
@@ -711,64 +642,83 @@ export default function ESignature() {
               );
             })()}
 
-            {/* Signer Info */}
-            <div className="esign-signers">
-              {[
-                { title: "Primary Taxpayer", signer: "Michael Brown" },
-                { title: "Spouse", signer: "Jennifer Brown" },
-              ].map((item, idx) => (
-                <div key={idx} className="esign-signer-card">
-                  <div className="esign-signer-top">
-                    <div className="esign-signer-left">
-                      <div className="esign-signer-icon">
-                        <ProfileIcon size={16} color="#3B4A66" />
+            {/* Compact Summary from API payload */}
+            {selectedIndex !== null && signatureRequests[selectedIndex] && (() => {
+              const selectedRequest = signatureRequests[selectedIndex];
+              const taskInfo = selectedRequest.task_info || {};
+
+              return (
+                <div className="mt-3">
+                  {/* Document & Client Info */}
+                  <div className="mb-3 d-flex flex-wrap gap-3">
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Document
                       </div>
-                      <div>
-                        <div className="esign-signer-title">{item.title}</div>
-                        <div className="esign-signer-subtitle">Signer: {item.signer}</div>
+                      <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
+                        {selectedRequest.document_name || selectedRequest.title || 'Document'}
                       </div>
                     </div>
-                    <span className="esign-signer-badge">Signature Required</span>
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Client
+                      </div>
+                      <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
+                        {selectedRequest.client_name || '—'}
+                      </div>
+                      </div>
+                      <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Requested By
+                      </div>
+                      <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
+                        {selectedRequest.requested_by_name || selectedRequest.staff_info?.name || '—'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Signature Requirements */}
-            <h6 className="esign-requirements-title">Signature Requirements</h6>
-            <div className="esign-requirements-list">
-              {[
-                { label: "Signature", icon: <SignatureIcon />, who: "Taxpayer", req: "Required" },
-                { label: "Date", icon: <DateIcon />, who: "Taxpayer", req: "Required" },
-                { label: "Signature", icon: <SignatureIcon />, who: "Spouse", req: "Required" },
-                { label: "Date", icon: <DateIcon />, who: "Spouse", req: "Required" },
-                { label: "Initial", icon: <InitialIcon />, who: "Taxpayer", req: "Optional" },
-              ].map((item, idx) => (
-                <div key={idx} className="esign-requirement-item">
-                  <span className="esign-requirement-left">
-                    <span className="esign-requirement-icon">{item.icon}</span>
-                    {item.label}
-                  </span>
-                  <span className="esign-requirement-tags">
-                    <span className="esign-tag">{item.who}</span>
-                    <span className="esign-tag">{item.req}</span>
+                  {/* Status & Dates */}
+                  <div className="mb-3 d-flex flex-wrap gap-3">
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Status
+                </div>
+                      <span className="esign-file-badge">
+                        {selectedRequest.status_display || selectedRequest.status || '—'}
                   </span>
                 </div>
-              ))}
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Created
+                      </div>
+                      <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#374151' }}>
+                        {selectedRequest.created_at ? formatDate(selectedRequest.created_at) : '—'}
             </div>
-
-            {/* Legal Notice */}
-            <div className="esign-legal-notice">
-              <div className="esign-legal-icon">
-                <LegalIcon size={14} color="#F56D2D" />
               </div>
               <div>
-                <div className="esign-legal-title">Legal Notice:</div>
-                <div className="esign-legal-text">
-                  By proceeding to sign, you agree that your electronic signature has the same legal effect as a handwritten one.
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Due Date
+                      </div>
+                      <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#374151' }}>
+                        {taskInfo.due_date ? formatDate(taskInfo.due_date) : '—'}
                 </div>
               </div>
             </div>
+
+                  {/* Description */}
+                  {selectedRequest.description && (
+                    <div className="mb-2">
+                      <div className="text-xs text-[#6B7280] mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Description
+                      </div>
+                      <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#4B5563' }}>
+                        {selectedRequest.description}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Footer Buttons */}
             <div className="esign-footer">
@@ -785,74 +735,8 @@ export default function ESignature() {
                       return;
                     }
 
-                    // Show loading toast
-                    const loadingToast = toast.loading('Extracting signature fields...');
+                    const sendingToast = toast.loading('Sending document to SignWell...');
 
-                    // Step 1: Extract signature fields
-                    let signatureFields = [];
-                    try {
-                      // Extract pdf_path from document_url or use esign_id
-                      let extractData = {};
-                      
-                      // Priority 1: Extract pdf_path from document_url
-                      if (selectedRequest.document_url) {
-                        // Use the full document URL as pdf_path (backend will handle it)
-                        // The backend expects the full URL with base URL
-                        extractData.pdf_path = selectedRequest.document_url;
-                      }
-                      
-                      // Priority 2: Use esign_id (signature request id)
-                      if (!extractData.pdf_path && selectedRequest.id) {
-                        extractData.esign_id = selectedRequest.id;
-                      }
-                      
-                      // Priority 3: Fallback to document_id
-                      if (!extractData.pdf_path && !extractData.esign_id) {
-                        const documentId = selectedRequest.document_id || selectedRequest.document?.id;
-                        if (documentId) {
-                          extractData.document_id = documentId;
-                        }
-                      }
-                      
-                      if (!extractData.pdf_path && !extractData.esign_id && !extractData.document_id) {
-                        throw new Error('PDF path or signature request ID not found');
-                      }
-
-                      const extractResponse = await signWellAPI.extractFields(extractData);
-                      
-                      if (extractResponse.success && extractResponse.fields && extractResponse.fields.length > 0) {
-                        signatureFields = extractResponse.fields;
-                        toast.update(loadingToast, {
-                          render: `Found ${signatureFields.length} signature field(s)`,
-                          type: 'success',
-                          isLoading: false,
-                          autoClose: 2000
-                        });
-                      } else {
-                        toast.update(loadingToast, {
-                          render: 'No signature fields detected. Proceeding with manual signature...',
-                          type: 'info',
-                          isLoading: false,
-                          autoClose: 3000
-                        });
-                        // If no fields detected, proceed with regular signature modal
-                        setShowSignModal(true);
-                        return;
-                      }
-                    } catch (extractError) {
-                      console.error('Error extracting signature fields:', extractError);
-                      toast.update(loadingToast, {
-                        render: extractError.message || 'Failed to extract signature fields. Proceeding with manual signature...',
-                        type: 'warning',
-                        isLoading: false,
-                        autoClose: 3000
-                      });
-                      // If extraction fails, proceed with regular signature modal
-                      setShowSignModal(true);
-                      return;
-                    }
-
-                    // Step 2: Apply SignWell signature
                     try {
                       const userData = getUserData();
                       const signerEmail = userData?.email || selectedRequest.client_email || '';
@@ -863,12 +747,9 @@ export default function ESignature() {
                         throw new Error('Signer email is required for SignWell signature');
                       }
 
-                      const sendingToast = toast.loading('Sending document to SignWell...');
-
-                      const documentId = selectedRequest.document_id || selectedRequest.document?.id;
+                      const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
                       const applyResponse = await signWellAPI.applySignature({
                         document_id: documentId,
-                        signature_fields: signatureFields,
                         signer_email: signerEmail,
                         signer_name: signerName,
                         document_name: documentName,
@@ -883,9 +764,6 @@ export default function ESignature() {
 
                         // Open SignWell signing URL in new tab
                         window.open(applyResponse.data.signing_url, '_blank');
-
-                        // Optionally, you can poll for status
-                        // pollSignWellStatus(applyResponse.data.document_id);
 
                         // Close the modal
                         setShowModal(false);

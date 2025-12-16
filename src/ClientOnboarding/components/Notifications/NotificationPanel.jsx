@@ -163,8 +163,12 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
+  
+  // Maximum number of notifications to show initially
+  const MAX_INITIAL_NOTIFICATIONS = 5;
 
   // Determine which API to use based on user type
   const notificationAPI = userType === "firm_admin" ? firmAdminNotificationAPI : clientNotificationAPI;
@@ -325,7 +329,16 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
   }, [notifications, selectedTab]);
 
   const groupedNotifications = useMemo(() => {
-    return groupNotificationsByDate(filteredNotifications);
+    // Limit notifications if not showing all
+    const notificationsToShow = showAllNotifications 
+      ? filteredNotifications 
+      : filteredNotifications.slice(0, MAX_INITIAL_NOTIFICATIONS);
+    return groupNotificationsByDate(notificationsToShow);
+  }, [filteredNotifications, showAllNotifications]);
+
+  // Check if there are more notifications than displayed
+  const hasMoreNotifications = useMemo(() => {
+    return filteredNotifications.length > MAX_INITIAL_NOTIFICATIONS;
   }, [filteredNotifications]);
 
   const markAsRead = useCallback(async (notificationId) => {
@@ -501,7 +514,10 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
             {TABS.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setSelectedTab(tab.key)}
+                onClick={() => {
+                  setSelectedTab(tab.key);
+                  setShowAllNotifications(false); // Reset when changing tabs
+                }}
                 className={`btn btn-sm ${
                   selectedTab === tab.key ? "active-tab" : "inactive-tab"
                 }`}

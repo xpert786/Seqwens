@@ -6,6 +6,10 @@ import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils'
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 
+// Import required CSS for TextLayer and AnnotationLayer
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
 // Set up PDF.js worker
 if (typeof window !== 'undefined') {
   const workerVersion = pdfjs.version || '5.3.31';

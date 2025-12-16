@@ -47,7 +47,7 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
           <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Add Trigger</h3>
@@ -179,12 +179,14 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            style={{ borderRadius: '8px' }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro]"
+            style={{ borderRadius: '8px' }}
           >
             Save Trigger
           </button>

@@ -143,6 +143,7 @@ const WorkflowManagement = () => {
               <button
                 onClick={handleCreateTemplate}
                 className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 text-xs sm:text-sm font-[BasisGrotesquePro] mt-3 sm:mt-4 lg:mt-0"
+                style={{ borderRadius: '8px' }}
               >
                 <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -234,6 +235,7 @@ const WorkflowManagement = () => {
                       ? 'bg-[#3AD6F2] text-white font-semibold'
                       : 'bg-transparent text-black hover:bg-gray-50'
                   }`}
+                  style={{ borderRadius: '8px' }}
                 >
                   {tab.label}
                 </button>

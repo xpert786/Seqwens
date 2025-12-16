@@ -523,24 +523,6 @@ export default function DocumentsPage() {
                 Firm Shared Documents
               </button>
             </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === 'shared-with-me' ? 'active' : ''}`}
-                onClick={() => setActiveTab('shared-with-me')}
-                style={{
-                  border: 'none',
-                  borderBottom: activeTab === 'shared-with-me' ? '2px solid #00C0C6' : '2px solid transparent',
-                  color: activeTab === 'shared-with-me' ? '#00C0C6' : '#6B7280',
-                  fontWeight: activeTab === 'shared-with-me' ? '600' : '400',
-                  backgroundColor: 'transparent',
-                  padding: '12px 24px',
-                  fontFamily: 'BasisGrotesquePro',
-                  cursor: 'pointer'
-                }}
-              >
-                Shared with Me
-              </button>
-            </li>
           </ul>
         </div>
       )}

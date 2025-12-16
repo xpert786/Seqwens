@@ -143,7 +143,8 @@ export default function SharedDocumentsList() {
               border: 'none',
               color: 'white',
               fontFamily: 'BasisGrotesquePro',
-              fontWeight: '500'
+              fontWeight: '500',
+              borderRadius: '8px'
             }}
           >
             <FiShare2 size={16} />
@@ -156,7 +157,8 @@ export default function SharedDocumentsList() {
               backgroundColor: '#F9FAFB',
               border: '1px solid #E5E7EB',
               color: '#3B4A66',
-              fontFamily: 'BasisGrotesquePro'
+              fontFamily: 'BasisGrotesquePro',
+              borderRadius: '8px'
             }}
           >
             <FiRefreshCw size={16} />

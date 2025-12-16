@@ -4,7 +4,6 @@ import { taxPreparerFirmSharedAPI, handleAPIError } from '../../../ClientOnboard
 import { toast } from 'react-toastify';
 import { FiUpload, FiDownload, FiTrash2, FiSearch, FiFilter, FiFolder, FiFile, FiRefreshCw, FiChevronRight } from 'react-icons/fi';
 import { Modal } from 'react-bootstrap';
-import PDFViewer from '../../../components/PDFViewer';
 
 const SUPPORTED_PREVIEW_TYPES = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp"]);
 
@@ -301,6 +300,21 @@ export default function FirmSharedDocuments() {
     }
   };
 
+  // Helper function to convert backend URL to proxy URL if needed (to avoid CORS issues)
+  const getProxyUrl = (url) => {
+    if (!url) return url;
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === '168.231.121.7' && urlObj.pathname.includes('/seqwens/media')) {
+        const proxyPath = urlObj.pathname;
+        return `${window.location.origin}${proxyPath}${urlObj.search}`;
+      }
+    } catch (e) {
+      console.warn('Failed to parse URL:', url, e);
+    }
+    return url;
+  };
+
   return (
     <div className="p-4" style={{ fontFamily: 'BasisGrotesquePro' }}>
       {/* Header */}
@@ -310,19 +324,7 @@ export default function FirmSharedDocuments() {
           <small className="text-muted">Access and manage documents shared by your firm</small>
         </div>
         <div className="d-flex gap-2">
-          <button
-            className="btn d-flex align-items-center gap-2"
-            onClick={handleUploadClick}
-            style={{
-              backgroundColor: '#00C0C6',
-              color: 'white',
-              border: 'none',
-              fontFamily: 'BasisGrotesquePro'
-            }}
-          >
-            <FiUpload size={16} />
-            Upload Document
-          </button>
+          
           <button
             className="btn d-flex align-items-center gap-2"
             onClick={fetchDocuments}
@@ -685,13 +687,24 @@ export default function FirmSharedDocuments() {
             {previewDoc && getDocumentName(previewDoc)}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: 0 }}>
-          {previewDoc && (
-            <PDFViewer
-              pdfUrl={previewDoc.tax_documents}
-              height="600px"
-              showThumbnails={true}
+        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+          {previewDoc && previewDoc.tax_documents ? (
+            <iframe
+              src={getProxyUrl(previewDoc.tax_documents)}
+              style={{
+                width: '100%',
+                height: '70vh',
+                border: 'none',
+                minHeight: '600px'
+              }}
+              title={getDocumentName(previewDoc)}
             />
+          ) : (
+            <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+              <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                No document available for preview.
+              </p>
+            </div>
           )}
         </Modal.Body>
       </Modal>

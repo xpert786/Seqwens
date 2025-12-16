@@ -49,6 +49,23 @@ a {
   backdrop-filter: blur(10px);
 }
 
+/* Global rounded corners for buttons and modals - ensure consistent appearance */
+.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 8px !important;
+}
+
+button.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 8px !important;
+}
+
+.modal-content:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 12px !important;
+}
+
+.form-control:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 8px !important;
+}
+
 /* Phone Input Container - Ensure dropdown overlaps modals and is fully visible */
 .phone-input-container {
   position: relative;

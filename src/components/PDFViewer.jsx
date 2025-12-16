@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
+// Import required CSS for TextLayer and AnnotationLayer
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
 // Set up PDF.js worker
 if (typeof window !== 'undefined') {
   const workerVersion = pdfjs.version || '5.3.31';
