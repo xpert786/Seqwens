@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
 import { getApiBaseUrl } from '../../ClientOnboarding/utils/corsConfig';
+import '../style/EditSubscriptionPlan.css';
 
 export default function EditSubscriptionPlan({ planType, onClose }) {
   const plans = ['Solo', 'Team', 'Professional', 'Enterprise'];
@@ -156,14 +157,14 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
   };
 
   return (
-    <div className="w-full h-full p-3 ">
-      <div className="rounded-lg  w-full max-w-6xl mx-auto">
+    <div className="w-full h-full lg:p-3 md:p-2 sm:p-1 edit-plan-page">
+      <div className="rounded-lg w-full max-w-6xl mx-auto edit-plan-container">
         {/* Header */}
-        <div className="p-6">
+        <div className="p-6 edit-plan-header">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-2 text-sm text-[#3B4A66] hover:underline focus:outline-none"
+            className="inline-flex items-center gap-2 text-sm text-[#3B4A66] hover:underline focus:outline-none edit-plan-back"
           >
             ← Back to Subscription Plans
           </button>
@@ -174,8 +175,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
         </div>
 
         {/* Plan Tabs */}
-        <div className="p-6">
-          <div className="flex gap-2 mb-6 bg-white p-2 w-fit" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+        <div className="lg:p-6 md:p-4 sm:p-2 edit-plan-tabs-wrap">
+          <div className="flex gap-2 mb-6 bg-white p-2 w-fit edit-plan-tabs" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
             {plans.map((plan) => (
               <button
                 key={plan}
@@ -197,13 +198,13 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           </div>
 
           {/* Content Sections */}
-          <div className="space-y-6 p-1">
+          <div className="space-y-6 p-1 edit-plan-content">
             {/* First Row - Pricing and Limits in 2 columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 edit-plan-row">
               {/* Pricing Section */}
               <div className="p-4 bg-white h-fit" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
                 <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Pricing</h3>
-                <div className="space-y-4 flex flex-row gap-4">
+                <div className="space-y-4 flex flex-row gap-4 edit-plan-inline">
                   <div>
                     <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Monthly Price ($)</label>
                     <input
@@ -274,7 +275,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               {/* Limits & Features Section */}
               <div className="p-3 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}>
                 <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Limits & Features</h3>
-                <div className="space-y-4 flex flex-row gap-4">
+                <div className="space-y-4 flex flex-row gap-4 edit-plan-inline">
                   <div>
                     <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Max Users</label>
                     <input
@@ -347,7 +348,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
 
                   </div>
                 </div>
-                <div className='space-y-4 flex flex-row gap-4 w-fit'>
+                <div className='space-y-4 flex flex-row gap-4 w-fit edit-plan-inline'>
                   <div>
                     <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Storage (GB)</label>
                     <input
@@ -394,7 +395,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
 
             {/* Features List Section - Full Width */}
             <div className="p-6 bg-white" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start edit-plan-actions">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-4" style={{ color: '#3B4A66' }}>Features List</h3>
                   <ul className="space-y-2">
@@ -406,7 +407,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     ))}
                   </ul>
                 </div>
-                <div className="flex gap-3 ml-6">
+                <div className="flex gap-3 ml-6 edit-plan-action-buttons">
                   <button
                     onClick={onClose}
                     className="px-4 py-2 transition-colors"

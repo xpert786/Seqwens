@@ -6,7 +6,7 @@ import SystemHealth from "./SystemHealth";
 import PlatformControl from "./PlatformControl";
 import LogsAndBackups from "./LogsAndBackups";
 import ArchivedMonitoring from "./ArchivedMonitoring";          
-
+import "../../style/AccountSetting.css"
 export default function AccountSettings() {
     const [activeTab, setActiveTab] = useState("profile");
 
@@ -20,11 +20,11 @@ export default function AccountSettings() {
     ];
 
     return (
-        <div className="container-fluid px-4">
+        <div className="container-fluid px-4 account-settings">
 
-            <div className="align-items-center mb-3">
+            <div className="align-items-center mb-3 account-header">
                 <h5
-                    className="mb-0 me-3"
+                    className="mb-0 me-3 account-title"
                     style={{
                         color: "#3B4A66",
                         fontSize: "28px",
@@ -35,7 +35,7 @@ export default function AccountSettings() {
                     Account Settings
                 </h5>
                 <p
-                    className="mb-0"
+                    className="mb-0 account-subtitle"
                     style={{
                         color: "#4B5563",
                         fontSize: "16px",
@@ -48,7 +48,7 @@ export default function AccountSettings() {
             </div>
 
             <div
-                className="d-inline-block mb-4"
+                className="d-inline-block mb-4 account-tabs"
                 style={{
                     padding: "10px 12px",
                     borderRadius: "12px",
@@ -60,7 +60,7 @@ export default function AccountSettings() {
                 }}
             >
                 <ul
-                    className="d-flex gap-2 mb-0"
+                    className="d-flex gap-2 mb-0 account-tabs-list"
                     style={{ listStyle: "none", padding: 0, margin: 0 }}
                 >
                     {tabs.map((tab) => (

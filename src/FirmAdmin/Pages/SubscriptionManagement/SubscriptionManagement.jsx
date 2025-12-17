@@ -16,6 +16,7 @@ import EnterpriseCostAllocation from './Enterprise/EnterpriseCostAllocation';
 import EnterpriseContracts from './Enterprise/EnterpriseContracts';
 import UpgradePlanModal from './UpgradePlanModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import './SubscriptionManagement.css';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -537,7 +538,7 @@ const SubscriptionManagement = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F3F7FF] p-4 sm:p-6">
+        <div className="min-h-screen bg-[#F3F7FF] lg:p-4 sm:p-2">
             <div className="mx-auto">
                 {/* Header Section */}
                 <div className="mb-6">
@@ -561,13 +562,13 @@ const SubscriptionManagement = () => {
 
                     {/* Navigation Tabs */}
                     <div className="mb-6">
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-1.5 sm:p-2 w-fit">
-                            <div className="flex gap-2 sm:gap-3 overflow-x-auto">
+                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-1.5 sm:p-2 w-fit subscription-tabs-wrapper">
+                            <div className="flex gap-2 sm:gap-3 overflow-x-auto subscription-tabs-scroll">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
-                                        className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg whitespace-nowrap ${activeTab === tab
+                                        className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg whitespace-nowrap subscription-tab-btn ${activeTab === tab
                                             ? 'bg-[#3AD6F2] !text-white font-semibold'
                                             : 'bg-transparent !text-black hover:bg-gray-50'
                                             }`}
@@ -798,7 +799,7 @@ const SubscriptionManagement = () => {
                         </div>
 
                         {/* Payment Methods Section */}
-                        <div className="mb-6 !bg-white rounded-lg p-4 sm:p-6">
+                        <div className="mb-6 !bg-white rounded-lg lg:p-4 sm:p-2">
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                                 <div>
                                     <h5 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 font-[BasisGrotesquePro]">Payment Methods</h5>

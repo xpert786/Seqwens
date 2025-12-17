@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import '../style/FirmManagement.css';
 
 export default function FirmManagement() {
     const PAGE_SIZE = 5;
@@ -615,7 +616,7 @@ export default function FirmManagement() {
     };
 
     return (
-        <div className="min-h-screen bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
+        <div className="min-h-screen bg-[rgb(243,247,255)] lg:px-4 md:px-2 sm-px-1 lg:py-6 sm:py-2 md:px-6">
             {/* Hidden PDF Content */}
             <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
                 <div style={{ marginBottom: '20px' }}>
@@ -668,16 +669,16 @@ export default function FirmManagement() {
                     </tbody>
                 </table>
             </div>
-            <div className="mx-auto flex w-full flex-col gap-6">
+            <div className="mx-auto flex w-full flex-col gap-6 firmmgmt-page">
                 {/* Header Section with Action Buttons */}
-                <div className="flex flex-col items-start justify-between gap-3 rounded-2xl  px-6 py-5 sm:flex-row sm:items-center">
+                <div className="flex flex-col items-start justify-between gap-3 rounded-2xl  px-6 py-5 sm:flex-row sm:items-center firmmgmt-header">
                     <div className="space-y-1">
                         <h3 className="text-3xl font-bold text-gray-900">Firm Management</h3>
                         <p className="text-sm text-gray-500">Manage all firms registered on the platform</p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 firmmgmt-actions">
                         <button
                             onClick={handleExportReport}
                             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -703,9 +704,9 @@ export default function FirmManagement() {
 
                 {/* Search and Filter Section */}
                 <div className=" rounded-lg mb-6  ">
-                    <div className="flex flex-col lg:flex-row gap-2">
+                    <div className="flex flex-col lg:flex-row gap-2 firmmgmt-search-row">
                         {/* Search Bar */}
-                        <div className=" relative  w-[300px]">
+                        <div className=" relative  w-[300px] firmmgmt-search">
                             <div className="absolute inset-y-0 left-0 pl-3 pb-2     flex items-center pointer-events-none">
                                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -721,7 +722,7 @@ export default function FirmManagement() {
                         </div>
 
                         {/* Status Filter */}
-                        <div className="w-fit">
+                        <div className="w-fit firmmgmt-filter">
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -766,10 +767,10 @@ export default function FirmManagement() {
                 )}
 
                 {/* Firms List Section */}
-                <div className="bg-white rounded-lg border-1  border-[#E8F0FF]">
+                <div className="bg-white rounded-lg border-1  border-[#E8F0FF] firmmgmt-table-card">
                     {/* List Header */}
                     <div className="p-6 ">
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="flex justify-between items-start mb-2 firmmgmt-table-card-header">
                             <div>
                                 <h4 className="text-md font-bold text-gray-800 mb-2">
                                     Firms
@@ -781,7 +782,7 @@ export default function FirmManagement() {
                             {totalFirmCards > FIRM_CARDS_PER_PAGE && (
                                 <button
                                     onClick={handleViewAllFirmCards}
-                                    className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                                    className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors firmmgmt-view-toggle"
                                     style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
                                 >
                                     {showAllFirmCards ? 'Show Less' : 'View All'}
@@ -791,8 +792,8 @@ export default function FirmManagement() {
                     </div>
 
                     {/* Table Headers */}
-                    <div className="px-3 py-3">
-                        <div className="grid grid-cols-12 gap-4 items-center text-sm font-semibold text-[#4B5563]">
+                    <div className="px-3 py-3 firmmgmt-table-header">
+                        <div className="grid grid-cols-12 gap-4 items-center text-sm font-semibold text-[#4B5563] firmmgmt-table-header-grid">
                             <div className="col-span-3">Firm</div>
                             <div className="col-span-2">Plan</div>
                             <div className="col-span-2">Status</div>
@@ -815,10 +816,10 @@ export default function FirmManagement() {
 
                     {/* Firm Entries */}
                     {!loading && (
-                        <div className="divide-y divide-gray-200">
+                        <div className="divide-y divide-gray-200 firmmgmt-table-list">
                             {displayedFirmCards.length > 0 ? displayedFirmCards.map((firm) => (
-                                <div key={firm.id} className="pr-1 pl-3 py-3 transition-colors border-1 border-[#E8F0FF] m-2" style={{ borderRadius: '7px' }}>
-                                    <div className="grid grid-cols-12 gap-4 items-center">
+                                <div key={firm.id} className="pr-1 pl-3 py-3 transition-colors border-1 border-[#E8F0FF] m-2 firmmgmt-table-row" style={{ borderRadius: '7px' }}>
+                                    <div className="grid grid-cols-12 gap-4 items-center firmmgmt-table-row-grid">
                                         {/* Firm Column */}
                                         <div className="col-span-3">
                                             <button
@@ -933,16 +934,16 @@ export default function FirmManagement() {
 
                     {/* Client-side Pagination Controls */}
                     {shouldShowFirmCardsPagination && (
-                        <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF]">
+                        <div className="flex items-center justify-between px-4 py-3 border-t border-[#E8F0FF] firmmgmt-pagination">
                             <button
                                 onClick={() => handleFirmCardsPageChange(firmCardsCurrentPage - 1)}
                                 disabled={firmCardsCurrentPage === 1}
-                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors firmmgmt-pagination-btn"
                                 style={{ borderRadius: '8px' }}
                             >
                                 Previous
                             </button>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 firmmgmt-pagination-info">
                                 <span className="text-sm text-gray-600">
                                     Page {firmCardsCurrentPage} of {totalFirmCardsPages}
                                 </span>
@@ -950,7 +951,7 @@ export default function FirmManagement() {
                             <button
                                 onClick={() => handleFirmCardsPageChange(firmCardsCurrentPage + 1)}
                                 disabled={firmCardsCurrentPage === totalFirmCardsPages}
-                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-[#E8F0FF] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors firmmgmt-pagination-btn"
                                 style={{ borderRadius: '8px' }}
                             >
                                 Next

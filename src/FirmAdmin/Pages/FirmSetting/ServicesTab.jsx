@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { firmAdminSettingsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import './ServicesTab.css';
 
 export default function ServicesTab() {
   const [services, setServices] = useState([]);
@@ -147,14 +148,14 @@ export default function ServicesTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 services-tab-container">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
       {/* Service Pricing Section */}
-      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF]">
+      <div className="bg-white rounded-2xl p-6 !border border-[#E8F0FF] service-card">
         <div className="mb-5">
           <h5 className="text-lg font-semibold text-[#1F2A55] font-[BasisGrotesquePro] mb-1">
             Service Pricing
@@ -166,9 +167,12 @@ export default function ServicesTab() {
 
         <div className="space-y-4">
           {services.map((service) => (
-            <div key={service.name} className="flex items-center justify-between p-4 !border border-[#E8F0FF] rounded-lg">
-              <div className="flex items-center gap-4 flex-1">
-                <label className="relative inline-flex cursor-pointer items-center flex-shrink-0">
+            <div
+              key={service.name}
+              className="flex items-center justify-between p-4 !border border-[#E8F0FF] rounded-lg service-item"
+            >
+              <div className="flex items-center gap-4 flex-1 service-item-inner">
+                <label className="relative inline-flex cursor-pointer items-center flex-shrink-0 service-item-toggle">
                   <input
                     type="checkbox"
                     className="peer sr-only"
@@ -192,7 +196,7 @@ export default function ServicesTab() {
                   </p>
                 </div>
                 {editingService === service.name ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 service-item-actions">
                     <input
                       type="number"
                       value={editPrice}
@@ -217,7 +221,7 @@ export default function ServicesTab() {
                     </button>
                   </div>
                 ) : (
-                  <>
+                  <div className="flex items-center gap-3 service-item-actions">
                     <div className="text-sm font-medium text-[#1F2A55] font-[BasisGrotesquePro]">
                       ${service.base_price?.toFixed(2) || '0.00'}<br />Base price
                     </div>
@@ -227,7 +231,7 @@ export default function ServicesTab() {
                     >
                       Edit
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
@@ -285,7 +289,7 @@ export default function ServicesTab() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end services-save-container">
         <button 
           onClick={handleSave}
           disabled={saving}
@@ -306,7 +310,7 @@ export default function ServicesTab() {
           )}
         </button>
       </div>
-    </div>
+    </div>  
   );
 }
 

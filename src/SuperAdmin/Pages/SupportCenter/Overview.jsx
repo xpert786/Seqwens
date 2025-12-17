@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TicketDetail from "./TicketDetail";
+import "../../style/SupportCenter.css";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -1000,10 +1001,10 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
             </div>
 
             {/* Support Tickets Section */}
-            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
+            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 support-tickets-card">
                 {/* Header */}
                 <div className="mb-6">
-                    <div className="flex justify-between items-start mb-1">
+                    <div className="flex justify-between items-start mb-1 support-tickets-header">
                         <div>
                             <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro] mb-1">
                                 Support Tickets ({tickets.length})
@@ -1015,7 +1016,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                         {totalTicketCards > TICKET_CARDS_PER_PAGE && (
                             <button
                                 onClick={handleViewAllTicketCards}
-                                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors"
+                                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors support-tickets-view-toggle"
                                 style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
                             >
                                 {showAllTicketCards ? 'Show Less' : 'View All'}
@@ -1025,7 +1026,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 </div>
 
                 {/* Category Filters */}
-                <div className="flex space-x-2 mb-4 border border-[#E8F0FF] rounded-lg p-2 w-fit">
+                <div className="flex space-x-2 mb-4 border border-[#E8F0FF] rounded-lg p-2 w-fit support-tickets-categories">
                     {categories.map((category) => (
                         <button
                             key={category.id}
@@ -1043,9 +1044,9 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                 </div>
 
                 {/* Search and Filter Bar */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex flex-col md:flex-row gap-4 mb-6 support-tickets-search-row">
                     {/* Search */}
-                    <div className="relative flex-1 w-[10%]">
+                    <div className="relative flex-1 w-[10%] support-tickets-search">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1061,7 +1062,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                     </div>
 
                     {/* Filters */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 support-tickets-filters">
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
@@ -1102,9 +1103,9 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
 
                 {/* Tickets Table */}
                 {!loading && !error && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 support-tickets-table">
                         {/* Header Row */}
-                        <div className="grid grid-cols-8 gap-4 py-3 px-4 bg-gray-50 rounded-lg">
+                        <div className="grid grid-cols-8 gap-4 py-3 px-4 bg-gray-50 rounded-lg support-tickets-header-row">
                             <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Ticket ID</div>
                             <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Subject</div>
                             <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Firm</div>
@@ -1126,7 +1127,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                         {displayedTicketCards.map((ticket) => (
                             <div
                                 key={ticket.id}
-                                className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-shadow focus-within:ring-2 focus-within:ring-[#3B4A66]/40 focus-within:ring-offset-2"
+                                className="grid grid-cols-8 gap-4 py-4 px-4 border border-[#E8F0FF] rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-shadow focus-within:ring-2 focus-within:ring-[#3B4A66]/40 focus-within:ring-offset-2 support-tickets-row-grid"
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => handleViewDetails(ticket.id || ticket.ticket_number)}
