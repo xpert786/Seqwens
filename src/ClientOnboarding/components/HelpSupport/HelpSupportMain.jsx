@@ -3,7 +3,7 @@ import Faq from "./Faq";
 import ContactSupport from "./ContactSupport";
 import MyTickets from "./MyTickets";
 import Resources from "./Resources";
-
+import '../../styles/HelpSuportMain.css';
 export default function HelpSupport() {
   const [activeTab, setActiveTab] = useState("faq");
 
@@ -15,7 +15,7 @@ export default function HelpSupport() {
   ];
 
   return (
-    <div className="container-fluid px-4">
+    <div className="container-fluid lg:px-4 md:px-2 px-1 help-support-page">
       <div className="align-items-center mb-3">
         <h5
           className="mb-0 me-3"
@@ -42,7 +42,7 @@ export default function HelpSupport() {
       </div>
 
       <div
-        className="d-inline-block mb-4"
+        className="d-inline-block mb-4 help-tabs"
         style={{
           padding: "10px 12px",
           border: "1px solid #E8F0FF",
@@ -106,7 +106,7 @@ export default function HelpSupport() {
             }}
           >
             <div
-              className="card-body"
+              className="card-body help-card-body"
               style={{
                 marginRight: "2px",
                 marginBottom: "30px",

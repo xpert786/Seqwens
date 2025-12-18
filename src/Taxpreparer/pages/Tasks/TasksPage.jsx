@@ -1515,7 +1515,7 @@ export default function TasksPage() {
 
       {/* Add Task Modal */}
       {showAddTaskModal && (
-        <div className="modal" style={{
+        <div className="modal task-modal-mobile" style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -2151,7 +2151,7 @@ export default function TasksPage() {
                 </div>
 
                 {/* Priority, Due Date, and Estimated Hours in one row */}
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                <div className="task-modal-row" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                   {/* Priority */}
                   <div style={{ flex: 1 }}>
                     <label style={{
@@ -2303,7 +2303,7 @@ export default function TasksPage() {
             </div>
 
             {/* Footer */}
-            <div style={{
+            <div className="task-modal-footer" style={{
               padding: '16px 24px',
               borderTop: '1px solid #E8F0FF',
               display: 'flex',

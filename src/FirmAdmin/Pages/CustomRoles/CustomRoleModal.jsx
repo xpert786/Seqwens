@@ -378,7 +378,7 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 rounded-lg border-0"
+              className="px-4 py-2 rounded-lg border-0 rounded-lg"
               style={{
                 backgroundColor: '#F3F4F6',
                 color: '#374151',

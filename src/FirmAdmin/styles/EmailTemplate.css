@@ -1,0 +1,53 @@
+@media (max-width: 767px) {
+
+    /* Center from top instead of vertical center */
+    .send-email-modal {
+      align-items: flex-start;
+      padding: 12px !important;
+    }
+  
+    /* Full width modal */
+    .send-email-modal-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 100vh !important;
+      border-radius: 12px;
+      padding: 16px !important;
+    }
+  
+    /* Reduce heading size */
+    .send-email-modal-box h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+  
+    /* Force grid fields to stack */
+    .send-email-modal-box .md\:grid-cols-2 {
+      grid-template-columns: 1fr !important;
+    }
+  
+    /* Textarea height adjustment */
+    .send-email-modal-box textarea {
+      height: 120px;
+    }
+  
+    /* Variable cards spacing */
+    .send-email-modal-box .space-y-2 > div {
+      padding: 12px;
+    }
+  
+    /* Footer buttons full width */
+    .send-email-footer {
+      flex-direction: column !important;
+    }
+  
+    .send-email-footer button {
+      width: 100%;
+    }
+  
+    /* Improve tap size */
+    .send-email-modal-box button {
+      min-height: 44px;
+    }
+  }
+  

@@ -12,6 +12,7 @@ import Pagination from "../components/Pagination";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import "../styles/Icon.css"
 import "../styles/fonts.css"
+import "../styles/Appointment.css";
 export default function Appointments() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -852,11 +853,11 @@ export default function Appointments() {
   }, [appointments.past.length]);
 
   return (
-    <div className="px-4" >
+    <div className="lg:px-4 md:px-2 px-1 appointments-header-wrapper" >
 
-      <div className="d-flex justify-content-between align-items-center mb-2">
+      <div className="d-flex justify-content-between align-items-center mb-2 appointments-header">
 
-        <div className="align-items-center mb-3 ">
+        <div className="align-items-center mb-3 appointments-title">
           <h5
             className="mb-0 me-3"
             style={{
@@ -922,8 +923,8 @@ export default function Appointments() {
 
       {/* Stats - Only show when not loading */}
       {!loading && (
-        <div className="d-flex gap-3 mb-4">
-          <div className="bg-white rounded shadow-sm p-3 flex-grow-1">
+        <div className="d-flex gap-3 mb-4 appointment-stats">
+          <div className="bg-white rounded shadow-sm p-3 flex-grow-1 appointment-stat-card">
             <div className="d-flex justify-content-between align-items-center mb-1">
               <small style={{ color: "#4B5563", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }} >Next Appointment</small>
               <AppoinIcon style={{ width: "18px", height: "18px", color: "#3B4A66" }} />
@@ -976,9 +977,9 @@ export default function Appointments() {
 
       {/* Appointment Lists - Only show when not loading */}
       {!loading && (
-        <div className="d-flex gap-4 flex-wrap align-items-start">
+        <div className="d-flex gap-4 flex-wrap align-items-start appointments-lists">
 
-          <div className="bg-white rounded shadow-sm p-3 flex-grow-1" style={{ minWidth: "350px" }}>
+          <div className="bg-white rounded shadow-sm p-3 flex-grow-1 upcoming-appointments-box" style={{ minWidth: "350px" }}>
 
             <div className="align-items-center mb-3 ">
               <h5
@@ -1170,7 +1171,7 @@ export default function Appointments() {
 
 
           {/* Past */}
-          <div className="bg-white rounded shadow-sm p-3" style={{ minWidth: "350px", alignSelf: "flex-start" }}>
+          <div className="bg-white rounded shadow-sm p-3 past-appointments-box" style={{ minWidth: "350px", alignSelf: "flex-start" }}>
 
             <div className="align-items-center mb-3 ">
               <h5
@@ -1209,7 +1210,7 @@ export default function Appointments() {
                   {paginatedPast.length > 0 ? paginatedPast.map((appt) => (
                     <div
                       key={appt.id}
-                      className="border rounded p-3 mb-3"
+                      className="border rounded p-3 mb-3 appointment-card"
                       onClick={() => setSelectedAppointmentId(appt.id)}
                       style={{
                         cursor: "pointer",

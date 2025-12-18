@@ -6,6 +6,7 @@ import { ViewIcon, DownloadIcon, PrintIcon, CrossIcon } from "../icons";
 import { taxpayerFirmAPI, paymentsAPI, handleAPIError } from "../../utils/apiUtils";
 import { toast } from "react-toastify";
 import "../../styles/Login.css";
+import "../../styles/PaymentHistoryTab.css";
 
 const InvoicePopupWithPDF = ({ payments = [] }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -137,7 +138,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
           return (
           <div
             key={invoice.id || originalIndex}
-            className="border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center position-relative"
+            className="border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center position-relative paid-invoice-card"
             style={{
               cursor: 'pointer',
               backgroundColor: selectedIndex === originalIndex ? '#FFF4E6' : '#ffffff',
