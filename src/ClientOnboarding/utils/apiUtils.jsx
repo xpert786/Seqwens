@@ -4543,17 +4543,20 @@ export const signatureRequestsAPI = {
 export const signWellAPI = {
   // Extract signature fields from PDF
   extractFields: async (data) => {
-    const { document_id, pdf_path } = data;
+    const { document_id, pdf_path, esign_id } = data;
     
-    if (!document_id && !pdf_path) {
-      throw new Error('Either document_id or pdf_path is required');
+    if (!document_id && !pdf_path && !esign_id) {
+      throw new Error('Either document_id, pdf_path, or esign_id is required');
     }
     
     const requestBody = {};
-    if (document_id) {
-      requestBody.document_id = document_id;
-    } else if (pdf_path) {
+    // Priority: pdf_path > esign_id > document_id
+    if (pdf_path) {
       requestBody.pdf_path = pdf_path;
+    } else if (esign_id) {
+      requestBody.esign_id = esign_id;
+    } else if (document_id) {
+      requestBody.document_id = document_id;
     }
     
     return await apiRequest('/taxpayer/signwell/extract-fields/', 'POST', requestBody);
