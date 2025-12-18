@@ -516,7 +516,7 @@
 @media (max-height: 800px) {
   .login-card {
 
-    padding: 30px 60px !important;
+    /* padding: 30px 60px !important; */
     min-height: 450px !important;
 
   }
