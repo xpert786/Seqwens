@@ -603,6 +603,92 @@ export const handleAPIError = (error) => {
     console.log('Could not parse error message as JSON:', errorMessage);
   }
 
+  // Extract clean error messages from ErrorDetail structures
+  // Handle formats like: "An error occurred: {'has_spouse': ErrorDetail(string='Spouse details not found for taxpayer.', code='invalid')}"
+  if (typeof errorMessage === 'string' && errorMessage.includes('ErrorDetail')) {
+    try {
+      // Extract string values from ErrorDetail objects
+      // Match pattern: ErrorDetail(string='message', code='...')
+      const errorDetailMatches = errorMessage.match(/ErrorDetail\(string=['"]([^'"]+)['"]/g);
+      if (errorDetailMatches && errorDetailMatches.length > 0) {
+        // Extract all error messages
+        const errorMessages = errorDetailMatches.map(match => {
+          const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
+          return stringMatch ? stringMatch[1] : null;
+        }).filter(Boolean);
+        
+        if (errorMessages.length > 0) {
+          errorMessage = errorMessages.join('. ');
+        }
+      }
+    } catch (parseError) {
+      // If parsing fails, try to extract a simpler version
+      console.log('Could not parse ErrorDetail structure:', errorMessage);
+    }
+  }
+  
+  // Also handle error.response.data structure (from API responses)
+  if (error.response?.data) {
+    const errorData = error.response.data;
+    
+    // Check if message contains ErrorDetail structure
+    if (errorData.message && typeof errorData.message === 'string' && errorData.message.includes('ErrorDetail')) {
+      try {
+        const errorDetailMatches = errorData.message.match(/ErrorDetail\(string=['"]([^'"]+)['"]/g);
+        if (errorDetailMatches && errorDetailMatches.length > 0) {
+          const errorMessages = errorDetailMatches.map(match => {
+            const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
+            return stringMatch ? stringMatch[1] : null;
+          }).filter(Boolean);
+          
+          if (errorMessages.length > 0) {
+            errorMessage = errorMessages.join('. ');
+          }
+        }
+      } catch (parseError) {
+        console.log('Could not parse ErrorDetail from response data:', errorData.message);
+      }
+    }
+    
+    // Handle errors object with ErrorDetail structures
+    if (errorData.errors && typeof errorData.errors === 'object') {
+      try {
+        const cleanErrors = [];
+        Object.entries(errorData.errors).forEach(([field, errorValue]) => {
+          if (typeof errorValue === 'string' && errorValue.includes('ErrorDetail')) {
+            const stringMatch = errorValue.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+            if (stringMatch) {
+              cleanErrors.push(stringMatch[1]);
+            } else {
+              cleanErrors.push(errorValue);
+            }
+          } else if (Array.isArray(errorValue)) {
+            errorValue.forEach(err => {
+              if (typeof err === 'string' && err.includes('ErrorDetail')) {
+                const stringMatch = err.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+                if (stringMatch) {
+                  cleanErrors.push(stringMatch[1]);
+                } else {
+                  cleanErrors.push(err);
+                }
+              } else if (typeof err === 'string') {
+                cleanErrors.push(err);
+              }
+            });
+          } else if (typeof errorValue === 'string') {
+            cleanErrors.push(errorValue);
+          }
+        });
+        
+        if (cleanErrors.length > 0) {
+          errorMessage = cleanErrors.join('. ');
+        }
+      } catch (parseError) {
+        console.log('Could not parse errors object:', errorData.errors);
+      }
+    }
+  }
+
   // Handle email template errors with user-friendly messages
   const lowerErrorMessage = errorMessage.toLowerCase();
   if (lowerErrorMessage.includes('no active template') || 
@@ -4043,7 +4129,7 @@ export const taxPreparerClientAPI = {
   // Create e-signature request
   // POST /api/taxpayer/esign/create/
   createESignRequest: async (data) => {
-    const { taxpayer_id, has_spouse, file, folder_id, deadline } = data;
+    const { taxpayer_id, has_spouse, preparer_must_sign, file, folder_id, deadline } = data;
     
     if (!taxpayer_id) {
       throw new Error('taxpayer_id is required');
@@ -4060,6 +4146,7 @@ export const taxPreparerClientAPI = {
     const formData = new FormData();
     formData.append('taxpayer_id', taxpayer_id.toString());
     formData.append('has_spouse', has_spouse ? 'true' : 'false');
+    formData.append('preparer_must_sign', preparer_must_sign !== undefined ? (preparer_must_sign ? 'true' : 'false') : 'true');
     formData.append('file', file);
     
     if (folder_id) {
@@ -4084,7 +4171,66 @@ export const taxPreparerClientAPI = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      
+      // Extract clean error message from ErrorDetail structures
+      let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
+      
+      // Handle ErrorDetail structures in message
+      if (typeof errorMessage === 'string' && errorMessage.includes('ErrorDetail')) {
+        try {
+          const errorDetailMatches = errorMessage.match(/ErrorDetail\(string=['"]([^'"]+)['"]/g);
+          if (errorDetailMatches && errorDetailMatches.length > 0) {
+            const errorMessages = errorDetailMatches.map(match => {
+              const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
+              return stringMatch ? stringMatch[1] : null;
+            }).filter(Boolean);
+            
+            if (errorMessages.length > 0) {
+              errorMessage = errorMessages.join('. ');
+            }
+          }
+        } catch (parseError) {
+          console.log('Could not parse ErrorDetail structure:', errorMessage);
+        }
+      }
+      
+      // Handle errors object with ErrorDetail structures
+      if (errorData.errors && typeof errorData.errors === 'object') {
+        try {
+          const cleanErrors = [];
+          Object.entries(errorData.errors).forEach(([field, errorValue]) => {
+            if (typeof errorValue === 'string' && errorValue.includes('ErrorDetail')) {
+              const stringMatch = errorValue.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+              if (stringMatch) {
+                cleanErrors.push(stringMatch[1]);
+              }
+            } else if (Array.isArray(errorValue)) {
+              errorValue.forEach(err => {
+                if (typeof err === 'string' && err.includes('ErrorDetail')) {
+                  const stringMatch = err.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+                  if (stringMatch) {
+                    cleanErrors.push(stringMatch[1]);
+                  } else if (typeof err === 'string') {
+                    cleanErrors.push(err);
+                  }
+                } else if (typeof err === 'string') {
+                  cleanErrors.push(err);
+                }
+              });
+            } else if (typeof errorValue === 'string') {
+              cleanErrors.push(errorValue);
+            }
+          });
+          
+          if (cleanErrors.length > 0) {
+            errorMessage = cleanErrors.join('. ');
+          }
+        } catch (parseError) {
+          console.log('Could not parse errors object:', errorData.errors);
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
 
     return await response.json();
@@ -4595,17 +4741,23 @@ export const paymentsAPI = {
 export const signatureRequestsAPI = {
   // Get all signature requests for the current taxpayer
   getSignatureRequests: async (options = {}) => {
-    const { status = null, activeOnly = false, expiredOnly = false } = options;
+    const { filter = null, status = null, activeOnly = false, expiredOnly = false } = options;
     const params = new URLSearchParams();
 
-    if (status) {
-      params.append('status', status);
-    }
-    if (activeOnly) {
-      params.append('active_only', 'true');
-    }
-    if (expiredOnly) {
-      params.append('expired_only', 'true');
+    // Use new filter parameter if provided, otherwise fall back to old parameters for backward compatibility
+    if (filter) {
+      params.append('filter', filter);
+    } else {
+      // Legacy support for old parameters
+      if (status) {
+        params.append('status', status);
+      }
+      if (activeOnly) {
+        params.append('active_only', 'true');
+      }
+      if (expiredOnly) {
+        params.append('expired_only', 'true');
+      }
     }
 
     const queryString = params.toString();
@@ -4633,6 +4785,14 @@ export const signatureRequestsAPI = {
   // Get expired signature requests
   getExpiredSignatureRequests: async () => {
     return await apiRequest('/taxpayer/signatures/requests/?expired_only=true', 'GET');
+  },
+
+  // Poll e-signature document status
+  pollESignStatus: async (esignDocumentId) => {
+    if (!esignDocumentId) {
+      throw new Error('esign_document_id is required');
+    }
+    return await apiRequest(`/taxpayer/esign/poll-status/${esignDocumentId}/`, 'POST');
   },
 
   // Submit signature request

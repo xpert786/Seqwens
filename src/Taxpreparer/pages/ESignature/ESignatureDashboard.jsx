@@ -27,6 +27,7 @@ export default function ESignatureDashboard() {
   const [creating, setCreating] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [hasSpouse, setHasSpouse] = useState(false);
+  const [preparerMustSign, setPreparerMustSign] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [deadline, setDeadline] = useState('');
@@ -216,11 +217,114 @@ export default function ESignatureDashboard() {
     }
   };
 
-  const handleViewDetails = (request) => {
-    // Navigate to client details with e-sign logs
-    if (request.client_id || request.client?.id) {
-      const clientId = request.client_id || request.client.id;
-      navigate(`/taxdashboard/clients/${clientId}/esign-logs`);
+  const handleViewDetails = (request, e) => {
+    // Check if preparer needs to sign
+    if (request.preparer_must_sign === true && request.preparer_needs_to_sign === true && request.embedded_url) {
+      e?.stopPropagation();
+      // Open SignWell in a new window/tab (cannot use iframe due to X-Frame-Options)
+      const signWellWindow = window.open(request.embedded_url, '_blank', 'width=1200,height=800');
+      
+      if (signWellWindow) {
+        // Show a toast notification
+        toast.info('Opening SignWell signing page in a new window. Please sign the document there.', {
+          autoClose: 5000,
+          position: "top-right"
+        });
+        
+        // Poll for status updates using the polling endpoint
+        const esignDocumentId = request.id || request.esign_id || request.document;
+        console.log('Starting polling for e-sign document:', esignDocumentId, request);
+        if (esignDocumentId) {
+          // Declare pollInterval variable first
+          let pollInterval = null;
+          
+          // Start polling immediately, then continue every 10 seconds
+          const pollStatus = async () => {
+            try {
+              console.log('Polling e-sign status for document:', esignDocumentId);
+              const pollResponse = await signatureRequestsAPI.pollESignStatus(esignDocumentId);
+              console.log('Poll response:', pollResponse);
+              if (pollResponse.success && pollResponse.data) {
+                // Update the request status if it changed
+                setSignatureRequests(prevRequests => 
+                  prevRequests.map(req => 
+                    req.id === esignDocumentId 
+                      ? { ...req, ...pollResponse.data }
+                      : req
+                  )
+                );
+                
+                // If document is completed/signed, stop polling and refresh full list
+                if (pollResponse.data.status === 'signed' || 
+                    pollResponse.data.status === 'completed' ||
+                    pollResponse.data.status === 'cancelled') {
+                  if (pollInterval) {
+                    clearInterval(pollInterval);
+                  }
+                  if (signWellWindow.closed) {
+                    setTimeout(() => fetchSignatureRequests(), 1000);
+                  } else {
+                    // Refresh full list even if window is still open
+                    fetchSignatureRequests();
+                  }
+                }
+              }
+            } catch (pollError) {
+              console.error('Error polling e-sign status:', pollError);
+              // Continue polling even if one request fails
+            }
+          };
+          
+          // Start polling immediately
+          pollStatus();
+          
+          // Then poll every 10 seconds
+          pollInterval = setInterval(pollStatus, 10000);
+          
+          // Stop polling when window is closed
+          const windowCheckInterval = setInterval(() => {
+            if (signWellWindow.closed) {
+              clearInterval(windowCheckInterval);
+              clearInterval(pollInterval);
+              setTimeout(() => fetchSignatureRequests(), 1000);
+            }
+          }, 2000);
+          
+          // Clean up intervals after 5 minutes
+          setTimeout(() => {
+            clearInterval(pollInterval);
+            clearInterval(windowCheckInterval);
+            fetchSignatureRequests();
+          }, 300000);
+        } else {
+          // Fallback: Poll for window closure and refresh
+          const checkInterval = setInterval(() => {
+            if (signWellWindow.closed) {
+              clearInterval(checkInterval);
+              setTimeout(() => {
+                fetchSignatureRequests();
+              }, 1000);
+            }
+          }, 2000);
+          
+          // Also set a timeout to refresh after 30 seconds regardless
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            fetchSignatureRequests();
+          }, 30000);
+        }
+      } else {
+        toast.error('Please allow pop-ups for this site to open the signing page', {
+          autoClose: 5000,
+          position: "top-right"
+        });
+      }
+    } else {
+      // Navigate to client details with e-sign logs
+      if (request.client_id || request.client?.id) {
+        const clientId = request.client_id || request.client.id;
+        navigate(`/taxdashboard/clients/${clientId}/esign-logs`);
+      }
     }
   };
 
@@ -273,6 +377,7 @@ export default function ESignatureDashboard() {
     setShowCreateModal(false);
     setSelectedClient(null);
     setHasSpouse(false);
+    setPreparerMustSign(true);
     setSelectedFile(null);
     setSelectedFolder(null);
     setDeadline('');
@@ -321,6 +426,7 @@ export default function ESignatureDashboard() {
       const requestData = {
         taxpayer_id: selectedClient.id || selectedClient.client_id,
         has_spouse: hasSpouse,
+        preparer_must_sign: preparerMustSign,
         file: selectedFile,
         ...(selectedFolder && { folder_id: selectedFolder.id || selectedFolder.folder_id }),
         ...(deadline && { deadline })
@@ -579,7 +685,7 @@ export default function ESignatureDashboard() {
                 <div
                   key={request.id}
                   className="signature-request-card"
-                  onClick={() => handleViewDetails(request)}
+                  onClick={(e) => handleViewDetails(request, e)}
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="d-flex justify-content-between align-items-start">
@@ -615,6 +721,21 @@ export default function ESignatureDashboard() {
                           {request.description}
                         </p>
                       )}
+                      {request.preparer_must_sign === true && request.preparer_needs_to_sign === true && request.embedded_url && (
+                        <div className="mb-2">
+                          <span style={{ 
+                            color: '#00C0C6', 
+                            fontSize: '13px', 
+                            fontWeight: '500',
+                            backgroundColor: '#E0F7FA',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            display: 'inline-block'
+                          }}>
+                            ⚠️ Preparer signature required - Click to sign
+                          </span>
+                        </div>
+                      )}
                       <div className="d-flex flex-wrap gap-3" style={{ fontSize: '12px', color: '#9CA3AF' }}>
                         <span>
                           Created: {formatDate(request.created_at)}
@@ -645,6 +766,7 @@ export default function ESignatureDashboard() {
           Showing {filteredRequests.length} of {signatureRequests.length} signature request{signatureRequests.length !== 1 ? 's' : ''}
         </div>
       )}
+
 
       {/* Create E-Signature Request Modal */}
       <Modal
@@ -752,6 +874,21 @@ export default function ESignatureDashboard() {
                 />
                 <span style={{ color: '#3B4A66', fontWeight: '500' }}>
                   Client has a spouse (spouse signature required)
+                </span>
+              </label>
+            </div>
+
+            {/* Preparer Must Sign Checkbox */}
+            <div>
+              <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={preparerMustSign}
+                  onChange={(e) => setPreparerMustSign(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{ color: '#3B4A66', fontWeight: '500' }}>
+                  Preparer must sign
                 </span>
               </label>
             </div>
