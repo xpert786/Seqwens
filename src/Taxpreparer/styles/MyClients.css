@@ -317,3 +317,306 @@ span.info-item {
   background-color: var(--Palette2-Gold-200, #FFF4E6);
   border-radius: 10px;
 }
+
+/* Responsive for screens 498px and below */
+@media (max-width: 458px) {
+
+  
+  /* Main header wrapper */
+  .header.d-flex.justify-content-between.align-items-center {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  /* Right-side button wrapper */
+  .header .d-flex.align-items-center.gap-2 {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Make "Create Taxpayer" button full width */
+  .header button.btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  /* Stats Cards - Full width like client list card */
+  .row.g-3.mb-3 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+  }
+
+  .row.g-3.mb-3 > .col-md-3,
+  .row.g-3.mb-3 > .col-sm-6 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 0.75rem;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .stat-card {
+    padding: 12px !important;
+    height: auto !important;
+    min-height: 120px;
+  }
+
+  .stat-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+
+  .stat-count {
+    font-size: 20px !important;
+  }
+
+  .stat-count-wrapper {
+    margin: 6px 0 !important;
+  }
+
+  .stat-card p.small {
+    font-size: 0.75rem !important;
+  }
+
+  /* Search & Filter Section - Full width */
+  .d-flex.align-items-center.gap-2.mb-3.mt-3 {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    margin-top: 1rem !important;
+    width: 100% !important;
+  }
+
+  /* Search Box - Full width - Override inline styles */
+  .position-relative[style*="width"],
+  .position-relative {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+  }
+
+  /* Override inline style on search container */
+  div[style*="width: '260px'"],
+  div[style*="width: \"260px\""] {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-shrink: 1 !important;
+  }
+
+  .form-control.rounded {
+    font-size: 13px !important;
+    height: 36px !important;
+    padding-left: 34px !important;
+    padding-right: 10px !important;
+    padding-top: 8px !important;
+    padding-bottom: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .search-icon {
+    left: 12px !important;
+    top: 11px !important;
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  /* Filter Button - Full width */
+  .filter-dropdown-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .btn.btn-filter {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 36px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-top: 8px !important;
+    padding-bottom: 6px !important;
+    font-size: 13px !important;
+    margin-top: 0 !important;
+  }
+
+  .btn.btn-filter svg,
+  .btn.btn-filter .me-2 {
+    font-size: 13px !important;
+    margin-right: 6px !important;
+  }
+
+  .badge.bg-danger {
+    font-size: 9px !important;
+    padding: 2px 5px !important;
+  }
+
+  /* Filter Dropdown */
+  .filter-dropdown-container {
+    position: relative !important;
+  }
+
+  .filter-dropdown-container .card.shadow-sm {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 8px !important;
+    padding: 10px !important;
+    z-index: 1050 !important;
+  }
+
+  .form-label.small {
+    font-size: 0.8rem !important;
+  }
+
+  .btn.btn-sm {
+    font-size: 0.75rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+
+  .d-flex.flex-column.gap-1 {
+    gap: 0.5rem !important;
+  }
+
+  /* Client List Card */
+  .client-list-card {
+    padding: 12px !important;
+  }
+
+  .client-list-card h6 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .client-list-card > div.mb-3 {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Client Cards Grid */
+  .row.g-3 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .row.g-3 > .col-12,
+  .row.g-3 > .col-md-6 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Individual Client Card */
+  .client-card {
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+
+  /* Client Card Layout */
+  .client-card > .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Left Section */
+  .client-card .d-flex.gap-3 {
+    gap: 0.75rem !important;
+    width: 100%;
+  }
+
+  /* Client Initials */
+  .client-initials {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Client Name */
+  .client-name-button {
+    font-size: 14px !important;
+  }
+
+  /* Client Contact Info */
+  .client-contact-info {
+    flex-direction: column;
+    gap: 4px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .client-email,
+  .client-phone {
+    font-size: 0.75rem !important;
+  }
+
+  .client-phone {
+    gap: 3px !important;
+  }
+
+  .client-phone svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Info Left - Tasks, Documents, Due */
+  .info-left {
+    flex-direction: column;
+    gap: 4px !important;
+    margin-top: 6px !important;
+  }
+
+  .info-item {
+    font-size: 0.7rem !important;
+  }
+
+  /* Right Section - Dot Menu */
+  .info-row {
+    align-self: flex-end !important;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .info-right {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 4px !important;
+  }
+
+  .info-right svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  /* Dot Dropdown */
+  .dot-dropdown {
+    min-width: 160px !important;
+    right: 0 !important;
+    left: auto !important;
+    font-size: 0.8rem;
+    padding: 4px !important;
+  }
+
+  .dot-dropdown li {
+    padding: 5px 10px !important;
+    font-size: 0.8rem;
+  }
+
+  /* Empty State */
+  .text-center.py-5 {
+    padding: 1.5rem 0 !important;
+  }
+
+  .btn.btn-sm {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+}

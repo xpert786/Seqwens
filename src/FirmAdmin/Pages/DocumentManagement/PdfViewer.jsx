@@ -4,7 +4,12 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { PdfCalendarIcon, PdfCheckmarkIcon, PdfDocumentIcon, PdfDocumentIconLight, PdfEditIcon, PdfPaperPlaneIcon, PdfProfileIcon } from '../../Components/icons';
 import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
+
+// Import required CSS for TextLayer and AnnotationLayer
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 // Set up PDF.js worker
 if (typeof window !== 'undefined') {
@@ -40,74 +45,29 @@ export default function PdfViewer() {
   const pdfContainerRef = useRef(null);
   const pageRefs = useRef({});
   
+  // Document data state
+  const [documentData, setDocumentData] = useState(null);
+  const [loadingDocument, setLoadingDocument] = useState(true);
+  const [documentError, setDocumentError] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
+  
+  // Default PDF URL as fallback
+  const DEFAULT_PDF_URL = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
+  
   // Memoize PDF options
   const pdfOptions = useMemo(() => ({
     cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
   }), []);
-
-  // Document data mapping based on documentId - matching FolderContents documents
-  const documentDataMap = {
-    '1': {
-      name: '2023_Tax_Return_John_Smith.Pdf',
-      type: 'Tax Return',
-      status: 'Reviewed',
-      size: '2.4MB',
-      client: 'John Smith',
-      assignedTo: 'Michael Chen',
-      uploadDate: '2024-03-15',
-      version: 'v1.2',
-    },
-    '2': {
-      name: 'W2_Smith_Corp_2023.Pdf',
-      type: 'W-2 Form',
-      status: 'Reviewed',
-      size: '1.2 MB',
-      client: 'Smith Corporation',
-      assignedTo: 'Sarah Martinez',
-      uploadDate: '2024-03-15',
-      version: 'v1.0',
-    },
-    '3': {
-      name: 'Receipt_Office_Supplies.Jpg',
-      type: 'Receipt',
-      status: 'Pending',
-      size: '856 KB',
-      client: 'Wilson Enterprises',
-      assignedTo: 'David Rodriguez',
-      uploadDate: '2024-03-15',
-      version: 'v1.0',
-    },
-    '4': {
-      name: '1099_Davis_Inc_2023.Pdf',
-      type: '1099 Form',
-      status: 'Approved',
-      size: '945 KB',
-      client: 'Davis Inc',
-      assignedTo: 'Lisa Thompson',
-      uploadDate: '2024-03-15',
-      version: 'v1.1',
-    },
-  };
-
-  const documentData = documentDataMap[documentId] || {
-    name: 'Document.pdf',
-    type: 'Document',
-    status: 'Pending',
-    size: '1.0MB',
-    client: 'Client',
-    assignedTo: 'User',
-    uploadDate: '2024-03-15',
-    version: 'v1.0',
-  };
-
-  // Dummy PDF URL - using a sample PDF that can be displayed
-  // In production, this should come from the API based on documentId
-  const pdfUrl = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
   
   // Helper function to convert backend URL to proxy URL if needed
   const getProxyUrl = (url) => {
     if (!url) return url;
+    
+    // Handle relative URLs (start with /)
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
     
     try {
       const urlObj = new URL(url);
@@ -118,40 +78,157 @@ export default function PdfViewer() {
         return `${window.location.origin}${proxyPath}${urlObj.search}`;
       }
     } catch (e) {
-      // If URL parsing fails, return original URL
+      // If URL parsing fails and it's not a relative URL, return original URL
       console.warn('Failed to parse URL:', url, e);
     }
     
     return url;
   };
 
-  // Load PDF file
+  // Format status display
+  const formatStatus = (status) => {
+    if (!status) return 'Pending';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('approved')) return 'Approved';
+    if (statusLower.includes('pending_review')) return 'Pending Review';
+    if (statusLower.includes('reviewed')) return 'Reviewed';
+    if (statusLower.includes('rejected')) return 'Rejected';
+    return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+  };
+
+  // Format file size
+  const formatFileSize = (size) => {
+    if (!size || size === '—') return '—';
+    if (typeof size === 'number') {
+      if (size < 1024) return `${size} B`;
+      if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+    return size;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Fetch document data from API
+  useEffect(() => {
+    const fetchDocumentData = async () => {
+      if (!documentId || !folderId) return;
+
+      try {
+        setLoadingDocument(true);
+        setDocumentError(null);
+
+        // Fetch documents from the folder to get the specific document
+        const response = await firmAdminDocumentsAPI.browseDocuments({ folder_id: folderId });
+
+        if (response.success && response.data) {
+          const documents = response.data.documents || [];
+          const document = documents.find(doc => doc.id.toString() === documentId.toString());
+
+          if (document) {
+            // Extract filename from URL
+            const url = document.tax_documents || '';
+            const filename = url.split('/').pop() || 'document.pdf';
+            const fileExtension = filename.split('.').pop().toUpperCase() || 'PDF';
+
+            // Transform document data
+            const transformedDocument = {
+              id: document.id,
+              name: filename,
+              type: fileExtension,
+              status: document.status || 'pending_review',
+              size: document.size || document.file_size || '—',
+              client: document.client?.name || document.client_name || 'N/A',
+              
+              assignedTo: document.uploaded_by?.name || document.uploaded_by_name || document.created_by?.name || 'N/A',
+              uploadDate: formatDate(document.created_at),
+              version: 'v1.0', // Version not provided by API, using default
+              tax_documents: document.tax_documents,
+              category: document.category?.name || 'General'
+            };
+
+            setDocumentData(transformedDocument);
+            setPdfUrl(document.tax_documents || null);
+          } else {
+            throw new Error('Document not found');
+          }
+        } else {
+          throw new Error(response.message || 'Failed to fetch document');
+        }
+      } catch (error) {
+        console.error('Error fetching document data:', error);
+        setDocumentError(handleAPIError(error) || 'Failed to load document');
+        toast.error(handleAPIError(error) || 'Failed to load document');
+      } finally {
+        setLoadingDocument(false);
+      }
+    };
+
+    fetchDocumentData();
+  }, [documentId, folderId]);
+
+  // Load PDF file - use default PDF if document PDF is not available
   useEffect(() => {
     const loadPdf = async () => {
-      if (!pdfUrl) return;
+      // Use document PDF URL if available, otherwise use default PDF
+      const urlToLoad = pdfUrl || DEFAULT_PDF_URL;
+      const isDocumentPdf = !!pdfUrl;
       
       try {
         setPdfLoading(true);
         setPdfError(null);
         
         // Convert to proxy URL if needed to avoid CORS issues
-        const proxiedUrl = getProxyUrl(pdfUrl);
+        const proxiedUrl = getProxyUrl(urlToLoad);
         
-        // Fetch PDF as blob
-        const response = await fetch(proxiedUrl);
+        // Get access token for authenticated requests (only for document PDFs, not default)
+        const token = getAccessToken();
+        const headers = {};
+        if (token && isDocumentPdf) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Fetch PDF as blob with authentication (if needed)
+        const response = await fetch(proxiedUrl, { headers });
         if (!response.ok) throw new Error('Failed to fetch PDF');
         const blob = await response.blob();
-        const file = new File([blob], 'document.pdf', { type: 'application/pdf' });
+        const file = new File([blob], isDocumentPdf ? 'document.pdf' : 'sample.pdf', { type: 'application/pdf' });
         setPdfFileData(file);
       } catch (error) {
         console.error('Error loading PDF:', error);
         setPdfError(error.message);
-        toast.error('Failed to load PDF document');
+        // If document PDF fails, try default PDF as fallback
+        if (isDocumentPdf) {
+          console.log('Document PDF failed, trying default PDF...');
+          try {
+            const defaultResponse = await fetch(DEFAULT_PDF_URL);
+            if (defaultResponse.ok) {
+              const defaultBlob = await defaultResponse.blob();
+              const defaultFile = new File([defaultBlob], 'sample.pdf', { type: 'application/pdf' });
+              setPdfFileData(defaultFile);
+              setPdfError(null);
+              toast.info('Using sample PDF (document PDF unavailable)');
+            } else {
+              toast.error('Failed to load PDF document');
+            }
+          } catch (defaultError) {
+            console.error('Error loading default PDF:', defaultError);
+            toast.error('Failed to load PDF document');
+          }
+        } else {
+          toast.error('Failed to load PDF document');
+        }
       } finally {
         setPdfLoading(false);
       }
     };
     
+    // Always load a PDF (default or document)
     loadPdf();
   }, [pdfUrl]);
   
@@ -429,6 +506,34 @@ export default function PdfViewer() {
         </button>
       </div>
 
+      {/* Loading State */}
+      {loadingDocument && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+            <p className="text-sm text-gray-600" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Loading document...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {documentError && !loadingDocument && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-800 font-[BasisGrotesquePro]">{documentError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Document Content */}
+      {!loadingDocument && !documentError && documentData && (
+        <>
       {/* Top Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
@@ -437,21 +542,18 @@ export default function PdfViewer() {
           </h5>
           <div className="flex items-center gap-2 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
             <span className="text-gray-600">{documentData.type}</span>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${documentData.status === 'Reviewed' ? 'bg-blue-800 text-white' :
-              documentData.status === 'Approved' ? 'bg-green-500 text-white' :
-                'bg-amber-400 text-gray-900'
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+              documentData.status?.toLowerCase().includes('approved') ? 'bg-green-500 text-white' :
+              documentData.status?.toLowerCase().includes('reviewed') ? 'bg-blue-800 text-white' :
+              documentData.status?.toLowerCase().includes('pending') ? 'bg-amber-400 text-gray-900' :
+              'bg-gray-500 text-white'
               }`} style={{ fontFamily: 'BasisGrotesquePro' }}>
-              {documentData.status}
+              {formatStatus(documentData.status)}
             </span>
-            <span className="text-gray-600">{documentData.size}</span>
+            <span className="text-gray-600">{formatFileSize(documentData.size)}</span>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
-            <PdfEditIcon />
-            <span>Edit</span>
-          </button>
-        </div>
+       
       </div>
 
       {/* Document Metadata */}
@@ -510,8 +612,11 @@ export default function PdfViewer() {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       {/* Main Content Area */}
+      {!loadingDocument && !documentError && documentData && (
       <div className="flex gap-6 bg-white">
         {/* Left Column - Document Preview */}
         <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
@@ -523,7 +628,7 @@ export default function PdfViewer() {
 
           <div className="flex border border-gray-200 rounded-lg overflow-hidden" style={{ height: '700px' }}>
             {/* Thumbnails Sidebar */}
-            {pdfFileData && numPages && (
+            {pdfFileData && numPages > 0 && (
               <div className="w-32 bg-gray-50 p-2 overflow-y-auto border-r border-gray-200 flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
                 <Document
                   file={pdfFileData}
@@ -585,7 +690,7 @@ export default function PdfViewer() {
                     </p>
                   </div>
                 </div>
-              ) : pdfFileData && numPages ? (
+              ) : pdfFileData ? (
                 <div
                   ref={pdfContainerRef}
                   className="flex-1 overflow-y-auto p-6"
@@ -601,6 +706,7 @@ export default function PdfViewer() {
                       onLoadError={onDocumentLoadError}
                       loading={
                         <div className="flex items-center justify-center p-8">
+                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
                           <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
                             Loading PDF...
                           </p>
@@ -609,7 +715,7 @@ export default function PdfViewer() {
                       options={pdfOptions}
                       className="w-full"
                     >
-                      {Array.from(new Array(numPages), (el, index) => (
+                      {numPages && Array.from(new Array(numPages), (el, index) => (
                         <div
                           key={`page_${index + 1}`}
                           ref={(el) => {
@@ -633,9 +739,12 @@ export default function PdfViewer() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                    No PDF document available
-                  </p>
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+                    <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      Loading PDF...
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -791,6 +900,7 @@ export default function PdfViewer() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

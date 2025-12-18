@@ -42,34 +42,42 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
       console.log('Tax Preparers API Response:', response);
       
       if (response.success && response.data) {
-        // Handle different response structures
-        let staff = [];
+        // The API returns data.staff_members array
+        let staffMembers = [];
         
-        if (Array.isArray(response.data.staff)) {
-          staff = response.data.staff;
+        if (Array.isArray(response.data.staff_members)) {
+          staffMembers = response.data.staff_members;
+        } else if (Array.isArray(response.data.staff)) {
+          staffMembers = response.data.staff;
         } else if (Array.isArray(response.data)) {
-          staff = response.data;
+          staffMembers = response.data;
         } else if (Array.isArray(response.data.tax_preparers)) {
-          staff = response.data.tax_preparers;
-        } else if (response.data.staff && typeof response.data.staff === 'object' && !Array.isArray(response.data.staff)) {
-          // If staff is an object, try to extract an array from it
-          staff = Object.values(response.data.staff);
-        } else if (typeof response.data === 'object' && !Array.isArray(response.data)) {
-          // If data itself is an object, try to extract an array
-          staff = Object.values(response.data);
+          staffMembers = response.data.tax_preparers;
         }
         
-        console.log('Extracted staff array:', staff);
+        console.log('Extracted staff_members array:', staffMembers);
         
-        // Ensure staff is an array
-        if (!Array.isArray(staff)) {
-          staff = [];
+        // Ensure staffMembers is an array
+        if (!Array.isArray(staffMembers)) {
+          staffMembers = [];
         }
         
-        // Filter out any invalid entries and ensure we have valid objects
-        const preparers = staff.filter(s => s && typeof s === 'object' && (s.id || s.user_id));
+        // Map the response structure to a simpler format for the dropdown
+        // Response structure: { id, staff_member: { name, profile_picture }, contact: { email, phone }, ... }
+        const preparers = staffMembers
+          .filter(s => s && typeof s === 'object' && s.id)
+          .map(s => ({
+            id: s.id,
+            name: s.staff_member?.name || s.name || 'Unknown',
+            full_name: s.staff_member?.name || s.name || 'Unknown',
+            email: s.contact?.email || s.email || '',
+            phone: s.contact?.phone || s.phone || '',
+            role: s.role?.primary || s.role || '',
+            status: s.status?.display || s.status || '',
+            profile_picture: s.staff_member?.profile_picture || s.profile_picture || null
+          }));
         
-        console.log('Filtered preparers:', preparers);
+        console.log('Mapped preparers:', preparers);
         setTaxPreparers(preparers);
       } else {
         console.warn('API response structure unexpected:', response);
@@ -112,6 +120,21 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
     }
   };
 
+  // Helper function to convert backend URL to proxy URL if needed (to avoid CORS issues)
+  const getProxyUrl = (url) => {
+    if (!url) return url;
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === '168.231.121.7' && urlObj.pathname.includes('/seqwens/media')) {
+        const proxyPath = urlObj.pathname;
+        return `${window.location.origin}${proxyPath}${urlObj.search}`;
+      }
+    } catch (e) {
+      console.warn('Failed to parse URL:', url, e);
+    }
+    return url;
+  };
+
   const handleSubmit = async () => {
     if (selectedTaxPreparerIds.length === 0) {
       toast.error('Please select at least one tax preparer', {
@@ -131,12 +154,65 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
 
     try {
       setSubmitting(true);
-      const documentIds = selectedDocuments.map(doc => doc.id || doc.document_id);
+      
+      // Show loading toast
+      const loadingToast = toast.loading('Preparing files for sharing...', {
+        position: "top-right",
+      });
+      
+      // Fetch files from document URLs and convert to File objects
+      const files = await Promise.all(
+        selectedDocuments.map(async (doc, index) => {
+          const fileUrl = doc.tax_documents || doc.file_url || doc.document_url;
+          if (!fileUrl) {
+            throw new Error(`No file URL found for document: ${doc.name || doc.id}`);
+          }
+
+          try {
+            // Use proxy URL if needed to avoid CORS issues
+            const proxiedUrl = getProxyUrl(fileUrl);
+            
+            // Fetch the file
+            const response = await fetch(proxiedUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch file: ${response.statusText}`);
+            }
+
+            // Get the blob
+            const blob = await response.blob();
+            
+            // Get filename from URL or use document name
+            const urlParts = fileUrl.split('/');
+            const urlFilename = urlParts[urlParts.length - 1];
+            // Remove query parameters from filename if any
+            const cleanFilename = urlFilename.split('?')[0];
+            const filename = doc.name || doc.file_name || cleanFilename || `document_${doc.id || doc.document_id}.pdf`;
+            
+            // Convert blob to File object
+            const file = new File([blob], filename, { type: blob.type || 'application/pdf' });
+            return file;
+          } catch (error) {
+            console.error(`Error fetching file for document ${doc.id}:`, error);
+            throw new Error(`Failed to fetch file for ${doc.name || doc.id}: ${error.message}`);
+          }
+        })
+      );
+
+      // Update loading toast
+      toast.update(loadingToast, {
+        render: 'Sharing documents...',
+        type: 'info',
+        isLoading: true
+      });
+
+      // Send files to API
       const response = await firmAdminDocumentsAPI.shareDocuments(
-        documentIds,
+        files,
         selectedTaxPreparerIds,
         notes.trim() || null
       );
+
+      toast.dismiss(loadingToast);
 
       if (response.success) {
         toast.success(response.message || 'Documents shared successfully', {
@@ -153,7 +229,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
       const errorMsg = handleAPIError(err);
       toast.error(errorMsg || 'Failed to share documents', {
         position: "top-right",
-        autoClose: 3000,
+        autoClose: 5000,
       });
     } finally {
       setSubmitting(false);
@@ -161,7 +237,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
   };
 
   const selectedTaxPreparers = taxPreparers.filter(p => 
-    selectedTaxPreparerIds.includes(p.id || p.user_id)
+    selectedTaxPreparerIds.includes(p.id)
   );
 
   return (
@@ -245,9 +321,10 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
               }}
             >
               {taxPreparers.map((preparer) => {
-                const preparerId = preparer.id || preparer.user_id;
+                const preparerId = preparer.id;
                 const preparerName = preparer.full_name || preparer.name || 'Unknown';
                 const preparerEmail = preparer.email || '';
+                const preparerRole = preparer.role || '';
                 return (
                   <option
                     key={preparerId}
@@ -256,7 +333,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
                       padding: '8px 12px'
                     }}
                   >
-                    {preparerName} {preparerEmail ? `(${preparerEmail})` : ''}
+                    {preparerName} {preparerEmail ? `(${preparerEmail})` : ''} {preparerRole ? `- ${preparerRole}` : ''}
                   </option>
                 );
               })}
@@ -277,7 +354,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             </p>
             <div className="d-flex flex-wrap gap-2">
               {selectedTaxPreparerIds.map((id) => {
-                const preparer = taxPreparers.find(p => (p.id || p.user_id) === id);
+                const preparer = taxPreparers.find(p => p.id === id);
                 if (!preparer) return null;
                 const preparerName = preparer.full_name || preparer.name || 'Unknown';
                 return (
@@ -326,7 +403,8 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             backgroundColor: '#F9FAFB',
             border: '1px solid #E5E7EB',
             color: '#3B4A66',
-            fontFamily: 'BasisGrotesquePro'
+            fontFamily: 'BasisGrotesquePro',
+            borderRadius: '8px'
           }}
         >
           Cancel
@@ -340,6 +418,7 @@ export default function ShareDocumentsModal({ show, onClose, selectedDocuments =
             border: 'none',
             color: 'white',
             fontFamily: 'BasisGrotesquePro',
+            borderRadius: '8px',
             fontWeight: '500'
           }}
         >

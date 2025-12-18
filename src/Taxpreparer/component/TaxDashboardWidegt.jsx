@@ -95,7 +95,7 @@ export default function Dashboard() {
   return (
     <div>
 
-      <div className="taxdashboard-header px-4">
+      <div className="taxdashboard-header lg:px-4 ">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
             <h2 className="taxdashboard-title">Dashboard</h2>
@@ -173,7 +173,7 @@ export default function Dashboard() {
           const shouldShowStatusIcon = card.statusType !== "no_change";
 
           return (
-            <div className="col-sm-6 col-md-3 px-4" key={index}>
+            <div className="col-sm-6 col-md-3 lg:px-4 md:px-2 px-1" key={index}>
               <div
                 className="carded dashboard-carded"
                 style={{ cursor: 'default', position: 'relative' }}

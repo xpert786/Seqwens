@@ -93,9 +93,36 @@ export default function MyClients() {
     }
   }, [activeInviteDetails, showInviteActionsModal]);
 
-  const openInviteActionsModal = (inviteData) => {
+  const openInviteActionsModal = async (inviteData) => {
     setActiveInviteDetails(inviteData);
     setShowInviteActionsModal(true);
+    
+    // If invite link is missing, try to fetch it
+    if (!inviteData.invite_link && (inviteData.id || inviteData.invite_id || inviteData.client_id)) {
+      try {
+        const params = {};
+        if (inviteData.id || inviteData.invite_id) {
+          params.invite_id = inviteData.id || inviteData.invite_id;
+        } else if (inviteData.client_id) {
+          params.client_id = inviteData.client_id;
+        }
+        
+        const linkResponse = await taxPreparerClientAPI.getInviteLink(params);
+        if (linkResponse.success) {
+          const inviteLink = linkResponse.invite_link || linkResponse.data?.invite_link;
+          if (inviteLink) {
+            setActiveInviteDetails((prev) => ({
+              ...prev,
+              invite_link: inviteLink,
+              expires_at: linkResponse.data?.expires_at || prev.expires_at
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching invite link:", error);
+        // Silently fail - user can regenerate if needed
+      }
+    }
   };
 
   const closeInviteActionsModal = () => {
@@ -373,13 +400,28 @@ export default function MyClients() {
         };
 
         try {
-          const inviteResponse = await firmAdminClientsAPI.inviteClient({
-            ...createdProfile,
-            delivery_methods: ["link"]
+          // Generate invite link using the new tax preparer API
+          // POST /accounts/tax-preparer/clients/invite/link/ with { client_id: X }
+          const inviteResponse = await taxPreparerClientAPI.generateInviteLink({
+            client_id: response.data.id || response.data.client_id
           });
 
-          if (inviteResponse.success && inviteResponse.data) {
-            openInviteActionsModal(inviteResponse.data);
+          if (inviteResponse.success) {
+            // Format the response to match the expected structure for openInviteActionsModal
+            const inviteData = {
+              id: inviteResponse.data?.invite_id,
+              invite_id: inviteResponse.data?.invite_id,
+              client_id: response.data.id || response.data.client_id,
+              first_name: response.data.first_name || createTaxpayerForm.first_name,
+              last_name: response.data.last_name || createTaxpayerForm.last_name,
+              email: response.data.email || createTaxpayerForm.email,
+              phone_number: response.data.phone_number || createTaxpayerForm.phone_number,
+              invite_link: inviteResponse.invite_link || inviteResponse.data?.invite_link,
+              expires_at: inviteResponse.data?.expires_at,
+              status: inviteResponse.data?.status || 'pending'
+            };
+            
+            openInviteActionsModal(inviteData);
             toast.info("Invite link created. Share or send it below.", {
               position: "top-right",
               autoClose: 3000
@@ -503,25 +545,50 @@ export default function MyClients() {
   };
 
   const handleRefreshInviteLink = async () => {
-    if (!activeInviteDetails?.id) return;
+    if (!activeInviteDetails) return;
+    
     try {
       setInviteLinkRefreshing(true);
-      const response = await firmAdminClientsAPI.getInviteLink(activeInviteDetails.id);
-      if (response.success && response.data?.invite_link) {
+      
+      // Use the new tax preparer API to regenerate invite link
+      // If we have invite_id, use it; otherwise use client_id
+      let response;
+      if (activeInviteDetails.id || activeInviteDetails.invite_id) {
+        // Regenerate by invite_id
+        response = await taxPreparerClientAPI.generateInviteLink({
+          invite_id: activeInviteDetails.id || activeInviteDetails.invite_id,
+          regenerate: true
+        });
+      } else if (activeInviteDetails.client_id) {
+        // Regenerate by client_id
+        response = await taxPreparerClientAPI.generateInviteLink({
+          client_id: activeInviteDetails.client_id,
+          regenerate: true
+        });
+      } else {
+        throw new Error("No invite ID or client ID available");
+      }
+      
+      if (response.success) {
+        // Update invite link from response
+        const newInviteLink = response.invite_link || response.data?.invite_link;
+        const newExpiresAt = response.data?.expires_at;
+        
         setActiveInviteDetails((prev) => ({
           ...prev,
-          invite_link: response.data.invite_link,
-          expires_at: response.data.expires_at
+          invite_link: newInviteLink,
+          expires_at: newExpiresAt || prev.expires_at
         }));
-        toast.success("Invite link refreshed successfully.", {
+        
+        toast.success("Invite link regenerated successfully.", {
           position: "top-right",
           autoClose: 3000
         });
       } else {
-        throw new Error(response.message || "Failed to refresh invite link");
+        throw new Error(response.message || "Failed to regenerate invite link");
       }
     } catch (error) {
-      console.error("Error refreshing invite link:", error);
+      console.error("Error regenerating invite link:", error);
       toast.error(handleAPIError(error), {
         position: "top-right",
         autoClose: 3000
@@ -589,6 +656,7 @@ export default function MyClients() {
       setLoadingInviteLink(true);
 
       // Use the new tax preparer API to get invite link by client_id
+      // GET /accounts/tax-preparer/clients/invite/link/?client_id=X
       const linkResponse = await taxPreparerClientAPI.getInviteLink({ client_id: client.id });
 
       if (linkResponse.success) {
@@ -602,6 +670,45 @@ export default function MyClients() {
     } catch (error) {
       console.error("Error fetching invite link:", error);
       // Don't show error toast here, just silently fail
+    } finally {
+      setLoadingInviteLink(false);
+    }
+  };
+
+  // Regenerate invite link for the selected client
+  const regenerateInviteLinkForClient = async (client) => {
+    if (!client || !client.id) return;
+
+    try {
+      setLoadingInviteLink(true);
+
+      // Use POST to regenerate invite link
+      // POST /accounts/tax-preparer/clients/invite/link/ with { client_id: X, regenerate: true }
+      const linkResponse = await taxPreparerClientAPI.generateInviteLink({ 
+        client_id: client.id, 
+        regenerate: true 
+      });
+
+      if (linkResponse.success) {
+        // The API returns invite_link directly in the response
+        if (linkResponse.invite_link) {
+          setInviteLinkForClient(linkResponse.invite_link);
+        } else if (linkResponse.data?.invite_link) {
+          setInviteLinkForClient(linkResponse.data.invite_link);
+        }
+        toast.success("Invite link regenerated successfully!", {
+          position: "top-right",
+          autoClose: 2000
+        });
+      } else {
+        throw new Error(linkResponse.message || "Failed to regenerate invite link");
+      }
+    } catch (error) {
+      console.error("Error regenerating invite link:", error);
+      toast.error(handleAPIError(error) || "Failed to regenerate invite link", {
+        position: "top-right",
+        autoClose: 3000
+      });
     } finally {
       setLoadingInviteLink(false);
     }
@@ -817,7 +924,7 @@ export default function MyClients() {
       <div className="myclients-container">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchClients}>
+          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchClients} style={{ borderRadius: '8px' }}>
             Retry
           </button>
         </div>
@@ -855,7 +962,7 @@ export default function MyClients() {
       {/* Stats */}
       <div className="row g-3 mb-3">
         {cardData.map((item, index) => (
-          <div className="col-md-3 col-sm-6" key={index}>
+          <div className="col-md-3 col-sm-12" key={index}>
             <div className="stat-card ">
               <div className="d-flex justify-content-between align-items-start">
                 <div className="stat-icon" style={{ color: item.color }}>
@@ -1063,6 +1170,7 @@ export default function MyClients() {
                 <button
                   className="btn btn-sm btn-outline-danger w-100 mt-2"
                   onClick={clearFilters}
+                  style={{ borderRadius: '8px' }}
                 >
                   Clear Filters
                 </button>
@@ -1749,7 +1857,7 @@ export default function MyClients() {
                         setInvitePhoneCountry(countryCode.toLowerCase());
                       }}
                       inputClass="form-control"
-                      containerClass="w-100 phone-input-container"
+                      containerClass="w-100 phone-input-container invite-taxpayer-phone-container"
                       inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
                       enableSearch={true}
                       countryCodeEditable={false}
@@ -1867,10 +1975,27 @@ export default function MyClients() {
                     >
                       <FaCopy size={14} />
                     </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                      onClick={() => regenerateInviteLinkForClient(selectedClientForInvite)}
+                      disabled={loadingInviteLink || !selectedClientForInvite}
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #00C0C6',
+                        color: '#00C0C6',
+                        padding: '8px 12px',
+                        whiteSpace: 'nowrap',
+                        fontSize: '13px'
+                      }}
+                      title="Regenerate invite link"
+                    >
+                      {loadingInviteLink ? '...' : 'Regenerate'}
+                    </button>
                   </div>
                   {loadingInviteLink && (
                     <small className="text-muted d-block mt-1" style={{ fontSize: '12px' }}>
-                      Generating invite link...
+                      {inviteLinkForClient ? 'Regenerating invite link...' : 'Generating invite link...'}
                     </small>
                   )}
                 </div>

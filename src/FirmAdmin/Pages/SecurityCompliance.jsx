@@ -15,15 +15,16 @@ import {
     Bar
 } from 'recharts';
 import { useFirmSettings } from '../Context/FirmSettingsContext';
-import { securityAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import { securityAPI, handleAPIError, firmAdminBlockedAccountsAPI, firmAdminGeoRestrictionsAPI } from '../../ClientOnboarding/utils/apiUtils';
+import { FiSearch, FiUnlock, FiClock, FiUser, FiShield, FiAlertCircle, FiLock, FiCheck, FiX, FiGlobe } from 'react-icons/fi';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { toast } from 'react-toastify';
 const tabs = [
     'Security Overview',
     'Active Sessions',
     'Audits Logs',
-    'Compliance',
-    'Security Controls',
-    'Security Settings'
+    'Blocked Accounts',
+    'Geo Restrictions'
 ];
 
 const metrics = [
@@ -312,8 +313,6 @@ export default function SecurityCompliance() {
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [roleBasedAccess, setRoleBasedAccess] = useState('Manager (Limited)');
     const [twoFactorAuth, setTwoFactorAuth] = useState(true);
-    const [geoRestrictions, setGeoRestrictions] = useState('North America');
-    const [sessionTimeoutControl, setSessionTimeoutControl] = useState('15 (minutes)');
 
     // Security Settings state
     const [require2FA, setRequire2FA] = useState(true);
@@ -345,6 +344,46 @@ export default function SecurityCompliance() {
     const [isLoadingSessions, setIsLoadingSessions] = useState(false);
     const [sessionsError, setSessionsError] = useState('');
     const [sessionsSummary, setSessionsSummary] = useState(null);
+    
+    // Blocked Accounts state
+    const [blockedAccounts, setBlockedAccounts] = useState([]);
+    const [blockedAccountsLoading, setBlockedAccountsLoading] = useState(false);
+    const [blockedAccountsError, setBlockedAccountsError] = useState(null);
+    const [blockedAccountsSearch, setBlockedAccountsSearch] = useState('');
+    const [blockedAccountsPagination, setBlockedAccountsPagination] = useState({
+        page: 1,
+        page_size: 20,
+        total_count: 0,
+        total_pages: 1,
+    });
+    const [blockedAccountsCurrentPage, setBlockedAccountsCurrentPage] = useState(1);
+    const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
+    const [accountToUnblock, setAccountToUnblock] = useState(null);
+    const [unblocking, setUnblocking] = useState(false);
+    const [showBlockModal, setShowBlockModal] = useState(false);
+    const [accountToBlock, setAccountToBlock] = useState(null);
+    const [blocking, setBlocking] = useState(false);
+    const [blockDuration, setBlockDuration] = useState(24);
+    const [blockReason, setBlockReason] = useState('');
+    
+    // Geo Restrictions Management state
+    const [geoLocationsList, setGeoLocationsList] = useState([]);
+    const [geoRestrictionsList, setGeoRestrictionsList] = useState([]);
+    const [geoRestrictionsLoading, setGeoRestrictionsLoading] = useState(false);
+    const [geoRestrictionsError, setGeoRestrictionsError] = useState(null);
+    const [showGeoRestrictionModal, setShowGeoRestrictionModal] = useState(false);
+    const [selectedGeoRegion, setSelectedGeoRegion] = useState(null);
+    const [currentRestrictionData, setCurrentRestrictionData] = useState(null);
+    const [geoRestrictionForm, setGeoRestrictionForm] = useState({
+        region: '',
+        session_timeout_minutes: 30,
+        description: '',
+        country_codes: [],
+        is_active: true
+    });
+    const [savingGeoRestriction, setSavingGeoRestriction] = useState(false);
+    const [deletingGeoRestrictionId, setDeletingGeoRestrictionId] = useState(null);
+    const [countryCodeInput, setCountryCodeInput] = useState('');
 
     // Audit Logs state
     const [auditLogsData, setAuditLogsData] = useState([]);
@@ -478,6 +517,46 @@ export default function SecurityCompliance() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auditLogFilters, auditLogsPagination.page, activeTab]);
+
+    // Fetch blocked accounts
+    const fetchBlockedAccounts = async () => {
+        try {
+            setBlockedAccountsLoading(true);
+            setBlockedAccountsError(null);
+
+            const response = await firmAdminBlockedAccountsAPI.getBlockedAccounts({
+                search: blockedAccountsSearch.trim(),
+                page: blockedAccountsCurrentPage,
+                page_size: blockedAccountsPagination.page_size,
+            });
+
+            if (response.success && response.data) {
+                setBlockedAccounts(response.data.blocked_accounts || []);
+                setBlockedAccountsPagination(response.data.pagination || {
+                    page: blockedAccountsCurrentPage,
+                    page_size: 20,
+                    total_count: 0,
+                    total_pages: 1,
+                });
+            } else {
+                throw new Error(response.message || 'Failed to fetch blocked accounts');
+            }
+        } catch (err) {
+            console.error('Error fetching blocked accounts:', err);
+            setBlockedAccountsError(handleAPIError(err));
+            setBlockedAccounts([]);
+        } finally {
+            setBlockedAccountsLoading(false);
+        }
+    };
+
+    // Fetch blocked accounts when tab is active or filters change
+    useEffect(() => {
+        if (activeTab === 'Blocked Accounts') {
+            fetchBlockedAccounts();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [blockedAccountsCurrentPage, blockedAccountsSearch, activeTab]);
 
     const handleTerminateSession = async (sessionKey) => {
         if (!sessionKey) return;
@@ -995,6 +1074,7 @@ export default function SecurityCompliance() {
                                 <td className="px-4 py-3 text-right">
                                     <button
                                         className="text-sm font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style={{ borderRadius: '8px' }}
                                         type="button"
                                         onClick={() => handleTerminateSession(session.sessionKey)}
                                         disabled={!session.sessionKey || isLoadingSessions}
@@ -1014,37 +1094,7 @@ export default function SecurityCompliance() {
 
     const renderAuditLogs = () => (
         <div className="flex flex-col gap-6">
-            {/* Search and Export Section */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="flex-1 max-w-md">
-                    <input
-                        type="text"
-                        placeholder="Search by user email, action, or IP address"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            // Filter audit logs client-side for search
-                        }}
-                        className="w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                        style={{ borderRadius: '8px' }}
-                    />
-                </div>
-                <div className="relative">
-                    {!advancedReportingEnabled && (
-                        <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                            style={{ borderRadius: '8px' }}
-                            type="button"
-                        >
-                            Export CSV
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </button>
-                    )}
-                </div>
-            </div>
-                    {/* Audit Logs Configuration Section */}
+            {/* Audit Logs Configuration Section */}
             <div className="rounded-xl bg-white p-6">
                 <div className="mb-6">
                     <h5 className="text-base font-semibold text-[#1F2937] mb-1">Audit Logs</h5>
@@ -1111,128 +1161,6 @@ export default function SecurityCompliance() {
                         </div>
                     </div>
                 </div>
-
-
-                {/* Enable CSV Export */}
-                {!advancedReportingEnabled && (
-                <div className="mb-8 pb-8 border-b border-[#E5E7EB]">
-                    <div className="gap-6 sm:flex-row sm:items-start sm:justify-between">
-                        {/* Enable Toggles Section */}
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-1">
-                            {/* Enable CSV Export */}
-                            <div className="flex items-center justify-between">
-                                <h6 className="text-sm font-semibold text-[#1F2937]">Enable CSV Export</h6>
-                                <button
-                                    type="button"
-                                    onClick={() => setCsvExportEnabled(!csvExportEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${csvExportEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${csvExportEnabled ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-
-                            {/* Enable Print To PDF */}
-                            <div className="flex items-center justify-between">
-                                <h6 className="text-sm font-semibold text-[#1F2937]">Enable Print To PDF</h6>
-                                <button
-                                    type="button"
-                                    onClick={() => setPrintPdfEnabled(!printPdfEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${printPdfEnabled ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${printPdfEnabled ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Info Text (Now below the toggles) */}
-                        <p className="text-sm text-[#6B7280] mt-4">
-                            Logs are append-only and cannot be altered by staff. Admins may export read-only CSV or print a PDF.
-                        </p>
-                    </div>
-                    {/* Filters Section */}
-                    <div className="">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">Filter By Action</label>
-                                <div className="relative">
-                                    <select
-                                        value={auditLogFilters.action}
-                                        onChange={(e) => setAuditLogFilters(prev => ({ ...prev, action: e.target.value }))}
-                                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
-                                    >
-                                        <option value="">All Actions</option>
-                                        <option value="document_access">Document Access</option>
-                                        <option value="client_edit">Client Edit</option>
-                                        <option value="esignature_event">eSignature Event</option>
-                                        <option value="return_submission">Return Submission</option>
-                                        <option value="user_login">User Login</option>
-                                        <option value="user_logout">User Logout</option>
-                                        <option value="settings_change">Settings Change</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M4 6L8 10L12 6"
-                                                stroke="#4B5563"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">Start Date</label>
-                                <input
-                                    type="date"
-                                    value={auditLogFilters.start_date}
-                                    onChange={(e) => setAuditLogFilters(prev => ({ ...prev, start_date: e.target.value }))}
-                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">End Date</label>
-                                <input
-                                    type="date"
-                                    value={auditLogFilters.end_date}
-                                    onChange={(e) => setAuditLogFilters(prev => ({ ...prev, end_date: e.target.value }))}
-                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-medium text-[#6B7280]">User ID (optional)</label>
-                                <input
-                                    type="text"
-                                    placeholder="User ID"
-                                    value={auditLogFilters.user_id}
-                                    onChange={(e) => setAuditLogFilters(prev => ({ ...prev, user_id: e.target.value }))}
-                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] placeholder:text-[#9CA3AF] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                )}
 
             </div>
             {/* Active User Sessions Section */}
@@ -1576,122 +1504,6 @@ export default function SecurityCompliance() {
         </div>
     );
 
-    const renderSecurityControls = () => (
-        <div className="flex flex-col bg-white rounded-xl">
-            {/* Header */}
-            <div className="rounded-xl p-6">
-                <p className="text-xl font-medium text-gray-600 mb-0">Security Controls</p>
-                <p className="text-sm text-[#6B7280] mb-0">Your first and strongest line of defense against cyber risks.</p>
-            </div>
-
-            {/* Role-based Access Levels */}
-            <div className="rounded-xl bg-white p-6 ml-6">
-                <p className="text-sm font-semibold text-gray-500 mb-0">Role-based Access Levels</p>
-                <div className="relative">
-                    <select
-                        value={roleBasedAccess}
-                        onChange={(e) => setRoleBasedAccess(e.target.value)}
-                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
-                        style={{ borderRadius: '8px' }}
-                    >
-                        <option value="Manager (Limited)">Manager (Limited)</option>
-                        <option value="Admin (Full)">Admin (Full)</option>
-                        <option value="Viewer (Read-only)">Viewer (Read-only)</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            {/* Two-Factor Authentication */}
-            <div className="rounded-xl bg-white p-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-600 mb-0">Two-Factor Authentication</p>
-                        <p className="text-xs text-[#6B7280] mt-0">Role-based Access Levels</p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setTwoFactorAuth(!twoFactorAuth)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] focus:ring-offset-2 ${twoFactorAuth ? 'bg-[#F56D2D]' : 'bg-gray-300'
-                            }`}
-                    >
-                        <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
-                                }`}
-                        />
-                    </button>
-                </div>
-            </div>
-
-            {/* Geo Restrictions */}
-            <div className="rounded-xl bg-white p-6 ml-6">
-                <p className="text-sm font-semibold text-gray-600 mb-0">Geo Restrictions</p>
-                <div className="relative">
-                    <select
-                        value={geoRestrictions}
-                        onChange={(e) => setGeoRestrictions(e.target.value)}
-                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
-                        style={{ borderRadius: '8px' }}
-                    >
-                        <option value="North America">North America</option>
-                        <option value="Europe">Europe</option>
-                        <option value="Asia">Asia</option>
-                        <option value="Global">Global</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            {/* Session Timeout */}
-            <div className="rounded-xl bg-white p-6 ml-6">
-                <p className="text-sm font-semibold text-gray-500 mb-0">Session Timeout</p>
-                <div className="relative">
-                    <select
-                        value={sessionTimeoutControl}
-                        onChange={(e) => setSessionTimeoutControl(e.target.value)}
-                        className="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20"
-                        style={{ borderRadius: '8px' }}
-                    >
-                        <option value="15 (minutes)">15 (minutes)</option>
-                        <option value="30 (minutes)">30 (minutes)</option>
-                        <option value="60 (minutes)">60 (minutes)</option>
-                        <option value="120 (minutes)">120 (minutes)</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6L8 10L12 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-start p-6 ml-6">
-                <button
-                    type="button"
-                    className="px-6 py-2 rounded-lg border border-[#E5E7EB] bg-white text-sm font-semibold text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
-                    style={{ borderRadius: '8px' }}
-                >
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    className="px-6 py-2 rounded-lg bg-[#F56D2D] text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-                    style={{ borderRadius: '8px' }}
-                >
-                    Save Changes
-                </button>
-            </div>
-        </div>
-    );
 
     const handleCheckboxChange = (setter, key) => {
         setter(prev => ({ ...prev, [key]: !prev[key] }));
@@ -2289,6 +2101,877 @@ export default function SecurityCompliance() {
         </div>
     );
 
+    // Blocked Accounts handlers
+    const handleUnblockClick = (account) => {
+        setAccountToUnblock(account);
+        setShowUnblockConfirm(true);
+    };
+
+    const confirmUnblock = async () => {
+        if (!accountToUnblock) return;
+
+        try {
+            setUnblocking(true);
+            const response = await firmAdminBlockedAccountsAPI.unblockAccount(accountToUnblock.id);
+
+            if (response.success) {
+                toast.success(response.message || 'Account unblocked successfully!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                await fetchBlockedAccounts();
+                setShowUnblockConfirm(false);
+                setAccountToUnblock(null);
+            } else {
+                toast.error(response.message || 'Failed to unblock account', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+            }
+        } catch (err) {
+            toast.error(handleAPIError(err), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setUnblocking(false);
+        }
+    };
+
+    const handleBlockSearch = (e) => {
+        e.preventDefault();
+        setBlockedAccountsCurrentPage(1);
+        fetchBlockedAccounts();
+    };
+
+    const formatTimeRemaining = (hours, minutes) => {
+        if (hours > 0 && minutes > 0) {
+            return `${hours}h ${minutes}m`;
+        } else if (hours > 0) {
+            return `${hours}h`;
+        } else if (minutes > 0) {
+            return `${minutes}m`;
+        }
+        return 'Expired';
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
+    const getRoleBadgeColor = (role) => {
+        const roleColors = {
+            client: 'bg-blue-100 text-blue-800',
+            staff: 'bg-purple-100 text-purple-800',
+            admin: 'bg-green-100 text-green-800',
+            firm_admin: 'bg-indigo-100 text-indigo-800',
+            tax_preparer: 'bg-yellow-100 text-yellow-800',
+        };
+        return roleColors[role] || 'bg-gray-100 text-gray-800';
+    };
+
+    const goToBlockedAccountsPage = (page) => {
+        if (page >= 1 && page <= blockedAccountsPagination.total_pages) {
+            setBlockedAccountsCurrentPage(page);
+        }
+    };
+
+    const blockedAccountsStartItem = blockedAccountsPagination.total_count
+        ? (blockedAccountsPagination.page - 1) * blockedAccountsPagination.page_size + 1
+        : 0;
+    const blockedAccountsEndItem = blockedAccountsPagination.total_count
+        ? Math.min(blockedAccountsPagination.page * blockedAccountsPagination.page_size, blockedAccountsPagination.total_count)
+        : 0;
+
+    const renderBlockedAccounts = () => (
+        <div className="rounded-xl bg-white p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            {/* Header */}
+            <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                    <FiShield className="text-[#3B4A66]" size={28} />
+                    <h2 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        Blocked Accounts
+                    </h2>
+                </div>
+                <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    View and manage blocked user accounts
+                </p>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-6">
+                <form onSubmit={handleBlockSearch} className="flex gap-3">
+                    <div className="relative flex-1">
+                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280]" size={20} />
+                        <input
+                            type="text"
+                            value={blockedAccountsSearch}
+                            onChange={(e) => setBlockedAccountsSearch(e.target.value)}
+                            placeholder="Search by name, email, or username..."
+                            className="w-full pl-10 pr-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-[#1F2A55]"
+                            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0] transition-colors font-medium"
+                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                    >
+                        Search
+                    </button>
+                </form>
+            </div>
+
+            {/* Error Message */}
+            {blockedAccountsError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <FiAlertCircle className="text-red-600" size={20} />
+                        <p className="text-red-700 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>{blockedAccountsError}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Loading State */}
+            {blockedAccountsLoading && blockedAccounts.length === 0 ? (
+                <div className="flex justify-center items-center py-12">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3AD6F2]"></div>
+                        <p className="mt-3 text-[#6B7280] text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            Loading blocked accounts...
+                        </p>
+                    </div>
+                </div>
+            ) : blockedAccounts.length === 0 ? (
+                /* Empty State */
+                <div className="bg-white border border-[#E8F0FF] rounded-lg p-12 text-center">
+                    <FiShield className="mx-auto text-[#9CA3AF]" size={48} />
+                    <h3 className="mt-4 text-lg font-semibold text-[#3B4A66]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        No Blocked Accounts Found
+                    </h3>
+                    <p className="mt-2 text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                        {blockedAccountsSearch ? 'No accounts match your search criteria.' : 'There are currently no blocked accounts.'}
+                    </p>
+                </div>
+            ) : (
+                <>
+                    {/* Accounts List */}
+                    <div className="bg-white border border-[#E8F0FF] rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-[#F6F7FF]">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#3B4A66] uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            User
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#3B4A66] uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            Role
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#3B4A66] uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            Blocked Until
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#3B4A66] uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            Time Remaining
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#3B4A66] uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            Failed Attempts
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#3B4A66] uppercase tracking-wider" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#E8F0FF]">
+                                    {blockedAccounts.map((account) => (
+                                        <tr key={account.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#E8F0FF] flex items-center justify-center">
+                                                        <FiUser className="text-[#3B4A66]" size={20} />
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <div className="text-sm font-medium text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                            {account.full_name || `${account.first_name} ${account.last_name}`.trim() || 'N/A'}
+                                                        </div>
+                                                        <div className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                            {account.email}
+                                                        </div>
+                                                        {account.username && (
+                                                            <div className="text-xs text-[#9CA3AF]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                                @{account.username}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(account.role)}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {account.role?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {formatDate(account.blocked_until)}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <FiClock className="text-[#F59E0B]" size={16} />
+                                                    <span className="text-sm font-medium text-[#F59E0B]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                        {formatTimeRemaining(account.time_remaining_hours || 0, account.time_remaining_minutes || 0)}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {account.failed_login_attempts || 0}
+                                                </div>
+                                                {account.last_failed_login_at && (
+                                                    <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                        {formatDate(account.last_failed_login_at)}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <button
+                                                    onClick={() => handleUnblockClick(account)}
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#10B981] text-white text-sm font-medium rounded-lg hover:bg-[#059669] transition-colors"
+                                                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                                >
+                                                    <FiUnlock size={16} />
+                                                    Unblock
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Pagination */}
+                    {blockedAccountsPagination.total_pages > 1 && (
+                        <div className="mt-6 flex items-center justify-between">
+                            <div className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                Showing {blockedAccountsStartItem} to {blockedAccountsEndItem} of {blockedAccountsPagination.total_count} blocked accounts
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => goToBlockedAccountsPage(blockedAccountsCurrentPage - 1)}
+                                    disabled={blockedAccountsCurrentPage === 1}
+                                    className="px-4 py-2 border border-[#E8F0FF] rounded-lg text-sm font-medium text-[#3B4A66] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                >
+                                    Previous
+                                </button>
+                                <div className="flex gap-1">
+                                    {Array.from({ length: Math.min(5, blockedAccountsPagination.total_pages) }, (_, i) => {
+                                        let pageNum;
+                                        if (blockedAccountsPagination.total_pages <= 5) {
+                                            pageNum = i + 1;
+                                        } else if (blockedAccountsCurrentPage <= 3) {
+                                            pageNum = i + 1;
+                                        } else if (blockedAccountsCurrentPage >= blockedAccountsPagination.total_pages - 2) {
+                                            pageNum = blockedAccountsPagination.total_pages - 4 + i;
+                                        } else {
+                                            pageNum = blockedAccountsCurrentPage - 2 + i;
+                                        }
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => goToBlockedAccountsPage(pageNum)}
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                    blockedAccountsCurrentPage === pageNum
+                                                        ? 'bg-[#3AD6F2] text-white'
+                                                        : 'border border-[#E8F0FF] text-[#3B4A66] hover:bg-gray-50'
+                                                }`}
+                                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <button
+                                    onClick={() => goToBlockedAccountsPage(blockedAccountsCurrentPage + 1)}
+                                    disabled={blockedAccountsCurrentPage === blockedAccountsPagination.total_pages}
+                                    className="px-4 py-2 border border-[#E8F0FF] rounded-lg text-sm font-medium text-[#3B4A66] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+
+            {/* Unblock Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showUnblockConfirm}
+                onClose={() => {
+                    if (!unblocking) {
+                        setShowUnblockConfirm(false);
+                        setAccountToUnblock(null);
+                    }
+                }}
+                onConfirm={confirmUnblock}
+                title="Unblock Account"
+                message={
+                    accountToUnblock
+                        ? `Are you sure you want to unblock the account for "${accountToUnblock.full_name || accountToUnblock.email}"? This will allow them to log in immediately.`
+                        : "Are you sure you want to unblock this account?"
+                }
+                confirmText="Unblock"
+                cancelText="Cancel"
+                isLoading={unblocking}
+                isDestructive={false}
+            />
+        </div>
+    );
+
+    // Fetch geo locations and restrictions
+    const fetchGeoData = async () => {
+        try {
+            setGeoRestrictionsLoading(true);
+            setGeoRestrictionsError(null);
+
+            const [locationsResponse, restrictionsResponse] = await Promise.all([
+                firmAdminGeoRestrictionsAPI.getGeoLocations(),
+                firmAdminGeoRestrictionsAPI.getGeoRestrictions({ include_inactive: true })
+            ]);
+
+            if (locationsResponse.success && locationsResponse.data) {
+                setGeoLocationsList(locationsResponse.data.regions || []);
+            }
+
+            if (restrictionsResponse.success && restrictionsResponse.data) {
+                setGeoRestrictionsList(restrictionsResponse.data.geo_restrictions || restrictionsResponse.data.restrictions || []);
+            }
+        } catch (err) {
+            console.error('Error fetching geo data:', err);
+            setGeoRestrictionsError(handleAPIError(err));
+        } finally {
+            setGeoRestrictionsLoading(false);
+        }
+    };
+
+    // Fetch geo data when tab is active
+    useEffect(() => {
+        if (activeTab === 'Geo Restrictions') {
+            fetchGeoData();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]);
+
+    // Handle opening geo restriction modal
+    const handleOpenGeoRestrictionModal = (region = null) => {
+        if (region) {
+            // Edit existing restriction
+            const existingRestriction = geoRestrictionsList.find(r => r.region_code === region.region_code);
+            if (existingRestriction) {
+                setGeoRestrictionForm({
+                    region: existingRestriction.region_code,
+                    session_timeout_minutes: existingRestriction.session_timeout_minutes || 30,
+                    description: existingRestriction.description || '',
+                    country_codes: existingRestriction.country_codes || [],
+                    is_active: existingRestriction.is_active !== false
+                });
+                setSelectedGeoRegion(region);
+                setCurrentRestrictionData(existingRestriction);
+            } else {
+                // New restriction for this region
+                setGeoRestrictionForm({
+                    region: region.region_code,
+                    session_timeout_minutes: region.default_timeout_minutes || 30,
+                    description: '',
+                    country_codes: [],
+                    is_active: true
+                });
+                setSelectedGeoRegion(region);
+                setCurrentRestrictionData(null);
+            }
+        } else {
+            // New restriction
+            setGeoRestrictionForm({
+                region: '',
+                session_timeout_minutes: 30,
+                description: '',
+                country_codes: [],
+                is_active: true
+            });
+            setSelectedGeoRegion(null);
+            setCurrentRestrictionData(null);
+        }
+        setShowGeoRestrictionModal(true);
+    };
+
+    // Handle saving geo restriction
+    const handleSaveGeoRestriction = async () => {
+        if (!geoRestrictionForm.region) {
+            toast.error('Please select a region', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (geoRestrictionForm.session_timeout_minutes < 1 || geoRestrictionForm.session_timeout_minutes > 1440) {
+            toast.error('Session timeout must be between 1 and 1440 minutes', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        try {
+            setSavingGeoRestriction(true);
+            const response = await firmAdminGeoRestrictionsAPI.createOrUpdateGeoRestriction(geoRestrictionForm);
+
+            if (response.success) {
+                toast.success(response.message || 'Geo restriction saved successfully!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                // Update current restriction data if available
+                if (response.data) {
+                    setCurrentRestrictionData(response.data);
+                }
+                setShowGeoRestrictionModal(false);
+                await fetchGeoData();
+            } else {
+                throw new Error(response.message || 'Failed to save geo restriction');
+            }
+        } catch (err) {
+            toast.error(handleAPIError(err), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setSavingGeoRestriction(false);
+        }
+    };
+
+    // Handle deleting geo restriction
+    const handleDeleteGeoRestriction = async (restrictionId) => {
+        if (!window.confirm('Are you sure you want to delete this geo restriction?')) {
+            return;
+        }
+
+        try {
+            setDeletingGeoRestrictionId(restrictionId);
+            const response = await firmAdminGeoRestrictionsAPI.deleteGeoRestriction(restrictionId);
+
+            if (response.success) {
+                toast.success(response.message || 'Geo restriction deleted successfully!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                await fetchGeoData();
+            } else {
+                throw new Error(response.message || 'Failed to delete geo restriction');
+            }
+        } catch (err) {
+            toast.error(handleAPIError(err), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setDeletingGeoRestrictionId(null);
+        }
+    };
+
+    // Handle adding country code
+    const handleAddCountryCode = () => {
+        const code = countryCodeInput.trim().toUpperCase();
+        if (code && code.length === 2 && !geoRestrictionForm.country_codes.includes(code)) {
+            setGeoRestrictionForm(prev => ({
+                ...prev,
+                country_codes: [...prev.country_codes, code]
+            }));
+            setCountryCodeInput('');
+        }
+    };
+
+    // Handle removing country code
+    const handleRemoveCountryCode = (code) => {
+        setGeoRestrictionForm(prev => ({
+            ...prev,
+            country_codes: prev.country_codes.filter(c => c !== code)
+        }));
+    };
+
+    const renderGeoRestrictions = () => (
+        <div className="rounded-xl bg-white p-6" style={{ fontFamily: 'BasisGrotesquePro' }}>
+            {/* Header */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                        <FiGlobe className="text-[#3B4A66]" size={28} />
+                        <h2 className="text-2xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            Geo Restrictions
+                        </h2>
+                    </div>
+                    <button
+                        onClick={() => handleOpenGeoRestrictionModal()}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors"
+                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                    >
+                        <FiGlobe size={16} />
+                        Add Restriction
+                    </button>
+                </div>
+                <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    Configure session timeouts and restrictions by geographic region
+                </p>
+            </div>
+
+            {/* Error Message */}
+            {geoRestrictionsError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <FiAlertCircle className="text-red-600" size={20} />
+                        <p className="text-red-700 text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>{geoRestrictionsError}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Loading State */}
+            {geoRestrictionsLoading ? (
+                <div className="flex justify-center items-center py-12">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3AD6F2]"></div>
+                        <p className="mt-3 text-[#6B7280] text-sm" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            Loading geo restrictions...
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {/* Regions List */}
+                    {geoLocationsList.map((region) => {
+                        const restriction = geoRestrictionsList.find(r => r.region_code === region.region_code);
+                        return (
+                            <div
+                                key={region.region_code}
+                                className="border border-[#E8F0FF] rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                                style={{ borderRadius: '8px' }}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h3 className="text-lg font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                {region.region_name}
+                                            </h3>
+                                            
+                                        </div>
+                                        {restriction ? (
+                                            <div className="space-y-1">
+                                                <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    Session Timeout: <span className="font-semibold text-[#1F2A55]">{restriction.session_timeout_minutes} minutes ({restriction.session_timeout_hours} hours)</span>
+                                                </p>
+                                                {restriction.description && (
+                                                    <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                        {restriction.description}
+                                                    </p>
+                                                )}
+                                                {restriction.country_codes && restriction.country_codes.length > 0 && (
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Countries:</span>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {restriction.country_codes.map((code) => (
+                                                                <span key={code} className="px-2 py-1 text-xs bg-[#E8F0FF] text-[#3B4A66] rounded" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '4px' }}>
+                                                                    {code}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                Default Timeout: {region.default_timeout_minutes} minutes
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-4">
+                                        <button
+                                            onClick={() => handleOpenGeoRestrictionModal(region)}
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors"
+                                            style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                        >
+                                            {restriction ? 'Edit' : 'Configure'}
+                                        </button>
+                                        {restriction && (
+                                            <button
+                                                onClick={() => handleDeleteGeoRestriction(restriction.id)}
+                                                disabled={deletingGeoRestrictionId === restriction.id}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                            >
+                                                {deletingGeoRestrictionId === restriction.id ? 'Deleting...' : 'Delete'}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Geo Restriction Modal */}
+            {showGeoRestrictionModal && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+                    onClick={() => !savingGeoRestriction && setShowGeoRestrictionModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                        style={{ borderRadius: '12px' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-[#E5E7EB]">
+                            <h3 className="text-xl font-semibold text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                {selectedGeoRegion ? `Configure ${selectedGeoRegion.region_name || selectedGeoRegion.region_code}` : 'Add Geo Restriction'}
+                            </h3>
+                            <button
+                                onClick={() => !savingGeoRestriction && setShowGeoRestrictionModal(false)}
+                                className="text-[#6B7280] hover:text-[#1F2937] transition-colors"
+                                disabled={savingGeoRestriction}
+                            >
+                                <FiX size={24} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-4">
+                            {/* Existing Restriction Info */}
+                            {currentRestrictionData && (
+                                <div className="bg-[#F9FAFB] border border-[#E8F0FF] rounded-lg p-4 mb-4" style={{ borderRadius: '8px' }}>
+                                    <h4 className="text-sm font-semibold text-[#3B4A66] mb-3" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                        Restriction Details
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <span className="text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Status: </span>
+                                            <span className={`font-medium ${currentRestrictionData.is_active ? 'text-green-600' : 'text-gray-600'}`} style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                {currentRestrictionData.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                        {currentRestrictionData.session_timeout_display && (
+                                            <div>
+                                                <span className="text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Current Timeout: </span>
+                                                <span className="font-medium text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {currentRestrictionData.session_timeout_display}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {currentRestrictionData.created_by && (
+                                            <div>
+                                                <span className="text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Created By: </span>
+                                                <span className="font-medium text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {currentRestrictionData.created_by.name}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {currentRestrictionData.created_at && (
+                                            <div>
+                                                <span className="text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Created: </span>
+                                                <span className="font-medium text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {new Date(currentRestrictionData.created_at).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {currentRestrictionData.updated_at && (
+                                            <div>
+                                                <span className="text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Last Updated: </span>
+                                                <span className="font-medium text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    {new Date(currentRestrictionData.updated_at).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {currentRestrictionData.id && (
+                                            <div>
+                                                <span className="text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>Restriction ID: </span>
+                                                <span className="font-medium text-[#1F2A55]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                                    #{currentRestrictionData.id}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Region Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                    Region <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={geoRestrictionForm.region}
+                                    onChange={(e) => setGeoRestrictionForm(prev => ({ ...prev, region: e.target.value }))}
+                                    disabled={!!selectedGeoRegion || savingGeoRestriction}
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                >
+                                    <option value="">Select a region</option>
+                                    {geoLocationsList.map((region) => (
+                                        <option key={region.region_code} value={region.region_code}>
+                                            {region.region_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Session Timeout */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                    Session Timeout (minutes) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="1440"
+                                    value={geoRestrictionForm.session_timeout_minutes}
+                                    onChange={(e) => setGeoRestrictionForm(prev => ({ ...prev, session_timeout_minutes: parseInt(e.target.value) || 30 }))}
+                                    disabled={savingGeoRestriction}
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                    placeholder="Enter timeout in minutes (1-1440)"
+                                />
+                                <p className="mt-1 text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                    Must be between 1 and 1440 minutes (24 hours)
+                                </p>
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                    Description (Optional)
+                                </label>
+                                <textarea
+                                    value={geoRestrictionForm.description}
+                                    onChange={(e) => setGeoRestrictionForm(prev => ({ ...prev, description: e.target.value }))}
+                                    disabled={savingGeoRestriction}
+                                    rows={3}
+                                    className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                    style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                    placeholder="Enter a description for this restriction"
+                                />
+                            </div>
+
+                            {/* Country Codes */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3B4A66] mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                    Country Codes (Optional)
+                                </label>
+                                <div className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        value={countryCodeInput}
+                                        onChange={(e) => setCountryCodeInput(e.target.value.toUpperCase().slice(0, 2))}
+                                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCountryCode())}
+                                        disabled={savingGeoRestriction}
+                                        placeholder="Enter 2-letter country code (e.g., US, IN)"
+                                        className="flex-1 rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/20 bg-white"
+                                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCountryCode}
+                                        disabled={savingGeoRestriction || !countryCodeInput.trim()}
+                                        className="px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors disabled:opacity-50"
+                                        style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                                {geoRestrictionForm.country_codes.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {geoRestrictionForm.country_codes.map((code) => (
+                                            <span
+                                                key={code}
+                                                className="inline-flex items-center gap-1 px-3 py-1 bg-[#E8F0FF] text-[#3B4A66] rounded text-sm"
+                                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                                            >
+                                                {code}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveCountryCode(code)}
+                                                    disabled={savingGeoRestriction}
+                                                    className="text-[#3B4A66] hover:text-red-500"
+                                                >
+                                                    <FiX size={14} />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Active Toggle */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={geoRestrictionForm.is_active}
+                                    onChange={(e) => setGeoRestrictionForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                                    disabled={savingGeoRestriction}
+                                    className="h-4 w-4 rounded border-[#E5E7EB] accent-[#3AD6F2] text-[#3AD6F2] focus:ring-[#3AD6F2] focus:ring-2"
+                                    style={{ borderRadius: '4px' }}
+                                />
+                                <label className="text-sm font-medium text-[#3B4A66]" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E5E7EB]">
+                            <button
+                                onClick={() => !savingGeoRestriction && setShowGeoRestrictionModal(false)}
+                                disabled={savingGeoRestriction}
+                                className="px-4 py-2 border border-[#E5E7EB] bg-white text-[#3B4A66] text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveGeoRestriction}
+                                disabled={savingGeoRestriction || !geoRestrictionForm.region}
+                                className="px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors disabled:opacity-50"
+                                style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
+                            >
+                                {savingGeoRestriction ? 'Saving...' : 'Save'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
     const handleChecklistChange = (item) => {
         setChecklistItems(prev => ({
             ...prev,
@@ -2332,7 +3015,8 @@ export default function SecurityCompliance() {
                     style={{ 
                         maxWidth: '672px',
                         position: 'relative',
-                        zIndex: 10000
+                        zIndex: 10000,
+                        borderRadius: '12px'
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -2433,6 +3117,7 @@ export default function SecurityCompliance() {
                                         ? 'bg-gray-300 text-[#4B5563] hover:bg-gray-400'
                                         : 'bg-[#F56D2D] text-white hover:bg-orange-600'
                                 }`}
+                                style={{ borderRadius: '8px' }}
                                 type="button"
                             >
                                 {label}
@@ -2473,10 +3158,9 @@ export default function SecurityCompliance() {
                 {activeTab === 'Security Overview' && renderSecurityOverview()}
                 {activeTab === 'Active Sessions' && renderActiveSessions()}
                 {activeTab === 'Audits Logs' && renderAuditLogs()}
-                {activeTab === 'Compliance' && renderCompliance()}
-                {activeTab === 'Security Controls' && renderSecurityControls()}
-                {activeTab === 'Security Settings' && renderSecuritySettings()}
-                {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && activeTab !== 'Audits Logs' && activeTab !== 'Compliance' && activeTab !== 'Security Controls' && activeTab !== 'Security Settings' && renderPlaceholder()}
+                {activeTab === 'Blocked Accounts' && renderBlockedAccounts()}
+                {activeTab === 'Geo Restrictions' && renderGeoRestrictions()}
+                {activeTab !== 'Security Overview' && activeTab !== 'Active Sessions' && activeTab !== 'Audits Logs' && activeTab !== 'Blocked Accounts' && activeTab !== 'Geo Restrictions' && renderPlaceholder()}
             </div>
             {renderReviewModal()}
         </div>

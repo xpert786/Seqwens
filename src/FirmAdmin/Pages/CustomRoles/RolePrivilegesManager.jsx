@@ -415,7 +415,8 @@ export default function RolePrivilegesManager({ show, onClose, role, onUpdate })
           {/* Body */}
           <div className="p-4">
             {/* Add Privilege Button */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-4 
+            ">
               <h5
                 style={{
                   color: '#1F2A55',

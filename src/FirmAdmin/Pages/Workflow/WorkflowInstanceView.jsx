@@ -102,6 +102,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
           <button
             onClick={onBack}
             className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors"
+            style={{ borderRadius: '8px' }}
           >
             Back to Workflows
           </button>
@@ -227,6 +228,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                             onClick={() => handleAdvance(instance.stage_instances[index + 1].stage?.id)}
                             disabled={advancing}
                             className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors font-[BasisGrotesquePro] disabled:opacity-50"
+                            style={{ borderRadius: '8px' }}
                           >
                             {advancing ? 'Advancing...' : 'Advance to Next Stage'}
                           </button>

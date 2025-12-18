@@ -612,37 +612,11 @@ const ESignatureModal = ({ show, onClose, pages, requestId, signatureRequest, on
         <div className="esignature-wrapper">
           {/* Left Side - Pages */}
           <div className="left-section">
-            <div className="thumbnail-list">
-              {pages.map((page, index) => (
-                <img
-                  key={page.id}
-                  src={page.image}
-                  alt={`Page ${page.id}`}
-                  className={`thumb ${currentPageIndex === index ? "active" : ""}`}
-                  onClick={() => setCurrentPageIndex(index)}
-                />
-              ))}
-            </div>
 
             {/* Large Preview */}
-            <div className="preview-area">
+            <div className="preview-area max-w-[740px]">
               <div className="preview-scroll">
-                {pages.map((page, index) => (
-                  <div
-                    key={page.id}
-                    className={`preview-page ${currentPageIndex === index ? "active" : ""}`}
-                    onClick={() => setCurrentPageIndex(index)}
-                  >
-                    <img
-                      src={page.image}
-                      alt={`Page ${index + 1}`}
-                      className="preview-img"
-                    />
-                    <div className="page-count">
-                      Page {index + 1} of {pages.length}
-                    </div>
-                  </div>
-                ))}
+                  {pages}
               </div>
             </div>
 

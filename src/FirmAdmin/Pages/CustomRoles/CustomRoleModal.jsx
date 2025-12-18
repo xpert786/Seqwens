@@ -206,8 +206,8 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
               <div className="d-flex justify-content-between align-items-center mt-1">
                 {errors.name ? (
                   <p className="mb-0" style={{ color: '#DC2626', fontSize: '12px' }}>
-                    {errors.name}
-                  </p>
+                  {errors.name}
+                </p>
                 ) : (
                   <div></div>
                 )}

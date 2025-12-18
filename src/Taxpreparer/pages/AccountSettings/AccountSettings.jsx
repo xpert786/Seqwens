@@ -57,7 +57,7 @@ export default function AccountSettings() {
     ];
 
     return (
-        <div className="container-fluid px-4">
+        <div className="container-fluid lg:px-4 md:px-2 px-1">
 
             <div className="align-items-center mb-3">
                 <h5
@@ -85,7 +85,7 @@ export default function AccountSettings() {
             </div>
 
             <div
-                className="d-inline-block mb-4"
+                className="d-inline-block mb-4 tabs-mobile"
                 style={{
                     padding: "10px 12px",
                     borderRadius: "12px",

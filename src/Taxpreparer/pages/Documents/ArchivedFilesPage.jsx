@@ -36,7 +36,7 @@ export default function ArchivedFilesPage() {
       <TaxUploadModal show={showUpload} handleClose={() => setShowUpload(false)} />
       <div className="header d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h3 className="fw-semibold">Documents </h3>
+          <h3 className="fw-semibold">Documents</h3>
           <small className="text-muted">Manage client documents and files</small>
         </div>
           <button

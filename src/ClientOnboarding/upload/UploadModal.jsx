@@ -7,7 +7,7 @@ import { FaFolder } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { getApiBaseUrl, fetchWithCors } from "../utils/corsConfig";
 import { getAccessToken } from "../utils/userUtils";
-import { handleAPIError } from "../utils/apiUtils";
+import { handleAPIError, documentsAPI } from "../utils/apiUtils";
 
 
 export default function UploadModal({ show, handleClose, onUploadSuccess }) {
@@ -29,6 +29,9 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [creatingFolderLoading, setCreatingFolderLoading] = useState(false);
     const [parentFolderForNewFolder, setParentFolderForNewFolder] = useState(null);
+    const [creatingCategory, setCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [creatingCategoryLoading, setCreatingCategoryLoading] = useState(false);
 
     // Handle click outside folder dropdown
     useEffect(() => {
@@ -129,42 +132,26 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
             try {
                 setLoadingCategories(true);
-                const API_BASE_URL = getApiBaseUrl();
-                const token = getAccessToken();
-
-                if (!token) {
-                    console.error('No authentication token found');
-                    return;
-                }
-
-                const config = {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                };
-
-                const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/document-categories/`, config);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
+                const result = await documentsAPI.getDocumentCategories();
                 console.log('Categories API response:', result);
 
+                // Handle different response structures
+                let categoriesData = [];
                 if (result.success && result.data && Array.isArray(result.data)) {
-                    // Filter only active categories
-                    const activeCategories = result.data.filter(cat => cat.is_active);
-                    setCategories(activeCategories);
-                } else {
-                    console.error('Unexpected categories response structure:', result);
-                    setCategories([]);
+                    categoriesData = result.data;
+                } else if (Array.isArray(result)) {
+                    categoriesData = result;
+                } else if (result.data && Array.isArray(result.data)) {
+                    categoriesData = result.data;
                 }
+
+                // Filter only active categories if is_active field exists
+                const activeCategories = categoriesData.filter(cat => cat.is_active !== false);
+                setCategories(activeCategories);
             } catch (error) {
                 console.error('Error fetching categories:', error);
-                toast.error('Failed to load document categories. Please refresh the page.', {
+                const errorMsg = handleAPIError(error);
+                toast.error(errorMsg || 'Failed to load document categories. Please refresh the page.', {
                     position: "top-right",
                     autoClose: 3000,
                 });
@@ -549,6 +536,78 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         }
     };
 
+    // Create new category
+    const handleCreateCategory = async () => {
+        if (!newCategoryName.trim()) {
+            toast.error('Please enter a category name', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        setCreatingCategoryLoading(true);
+
+        try {
+            const categoryData = {
+                name: newCategoryName.trim(),
+                description: `Document category: ${newCategoryName.trim()}`,
+                is_active: true
+            };
+
+            const result = await documentsAPI.createDocumentCategory(categoryData);
+            
+            // Handle different response structures
+            let categoryInfo = result;
+            if (result.success && result.data) {
+                categoryInfo = result.data;
+            } else if (result.category) {
+                categoryInfo = result.category;
+            }
+
+            // Add new category to the list
+            const newCategory = {
+                id: categoryInfo.id,
+                name: categoryInfo.name || newCategoryName.trim(),
+                description: categoryInfo.description || categoryData.description,
+                is_active: categoryInfo.is_active !== false
+            };
+
+            const updatedCategories = [...categories, newCategory];
+            setCategories(updatedCategories);
+
+            // Auto-select the newly created category for the current file
+            const updated = [...files];
+            updated[selectedIndex].category = newCategory.name;
+            updated[selectedIndex].categoryId = newCategory.id;
+            setFiles(updated);
+
+            // Clear errors for this file
+            if (fileErrors[selectedIndex]) {
+                const newFileErrors = { ...fileErrors };
+                delete newFileErrors[selectedIndex];
+                setFileErrors(newFileErrors);
+            }
+
+            setNewCategoryName("");
+            setCreatingCategory(false);
+
+            toast.success(result.message || "Category created and selected successfully!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } catch (error) {
+            console.error('Error creating category:', error);
+            const errorMsg = handleAPIError(error);
+            toast.error(errorMsg || 'Failed to create category', {
+                position: "top-right",
+                autoClose: 5000,
+            });
+        } finally {
+            setCreatingCategoryLoading(false);
+        }
+    };
+
     const handleFolderSelect = (path, folderId) => {
         const updated = [...files];
         updated[selectedIndex].folderPath = path;
@@ -581,6 +640,9 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         setFileErrors({});
         setCreatingFolderLoading(false);
         setExpandedFolders(new Set());
+        setCreatingCategory(false);
+        setNewCategoryName("");
+        setCreatingCategoryLoading(false);
         handleClose();
     };
 
@@ -997,12 +1059,89 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
 
                                             <Form.Group className="mb-3">
-                                                <h6 className="txt">Document Category</h6>
+                                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 className="txt">Document Category</h6>
+                                                    {!creatingCategory ? (
+                                                        <Button
+                                                            variant="link"
+                                                            className="p-0 small create-folder-btn"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setCreatingCategory(true);
+                                                            }}
+                                                            style={{
+                                                                color: '#00C0C6',
+                                                                textDecoration: 'none',
+                                                                fontSize: '12px',
+                                                                fontWeight: '500'
+                                                            }}
+                                                        >
+                                                            Create New Category
+                                                        </Button>
+                                                    ) : (
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <Form.Control
+                                                                size="sm"
+                                                                type="text"
+                                                                placeholder="Enter category name"
+                                                                value={newCategoryName}
+                                                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                                                disabled={creatingCategoryLoading}
+                                                                autoFocus
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' && newCategoryName.trim() && !creatingCategoryLoading) {
+                                                                        e.preventDefault();
+                                                                        handleCreateCategory();
+                                                                    } else if (e.key === 'Escape') {
+                                                                        setCreatingCategory(false);
+                                                                        setNewCategoryName("");
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    width: '150px',
+                                                                    borderRadius: '8px'
+                                                                }}
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                variant="success"
+                                                                onClick={handleCreateCategory}
+                                                                disabled={!newCategoryName.trim() || creatingCategoryLoading}
+                                                                style={{
+                                                                    borderRadius: '8px',
+                                                                    fontSize: '12px',
+                                                                    padding: '4px 12px'
+                                                                }}
+                                                            >
+                                                                {creatingCategoryLoading ? '...' : 'Save'}
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline-secondary"
+                                                                onClick={() => {
+                                                                    setCreatingCategory(false);
+                                                                    setNewCategoryName("");
+                                                                }}
+                                                                disabled={creatingCategoryLoading}
+                                                                style={{
+                                                                    borderRadius: '8px',
+                                                                    fontSize: '12px',
+                                                                    padding: '4px 12px'
+                                                                }}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <Form.Select
                                                     className={`custom-select ${fileErrors[selectedIndex] && fileErrors[selectedIndex].length > 0 ? 'border-danger' : ''}`}
                                                     value={files[selectedIndex]?.category || ""}
                                                     onChange={handleCategoryChange}
-                                                    disabled={loadingCategories}
+                                                    disabled={loadingCategories || creatingCategory}
+                                                    style={{
+                                                        borderRadius: '8px'
+                                                    }}
                                                 >
                                                     <option value="">
                                                         {loadingCategories ? "Loading categories..." : "Select a Category"}

@@ -114,7 +114,7 @@ export default function AdvancedTab() {
               <h6 className="text-sm font-medium text-[#1F2A55] mb-1">Delete Firm Account</h6>
               <p className="text-xs text-[#4B5563]">Permanently delete your firm account and all data</p>
             </div>
-            <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] rounded-lg hover:bg-red-700">Delete Account</button>
+            <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] rounded-lg hover:bg-red-700" style={{ borderRadius: '8px' }}>Delete Account</button>
           </div>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function AdvancedTab() {
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 border border-[#E8F0FF]">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 border border-[#E8F0FF]" style={{ borderRadius: '12px' }}>
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-[#EF4444] mb-2">Delete Firm Account</h3>
               <p className="text-sm text-[#4B5563]">This action cannot be undone. This will permanently delete your firm account and all associated data. All users will lose access immediately.</p>
@@ -159,8 +159,8 @@ export default function AdvancedTab() {
             </div>
 
             <div className="flex gap-3 justify-end">
-              <button onClick={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteConfirmation(''); setError(''); }} disabled={deleting} className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
-              <button onClick={handleDeleteAccount} disabled={deleting || !deletePassword} className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">{deleting ? (<><div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div><span>Deleting...</span></>) : (<span>Delete Account</span>)}</button>
+              <button onClick={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteConfirmation(''); setError(''); }} disabled={deleting} className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed" style={{ borderRadius: '8px' }}>Cancel</button>
+              <button onClick={handleDeleteAccount} disabled={deleting || !deletePassword} className="px-4 py-2 text-sm font-medium text-white bg-[#EF4444] rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" style={{ borderRadius: '8px' }}>{deleting ? (<><div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div><span>Deleting...</span></>) : (<span>Delete Account</span>)}</button>
             </div>
           </div>
         </div>

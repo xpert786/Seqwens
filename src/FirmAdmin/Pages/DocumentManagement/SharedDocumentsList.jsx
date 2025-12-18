@@ -143,7 +143,8 @@ export default function SharedDocumentsList() {
               border: 'none',
               color: 'white',
               fontFamily: 'BasisGrotesquePro',
-              fontWeight: '500'
+              fontWeight: '500',
+              borderRadius: '8px'
             }}
           >
             <FiShare2 size={16} />
@@ -156,7 +157,8 @@ export default function SharedDocumentsList() {
               backgroundColor: '#F9FAFB',
               border: '1px solid #E5E7EB',
               color: '#3B4A66',
-              fontFamily: 'BasisGrotesquePro'
+              fontFamily: 'BasisGrotesquePro',
+              borderRadius: '8px'
             }}
           >
             <FiRefreshCw size={16} />
@@ -350,10 +352,14 @@ export default function SharedDocumentsList() {
         show={showDocumentSelectionModal}
         onClose={() => {
           setShowDocumentSelectionModal(false);
-          setSelectedDocumentsForShare([]);
+          // setSelectedDocumentsForShare([]);
         }}
         onSelectDocuments={(docs) => {
-          setSelectedDocumentsForShare(docs);
+          console.log(docs,'checkdocs hereeee')
+          if(docs.length){
+
+            setSelectedDocumentsForShare(docs);
+          }
           setShowDocumentSelectionModal(false);
           setShowShareModal(true);
         }}
@@ -371,7 +377,7 @@ export default function SharedDocumentsList() {
         onSuccess={() => {
           fetchShares();
           setShowShareModal(false);
-          setSelectedDocumentsForShare([]); // Clear only on success
+          // setSelectedDocumentsForShare([]); // Clear only on success
         }}
       />
 

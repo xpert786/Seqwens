@@ -10,7 +10,7 @@ import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAP
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
 import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
-import "../styles/FirmHeader.css";
+
 
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const navigate = useNavigate();
@@ -221,11 +221,11 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
     return (
         <>
-            <nav className="navbar bg-white fixed-top border-bottom firm-custom-topbar px-2 px-md-3 py-2">
-                <div className="container-fluid d-flex justify-content-between align-items-center flex-wrap w-100">
+            <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-3">
+                <div className="container-fluid d-flex justify-content-between align-items-center">
 
                     {/* Left Section */}
-                    <div className="d-flex align-items-center gap-2 gap-md-3 flex-grow-1 flex-wrap">
+                    <div className="d-flex align-items-center gap-3 flex-grow-1">
                         {/* Logo */}
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img
@@ -275,7 +275,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
                         {/* Search Icon - Mobile (Toggle) */}
                         <div
-                            className="d-md-none d-flex align-items-center justify-content-center"
+                            className="d-md-none d-sm-none d-flex align-items-center justify-content-center"
                             onClick={() => setShowSearch(!showSearch)}
                             style={{
                                 width: "34px",
@@ -292,13 +292,13 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
                     {/* Right Section */}
                     <div
-                        className="d-flex align-items-center gap-2 gap-md-3 ms-auto flex-shrink-0 flex-nowrap"
+                        className="d-flex align-items-center gap-3"
                         style={{ minWidth: "fit-content" }}
                     >
                         {/* Notification Bell */}
                         <div
                             ref={notificationButtonRef}
-                            className="firm-notification-bell d-flex align-items-center justify-content-center position-relative"
+                            className="firm-notification-bell d-flex align-items-center justify-content-center position-relative notification-bell border-0 p-0"
                             onClick={toggleNotifications}
                             style={{
                                 width: "34px",

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { toast } from 'react-toastify';
 
 const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, assignedPreparerId = null }) => {
@@ -36,11 +38,66 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
   const fetchPreparers = async () => {
     try {
       setLoadingPreparers(true);
-      // You may need to adjust this API call based on your staff API
-      const response = await workflowAPI.listInstances(); // This might not be the right API
-      // For now, we'll use a placeholder - you may need to import firmAdminStaffAPI
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Use firm admin tax preparers endpoint
+      const response = await fetchWithCors(
+        `${API_BASE_URL}/user/firm-admin/staff/tax-preparers/?status=active&role=all`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const staffMembers = result.data.staff_members || [];
+
+          // Filter for active tax preparers with valid roles (same logic as CreateTaskModal)
+          const filteredPreparers = staffMembers.filter((staff) => {
+            const rolePrimary = staff.role?.primary?.toLowerCase() || '';
+            const roleType = staff.role?.role_type?.toLowerCase() || '';
+            const role =
+              rolePrimary ||
+              roleType ||
+              staff.role?.toLowerCase() ||
+              staff.user_role?.toLowerCase() ||
+              '';
+            const isActive =
+              staff.status?.value === 'active' ||
+              staff.status?.is_active === true ||
+              staff.is_active === true;
+            const validRoles = ['staff', 'accountant', 'bookkeeper', 'assistant', 'tax_preparer'];
+            const isValidRole = validRoles.includes(role) || roleType === 'tax_preparer';
+            return isActive && isValidRole;
+          });
+
+          setPreparers(filteredPreparers);
+        } else {
+          console.error('Tax preparers API response not successful:', result);
+          toast.error(result.message || 'Failed to load tax preparers');
+          setPreparers([]);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Tax preparers API error response:', errorData);
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
     } catch (error) {
       console.error('Error fetching preparers:', error);
+      const msg = error.message || handleAPIError(error) || 'Failed to load tax preparers';
+      toast.error(msg);
+      setPreparers([]);
     } finally {
       setLoadingPreparers(false);
     }
@@ -160,23 +217,6 @@ const StartWorkflowModal = ({ isOpen, onClose, onSuccess, clientId, clientName, 
             )}
           </div>
 
-          {/* Assigned Preparer (Optional) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
-              Assign to Tax Preparer (Optional)
-            </label>
-            <input
-              type="number"
-              value={selectedPreparerId}
-              onChange={(e) => setSelectedPreparerId(e.target.value)}
-              placeholder="Enter preparer ID (optional)"
-              className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-              disabled={starting}
-            />
-            <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-              Leave empty to assign to the firm or use the client's assigned preparer
-            </p>
-          </div>
 
           {/* Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

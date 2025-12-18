@@ -49,14 +49,33 @@ a {
   backdrop-filter: blur(10px);
 }
 
-/* Phone Input Container - Fix overlap issue */
+/* Global rounded corners for buttons and modals - ensure consistent appearance */
+.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 8px !important;
+}
+
+button.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 8px !important;
+}
+
+.modal-content:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 12px !important;
+}
+
+.form-control:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="border-radius"]) {
+  border-radius: 8px !important;
+}
+
+/* Phone Input Container - Ensure dropdown overlaps modals and is fully visible */
 .phone-input-container {
   position: relative;
   width: 100%;
+  overflow: visible !important;
 }
 
 .phone-input-container .react-phone-input-2 {
   width: 100% !important;
+  overflow: visible !important;
 }
 
 .phone-input-container .react-phone-input-2 .selected-flag {
@@ -75,11 +94,23 @@ a {
   left: 0;
   top: 0;
   bottom: 0;
-  z-index: 1;
+  z-index: 1060; /* Above Bootstrap modal (1050) */
+  overflow: visible !important;
 }
 
 .phone-input-container .react-phone-input-2 .flag-dropdown.open {
-  z-index: 50 !important;
+  z-index: 1060 !important;
+}
+
+/* Invite Taxpayer modal specific tweaks to ensure phone field and dropdown are above modal content */
+.invite-taxpayer-phone-container {
+  position: relative;
+  z-index: 1;
+}
+
+.invite-taxpayer-phone-container .react-phone-input-2 .flag-dropdown,
+.invite-taxpayer-phone-container .react-phone-input-2 .flag-dropdown.open {
+  z-index: 2000 !important; /* Above Bootstrap modal and other overlays */
 }
 
 .Toastify__toast {

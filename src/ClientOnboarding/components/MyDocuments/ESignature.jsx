@@ -37,9 +37,7 @@ export default function ESignature() {
     completed: 0,
     cancelled: 0
   });
-  const [filterStatus, setFilterStatus] = useState(null); // null = all, 'pending', 'sent', etc.
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
-  const [showExpiredOnly, setShowExpiredOnly] = useState(false);
+  const [filter, setFilter] = useState(null); // null = all, 'pending', 'inprogress', 'expired'
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
@@ -61,17 +59,14 @@ export default function ESignature() {
     }
   ];
 
-  // Fetch signature requests from API
-  useEffect(() => {
-    const fetchSignatureRequests = async () => {
+  // Fetch signature requests function
+  const fetchSignatureRequests = async () => {
       try {
         setLoading(true);
         setError(null);
         
         const options = {
-          status: filterStatus,
-          activeOnly: showActiveOnly,
-          expiredOnly: showExpiredOnly
+          filter: filter
         };
         
         const response = await signatureRequestsAPI.getSignatureRequests(options);
@@ -124,8 +119,10 @@ export default function ESignature() {
       }
     };
 
+  // Fetch signature requests on mount and when filters change
+  useEffect(() => {
     fetchSignatureRequests();
-  }, [filterStatus, showActiveOnly, showExpiredOnly]);
+  }, [filter]);
 
   const handleHighlightClick = (highlight) => {
     const newMarker = {
@@ -178,7 +175,7 @@ export default function ESignature() {
   // Reset to page 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, showActiveOnly, showExpiredOnly]);
+  }, [filter]);
 
   // Pagination for signature requests
   const totalPages = Math.ceil(signatureRequests.length / itemsPerPage);
@@ -203,6 +200,7 @@ export default function ESignature() {
       'pending': 'Signature Required',
       'sent': 'Sent',
       'viewed': 'Viewed',
+      'created': 'Created',
       'completed': 'Completed',
       'signed': 'Signed',
       'cancelled': 'Cancelled'
@@ -313,14 +311,12 @@ export default function ESignature() {
           <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0">
             <button
               onClick={() => {
-                setFilterStatus(null);
-                setShowActiveOnly(false);
-                setShowExpiredOnly(false);
+                setFilter(null);
               }}
               className="btn btn-sm"
               style={{
-                backgroundColor: filterStatus === null && !showActiveOnly && !showExpiredOnly ? "#00C0C6" : "#fff",
-                color: filterStatus === null && !showActiveOnly && !showExpiredOnly ? "#fff" : "#3B4A66",
+                backgroundColor: filter === null ? "#00C0C6" : "#fff",
+                color: filter === null ? "#fff" : "#3B4A66",
                 border: "1px solid #E8F0FF",
                 borderRadius: "8px",
                 fontSize: "12px",
@@ -332,14 +328,12 @@ export default function ESignature() {
             </button>
             <button
               onClick={() => {
-                setFilterStatus('pending');
-                setShowActiveOnly(false);
-                setShowExpiredOnly(false);
+                setFilter('pending');
               }}
               className="btn btn-sm"
               style={{
-                backgroundColor: filterStatus === 'pending' ? "#00C0C6" : "#fff",
-                color: filterStatus === 'pending' ? "#fff" : "#3B4A66",
+                backgroundColor: filter === 'pending' ? "#00C0C6" : "#fff",
+                color: filter === 'pending' ? "#fff" : "#3B4A66",
                 border: "1px solid #E8F0FF",
                 borderRadius: "8px",
                 fontSize: "12px",
@@ -351,14 +345,12 @@ export default function ESignature() {
             </button>
             <button
               onClick={() => {
-                setFilterStatus(null);
-                setShowActiveOnly(true);
-                setShowExpiredOnly(false);
+                setFilter('inprogress');
               }}
               className="btn btn-sm"
               style={{
-                backgroundColor: showActiveOnly ? "#00C0C6" : "#fff",
-                color: showActiveOnly ? "#fff" : "#3B4A66",
+                backgroundColor: filter === 'inprogress' ? "#00C0C6" : "#fff",
+                color: filter === 'inprogress' ? "#fff" : "#3B4A66",
                 border: "1px solid #E8F0FF",
                 borderRadius: "8px",
                 fontSize: "12px",
@@ -366,18 +358,16 @@ export default function ESignature() {
                 padding: "6px 12px"
               }}
             >
-              Active
+              In Progress
             </button>
             <button
               onClick={() => {
-                setFilterStatus(null);
-                setShowActiveOnly(false);
-                setShowExpiredOnly(true);
+                setFilter('expired');
               }}
               className="btn btn-sm"
               style={{
-                backgroundColor: showExpiredOnly ? "#00C0C6" : "#fff",
-                color: showExpiredOnly ? "#fff" : "#3B4A66",
+                backgroundColor: filter === 'expired' ? "#00C0C6" : "#fff",
+                color: filter === 'expired' ? "#fff" : "#3B4A66",
                 border: "1px solid #E8F0FF",
                 borderRadius: "8px",
                 fontSize: "12px",
@@ -461,6 +451,11 @@ export default function ESignature() {
                     {request.description && (
                       <div className="small text-muted mb-1">{request.description}</div>
                     )}
+                    {request.spouse_sign === true && (
+                      <div className="small mb-1" style={{ color: '#F49C2D', fontWeight: '500' }}>
+                        ⚠️ Spouse signature also required
+                      </div>
+                    )}
                     <div className="small text-muted">
                       {request.created_at && `Created on ${formatDate(request.created_at)}`}
                       {request.requested_by_name && ` · Requested by ${request.requested_by_name}`}
@@ -499,14 +494,188 @@ export default function ESignature() {
                     </button>
                   )}
 
-                  {(request.status === 'pending' || request.status === 'sent' || request.status === 'viewed') && (
+                  {((request.status === 'pending' || request.status === 'sent' || request.status === 'viewed' || request.status === 'created') || request.embedded_url) && 
+                   request.status !== 'signed' && 
+                   request.status !== 'completed' && (
                     <button
                       className="btn d-flex align-items-center gap-2 rounded text-white"
                       style={{ backgroundColor: "#F56D2D" }}
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
                         setSelectedIndex(originalIndex);
-                        setShowModal(true);
+                        
+                        try {
+                          const selectedRequest = signatureRequests[originalIndex];
+                          if (!selectedRequest) {
+                            toast.error('No document selected');
+                            return;
+                          }
+
+                          // Check if embedded_url is available (direct SignWell embedding)
+                          if (selectedRequest.embedded_url) {
+                            // Open SignWell embedded URL in new window
+                            const signWellWindow = window.open(selectedRequest.embedded_url, '_blank', 'width=1200,height=800');
+                            
+                            if (signWellWindow) {
+                              toast.info('Opening SignWell signing page in a new window. Please sign the document there.', {
+                                autoClose: 5000,
+                                position: "top-right"
+                              });
+                              
+                              // If spouse signature is also required, inform user
+                              if (selectedRequest.spouse_sign === true) {
+                                toast.info('Your spouse will also need to sign this document. Please have them sign after you complete your signature.', {
+                                  autoClose: 7000,
+                                  position: "top-right"
+                                });
+                              }
+                              
+                              // Poll for status updates using the polling endpoint
+                              const esignDocumentId = selectedRequest.id || selectedRequest.esign_id || selectedRequest.document;
+                              console.log('Starting polling for e-sign document:', esignDocumentId, selectedRequest);
+                              if (esignDocumentId) {
+                                // Declare pollInterval variable first
+                                let pollInterval = null;
+                                
+                                // Start polling immediately, then continue every 10 seconds
+                                const pollStatus = async () => {
+                                  try {
+                                    console.log('Polling e-sign status for document:', esignDocumentId);
+                                    const pollResponse = await signatureRequestsAPI.pollESignStatus(esignDocumentId);
+                                    console.log('Poll response:', pollResponse);
+                                    if (pollResponse.success && pollResponse.data) {
+                                      // Update the request status if it changed
+                                      setSignatureRequests(prevRequests => 
+                                        prevRequests.map(req => 
+                                          req.id === esignDocumentId 
+                                            ? { ...req, ...pollResponse.data }
+                                            : req
+                                        )
+                                      );
+                                      
+                                      // If document is completed/signed, stop polling and refresh full list
+                                      if (pollResponse.data.status === 'signed' || 
+                                          pollResponse.data.status === 'completed' ||
+                                          pollResponse.data.status === 'cancelled') {
+                                        if (pollInterval) {
+                                          clearInterval(pollInterval);
+                                        }
+                                        if (signWellWindow.closed) {
+                                          setTimeout(() => fetchSignatureRequests(), 1000);
+                                        } else {
+                                          // Refresh full list even if window is still open
+                                          fetchSignatureRequests();
+                                        }
+                                      }
+                                    }
+                                  } catch (pollError) {
+                                    console.error('Error polling e-sign status:', pollError);
+                                    // Continue polling even if one request fails
+                                  }
+                                };
+                                
+                                // Start polling immediately
+                                pollStatus();
+                                
+                                // Then poll every 10 seconds
+                                pollInterval = setInterval(pollStatus, 10000);
+                                
+                                // Stop polling when window is closed
+                                const windowCheckInterval = setInterval(() => {
+                                  if (signWellWindow.closed) {
+                                    clearInterval(windowCheckInterval);
+                                    clearInterval(pollInterval);
+                                    setTimeout(() => fetchSignatureRequests(), 1000);
+                                  }
+                                }, 2000);
+                                
+                                // Clean up intervals after 5 minutes
+                                setTimeout(() => {
+                                  clearInterval(pollInterval);
+                                  clearInterval(windowCheckInterval);
+                                  fetchSignatureRequests();
+                                }, 300000);
+                              } else {
+                                // Fallback: Poll for window closure and refresh
+                                const checkInterval = setInterval(() => {
+                                  if (signWellWindow.closed) {
+                                    clearInterval(checkInterval);
+                                    setTimeout(() => fetchSignatureRequests(), 1000);
+                                  }
+                                }, 2000);
+                                
+                                // Refresh after 30 seconds regardless
+                                setTimeout(() => {
+                                  clearInterval(checkInterval);
+                                  fetchSignatureRequests();
+                                }, 30000);
+                              }
+                            } else {
+                              toast.error('Please allow pop-ups for this site to open the signing page', {
+                                autoClose: 5000,
+                                position: "top-right"
+                              });
+                            }
+                            return;
+                          }
+
+                          // Fallback to existing SignWell API workflow if embedded_url is not available
+                          const sendingToast = toast.loading('Sending document to SignWell...');
+
+                          try {
+                            const userData = getUserData();
+                            const signerEmail = userData?.email || selectedRequest.client_email || '';
+                            const signerName = userData?.full_name || userData?.name || selectedRequest.client_name || 'Signer';
+                            const documentName = selectedRequest.document_name || selectedRequest.title || 'Document';
+
+                            if (!signerEmail) {
+                              throw new Error('Signer email is required for SignWell signature');
+                            }
+
+                            const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
+                            const applyResponse = await signWellAPI.applySignature({
+                              document_id: documentId,
+                              signer_email: signerEmail,
+                              signer_name: signerName,
+                              document_name: documentName,
+                              test_mode: true // TODO: Set to false in production environment
+                            });
+
+                            if (applyResponse.success && applyResponse.data && applyResponse.data.signing_url) {
+                              toast.dismiss(sendingToast);
+                              toast.success('Document sent to SignWell. Opening signing page...', {
+                                autoClose: 3000
+                              });
+
+                              // Open SignWell signing URL in new tab
+                              window.open(applyResponse.data.signing_url, '_blank');
+
+                              // Refresh signature requests after a delay
+                              setTimeout(async () => {
+                                const response = await signatureRequestsAPI.getSignatureRequests();
+                                if (response.success && response.data && response.data.requests) {
+                                  setSignatureRequests(response.data.requests);
+                                }
+                              }, 2000);
+                            } else {
+                              throw new Error(applyResponse.message || 'Failed to apply SignWell signature');
+                            }
+                          } catch (applyError) {
+                            console.error('Error applying SignWell signature:', applyError);
+                            toast.error(applyError.message || 'Failed to send document to SignWell. Opening signature modal...', {
+                              autoClose: 5000
+                            });
+                            // Fallback to regular signature modal
+                            setShowModal(true);
+                          }
+                        } catch (error) {
+                          console.error('Error in SignWell workflow:', error);
+                          toast.error(handleAPIError(error) || 'An error occurred. Opening signature modal...', {
+                            autoClose: 5000
+                          });
+                          // Fallback to regular signature modal
+                          setShowModal(true);
+                        }
                       }}
                     >
                       <div
@@ -579,64 +748,83 @@ export default function ESignature() {
               );
             })()}
 
-            {/* Signer Info */}
-            <div className="esign-signers">
-              {[
-                { title: "Primary Taxpayer", signer: "Michael Brown" },
-                { title: "Spouse", signer: "Jennifer Brown" },
-              ].map((item, idx) => (
-                <div key={idx} className="esign-signer-card">
-                  <div className="esign-signer-top">
-                    <div className="esign-signer-left">
-                      <div className="esign-signer-icon">
-                        <ProfileIcon size={16} color="#3B4A66" />
+            {/* Compact Summary from API payload */}
+            {selectedIndex !== null && signatureRequests[selectedIndex] && (() => {
+              const selectedRequest = signatureRequests[selectedIndex];
+              const taskInfo = selectedRequest.task_info || {};
+
+              return (
+                <div className="mt-3">
+                  {/* Document & Client Info */}
+                  <div className="mb-3 d-flex flex-wrap gap-3">
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Document
                       </div>
-                      <div>
-                        <div className="esign-signer-title">{item.title}</div>
-                        <div className="esign-signer-subtitle">Signer: {item.signer}</div>
+                      <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
+                        {selectedRequest.document_name || selectedRequest.title || 'Document'}
                       </div>
                     </div>
-                    <span className="esign-signer-badge">Signature Required</span>
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Client
+                      </div>
+                      <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
+                        {selectedRequest.client_name || '—'}
+                      </div>
+                      </div>
+                      <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Requested By
+                      </div>
+                      <div className="text-sm fw-semibold" style={{ fontFamily: 'BasisGrotesquePro', color: '#111827' }}>
+                        {selectedRequest.requested_by_name || selectedRequest.staff_info?.name || '—'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Signature Requirements */}
-            <h6 className="esign-requirements-title">Signature Requirements</h6>
-            <div className="esign-requirements-list">
-              {[
-                { label: "Signature", icon: <SignatureIcon />, who: "Taxpayer", req: "Required" },
-                { label: "Date", icon: <DateIcon />, who: "Taxpayer", req: "Required" },
-                { label: "Signature", icon: <SignatureIcon />, who: "Spouse", req: "Required" },
-                { label: "Date", icon: <DateIcon />, who: "Spouse", req: "Required" },
-                { label: "Initial", icon: <InitialIcon />, who: "Taxpayer", req: "Optional" },
-              ].map((item, idx) => (
-                <div key={idx} className="esign-requirement-item">
-                  <span className="esign-requirement-left">
-                    <span className="esign-requirement-icon">{item.icon}</span>
-                    {item.label}
-                  </span>
-                  <span className="esign-requirement-tags">
-                    <span className="esign-tag">{item.who}</span>
-                    <span className="esign-tag">{item.req}</span>
+                  {/* Status & Dates */}
+                  <div className="mb-3 d-flex flex-wrap gap-3">
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Status
+                </div>
+                      <span className="esign-file-badge">
+                        {selectedRequest.status_display || selectedRequest.status || '—'}
                   </span>
                 </div>
-              ))}
+                    <div>
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Created
+                      </div>
+                      <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#374151' }}>
+                        {selectedRequest.created_at ? formatDate(selectedRequest.created_at) : '—'}
             </div>
-
-            {/* Legal Notice */}
-            <div className="esign-legal-notice">
-              <div className="esign-legal-icon">
-                <LegalIcon size={14} color="#F56D2D" />
               </div>
               <div>
-                <div className="esign-legal-title">Legal Notice:</div>
-                <div className="esign-legal-text">
-                  By proceeding to sign, you agree that your electronic signature has the same legal effect as a handwritten one.
+                      <div className="text-xs text-[#6B7280]" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Due Date
+                      </div>
+                      <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#374151' }}>
+                        {taskInfo.due_date ? formatDate(taskInfo.due_date) : '—'}
                 </div>
               </div>
             </div>
+
+                  {/* Description */}
+                  {selectedRequest.description && (
+                    <div className="mb-2">
+                      <div className="text-xs text-[#6B7280] mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px' }}>
+                        Description
+                      </div>
+                      <div className="text-sm" style={{ fontFamily: 'BasisGrotesquePro', color: '#4B5563' }}>
+                        {selectedRequest.description}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Footer Buttons */}
             <div className="esign-footer">
@@ -653,54 +841,8 @@ export default function ESignature() {
                       return;
                     }
 
-                    // Show loading toast
-                    const loadingToast = toast.loading('Extracting signature fields...');
+                    const sendingToast = toast.loading('Sending document to SignWell...');
 
-                    // Step 1: Extract signature fields
-                    let signatureFields = [];
-                    try {
-                      // Try to get document_id from the request
-                      const documentId = selectedRequest.document_id || selectedRequest.document?.id;
-                      
-                      if (!documentId) {
-                        throw new Error('Document ID not found in signature request');
-                      }
-
-                      const extractResponse = await signWellAPI.extractFields({ document_id: documentId });
-                      
-                      if (extractResponse.success && extractResponse.fields && extractResponse.fields.length > 0) {
-                        signatureFields = extractResponse.fields;
-                        toast.update(loadingToast, {
-                          render: `Found ${signatureFields.length} signature field(s)`,
-                          type: 'success',
-                          isLoading: false,
-                          autoClose: 2000
-                        });
-                      } else {
-                        toast.update(loadingToast, {
-                          render: 'No signature fields detected. Proceeding with manual signature...',
-                          type: 'info',
-                          isLoading: false,
-                          autoClose: 3000
-                        });
-                        // If no fields detected, proceed with regular signature modal
-                        setShowSignModal(true);
-                        return;
-                      }
-                    } catch (extractError) {
-                      console.error('Error extracting signature fields:', extractError);
-                      toast.update(loadingToast, {
-                        render: extractError.message || 'Failed to extract signature fields. Proceeding with manual signature...',
-                        type: 'warning',
-                        isLoading: false,
-                        autoClose: 3000
-                      });
-                      // If extraction fails, proceed with regular signature modal
-                      setShowSignModal(true);
-                      return;
-                    }
-
-                    // Step 2: Apply SignWell signature
                     try {
                       const userData = getUserData();
                       const signerEmail = userData?.email || selectedRequest.client_email || '';
@@ -711,12 +853,9 @@ export default function ESignature() {
                         throw new Error('Signer email is required for SignWell signature');
                       }
 
-                      const sendingToast = toast.loading('Sending document to SignWell...');
-
-                      const documentId = selectedRequest.document_id || selectedRequest.document?.id;
+                      const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
                       const applyResponse = await signWellAPI.applySignature({
                         document_id: documentId,
-                        signature_fields: signatureFields,
                         signer_email: signerEmail,
                         signer_name: signerName,
                         document_name: documentName,
@@ -731,9 +870,6 @@ export default function ESignature() {
 
                         // Open SignWell signing URL in new tab
                         window.open(applyResponse.data.signing_url, '_blank');
-
-                        // Optionally, you can poll for status
-                        // pollSignWellStatus(applyResponse.data.document_id);
 
                         // Close the modal
                         setShowModal(false);
@@ -783,12 +919,11 @@ export default function ESignature() {
             setShowSignModal(false);
             setSelectedIndex(null);
           }}
-          pages={[
-            { id: 1, title: "Page 1", image: page1Image },
-            { id: 2, title: "Page 2", image: page2Image },
-            { id: 3, title: "Page 3", image: page3Image },
-            { id: 4, title: "Page 4", image: page4Image },
-          ]}
+          pages={ <PDFViewer
+            pdfUrl={signatureRequests[selectedIndex]?.document_url}
+            height="70vh"
+            showThumbnails={true}
+          />}
           requestId={signatureRequests[selectedIndex]?.id}
           signatureRequest={signatureRequests[selectedIndex]}
           onSignatureComplete={async (result) => {
@@ -815,6 +950,7 @@ export default function ESignature() {
         fullscreen="lg-down"
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
+
         <Modal.Header closeButton>
           <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
             {selectedIndex !== null && signatureRequests[selectedIndex]
@@ -825,7 +961,7 @@ export default function ESignature() {
         <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
           {selectedIndex !== null && signatureRequests[selectedIndex]?.document_url ? (
             <PDFViewer
-              pdfUrl={signatureRequests[selectedIndex].document_url}
+              pdfUrl={signatureRequests[selectedIndex]?.document_url}
               height="70vh"
               showThumbnails={true}
             />

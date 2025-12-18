@@ -137,3 +137,10 @@
 .notification-dismiss:hover {
     color: #f56d2d !important;
 }
+
+@media (max-width: 400px) {
+    .firm-topbar-logo{
+      max-height: 22px !important;
+      width: auto !important;
+    }
+  }

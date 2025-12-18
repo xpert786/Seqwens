@@ -82,6 +82,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
             <button
               onClick={onCreateTemplate}
               className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] flex items-center gap-2"
+              style={{ borderRadius: '8px' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -105,6 +106,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
             <button
               onClick={onCreateTemplate}
               className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro]"
+              style={{ borderRadius: '8px' }}
             >
               Create Template
             </button>
@@ -164,12 +166,14 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
                 <button
                   onClick={() => onViewTemplate(template)}
                   className="flex-1 px-3 py-2 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                  style={{ borderRadius: '8px' }}
                 >
                   View
                 </button>
                 <button
                   onClick={() => onEditTemplate(template)}
                   className="flex-1 px-3 py-2 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                  style={{ borderRadius: '8px' }}
                 >
                   Edit
                 </button>
@@ -177,6 +181,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
                   onClick={() => handleClone(template)}
                   className="px-3 py-2 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
                   title="Clone"
+                  style={{ borderRadius: '8px' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -186,6 +191,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
                   onClick={() => setShowDeleteConfirm(template.id)}
                   className="px-3 py-2 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors font-[BasisGrotesquePro]"
                   title="Delete"
+                  style={{ borderRadius: '8px' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -200,7 +206,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg max-w-md w-full p-6" style={{ borderRadius: '12px' }}>
             <h3 className="text-lg font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
               Delete Workflow Template
             </h3>
@@ -212,6 +218,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
                 onClick={() => setShowDeleteConfirm(null)}
                 disabled={deleting}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                style={{ borderRadius: '8px' }}
               >
                 Cancel
               </button>
@@ -219,6 +226,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
                 onClick={() => handleDelete(showDeleteConfirm)}
                 disabled={deleting}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-[BasisGrotesquePro] disabled:opacity-50"
+                style={{ borderRadius: '8px' }}
               >
                 {deleting ? 'Deleting...' : 'Delete'}
               </button>

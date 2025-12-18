@@ -603,6 +603,92 @@ export const handleAPIError = (error) => {
     console.log('Could not parse error message as JSON:', errorMessage);
   }
 
+  // Extract clean error messages from ErrorDetail structures
+  // Handle formats like: "An error occurred: {'has_spouse': ErrorDetail(string='Spouse details not found for taxpayer.', code='invalid')}"
+  if (typeof errorMessage === 'string' && errorMessage.includes('ErrorDetail')) {
+    try {
+      // Extract string values from ErrorDetail objects
+      // Match pattern: ErrorDetail(string='message', code='...')
+      const errorDetailMatches = errorMessage.match(/ErrorDetail\(string=['"]([^'"]+)['"]/g);
+      if (errorDetailMatches && errorDetailMatches.length > 0) {
+        // Extract all error messages
+        const errorMessages = errorDetailMatches.map(match => {
+          const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
+          return stringMatch ? stringMatch[1] : null;
+        }).filter(Boolean);
+        
+        if (errorMessages.length > 0) {
+          errorMessage = errorMessages.join('. ');
+        }
+      }
+    } catch (parseError) {
+      // If parsing fails, try to extract a simpler version
+      console.log('Could not parse ErrorDetail structure:', errorMessage);
+    }
+  }
+  
+  // Also handle error.response.data structure (from API responses)
+  if (error.response?.data) {
+    const errorData = error.response.data;
+    
+    // Check if message contains ErrorDetail structure
+    if (errorData.message && typeof errorData.message === 'string' && errorData.message.includes('ErrorDetail')) {
+      try {
+        const errorDetailMatches = errorData.message.match(/ErrorDetail\(string=['"]([^'"]+)['"]/g);
+        if (errorDetailMatches && errorDetailMatches.length > 0) {
+          const errorMessages = errorDetailMatches.map(match => {
+            const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
+            return stringMatch ? stringMatch[1] : null;
+          }).filter(Boolean);
+          
+          if (errorMessages.length > 0) {
+            errorMessage = errorMessages.join('. ');
+          }
+        }
+      } catch (parseError) {
+        console.log('Could not parse ErrorDetail from response data:', errorData.message);
+      }
+    }
+    
+    // Handle errors object with ErrorDetail structures
+    if (errorData.errors && typeof errorData.errors === 'object') {
+      try {
+        const cleanErrors = [];
+        Object.entries(errorData.errors).forEach(([field, errorValue]) => {
+          if (typeof errorValue === 'string' && errorValue.includes('ErrorDetail')) {
+            const stringMatch = errorValue.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+            if (stringMatch) {
+              cleanErrors.push(stringMatch[1]);
+            } else {
+              cleanErrors.push(errorValue);
+            }
+          } else if (Array.isArray(errorValue)) {
+            errorValue.forEach(err => {
+              if (typeof err === 'string' && err.includes('ErrorDetail')) {
+                const stringMatch = err.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+                if (stringMatch) {
+                  cleanErrors.push(stringMatch[1]);
+                } else {
+                  cleanErrors.push(err);
+                }
+              } else if (typeof err === 'string') {
+                cleanErrors.push(err);
+              }
+            });
+          } else if (typeof errorValue === 'string') {
+            cleanErrors.push(errorValue);
+          }
+        });
+        
+        if (cleanErrors.length > 0) {
+          errorMessage = cleanErrors.join('. ');
+        }
+      } catch (parseError) {
+        console.log('Could not parse errors object:', errorData.errors);
+      }
+    }
+  }
+
   // Handle email template errors with user-friendly messages
   const lowerErrorMessage = errorMessage.toLowerCase();
   if (lowerErrorMessage.includes('no active template') || 
@@ -2907,15 +2993,60 @@ export const firmAdminDocumentsAPI = {
   // ========== Document Sharing Management ==========
 
   // Share documents with tax preparers
-  shareDocuments: async (documentIds, taxPreparerIds, notes = null) => {
-    const payload = {
-      document_ids: documentIds,
-      tax_preparer_ids: taxPreparerIds
-    };
-    if (notes) {
-      payload.notes = notes;
+  shareDocuments: async (files, taxPreparerIds, notes = null) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-    return await apiRequest('/firm/share-documents/', 'POST', payload);
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    
+    // Append files - files should be an array of File objects
+    if (Array.isArray(files)) {
+      files.forEach((file, index) => {
+        if (file instanceof File) {
+          formData.append('files', file);
+        } else if (file && typeof file === 'object') {
+          // If it's a file-like object, try to append it
+          formData.append('files', file);
+        }
+      });
+    } else if (files instanceof File) {
+      formData.append('files', files);
+    }
+
+    // Append tax preparer IDs
+    if (Array.isArray(taxPreparerIds)) {
+      taxPreparerIds.forEach((id) => {
+        formData.append('tax_preparer_ids', id.toString());
+      });
+    } else {
+      formData.append('tax_preparer_ids', taxPreparerIds.toString());
+    }
+
+    // Append notes if provided
+    if (notes) {
+      formData.append('notes', notes);
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type for FormData, browser will set it with boundary
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/firm/share-documents/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
   },
 
   // Unshare documents from tax preparers
@@ -3934,7 +4065,8 @@ export const taxPreparerClientAPI = {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invite/sms/`, 'POST', smsData);
   },
 
-  // Get invite link for existing client (new API)
+  // Get invite link for existing client (by invite_id or client_id)
+  // GET /accounts/tax-preparer/clients/invite/link/?invite_id=X or ?client_id=X
   getInviteLink: async (params = {}) => {
     const { invite_id, client_id } = params;
     const queryParams = new URLSearchParams();
@@ -3951,6 +4083,26 @@ export const taxPreparerClientAPI = {
     return await apiRequest(endpoint, 'GET');
   },
 
+  // Generate or regenerate invite link
+  // POST /accounts/tax-preparer/clients/invite/link/
+  // Body: { client_id: X } or { invite_id: X, regenerate: true } or { client_id: X, regenerate: true }
+  generateInviteLink: async (data) => {
+    const { client_id, invite_id, regenerate = false } = data;
+    
+    const payload = {};
+    if (client_id) {
+      payload.client_id = client_id;
+    }
+    if (invite_id) {
+      payload.invite_id = invite_id;
+    }
+    if (regenerate) {
+      payload.regenerate = true;
+    }
+
+    return await apiRequest('/user/tax-preparer/clients/invite/link/', 'POST', payload);
+  },
+
   // Send invite to client (new API)
   sendInvite: async (payload) => {
     return await apiRequest('/user/tax-preparer/clients/invite/send/', 'POST', payload);
@@ -3960,6 +4112,128 @@ export const taxPreparerClientAPI = {
   // GET /taxpayer/tax-preparer/clients/{client_id}/esign-logs/
   getESignLogs: async (clientId) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/esign-logs/`, 'GET');
+  },
+
+  // Get list of clients for tax preparer
+  // GET /taxpayer/tax-preparer/clients/ or /firm/staff/clients/list/
+  getClients: async (params = {}) => {
+    const { search, status, priority } = params;
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+    if (status) queryParams.append('status', status);
+    if (priority) queryParams.append('priority', priority);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Create e-signature request
+  // POST /api/taxpayer/esign/create/
+  createESignRequest: async (data) => {
+    const { taxpayer_id, has_spouse, preparer_must_sign, file, folder_id, deadline } = data;
+    
+    if (!taxpayer_id) {
+      throw new Error('taxpayer_id is required');
+    }
+    if (!file) {
+      throw new Error('PDF file is required');
+    }
+
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+    formData.append('taxpayer_id', taxpayer_id.toString());
+    formData.append('has_spouse', has_spouse ? 'true' : 'false');
+    formData.append('preparer_must_sign', preparer_must_sign !== undefined ? (preparer_must_sign ? 'true' : 'false') : 'true');
+    formData.append('file', file);
+    
+    if (folder_id) {
+      formData.append('folder_id', folder_id.toString());
+    }
+    
+    if (deadline) {
+      // Ensure deadline is in YYYY-MM-DD format (date only)
+      // Date input already provides YYYY-MM-DD format
+      const deadlineDate = deadline.split('T')[0]; // Remove time if present
+      formData.append('deadline', deadlineDate);
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/esign/create/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Extract clean error message from ErrorDetail structures
+      let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
+      
+      // Handle ErrorDetail structures in message
+      if (typeof errorMessage === 'string' && errorMessage.includes('ErrorDetail')) {
+        try {
+          const errorDetailMatches = errorMessage.match(/ErrorDetail\(string=['"]([^'"]+)['"]/g);
+          if (errorDetailMatches && errorDetailMatches.length > 0) {
+            const errorMessages = errorDetailMatches.map(match => {
+              const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
+              return stringMatch ? stringMatch[1] : null;
+            }).filter(Boolean);
+            
+            if (errorMessages.length > 0) {
+              errorMessage = errorMessages.join('. ');
+            }
+          }
+        } catch (parseError) {
+          console.log('Could not parse ErrorDetail structure:', errorMessage);
+        }
+      }
+      
+      // Handle errors object with ErrorDetail structures
+      if (errorData.errors && typeof errorData.errors === 'object') {
+        try {
+          const cleanErrors = [];
+          Object.entries(errorData.errors).forEach(([field, errorValue]) => {
+            if (typeof errorValue === 'string' && errorValue.includes('ErrorDetail')) {
+              const stringMatch = errorValue.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+              if (stringMatch) {
+                cleanErrors.push(stringMatch[1]);
+              }
+            } else if (Array.isArray(errorValue)) {
+              errorValue.forEach(err => {
+                if (typeof err === 'string' && err.includes('ErrorDetail')) {
+                  const stringMatch = err.match(/ErrorDetail\(string=['"]([^'"]+)['"]/);
+                  if (stringMatch) {
+                    cleanErrors.push(stringMatch[1]);
+                  } else if (typeof err === 'string') {
+                    cleanErrors.push(err);
+                  }
+                } else if (typeof err === 'string') {
+                  cleanErrors.push(err);
+                }
+              });
+            } else if (typeof errorValue === 'string') {
+              cleanErrors.push(errorValue);
+            }
+          });
+          
+          if (cleanErrors.length > 0) {
+            errorMessage = cleanErrors.join('. ');
+          }
+        } catch (parseError) {
+          console.log('Could not parse errors object:', errorData.errors);
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
   },
 
   // Get pending client invites
@@ -4467,17 +4741,23 @@ export const paymentsAPI = {
 export const signatureRequestsAPI = {
   // Get all signature requests for the current taxpayer
   getSignatureRequests: async (options = {}) => {
-    const { status = null, activeOnly = false, expiredOnly = false } = options;
+    const { filter = null, status = null, activeOnly = false, expiredOnly = false } = options;
     const params = new URLSearchParams();
 
-    if (status) {
-      params.append('status', status);
-    }
-    if (activeOnly) {
-      params.append('active_only', 'true');
-    }
-    if (expiredOnly) {
-      params.append('expired_only', 'true');
+    // Use new filter parameter if provided, otherwise fall back to old parameters for backward compatibility
+    if (filter) {
+      params.append('filter', filter);
+    } else {
+      // Legacy support for old parameters
+      if (status) {
+        params.append('status', status);
+      }
+      if (activeOnly) {
+        params.append('active_only', 'true');
+      }
+      if (expiredOnly) {
+        params.append('expired_only', 'true');
+      }
     }
 
     const queryString = params.toString();
@@ -4505,6 +4785,14 @@ export const signatureRequestsAPI = {
   // Get expired signature requests
   getExpiredSignatureRequests: async () => {
     return await apiRequest('/taxpayer/signatures/requests/?expired_only=true', 'GET');
+  },
+
+  // Poll e-signature document status
+  pollESignStatus: async (esignDocumentId) => {
+    if (!esignDocumentId) {
+      throw new Error('esign_document_id is required');
+    }
+    return await apiRequest(`/taxpayer/esign/poll-status/${esignDocumentId}/`, 'POST');
   },
 
   // Submit signature request
@@ -4543,17 +4831,20 @@ export const signatureRequestsAPI = {
 export const signWellAPI = {
   // Extract signature fields from PDF
   extractFields: async (data) => {
-    const { document_id, pdf_path } = data;
+    const { document_id, pdf_path, esign_id } = data;
     
-    if (!document_id && !pdf_path) {
-      throw new Error('Either document_id or pdf_path is required');
+    if (!document_id && !pdf_path && !esign_id) {
+      throw new Error('Either document_id, pdf_path, or esign_id is required');
     }
     
     const requestBody = {};
-    if (document_id) {
-      requestBody.document_id = document_id;
-    } else if (pdf_path) {
+    // Priority: pdf_path > esign_id > document_id
+    if (pdf_path) {
       requestBody.pdf_path = pdf_path;
+    } else if (esign_id) {
+      requestBody.esign_id = esign_id;
+    } else if (document_id) {
+      requestBody.document_id = document_id;
     }
     
     return await apiRequest('/taxpayer/signwell/extract-fields/', 'POST', requestBody);
@@ -4563,7 +4854,6 @@ export const signWellAPI = {
   applySignature: async (data) => {
     const {
       document_id,
-      signature_fields,
       signer_email,
       signer_name,
       document_name,
@@ -4573,11 +4863,7 @@ export const signWellAPI = {
     if (!document_id) {
       throw new Error('document_id is required');
     }
-    
-    if (!signature_fields || !Array.isArray(signature_fields) || signature_fields.length === 0) {
-      throw new Error('signature_fields array is required');
-    }
-    
+
     if (!signer_email) {
       throw new Error('signer_email is required');
     }
@@ -4588,7 +4874,6 @@ export const signWellAPI = {
     
     const requestBody = {
       document_id,
-      signature_fields,
       signer_email,
       signer_name,
       document_name: document_name || 'Document',
@@ -4610,6 +4895,18 @@ export const signWellAPI = {
 
 // Documents API functions
 export const documentsAPI = {
+  // Get document categories for taxpayer
+  // GET /taxpayer/document-categories/
+  getDocumentCategories: async () => {
+    return await apiRequest('/taxpayer/document-categories/', 'GET');
+  },
+
+  // Create new document category for taxpayer
+  // POST /taxpayer/document-categories/
+  createDocumentCategory: async (categoryData) => {
+    return await apiRequest('/taxpayer/document-categories/', 'POST', categoryData);
+  },
+
   // Get all document requests for the current taxpayer
   getDocumentRequests: async (options = {}) => {
     const {
@@ -5598,6 +5895,103 @@ export const firmAdminSubscriptionAPI = {
       payment_method: paymentMethod,
       change_immediately: changeImmediately
     });
+  },
+};
+
+// Firm Admin Blocked Accounts & Invites API functions
+export const firmAdminBlockedAccountsAPI = {
+  // Get blocked accounts
+  // GET /accounts/firm-admin/blocked-accounts/?page=1&page_size=20&search=john
+  getBlockedAccounts: async ({ search = '', page = 1, page_size = 20 } = {}) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: page_size.toString(),
+    });
+    if (search) {
+      params.append('search', search);
+    }
+    return await apiRequest(`/user/firm-admin/blocked-accounts/?${params}`, 'GET');
+  },
+
+  // Block a user
+  // POST /accounts/firm-admin/blocked-accounts/{user_id}/block/
+  blockAccount: async (userId, { block_duration_hours, reason }) => {
+    return await apiRequest(`/user/firm-admin/blocked-accounts/${userId}/block/`, 'POST', {
+      block_duration_hours,
+      reason
+    });
+  },
+
+  // Unblock a user
+  // POST /accounts/firm-admin/blocked-accounts/{user_id}/unblock/
+  unblockAccount: async (userId) => {
+    return await apiRequest(`/user/firm-admin/blocked-accounts/${userId}/unblock/`, 'POST');
+  },
+
+  // Approve invite
+  // POST /accounts/firm-admin/invites/{invite_id}/approve/
+  approveInvite: async (inviteId) => {
+    return await apiRequest(`/user/firm-admin/invites/${inviteId}/approve/`, 'POST');
+  },
+
+  // Decline invite
+  // POST /accounts/firm-admin/invites/{invite_id}/decline/
+  declineInvite: async (inviteId, { reason }) => {
+    return await apiRequest(`/user/firm-admin/invites/${inviteId}/decline/`, 'POST', {
+      reason
+    });
+  },
+};
+
+// Firm Admin Geo Restrictions API functions
+export const firmAdminGeoRestrictionsAPI = {
+  // List available geo locations
+  // GET /accounts/firm-admin/geo-locations/
+  getGeoLocations: async () => {
+    return await apiRequest('/user/firm-admin/geo-locations/', 'GET');
+  },
+
+  // List all geo restrictions
+  // GET /accounts/firm-admin/geo-restrictions/?include_inactive=true
+  getGeoRestrictions: async ({ include_inactive = false } = {}) => {
+    const params = new URLSearchParams();
+    if (include_inactive) {
+      params.append('include_inactive', 'true');
+    }
+    const queryString = params.toString();
+    return await apiRequest(`/user/firm-admin/geo-restrictions/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Create or update geo restriction (upsert)
+  // POST /accounts/firm-admin/geo-restrictions/create/
+  createOrUpdateGeoRestriction: async (data) => {
+    const { region, session_timeout_minutes, description, country_codes, is_active = true } = data;
+    const payload = {
+      region,
+      session_timeout_minutes,
+      is_active
+    };
+    if (description) payload.description = description;
+    if (country_codes && Array.isArray(country_codes)) payload.country_codes = country_codes;
+    return await apiRequest('/user/firm-admin/geo-restrictions/create/', 'POST', payload);
+  },
+
+  // Get geo restriction details
+  // GET /accounts/firm-admin/geo-restrictions/{restriction_id}/
+  getGeoRestriction: async (restrictionId) => {
+    return await apiRequest(`/user/firm-admin/geo-restrictions/${restrictionId}/`, 'GET');
+  },
+
+  // Update geo restriction
+  // PUT /accounts/firm-admin/geo-restrictions/{restriction_id}/
+  updateGeoRestriction: async (restrictionId, data) => {
+    return await apiRequest(`/user/firm-admin/geo-restrictions/${restrictionId}/`, 'PUT', data);
+  },
+
+  // Delete geo restriction
+  // DELETE /accounts/firm-admin/geo-restrictions/{restriction_id}/
+  deleteGeoRestriction: async (restrictionId) => {
+    return await apiRequest(`/user/firm-admin/geo-restrictions/${restrictionId}/`, 'DELETE');
   },
 };
 
