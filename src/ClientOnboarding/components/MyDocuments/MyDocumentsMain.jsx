@@ -6,7 +6,7 @@ import UploadModal from "../../upload/UploadModal";
 import Folders from './Folders';
 import ESignature from './ESignature';
 import ArchivedDocuments from './ArchivedDocuments';
-
+import '../../styles/MyDocumentMain.css';
 const tabs = [
   { name: 'Document Requests', key: 'requests' },
   { name: 'My Documents', key: 'my' },
@@ -22,11 +22,11 @@ export default function MyDocumentsMain() {
   const documentsRefreshKey = useRef(0);
 
   return (
-    <div className='px-4'>
+    <div className='lg:px-4 md:px-2 px-1'>
       {/* Header - Hide when folder is selected */}
       {!isFolderSelected && (
         <>
-          <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="d-flex justify-content-between align-items-center mb-3 my-docs-header">
             <div>
               <h5 className="mb-0" style={{ fontSize: '26px', fontWeight: '500', color: '#3B4A66', fontFamily: "BasisGrotesquePro", }}>
                 My Documents
@@ -59,7 +59,7 @@ export default function MyDocumentsMain() {
 
 
           <div
-            className="d-inline-block mb-4"
+            className="d-inline-block mb-4 tabs-wrapper"
             style={{
               padding: "6px 10px",
               border: "1px solid #E8F0FF",

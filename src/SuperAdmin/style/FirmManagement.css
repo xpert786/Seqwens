@@ -1,0 +1,77 @@
+@media (max-width: 767px) {
+  .firmmgmt-page {
+    gap: 16px;
+  }
+
+  .firmmgmt-header {
+    padding: 16px 12px;
+  }
+
+  .firmmgmt-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .firmmgmt-actions button {
+    flex: 1 1 0;
+  }
+
+  .firmmgmt-search-row {
+    gap: 8px;
+  }
+
+  .firmmgmt-search {
+    width: 100%;
+  }
+
+  .firmmgmt-filter {
+    width: 100%;
+  }
+
+  .firmmgmt-filter select {
+    width: 100%;
+  }
+
+  .firmmgmt-table-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .firmmgmt-view-toggle {
+    width: 100%;
+    text-align: center;
+  }
+
+  .firmmgmt-table-header-grid {
+    display: none;
+  }
+
+  .firmmgmt-table-list {
+    padding-top: 0;
+  }
+
+  .firmmgmt-table-row-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .firmmgmt-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .firmmgmt-pagination-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .firmmgmt-pagination-info {
+    justify-content: center;
+    display: flex;
+  }
+}
+
+

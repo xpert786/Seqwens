@@ -6,6 +6,7 @@ import { chatService } from '../../../ClientOnboarding/utils/chatService';
 import { useChatWebSocket } from '../../../ClientOnboarding/utils/useChatWebSocket';
 import { JdIcon } from '../../../ClientOnboarding/components/icons';
 import { toast } from 'react-toastify';
+import '../../styles/Message.css';
 
 const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -1222,9 +1223,9 @@ const Messages = () => {
           </div>
 
           {/* Right Panel - Message Thread Card */}
-          <div className="w-full lg:w-2/3 bg-white !rounded-lg  !border border-[#E8F0FF] p-6 h-[600px] flex flex-col">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
+          <div className="w-full lg:w-2/3 bg-white !rounded-lg  !border border-[#E8F0FF] p-6 h-[600px] flex flex-col message-thread-card">
+            <div className="mb-4 message-thread-header">
+              <div className="flex items-center justify-between mb-1 message-thread-title-row">
                 <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Message Thread</h3>
                 {/* WebSocket Connection Status */}
                 {selectedThreadId && (
@@ -1248,7 +1249,7 @@ const Messages = () => {
             </div>
 
             {/* Messages */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-4 mb-4 hide-scrollbar">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-4 mb-4 hide-scrollbar message-thread-messages">
               {messagesLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="text-gray-500">Loading messages...</div>
@@ -1279,13 +1280,13 @@ const Messages = () => {
                     return (
                       <div
                         key={msg.id}
-                        className={`d-flex mb-3 w-100 ${isSentByCurrentUser ? 'justify-content-end' : ''}`}
+                        className={`d-flex mb-3 w-100 message-thread-message-item ${isSentByCurrentUser ? 'justify-content-end' : ''}`}
                         style={{ fontFamily: "BasisGrotesquePro", justifyContent: isSentByCurrentUser ? 'flex-end' : 'flex-start' }}
                       >
                         {/* {!isSentByCurrentUser && (
                           <JdIcon color="#f97316" className="me-2" />
                         )} */}
-                        <div className={`bg-[#FFF4E6] p-2 px-4 rounded ${isSentByCurrentUser ? 'mr-4' : 'ml-2'} max-w-[75%] min-w-[80px]`} style={{ fontFamily: "BasisGrotesquePro", marginLeft: isSentByCurrentUser ? '0' : '10px', marginRight: isSentByCurrentUser ? '16px' : '0' }}>
+                        <div className={`bg-[#FFF4E6] p-2 px-4 rounded message-thread-message-bubble ${isSentByCurrentUser ? 'mr-4' : 'ml-2'} max-w-[75%] min-w-[80px]`} style={{ fontFamily: "BasisGrotesquePro", marginLeft: isSentByCurrentUser ? '0' : '10px', marginRight: isSentByCurrentUser ? '16px' : '0' }}>
                           <div style={{ fontSize: "12px", color: "#6B7280", marginBottom: "4px", fontWeight: "500" }}>
                             {isSentByCurrentUser ? (msg.sender_name || currentUserName) : (msg.sender_name || 'Unknown')}
                           </div>
@@ -1342,7 +1343,7 @@ const Messages = () => {
             </div>
 
             {/* Message Input */}
-            <div className="flex items-center gap-3 !border-t border-[#E8F0FF] pt-4">
+            <div className="flex items-center gap-3 !border-t border-[#E8F0FF] pt-4 message-thread-input">
               <input
                 ref={threadFileInputRef}
                 type="file"
@@ -1352,7 +1353,7 @@ const Messages = () => {
               <button
                 onClick={() => threadFileInputRef.current?.click()}
                 disabled={!selectedThreadId || sendingThreadMessage}
-                className="w-10 h-10 !rounded-lg border border-[#E8F0FF] flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-10 h-10 !rounded-lg border border-[#E8F0FF] flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed message-thread-attach-btn"
                 title="Attach file"
               >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1360,7 +1361,7 @@ const Messages = () => {
                 </svg>
               </button>
               {threadAttachment && (
-                <span className="text-xs text-gray-600 max-w-[100px] truncate" title={threadAttachment.name}>
+                <span className="text-xs text-gray-600 max-w-[100px] truncate message-thread-attachment-name" title={threadAttachment.name}>
                   {threadAttachment.name}
                 </span>
               )}
@@ -1376,12 +1377,12 @@ const Messages = () => {
                 }}
                 placeholder={selectedThreadId ? "Write your messages here..." : "Select a conversation to send messages"}
                 disabled={sendingThreadMessage}
-                className="flex-1 w-full px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 w-full px-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed message-thread-input-field"
               />
               {threadAttachment && (
                 <button
                   onClick={() => setThreadAttachment(null)}
-                  className="text-red-500 hover:text-red-700 text-sm px-2"
+                  className="text-red-500 hover:text-red-700 text-sm px-2 message-thread-remove-attachment"
                   title="Remove attachment"
                 >
                   ×
@@ -1390,7 +1391,7 @@ const Messages = () => {
               <button
                 onClick={handleSendThreadMessage}
                 disabled={!selectedThreadId || !(threadMessageInput.trim() || threadAttachment) || sendingThreadMessage}
-                className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-10 h-10 !rounded-lg bg-[#F56D2D] flex items-center justify-center hover:bg-[#E55A1D] transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed message-thread-send-btn"
               >
                 {sendingThreadMessage ? (
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1410,17 +1411,17 @@ const Messages = () => {
 
       {/* Compose Message Modal */}
       {isComposeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-6 ml-40 mt-20">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 ml-40 mt-20 compose-modal-overlay">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[85vh] compose-modal-container">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0">
-              <div>
+            <div className="flex items-center justify-between p-3 border-b border-[#E8F0FF] flex-shrink-0 compose-modal-header">
+              <div className="compose-modal-header-content">
                 <h4 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">Compose Message</h4>
                 <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-0.5">Send a message to staff members or clients</p>
               </div>
               <button
                 onClick={() => setIsComposeModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors compose-modal-close-btn"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -1431,14 +1432,14 @@ const Messages = () => {
             </div>
 
             {/* Modal Body - Scrollable */}
-            <div className="p-3 space-y-3 overflow-y-auto hide-scrollbar flex-1">
+            <div className="p-3 space-y-3 overflow-y-auto hide-scrollbar flex-1 compose-modal-body">
 
               {/* Select User (Client, Staff, or Admin) */}
-              <div>
+              <div className="compose-modal-section">
                 <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Select User</label>
                 
                 {/* Role Filter */}
-                <div className="mb-2">
+                <div className="mb-2 compose-modal-role-filter">
                       <select
                     value={userRoleFilter}
                     onChange={(e) => {
@@ -1455,7 +1456,7 @@ const Messages = () => {
                 </div>
 
                 {/* User Search Input */}
-                <div className="relative" ref={userDropdownRef}>
+                <div className="relative compose-modal-user-search" ref={userDropdownRef}>
                   <input
                     type="text"
                     value={userSearchQuery}
@@ -1478,7 +1479,7 @@ const Messages = () => {
 
                   {/* User Dropdown */}
                   {showUserDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto compose-modal-user-dropdown">
                       {activeUsers.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
                           {activeUsersLoading ? 'Loading...' : 'No users found'}
@@ -1542,7 +1543,7 @@ const Messages = () => {
 
                 {/* Selected User Display */}
                 {selectedUserId && (
-                  <div className="mt-2 p-2 bg-[#FFF4E6] rounded-lg border border-[#FFE0B2]">
+                  <div className="mt-2 p-2 bg-[#FFF4E6] rounded-lg border border-[#FFE0B2] compose-modal-selected-user">
                     <p className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1">Selected:</p>
                     <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">
                       {activeUsers.find(u => u.id === selectedUserId)?.full_name || userSearchQuery}
@@ -1552,34 +1553,34 @@ const Messages = () => {
               </div>
 
               {/* Subject */}
-              <div>
+              <div className="compose-modal-section">
                 <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Subject</label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Enter subject"
-                  className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro]"
+                  className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] compose-modal-input"
                 />
               </div>
 
               {/* Message */}
-              <div>
+              <div className="compose-modal-section">
                 <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Message</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your message.."
                   rows={3}
-                  className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] resize-none"
+                  className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] resize-none compose-modal-textarea"
                 />
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex flex-col gap-3 p-3 border-t border-[#E8F0FF] flex-shrink-0">
+            <div className="flex flex-col gap-3 p-3 border-t border-[#E8F0FF] flex-shrink-0 compose-modal-footer">
               {/* Attach file button - First line */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 compose-modal-attach-row">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1588,7 +1589,7 @@ const Messages = () => {
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors compose-modal-attach-btn"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -1598,24 +1599,24 @@ const Messages = () => {
                 {attachment && (
                   <button
                     onClick={() => setAttachment(null)}
-                    className="text-red-500 hover:text-red-700 text-sm"
+                    className="text-red-500 hover:text-red-700 text-sm compose-modal-remove-attachment"
                   >
                     Remove
                   </button>
                 )}
               </div>
               {/* Cancel and Send buttons - Second line, right aligned */}
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex items-center justify-end gap-3 compose-modal-actions">
                 <button
                   onClick={() => setIsComposeModalOpen(false)}
-                  className="px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors"
+                  className="px-4 py-2 bg-white !border border-[#E8F0FF] !rounded-lg text-gray-700 hover:text-gray-900 font-[BasisGrotesquePro] transition-colors compose-modal-cancel-btn"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleComposeMessage}
                   disabled={sending || !subject.trim() || !message.trim() || (!selectedUserId && !selectedStaffId)}
-                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed compose-modal-send-btn"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />

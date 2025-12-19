@@ -121,7 +121,7 @@ const InvoicesMain = () => {
   }, [searchParams, invoices, fetchInvoices, setSearchParams]);
 
   return (
-    <div className='px-4' >
+    <div className='lg:px-4 md:px-2 px-1' >
 
 
       <div className="align-items-center mb-3 ">

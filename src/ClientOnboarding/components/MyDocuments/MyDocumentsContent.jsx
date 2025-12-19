@@ -543,7 +543,7 @@ export default function MyDocumentsContent() {
                 </div>
             </div>
 
-            <div className="p-4 bg-white" style={{ borderRadius: "15px" }}>
+            <div className="p-4 bg-white documents-wrapper" style={{ borderRadius: "15px" }}>
                 {/* Documents Section */}
                 <div className="align-items-center mb-3">
                     <h5 className="mb-0 me-3" style={{ fontSize: "20px", fontWeight: "500", color: "#3B4A66", fontFamily: "BasisGrotesquePro" }}>
@@ -796,7 +796,7 @@ export default function MyDocumentsContent() {
             {/* PDF Viewer Modal */}
             {showPdfModal && selectedDocument && (
                 <div
-                    className="modal"
+                    className="modal pdf-modal-overlay"
                     style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -817,7 +817,7 @@ export default function MyDocumentsContent() {
                         }
                     }}
                 >
-                    <div
+                    <div className="pdf-modal-container"
                         style={{
                             width: '100%',
                             maxWidth: 'min(880px, 70vw)',

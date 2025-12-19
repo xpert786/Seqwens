@@ -1,0 +1,31 @@
+@media (max-width: 767px) {
+
+    /* Stack content vertically */
+    .save-config-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
+    }
+
+    /* Full width button on mobile */
+    .save-config-btn {
+        width: 100%;
+        min-width: unset !important;
+        justify-content: center;
+    }
+
+    /* Reduce heading size only on mobile */
+    .save-config-title {
+        font-size: 20px !important;
+    }
+
+    .save-config-subtitle {
+        font-size: 13px !important;
+        line-height: 1.4;
+    }
+
+    /* Reduce padding slightly on mobile */
+    .save-config {
+        padding: 16px !important;
+    }
+}

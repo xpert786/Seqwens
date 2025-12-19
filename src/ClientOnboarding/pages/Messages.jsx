@@ -9,7 +9,7 @@ import { useThreadWebSocket } from "../utils/useThreadWebSocket";
 import { chatService } from "../utils/chatService";
 import { useChatWebSocket } from "../utils/useChatWebSocket";
 import { toast } from "react-toastify";
-
+import "../styles/Messages.css";
 export default function Messages() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -1214,9 +1214,9 @@ export default function Messages() {
   });
 
   return (
-    <div className="px-4">
+    <div className="lg:px-4 md:px-2 px-1 messages-page">
 
-      <div className="d-flex justify-content-between align-items-center mb-3 px-2">
+      <div className="d-flex justify-content-between align-items-center mb-3 px-2 messages-header">
         <div>
           <h5 className="mb-0" style={{ color: "#3B4A66", fontSize: "26px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}>Messages</h5>
           <small style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}>Communicate with your tax professional</small>
@@ -1232,9 +1232,9 @@ export default function Messages() {
 
       </div>
 
-      <div className="d-flex flex-grow-1 overflow-hidden">
+      <div className="d-flex flex-grow-1 overflow-hidden messages-layout">
 
-        <div className="p-3 me-3 d-flex flex-column" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
+        <div className="p-3 me-3 d-flex flex-column conversations-panel" style={{ width: "500px", height: "55vh", border: "1px solid #E8F0FF", backgroundColor: "#FFFFFF", borderRadius: "12px", minHeight: "400px" }}>
           <div className="mb-2">
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Conversations</h5>
 
@@ -1391,7 +1391,7 @@ export default function Messages() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column" style={{ height: "55vh", minHeight: "400px" }}>
+        <div className="flex-grow-1 bg-white rounded shadow-sm p-3 d-flex flex-column chat-panel" style={{ height: "55vh", minHeight: "400px" }}>
           {activeConversation ? (
             <>
               <div className="border-bottom pb-2 mb-3 d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
@@ -1667,7 +1667,7 @@ export default function Messages() {
       {showModal && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
           style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}>
-          <div className="bg-white p-4" style={{ width: "500px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
+          <div className="bg-white p-4 create-chat-modal" style={{ width: "500px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "24px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Create a new chat</h5>
             <div className="mb-3">
               <label className="form-label" style={{ color: "#131323", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Chat Subject</label>
@@ -1727,7 +1727,7 @@ export default function Messages() {
       {showDeleteConfirm && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
           style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
-          <div className="bg-white p-4" style={{ width: "400px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
+          <div className="bg-white p-4 delete-chat-modal" style={{ width: "400px", border: "1px solid #E8F0FF", borderRadius: "16px" }}>
             <h5 className="mb-3" style={{ color: "#3B4A66", fontSize: "20px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>Delete Thread</h5>
             <p className="mb-4" style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
               Are you sure you want to delete this conversation? This action cannot be undone.

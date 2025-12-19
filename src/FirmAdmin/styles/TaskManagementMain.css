@@ -1,0 +1,190 @@
+/* Task Management Main Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .taskmanage-main-container {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Header Section - stack vertically */
+  .taskmanage-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  .taskmanage-header-content {
+    width: 100% !important;
+  }
+
+  .taskmanage-header-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .taskmanage-header-subtitle {
+    font-size: 0.875rem !important;
+  }
+
+  /* Buttons Container */
+  .taskmanage-buttons-container {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Action Buttons - full width */
+  .taskmanage-action-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .taskmanage-action-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* KPI Cards - single column */
+  .taskmanage-kpi-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .taskmanage-kpi-card {
+    padding: 0.875rem !important;
+  }
+
+  .taskmanage-kpi-title {
+    font-size: 0.8rem !important;
+  }
+
+  .taskmanage-kpi-value {
+    font-size: 1.5rem !important;
+  }
+
+  .taskmanage-kpi-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Filters and Search Section */
+  .taskmanage-filters-section {
+    margin-bottom: 1rem !important;
+  }
+
+  .taskmanage-filters-container {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Search Bar */
+  .taskmanage-search-container {
+    width: 100% !important;
+  }
+
+  .taskmanage-search-input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem !important;
+  }
+
+  .taskmanage-search-icon {
+    top: 10px !important;
+  }
+
+  /* Filter Dropdowns */
+  .taskmanage-filters-dropdowns {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .taskmanage-filter-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  }
+
+  /* Pagination */
+  .taskmanage-pagination {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+    margin-top: 1rem !important;
+  }
+
+  .taskmanage-pagination-button {
+    width: 100% !important;
+    max-width: 200px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .taskmanage-pagination-info {
+    font-size: 0.8rem !important;
+    text-align: center !important;
+    min-width: auto !important;
+  }
+
+  /* Loading State */
+  .taskmanage-loading {
+    padding: 2rem 0 !important;
+  }
+
+  /* Error State */
+  .taskmanage-error {
+    padding: 0.875rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .taskmanage-error p {
+    font-size: 0.875rem !important;
+  }
+
+  .taskmanage-error button {
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Delete Modal */
+  .taskmanage-delete-modal {
+    padding: 1rem !important;
+    margin: 1rem !important;
+  }
+
+  .taskmanage-delete-modal h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .taskmanage-delete-modal p {
+    font-size: 0.875rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .taskmanage-delete-modal-buttons {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .taskmanage-delete-modal-buttons button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+}
+

@@ -262,14 +262,14 @@ export default function FirmPerformance() {
   return (
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
       {/* Month/Year Filter Selector - Top Right */}
-      <div className="mb-6 flex justify-end items-center gap-2">
+      <div className="mb-6 flex justify-end items-center gap-2 firmperf-filter-row">
         <select
           value={filterMonth}
           onChange={(e) => {
             setFilterMonth(e.target.value);
             if (!e.target.value) setFilterYear('');
           }}
-          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 firmperf-filter-control"
           style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
         >
           <option value="">All Months</option>
@@ -283,7 +283,7 @@ export default function FirmPerformance() {
             setFilterYear(e.target.value);
             if (!e.target.value) setFilterMonth('');
           }}
-          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 firmperf-filter-control"
           style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
           disabled={!filterMonth}
         >
@@ -295,7 +295,7 @@ export default function FirmPerformance() {
         <button
           onClick={handleApplyFilter}
           disabled={!filterMonth || !filterYear}
-          className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed firmperf-apply-btn"
           style={{ backgroundColor: '#3B82F6' }}
         >
           Apply
@@ -308,7 +308,7 @@ export default function FirmPerformance() {
               setAppliedFilterMonth('');
               setAppliedFilterYear('');
             }}
-            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
+            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 firmperf-clear-btn"
             title="Clear filter"
           >
             ✕
@@ -342,7 +342,7 @@ export default function FirmPerformance() {
         <>
           {/* API Calls Per Firm Table */}
           {apiCallsPerFirm.length > 0 && (
-            <div className="bg-white p-6 mb-8" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+            <div className="bg-white p-6 mb-8 firmperf-api-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
               <div className="mb-6">
                 <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>API Calls Per Firm</h3>
                 <p className="text-sm" style={{color: '#6B7280'}}>
@@ -407,9 +407,9 @@ export default function FirmPerformance() {
           )}
 
           {/* Two Charts Dashboard */}
-          <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-2 gap-6 mb-8 firmperf-two-charts">
             {/* Left Chart - API Usage (Area Chart) */}
-            <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+            <div className="bg-white p-6 transition-all duration-300 ease-in-out firmperf-chart-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
               <div className="mb-6">
                 <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>API Usage</h3>
                 <p className="text-sm" style={{color: '#3B4A66'}}>
@@ -475,7 +475,7 @@ export default function FirmPerformance() {
             </div>
             
             {/* Right Chart - IRS E-File Stats (Pie Chart) */}
-            <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+            <div className="bg-white p-6 transition-all duration-300 ease-in-out firmperf-chart-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
               <div className="mb-6">
                 <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>IRS E-File Stats</h3>
                 <p className="text-sm" style={{color: '#3B4A66'}}>
@@ -519,7 +519,7 @@ export default function FirmPerformance() {
               
               {/* Legend */}
               {irsEfileStats && (
-                <div className="space-y-3 mt-6">
+                <div className="space-y-3 mt-6 firmperf-legend">
                   {eFileData.map((item, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -549,7 +549,7 @@ export default function FirmPerformance() {
           </div>
 
           {/* Client Adoption Rates Double Bar Chart */}
-          <div className="bg-white p-6 mb-8" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+          <div className="bg-white p-6 mb-8 firmperf-chart-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
             <div className="mb-6">
               <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>Client Adoption Rates</h3>
             </div>
@@ -607,7 +607,7 @@ export default function FirmPerformance() {
             </div>
             
             {/* Legend */}
-            <div className="flex justify-center gap-6 mt-4">
+            <div className="flex justify-center gap-6 mt-4 firmperf-legend">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded" style={{backgroundColor: '#1E40AF'}}></div>
                 <span className="text-sm" style={{color: '#3B4A66'}}>Total Signups</span>

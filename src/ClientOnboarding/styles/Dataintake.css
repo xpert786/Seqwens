@@ -240,3 +240,61 @@
   box-shadow: none !important;
   border-color: #F56D2D !important;
 }
+
+
+@media (max-width: 767px) {
+
+  /* Stack columns cleanly */
+  .upload-responsive > .col-md-6 {
+    width: 100%;
+  }
+
+  /* Upload drop area */
+  .upload-responsive label {
+    min-height: 140px !important;
+    padding: 16px !important;
+  }
+
+  /* Upload icon */
+  .upload-responsive svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Main upload text */
+  .upload-responsive strong {
+    font-size: 13px !important;
+    line-height: 1.4;
+  }
+
+  /* Helper text */
+  .upload-responsive small {
+    font-size: 11px !important;
+  }
+
+  /* Uploaded file preview box */
+  .upload-responsive .border.rounded.p-3 {
+    padding: 12px !important;
+  }
+
+  /* File name */
+  .upload-responsive .fw-semibold {
+    font-size: 13px !important;
+  }
+
+  /* Progress text */
+  .upload-responsive small[style*="Uploading"] {
+    font-size: 10px !important;
+  }
+
+  /* Status badges */
+  .upload-responsive .badge {
+    font-size: 11px !important;
+    padding: 3px 6px !important;
+  }
+
+  /* Remove button */
+  .upload-responsive button.btn {
+    padding: 0 !important;
+  }
+}

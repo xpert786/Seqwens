@@ -5,6 +5,7 @@ import { FiSearch, FiTrash2, FiRefreshCw, FiFile, FiUser, FiCalendar, FiShare2 }
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import ShareDocumentsModal from './ShareDocumentsModal';
 import DocumentSelectionModal from './DocumentSelectionModal';
+import '../../styles/SharedDocumentsList.css';
 
 export default function SharedDocumentsList() {
   const [shares, setShares] = useState([]);
@@ -125,18 +126,18 @@ export default function SharedDocumentsList() {
   return (
     <div style={{ fontFamily: 'BasisGrotesquePro' }}>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h4 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '4px' }}>
+      <div className="d-flex justify-content-between align-items-center mb-4 shareddocs-header">
+        <div className="shareddocs-header-content">
+          <h4 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '4px' }} className="shareddocs-header-title">
             Shared Documents
           </h4>
-          <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>
+          <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }} className="shareddocs-header-subtitle">
             Manage documents shared with tax preparers
           </p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 shareddocs-header-buttons">
           <button
-            className="btn d-flex align-items-center gap-2"
+            className="btn d-flex align-items-center gap-2 shareddocs-header-button"
             onClick={() => setShowDocumentSelectionModal(true)}
             style={{
               backgroundColor: '#00C0C6',
@@ -151,7 +152,7 @@ export default function SharedDocumentsList() {
             Share Documents
           </button>
           <button
-            className="btn d-flex align-items-center gap-2"
+            className="btn d-flex align-items-center gap-2 shareddocs-header-button"
             onClick={fetchShares}
             style={{
               backgroundColor: '#F9FAFB',
@@ -168,12 +169,13 @@ export default function SharedDocumentsList() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg p-3 mb-4" style={{ border: '1px solid #E5E7EB' }}>
-        <div className="row g-3">
+      <div className="bg-white rounded-lg p-3 mb-4 shareddocs-filters" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="row g-3 shareddocs-filters-row">
           <div className="col-md-4">
-            <div className="position-relative">
+            <div className="position-relative shareddocs-search-container">
               <FiSearch
                 size={18}
+                className="shareddocs-search-icon"
                 style={{
                   position: 'absolute',
                   left: '12px',
@@ -184,7 +186,7 @@ export default function SharedDocumentsList() {
               />
               <input
                 type="text"
-                className="form-control"
+                className="form-control shareddocs-search-input"
                 placeholder="Search by document, preparer, or notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -198,7 +200,7 @@ export default function SharedDocumentsList() {
           <div className="col-md-4">
             <input
               type="number"
-              className="form-control"
+              className="form-control shareddocs-filter-input"
               placeholder="Filter by Document ID"
               value={documentFilter}
               onChange={(e) => setDocumentFilter(e.target.value)}
@@ -208,7 +210,7 @@ export default function SharedDocumentsList() {
           <div className="col-md-4">
             <input
               type="number"
-              className="form-control"
+              className="form-control shareddocs-filter-input"
               placeholder="Filter by Tax Preparer ID"
               value={taxPreparerFilter}
               onChange={(e) => setTaxPreparerFilter(e.target.value)}
@@ -220,18 +222,18 @@ export default function SharedDocumentsList() {
 
       {/* Shares List */}
       {loading ? (
-        <div className="text-center py-5">
+        <div className="text-center py-5 shareddocs-loading">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
           <p className="mt-3" style={{ color: '#6B7280' }}>Loading shared documents...</p>
         </div>
       ) : error && shares.length === 0 ? (
-        <div className="text-center py-5">
+        <div className="text-center py-5 shareddocs-error">
           <p className="text-danger mb-3">{error}</p>
           <button
             onClick={fetchShares}
-            className="btn"
+            className="btn shareddocs-error-button"
             style={{
               backgroundColor: '#00C0C6',
               color: 'white',
@@ -243,7 +245,7 @@ export default function SharedDocumentsList() {
           </button>
         </div>
       ) : filteredShares.length === 0 ? (
-        <div className="text-center py-5 bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="text-center py-5 bg-white rounded-lg p-4 shareddocs-empty-state" style={{ border: '1px solid #E5E7EB' }}>
           <FiFile size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
           <p style={{ color: '#6B7280', fontSize: '16px', marginBottom: '8px' }}>
             No shared documents found
@@ -255,9 +257,9 @@ export default function SharedDocumentsList() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <div className="table-responsive">
-            <table className="table table-hover">
+        <div className="bg-white rounded-lg p-4 shareddocs-table-container" style={{ border: '1px solid #E5E7EB' }}>
+          <div className="table-responsive shareddocs-table-wrapper">
+            <table className="table table-hover shareddocs-table">
               <thead>
                 <tr>
                   <th style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>Document</th>
@@ -272,14 +274,14 @@ export default function SharedDocumentsList() {
                 {filteredShares.map((share) => (
                   <tr key={share.id}>
                     <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <FiFile size={18} style={{ color: '#00C0C6' }} />
+                      <div className="d-flex align-items-center gap-2 shareddocs-document-cell">
+                        <FiFile size={18} className="shareddocs-document-icon" style={{ color: '#00C0C6' }} />
                         <div>
-                          <div style={{ color: '#3B4A66', fontWeight: '500', fontSize: '14px' }}>
+                          <div style={{ color: '#3B4A66', fontWeight: '500', fontSize: '14px' }} className="shareddocs-document-name">
                             {share.document?.name || 'Unknown Document'}
                           </div>
                           {share.document?.category && (
-                            <div style={{ color: '#6B7280', fontSize: '12px' }}>
+                            <div style={{ color: '#6B7280', fontSize: '12px' }} className="shareddocs-document-category">
                               {share.document.category}
                             </div>
                           )}
@@ -287,39 +289,39 @@ export default function SharedDocumentsList() {
                       </div>
                     </td>
                     <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <FiUser size={16} style={{ color: '#6B7280' }} />
+                      <div className="d-flex align-items-center gap-2 shareddocs-shared-with-cell">
+                        <FiUser size={16} className="shareddocs-user-icon" style={{ color: '#6B7280' }} />
                         <div>
-                          <div style={{ color: '#3B4A66', fontSize: '14px' }}>
+                          <div style={{ color: '#3B4A66', fontSize: '14px' }} className="shareddocs-user-name">
                             {share.shared_with?.name || 'Unknown'}
                           </div>
-                          <div style={{ color: '#6B7280', fontSize: '12px' }}>
+                          <div style={{ color: '#6B7280', fontSize: '12px' }} className="shareddocs-user-email">
                             {share.shared_with?.email || ''}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td>
-                      <span style={{ color: '#6B7280', fontSize: '14px' }}>
+                      <span style={{ color: '#6B7280', fontSize: '14px' }} className="shareddocs-shared-by">
                         {share.shared_by?.name || 'Unknown'}
                       </span>
                     </td>
                     <td>
-                      <span style={{ color: '#6B7280', fontSize: '14px' }}>
+                      <span style={{ color: '#6B7280', fontSize: '14px' }} className="shareddocs-notes">
                         {share.notes || '—'}
                       </span>
                     </td>
                     <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <FiCalendar size={14} style={{ color: '#6B7280' }} />
-                        <span style={{ color: '#6B7280', fontSize: '14px' }}>
+                      <div className="d-flex align-items-center gap-2 shareddocs-shared-at">
+                        <FiCalendar size={14} className="shareddocs-calendar-icon" style={{ color: '#6B7280' }} />
+                        <span style={{ color: '#6B7280', fontSize: '14px' }} className="shareddocs-date">
                           {formatDate(share.created_at)}
                         </span>
                       </div>
                     </td>
                     <td>
                       <button
-                        className="btn btn-sm"
+                        className="btn btn-sm shareddocs-actions-button"
                         onClick={() => handleUnshareClick(share)}
                         style={{
                           backgroundColor: '#FEE2E2',
@@ -342,7 +344,7 @@ export default function SharedDocumentsList() {
 
       {/* Summary */}
       {filteredShares.length > 0 && (
-        <div className="mt-4 text-center" style={{ color: '#6B7280', fontSize: '14px' }}>
+        <div className="mt-4 text-center shareddocs-summary" style={{ color: '#6B7280', fontSize: '14px' }}>
           Showing {filteredShares.length} of {shares.length} shared document{shares.length !== 1 ? 's' : ''}
         </div>
       )}

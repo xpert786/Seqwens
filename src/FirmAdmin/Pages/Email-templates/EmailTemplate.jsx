@@ -5,7 +5,7 @@ import TabNavigation from '../Integrations/TabNavigation';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
 import ConfirmationModal from '../../../components/ConfirmationModal';
-
+import '../../styles/EmailTemplate.css';
 const statusClasses = {
     active: '!border border-[#22C55E] bg-transparent text-[#198754]',
     draft: '!border border-[#FBBF24] bg-transparent text-[#D97706]',
@@ -459,8 +459,8 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
     };
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 send-email-modal">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto send-email-modal-box">
                 <h3 className="text-lg font-semibold text-[#1F2A55] mb-4">Send Email</h3>
                 <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -544,7 +544,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:justify-end">
+                <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:justify-end send-email-footer">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] rounded-lg hover:bg-gray-50"

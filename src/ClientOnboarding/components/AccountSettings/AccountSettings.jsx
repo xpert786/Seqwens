@@ -6,7 +6,7 @@ import Security from "./Security";
 import Billing from "./Billing";
 import RoleManagement from "../RoleManagement";
 import UserProfileWithRoles from "../UserProfileWithRoles";
-
+import '../../styles/AccountSetting.css';
 export default function AccountSettings() {
     const [searchParams, setSearchParams] = useSearchParams();
     const tabFromUrl = searchParams.get("tab");
@@ -28,7 +28,7 @@ export default function AccountSettings() {
     ];
 
     return (
-        <div className="container-fluid px-4">
+        <div className="container-fluid lg:px-4 md:px-2 px-1 account-settings-page">
 
             <div className="align-items-center mb-3">
                 <h5
@@ -56,7 +56,7 @@ export default function AccountSettings() {
             </div>
 
             <div
-                className="d-inline-block mb-4"
+                className="d-inline-block mb-4 account-tabs"
                 style={{
                     padding: "10px 12px",
                     borderRadius: "12px",
@@ -101,7 +101,7 @@ export default function AccountSettings() {
 
             {/* Content Section */}
             <div className="card " style={{ borderRadius: "15px", border: "1px solid #E8F0FF" }}>
-                <div className="card-body" style={{
+                <div className="card-body account-card-body" style={{
                     marginRight: "17",
                     marginBottom: "30",
                     marginLeft: "17",

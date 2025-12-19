@@ -157,7 +157,7 @@ export default function UsagePerformance() {
   return (
     <div className="transition-all duration-500 ease-in-out h-fit mb-8">
       {/* System Performance Metrics */}
-      <div className="bg-white p-6 mb-8" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
+      <div className="bg-white p-6 mb-8 usage-metrics-card" style={{border: '1px solid #E8F0FF', borderRadius: '7px'}}>
         <div className="mb-6">
           <h3 className="text-md font-semibold mb-2" style={{color: '#3B4A66'}}>System Performance Metrics</h3>
           <p className="text-sm" style={{color: '#3B4A66'}}>Real-time platform health and performance indicators</p>
@@ -169,7 +169,7 @@ export default function UsagePerformance() {
             <p className="text-sm text-[#6B7280] mt-2" style={{fontFamily: 'BasisGrotesquePro'}}>Loading metrics...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4 usage-metrics-grid">
             {/* Uptime */}
             <div className="text-center p-4 border border-gray-100 rounded-lg">
               <div className="text-3xl font-bold mb-1" style={{color: '#22C55E'}}>

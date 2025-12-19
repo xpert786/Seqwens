@@ -1,0 +1,189 @@
+/* Mobile Responsive Styles for Message Thread - Below 767px */
+@media (max-width: 767px) {
+  .message-thread-card {
+    padding: 12px !important;
+    height: auto !important;
+    min-height: 500px;
+  }
+
+  .message-thread-header {
+    margin-bottom: 12px;
+  }
+
+  .message-thread-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .message-thread-messages {
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+
+  .message-thread-message-item {
+    margin-bottom: 12px !important;
+  }
+
+  .message-thread-message-bubble {
+    max-width: 85% !important;
+    padding: 10px 12px !important;
+    font-size: 14px;
+  }
+
+  .message-thread-input {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px !important;
+  }
+
+  .message-thread-attach-btn {
+    width: 36px !important;
+    height: 36px !important;
+    flex-shrink: 0;
+  }
+
+  .message-thread-attachment-name {
+    max-width: 80px;
+    font-size: 11px;
+  }
+
+  .message-thread-input-field {
+    min-width: 0;
+    flex: 1 1 auto;
+    font-size: 14px;
+    padding: 10px 12px !important;
+  }
+
+  .message-thread-remove-attachment {
+    padding: 4px 6px;
+    font-size: 16px;
+  }
+
+  .message-thread-send-btn {
+    width: 36px !important;
+    height: 36px !important;
+    flex-shrink: 0;
+  }
+}
+
+/* Mobile Responsive Styles for Compose Message Modal - Below 767px */
+@media (max-width: 767px) {
+  .compose-modal-overlay {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    align-items: flex-start !important;
+  }
+
+  .compose-modal-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .compose-modal-header {
+    padding: 12px !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .compose-modal-header-content {
+    width: 100%;
+  }
+
+  .compose-modal-header-content h4 {
+    font-size: 16px !important;
+  }
+
+  .compose-modal-header-content p {
+    font-size: 12px !important;
+  }
+
+  .compose-modal-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .compose-modal-body {
+    padding: 12px !important;
+  }
+
+  .compose-modal-section {
+    margin-bottom: 16px;
+  }
+
+  .compose-modal-role-filter select {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .compose-modal-user-search {
+    width: 100%;
+  }
+
+  .compose-modal-user-search input {
+    font-size: 14px;
+    padding: 10px 12px !important;
+  }
+
+  .compose-modal-user-dropdown {
+    max-height: 200px !important;
+  }
+
+  .compose-modal-selected-user {
+    padding: 10px !important;
+  }
+
+  .compose-modal-input {
+    font-size: 14px;
+    padding: 10px 12px !important;
+  }
+
+  .compose-modal-textarea {
+    font-size: 14px;
+    padding: 10px 12px !important;
+    min-height: 100px;
+  }
+
+  .compose-modal-footer {
+    padding: 12px !important;
+    gap: 12px !important;
+  }
+
+  .compose-modal-attach-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .compose-modal-attach-btn {
+    width: 100% !important;
+    justify-content: center;
+    padding: 10px 12px !important;
+    font-size: 14px;
+  }
+
+  .compose-modal-remove-attachment {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .compose-modal-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px !important;
+  }
+
+  .compose-modal-cancel-btn,
+  .compose-modal-send-btn {
+    width: 100% !important;
+    justify-content: center;
+    padding: 12px !important;
+    font-size: 14px;
+  }
+}
+

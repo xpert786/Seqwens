@@ -1294,7 +1294,7 @@ export default function DataIntakeForm() {
   };
 
   return (
-    <div className="data-intake-page row g-0 px-4">
+    <div className="data-intake-page row g-0 lg:px-4 md:px-2 px-1">
       <div className="align-items-center mb-3">
         <h5 className="mb-0 me-3" style={{
           color: "#3B4A66",
@@ -2917,7 +2917,7 @@ export default function DataIntakeForm() {
       </div>
 
       {/* Document Upload */}
-      <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
+      <div className="bg-white lg:p-4 md:p-2 px-1 rounded-4 shadow-sm mb-4">
         <div className="align-items-center mb-3">
           <h5 className="mb-0 me-3" style={{
             color: "#3B4A66",
@@ -2936,7 +2936,7 @@ export default function DataIntakeForm() {
             Upload your tax documents
           </p>
         </div>
-        <div className="row align-items-start">
+        <div className="row align-items-start upload-responsive">
           {/* Upload Box */}
           <div className="col-md-6">
             <label

@@ -1,0 +1,17 @@
+@media (max-width: 767px) {
+  .subscription-tabs-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .subscription-tabs-scroll {
+    display: flex;
+  }
+
+  .subscription-tab-btn {
+    flex: 1 0 0;
+    text-align: center;
+  }
+}
+
+

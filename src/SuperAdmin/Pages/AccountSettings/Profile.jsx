@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { SaveIcon } from "../../Components/icons";
 import { superAdminAPI, handleAPIError } from "../../utils/superAdminAPI";
 import { superToastOptions } from "../../utils/toastConfig";
-
+import "../../style/Profile.css"
 const TIMEZONE_OPTIONS = [
     { label: "Eastern (America/New_York)", value: "America/New_York" },
     { label: "Central (America/Chicago)", value: "America/Chicago" },
@@ -577,7 +577,7 @@ export default function Profile() {
                             />
                             <label htmlFor="smsAlerts"></label>
                         </div>
-                    </div>                    
+                    </div>
 
                     {/* Weekly Reports */}
                     <div className="flex justify-between items-center">
@@ -734,7 +734,7 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    
+
                     <div className="flex justify-between items-center">
                         <div>
                             <div
@@ -814,11 +814,12 @@ export default function Profile() {
             </div>
 
             {/* Save Button */}
-            <div className="border border-[#E8F0FF] p-4 rounded-lg bg-white mt-4">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div>
+            <div className="border border-[#E8F0FF] p-4 rounded-lg bg-white mt-4 save-config">
+
+                <div className="d-flex justify-content-between align-items-center save-config-header">
+                    <div className="save-config-text">
                         <h5
-                            className="mb-0 me-3"
+                            className="mb-0 me-3 save-config-title"
                             style={{
                                 color: "#3B4A66",
                                 fontSize: "24px",
@@ -829,7 +830,7 @@ export default function Profile() {
                             Save Configuration
                         </h5>
                         <p
-                            className="mb-0"
+                            className="mb-0 save-config-subtitle"
                             style={{
                                 color: "#4B5563",
                                 fontSize: "14px",
@@ -840,9 +841,10 @@ export default function Profile() {
                             Apply the latest configuration changes across the platform
                         </p>
                     </div>
+
                     <button
                         type="button"
-                        className="btn d-flex align-items-center gap-2 px-6 py-2 rounded-lg"
+                        className="btn d-flex align-items-center gap-2 px-6 py-2 rounded-lg save-config-btn"
                         style={{
                             backgroundColor: "#F56D2D",
                             color: "#ffffff",
@@ -860,7 +862,9 @@ export default function Profile() {
                         {isSaving ? "Saving..." : "Save Changes"}
                     </button>
                 </div>
+
             </div>
+
         </div>
     );
 }

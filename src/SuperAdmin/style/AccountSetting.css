@@ -1,0 +1,46 @@
+@media (max-width: 767px) {
+
+    /* Reduce side padding only on mobile */
+    .account-settings {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    /* Stack title + subtitle */
+    .account-header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* Reduce text size only on mobile */
+    .account-title {
+        font-size: 22px !important;
+    }
+
+    .account-subtitle {
+        font-size: 14px !important;
+        line-height: 1.4;
+    }
+
+    /* Make tabs scrollable horizontally */
+    .account-tabs {
+        width: 100%;
+    }
+
+    .account-tabs-list {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .account-tabs-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .account-tab-btn {
+        white-space: nowrap;
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+    }
+}

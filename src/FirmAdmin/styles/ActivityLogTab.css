@@ -1,0 +1,185 @@
+/* Activity Log Tab Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .activity-main-container {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Header section */
+  .activity-header {
+    margin-bottom: 1rem !important;
+  }
+
+  .activity-header-title {
+    font-size: 1rem !important;
+  }
+
+  .activity-header-subtitle {
+    font-size: 0.8rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Statistics Grid - single column */
+  .activity-statistics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .activity-stat-card {
+    padding: 0.875rem !important;
+  }
+
+  .activity-stat-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .activity-stat-value {
+    font-size: 1.25rem !important;
+  }
+
+  .activity-stat-sub-label {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .activity-stat-item {
+    font-size: 0.7rem !important;
+  }
+
+  /* Filters Grid - single column */
+  .activity-filters-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Filter wrapper divs */
+  .activity-filters-grid > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  .activity-filter-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .activity-filter-input,
+  .activity-filter-select {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  /* Clear Filters Button */
+  .activity-clear-filters {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .activity-clear-filters button {
+    font-size: 0.8rem !important;
+  }
+
+  /* Activity Items */
+  .activity-item {
+    padding: 0.75rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .activity-item-icon {
+    width: 20px !important;
+    height: 20px !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .activity-item-content {
+    flex: 1 1 100% !important;
+  }
+
+  .activity-item-title {
+    font-size: 0.875rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .activity-item-description {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .activity-item-meta {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  .activity-item-meta span {
+    font-size: 0.7rem !important;
+  }
+
+  .activity-item-timestamp {
+    font-size: 0.7rem !important;
+    margin-top: 0.5rem !important;
+  }
+
+  /* Pagination */
+  .activity-pagination {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+    margin-top: 1rem !important;
+  }
+
+  .activity-pagination-info {
+    text-align: center !important;
+    font-size: 0.8rem !important;
+  }
+
+  .activity-pagination-buttons {
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .activity-pagination-button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Loading and Error States */
+  .activity-loading,
+  .activity-error {
+    padding: 1.5rem 0 !important;
+  }
+
+  .activity-loading p,
+  .activity-error {
+    font-size: 0.8rem !important;
+  }
+
+  /* Empty State */
+  .activity-empty-state {
+    padding: 1.5rem 0 !important;
+  }
+
+  .activity-empty-state p {
+    font-size: 0.8rem !important;
+  }
+}
+

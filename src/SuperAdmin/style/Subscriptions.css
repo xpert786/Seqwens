@@ -1,0 +1,131 @@
+@media (max-width: 767px) {
+  .subscriptions-page {
+    padding: 16px 12px !important;
+  }
+
+  .subscriptions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .subscriptions-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .subscriptions-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .subscriptions-metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .subscriptions-plan-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .subscriptions-plan-performance-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .subscriptions-plan-performance-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .subscriptions-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .subscriptions-filter input,
+  .subscriptions-filter select {
+    width: 100%;
+  }
+
+  .subscriptions-table-card {
+    overflow-x: auto;
+  }
+
+  .subscriptions-table-header,
+  .subscriptions-table-card-header,
+  .subscriptions-table-list,
+  .subscriptions-table-row {
+    min-width: 720px;
+  }
+
+  .subscriptions-table-row-grid,
+  .subscriptions-table-header-grid {
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+  }
+
+  .subscriptions-apply-btn {
+    width: 100%;
+  }
+
+  .subscriptions-plan-performance-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .subscriptions-plan-filter-row {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .subscriptions-plan-filter-control {
+    width: 100%;
+  }
+
+  .subscriptions-clear-btn {
+    width: auto;
+  }
+
+  .subscriptions-plan-card,
+  .subscriptions-plan-card-full {
+    overflow-x: auto;
+  }
+
+  .subscriptions-table-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .subscriptions-view-toggle {
+    width: 100%;
+    text-align: center;
+  }
+
+  .subscriptions-pagination {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .subscriptions-pagination-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .subscriptions-pagination-info {
+    justify-content: center;
+    display: flex;
+  }
+
+  .subscriptions-mrr-chart text {
+    font-size: 16px !important;
+  }
+
+  .subscriptions-churn-chart text {
+    font-size: 16px !important;
+  }
+}
+
+
+

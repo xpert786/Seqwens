@@ -72,7 +72,7 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
   return (
     <div>
 
-      <div className="dashboard-header px-4">
+      <div className="dashboard-header lg:px-4 md:px-2 px-1 dashboard-header-responsive">
         <div className="d-flex flex-wrap justify-content-between align-items-center">
           <div>
             <h2 className="dashboard-title">Dashboard</h2>
@@ -81,7 +81,7 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
 
           <div className="d-flex flex-wrap gap-3 mt-2 mt-md-0">
             <button
-              className="btn dashboard-btn btn-contact d-flex align-items-center gap-2"
+              className="btn dashboard-btn btn-contact d-flex align-items-center gap-2 "
               onClick={() => navigate("/messages")}
             >
               <Message2Icon />
@@ -108,7 +108,7 @@ export default function TaxDashboardWidegts({ dashboardData, loading }) {
       {/* Dashboard Cards */}
       <div className="row g-3">
         {summaryCards.map((card, index) => (
-          <div className="col-sm-6 col-md-3 px-4" key={index}>
+          <div className="col-sm-6 col-md-3 lg:px-4 md:px-2 px-1" key={index}>
             <div className="card dashboard-card">
               <div className="d-flex justify-content-start align-items-start mb-3">
                 {card.icon}

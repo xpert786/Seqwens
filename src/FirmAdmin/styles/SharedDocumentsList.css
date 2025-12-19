@@ -1,0 +1,252 @@
+/* Shared Documents List Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Header Section */
+  .shareddocs-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .shareddocs-header-content {
+    width: 100% !important;
+  }
+
+  .shareddocs-header-title {
+    font-size: 1.125rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .shareddocs-header-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  /* Action Buttons */
+  .shareddocs-header-buttons {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .shareddocs-header-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .shareddocs-header-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Filters Section */
+  .shareddocs-filters {
+    padding: 0.875rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .shareddocs-filters-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .shareddocs-filters-row > [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .shareddocs-filters-row > [class*="col-"]:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .shareddocs-search-container {
+    position: relative !important;
+  }
+
+  .shareddocs-search-icon {
+    left: 0.75rem !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .shareddocs-search-input,
+  .shareddocs-filter-input {
+    width: 100% !important;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem !important;
+    font-size: 0.875rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .shareddocs-filter-input {
+    padding-left: 0.75rem !important;
+  }
+
+  /* Loading State */
+  .shareddocs-loading {
+    padding: 2rem 0 !important;
+  }
+
+  .shareddocs-loading p {
+    font-size: 0.875rem !important;
+    margin-top: 0.75rem !important;
+  }
+
+  /* Error State */
+  .shareddocs-error {
+    padding: 2rem 0 !important;
+  }
+
+  .shareddocs-error p {
+    font-size: 0.875rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .shareddocs-error-button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Empty State */
+  .shareddocs-empty-state {
+    padding: 2rem 1rem !important;
+  }
+
+  .shareddocs-empty-state svg {
+    width: 36px !important;
+    height: 36px !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .shareddocs-empty-state p:first-of-type {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .shareddocs-empty-state p:last-of-type {
+    font-size: 0.8rem !important;
+  }
+
+  /* Table Container */
+  .shareddocs-table-container {
+    padding: 0.875rem !important;
+  }
+
+  .shareddocs-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .shareddocs-table {
+    min-width: 1000px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .shareddocs-table thead th {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+  }
+
+  .shareddocs-table tbody td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Document Cell */
+  .shareddocs-document-cell {
+    gap: 0.5rem !important;
+  }
+
+  .shareddocs-document-icon {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .shareddocs-document-name {
+    font-size: 0.8rem !important;
+  }
+
+  .shareddocs-document-category {
+    font-size: 0.7rem !important;
+  }
+
+  /* Shared With Cell */
+  .shareddocs-shared-with-cell {
+    gap: 0.5rem !important;
+  }
+
+  .shareddocs-user-icon {
+    width: 14px !important;
+    height: 14px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .shareddocs-user-name {
+    font-size: 0.8rem !important;
+  }
+
+  .shareddocs-user-email {
+    font-size: 0.7rem !important;
+  }
+
+  /* Shared By Cell */
+  .shareddocs-shared-by {
+    font-size: 0.8rem !important;
+  }
+
+  /* Notes Cell */
+  .shareddocs-notes {
+    font-size: 0.8rem !important;
+    max-width: 200px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Shared At Cell */
+  .shareddocs-shared-at {
+    gap: 0.5rem !important;
+  }
+
+  .shareddocs-calendar-icon {
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .shareddocs-date {
+    font-size: 0.8rem !important;
+  }
+
+  /* Actions Cell */
+  .shareddocs-actions-button {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  .shareddocs-actions-button svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  /* Summary */
+  .shareddocs-summary {
+    margin-top: 1rem !important;
+    font-size: 0.8rem !important;
+    padding: 0 0.5rem !important;
+  }
+
+  /* Modal adjustments if needed */
+  .shareddocs-modal-content {
+    width: calc(100% - 2rem) !important;
+    max-width: 100% !important;
+    margin: 1rem !important;
+  }
+}
+

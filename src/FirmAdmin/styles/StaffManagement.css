@@ -1,0 +1,212 @@
+/* Staff Management Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .staff-main-container {
+    padding: 1rem !important;
+  }
+
+  /* Header and Action Buttons - stack vertically */
+  .staff-header-section {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .staff-header-content {
+    width: 100% !important;
+  }
+
+  .staff-header-title {
+    font-size: 1rem !important;
+  }
+
+  .staff-header-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  /* Action Buttons Container */
+  .staff-actions-container {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .staff-actions-top-row {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .staff-actions-bottom-row {
+    width: 100% !important;
+  }
+
+  /* Action Buttons - full width */
+  .staff-action-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Key Metrics Cards - single column */
+  .staff-metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .staff-metric-card {
+    padding: 0.875rem !important;
+  }
+
+  .staff-metric-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .staff-metric-value {
+    font-size: 1.25rem !important;
+  }
+
+  /* Staff Status Filters - full width and wrap */
+  .staff-filters-container {
+    width: 100% !important;
+    padding: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    overflow-x: auto !important;
+  }
+
+  .staff-filters-buttons {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .staff-filter-button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap;
+  }
+
+  /* Team Members Section */
+  .staff-team-section {
+    padding: 0.75rem !important;
+  }
+
+  .staff-team-header {
+    padding: 0.75rem !important;
+  }
+
+  .staff-team-title {
+    font-size: 1rem !important;
+  }
+
+  .staff-team-subtitle {
+    font-size: 0.8rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Search and Filter Bar */
+  .staff-search-section {
+    padding: 0.75rem !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .staff-search-input-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .staff-search-input {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem !important;
+  }
+
+  /* Table Container - horizontal scroll */
+  .staff-table-container {
+    overflow-x: auto !important;
+  }
+
+  /* Table - maintain min width for scroll */
+  .staff-table {
+    min-width: 1200px !important;
+  }
+
+  /* Table cells - adjust padding */
+  .staff-table th,
+  .staff-table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Pagination */
+  .staff-pagination {
+    padding: 0.75rem !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+  }
+
+  .staff-pagination-info {
+    text-align: center !important;
+    font-size: 0.8rem !important;
+  }
+
+  .staff-pagination-buttons {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .staff-pagination-button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Dropdown Menu - responsive positioning */
+  .staff-dropdown-menu {
+    width: calc(100vw - 2rem) !important;
+    max-width: 280px !important;
+    right: 1rem !important;
+    left: auto !important;
+    position: fixed !important;
+    z-index: 10000 !important;
+    margin-top: 0.5rem !important;
+  }
+
+  /* Override inline styles for dropdown positioning on mobile */
+  .staff-dropdown-menu[style*="top"],
+  .staff-dropdown-menu[style*="right"] {
+    right: 1rem !important;
+    top: auto !important;
+    bottom: 1rem !important;
+  }
+
+  /* Dropdown menu items */
+  .staff-dropdown-menu button {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Dropdown container - adjust for mobile */
+  .dropdown-container {
+    position: relative !important;
+  }
+
+  /* Ensure dropdowns in table cells are positioned correctly */
+  .staff-table td .dropdown-container {
+    position: static !important;
+  }
+
+  .staff-table td .staff-dropdown-menu {
+    position: fixed !important;
+    right: 1rem !important;
+    left: auto !important;
+    top: auto !important;
+    bottom: 1rem !important;
+  }
+}
+

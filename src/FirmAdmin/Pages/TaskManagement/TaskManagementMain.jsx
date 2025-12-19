@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
+import '../../styles/TaskManagementMain.css';
 
 const TaskManagementMain = () => {
   const { advancedReportingEnabled } = useFirmSettings();
@@ -446,19 +447,19 @@ const TaskManagementMain = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F7FF] p-6">
+    <div className="min-h-screen bg-[#F6F7FF] p-6 taskmanage-main-container">
       <div className=" mx-auto">
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-8 space-y-4 lg:space-y-0">
-          <div>
-            <h4 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">Task Management</h4>
-            <p className="text-gray-600 font-[BasisGrotesquePro]">Track and manage all firm tasks and workflows</p>
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-8 space-y-4 lg:space-y-0 taskmanage-header">
+          <div className="taskmanage-header-content">
+            <h4 className="text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro] taskmanage-header-title">Task Management</h4>
+            <p className="text-gray-600 font-[BasisGrotesquePro] taskmanage-header-subtitle">Track and manage all firm tasks and workflows</p>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex space-x-3 taskmanage-buttons-container">
             {!advancedReportingEnabled && (
               <button
                 onClick={exportTasksToPDF}
-                className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro]"
+                className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-[7px] hover:bg-gray-50 transition-colors flex items-center gap-x-2 font-[BasisGrotesquePro] taskmanage-action-button"
               >
                 <svg
                   width="18"
@@ -485,7 +486,7 @@ const TaskManagementMain = () => {
                 e.stopPropagation();
                 setShowCreateTaskModal(true);
               }}
-              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]"
+              className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro] taskmanage-action-button"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -496,27 +497,27 @@ const TaskManagementMain = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 taskmanage-kpi-grid">
           {kpiData.map((kpi, index) => (
-            <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] p-3">
+            <div key={index} className="bg-white !rounded-lg !border border-[#E8F0FF] p-3 taskmanage-kpi-card">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro]">{kpi.title}</p>
-                <div className="text-[#3AD6F2] flex-shrink-0">
+                <p className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] taskmanage-kpi-title">{kpi.title}</p>
+                <div className="text-[#3AD6F2] flex-shrink-0 taskmanage-kpi-icon">
                   {kpi.icon}
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{kpi.value}</p>
+              <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] taskmanage-kpi-value">{kpi.value}</p>
             </div>
           ))}
         </div>
 
         {/* Filters and Search */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4 mb-6">
+        <div className="mb-6 taskmanage-filters-section">
+          <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4 mb-6 taskmanage-filters-container">
             {/* Search Bar */}
-            <div className="w-full lg:w-80">
+            <div className="w-full lg:w-80 taskmanage-search-container">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none taskmanage-search-icon">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -526,18 +527,18 @@ const TaskManagementMain = () => {
                   placeholder="Search tasks..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block bg-white w-full pl-10 pr-3 py-2 !border border-[#E8F0FF] !rounded-lg  focus:border-transparent font-[BasisGrotesquePro]"
+                  className="block bg-white w-full pl-10 pr-3 py-2 !border border-[#E8F0FF] !rounded-lg  focus:border-transparent font-[BasisGrotesquePro] taskmanage-search-input"
                 />
               </div>
             </div>
 
             {/* Filter Dropdowns */}
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 taskmanage-filters-dropdowns">
               <div className="relative">
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer min-w-[160px]"
+                  className="appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer min-w-[160px] taskmanage-filter-select"
                 >
                   <option>All Priorities</option>
                   <option>High</option>
@@ -555,7 +556,7 @@ const TaskManagementMain = () => {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer min-w-[160px]"
+                  className="appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer min-w-[160px] taskmanage-filter-select"
                 >
                   <option>All Categories</option>
                   <option>Tax Preparation</option>
@@ -586,9 +587,9 @@ const TaskManagementMain = () => {
             />
             {/* Pagination Controls */}
             {pagination.total_pages > 1 && (
-              <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
+              <div className="d-flex justify-content-center align-items-center gap-2 mt-4 taskmanage-pagination">
                 <button
-                  className="btn btn-sm"
+                  className="btn btn-sm taskmanage-pagination-button"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   style={{
@@ -605,11 +606,11 @@ const TaskManagementMain = () => {
                 >
                   Previous
                 </button>
-                <span style={{ fontSize: '14px', color: '#4B5563', minWidth: '100px', textAlign: 'center', fontFamily: 'BasisGrotesquePro' }}>
+                <span className="taskmanage-pagination-info" style={{ fontSize: '14px', color: '#4B5563', minWidth: '100px', textAlign: 'center', fontFamily: 'BasisGrotesquePro' }}>
                   Page {currentPage} of {pagination.total_pages}
                 </span>
                 <button
-                  className="btn btn-sm"
+                  className="btn btn-sm taskmanage-pagination-button"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= pagination.total_pages}
                   style={{
@@ -633,7 +634,7 @@ const TaskManagementMain = () => {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex justify-center items-center py-12">
+          <div className="flex justify-center items-center py-12 taskmanage-loading">
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
@@ -642,7 +643,7 @@ const TaskManagementMain = () => {
 
         {/* Error State */}
         {error && !loading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 taskmanage-error">
             <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
             <button
               onClick={fetchTasks}
@@ -674,14 +675,14 @@ const TaskManagementMain = () => {
               }
             }}
           >
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 taskmanage-delete-modal">
               <h3 className="text-lg font-bold mb-4 font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>
                 Delete Task
               </h3>
               <p className="text-sm mb-6 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
                 Are you sure you want to delete "{taskToDelete?.title}"? This action cannot be undone.
               </p>
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-3 taskmanage-delete-modal-buttons">
                 <button
                   onClick={() => {
                     setShowDeleteConfirm(false);

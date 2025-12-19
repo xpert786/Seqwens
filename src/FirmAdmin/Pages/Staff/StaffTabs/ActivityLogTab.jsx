@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { firmAdminStaffAPI } from '../../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import '../../../styles/ActivityLogTab.css';
 
 export default function ActivityLogTab({ staffId, staffMember }) {
   const [activities, setActivities] = useState([]);
@@ -114,31 +115,31 @@ export default function ActivityLogTab({ staffId, staffMember }) {
   };
 
   return (
-    <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6">
-      <div className="mb-6">
-        <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">
+    <div className="bg-white rounded-xl !border border-[#E8F0FF] p-6 activity-main-container">
+      <div className="mb-6 activity-header">
+        <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] activity-header-title">
           Activity Log - {staffMember?.name || 'Staff Member'}
         </h5>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1 activity-header-subtitle">
           Recent activities and actions performed by this staff member
         </p>
       </div>
 
       {/* Statistics */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Total Activities</div>
-            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 activity-statistics-grid">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 activity-stat-card">
+            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1 activity-stat-label">Total Activities</div>
+            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] activity-stat-value">
               {statistics.total_activities || 0}
             </div>
           </div>
           {statistics.by_type && Object.keys(statistics.by_type).length > 0 && (
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">By Type</div>
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 activity-stat-card">
+              <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 activity-stat-sub-label">By Type</div>
               <div className="space-y-1">
                 {Object.entries(statistics.by_type).slice(0, 3).map(([type, data]) => (
-                  <div key={type} className="flex justify-between text-xs">
+                  <div key={type} className="flex justify-between text-xs activity-stat-item">
                     <span className="text-gray-600">{data.display_name}:</span>
                     <span className="font-semibold text-gray-900">{data.count}</span>
                   </div>
@@ -147,11 +148,11 @@ export default function ActivityLogTab({ staffId, staffMember }) {
             </div>
           )}
           {statistics.by_status && Object.keys(statistics.by_status).length > 0 && (
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">By Status</div>
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 activity-stat-card">
+              <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 activity-stat-sub-label">By Status</div>
               <div className="space-y-1">
                 {Object.entries(statistics.by_status).slice(0, 3).map(([status, data]) => (
-                  <div key={status} className="flex justify-between text-xs">
+                  <div key={status} className="flex justify-between text-xs activity-stat-item">
                     <span className="text-gray-600">{data.display_name}:</span>
                     <span className="font-semibold text-gray-900">{data.count}</span>
                   </div>
@@ -163,15 +164,15 @@ export default function ActivityLogTab({ staffId, staffMember }) {
       )}
 
       {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 activity-filters-grid">
         <div>
-          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1 activity-filter-label">
             Activity Type
           </label>
           <select
             value={filters.activity_type}
             onChange={(e) => handleFilterChange('activity_type', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 activity-filter-select"
           >
             <option value="">All Types</option>
             <option value="document">Document</option>
@@ -185,13 +186,13 @@ export default function ActivityLogTab({ staffId, staffMember }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1 activity-filter-label">
             Status
           </label>
           <select
             value={filters.status}
             onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 activity-filter-select"
           >
             <option value="">All Statuses</option>
             <option value="completed">Completed</option>
@@ -203,33 +204,33 @@ export default function ActivityLogTab({ staffId, staffMember }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1 activity-filter-label">
             Start Date
           </label>
           <input
             type="date"
             value={filters.start_date}
             onChange={(e) => handleFilterChange('start_date', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 activity-filter-input"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
-            End Date
+          <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1 activity-filter-label">
+            End Date dsfsdf
           </label>
           <input
             type="date"
             value={filters.end_date}
             onChange={(e) => handleFilterChange('end_date', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 activity-filter-input"
           />
         </div>
       </div>
 
       {/* Clear Filters Button */}
       {(filters.activity_type || filters.status || filters.start_date || filters.end_date) && (
-        <div className="mb-4">
+        <div className="mb-4 activity-clear-filters">
           <button
             onClick={() => setFilters({ activity_type: '', status: '', start_date: '', end_date: '' })}
             className="text-sm text-blue-600 hover:text-blue-700 font-[BasisGrotesquePro] underline"
@@ -241,7 +242,7 @@ export default function ActivityLogTab({ staffId, staffMember }) {
 
       {/* Loading State */}
       {loading && (
-        <div className="text-center py-8">
+        <div className="text-center py-8 activity-loading">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading activity logs...</p>
         </div>
@@ -249,7 +250,7 @@ export default function ActivityLogTab({ staffId, staffMember }) {
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 activity-error">
           {error}
         </div>
       )}
@@ -264,8 +265,8 @@ export default function ActivityLogTab({ staffId, staffMember }) {
                 const statusColor = getStatusColor(activity.status);
 
                 return (
-                  <div key={activity.id} className="flex items-start gap-4 p-4 !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="mt-1 flex-shrink-0">
+                  <div key={activity.id} className="flex items-start gap-4 p-4 !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors activity-item">
+                    <div className="mt-1 flex-shrink-0 activity-item-icon">
                       {iconType === 'clock' && (
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M12 6V12L16 14M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke={statusColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -287,18 +288,18 @@ export default function ActivityLogTab({ staffId, staffMember }) {
                         </svg>
                       )}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 activity-item-content">
                       <div className="flex items-start justify-between gap-4 mb-1">
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900 font-[BasisGrotesquePro] mb-1">
+                          <div className="font-medium text-gray-900 font-[BasisGrotesquePro] mb-1 activity-item-title">
                             {activity.title}
                           </div>
                           {activity.description && (
-                            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">
+                            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 activity-item-description">
                               {activity.description}
                             </div>
                           )}
-                          <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-3 flex-wrap activity-item-meta">
                             <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">
                               {activity.activity_type_display || activity.activity_type}
                             </span>
@@ -321,7 +322,7 @@ export default function ActivityLogTab({ staffId, staffMember }) {
                           </div>
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-2">
+                      <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-2 activity-item-timestamp">
                         {activity.formatted_timestamp || activity.formatted_date || new Date(activity.timestamp).toLocaleString()}
                       </div>
                     </div>
@@ -330,29 +331,29 @@ export default function ActivityLogTab({ staffId, staffMember }) {
               })}
             </div>
           ) : (
-            <div className="text-center py-8">
+            <div className="text-center py-8 activity-empty-state">
               <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No activity logs found</p>
             </div>
           )}
 
           {/* Pagination */}
           {pagination.total_pages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+            <div className="mt-6 flex items-center justify-between activity-pagination">
+              <div className="text-sm text-gray-600 font-[BasisGrotesquePro] activity-pagination-info">
                 Showing page {pagination.page} of {pagination.total_pages} ({pagination.total_count} total)
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 activity-pagination-buttons">
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={!pagination.has_previous}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 activity-pagination-button"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={!pagination.has_next}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 activity-pagination-button"
                 >
                   Next
                 </button>
