@@ -15,6 +15,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import '../../styles/StaffManagement.css';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -1055,22 +1056,22 @@ export default function StaffManagement() {
         onInviteCreated={handleInviteCreated}
         onRefresh={fetchPendingInvites}
       />
-      <div className="w-full px-4 py-4 bg-[#F6F7FF] min-h-screen">
+      <div className="w-full lg:px-4 px-2 py-4 bg-[#F6F7FF] min-h-screen staff-main-container">
         {/* Header and Action Buttons */}
-        <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4">
+        <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4 staff-header-section">
           {/* Header */}
-          <div className="flex-1">
-            <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">Staff Management</h4>
-            <p className="text-gray-600 font-[BasisGrotesquePro] text-sm">Manage team members and their assignments</p>
+          <div className="flex-1 staff-header-content">
+            <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro] staff-header-title">Staff Management</h4>
+            <p className="text-gray-600 font-[BasisGrotesquePro] text-sm staff-header-subtitle">Manage team members and their assignments</p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 staff-actions-container">
             {/* Top Row - 3 buttons */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 staff-actions-top-row">
               <button 
                 onClick={handleDownloadPerformanceReport}
-                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
               >
                 <PowersIcon />
                 Performance Report
@@ -1078,7 +1079,7 @@ export default function StaffManagement() {
               {!advancedReportingEnabled && (
                 <button
                   onClick={() => setIsBulkImportModalOpen(true)}
-                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
                 >
                   <UpperDownsIcon />
                   Bulk Import
@@ -1086,7 +1087,7 @@ export default function StaffManagement() {
               )}
               <button
                 onClick={() => setIsAddStaffModalOpen(true)}
-                className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+                className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1096,11 +1097,11 @@ export default function StaffManagement() {
             </div>
 
             {/* Bottom Row - 1 button */}
-            <div className="flex items-center">
+            <div className="flex items-center staff-actions-bottom-row">
               {!advancedReportingEnabled && (
                 <button
                   onClick={exportStaffToPDF}
-                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap"
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
                 >
                   <DownsIcon />
                   Export Report
@@ -1111,29 +1112,41 @@ export default function StaffManagement() {
         </div>
 
         {/* Key Metrics Cards */}
-        <div className="grid grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-4 text-left">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Active Staff</div>
-            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.active_staff}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
+          <div className="w-full h-full">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] staff-metric-label">Active Staff</div>
           </div>
-          <div className="bg-white rounded-lg p-4 text-left">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Pending Invites</div>
-            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.pending_invites}</div>
+              <h5 className="text-3xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro] staff-metric-value">{summary.active_staff}</h5>
           </div>
-          <div className="bg-white rounded-lg p-4 text-left">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">Avg Performance</div>
-            <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">{summary.avg_performance}%</div>
+          </div>
+          <div className="w-full h-full">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] staff-metric-label">Pending Invites</div>
+              </div>
+              <h5 className="text-3xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro] staff-metric-value">{summary.pending_invites}</h5>
+            </div>
+          </div>
+          <div className="w-full h-full">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col staff-metric-card">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-sm font-medium text-gray-600 font-[BasisGrotesquePro] staff-metric-label">Avg Performance</div>
+              </div>
+              <h5 className="text-3xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro] staff-metric-value">{summary.avg_performance}%</h5>
+            </div>
           </div>
         </div>
 
         {/* Staff Status Filters */}
-        <div className="bg-white rounded-lg p-3 mb-6 w-fit">
-          <div className="flex items-center gap-1">
+        <div className="bg-white rounded-lg p-3 mb-6 w-fit staff-filters-container">
+          <div className="flex items-center gap-1 staff-filters-buttons">
             {filters.map((filter) => (
               <button
                 key={filter.value}
                 onClick={() => setActiveFilter(filter.value)}
-                className={`px-3 py-2 !rounded-[8px] text-sm font-medium font-[BasisGrotesquePro] transition-colors transition-transform focus:outline-none active:scale-[0.98] ${activeFilter === filter.value
+                className={`px-3 py-2 !rounded-[8px] text-sm font-medium font-[BasisGrotesquePro] transition-colors transition-transform focus:outline-none active:scale-[0.98] staff-filter-button ${activeFilter === filter.value
                   ? 'bg-[#3AD6F2] text-white ring-2 ring-[#3AD6F2]/40 shadow-sm'
                   : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
@@ -1152,14 +1165,14 @@ export default function StaffManagement() {
         )}
 
         {/* Team Members Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 lg:p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 staff-team-section">
+          <div className="p-4 lg:p-6 border-b border-gray-200 staff-team-header">
+            <h2 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] staff-team-title">
               {activeFilter === 'pending_invites'
                 ? `Pending Invites (${pendingInvites.length})`
                 : `Team Members (${staffData.length})`}
             </h2>
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1 staff-team-subtitle">
               {activeFilter === 'pending_invites'
                 ? 'Staff members who have been invited but not yet accepted'
                 : 'Complete list of staff members with performance metrics'}
@@ -1167,9 +1180,9 @@ export default function StaffManagement() {
           </div>
 
           {/* Search and Filter Bar */}
-          <div className="p-4 lg:p-6 border-b border-gray-200">
+          <div className="p-4 lg:p-6 border-b border-gray-200 staff-search-section">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1 max-w-md staff-search-input-container">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1195,7 +1208,7 @@ export default function StaffManagement() {
                       }
                     }
                   }}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 staff-search-input"
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1205,7 +1218,7 @@ export default function StaffManagement() {
           </div>
 
           {/* Staff Table / Pending Invites Table */}
-          <div className="overflow-x-auto">
+          <div className="staff-table-container w-full">
             {loading && activeFilter !== 'pending_invites' ? (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1218,43 +1231,43 @@ export default function StaffManagement() {
                   <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No pending invites found</p>
                 </div>
               ) : (
-                <table className="min-w-[1200px] divide-y divide-gray-200">
+                <table className="w-full divide-y divide-gray-200 staff-table">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Name</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Email</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Invited By</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Invited At</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Expires At</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Action</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Invited By</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Invited At</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Expires At</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Action</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {pendingInvites.map((invite) => (
                       <tr key={invite.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 w-[200px]">
+                        <td className="px-4 py-4">
                           <div className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro]">{invite.name}</div>
                         </td>
-                        <td className="px-4 py-4 w-[180px]">
+                        <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
                             <Mails2Icon />
                             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.email}</div>
                           </div>
                         </td>
                         
-                        <td className="px-4 py-4 w-[150px]">
+                        <td className="px-4 py-4">
                           <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.invited_by || 'N/A'}</div>
                         </td>
-                        <td className="px-4 py-4 w-[150px]">
+                        <td className="px-4 py-4">
                           <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{invite.invited_at_formatted || 'N/A'}</div>
                         </td>
-                        <td className="px-4 py-4 w-[150px]">
+                        <td className="px-4 py-4">
                           <div className={`text-sm font-[BasisGrotesquePro] ${invite.is_expired ? 'text-red-600' : 'text-gray-900'}`}>
                             {invite.expires_at_formatted || 'N/A'}
                           </div>
                         </td>
-                        <td className="px-4 py-4 w-[100px]">
+                        <td className="px-4 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-full ${invite.is_expired
                             ? 'bg-red-100 text-red-700'
                             : 'bg-[#F59E0B] text-white'
@@ -1266,7 +1279,7 @@ export default function StaffManagement() {
                             {invite.is_expired ? 'Expired' : (invite.status_display || invite.status)}
                           </span>
                         </td>
-                        <td className="px-4 py-4 w-[80px]">
+                        <td className="px-4 py-4">
                           <div className="relative dropdown-container">
                             <button
                               onClick={() => handleDropdownToggle(`invite-${invite.id}`)}
@@ -1277,7 +1290,7 @@ export default function StaffManagement() {
                               </svg>
                             </button>
                             {showDropdown === `invite-${invite.id}` && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200" style={{ zIndex: 9999 }}>
+                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 staff-dropdown-menu" style={{ zIndex: 9999 }}>
                                 <div className="py-1">
                                   <button
                                     onClick={() => handleResendInvite(invite)}
@@ -1316,15 +1329,15 @@ export default function StaffManagement() {
 
             {/* Pending Invites Pagination */}
             {activeFilter === 'pending_invites' && pendingInvitesPagination.total_count > pendingInvitesPagination.page_size && (
-              <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+              <div className="p-4 lg:p-6 border-t border-gray-200 flex items-center justify-between staff-pagination">
+                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] staff-pagination-info">
                   Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of {pendingInvitesPagination.total_count} invites
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 staff-pagination-buttons">
                   <button
                     onClick={() => setPendingInvitesPage(prev => Math.max(1, prev - 1))}
                     disabled={pendingInvitesPage === 1}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
                   >
                     Previous
                   </button>
@@ -1351,7 +1364,7 @@ export default function StaffManagement() {
                             )}
                             <button
                               onClick={() => setPendingInvitesPage(page)}
-                              className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] ${pendingInvitesPage === page
+                              className={`px-3 py-2 text-sm font-medium rounded-lg font-[BasisGrotesquePro] staff-pagination-button ${pendingInvitesPage === page
                                 ? 'bg-[#F56D2D] text-white'
                                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                 }`}
@@ -1368,7 +1381,7 @@ export default function StaffManagement() {
                   <button
                     onClick={() => setPendingInvitesPage(prev => Math.min(Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size), prev + 1))}
                     disabled={pendingInvitesPage >= Math.ceil(pendingInvitesPagination.total_count / pendingInvitesPagination.page_size)}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] staff-pagination-button"
                   >
                     Next
                   </button>
@@ -1383,17 +1396,17 @@ export default function StaffManagement() {
                     <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No staff members found</p>
                   </div>
                 ) : (
-                  <table className="min-w-[1200px] divide-y divide-gray-200">
+                  <table className="w-full divide-y divide-gray-200 staff-table">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[200px]">Staff Member</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[180px]">Contact</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Clients</th>
-                        {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[150px]">Performance</th> */}
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Hire Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[100px]">Revenue</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro] w-[80px]">Action</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Staff Member</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Contact</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Clients</th>
+                        {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Performance</th> */}
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Hire Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Revenue</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">Action</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -1402,7 +1415,7 @@ export default function StaffManagement() {
                         return (
                           <tr key={mappedStaff.id} className="hover:bg-gray-50">
                             {/* Staff Member */}
-                            <td className="px-4 py-4 w-[200px]">
+                            <td className="px-4 py-4">
                               <div className="flex items-center">
                                 <div className="flex-shrink-0 h-10 w-10">
                                   {mappedStaff.profilePicture ? (
@@ -1437,7 +1450,7 @@ export default function StaffManagement() {
                             </td>
 
                             {/* Contact */}
-                            <td className="px-4 py-4 w-[180px]">
+                            <td className="px-4 py-4">
                               <div className="flex items-center gap-2 mb-1">
                                 <Mails2Icon />
                                 <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.email}</div>
@@ -1448,23 +1461,10 @@ export default function StaffManagement() {
                               </div>
                             </td>
 
-                            {/* Role */}
-                            <td className="px-4 py-4 w-[120px]">
-                              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{mappedStaff.role}</div>
-                              {mappedStaff.roleLevel && (
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-[BasisGrotesquePro] mt-1 ${mappedStaff.roleLevel === 'Advanced'
-                                  ? 'bg-gray-100 text-gray-700'
-                                  : mappedStaff.roleLevel === 'Manager'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-green-100 text-green-700'
-                                  }`}>
-                                  {mappedStaff.roleLevel}
-                                </span>
-                              )}
-                            </td>
+                            
 
                             {/* Status */}
-                            <td className="px-4 py-4 w-[100px]">
+                            <td className="px-4 py-4">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${mappedStaff.statusValue === 'active' || mappedStaff.isActive
                                 ? 'bg-[#22C55E] text-white'
                                 : mappedStaff.statusValue === 'pending_invites'
@@ -1476,7 +1476,7 @@ export default function StaffManagement() {
                             </td>
 
                             {/* Clients */}
-                            <td className="px-4 py-4 w-[80px]">
+                            <td className="px-4 py-4">
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                                   <TwouserIcon /> 
@@ -1498,17 +1498,17 @@ export default function StaffManagement() {
                             </td> */}
 
                             {/* Hire Date */}
-                            <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">
+                            <td className="px-4 py-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
                               {mappedStaff.hireDate}
                             </td>
 
                             {/* Revenue */}
-                            <td className="px-4 py-4 w-[100px] text-sm text-gray-900 font-[BasisGrotesquePro]">
+                            <td className="px-4 py-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
                               {mappedStaff.revenue}
                             </td>
 
                             {/* Action */}
-                            <td className="px-4 py-4 w-[80px] text-sm font-medium">
+                            <td className="px-4 py-4 text-sm font-medium">
                               <div
                                 ref={(el) => { dropdownRefs.current[mappedStaff.id] = el; }}
                               >
@@ -1541,7 +1541,7 @@ export default function StaffManagement() {
         return mapped.id === showDropdown;
       }) && (
           <div
-            className="fixed w-48 bg-white rounded-md shadow-lg border border-gray-200"
+            className="fixed w-48 bg-white rounded-md shadow-lg border border-gray-200 staff-dropdown-menu"
             data-dropdown-menu
             style={{
               zIndex: 9999,

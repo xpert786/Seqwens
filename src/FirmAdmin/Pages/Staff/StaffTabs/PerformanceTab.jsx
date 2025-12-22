@@ -11,6 +11,7 @@ import {
 import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import '../../../styles/PerformanceTab.css';
 
 export default function PerformanceTab({ staffId }) {
   const [performanceData, setPerformanceData] = useState(null);
@@ -179,22 +180,22 @@ export default function PerformanceTab({ staffId }) {
   }
 
   return (
-    <div className="bg-white rounded-xl !border border-gray-200 p-6">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">
+    <div className="bg-white rounded-xl !border border-gray-200 p-6 performance-main-container">
+      <div className="flex justify-between items-start mb-6 performance-header">
+        <div className="performance-header-content">
+          <h5 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro] performance-header-title">
             Performance Metrics
             {performanceData?.detailed_metrics?.tasks && ` (${performanceData.detailed_metrics.tasks.total} tasks)`}
           </h5>
-          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1 performance-header-subtitle">
             {performanceData?.staff_name ? `${performanceData.staff_name}'s performance overview` : 'Performance overview and metrics'}
           </p>
         </div>
-        <div className="relative">
+        <div className="relative performance-period-selector">
           <select 
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-4 py-2 text-sm font-medium text-[#4A5568] bg-[#F0F4F8] !rounded-lg appearance-none pr-12 font-[BasisGrotesquePro] cursor-pointer hover:bg-[#E2E8F0] transition !border border-[#E8F0FF]"
+            className="px-4 py-2 text-sm font-medium text-[#4A5568] bg-[#F0F4F8] !rounded-lg appearance-none pr-12 font-[BasisGrotesquePro] cursor-pointer hover:bg-[#E2E8F0] transition !border border-[#E8F0FF] performance-period-select"
           >
             <option value="all">All Time</option>
             <option value="yearly">Yearly</option>
@@ -210,9 +211,9 @@ export default function PerformanceTab({ staffId }) {
       </div>
 
       {/* Chart Container */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 performance-chart-container">
         {/* Chart Area */}
-        <div className="flex-1">
+        <div className="flex-1 performance-chart-area">
           <ResponsiveContainer width="100%" height={280}>
             <LineChart
               data={chartData}
@@ -302,15 +303,15 @@ export default function PerformanceTab({ staffId }) {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-3 text-sm font-[BasisGrotesquePro] min-w-[180px] flex-shrink-0">
+        <div className="flex flex-col gap-3 text-sm font-[BasisGrotesquePro] min-w-[180px] flex-shrink-0 performance-legend">
           {legendData.map((item) => (
-            <div key={item.name} className="flex items-center gap-2">
+            <div key={item.name} className="flex items-center gap-2 performance-legend-item">
               <div
-                className="w-3 h-3 flex-shrink-0"
+                className="w-3 h-3 flex-shrink-0 performance-legend-color"
                 style={{ backgroundColor: item.color }}
               ></div>
-              <span className="text-gray-700 font-[BasisGrotesquePro]">{item.name}:</span>
-              <span className="text-gray-900 font-semibold font-[BasisGrotesquePro]">
+              <span className="text-gray-700 font-[BasisGrotesquePro] performance-legend-text">{item.name}:</span>
+              <span className="text-gray-900 font-semibold font-[BasisGrotesquePro] performance-legend-text">
                 {item.completed}/{item.total}
               </span>
             </div>
@@ -320,22 +321,22 @@ export default function PerformanceTab({ staffId }) {
 
       {/* Detailed Metrics Section */}
       {performanceData?.detailed_metrics && (
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <h6 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4">Detailed Metrics</h6>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-8 pt-6 border-t border-gray-200 performance-metrics-section">
+          <h6 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro] mb-4 performance-metrics-title">Detailed Metrics</h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 performance-metrics-grid">
             {/* Tasks */}
             {performanceData.detailed_metrics.tasks && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Tasks</div>
+              <div className="bg-gray-50 rounded-lg p-4 performance-metric-card">
+                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 performance-metric-label">Tasks</div>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] performance-metric-value">
                     {performanceData.detailed_metrics.tasks.completed || 0}
                   </div>
-                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro] performance-metric-total">
                     / {performanceData.detailed_metrics.tasks.total || 0} total
                   </div>
                 </div>
-                <div className="mt-2 flex gap-2 text-xs font-[BasisGrotesquePro]">
+                <div className="mt-2 flex gap-2 text-xs font-[BasisGrotesquePro] performance-metric-details">
                   <span className="text-green-600">In Progress: {performanceData.detailed_metrics.tasks.in_progress || 0}</span>
                   <span className="text-orange-600">Pending: {performanceData.detailed_metrics.tasks.pending || 0}</span>
                 </div>
@@ -344,17 +345,17 @@ export default function PerformanceTab({ staffId }) {
 
             {/* Appointments */}
             {performanceData.detailed_metrics.appointments && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Appointments</div>
+              <div className="bg-gray-50 rounded-lg p-4 performance-metric-card">
+                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 performance-metric-label">Appointments</div>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] performance-metric-value">
                     {performanceData.detailed_metrics.appointments.completed || 0}
                   </div>
-                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro] performance-metric-total">
                     / {performanceData.detailed_metrics.appointments.total || 0} total
                   </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2 text-xs font-[BasisGrotesquePro]">
+                <div className="mt-2 flex flex-wrap gap-2 text-xs font-[BasisGrotesquePro] performance-metric-details">
                   <span className="text-blue-600">Scheduled: {performanceData.detailed_metrics.appointments.scheduled || 0}</span>
                   <span className="text-purple-600">Confirmed: {performanceData.detailed_metrics.appointments.confirmed || 0}</span>
                   <span className="text-orange-600">Pending: {performanceData.detailed_metrics.appointments.pending || 0}</span>
@@ -364,17 +365,17 @@ export default function PerformanceTab({ staffId }) {
 
             {/* Documents */}
             {performanceData.detailed_metrics.documents && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Documents</div>
+              <div className="bg-gray-50 rounded-lg p-4 performance-metric-card">
+                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 performance-metric-label">Documents</div>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] performance-metric-value">
                     {performanceData.detailed_metrics.documents.reviewed || 0}
                   </div>
-                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro] performance-metric-total">
                     / {performanceData.detailed_metrics.documents.total_uploaded || 0} uploaded
                   </div>
                 </div>
-                <div className="mt-2 text-xs text-gray-500 font-[BasisGrotesquePro]">
+                <div className="mt-2 text-xs text-gray-500 font-[BasisGrotesquePro] performance-metric-rate">
                   Review Rate: {performanceData.detailed_metrics.documents.total_uploaded > 0 
                     ? Math.round((performanceData.detailed_metrics.documents.reviewed / performanceData.detailed_metrics.documents.total_uploaded) * 100) 
                     : 0}%
@@ -384,17 +385,17 @@ export default function PerformanceTab({ staffId }) {
 
             {/* Clients */}
             {performanceData.detailed_metrics.clients && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Clients</div>
+              <div className="bg-gray-50 rounded-lg p-4 performance-metric-card">
+                <div className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2 performance-metric-label">Clients</div>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                  <div className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] performance-metric-value">
                     {performanceData.detailed_metrics.clients.active || 0}
                   </div>
-                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                  <div className="text-sm text-gray-500 font-[BasisGrotesquePro] performance-metric-total">
                     / {performanceData.detailed_metrics.clients.total_assigned || 0} assigned
                   </div>
                 </div>
-                <div className="mt-2 text-xs text-gray-500 font-[BasisGrotesquePro]">
+                <div className="mt-2 text-xs text-gray-500 font-[BasisGrotesquePro] performance-metric-rate">
                   Active Rate: {performanceData.detailed_metrics.clients.total_assigned > 0 
                     ? Math.round((performanceData.detailed_metrics.clients.active / performanceData.detailed_metrics.clients.total_assigned) * 100) 
                     : 0}%

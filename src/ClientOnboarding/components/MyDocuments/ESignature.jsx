@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaEye, } from "react-icons/fa";
+import { FaEye, FaSyncAlt } from "react-icons/fa";
 import { Modal } from 'react-bootstrap';
 import "../../styles/Popup.css";
 import "../../styles/Esignpop.css"
@@ -26,6 +26,7 @@ export default function ESignature() {
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [commentText, setCommentText] = useState("");
+  const [signatureFieldsStatus, setSignatureFieldsStatus] = useState({}); // { documentId: { hasFields: bool, totalFields: number, loading: bool, regenerating: bool } }
   const [signatureRequests, setSignatureRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -118,6 +119,120 @@ export default function ESignature() {
         setLoading(false);
       }
     };
+
+  // Check signature fields for a document
+  const checkSignatureFieldsForDocument = async (esignDocumentId) => {
+    if (!esignDocumentId) return;
+    
+    // Set loading state
+    setSignatureFieldsStatus(prev => ({
+      ...prev,
+      [esignDocumentId]: { ...prev[esignDocumentId], loading: true }
+    }));
+    
+    try {
+      const response = await signatureRequestsAPI.checkSignatureFields(esignDocumentId, false);
+      
+      if (response.success) {
+        setSignatureFieldsStatus(prev => ({
+          ...prev,
+          [esignDocumentId]: {
+            hasFields: response.total_fields > 0,
+            totalFields: response.total_fields || 0,
+            fieldsExisted: response.fields_existed || false,
+            regenerated: response.regenerated || false,
+            loading: false
+          }
+        }));
+        
+        if (response.regenerated) {
+          toast.success(`Successfully extracted ${response.total_fields} signature field(s)`, {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        } else if (response.total_fields > 0) {
+          // Fields already existed, no need to show toast
+          console.log(`Found ${response.total_fields} existing signature fields`);
+        }
+      } else {
+        setSignatureFieldsStatus(prev => ({
+          ...prev,
+          [esignDocumentId]: {
+            hasFields: false,
+            totalFields: 0,
+            loading: false,
+            error: response.message
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking signature fields:', error);
+      const errorMsg = handleAPIError(error);
+      setSignatureFieldsStatus(prev => ({
+        ...prev,
+        [esignDocumentId]: {
+          hasFields: false,
+          totalFields: 0,
+          loading: false,
+          error: errorMsg
+        }
+      }));
+    }
+  };
+
+  // Regenerate signature fields
+  const regenerateSignatureFields = async (esignDocumentId) => {
+    if (!esignDocumentId) return;
+    
+    // Set regenerating state for this document
+    setSignatureFieldsStatus(prev => ({
+      ...prev,
+      [esignDocumentId]: { ...prev[esignDocumentId], regenerating: true, loading: true }
+    }));
+    
+    try {
+      const response = await signatureRequestsAPI.checkSignatureFields(esignDocumentId, true);
+      
+      if (response.success) {
+        setSignatureFieldsStatus(prev => ({
+          ...prev,
+          [esignDocumentId]: {
+            hasFields: response.total_fields > 0,
+            totalFields: response.total_fields || 0,
+            fieldsExisted: false,
+            regenerated: true,
+            loading: false,
+            regenerating: false
+          }
+        }));
+        
+        toast.success(`Successfully regenerated ${response.total_fields} signature field(s)`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      } else {
+        setSignatureFieldsStatus(prev => ({
+          ...prev,
+          [esignDocumentId]: { ...prev[esignDocumentId], regenerating: false, loading: false, error: response.message }
+        }));
+        toast.error(response.message || 'Failed to regenerate signature fields', {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+    } catch (error) {
+      console.error('Error regenerating signature fields:', error);
+      const errorMsg = handleAPIError(error);
+      setSignatureFieldsStatus(prev => ({
+        ...prev,
+        [esignDocumentId]: { ...prev[esignDocumentId], regenerating: false, loading: false, error: errorMsg }
+      }));
+      toast.error(errorMsg || 'Failed to regenerate signature fields', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  };
 
   // Fetch signature requests on mount and when filters change
   useEffect(() => {
@@ -483,9 +598,16 @@ export default function ESignature() {
                   {request.document_url && (
                     <button
                       className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
                         setSelectedIndex(originalIndex);
+                        
+                        // Check signature fields when opening preview
+                        const esignDocId = request.id || request.esign_id || request.document;
+                        if (esignDocId) {
+                          await checkSignatureFieldsForDocument(esignDocId);
+                        }
+                        
                         setShowPreviewModal(true);
                       }}
                     >
@@ -493,6 +615,37 @@ export default function ESignature() {
                       Preview
                     </button>
                   )}
+
+                  {request.document_url && (() => {
+                    const esignDocId = request.id || request.esign_id || request.document;
+                    const fieldsStatus = esignDocId ? signatureFieldsStatus[esignDocId] : null;
+                    const isRegenerating = fieldsStatus?.regenerating || false;
+                    
+                    return (
+                      <button
+                        className="btn d-flex align-items-center gap-2 rounded"
+                        style={{
+                          backgroundColor: "#fff",
+                          color: "#3B4A66",
+                          border: "1px solid #E8F0FF",
+                          fontSize: "12px",
+                          fontWeight: "500"
+                        }}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (esignDocId) {
+                            // Regenerate fields
+                            await regenerateSignatureFields(esignDocId);
+                          }
+                        }}
+                        disabled={isRegenerating}
+                        title="Regenerate signature fields"
+                      >
+                        <FaSyncAlt size={14} style={{ animation: isRegenerating ? 'spin 1s linear infinite' : 'none' }} />
+                        {isRegenerating ? 'Regenerating...' : 'Regenerate Fields'}
+                      </button>
+                    );
+                  })()}
 
                   {((request.status === 'pending' || request.status === 'sent' || request.status === 'viewed' || request.status === 'created') || request.embedded_url) && 
                    request.status !== 'signed' && 
@@ -960,11 +1113,65 @@ export default function ESignature() {
         </Modal.Header>
         <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
           {selectedIndex !== null && signatureRequests[selectedIndex]?.document_url ? (
-            <PDFViewer
-              pdfUrl={signatureRequests[selectedIndex]?.document_url}
-              height="70vh"
-              showThumbnails={true}
-            />
+            <>
+              <PDFViewer
+                pdfUrl={signatureRequests[selectedIndex]?.document_url}
+                height="70vh"
+                showThumbnails={true}
+              />
+              {/* Signature Fields Status */}
+              {(() => {
+                const request = signatureRequests[selectedIndex];
+                const esignDocId = request?.id || request?.esign_id || request?.document;
+                const fieldsStatus = esignDocId ? signatureFieldsStatus[esignDocId] : null;
+                
+                if (!esignDocId) return null;
+                
+                return (
+                  <div className="p-3 border-top" style={{ backgroundColor: '#F9FAFB' }}>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div>
+                        {fieldsStatus?.loading ? (
+                          <small className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            Checking signature fields...
+                          </small>
+                        ) : fieldsStatus?.hasFields ? (
+                          <small className="text-success" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            ✓ Found {fieldsStatus.totalFields} signature field(s)
+                          </small>
+                        ) : fieldsStatus?.error ? (
+                          <small className="text-danger" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            ⚠ {fieldsStatus.error}
+                          </small>
+                        ) : (
+                          <small className="text-warning" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                            ⚠ No signature fields found
+                          </small>
+                        )}
+                      </div>
+                      {(!fieldsStatus?.hasFields || fieldsStatus?.error) && (
+                        <button
+                          className="btn btn-sm"
+                          style={{
+                            backgroundColor: "#F56D2D",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            padding: "4px 12px"
+                          }}
+                          onClick={() => regenerateSignatureFields(esignDocId)}
+                          disabled={fieldsStatus?.regenerating || false}
+                        >
+                          {fieldsStatus?.regenerating ? 'Regenerating...' : 'Regenerate Fields'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           ) : (
             <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
               <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>

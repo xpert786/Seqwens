@@ -35,6 +35,7 @@ import WorkflowTemp from './Pages/Workflow-temp/WorkflowTemp';
 import WorkflowManagement from './Pages/Workflow/WorkflowManagement';
 import WorkflowInstanceView from './Pages/Workflow/WorkflowInstanceView';
 import SubscriptionManagement from './Pages/SubscriptionManagement/SubscriptionManagement';
+import FinalizeSubscription from './Pages/SubscriptionManagement/FinalizeSubscription';
 import Offices from './Pages/Offices';
 import OfficeOverview from './Pages/Offices/OfficeOverview';
 import OfficeDashboardView from './Pages/Offices/OfficeDashboardView';
@@ -47,46 +48,6 @@ import CustomRolesManagement from './Pages/CustomRoles/CustomRolesManagement';
 function FirmAdminProtectedRoute({ children }) {
   const location = useLocation();
   
-  // Check for superadmin-initiated login BEFORE checking authentication
-  const params = new URLSearchParams(location.search);
-  const isSuperadminLogin = params.get('superadmin_login') === 'true';
-  
-  if (isSuperadminLogin) {
-    // Check for firm login data in localStorage
-    const firmLoginDataStr = localStorage.getItem('firmLoginData');
-    
-    if (firmLoginDataStr) {
-      try {
-        const loginData = JSON.parse(firmLoginDataStr);
-        const { access_token, refresh_token, user } = loginData;
-        
-        if (access_token && refresh_token && user) {
-          // Store tokens and user data for this tab
-          setTokens(access_token, refresh_token, true);
-          localStorage.setItem('userData', JSON.stringify(user));
-          localStorage.setItem('userType', user.user_type || 'admin');
-          localStorage.setItem('isLoggedIn', 'true');
-          
-          // Also set in sessionStorage to ensure it's available
-          sessionStorage.setItem('accessToken', access_token);
-          sessionStorage.setItem('refreshToken', refresh_token);
-          sessionStorage.setItem('userData', JSON.stringify(user));
-          sessionStorage.setItem('userType', user.user_type || 'admin');
-          sessionStorage.setItem('isLoggedIn', 'true');
-          sessionStorage.setItem('rememberMe', 'true');
-          
-          // Clear the temporary login data
-          localStorage.removeItem('firmLoginData');
-          
-          // Remove query parameters from URL
-          window.history.replaceState({}, '', location.pathname);
-        }
-      } catch (error) {
-        console.error('Error processing firm login data:', error);
-      }
-    }
-  }
-  
   // Check if user is logged in
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
@@ -98,16 +59,36 @@ function FirmAdminProtectedRoute({ children }) {
 
   console.log('Firm Admin Protected Route - User type:', userType);
 
+  // Only allow admin access - if super_admin, redirect back to superadmin
+  if (userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') {
+    console.warn('Super admin detected in firm admin route, redirecting to superadmin');
+    return <Navigate to="/superadmin" replace />;
+  }
+
   // Only allow admin access
   if (userType !== 'admin') {
     console.warn('Unauthorized access attempt to Firm Admin Dashboard');
     // Redirect based on user type
     if (userType === 'client') {
       return <Navigate to="/dashboard" replace />;
-    } else if (userType === 'super_admin') {
-      return <Navigate to="/superadmin" replace />;
     } else {
       return <Navigate to="/login" replace />;
+    }
+  }
+
+  // Check if admin user has no subscription plan (except on finalize-subscription page)
+  if (location.pathname !== '/firmadmin/finalize-subscription') {
+    const userDataStr = storage?.getItem("userData");
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr);
+        if (userData.subscription_plan === null || userData.subscription_plan === undefined) {
+          // Redirect to subscription finalization page
+          return <Navigate to="/firmadmin/finalize-subscription" replace />;
+        }
+      } catch (error) {
+        console.error('Error checking subscription plan:', error);
+      }
     }
   }
 
@@ -159,6 +140,7 @@ export default function FirmRoutes() {
         <Route path="workflow" element={<WorkflowManagement />} />
         <Route path="workflow/instances/:instanceId" element={<WorkflowInstanceView />} />
         <Route path="subscription" element={<SubscriptionManagement />} />
+        <Route path="finalize-subscription" element={<FinalizeSubscription />} />
         <Route path="email-templates" element={<EmailTemplate />} />
         
         {/* System Administration routes */}

@@ -1,0 +1,104 @@
+@media (max-width: 767px) {
+
+    /* Remove left offset on mobile */
+    .invoices-header {
+      margin-left: 0 !important;
+      padding: 0 8px;
+      text-align: left;
+    }
+  
+    /* Heading size */
+    .invoices-header h5 {
+      font-size: 18px !important;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+  
+    /* Description text */
+    .invoices-header p {
+      font-size: 13px !important;
+      line-height: 1.4;
+    }
+
+        /* Remove left margin on mobile */
+    .empty-invoice-msg {
+        margin-left: 0 !important;
+        padding-left: 8px;
+        padding-right: 8px;
+        text-align: center;
+    }
+
+    /* Text size optimization */
+    .empty-invoice-msg p {
+        font-size: 13px !important;
+        line-height: 1.4;
+    }
+
+     /* Remove left offset */
+  .invoice-card {
+    margin-left: 0 !important;
+    padding: 12px;
+  }
+
+  /* Stack layout vertically */
+  .invoice-card > .d-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  /* Amount section full width & left aligned */
+  .invoice-card .flex-grow-1 {
+    width: 100%;
+    text-align: left !important;
+  }
+
+  /* Actions row */
+  .invoice-card .text-end {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  /* Pay Now button sizing */
+  .invoice-card button.btn {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+    .invoice-pagination {
+    margin-left: 0 !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* Pagination buttons wrap */
+  .invoice-pagination > .d-flex {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Center page numbers row */
+  .invoice-pagination .gap-1 {
+    flex-wrap: wrap;
+  }
+
+  /* Page info text */
+  .invoice-pagination > div:last-child {
+    width: 100%;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  /* Button sizing */
+  .invoice-pagination button.btn {
+    font-size: 13px;
+    padding: 4px 8px;
+    min-width: auto;
+  }
+  }
+  

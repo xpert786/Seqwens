@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminClientsAPI } from '../../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 export default function DocumentsTab({ client }) {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function DocumentsTab({ client }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   // Fetch documents from API
   const fetchDocuments = useCallback(async (folderId = null) => {
@@ -132,6 +134,46 @@ export default function DocumentsTab({ client }) {
     }
   };
 
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!client?.id) {
+      toast.error('Client ID is required', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+      return;
+    }
+
+    try {
+      setDownloadingPDF(true);
+      const blob = await firmAdminClientsAPI.getClientDataEntryFormPDF(client.id);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `client_data_entry_form_${client.id}_${client.name || 'client'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF downloaded successfully', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to download PDF. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF]">
@@ -166,7 +208,8 @@ export default function DocumentsTab({ client }) {
   return (
     <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF]">
       <div className="mb-6">
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
           {currentFolderId && (
             <button
               onClick={() => {
@@ -188,6 +231,27 @@ export default function DocumentsTab({ client }) {
             </button>
           )}
           <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro]">Documents</h5>
+          </div>
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloadingPDF}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {downloadingPDF ? (
+              <>
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Downloading...
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V12C4 12.5304 4.21071 13.0391 4.58579 13.4142C4.96086 13.7893 5.46957 14 6 14H14C14.5304 14 15.0391 13.7893 15.4142 13.4142C15.7893 13.0391 16 12.5304 16 12V4C16 3.46957 15.7893 2.96086 15.4142 2.58579C15.0391 2.21071 14.5304 2 14 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                  <path d="M10 6V10M8 8H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Download Signed Form PDF
+              </>
+            )}
+          </button>
         </div>
         <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Client documents and supporting materials</p>
       </div>

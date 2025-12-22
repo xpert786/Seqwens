@@ -1,0 +1,42 @@
+@media (max-width: 767px) {
+
+    /* Remove left offset */
+    .paid-invoice-card {
+      margin-left: 0 !important;
+      padding: 12px;
+    }
+  
+    /* Stack layout */
+    .paid-invoice-card {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 12px;
+    }
+  
+    /* Disable absolute centering on mobile */
+    .paid-invoice-card .position-absolute {
+      position: static !important;
+      transform: none !important;
+      width: 100%;
+      text-align: left;
+    }
+  
+    /* Amount spacing */
+    .paid-invoice-card .position-absolute div {
+      font-size: 14px;
+    }
+  
+    /* Right-side buttons align left */
+    .paid-invoice-card .flex-column {
+      flex-direction: row !important;
+      width: 100%;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+  
+    /* Button sizing */
+    .paid-invoice-card button.btn {
+      padding: 4px 8px;
+    }
+  }
+  

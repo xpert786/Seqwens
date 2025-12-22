@@ -1,38 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { FiPlus, FiEdit2, FiTrash2, FiShield, FiUsers } from 'react-icons/fi';
-import { firmAdminCustomRolesAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
-import CustomRoleModal from './CustomRoleModal';
-import ConfirmationModal from '../../../components/ConfirmationModal';
+import { FiSearch, FiShield, FiUsers, FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
+import { firmAdminStaffAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import TaxPreparerPermissionsModal from '../Staff/TaxPreparerPermissionsModal';
 
 export default function CustomRolesManagement() {
-  const [roles, setRoles] = useState([]);
+  const [taxPreparers, setTaxPreparers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingRole, setEditingRole] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [roleToDelete, setRoleToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [includeInactive, setIncludeInactive] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [selectedPreparer, setSelectedPreparer] = useState(null);
 
   useEffect(() => {
-    loadRoles();
-  }, [includeInactive]);
+    loadTaxPreparers();
+  }, []);
 
-  const loadRoles = async () => {
+  const loadTaxPreparers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await firmAdminCustomRolesAPI.getCustomRoles(includeInactive);
-
+      
+      const response = await firmAdminStaffAPI.listTaxPreparers();
+      
       if (response.success && response.data) {
-        setRoles(response.data.roles || []);
+        setTaxPreparers(response.data || []);
       } else {
-        setError(response.message || 'Failed to load custom roles');
+        setError(response.message || 'Failed to load tax preparers');
+        toast.error(response.message || 'Failed to load tax preparers', {
+          position: "top-right",
+          autoClose: 3000,
+        });
       }
     } catch (err) {
-      console.error('Error loading custom roles:', err);
+      console.error('Error loading tax preparers:', err);
       const errorMsg = handleAPIError(err);
       setError(errorMsg);
       toast.error(errorMsg, {
@@ -44,118 +45,32 @@ export default function CustomRolesManagement() {
     }
   };
 
-  const handleCreateRole = async (name, description, permission_groups) => {
-    try {
-      const response = await firmAdminCustomRolesAPI.createCustomRole(name, description, permission_groups);
-      if (response.success) {
-        toast.success(response.message || 'Custom role created successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        await loadRoles();
-        setShowCreateModal(false);
-      } else {
-        toast.error(response.message || 'Failed to create custom role', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      }
-    } catch (err) {
-      const errorMsg = handleAPIError(err);
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    }
-  };
-
-  const handleUpdateRole = async (roleId, name, description, permission_groups, isActive) => {
-    try {
-      const response = await firmAdminCustomRolesAPI.updateCustomRole(roleId, {
-        name,
-        description,
-        permission_groups,
-        is_active: isActive
-      });
-      if (response.success) {
-        toast.success(response.message || 'Custom role updated successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        await loadRoles();
-        setEditingRole(null);
-      } else {
-        toast.error(response.message || 'Failed to update custom role', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      }
-    } catch (err) {
-      const errorMsg = handleAPIError(err);
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    }
-  };
-
-  const handleDeleteClick = (role) => {
-    setRoleToDelete(role);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDeleteRole = async () => {
-    if (!roleToDelete) return;
-
-    try {
-      setDeleting(true);
-      const response = await firmAdminCustomRolesAPI.deleteCustomRole(roleToDelete.id);
-
-      if (response.success) {
-        toast.success(response.message || 'Custom role deleted successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        await loadRoles();
-        setShowDeleteConfirm(false);
-        setRoleToDelete(null);
-      } else {
-        toast.error(response.message || 'Failed to delete custom role', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      }
-    } catch (err) {
-      const errorMsg = handleAPIError(err);
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-
-  const handleEditRole = (role) => {
-    setEditingRole(role);
-  };
+  // Filter tax preparers based on search term
+  const filteredPreparers = taxPreparers.filter(preparer => {
+    if (!searchTerm.trim()) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      preparer.full_name?.toLowerCase().includes(search) ||
+      preparer.email?.toLowerCase().includes(search) ||
+      preparer.role?.toLowerCase().includes(search)
+    );
+  });
 
   // Calculate summary statistics
   const summary = {
-    total_roles: roles.length,
-    active_roles: roles.filter(r => r.is_active).length,
-    total_privileges: roles.reduce((sum, r) => sum + (r.privileges_count || 0), 0),
-    total_assigned_users: roles.reduce((sum, r) => sum + (r.assigned_users_count || 0), 0)
+    total_preparers: taxPreparers.length,
+    active_preparers: taxPreparers.filter(p => p.is_active).length,
+    with_permissions: taxPreparers.filter(p => p.has_permissions).length,
+    total_permissions: taxPreparers.reduce((sum, p) => sum + (p.permissions_count || 0), 0)
   };
 
-  if (loading && roles.length === 0) {
+  if (loading && taxPreparers.length === 0) {
     return (
       <div className="flex justify-center items-center" style={{ minHeight: '400px' }}>
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#32B582]"></div>
           <p className="mt-3 text-sm text-gray-600 font-[BasisGrotesquePro]">
-            Loading custom roles...
+            Loading tax preparers...
           </p>
         </div>
       </div>
@@ -163,262 +78,261 @@ export default function CustomRolesManagement() {
   }
 
   return (
-    <div className="p-4 sm:p-6" style={{ fontFamily: "BasisGrotesquePro" }}>
-      {/* Header */}
+    <div className="p-6 bg-[rgb(243,247,255)] min-h-screen" style={{ fontFamily: "BasisGrotesquePro" }}>
+      {/* Page Header */}
       <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-xl sm:text-2xl font-semibold text-[#1F2A55] mb-2 font-[BasisGrotesquePro]">
-              Custom Roles Management
-            </h3>
-            <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
-              Create and manage custom roles with specific permission sets for your staff
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#32B582] text-white rounded-lg hover:bg-[#2A9D6F] transition-colors font-[BasisGrotesquePro] text-sm font-medium"
-          >
-            <FiPlus size={18} />
-            Create Custom Role
-          </button>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-          <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Total Roles</p>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-              {loading ? '...' : summary.total_roles}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Custom roles created</p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Active Roles</p>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-              {loading ? '...' : summary.active_roles}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Currently active</p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Total Privileges</p>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-              {loading ? '...' : summary.total_privileges}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Across all roles</p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Assigned Users</p>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-              {loading ? '...' : summary.total_assigned_users}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Staff with custom roles</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-[BasisGrotesquePro]">
-          {error}
-        </div>
-      )}
-
-      {/* Filter Toggle */}
-      <div className="mb-6 flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="includeInactive"
-          checked={includeInactive}
-          onChange={(e) => setIncludeInactive(e.target.checked)}
-          className="w-4 h-4 text-[#32B582] border-gray-300 rounded focus:ring-[#32B582] cursor-pointer"
-        />
-        <label htmlFor="includeInactive" className="text-sm text-[#6B7280] font-[BasisGrotesquePro] cursor-pointer">
-          Include inactive roles
-        </label>
-      </div>
-
-      {/* Roles List */}
-      <div>
-        <h6 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
-          Custom Roles
-        </h6>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">
-          Manage custom roles and their permission sets
+        <h1 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
+          Tax Preparer Permissions Management
+        </h1>
+        <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+          Manage individual permissions for each tax preparer in your firm. Each preparer can have their own unique set of permissions.
         </p>
+      </div>
 
-        {loading && roles.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#32B582]"></div>
-            <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading custom roles...</p>
-          </div>
-        ) : roles.length === 0 ? (
-          <div className="bg-white border border-[#E8F0FF] rounded-lg p-8 sm:p-12 text-center">
-            <FiShield size={48} color="#9CA3AF" className="mx-auto mb-4" />
-            <h5 className="text-lg font-semibold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">
-              No Custom Roles Found
-            </h5>
-            <p className="text-sm text-[#6B7280] mb-6 font-[BasisGrotesquePro]">
-              Get started by creating your first custom role
-            </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-[#32B582] text-white rounded-lg hover:bg-[#2A9D6F] transition-colors font-[BasisGrotesquePro] text-sm font-medium"
-            >
-              Create Custom Role
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {roles.map((role) => (
-              <div
-                key={role.id}
-                className={`bg-white border rounded-lg p-4 sm:p-6 hover:bg-gray-50 transition-colors ${
-                  role.is_active ? 'border-[#E8F0FF]' : 'border-gray-200 bg-gray-50'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-grow-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FiShield
-                        size={20}
-                        color={role.is_active ? "#32B582" : "#9CA3AF"}
-                      />
-                      <h5 className={`text-base sm:text-lg font-semibold mb-0 font-[BasisGrotesquePro] ${
-                        role.is_active ? 'text-[#1F2A55]' : 'text-[#6B7280]'
-                      }`}>
-                        {role.name}
-                      </h5>
-                      {!role.is_active && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full font-[BasisGrotesquePro]">
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-                    {role.description && (
-                      <p className="text-sm text-[#6B7280] mb-3 font-[BasisGrotesquePro]">
-                        {role.description}
-                      </p>
-                    )}
-                    {/* Permission Groups Display */}
-                    {role.permission_groups && role.permission_groups.length > 0 && (
-                      <div className="mb-3">
-                        <div className="flex flex-wrap gap-2">
-                          {role.permission_groups_display ? (
-                            role.permission_groups_display.map((group, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full font-[BasisGrotesquePro]"
-                              >
-                                {group}
-                              </span>
-                            ))
-                          ) : (
-                            role.permission_groups.map((group, idx) => {
-                              const groupLabels = {
-                                'client': 'Client',
-                                'todo': 'Todo',
-                                'appointment': 'Appointment',
-                                'document': 'Document',
-                                'esign': 'E-Sign',
-                                'messages': 'Messages',
-                                'full_control': 'Full Control'
-                              };
-                              return (
-                                <span
-                                  key={idx}
-                                  className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full font-[BasisGrotesquePro]"
-                                >
-                                  {groupLabels[group] || group}
-                                </span>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                      <div className="flex items-center gap-2">
-                        <FiUsers size={14} color="#6B7280" />
-                        <span className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">
-                          {role.assigned_users_count || 0} {role.assigned_users_count === 1 ? 'user' : 'users'}
-                        </span>
-                      </div>
-                      {role.created_by && (
-                        <span className="text-xs text-[#9CA3AF] font-[BasisGrotesquePro]">
-                          Created by {role.created_by}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <button
-                      onClick={() => handleEditRole(role)}
-                      className="flex items-center gap-1 px-3 py-2 bg-white border border-[#3B4A66] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
-                    >
-                      <FiEdit2 size={14} />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(role)}
-                      className="flex items-center gap-1 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
-                    >
-                      <FiTrash2 size={14} />
-                      Delete
-                    </button>
-                  </div>
-                </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Total Tax Preparers</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
+            {loading ? '...' : summary.total_preparers}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">In your firm</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Active Preparers</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
+            {loading ? '...' : summary.active_preparers}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Currently active</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">With Permissions</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
+            {loading ? '...' : summary.with_permissions}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Have custom permissions</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 sm:p-6">
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">Total Permissions</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
+            {loading ? '...' : summary.total_permissions}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">Across all preparers</p>
+        </div>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white rounded-lg border border-[#E8F0FF] shadow-sm">
+        {/* Toolbar */}
+        <div className="p-6 border-b border-[#E8F0FF]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Search Bar */}
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <FiSearch className="text-gray-400" size={18} />
               </div>
-            ))}
+              <input
+                type="text"
+                placeholder="Search tax preparers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  // Refresh the list
+                  loadTaxPreparers();
+                  toast.success('Tax preparers list refreshed', {
+                    position: "top-right",
+                    autoClose: 2000,
+                  });
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mx-6 mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-[BasisGrotesquePro]">
+            {error}
           </div>
         )}
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          {loading && taxPreparers.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#32B582]"></div>
+              <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading tax preparers...</p>
+            </div>
+          ) : filteredPreparers.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <FiUsers size={32} color="#9CA3AF" />
+              </div>
+              <h5 className="text-lg font-semibold text-[#3B4A66] mb-2 font-[BasisGrotesquePro]">
+                {searchTerm ? 'No tax preparers found' : 'No Tax Preparers Found'}
+              </h5>
+              <p className="text-sm text-[#6B7280] mb-6 font-[BasisGrotesquePro] max-w-md mx-auto">
+                {searchTerm 
+                  ? 'Try adjusting your search terms to find what you\'re looking for.'
+                  : 'No tax preparers have been added to your firm yet.'
+                }
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="px-6 py-3 bg-blue-50 border-b border-blue-100">
+                <p className="text-xs text-blue-700 font-[BasisGrotesquePro]">
+                  💡 <strong>Tip:</strong> Click on any tax preparer row or use the "Manage" button to customize their individual permissions. Changes only affect the selected preparer.
+                </p>
+              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-[#E8F0FF] bg-gray-50">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro] uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro] uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro] uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro] uppercase tracking-wider">
+                      Permissions
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro] uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro] uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPreparers.map((preparer) => (
+                    <tr
+                      key={preparer.id}
+                      className="border-b border-[#E8F0FF] hover:bg-blue-50 transition-colors cursor-pointer group"
+                      onClick={() => {
+                        setSelectedPreparer({
+                          id: preparer.id,
+                          name: preparer.full_name,
+                          email: preparer.email,
+                          role: preparer.role
+                        });
+                        setShowPermissionsModal(true);
+                      }}
+                    >
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg transition-colors ${
+                            preparer.is_active ? 'bg-[#32B582]/10 group-hover:bg-[#32B582]/20' : 'bg-gray-100 group-hover:bg-gray-200'
+                          }`}>
+                            <FiUsers
+                              size={18}
+                              color={preparer.is_active ? "#32B582" : "#9CA3AF"}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] block group-hover:text-[#3AD6F2] transition-colors">
+                              {preparer.full_name || 'N/A'}
+                            </span>
+                            <span className="text-xs text-gray-500 font-[BasisGrotesquePro] group-hover:text-gray-600 transition-colors">
+                              Click to manage permissions
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                          {preparer.email || '—'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full font-[BasisGrotesquePro] capitalize">
+                          {preparer.role || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          {preparer.has_permissions ? (
+                            <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full font-[BasisGrotesquePro] border border-blue-200">
+                              {preparer.permissions_count || 0} {preparer.permissions_count === 1 ? 'permission' : 'permissions'}
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full font-[BasisGrotesquePro]">
+                              No permissions set
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${
+                          preparer.is_active
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : 'bg-gray-100 text-gray-600 border border-gray-200'
+                        }`}>
+                          {preparer.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPreparer({
+                                id: preparer.id,
+                                name: preparer.full_name,
+                                email: preparer.email,
+                                role: preparer.role
+                              });
+                              setShowPermissionsModal(true);
+                            }}
+                            className="px-3 py-1.5 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0] transition-colors font-[BasisGrotesquePro] text-xs font-medium flex items-center gap-1.5"
+                            title="Manage Permissions"
+                          >
+                            <FiEdit2 size={14} />
+                            Manage
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Create Role Modal */}
-      {showCreateModal && (
-        <CustomRoleModal
-          show={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSave={handleCreateRole}
+      {/* Tax Preparer Permissions Modal */}
+      {showPermissionsModal && selectedPreparer && (
+        <TaxPreparerPermissionsModal
+          isOpen={showPermissionsModal}
+          onClose={() => {
+            setShowPermissionsModal(false);
+            setSelectedPreparer(null);
+            // Refresh the list to show updated permission counts
+            loadTaxPreparers();
+          }}
+          preparerId={selectedPreparer.id}
+          preparerName={selectedPreparer.name}
+          preparerEmail={selectedPreparer.email}
         />
       )}
-
-      {/* Edit Role Modal */}
-      {editingRole && (
-        <CustomRoleModal
-          show={!!editingRole}
-          onClose={() => setEditingRole(null)}
-          onSave={(name, description, permission_groups, isActive) => handleUpdateRole(editingRole.id, name, description, permission_groups, isActive)}
-          role={editingRole}
-        />
-      )}
-
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          if (!deleting) {
-            setShowDeleteConfirm(false);
-            setRoleToDelete(null);
-          }
-        }}
-        onConfirm={confirmDeleteRole}
-        title="Delete Custom Role"
-        message={
-          roleToDelete
-            ? `Are you sure you want to delete the "${roleToDelete.name}" role? This action cannot be undone.`
-            : "Are you sure you want to delete this role? This action cannot be undone."
-        }
-        confirmText="Delete"
-        cancelText="Cancel"
-        isLoading={deleting}
-        isDestructive={true}
-      />
     </div>
   );
 }
-

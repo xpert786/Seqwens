@@ -1,6 +1,5 @@
 import { getApiBaseUrl, getFallbackApiBaseUrl, fetchWithCors } from './corsConfig';
 import { getAccessToken, getRefreshToken, setTokens, isTokenExpired, clearUserData } from './userUtils';
-import { getLoginUrl } from './urlUtils';
 
 // API Configuration
 const API_BASE_URL = getApiBaseUrl();
@@ -171,13 +170,13 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -805,6 +804,27 @@ export const firmAdminAnalyticsAPI = {
 
 // Data Intake API functions
 export const dataIntakeAPI = {
+  // Request to sign data entry form
+  requestSignForm: async () => {
+    return await apiRequest('/taxpayer/data-entry-form/sign-request/', 'POST');
+  },
+
+  // Submit signature for data entry form
+  submitSignature: async (signatureData) => {
+    const { signature_image, typed_text } = signatureData;
+    const requestBody = {};
+    
+    if (typed_text) {
+      requestBody.typed_text = typed_text;
+    } else if (signature_image) {
+      requestBody.signature_image = signature_image;
+    } else {
+      throw new Error('Either signature_image or typed_text is required');
+    }
+    
+    return await apiRequest('/taxpayer/data-entry-form/submit-signature/', 'POST', requestBody);
+  },
+
   // Submit data intake form
   submitDataIntake: async (formData) => {
     try {
@@ -842,7 +862,7 @@ export const dataIntakeAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = getLoginUrl();
+            window.location.href = '/login';
             throw new Error('Session expired. Please login again.');
           }
 
@@ -854,7 +874,7 @@ export const dataIntakeAPI = {
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -1062,13 +1082,13 @@ export const profileAPI = {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -1342,13 +1362,13 @@ export const taxPreparerProfileAPI = {
           // Refresh failed, redirect to login
           console.log('Token refresh failed, clearing user data and redirecting to login');
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -1603,13 +1623,13 @@ export const threadsAPI = {
 
           if (response.status === 401) {
             clearUserData();
-            window.location.href = getLoginUrl();
+            window.location.href = '/login';
             throw new Error('Session expired. Please login again.');
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -1723,13 +1743,13 @@ export const threadsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -3137,6 +3157,34 @@ export const firmAdminClientsAPI = {
   },
 
   // Get client details
+  // Download client data entry form PDF
+  getClientDataEntryFormPDF: async (clientId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/firm/clients/${clientId}/data-entry-form-pdf/`;
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/pdf'
+      }
+    };
+
+    const response = await fetchWithCors(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    // Return blob for PDF download
+    const blob = await response.blob();
+    return blob;
+  },
+
   getClientDetails: async (clientId) => {
     return await apiRequest(`/user/firm-admin/clients/${clientId}/`, 'GET');
   },
@@ -3400,6 +3448,23 @@ export const firmAdminStaffAPI = {
   reactivateStaff: async (staffId) => {
     return await apiRequest(`/user/firm-admin/staff/tax-preparers/${staffId}/set-active/`, 'PATCH');
   },
+
+  // List all tax preparers with permission status
+  listTaxPreparers: async () => {
+    return await apiRequest('/user/firm-admin/tax-preparers/', 'GET');
+  },
+
+  // Get tax preparer permissions
+  getTaxPreparerPermissions: async (userId) => {
+    return await apiRequest(`/user/firm-admin/tax-preparers/${userId}/permissions/`, 'GET');
+  },
+
+  // Update tax preparer permissions
+  updateTaxPreparerPermissions: async (userId, permissions) => {
+    return await apiRequest(`/user/firm-admin/tax-preparers/${userId}/permissions/`, 'PUT', {
+      permissions
+    });
+  },
 };
 
 // Firm Admin Custom Roles API functions
@@ -3415,11 +3480,11 @@ export const firmAdminCustomRolesAPI = {
   },
 
   // Create custom role
-  createCustomRole: async (name, description, permission_groups) => {
+  createCustomRole: async (name, description, permissions) => {
     return await apiRequest('/user/firm-admin/custom-roles/', 'POST', { 
       name, 
       description, 
-      permission_groups 
+      permissions 
     });
   },
 
@@ -3606,6 +3671,12 @@ export const firmOfficeAPI = {
   setPrimaryOffice: async (officeId) => {
     return await apiRequest(`/firm/office-locations/${officeId}/set-primary/`, 'POST');
   },
+  removeManager: async (officeId) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/manager/`, 'DELETE');
+  },
+  updateBasicDetails: async (officeId, officeData) => {
+    return await apiRequest(`/firm/office-locations/${officeId}/basic-details/`, 'PATCH', officeData);
+  },
 };
 
 // Firm Admin Meetings API functions
@@ -3731,13 +3802,13 @@ export const firmSignatureDocumentRequestsAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = getLoginUrl();
+            window.location.href = '/login';
             throw new Error('Session expired. Please login again.');
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -3848,6 +3919,135 @@ export const taxPreparerSecurityAPI = {
   }
 };
 
+// Super Admin Billing Management API functions
+export const superAdminBillingAPI = {
+  // Office Pricing
+  listOfficePricing: async (params = {}) => {
+    const { firm_id } = params;
+    const queryParams = new URLSearchParams();
+    if (firm_id) {
+      queryParams.append('firm_id', firm_id);
+    }
+    const queryString = queryParams.toString();
+    const endpoint = `/user/superadmin/billing/office-pricing/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  createOrUpdateOfficePricing: async (pricingData) => {
+    return await apiRequest('/user/superadmin/billing/office-pricing/', 'POST', pricingData);
+  },
+
+  // User Pricing
+  listUserPricing: async (params = {}) => {
+    const { firm_id } = params;
+    const queryParams = new URLSearchParams();
+    if (firm_id) {
+      queryParams.append('firm_id', firm_id);
+    }
+    const queryString = queryParams.toString();
+    const endpoint = `/user/superadmin/billing/user-pricing/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  createOrUpdateUserPricing: async (pricingData) => {
+    return await apiRequest('/user/superadmin/billing/user-pricing/', 'POST', pricingData);
+  },
+
+  // Billing Rules
+  getBillingRules: async (firmId) => {
+    return await apiRequest(`/user/superadmin/billing/firms/${firmId}/rules/`, 'GET');
+  },
+
+  createOrUpdateBillingRules: async (firmId, rulesData) => {
+    return await apiRequest(`/user/superadmin/billing/firms/${firmId}/rules/`, 'POST', rulesData);
+  },
+
+  // Billing Charges
+  listBillingCharges: async (params = {}) => {
+    const { firm_id, status } = params;
+    const queryParams = new URLSearchParams();
+    if (firm_id) {
+      queryParams.append('firm_id', firm_id);
+    }
+    if (status) {
+      queryParams.append('status', status);
+    }
+    const queryString = queryParams.toString();
+    const endpoint = `/user/superadmin/billing/charges/${queryString ? `?${queryString}` : ''}`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  approveBillingCharge: async (chargeId) => {
+    return await apiRequest(`/user/superadmin/billing/charges/${chargeId}/approve/`, 'POST');
+  }
+};
+
+// Super Admin Addons API functions
+export const superAdminAddonsAPI = {
+  // List all addons
+  listAddons: async () => {
+    return await apiRequest('/user/superadmin/add-ons/', 'GET');
+  },
+
+  // Create addon
+  createAddon: async (addonData) => {
+    return await apiRequest('/user/superadmin/add-ons/create/', 'POST', addonData);
+  },
+
+  // Update addon (full)
+  updateAddonFull: async (addonId, addonData) => {
+    return await apiRequest(`/user/superadmin/add-ons/${addonId}/`, 'PUT', addonData);
+  },
+
+  // Update addon (partial)
+  updateAddonPartial: async (addonId, addonData) => {
+    return await apiRequest(`/user/superadmin/add-ons/${addonId}/`, 'PATCH', addonData);
+  },
+
+  // Toggle addon status
+  toggleAddonStatus: async (addonId) => {
+    return await apiRequest(`/user/superadmin/add-ons/${addonId}/toggle-status/`, 'POST');
+  },
+
+  // Delete addon
+  deleteAddon: async (addonId) => {
+    return await apiRequest(`/user/superadmin/add-ons/${addonId}/delete/`, 'DELETE');
+  },
+
+  // Get firm addons
+  getFirmAddons: async (firmId) => {
+    return await apiRequest(`/user/superadmin/firms/${firmId}/add-ons/`, 'GET');
+  },
+
+  // Get simple addons list (for creating new addons)
+  getSimpleAddons: async () => {
+    return await apiRequest('/user/superadmin/add-ons/simple/', 'GET');
+  }
+};
+
+// Firm Admin Addons API functions
+export const firmAdminAddonsAPI = {
+  // Get firm's addons
+  getFirmAddons: async () => {
+    return await apiRequest('/user/firm-admin/add-ons/', 'GET');
+  },
+
+  // List marketplace addons
+  listMarketplaceAddons: async () => {
+    return await apiRequest('/user/firm-admin/add-ons/marketplace/', 'GET');
+  },
+
+  // Add addon to firm plan
+  addAddonToFirm: async (addonData) => {
+    return await apiRequest('/user/firm-admin/add-ons/add/', 'POST', addonData);
+  },
+
+  // Remove addon from firm
+  removeAddonFromFirm: async (addonId) => {
+    return await apiRequest(`/user/firm-admin/add-ons/${addonId}/remove/`, 'DELETE');
+  }
+};
+
 // Tax Preparer Shared Documents API functions (documents shared by Firm Admin)
 export const taxPreparerSharedDocumentsAPI = {
   // View documents shared with tax preparer
@@ -3927,7 +4127,7 @@ export const taxPreparerFirmSharedAPI = {
             // Refresh failed, redirect to login
             console.log('Token refresh failed, clearing user data and redirecting to login');
             clearUserData();
-            window.location.href = getLoginUrl();
+            window.location.href = '/login';
             throw new Error('Session expired. Please login again.');
           }
 
@@ -3939,7 +4139,7 @@ export const taxPreparerFirmSharedAPI = {
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       }
@@ -4513,13 +4713,13 @@ export const taxPreparerThreadsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -4795,6 +4995,16 @@ export const signatureRequestsAPI = {
     return await apiRequest(`/taxpayer/esign/poll-status/${esignDocumentId}/`, 'POST');
   },
 
+  // Check and regenerate signature fields
+  checkSignatureFields: async (esignDocumentId, forceRegenerate = false) => {
+    if (!esignDocumentId) {
+      throw new Error('esign_document_id is required');
+    }
+    return await apiRequest(`/taxpayer/esign/check-fields/${esignDocumentId}/`, 'POST', {
+      force_regenerate: forceRegenerate
+    });
+  },
+
   // Submit signature request
   submitSignatureRequest: async (signatureData) => {
     const {
@@ -4978,13 +5188,13 @@ export const documentsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -5028,13 +5238,13 @@ export const documentsAPI = {
 
         if (response.status === 401) {
           clearUserData();
-          window.location.href = getLoginUrl();
+          window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         clearUserData();
-        window.location.href = getLoginUrl();
+        window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
       }
     }
@@ -5888,13 +6098,23 @@ export const firmAdminSubscriptionAPI = {
     });
   },
   // Change subscription plan
-  changeSubscription: async (subscriptionPlanId, billingCycle, paymentMethod = 'stripe', changeImmediately = true) => {
-    return await apiRequest('/user/firm-admin/subscription/change/', 'POST', {
+  changeSubscription: async (subscriptionPlanId, billingCycle, paymentMethod = 'stripe', changeImmediately = true, successUrl = null, cancelUrl = null) => {
+    const payload = {
       subscription_plan_id: subscriptionPlanId,
       billing_cycle: billingCycle,
       payment_method: paymentMethod,
       change_immediately: changeImmediately
-    });
+    };
+    
+    if (successUrl) {
+      payload.success_url = successUrl;
+    }
+    
+    if (cancelUrl) {
+      payload.cancel_url = cancelUrl;
+    }
+    
+    return await apiRequest('/user/firm-admin/subscription/change/', 'POST', payload);
   },
 };
 
@@ -6145,6 +6365,11 @@ export const workflowAPI = {
   // Complete workflow
   completeWorkflow: async (instanceId) => {
     return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/complete/`, 'POST');
+  },
+
+  // Delete workflow instance
+  deleteWorkflowInstance: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'DELETE');
   },
 
   // Tax Preparer Workflows

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loading }) => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [instanceToDelete, setInstanceToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filteredInstances = instances.filter(instance => {
     const matchesFilter = filter === 'all' || instance.status === filter;
@@ -29,6 +33,48 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
 
   const formatProgress = (percentage) => {
     return Math.round(percentage || 0);
+  };
+
+  const handleDeleteClick = (instance) => {
+    setInstanceToDelete(instance);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!instanceToDelete) return;
+    
+    try {
+      setDeleting(true);
+      const response = await workflowAPI.deleteWorkflowInstance(instanceToDelete.id);
+      if (response.success) {
+        toast.success('Workflow instance deleted successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowDeleteConfirm(false);
+        setInstanceToDelete(null);
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        throw new Error(response.message || 'Failed to delete workflow instance');
+      }
+    } catch (error) {
+      console.error('Error deleting workflow instance:', error);
+      toast.error(handleAPIError(error) || 'Failed to delete workflow instance', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleting) {
+      setShowDeleteConfirm(false);
+      setInstanceToDelete(null);
+    }
   };
 
   if (loading) {
@@ -137,6 +183,13 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
                         style={{ borderRadius: '8px' }}
                       >
                         View Details
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(instance)}
+                        className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
+                        style={{ borderRadius: '8px' }}
+                      >
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -317,6 +370,19 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Workflow Instance"
+        message={`Are you sure you want to delete this workflow instance? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={deleting}
+        isDestructive={true}
+      />
     </div>
   );
 };

@@ -1,0 +1,105 @@
+@media (max-width: 767px) {
+
+    /* Page padding */
+    .messages-page {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+  
+    /* Header stack */
+    .messages-header {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px;
+    }
+  
+    .messages-header h5 {
+      font-size: 20px !important;
+    }
+  
+    .messages-header button {
+      width: 100%;
+      justify-content: center;
+    }
+  
+    /* Main layout -> vertical */
+    .messages-layout {
+      flex-direction: column !important;
+    }
+  
+    /* Conversations panel full width */
+    .conversations-panel {
+      width: 100% !important;
+      height: auto !important;
+      min-height: 280px !important;
+      margin-right: 0 !important;
+      margin-bottom: 12px;
+    }
+  
+    /* Conversations scroll height */
+    .conversations-panel .conversations-scroll {
+      max-height: 220px !important;
+    }
+  
+    /* Chat panel full width */
+    .chat-panel {
+      width: 100% !important;
+      height: auto !important;
+      min-height: 320px !important;
+    }
+  
+    /* Messages scroll */
+    .chat-panel .messages-scroll {
+      max-height: 240px !important;
+    }
+  
+    /* Message bubbles */
+    .chat-panel .bg-light {
+      max-width: 90% !important;
+    }
+  
+    /* Input row wrap */
+    .chat-panel .border-top .d-flex {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  
+    .chat-panel input.form-control {
+      flex: 1 1 100%;
+    }
+  
+    /* Attach + send buttons */
+    .chat-panel button.btn {
+      min-height: 44px;
+    }
+  
+    /* Create chat modal */
+    .create-chat-modal {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 12px !important;
+      margin: 12px;
+    }
+  
+    /* Delete confirm modal */
+    .delete-confirm-modal {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 12px !important;
+      margin: 12px;
+    }
+  
+    /* Modal buttons full width */
+    .create-chat-modal .text-end,
+    .delete-confirm-modal .d-flex {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px;
+    }
+  
+    .create-chat-modal button,
+    .delete-confirm-modal button {
+      width: 100%;
+    }
+  }
+  

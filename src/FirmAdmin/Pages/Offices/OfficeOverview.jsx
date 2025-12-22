@@ -4,6 +4,8 @@ import { FaCog, FaEdit, FaArrowLeft, FaStar, FaUsers } from 'react-icons/fa';
 import { firmOfficeAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import TaxpayerManagementModal from './TaxpayerManagementModal';
+import ConfirmationModal from '../../../components/ConfirmationModal';
+import EditOfficeModal from './EditOfficeModal';
 import {
     LineChart,
     Line,
@@ -22,162 +24,6 @@ import {
 import sampleOffices from './sampleOffices';
 import { Link } from 'react-router-dom';
 
-const schedulingOfficeOptions = ['All Offices', 'New York', 'London', 'Mumbai'];
-
-const schedulingResources = [
-    {
-        id: 'conf-room-a',
-        name: 'Conf Room A',
-        office: 'New York',
-        location: 'New York',
-        type: 'Conference Room',
-        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
-        color: '#3AD6F2'
-    },
-    {
-        id: 'zoom-license-1',
-        name: 'Zoom License #1',
-        office: 'Remote',
-        location: 'Virtual',
-        type: 'License',
-        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
-        color: '#10B981'
-    },
-    {
-        id: 'printer-3',
-        name: 'Printer 3',
-        office: 'New York',
-        location: 'Operations',
-        type: 'Equipment',
-        slots: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
-        color: '#F59E0B'
-    }
-];
-
-const initialSchedulingEvents = [
-    {
-        id: 'evt-1',
-        title: 'NY - Team Sync',
-        date: '2025-07-22',
-        startTime: '13:00',
-        endTime: '14:00',
-        resourceId: 'conf-room-a',
-        office: 'New York',
-        location: 'New York',
-        status: 'Confirmed',
-        badge: '+2 New'
-    },
-    {
-        id: 'evt-2',
-        title: 'NY - Interview',
-        date: '2025-07-24',
-        startTime: '10:00',
-        endTime: '11:00',
-        resourceId: 'conf-room-a',
-        office: 'New York',
-        location: 'New York',
-        status: 'Pending',
-        badge: 'Internal'
-    }
-];
-
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-const toISODate = (date) => date.toISOString().split('T')[0];
-
-const isSameDay = (dateA, dateB) =>
-    dateA.getFullYear() === dateB.getFullYear() &&
-    dateA.getMonth() === dateB.getMonth() &&
-    dateA.getDate() === dateB.getDate();
-
-const normaliseTime = (time = '00:00') => {
-    const [hours = '00', minutes = '00'] = time.split(':');
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
-
-const formatTimeLabel = (time = '00:00') => {
-    const [hours, minutes] = normaliseTime(time).split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-};
-
-const addMinutesToTime = (time = '00:00', minutesToAdd = 30) => {
-    const [hours, minutes] = normaliseTime(time).split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours);
-    date.setMinutes(minutes + minutesToAdd);
-    return normaliseTime(`${date.getHours()}:${date.getMinutes()}`);
-};
-
-const generateMonthlyCalendar = (referenceDate, events = []) => {
-    const year = referenceDate.getFullYear();
-    const month = referenceDate.getMonth();
-
-    const startOfMonth = new Date(year, month, 1);
-    const endOfMonth = new Date(year, month + 1, 0);
-    const daysInMonth = endOfMonth.getDate();
-    const startDayOfWeek = startOfMonth.getDay();
-    const previousMonthDays = new Date(year, month, 0).getDate();
-
-    const today = new Date();
-    const calendarDays = [];
-
-    for (let i = startDayOfWeek; i > 0; i -= 1) {
-        const date = new Date(year, month - 1, previousMonthDays - i + 1);
-        const iso = toISODate(date);
-        calendarDays.push({
-            date,
-            iso,
-            isCurrentMonth: false,
-            isToday: isSameDay(date, today),
-            events: events.filter((event) => event.date === iso)
-        });
-    }
-
-    for (let day = 1; day <= daysInMonth; day += 1) {
-        const date = new Date(year, month, day);
-        const iso = toISODate(date);
-        calendarDays.push({
-            date,
-            iso,
-            isCurrentMonth: true,
-            isToday: isSameDay(date, today),
-            events: events.filter((event) => event.date === iso)
-        });
-    }
-
-    let nextMonthDay = 1;
-    while (calendarDays.length < 42) {
-        const date = new Date(year, month + 1, nextMonthDay);
-        const iso = toISODate(date);
-        calendarDays.push({
-            date,
-            iso,
-            isCurrentMonth: false,
-            isToday: isSameDay(date, today),
-            events: events.filter((event) => event.date === iso)
-        });
-        nextMonthDay += 1;
-    }
-
-    return calendarDays;
-};
-
-const formatSlotLabel = (slot) => {
-    if (!slot?.date) {
-        return 'No slot selected';
-    }
-
-    const date = new Date(slot.date);
-    const dateLabel = date.toLocaleDateString(undefined, {
-        month: 'numeric',
-        day: 'numeric',
-        year: 'numeric'
-    });
-
-    return `${dateLabel}${slot.time ? `, ${formatTimeLabel(slot.time)}` : ''}`;
-};
 
 // Helper function to get initials from name
 const getInitials = (name) => {
@@ -193,18 +39,6 @@ export default function OfficeOverview() {
     const { officeId } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('Overview');
-    const [calendarView, setCalendarView] = useState('Monthly');
-    const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date(2025, 6, 1));
-    const [events, setEvents] = useState(initialSchedulingEvents);
-    const [selectedOfficeFilter, setSelectedOfficeFilter] = useState('All Offices');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-    const [selectedSlot, setSelectedSlot] = useState(null);
-    const [bookingForm, setBookingForm] = useState({
-        title: '',
-        office: 'All Offices',
-        resource: ''
-    });
     const [taxPrepUrl, setTaxPrepUrl] = useState('https://www.grammarly.com/');
     const [whiteLabelEnabled, setWhiteLabelEnabled] = useState(false);
     const [branding, setBranding] = useState({
@@ -220,11 +54,7 @@ export default function OfficeOverview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Staff members state
-    const [staffMembers, setStaffMembers] = useState([]);
-    const [staffLoading, setStaffLoading] = useState(false);
-    const [staffError, setStaffError] = useState('');
-    const [staffCount, setStaffCount] = useState(0);
+    // Staff count for summary (from officeData, no tab needed)
 
     // Clients state
     const [clients, setClients] = useState([]);
@@ -241,6 +71,11 @@ export default function OfficeOverview() {
     const [showTaxpayerModal, setShowTaxpayerModal] = useState(false);
     const [isPrimaryOffice, setIsPrimaryOffice] = useState(false);
     const [settingPrimary, setSettingPrimary] = useState(false);
+    
+    // Edit office modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [removingManager, setRemovingManager] = useState(false);
+    const [showRemoveManagerConfirm, setShowRemoveManagerConfirm] = useState(false);
 
     // Fetch office details from API
     useEffect(() => {
@@ -279,37 +114,6 @@ export default function OfficeOverview() {
         fetchOfficeDetails();
     }, [officeId]);
 
-    // Fetch staff members when Staff tab is active
-    useEffect(() => {
-        const fetchStaffMembers = async () => {
-            if (activeTab !== 'Staff' || !officeId) {
-                return;
-            }
-
-            try {
-                setStaffLoading(true);
-                setStaffError('');
-
-                const response = await firmOfficeAPI.getOfficeStaff(officeId);
-
-                if (response.success && response.data) {
-                    setStaffMembers(response.data.staff_members || []);
-                    setStaffCount(response.data.staff_count || response.data.staff_members?.length || 0);
-                } else {
-                    throw new Error(response.message || 'Failed to load staff members');
-                }
-            } catch (err) {
-                console.error('Error fetching staff members:', err);
-                const errorMsg = handleAPIError(err);
-                setStaffError(errorMsg || 'Failed to load staff members');
-                setStaffMembers([]);
-            } finally {
-                setStaffLoading(false);
-            }
-        };
-
-        fetchStaffMembers();
-    }, [activeTab, officeId]);
 
     // Fetch clients when Clients tab is active
     useEffect(() => {
@@ -386,12 +190,8 @@ export default function OfficeOverview() {
 
     const tabs = [
         { id: 'Overview', label: 'Overview' },
-        { id: 'Staff', label: `Staff (${staffCount || officeData?.staff_count || officeData?.staffMembers?.length || 0})` },
         { id: 'Clients', label: `Clients (${clientsCount || officeData?.clients_count || officeData?.officeClients?.length || 0})` },
         { id: 'Performance', label: 'Performance' },
-        { id: 'Resource Management', label: 'Resource Management' },
-        { id: 'Scheduling & Coordination', label: 'Scheduling & Coordination' },
-        { id: 'Compliance & Audit', label: 'Compliance & Audit' },
         { id: 'Settings', label: 'Settings' }
     ];
 
@@ -437,7 +237,8 @@ export default function OfficeOverview() {
     };
 
     const timezone = officeData?.timezone || 'America/New_York';
-    const officeManager = officeData?.manager_name || officeData?.officeManager || officeData?.staffMembers?.[0]?.name || 'N/A';
+    const officeManager = officeData?.manager_name || 'N/A';
+    const managerEmail = officeData?.manager_email || 'N/A';
 
     const defaultBranding = useMemo(
         () => ({
@@ -456,140 +257,6 @@ export default function OfficeOverview() {
         setTaxPrepUrl(officeData?.taxPrepUrl || 'https://www.grammarly.com/');
     }, [defaultBranding, officeData]);
 
-    const resourceLookup = useMemo(() => {
-        return schedulingResources.reduce((accumulator, resource) => {
-            accumulator[resource.id] = resource;
-            return accumulator;
-        }, {});
-    }, []);
-
-    const filteredEvents = useMemo(() => {
-        return events.filter((event) => {
-            const matchOffice =
-                selectedOfficeFilter === 'All Offices' || event.office === selectedOfficeFilter;
-            const matchSearch =
-                !searchTerm ||
-                event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (resourceLookup[event.resourceId]?.name || '')
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase());
-
-            return matchOffice && matchSearch;
-        });
-    }, [events, selectedOfficeFilter, searchTerm, resourceLookup]);
-
-    const calendarDays = useMemo(
-        () => generateMonthlyCalendar(currentCalendarDate, filteredEvents),
-        [currentCalendarDate, filteredEvents]
-    );
-
-    const monthLabel = useMemo(
-        () =>
-            currentCalendarDate.toLocaleDateString(undefined, {
-                month: 'long',
-                year: 'numeric'
-            }),
-        [currentCalendarDate]
-    );
-
-    const conflictSummary = useMemo(() => {
-        return [...filteredEvents]
-            .sort((a, b) => {
-                const dateA = new Date(`${a.date}T${a.startTime || '00:00'}`);
-                const dateB = new Date(`${b.date}T${b.startTime || '00:00'}`);
-                return dateA - dateB;
-            })
-            .slice(0, 5);
-    }, [filteredEvents]);
-
-    const viewOptions = ['Day', 'Week', 'Monthly', 'Years', 'Agenda'];
-
-    const handleCalendarNavigation = (direction) => {
-        setCurrentCalendarDate((previousDate) => {
-            return new Date(previousDate.getFullYear(), previousDate.getMonth() + direction, 1);
-        });
-    };
-
-    const handleResetFilters = () => {
-        setSelectedOfficeFilter('All Offices');
-        setSearchTerm('');
-    };
-
-    const handleDaySelect = (day) => {
-        const defaultResource = bookingForm.resource || '';
-        setSelectedSlot({
-            date: day.iso,
-            time: '12:00',
-            resourceId: defaultResource
-        });
-        setBookingForm((previous) => ({
-            ...previous,
-            office:
-                selectedOfficeFilter !== 'All Offices'
-                    ? selectedOfficeFilter
-                    : previous.office,
-            resource: defaultResource
-        }));
-        setIsBookingModalOpen(true);
-    };
-
-    const handleQuickSlotSelect = (resourceId, time) => {
-        const normalisedTime = normaliseTime(time);
-        const resource = resourceLookup[resourceId];
-        setSelectedSlot({
-            date: toISODate(new Date()),
-            time: normalisedTime,
-            resourceId
-        });
-        setBookingForm((previous) => ({
-            ...previous,
-            office:
-                selectedOfficeFilter !== 'All Offices'
-                    ? selectedOfficeFilter
-                    : resource?.office || previous.office,
-            resource: resourceId
-        }));
-        setIsBookingModalOpen(true);
-    };
-
-    const closeBookingModal = () => {
-        setIsBookingModalOpen(false);
-        setSelectedSlot(null);
-        setBookingForm({
-            title: '',
-            office: 'All Offices',
-            resource: ''
-        });
-    };
-
-    const handleCreateBooking = () => {
-        if (!bookingForm.title.trim() || !selectedSlot?.date) {
-            return;
-        }
-
-        const resourceId =
-            bookingForm.resource || selectedSlot.resourceId || schedulingResources[0]?.id;
-        const normalisedStart = normaliseTime(selectedSlot.time || '09:00');
-        const derivedOffice =
-            bookingForm.office !== 'All Offices'
-                ? bookingForm.office
-                : resourceLookup[resourceId]?.office || 'All Offices';
-        const newEvent = {
-            id: `evt-${Date.now()}`,
-            title: bookingForm.title.trim(),
-            date: selectedSlot.date,
-            startTime: normalisedStart,
-            endTime: addMinutesToTime(normalisedStart, 60),
-            resourceId,
-            office: derivedOffice,
-            location: resourceLookup[resourceId]?.location || 'New York',
-            status: 'Scheduled',
-            badge: 'New'
-        };
-
-        setEvents((previousEvents) => [...previousEvents, newEvent]);
-        closeBookingModal();
-    };
 
     const handleBrandingChange = (field) => (event) => {
         const value = event.target.value;
@@ -680,6 +347,53 @@ export default function OfficeOverview() {
                 }
             };
             fetchClients();
+        }
+    };
+
+    const handleRemoveManager = () => {
+        setShowRemoveManagerConfirm(true);
+    };
+
+    const confirmRemoveManager = async () => {
+        try {
+            setRemovingManager(true);
+            const response = await firmOfficeAPI.removeManager(officeId);
+
+            if (response.success) {
+                toast.success(response.message || 'Manager removed successfully', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                // Refresh office data
+                const officeResponse = await firmOfficeAPI.getOffice(officeId);
+                if (officeResponse.success && officeResponse.data) {
+                    setOffice(officeResponse.data);
+                }
+            } else {
+                throw new Error(response.message || 'Failed to remove manager');
+            }
+        } catch (error) {
+            const errorMessage = handleAPIError(error);
+            toast.error(errorMessage || 'Failed to remove manager', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        } finally {
+            setRemovingManager(false);
+            setShowRemoveManagerConfirm(false);
+        }
+    };
+
+    const handleOfficeUpdated = async () => {
+        // Refresh office data after update
+        try {
+            const response = await firmOfficeAPI.getOffice(officeId);
+            if (response.success && response.data) {
+                setOffice(response.data);
+                setIsPrimaryOffice(response.data.is_primary || false);
+            }
+        } catch (err) {
+            console.error('Error refreshing office data:', err);
         }
     };
 
@@ -786,7 +500,7 @@ export default function OfficeOverview() {
                             <span className="text-sm font-medium">Office Settings</span>
                         </div> */}
                         <button
-                            onClick={() => navigate(`/firmadmin/offices/${officeId}/edit`)}
+                            onClick={() => setShowEditModal(true)}
                             className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
                             style={{ borderRadius: '8px' }}
                         >
@@ -906,11 +620,9 @@ export default function OfficeOverview() {
                 {/* Main Content Area - Conditional Rendering Based on Active Tab */}
                 {activeTab === 'Overview' && (
                     <>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            {/* Left Column */}
-                            <div className="space-y-6">
+                        <div className="flex flex-col lg:flex-row gap-6 mb-6">
                                 {/* Office Information */}
-                                <div className="bg-white rounded-lg p-6 shadow-sm">
+                            <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
                                     <h6 className="text-base font-semibold text-gray-900 mb-4">Office Information</h6>
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2">
@@ -945,7 +657,7 @@ export default function OfficeOverview() {
                                                 <path d="M8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333ZM8 13.3333C5.05933 13.3333 2.66667 10.9407 2.66667 8C2.66667 5.05933 5.05933 2.66667 8 2.66667C10.9407 2.66667 13.3333 5.05933 13.3333 8C13.3333 10.9407 10.9407 13.3333 8 13.3333Z" fill="#6B7280" />
                                                 <path d="M8.66667 4.66667V8.66667L11.3333 10.1333" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
-                                            {/* <p className="text-sm text-gray-700 mb-0">{officeData?.operation_hours_display || officeData?.hours || 'N/A'}</p> */}
+                                        <p className="text-sm text-gray-700 mb-0">{officeData?.operation_hours_display || 'N/A'}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -960,7 +672,7 @@ export default function OfficeOverview() {
                                 </div>
 
                                 {/* Office Performance - Map */}
-                                <div className="bg-white rounded-lg p-6 shadow-sm">
+                            <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
                                     <h6 className="text-base font-semibold text-gray-900 mb-4">Office Performance Map</h6>
                                     <div className="relative h-64 bg-gray-100 rounded-lg overflow-hidden">
                                         {(() => {
@@ -1024,226 +736,10 @@ export default function OfficeOverview() {
                                         })()}
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Right Column */}
-                            <div>
-                                {/* Performance Metrics */}
-                                <div className="bg-white rounded-lg p-6 shadow-sm">
-                                    <h6 className="text-base font-semibold text-gray-900 mb-4">Performance Metrics</h6>
-                                    <div className="space-y-6">
-                                        {/* Client Satisfaction */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm font-medium text-gray-700">Client Satisfaction</span>
-                                                <span className="text-sm font-semibold text-gray-900">
-                                                    {officeData?.client_satisfaction?.display || officeData?.client_satisfaction?.rating || officeData?.clientSatisfaction || '0'}/5.0
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div
-                                                    className="bg-[#3AD6F2] h-2 rounded-full"
-                                                    style={{ width: `${((officeData?.client_satisfaction?.rating || officeData?.clientSatisfaction || 0) / 5.0) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-
-                                        {/* Task Completion Rate */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm font-medium text-gray-700">Task Completion Rate</span>
-                                                <span className="text-sm font-semibold text-gray-900">
-                                                    {officeData?.task_completion_rate?.display || officeData?.task_completion_rate?.rate || officeData?.taskCompletionRate || '0'}
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div
-                                                    className="bg-[#3AD6F2] h-2 rounded-full"
-                                                    style={{ width: `${parseFloat(officeData?.task_completion_rate?.rate || officeData?.taskCompletionRate || 0)}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-
-                                        {/* Average Revenue per Client */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm font-medium text-gray-700">Average Revenue per Client</span>
-                                                <span className="text-sm font-semibold text-gray-900">
-                                                    {officeData?.average_revenue_per_client?.display ||
-                                                        (officeData?.average_revenue_per_client?.value ? `$${officeData.average_revenue_per_client.value}` : '') ||
-                                                        (officeData?.avgRevenuePerClient ? `$${officeData.avgRevenuePerClient}` : '$0')}
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div
-                                                    className="bg-[#3AD6F2] h-2 rounded-full"
-                                                    style={{ width: '85%' }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Office Description Section */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <h6 className="text-lg font-semibold text-gray-900 mb-3">Office Description</h6>
-                            <p className="text-sm text-gray-700">{officeData?.description || 'No description available'}</p>
                         </div>
                     </>
                 )}
 
-                {/* Staff Tab Content */}
-                {activeTab === 'Staff' && (
-                    <div className="bg-white rounded-lg p-6 shadow-sm">
-                        <div className="mb-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <div>
-                                    <p className="text-lg font-medium text-gray-600">Office Staff</p>
-                                    <p className="text-sm text-gray-600">All staff members assigned to this office location</p>
-                                </div>
-                                {!staffLoading && !staffError && (
-                                    <div className="bg-[#F3F7FF] px-4 py-2 rounded-lg">
-                                        <span className="text-sm font-semibold text-gray-700">
-                                            Total: {staffCount} {staffCount === 1 ? 'Staff Member' : 'Staff Members'}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Table Header - Desktop */}
-                        <div className="hidden md:grid grid-cols-12 gap-4 pb-3 mb-4">
-                            <div className="col-span-3">
-                                <span className="text-sm font-semibold text-gray-500">Staff Member</span>
-                            </div>
-                            <div className="col-span-2">
-                                <span className="text-sm font-semibold text-gray-500">Role</span>
-                            </div>
-                            <div className="col-span-3">
-                                <span className="text-sm font-semibold text-gray-500">Contact</span>
-                            </div>
-                            <div className="col-span-1 text-center">
-                                <span className="text-sm font-semibold text-gray-500">Clients</span>
-                            </div>
-                            <div className="col-span-2 text-center">
-                                <span className="text-sm font-semibold text-gray-500">Status</span>
-                            </div>
-                            <div className="col-span-1 text-center">
-                                <span className="text-sm font-semibold text-gray-500">Actions</span>
-                            </div>
-                        </div>
-
-                        {/* Staff Members List */}
-                        <div className="space-y-3">
-                            {staffLoading ? (
-                                <div className="text-center py-8">
-                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-                                    <p className="text-sm text-gray-600">Loading staff members...</p>
-                                </div>
-                            ) : staffError ? (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                    {staffError}
-                                </div>
-                            ) : staffMembers.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <p className="text-sm text-gray-600">No staff members found</p>
-                                </div>
-                            ) : (
-                                staffMembers.map((staff) => (
-                                    <div key={staff.id} className="bg-white border border-gray-100 rounded-lg p-4 ">
-                                        {/* Mobile Layout */}
-                                        <div className="md:hidden space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                    {staff.profile_picture_url ? (
-                                                        <img src={staff.profile_picture_url} alt={staff.full_name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span className="text-sm font-medium text-gray-500">{staff.initials || getInitials(staff.full_name || staff.name)}</span>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-sm text-gray-700">{staff.full_name || staff.name}</div>
-                                                    <div className="text-sm text-gray-600">{staff.role_display || staff.role}</div>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${(staff.status || '').toLowerCase() === 'active' ? 'bg-green-500' : 'bg-gray-500'
-                                                        }`}>
-                                                        {staff.status || 'N/A'}
-                                                    </span>
-                                                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                            <path d="M2 12V14C2 14.5304 2.21071 15.0391 2.58579 15.4142C2.96086 15.7893 3.46957 16 4 16H12C12.5304 16 13.0391 15.7893 13.4142 15.4142C13.7893 15.0391 14 14.5304 14 14V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div className="pl-[52px] space-y-1">
-                                                <div className="text-sm text-gray-700">{staff.email}</div>
-                                                <div className="text-sm text-gray-700">{staff.phone_number || staff.phone}</div>
-                                                <div className="text-sm font-medium text-gray-700">Clients: {staff.client_count || staff.clients || 0}</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Desktop Layout */}
-                                        <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                                            {/* Staff Member */}
-                                            <div className="col-span-3 flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                    {staff.profile_picture_url ? (
-                                                        <img src={staff.profile_picture_url} alt={staff.full_name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span className="text-sm font-medium text-gray-700">{staff.initials || getInitials(staff.full_name || staff.name)}</span>
-                                                    )}
-                                                </div>
-                                                <span className="text-sm font-medium text-gray-700">{staff.full_name || staff.name}</span>
-                                            </div>
-
-                                            {/* Role */}
-                                            <div className="col-span-2">
-                                                <span className="text-sm font-medium text-gray-700">{staff.role_display || staff.role}</span>
-                                            </div>
-
-                                            {/* Contact */}
-                                            <div className="col-span-3">
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-medium text-gray-700">{staff.email}</span>
-                                                    <span className="text-sm text-gray-700">{staff.phone_number || staff.phone}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Clients */}
-                                            <div className="col-span-1 text-center">
-                                                <span className="text-sm font-medium text-gray-700">{staff.client_count || staff.clients || 0}</span>
-                                            </div>
-
-                                            {/* Status */}
-                                            <div className="col-span-2 flex justify-center">
-                                                <span className={`px-2 py-1 text-xs font-medium text-white rounded-full ${(staff.status || '').toLowerCase() === 'active' ? 'bg-green-500' : 'bg-gray-500'
-                                                    }`}>
-                                                    {staff.status || 'N/A'}
-                                                </span>
-                                            </div>
-
-                                            {/* Actions */}
-                                            <div className="col-span-1 flex justify-center">
-                                                <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#E8F0FF" />
-                                                        <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#DFE2FF" strokeWidth="0.5" />
-                                                        <path d="M3 12.003V12.75C3 13.3467 3.23705 13.919 3.65901 14.341C4.08097 14.7629 4.65326 15 5.25 15H12.75C13.3467 15 13.919 14.7629 14.341 14.341C14.7629 13.919 15 13.3467 15 12.75V12M9 3.375V11.625M9 11.625L11.625 9M9 11.625L6.375 9" stroke="#131323" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                )}
 
                 {/* Clients Tab Content */}
                 {activeTab === 'Clients' && (
@@ -1557,113 +1053,8 @@ export default function OfficeOverview() {
                         </div>
                     </div>
                 )}
-
-                {/* Scheduling & Coordination Tab Content */}
-               
-
-                {/* Resource Management Tab Content */}
-               
-
-                {/* Compliance & Audit Tab Content */}
                 
             </div>
-            {isBookingModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <p className="text-lg font-semibold text-gray-900">Create Booking</p>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Selected slot: <span className="font-medium text-gray-700">{formatSlotLabel(selectedSlot)}</span>
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={closeBookingModal}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
-                                aria-label="Close booking modal"
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <div className="mt-6 space-y-4">
-                            <div>
-                                <label className="text-sm font-medium text-gray-700">Title</label>
-                                <input
-                                    value={bookingForm.title}
-                                    onChange={(event) =>
-                                        setBookingForm((previous) => ({
-                                            ...previous,
-                                            title: event.target.value
-                                        }))
-                                    }
-                                    placeholder="Meeting title"
-                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-700">Office</label>
-                                <select
-                                    value={bookingForm.office}
-                                    onChange={(event) =>
-                                        setBookingForm((previous) => ({
-                                            ...previous,
-                                            office: event.target.value
-                                        }))
-                                    }
-                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
-                                >
-                                    {schedulingOfficeOptions.map((option) => (
-                                        <option key={option} value={option}>
-                                            {option}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-700">Resource</label>
-                                <select
-                                    value={bookingForm.resource}
-                                    onChange={(event) =>
-                                        setBookingForm((previous) => ({
-                                            ...previous,
-                                            resource: event.target.value
-                                        }))
-                                    }
-                                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/40"
-                                >
-                                    <option value="">Select resource</option>
-                                    {schedulingResources.map((resource) => (
-                                        <option key={resource.id} value={resource.id}>
-                                            {resource.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex items-center justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={closeBookingModal}
-                                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                                style={{ borderRadius: '8px' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCreateBooking}
-                                className="rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-                                style={{ borderRadius: '8px' }}
-                            >
-                                Create
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
             {activeTab === 'Settings' && (
                 <div className="space-y-6 p-6">
                    
@@ -1696,6 +1087,18 @@ export default function OfficeOverview() {
                                         Office Manager
                                     </p>
                                     <p className="mt-1 text-sm font-medium text-gray-600">{officeManager}</p>
+                                    {managerEmail !== 'N/A' && (
+                                        <p className="mt-1 text-xs text-gray-500">{managerEmail}</p>
+                                    )}
+                                    {officeManager !== 'N/A' && officeData?.manager && (
+                                        <button
+                                            onClick={handleRemoveManager}
+                                            disabled={removingManager}
+                                            className="mt-2 text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                                        >
+                                            {removingManager ? 'Removing...' : 'Remove Manager'}
+                                        </button>
+                                    )}
                                 </div>
                                 <div className='text-end'>
                                     <p className="text-base font-medium tracking-wide text-gray-700">
@@ -1708,7 +1111,7 @@ export default function OfficeOverview() {
                             </div>
                         </div>
 
-                        <div className="space-y-6 rounded-xl bg-white p-6 border border-[#E4ECFF]">
+                        {/* <div className="space-y-6 rounded-xl bg-white p-6 border border-[#E4ECFF]">
                             <div>
                                 <h5 className="text-lg font-medium text-gray-500">Tax Prep Software</h5>
                                 <p className="text-sm text-[#64748B]">
@@ -1772,7 +1175,7 @@ export default function OfficeOverview() {
                                     Save
                                 </button>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     <div className="space-y-6 rounded-xl bg-white p-6 ">
@@ -1915,6 +1318,48 @@ export default function OfficeOverview() {
                 officeId={officeId}
                 officeName={officeData?.name || 'Office'}
                 onUpdate={handleTaxpayerUpdate}
+            />
+
+            {/* Set Primary Office Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showSetPrimaryConfirm}
+                onClose={() => {
+                    if (!settingPrimary) {
+                        setShowSetPrimaryConfirm(false);
+                    }
+                }}
+                onConfirm={confirmSetPrimaryOffice}
+                title="Set as Primary Office"
+                message="Are you sure you want to set this office as the primary office? This will replace the current primary office."
+                confirmText="Set as Primary"
+                cancelText="Cancel"
+                isLoading={settingPrimary}
+            />
+
+            {/* Edit Office Modal */}
+            <EditOfficeModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                officeId={officeId}
+                officeData={officeData}
+                onOfficeUpdated={handleOfficeUpdated}
+            />
+
+            {/* Remove Manager Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showRemoveManagerConfirm}
+                onClose={() => {
+                    if (!removingManager) {
+                        setShowRemoveManagerConfirm(false);
+                    }
+                }}
+                onConfirm={confirmRemoveManager}
+                title="Remove Manager"
+                message="Are you sure you want to remove the manager from this office?"
+                confirmText="Remove"
+                cancelText="Cancel"
+                isLoading={removingManager}
+                isDestructive={true}
             />
         </>
     );

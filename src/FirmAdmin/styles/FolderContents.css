@@ -1,0 +1,247 @@
+/* Folder Contents Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .foldercontents-main-container {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Back Button and Breadcrumbs */
+  .foldercontents-back-section {
+    margin-bottom: 1rem !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+
+  .foldercontents-back-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .foldercontents-back-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .foldercontents-breadcrumbs {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    font-size: 0.8rem !important;
+    overflow-x: auto !important;
+  }
+
+  .foldercontents-breadcrumbs button {
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Loading and Error States */
+  .foldercontents-loading,
+  .foldercontents-error {
+    padding: 2rem 0 !important;
+  }
+
+  .foldercontents-error {
+    padding: 0.875rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .foldercontents-error p {
+    font-size: 0.875rem !important;
+  }
+
+  .foldercontents-error button {
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Summary Cards - single column */
+  .foldercontents-summary-cards {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .foldercontents-summary-card {
+    padding: 0.875rem !important;
+  }
+
+  .foldercontents-summary-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .foldercontents-summary-value {
+    font-size: 1.25rem !important;
+  }
+
+  /* Document List Section */
+  .foldercontents-document-section {
+    padding: 0.5rem !important;
+  }
+
+  .foldercontents-document-header {
+    margin-bottom: 1rem !important;
+  }
+
+  .foldercontents-document-title {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .foldercontents-document-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  /* Search Bar */
+  .foldercontents-search-section {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .foldercontents-search-container {
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .foldercontents-search-input {
+    width: 100% !important;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem !important;
+    font-size: 0.875rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .foldercontents-search-icon {
+    left: 0.75rem !important;
+  }
+
+  /* Table Container - make scrollable */
+  .foldercontents-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .foldercontents-table {
+    min-width: 1000px !important;
+  }
+
+  .foldercontents-table th,
+  .foldercontents-table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .foldercontents-table th {
+    font-size: 0.75rem !important;
+  }
+
+  /* Document Name Cell */
+  .foldercontents-document-name {
+    gap: 0.75rem !important;
+  }
+
+  .foldercontents-document-icon {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .foldercontents-document-name-text {
+    font-size: 0.8rem !important;
+  }
+
+  .foldercontents-document-type {
+    font-size: 0.7rem !important;
+  }
+
+  /* Category Badge */
+  .foldercontents-category-badge {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  /* Actions Menu */
+  .foldercontents-actions-menu {
+    width: calc(100vw - 2rem) !important;
+    max-width: 200px !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 10000 !important;
+  }
+
+  .foldercontents-actions-button {
+    padding: 0.5rem !important;
+  }
+
+  .foldercontents-actions-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .foldercontents-actions-menu button {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  /* Empty State */
+  .foldercontents-empty-state {
+    padding: 2rem 0 !important;
+  }
+
+  .foldercontents-empty-state p {
+    font-size: 0.875rem !important;
+  }
+
+  /* Pagination */
+  .foldercontents-pagination {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+    margin-top: 1rem !important;
+  }
+
+  .foldercontents-pagination-controls {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+  }
+
+  .foldercontents-pagination-buttons {
+    width: 100% !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .foldercontents-pagination-button {
+    flex: 1 !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    justify-content: center !important;
+  }
+
+  .foldercontents-pagination-info {
+    text-align: center !important;
+    font-size: 0.8rem !important;
+  }
+
+  .foldercontents-view-all-button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    justify-content: center !important;
+  }
+}
+

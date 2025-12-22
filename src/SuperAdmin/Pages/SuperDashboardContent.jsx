@@ -1267,7 +1267,7 @@ export default function SuperDashboardContent() {
                     </p>
                   </div>
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                    {firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : '—'}
+                    {firm.subscription_plan ? firm.subscription_plan.charAt(0).toUpperCase() + firm.subscription_plan.slice(1) : 'None'}
                   </span>
                 </div>
               ))}

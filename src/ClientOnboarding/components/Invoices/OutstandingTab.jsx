@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { invoicesAPI, taxpayerFirmAPI, handleAPIError } from '../../utils/apiUtils';
-
+import '../../styles/OutStandingTab.css';
 const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [showModal, setShowModal] = useState(false);
     const [showInvoiceDetailsModal, setShowInvoiceDetailsModal] = useState(false);
@@ -348,8 +348,8 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
 
     return (
-        <div className="bg-white p-3 rounded" >
-            <div className="align-items-center mb-3 " style={{marginLeft:"10px"}}>
+        <div className="bg-white lg:p-3 md:p-2 px-1 rounded" >
+            <div className="align-items-center mb-3 invoices-header" style={{marginLeft:"10px"}}>
                 <h5
                     className="mb-0 me-3"
                     style={{
@@ -375,7 +375,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
             </div>
 
             {allInvoices.length === 0 ? (
-                <div className="text-center py-4" style={{ marginLeft: "10px" }}>
+                <div className="text-center py-4 empty-invoice-msg" style={{ marginLeft: "10px" }}>
                     <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
                         No invoices at this time.
                     </p>
@@ -387,7 +387,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
                     return (
                         <div
                             key={inv.id || idx}
-                            className="border rounded p-3 mb-3"
+                            className="border rounded p-3 mb-3 invoice-card"
                             style={{
                                 backgroundColor: '#ffffff',
                                 transition: 'background-color 0.3s ease',
@@ -479,7 +479,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
                 {/* Pagination Controls */}
                 {allInvoices.length > itemsPerPage && (
-                    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
+                    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top invoice-pagination" style={{ marginLeft: "10px", borderColor: '#E5E7EB' }}>
                         <div className="d-flex align-items-center gap-2">
                             <button
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}

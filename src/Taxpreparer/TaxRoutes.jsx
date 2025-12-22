@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isLoggedIn, getStorage } from '../ClientOnboarding/utils/userUtils';
-import { hasPermissionGroup, isFeatureVisible } from '../ClientOnboarding/utils/privilegeUtils';
+import { hasPermissionGroup, isFeatureVisible, hasTaxPreparerPermission } from '../ClientOnboarding/utils/privilegeUtils';
 
 // Layouts
 import TaxDashboardLayout from './component/TaxDashboardLayout';
@@ -24,6 +24,7 @@ import ClientESignLogs from './pages/MyClients/ClientESignLogs';
 import CalendarPage from './pages/Calender/Calender';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
 import ESignatureDashboard from './pages/ESignature/ESignatureDashboard';
+import TaxPreparerBilling from './pages/Billing/TaxPreparerBilling';
 
 // Protected Route Component for Admin/Tax Preparer
 function AdminProtectedRoute({ children }) {
@@ -87,6 +88,16 @@ function PermissionProtectedRoute({ children, requiredGroup }) {
   }
 }
 
+// Tax Preparer Permission-based route protection component
+function TaxPreparerPermissionRoute({ children, requiredPermission }) {
+  // Check if user has the specific tax preparer permission
+  if (requiredPermission && !hasTaxPreparerPermission(requiredPermission)) {
+    return <Navigate to="/taxdashboard" replace />;
+  }
+  
+  return children;
+}
+
 export default function TaxRoutes() {
   return (
     <Routes>
@@ -148,6 +159,16 @@ export default function TaxRoutes() {
         
         {/* Invoices */}
         <Route path="invoices" element={<InvoicesPage />} />
+        
+        {/* Billing & Invoicing - Only accessible if user has create_invoices permission */}
+        <Route 
+          path="billing" 
+          element={
+            <TaxPreparerPermissionRoute requiredPermission="create_invoices">
+              <TaxPreparerBilling />
+            </TaxPreparerPermissionRoute>
+          } 
+        />
         
         {/* My Clients */}
         <Route path="clients" element={

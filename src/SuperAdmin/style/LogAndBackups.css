@@ -1,0 +1,34 @@
+@media (max-width: 767px) {
+
+    /* Hide table header on mobile */
+    .backup-header {
+        display: none;
+    }
+
+    /* Convert each row into card layout */
+    .backup-row {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Stack label + value */
+    .backup-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    /* Mobile labels */
+    .backup-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: #6B7280;
+        font-family: BasisGrotesquePro;
+    }
+
+    /* Actions align left */
+    .backup-actions {
+        align-items: flex-start;
+    }
+}

@@ -4,11 +4,14 @@ import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaC
 import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
 import AddSubscription from './AddSubscription';
+import AddonsManagement from './Subscriptions/AddonsManagement';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import '../style/Subscriptions.css';
 
 export default function Subscriptions() {
+  const [activeTab, setActiveTab] = useState('Plans'); // 'Plans' or 'Addons'
   const [showPlanDetails, setShowPlanDetails] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
@@ -508,7 +511,7 @@ export default function Subscriptions() {
     );
   }
   return (
-    <div className="w-full h-full p-6">
+    <div className="w-full h-full p-6 subscriptions-page">
       {/* Hidden PDF Content */}
       <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
         <div style={{ marginBottom: '20px' }}>
@@ -563,12 +566,12 @@ export default function Subscriptions() {
         </table>
       </div>
       {/* Header Section */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-start mb-8 subscriptions-header">
         <div>
           <h3 className="taxdashboardr-titler font-bold mb-2" style={{ color: '#3B4A66' }}>Subscription & Billing Management</h3>
           <p style={{ color: '#3B4A66' }}>Monitor and manage all platform subscriptions</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 subscriptions-actions">
           <button 
             onClick={handleExportReport}
             className="px-2 py-1 text-[10px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center" 
@@ -594,8 +597,42 @@ export default function Subscriptions() {
           </button>
         </div>
       </div>
-      {/* Metric Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-1.5 w-fit">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('Plans')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
+                activeTab === 'Plans'
+                  ? 'bg-[#3AD6F2] text-white'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Subscription Plans
+            </button>
+            <button
+              onClick={() => setActiveTab('Addons')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
+                activeTab === 'Addons'
+                  ? 'bg-[#3AD6F2] text-white'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Addons
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'Addons' ? (
+        <AddonsManagement />
+      ) : (
+        <>
+          {/* Metric Cards and main subscriptions content */}
+          <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
         {/* Total Revenue */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
@@ -746,7 +783,7 @@ export default function Subscriptions() {
       </div>
 
       {/* Plan and Alerts Section */}
-      <div className="grid gap-8 mb-8" style={{ gridTemplateColumns: '60% 35%' }}>
+      <div className="grid gap-8 mb-8 subscriptions-plan-grid" style={{ gridTemplateColumns: '60% 35%' }}>
         {/* Plan Section */}
         <div className='bg-white p-3' style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-center mb-3 ">
@@ -929,21 +966,21 @@ export default function Subscriptions() {
       {/* Plan Performance Section */}
       <div className="mb-8 bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="flex flex-col gap-4 mb-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between subscriptions-plan-performance-header">
             <div>
               <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Plan Performance</h3>
               <p className="text-xs" style={{ color: '#3B4A66' }}>MRR, churn, and plan distribution</p>
             </div>
             <div className="flex flex-col items-end gap-2">
               {/* Filter Dropdowns - Upper Right */}
-              <div className="flex gap-2 items-end">
+              <div className="flex gap-2 items-end subscriptions-plan-filter-row">
                 <select
                   value={filterMonth}
                   onChange={(e) => {
                     setFilterMonth(e.target.value);
                     if (!e.target.value) setFilterYear('');
                   }}
-                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
                   style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                 >
                   <option value="">All Months</option>
@@ -957,7 +994,7 @@ export default function Subscriptions() {
                     setFilterYear(e.target.value);
                     if (!e.target.value) setFilterMonth('');
                   }}
-                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 subscriptions-plan-filter-control"
                   style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
                   disabled={!filterMonth}
                 >
@@ -967,9 +1004,9 @@ export default function Subscriptions() {
                   ))}
                 </select>
                 <button
+                  className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed subscriptions-apply-btn"
                   onClick={handleApplyFilter}
                   disabled={!filterMonth || !filterYear}
-                  className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#3B82F6' }}
                 >
                   Apply
@@ -982,7 +1019,7 @@ export default function Subscriptions() {
                       setAppliedFilterMonth('');
                       setAppliedFilterYear('');
                     }}
-                    className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
+                    className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 subscriptions-clear-btn"
                     title="Clear filter"
                   >
                     ✕
@@ -999,9 +1036,9 @@ export default function Subscriptions() {
         </div>
 
         {planPerformance ? (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
-              <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
+          <div className="grid gap-6 lg:grid-cols-2 subscriptions-plan-performance-grid">
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
+              <h4 className="text-sm sm:text-base font-semibold text-[#3B4A66] mb-2">Monthly Recurring Revenue</h4>
               {mrrTrend.length > 0 ? (() => {
                 const svgWidth = 400;
                 const svgHeight = 180;
@@ -1015,7 +1052,7 @@ export default function Subscriptions() {
                 
                 return (
                   <div className="relative h-48 mt-2">
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full subscriptions-mrr-chart">
                       {[0, 1, 2, 3, 4].map((step) => {
                         const y = paddingY + (innerHeight / 4) * step;
                         const labelValue = mrrMax - (range / 4) * step;
@@ -1034,7 +1071,7 @@ export default function Subscriptions() {
                               x={paddingX - 8}
                               y={y + 4}
                               textAnchor="end"
-                              fontSize="10"
+                              fontSize="12"
                               fill="#6B7280"
                             >
                               {formatCurrency(labelValue)}
@@ -1061,7 +1098,7 @@ export default function Subscriptions() {
                               x={x + barWidth / 2}
                               y={y - 6}
                               textAnchor="middle"
-                              fontSize="10"
+                              fontSize="12"
                               fill="#3B4A66"
                               fontWeight="600"
                             >
@@ -1071,7 +1108,7 @@ export default function Subscriptions() {
                               x={x + barWidth / 2}
                               y={svgHeight - 8}
                               textAnchor="middle"
-                              fontSize="10"
+                              fontSize="12"
                               fill="#6B7280"
                             >
                               {item.month || `M${index + 1}`}
@@ -1087,7 +1124,7 @@ export default function Subscriptions() {
               )}
             </div>
 
-            <div className="border border-[#E8F0FF] rounded-[10px] p-4">
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4 subscriptions-plan-card">
               <h4 className="text-sm font-semibold text-[#3B4A66] mb-2">Churn Rate</h4>
               {churnTrend.length > 0 ? (() => {
                 const svgWidth = 400;
@@ -1100,7 +1137,7 @@ export default function Subscriptions() {
                 const barWidth = stepWidth * 0.5;
                 return (
                   <div className="relative h-48 mt-2">
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full subscriptions-churn-chart">
                       {[0, 1, 2, 3, 4].map((step) => {
                         const y = paddingY + (innerHeight / 4) * step;
                         const labelValue = churnMax - ((churnMax / 4) * step);
@@ -1119,7 +1156,7 @@ export default function Subscriptions() {
                               x={paddingX - 8}
                               y={y + 4}
                               textAnchor="end"
-                              fontSize="10"
+                              fontSize="12"
                               fill="#6B7280"
                             >
                               {formatPercentage(labelValue)}
@@ -1146,7 +1183,7 @@ export default function Subscriptions() {
                               x={x + barWidth / 2}
                               y={y - 6}
                               textAnchor="middle"
-                              fontSize="10"
+                              fontSize="12"
                               fill="#4C1D95"
                               fontWeight="600"
                             >
@@ -1156,7 +1193,7 @@ export default function Subscriptions() {
                               x={x + barWidth / 2}
                               y={svgHeight - 8}
                               textAnchor="middle"
-                              fontSize="10"
+                              fontSize="12"
                               fill="#6B7280"
                             >
                               {item.month || `M${index + 1}`}
@@ -1172,7 +1209,7 @@ export default function Subscriptions() {
               )}
             </div>
 
-            <div className="border border-[#E8F0FF] rounded-[10px] p-4 lg:col-span-2">
+            <div className="border border-[#E8F0FF] rounded-[10px] p-4 lg:col-span-2 subscriptions-plan-card-full">
               <h4 className="text-sm font-semibold text-[#3B4A66] mb-4">Plan Distribution</h4>
               <div className="space-y-3">
                 {planDistributionData.length > 0 ? planDistributionData.map((item) => {
@@ -1208,7 +1245,7 @@ export default function Subscriptions() {
       <div>
         {/* Filter Bar */}
         <div className='mb-4'>
-          <div className="flex gap-3">
+          <div className="flex gap-3 subscriptions-filter">
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
@@ -1252,8 +1289,8 @@ export default function Subscriptions() {
             </select>
           </div>
         </div>
-        <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white p-4 subscriptions-table-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+          <div className="flex justify-between items-center mb-6 subscriptions-table-card-header">
             <div>
               <h3 className="text-xl font-bold" style={{ color: '#3B4A66' }}>Subscriptions</h3>
               <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed view of all platform subscriptions</p>
@@ -1276,8 +1313,8 @@ export default function Subscriptions() {
           )}
 
           {/* Table Header */}
-          <div className=" px-6 py-3 mb-2">
-            <div className="grid grid-cols-6 gap-4 text-sm font-medium" style={{ color: '#3B4A66' }}>
+          <div className=" px-6 py-3 mb-2 subscriptions-table-header">
+            <div className="grid grid-cols-6 gap-4 text-sm font-medium subscriptions-table-header-grid" style={{ color: '#3B4A66' }}>
               <div>Firm</div>
               <div>Plan</div>
               <div>Amount</div>
@@ -1289,7 +1326,7 @@ export default function Subscriptions() {
           </div>
 
           {/* Table */}
-          <div className="space-y-4">
+          <div className="space-y-4 subscriptions-table-list">
             {tableLoading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -1302,8 +1339,8 @@ export default function Subscriptions() {
                 const planStyles = getPlanBadgeStyles(subscription.plan);
                 const statusClasses = getStatusBadgeClasses(subscription.status);
                 return (
-                  <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
-                    <div className="grid grid-cols-6 gap-4 items-center">
+                  <div key={`${subscription.firm_id}-${subscription.plan}`} className="bg-white p-4 subscriptions-table-row" style={{ border: '1px solid #E0E0E0', borderRadius: '8px' }}>
+                    <div className="grid grid-cols-6 gap-4 items-center subscriptions-table-row-grid">
                       <div>
                         <p className="text-sm font-semibold" style={{ color: '#3B4A66' }}>
                           {subscription.firm_name || '—'}
@@ -1383,8 +1420,10 @@ export default function Subscriptions() {
               </button>
             </div>
           )}
+          </div>
         </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

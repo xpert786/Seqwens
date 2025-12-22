@@ -332,14 +332,14 @@ export default function Overview() {
   return (
     <div className="space-y-8 mb-8">
       {/* Filter Section - Top Right */}
-      <div className="flex justify-end items-center gap-2 mb-4">
+      <div className="flex justify-end items-center gap-2 mb-4 overview-filter-row">
         <select
           value={filterMonth}
           onChange={(e) => {
             setFilterMonth(e.target.value);
             if (!e.target.value) setFilterYear('');
           }}
-          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 overview-filter-control"
           style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
         >
           <option value="">All Months</option>
@@ -353,7 +353,7 @@ export default function Overview() {
             setFilterYear(e.target.value);
             if (!e.target.value) setFilterMonth('');
           }}
-          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 overview-filter-control"
           style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
           disabled={!filterMonth}
         >
@@ -365,7 +365,7 @@ export default function Overview() {
         <button
           onClick={handleApplyFilter}
           disabled={!filterMonth || !filterYear}
-          className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-1.5 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed overview-apply-btn"
           style={{ backgroundColor: '#3B82F6' }}
         >
           Apply
@@ -378,7 +378,7 @@ export default function Overview() {
               setAppliedFilterMonth('');
               setAppliedFilterYear('');
             }}
-            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800"
+            className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-800 overview-clear-btn"
             title="Clear filter"
           >
             ✕
@@ -386,7 +386,7 @@ export default function Overview() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 overview-metrics-grid">
         <div className="bg-white p-4 border border-[#E8F0FF] rounded-lg">
           <p className="text-xs font-medium text-gray-500 mb-1">Total Revenue ({dateRangeLabel})</p>
           <p className="text-2xl font-bold text-gray-900">
@@ -420,7 +420,7 @@ export default function Overview() {
       </div>
 
       {/* First Chart - Area Chart */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out overview-chart-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
           <div>
             <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Revenue Growth Trend</h3>
@@ -473,7 +473,7 @@ export default function Overview() {
       </div>
 
       {/* Second Chart - Multi-line Chart */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8 overview-chart-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
           <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>User Engagement Metrics</h3>
           <p className="text-sm" style={{ color: '#3B4A66' }}>Active users, new registrations, and session data by month</p>
@@ -560,7 +560,7 @@ export default function Overview() {
 
         {/* Legend */}
         {engagementData.length > 0 && (
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="flex justify-center gap-6 mt-4 overview-legend">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }}></div>
               <span className="text-sm" style={{ color: '#3B4A66' }}>Active Users</span>
@@ -578,7 +578,7 @@ export default function Overview() {
       </div>
 
       {/* Third Chart - Bar Chart */}
-      <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
+      <div className="bg-white p-6 transition-all duration-300 ease-in-out mb-8 overview-chart-card" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
         <div className="mb-6">
           <h3 className="text-md font-semibold mb-2" style={{ color: '#3B4A66' }}>Monthly Revenue Breakdown</h3>
           <p className="text-sm" style={{ color: '#3B4A66' }}>Detailed revenue analysis by subscription plan.</p>
@@ -628,7 +628,7 @@ export default function Overview() {
         </div>
 
         {monthlyRevenueData.length > 0 && (
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-4 overview-legend">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4285F4' }}></div>
               <span className="text-sm" style={{ color: '#3B4A66' }}>Total Revenue</span>

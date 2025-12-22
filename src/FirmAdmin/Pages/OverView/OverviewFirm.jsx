@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DolersIcon, DoublesIcon, FilessIcon, WatchesIcon, ChecksIcon, Checks2Icon, DownsIcon, SceheIcon, CrossesIcon } from "../../Components/icons";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import { firmAdminDashboardAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getStorage } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
 import {
@@ -62,6 +62,7 @@ const getBreakdownData = (dashboardData) => {
 
 export default function FirmAdminDashboard() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { advancedReportingEnabled } = useFirmSettings();
   const [activeTab, setActiveTab] = useState('trend');
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
@@ -137,6 +138,70 @@ export default function FirmAdminDashboard() {
 
     fetchDashboardData();
   }, [dateRange]);
+
+  // Handle subscription success redirect
+  useEffect(() => {
+    const subscriptionSuccess = searchParams.get('subscription_success');
+    const subscriptionCancelled = searchParams.get('subscription_cancelled');
+
+    if (subscriptionSuccess === 'true') {
+      // Show success message
+      toast.success('Subscription activated successfully! Welcome to your dashboard.', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+
+      // Refresh user data to get updated subscription info
+      const storage = getStorage();
+      const userDataStr = storage?.getItem("userData");
+      if (userDataStr) {
+        try {
+          // Fetch updated user data from API
+          const token = getAccessToken();
+          if (token) {
+            fetchWithCors(`${getApiBaseUrl()}/user/me/`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+            })
+              .then(response => response.json())
+              .then(result => {
+                if (result.success && result.data) {
+                  const userData = result.data;
+                  storage.setItem("userData", JSON.stringify(userData));
+                  sessionStorage.setItem("userData", JSON.stringify(userData));
+                  // Refresh dashboard data to show updated subscription
+                  window.location.reload();
+                }
+              })
+              .catch(err => {
+                console.error('Error fetching user data:', err);
+                // Still remove the parameter even if fetch fails
+                setSearchParams({});
+              });
+          } else {
+            setSearchParams({});
+          }
+        } catch (error) {
+          console.error('Error updating user data:', error);
+          setSearchParams({});
+        }
+      } else {
+        setSearchParams({});
+      }
+    } else if (subscriptionCancelled === 'true') {
+      // Show cancellation message
+      toast.info('Subscription setup was cancelled. Please complete your subscription to access all features.', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+      // Remove parameter and redirect to finalize subscription
+      setSearchParams({});
+      navigate('/firmadmin/finalize-subscription', { replace: true });
+    }
+  }, [searchParams, setSearchParams, navigate]);
 
   // Export Dashboard Report to PDF
   const exportDashboardToPDF = async () => {

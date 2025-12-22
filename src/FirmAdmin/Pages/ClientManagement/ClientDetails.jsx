@@ -10,6 +10,7 @@ import BillingTab from './ClientTabs/BillingTab';
 import TimelineTab from './ClientTabs/TimelineTab';
 import AppointmentsTab from './ClientTabs/AppointmentsTab';
 import NotesTab from './ClientTabs/NotesTab';
+import '../../styles/ClientDetails.css';
 
 const API_BASE_URL = getApiBaseUrl();
 

@@ -1,0 +1,44 @@
+/* Client Management Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Header Section - stack vertically */
+  .clientmanage-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+  }
+
+  .clientmanage-header-content {
+    width: 100% !important;
+  }
+
+  .clientmanage-header-title {
+    font-size: 1.25rem !important;
+  }
+
+  .clientmanage-header-subtitle {
+    font-size: 0.875rem !important;
+  }
+
+  /* Buttons Container */
+  .clientmanage-buttons-container {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Action Buttons - full width */
+  .clientmanage-action-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .clientmanage-action-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+

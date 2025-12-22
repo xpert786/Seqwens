@@ -1,0 +1,8 @@
+@media (max-width: 400px) {
+  .super-topbar-logo {
+    max-height: 22px !important;
+    width: auto !important;
+  }
+}
+
+

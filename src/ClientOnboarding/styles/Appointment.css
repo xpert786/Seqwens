@@ -1,0 +1,103 @@
+@media (max-width: 767px) {
+
+    /* Header layout stack */
+    .appointments-header {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px;
+    }
+  
+    /* Reduce title size */
+    .appointments-title h5 {
+      font-size: 20px !important;
+      line-height: 1.2;
+    }
+  
+    .appointments-title p {
+      font-size: 13px !important;
+    }
+  
+    /* Full-width button */
+    .appointments-header button {
+      width: 100%;
+      justify-content: center;
+      min-height: 44px;
+    }
+  
+    /* Improve side padding */
+    .appointments-header-wrapper {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    .appointment-stats {
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+    
+      /* Full width cards */
+      .appointment-stat-card {
+        width: 100%;
+      }
+    
+      /* Compact card padding */
+      .appointment-stat-card {
+        padding: 12px !important;
+      }
+    
+      /* Text alignment */
+      .appointment-stat-card h6 {
+        font-size: 14px;
+      }
+    
+      .appointment-stat-card small {
+        font-size: 12px;
+      }
+      .appointments-lists {
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+    
+      /* Full width boxes */
+      .upcoming-appointments-box,
+      .past-appointments-box {
+        width: 100% !important;
+        min-width: 100% !important;
+      }
+    
+      /* Reduce padding */
+      .upcoming-appointments-box,
+      .past-appointments-box {
+        padding: 12px !important;
+      }
+    
+      /* Titles smaller */
+      .upcoming-appointments-box h5,
+      .past-appointments-box h5 {
+        font-size: 18px !important;
+        line-height: 1.3;
+      }
+    
+      /* Meta rows wrap nicely */
+      .appointment-card .d-flex {
+        flex-wrap: wrap;
+        gap: 8px !important;
+      }
+    
+      /* Icon + text spacing */
+      .appointment-card .small-icon {
+        font-size: 12px;
+      }
+    
+      /* Join button full width */
+      .appointment-card button.btn {
+        width: 100%;
+        min-height: 44px;
+      }
+    
+      /* Pagination spacing */
+      .appointments-lists .pagination {
+        justify-content: center;
+        margin-top: 8px;
+      }
+  }
+  

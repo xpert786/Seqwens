@@ -51,14 +51,43 @@ const AllPlans = ({ currentPlanName }) => {
 
             const result = await response.json();
 
-            // Handle different response structures
+            // Handle new response structure with monthly_plans and yearly_plans
+            let plansData = [];
             if (result.success && result.data) {
-                setPlans(Array.isArray(result.data) ? result.data : []);
+                // New structure: data.monthly_plans and data.yearly_plans
+                if (result.data.monthly_plans && result.data.yearly_plans) {
+                    plansData = billingCycle === 'monthly' 
+                        ? (result.data.monthly_plans || [])
+                        : (result.data.yearly_plans || []);
+                } 
+                // Fallback: old structure with flat array
+                else if (Array.isArray(result.data)) {
+                    plansData = result.data.filter(plan => 
+                        plan.billing_cycle === billingCycle && plan.is_active !== false
+                    );
+                }
             } else if (Array.isArray(result)) {
-                setPlans(result);
-            } else {
-                setPlans([]);
+                // Direct array response (old format)
+                plansData = result.filter(plan => 
+                    plan.billing_cycle === billingCycle && plan.is_active !== false
+                );
             }
+
+            // Extract user_billing_cycle from response if available
+            if (result.user_billing_cycle) {
+                setBillingCycle(result.user_billing_cycle);
+                // Refetch with correct billing cycle
+                if (result.data && result.data.monthly_plans && result.data.yearly_plans) {
+                    plansData = result.user_billing_cycle === 'monthly' 
+                        ? (result.data.monthly_plans || [])
+                        : (result.data.yearly_plans || []);
+            }
+            }
+
+            // Filter only active plans
+            const filteredPlans = plansData.filter(plan => plan.is_active !== false);
+
+            setPlans(filteredPlans);
         } catch (err) {
             console.error('Error fetching subscription plans:', err);
             const errorMsg = handleAPIError(err);
@@ -69,10 +98,10 @@ const AllPlans = ({ currentPlanName }) => {
         }
     }, []);
 
-    // Fetch plans on mount
+    // Fetch plans on mount and when billing cycle changes
     useEffect(() => {
         fetchPlans();
-    }, [fetchPlans]);
+    }, [fetchPlans, billingCycle]);
 
     // Format plan type name
     const formatPlanType = (type) => {
@@ -82,11 +111,14 @@ const AllPlans = ({ currentPlanName }) => {
 
     // Check if a plan is the current plan
     const isCurrentPlan = (plan) => {
+        // Use is_current field from API if available
+        if (plan.is_current !== undefined) {
+            return plan.is_current === true;
+        }
+        // Fallback to old method
         if (!currentPlanName) return false;
-        // Normalize both names for comparison (case-insensitive)
         const planType = formatPlanType(plan.subscription_type).toLowerCase();
         const currentPlan = currentPlanName.toLowerCase();
-        // Check if plan type matches current plan name
         return planType === currentPlan;
     };
 
@@ -108,14 +140,16 @@ const AllPlans = ({ currentPlanName }) => {
                 'Basic client management',
                 'Document storage',
                 'Email support',
-                'Standard reporting'
+                'Standard reporting',
+                '1 Office Location Included'
             ],
             team: [
                 'Up to 5 team members',
                 'Advanced client management',
                 'Enhanced document storage',
                 'Priority email support',
-                'Advanced reporting'
+                'Advanced reporting',
+                '1 Office Location Included'
             ],
             professional: [
                 'Unlimited team members',
@@ -123,7 +157,8 @@ const AllPlans = ({ currentPlanName }) => {
                 'Unlimited document storage',
                 'Priority support',
                 'Advanced analytics',
-                'Custom integrations'
+                'Custom integrations',
+                '3 Office Locations Included'
             ],
             enterprise: [
                 'Unlimited everything',
@@ -132,7 +167,8 @@ const AllPlans = ({ currentPlanName }) => {
                 '24/7 priority support',
                 'Advanced analytics & reporting',
                 'Custom integrations',
-                'Dedicated account manager'
+                'Dedicated account manager',
+                '5 Office Locations Included'
             ]
         };
         return features[type] || [];
@@ -238,7 +274,7 @@ const AllPlans = ({ currentPlanName }) => {
                         Yearly
                         {billingCycle === 'yearly' && plans.length > 0 && (
                             <span className="ml-1 text-xs">
-                                (Save up to {Math.max(...plans.map(p => p.discount_percentage_yearly || 0))}%)
+                                (Save up to {Math.max(...plans.map(p => p.discount_percentage || p.discount_percentage_yearly || 0))}%)
                             </span>
                         )}
                     </button>
@@ -264,15 +300,13 @@ const AllPlans = ({ currentPlanName }) => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
-                    {plans
-                        .filter(plan => plan.is_active !== false) // Only show active plans
-                        .map((plan) => {
-                            const price = billingCycle === 'monthly'
-                                ? parseFloat(plan.monthly_price || 0)
-                                : parseFloat(plan.yearly_price || 0);
+                    {plans.map((plan) => {
+                            // Use price from API response (already filtered by billing_cycle)
+                            const price = parseFloat(plan.price || plan.monthly_price || plan.yearly_price || 0);
+                            const priceDisplay = plan.price_display || `$${price.toFixed(2)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
                             const isCustomPricing = plan.custom_pricing === 'enabled';
                             const isMostPopular = plan.most_popular || false;
-                            const discountPercentage = plan.discount_percentage_yearly || 0;
+                            const discountPercentage = plan.discount_percentage || plan.discount_percentage_yearly || 0;
                             const availableAddons = getAvailableAddons(plan);
                             const isCurrent = isCurrentPlan(plan);
 
@@ -314,12 +348,19 @@ const AllPlans = ({ currentPlanName }) => {
                                                 <>
                                                     <div className="flex items-baseline gap-2">
                                                         <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                                            ${price.toFixed(2)}
-                                                        </span>
-                                                        <span className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">
-                                                            per {billingCycle === 'monthly' ? 'month' : 'year'}
+                                                            {priceDisplay}
                                                         </span>
                                                     </div>
+                                                    {billingCycle === 'yearly' && plan.monthly_equivalent && (
+                                                        <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
+                                                            ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month
+                                                        </div>
+                                                    )}
+                                                    {billingCycle === 'monthly' && plan.yearly_equivalent && (
+                                                        <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
+                                                            ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year
+                                                        </div>
+                                                    )}
                                                     {billingCycle === 'yearly' && discountPercentage > 0 && (
                                                         <div className="mt-1">
                                                             <span className="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded font-[BasisGrotesquePro]">
@@ -342,7 +383,8 @@ const AllPlans = ({ currentPlanName }) => {
                                         </h6>
                                         <div className="space-y-1.5 sm:space-y-2">
                                             {(plan.features_list && plan.features_list.length > 0) ? (
-                                                plan.features_list.map((feature, index) => (
+                                                <>
+                                                    {plan.features_list.map((feature, index) => (
                                                     <div key={index} className="flex items-center gap-1.5 sm:gap-2">
                                                         <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -351,9 +393,23 @@ const AllPlans = ({ currentPlanName }) => {
                                                             {feature}
                                                         </span>
                                                     </div>
-                                                ))
+                                                    ))}
+                                                    {/* Add included_offices if not in features_list */}
+                                                    {plan.included_offices !== undefined && plan.included_offices !== null && 
+                                                     !plan.features_list.some(f => f.toLowerCase().includes('office')) && (
+                                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                                {plan.included_offices} {plan.included_offices === 1 ? 'Office Location' : 'Office Locations'} Included
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
                                             ) : getDefaultFeatures(plan.subscription_type).length > 0 ? (
-                                                getDefaultFeatures(plan.subscription_type).map((feature, index) => (
+                                                <>
+                                                    {getDefaultFeatures(plan.subscription_type).map((feature, index) => (
                                                     <div key={index} className="flex items-center gap-1.5 sm:gap-2">
                                                         <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -362,11 +418,36 @@ const AllPlans = ({ currentPlanName }) => {
                                                             {feature}
                                                         </span>
                                                     </div>
-                                                ))
+                                                    ))}
+                                                    {/* Add included_offices if available */}
+                                                    {plan.included_offices !== undefined && plan.included_offices !== null && (
+                                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                                {plan.included_offices} {plan.included_offices === 1 ? 'Office Location' : 'Office Locations'} Included
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
                                             ) : (
+                                                <>
                                                 <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">
                                                     Standard features included
                                                 </p>
+                                                    {/* Add included_offices if available */}
+                                                    {plan.included_offices !== undefined && plan.included_offices !== null && (
+                                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span className="text-xs sm:text-sm text-gray-700 font-[BasisGrotesquePro]">
+                                                                {plan.included_offices} {plan.included_offices === 1 ? 'Office Location' : 'Office Locations'} Included
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminMessagingAPI } from '../../../ClientOnboarding/utils/apiUtils';
-
+import '../../styles/CreateInvoiceModel.css';
 const API_BASE_URL = getApiBaseUrl();
 
 export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
@@ -392,8 +392,8 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ml-20 mt-10" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ml-20 mt-10 invoice-modal-mobile" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
           <h4 className="text-2xl font-bold font-[BasisGrotesquePro]" style={{ color: '#1F2937' }}>Create Invoice</h4>
@@ -687,7 +687,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+          <div className="flex justify-end gap-3 pt-4 border-t invoice-modal-footer" style={{ borderColor: '#E5E7EB' }}>
             <button
               onClick={onClose}
               disabled={loading}

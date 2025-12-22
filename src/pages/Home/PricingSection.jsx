@@ -12,7 +12,24 @@ export default function PricingSection() {
         "http://168.231.121.7/seqwens/api/user/subscriptions/plans/public/"
       );
       const data = await res.json();
-      if (data.success) setPlans(data.data);
+      if (data.success && data.data) {
+        // New structure: data.monthly_plans and data.yearly_plans
+        if (data.data.monthly_plans && data.data.yearly_plans) {
+          const plansData = billingCycle === 'monthly' 
+            ? (data.data.monthly_plans || [])
+            : (data.data.yearly_plans || []);
+          // Filter only active plans
+          const filteredPlans = plansData.filter(plan => plan.is_active !== false);
+          setPlans(filteredPlans);
+        } 
+        // Fallback: old structure with flat array
+        else if (Array.isArray(data.data)) {
+          const filteredPlans = data.data.filter(plan => 
+            plan.billing_cycle === billingCycle && plan.is_active !== false
+          );
+          setPlans(filteredPlans);
+        }
+      }
     } catch (err) {
       console.log("Error:", err);
     }
@@ -20,7 +37,8 @@ export default function PricingSection() {
 
   useEffect(() => {
     fetchPlans();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billingCycle]);
 
   return (
     <section id="pricing" className="py-8 sm:py-12 md:py-16 lg:py-20 px-3 sm:px-4 md:px-6">
@@ -136,15 +154,26 @@ export default function PricingSection() {
                     className={`text-2xl sm:text-3xl md:text-3xl font-extrabold ${index === 0 ? "text-[#FF8A00]" : index === 3 ? "text-[#2C3E50]" : cardText
                       }`}
                   >
-                    ${billingCycle === "monthly" ? plan.monthly_price : plan.yearly_price}
+                    {plan.price_display || (billingCycle === "yearly" 
+                      ? `$${parseFloat(plan.yearly_price || plan.price || 0).toFixed(2)}/year`
+                      : `$${parseFloat(plan.monthly_price || plan.price || 0).toFixed(2)}/month`)}
                   </span>
-                  <span className={`text-sm sm:text-base opacity-80 ml-1 whitespace-nowrap ${cardText}`}>/month</span>
                 </div>
+                {billingCycle === "yearly" && plan.monthly_equivalent && (
+                  <p className={`text-xs opacity-80 mb-2 ${cardText}`}>
+                    ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month
+                  </p>
+                )}
+                {billingCycle === "monthly" && plan.yearly_equivalent && (
+                  <p className={`text-xs opacity-80 mb-2 ${cardText}`}>
+                    ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year
+                  </p>
+                )}
 
                 {/* Discount for yearly */}
-                {billingCycle === "yearly" && plan.discount_percentage_yearly && (
+                {billingCycle === "yearly" && plan.discount_percentage && plan.discount_percentage > 0 && (
                   <p className="text-green-600 font-semibold text-xs sm:text-sm mb-4">
-                    Save {plan.discount_percentage_yearly}%
+                    Save {plan.discount_percentage}%
                   </p>
                 )}
 

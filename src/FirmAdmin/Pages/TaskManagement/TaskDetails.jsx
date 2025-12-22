@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { taskDetailAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import '../../styles/TaskDetails.css';
 
 const TaskDetails = () => {
     const navigate = useNavigate();
@@ -331,10 +332,10 @@ const TaskDetails = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F6F7FF] p-6">
+        <div className="min-h-screen bg-[#F6F7FF] p-6 taskdetails-main-container">
             <div className="mx-auto">
                 {/* Back Button */}
-                <div className="mb-4">
+                <div className="mb-4 taskdetails-back-button">
                     <button
                         onClick={handleBack}
                         className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
@@ -347,24 +348,24 @@ const TaskDetails = () => {
                 </div>
 
                 {/* Header Section */}
-                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 space-y-4 lg:space-y-0">
-                    <div className="flex-1">
-                        <h4 className="text-xl font-bold text-gray-900 mb-3 font-[BasisGrotesquePro]">{transformedTaskData.task}</h4>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getPriorityColor(transformedTaskData.priority)}`}>
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 space-y-4 lg:space-y-0 taskdetails-header">
+                    <div className="flex-1 taskdetails-header-content">
+                        <h4 className="text-xl font-bold text-gray-900 mb-3 font-[BasisGrotesquePro] taskdetails-header-title">{transformedTaskData.task}</h4>
+                        <div className="flex flex-wrap items-center gap-3 taskdetails-header-badges">
+                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] taskdetails-header-badge ${getPriorityColor(transformedTaskData.priority)}`}>
                                 {transformedTaskData.priority}
                             </span>
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getStatusColor(transformedTaskData.status)}`}>
+                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] taskdetails-header-badge ${getStatusColor(transformedTaskData.status)}`}>
                                 {transformedTaskData.status}
                             </span>
-                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Due: {transformedTaskData.dueDate}</span>
+                            <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-header-due">Due: {transformedTaskData.dueDate}</span>
                         </div>
                     </div>
-                    <div className="flex space-x-3">
+                    <div className="flex space-x-3 taskdetails-action-buttons">
                         <button
                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                             disabled={timeTrackingLoading}
-                            className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro] disabled:opacity-50"
+                            className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center font-[BasisGrotesquePro] disabled:opacity-50 taskdetails-action-button"
                         >
                             {timeTrackingStatus?.is_tracking_active ? (
                                 <>
@@ -385,7 +386,7 @@ const TaskDetails = () => {
                         </button>
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro]"
+                            className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center font-[BasisGrotesquePro] taskdetails-action-button"
                         >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -396,12 +397,12 @@ const TaskDetails = () => {
                 </div>
 
                 {/* Top Information Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 taskdetails-info-cards">
                     {/* Assigned To */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
+                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Assigned To</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                            <p className="text-xs text-gray-500 font-[BasisGrotesquePro] taskdetails-info-card-label">Assigned To</p>
+                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M19 21V19C19 17.9391 18.5786 16.9217 17.8284 16.1716C17.0783 15.4214 16.0609 15 15 15H9C7.93913 15 6.92172 15.4214 6.17157 16.1716C5.42143 16.9217 5 17.9391 5 19V21" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -409,13 +410,13 @@ const TaskDetails = () => {
 
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.assignedTo.name}</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.assignedTo.name}</p>
                     </div>
                     {/* Time Spent */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
+                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">Time Spent</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Time Spent</p>
+                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M12 6V12L16 14" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -423,26 +424,26 @@ const TaskDetails = () => {
 
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.timeSpent}</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.timeSpent}</p>
                     </div>
                     {/* Progress */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
+                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">Progress</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Progress</p>
+                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M12 6V12L16 14" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.progress}%</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.progress}%</p>
                     </div>
                     {/* Client */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
+                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-info-card">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">Client</p>
-                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                            <p className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] taskdetails-info-card-label">Client</p>
+                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 taskdetails-info-card-icon">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M8 2V6" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M16 2V6" stroke="#3AD6F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -452,41 +453,41 @@ const TaskDetails = () => {
 
                             </div>
                         </div>
-                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.client}</p>
+                        <p className="text-base font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-info-card-value">{transformedTaskData.client}</p>
                     </div>
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 taskdetails-main-grid">
                     {/* Left Column */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-6 taskdetails-left-column">
                         {/* Task Details Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Task Details</h4>
+                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6 taskdetails-details-section">
+                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] taskdetails-details-title">Task Details</h4>
 
                             <div className="space-y-4">
                                 {/* Description */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Description</label>
-                                    <p className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.description}</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-details-label">Description</label>
+                                    <p className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-details-text">{transformedTaskData.description}</p>
                                 </div>
 
                                 {/* Category and Tags - Same Line */}
-                                <div className="flex flex-col sm:flex-row gap-6">
+                                <div className="flex flex-col sm:flex-row gap-6 taskdetails-details-row">
                                     <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Category</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-details-label">Category</label>
                                         <div>
-                                            <span className="inline-flex px-3 py-1 text-xs font-medium bg-[#E8F0FF] !border border-[#E8F0FF] text-[#3B4A66] rounded-full font-[BasisGrotesquePro]">
+                                            <span className="inline-flex px-3 py-1 text-xs font-medium bg-[#E8F0FF] !border border-[#E8F0FF] text-[#3B4A66] rounded-full font-[BasisGrotesquePro] taskdetails-details-tag">
                                                 {transformedTaskData.category}
                                             </span>
                                         </div>
                                     </div>
 
                                     <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Tags</label>
-                                        <div className="flex flex-wrap gap-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-details-label">Tags</label>
+                                        <div className="flex flex-wrap gap-2 taskdetails-details-tags">
                                             {transformedTaskData.tags.map((tag, index) => (
-                                                <span key={index} className="inline-flex px-3 py-1 text-xs font-medium bg-[#FFFFFF] text-[#3B4A66] !border border-[#E8F0FF] !rounded-full font-[BasisGrotesquePro]">
+                                                <span key={index} className="inline-flex px-3 py-1 text-xs font-medium bg-[#FFFFFF] text-[#3B4A66] !border border-[#E8F0FF] !rounded-full font-[BasisGrotesquePro] taskdetails-details-tag">
                                                     {tag}
                                                 </span>
                                             ))}
@@ -511,25 +512,25 @@ const TaskDetails = () => {
                         </div>
 
                         {/* Task Information Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Task Information</h4>
+                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6 taskdetails-info-section">
+                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] taskdetails-info-section-title">Task Information</h4>
 
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Created:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.created}</span>
+                                <div className="flex justify-between items-center taskdetails-info-row">
+                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Created:</span>
+                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-info-value">{transformedTaskData.created}</span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Assigned By:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.assignedBy}</span>
+                                <div className="flex justify-between items-center taskdetails-info-row">
+                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Assigned By:</span>
+                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-info-value">{transformedTaskData.assignedBy}</span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Due Date:</span>
-                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{transformedTaskData.dueDate}</span>
+                                <div className="flex justify-between items-center taskdetails-info-row">
+                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Due Date:</span>
+                                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro] taskdetails-info-value">{transformedTaskData.dueDate}</span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro]">Priority:</span>
-                                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] ${getPriorityColor(transformedTaskData.priority)}`}>
+                                <div className="flex justify-between items-center taskdetails-info-row">
+                                    <span className="text-sm text-gray-600 font-[BasisGrotesquePro] taskdetails-info-label">Priority:</span>
+                                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full font-[BasisGrotesquePro] taskdetails-info-value ${getPriorityColor(transformedTaskData.priority)}`}>
                                         {transformedTaskData.priority}
                                     </span>
                                 </div>
@@ -538,21 +539,21 @@ const TaskDetails = () => {
                     </div>
 
                     {/* Right Column */}
-                    <div className="space-y-6">
+                    <div className="space-y-6 taskdetails-right-column">
                         {/* Quick Actions Section */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
-                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Quick Actions</h4>
+                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6 taskdetails-quick-actions">
+                            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro] taskdetails-quick-actions-title">Quick Actions</h4>
 
                             <div className="space-y-4">
                                 {/* Status Dropdown */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">Status</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro] taskdetails-status-label">Status</label>
                                     <div className="relative">
                                         <select
                                             value={taskData.status || 'to_do'}
                                             onChange={(e) => handleStatusUpdate(e.target.value)}
                                             disabled={updatingStatus}
-                                            className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer disabled:opacity-50"
+                                            className="w-full appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer disabled:opacity-50 taskdetails-status-select"
                                         >
                                             <option value="to_do">To Do</option>
                                             <option value="pending">Pending</option>
@@ -572,24 +573,24 @@ const TaskDetails = () => {
                                 <div className="space-y-2">
                                     {/* Timer Display */}
                                     {timeTrackingStatus && (
-                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-                                            <div className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1">Total Time</div>
-                                            <div className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
+                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg taskdetails-timer-display">
+                                            <div className="text-xs text-gray-600 font-[BasisGrotesquePro] mb-1 taskdetails-timer-label">Total Time</div>
+                                            <div className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] taskdetails-timer-value">
                                                 {currentTime || timeTrackingStatus.total_time_formatted || '0:00:00'}
                                             </div>
                                             {timeTrackingStatus.is_tracking_active && timeTrackingStatus.active_tracking && (
-                                                <div className="text-xs text-green-600 font-[BasisGrotesquePro] mt-1">
+                                                <div className="text-xs text-green-600 font-[BasisGrotesquePro] mt-1 taskdetails-timer-status">
                                                     Active • Started by {timeTrackingStatus.active_tracking.started_by}
                                                 </div>
                                             )}
                                         </div>
                                     )}
                                     {/* Start and Pause - Same Line */}
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 taskdetails-timer-buttons">
                                         <button
                                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                                             disabled={timeTrackingLoading}
-                                            className="flex-1 px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50"
+                                            className="flex-1 px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50 taskdetails-timer-button"
                                         >
                                             {timeTrackingStatus?.is_tracking_active ? (
                                                 <>
@@ -613,7 +614,7 @@ const TaskDetails = () => {
                                     <button
                                         onClick={handleResetTimer}
                                         disabled={timeTrackingLoading || !timeTrackingStatus || timeTrackingStatus.total_sessions === 0}
-                                        className="w-full px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50"
+                                        className="w-full px-3 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center font-[BasisGrotesquePro] text-sm disabled:opacity-50 taskdetails-timer-button"
                                     >
                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -661,11 +662,11 @@ const TaskDetails = () => {
             {/* Edit Task Modal */}
             {showEditModal && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center  mt-20 ml-[300px]"
+                    className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center taskdetails-edit-modal"
                     onClick={() => setShowEditModal(false)}
                 >
                     <div
-                        className="bg-white !rounded-lg shadow-xl w-full max-w-4xl"
+                        className="bg-white !rounded-lg shadow-xl w-full max-w-4xl taskdetails-edit-modal-content"
                         style={{
                             borderRadius: '12px',
                             maxHeight: '75vh',
@@ -675,7 +676,7 @@ const TaskDetails = () => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center p-3 border-b border-[#E8F0FF]">
+                        <div className="flex justify-between items-center p-3 border-b border-[#E8F0FF] taskdetails-edit-modal-header">
                             <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Edit Task</h4>
                             <button
                                 onClick={() => setShowEditModal(false)}
@@ -690,34 +691,34 @@ const TaskDetails = () => {
                         </div>
 
                         {/* Modal Content */}
-                        <div className="p-3 overflow-y-auto flex-1" style={{ maxHeight: 'calc(75vh - 100px)' }}>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="p-3 overflow-y-auto flex-1 taskdetails-edit-modal-body" style={{ maxHeight: 'calc(75vh - 100px)' }}>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 taskdetails-edit-modal-grid">
                                 {/* Left Column - Overview */}
-                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 space-y-3 w-full">
+                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 space-y-3 w-full taskdetails-edit-modal-column">
                                     <h6 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">Overview</h6>
 
                                     {/* Title */}
                                     <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Title</label>
+                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro] taskdetails-edit-modal-label">Title</label>
                                         <input
                                             type="text"
                                             defaultValue="Client Onboarding"
-                                            className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
+                                            className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm taskdetails-edit-modal-input"
                                         />
                                     </div>
 
                                     {/* Description */}
                                     <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Description</label>
+                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro] taskdetails-edit-modal-label">Description</label>
                                         <textarea
                                             rows={2}
                                             defaultValue="Onboard a new client with required documents and steps"
-                                            className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
+                                            className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm taskdetails-edit-modal-textarea"
                                         />
                                     </div>
 
                                     {/* Status and Priority - Same Line */}
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-3 taskdetails-edit-modal-grid-2">
                                         {/* Status */}
                                         <div>
                                             <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Status</label>
@@ -756,16 +757,16 @@ const TaskDetails = () => {
 
                                     {/* Assignees */}
                                     <div>
-                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Assignees</label>
-                                        <div className="flex flex-wrap gap-2">
-                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro]">Alex Rivera</span>
-                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-[#F56D2D] text-white rounded-full font-[BasisGrotesquePro]">Jamie Chen</span>
-                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro]">Morgan Patel</span>
+                                        <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro] taskdetails-edit-modal-label">Assignees</label>
+                                        <div className="flex flex-wrap gap-2 taskdetails-edit-modal-tags">
+                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] taskdetails-edit-modal-tag">Alex Rivera</span>
+                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-[#F56D2D] text-white rounded-full font-[BasisGrotesquePro] taskdetails-edit-modal-tag">Jamie Chen</span>
+                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-white text-[#3B4A66] !border border-[#E8F0FF] rounded-full font-[BasisGrotesquePro] taskdetails-edit-modal-tag">Morgan Patel</span>
                                         </div>
                                     </div>
 
                                     {/* Client and Office - Same Line */}
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-3 taskdetails-edit-modal-grid-2">
                                         {/* Client */}
                                         <div>
                                             <label className="block text-base font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Client</label>
@@ -835,7 +836,7 @@ const TaskDetails = () => {
                                 </div>
 
                                 {/* Right Column - Checklist & Attachments */}
-                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 space-y-3 w-full">
+                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 space-y-3 w-full taskdetails-edit-modal-column">
                                     <h6 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">Checklist & Attachments</h6>
 
                                     {/* Checklist */}
@@ -936,19 +937,19 @@ const TaskDetails = () => {
 
                             {/* Comments & Mentions Section */}
                             <div className="mt-4">
-                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4">
-                                    <h6 className="text-base font-semibold text-gray-900 mb-3 font-[BasisGrotesquePro]">Comments & Mentions</h6>
+                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 taskdetails-comments-section">
+                                    <h6 className="text-base font-semibold text-gray-900 mb-3 font-[BasisGrotesquePro] taskdetails-comments-title">Comments & Mentions</h6>
                                     <textarea
                                         rows={3}
                                         placeholder="Write a comment. Use @Name to mention staff."
-                                        className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm mb-3"
+                                        className="w-full px-3 py-2 bg-white !border border-[#E8F0FF] !rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm mb-3 taskdetails-comments-textarea"
                                     />
-                                    <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-start justify-between mb-2 taskdetails-comments-info">
                                         <div className="flex flex-col gap-2">
                                             <p className="text-xs text-gray-700 font-[BasisGrotesquePro]">Client visible: No</p>
                                             <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">No comments yet</p>
                                         </div>
-                                        <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] text-xs font-medium">
+                                        <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] text-xs font-medium taskdetails-comments-button">
                                             Add Item
                                         </button>
                                     </div>
@@ -957,14 +958,14 @@ const TaskDetails = () => {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex justify-between items-center gap-2 p-3 border-t border-[#E8F0FF]">
+                        <div className="flex justify-between items-center gap-2 p-3 border-t border-[#E8F0FF] taskdetails-edit-modal-footer">
                             <button
                                 onClick={() => setShowEditModal(false)}
                                 className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg hover:bg-[#DC2626] transition-colors font-[BasisGrotesquePro] text-sm"
                             >
                                 Cancel
                             </button>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 taskdetails-edit-modal-footer-buttons">
                                 <button
                                     onClick={() => setShowEditModal(false)}
                                     className="px-4 py-2 bg-white text-gray-700 !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm"

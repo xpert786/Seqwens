@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { maintenanceModeAPI, handleAPIError } from '../utils/apiUtils';
 import { getStorage, clearUserData } from '../utils/userUtils';
-import { getLoginUrl } from '../utils/urlUtils';
 
 const MaintenanceMode = () => {
   const navigate = useNavigate();
@@ -42,13 +41,8 @@ const MaintenanceMode = () => {
         // Clear user data
         clearUserData();
         
-        // Redirect to login page
-        const loginUrl = getLoginUrl();
-        if (loginUrl.includes('168.231.121.7')) {
-          window.location.href = loginUrl;
-        } else {
-          navigate('/login', { replace: true });
-        }
+        // Redirect to login page using React Router (respects basename)
+        navigate('/seqwens-frontend/login', { replace: true });
       }
     };
 

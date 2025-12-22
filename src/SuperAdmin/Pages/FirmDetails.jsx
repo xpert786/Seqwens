@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
-import { setTokens } from '../../ClientOnboarding/utils/userUtils';
+import { setTokens, clearUserData } from '../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
+import FirmAddonsTab from './FirmDetails/FirmAddonsTab';
+import '../style/FirmDetails.css';
 
 const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) {
@@ -240,6 +242,7 @@ export default function FirmDetails() {
     const tabs = useMemo(() => [
         { id: 'Overview', label: 'Overview' },
         { id: 'Billing', label: 'Billing' },
+        { id: 'Addons', label: 'Addons' },
         { id: 'Settings', label: 'Settings' }
     ], []);
 
@@ -279,7 +282,7 @@ export default function FirmDetails() {
         return {
             plan: firmDetails?.subscription_plan
                 ? firmDetails.subscription_plan.charAt(0).toUpperCase() + firmDetails.subscription_plan.slice(1)
-                : 'Professional',
+                : 'None',
             monthlyCost: formatCurrency(firmDetails?.monthly_fee ?? 0),
             nextBilling: formatDate(firmDetails?.next_billing_date) || 'Not available',
             status: firmDetails?.status
@@ -393,13 +396,23 @@ export default function FirmDetails() {
             if (response.success && response.data) {
                 const { access_token, refresh_token, user, firm } = response.data;
                 
-                // Store tokens and user data in current session (this will log out superadmin and log in as firm admin)
+                // STEP 1: Completely clear all superadmin session data using utility function
+                clearUserData();
+                
+                // Also clear any additional superadmin-specific data
+                localStorage.removeItem('firmLoginData');
+                sessionStorage.removeItem('firmLoginData');
+                
+                // STEP 2: Set new firm admin tokens and user data
+                // Use setTokens to properly set tokens
                 setTokens(access_token, refresh_token, true);
+                
+                // Set user data in both storages for consistency
                 localStorage.setItem('userData', JSON.stringify(user));
                 localStorage.setItem('userType', user.user_type || 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('rememberMe', 'true');
                 
-                // Also set in sessionStorage
                 sessionStorage.setItem('accessToken', access_token);
                 sessionStorage.setItem('refreshToken', refresh_token);
                 sessionStorage.setItem('userData', JSON.stringify(user));
@@ -412,10 +425,11 @@ export default function FirmDetails() {
                     autoClose: 2000,
                 });
 
-                // Navigate to firm admin dashboard in current tab
+                // STEP 3: Navigate to firm admin dashboard with a small delay to ensure state is cleared
+                // Use window.location.href for a hard navigation to ensure clean state and prevent loops
                 setTimeout(() => {
-                    navigate('/firmadmin');
-                }, 500);
+                    window.location.href = '/firmadmin';
+                }, 300);
             } else {
                 throw new Error(response.message || 'Failed to generate login credentials');
             }
@@ -425,7 +439,6 @@ export default function FirmDetails() {
                 position: "top-right",
                 autoClose: 3000,
             });
-        } finally {
             setLoggingIn(false);
         }
     };
@@ -458,16 +471,16 @@ export default function FirmDetails() {
     ];
 
     return (
-        <div className="min-h-screen bg-[rgb(243,247,255)] px-4 py-6 md:px-6">
-            <div className="mx-auto flex w-full flex-col gap-6">
-                <div className="flex flex-col items-start justify-between gap-3 rounded-2xl px-6 py-3 sm:flex-row sm:items-center">
+        <div className="min-h-screen bg-[rgb(243,247,255)] lg:px-4 sm:px-1 lg:py-6 md:py-4 sm:py-2 md:px-4 firmdetails-page">
+            <div className="mx-auto flex w-full flex-col gap-6 firmdetails-container">
+                <div className="flex flex-col items-start justify-between gap-3 rounded-2xl px-6 py-3 sm:flex-row sm:items-center firmdetails-header">
                     <div className="space-y-1">
                         <h3 className="text-3xl font-bold text-gray-900">{firmName || 'Firm Details'}</h3>
                         <p className="text-sm text-gray-500">Manage all firms registered on the platform</p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 firmdetails-actions">
                         
                         <button
                             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -550,10 +563,10 @@ export default function FirmDetails() {
                             ← Back to Firm Management
                         </button>
 
-                        <div className="rounded-lg bg-white px-4 py-2">
-                            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="rounded-lg bg-white px-4 py-2 firmdetails-tabs-card">
+                            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between firmdetails-tabs-row">
                                 <div className="space-y-4">
-                                    <div className="flex flex-wrap gap-2 p-2">
+                                    <div className="flex flex-wrap gap-2 p-2 firmdetails-tabs">
                                         {tabs.map((tab) => {
                                             const isActive = activeTab === tab.id;
                                             return (
@@ -578,7 +591,7 @@ export default function FirmDetails() {
 
                         {activeTab === 'Overview' && (
                             <>
-                                <div className="grid gap-4 md:grid-cols-3">
+                                <div className="grid gap-4 md:grid-cols-3 firmdetails-overview-metrics">
                                     {statCards.map(({ id, label, value, subtitle, icon }) => (
                                         <div
                                             key={id}
@@ -598,7 +611,7 @@ export default function FirmDetails() {
                                     ))}
                                 </div>
 
-                                <div className="grid gap-4 lg:grid-cols-2 xl:gap-6">
+                                <div className="grid gap-4 lg:grid-cols-2 xl:gap-6 firmdetails-overview-grid">
                                     <div className="rounded-xl bg-white/90 p-6 ">
                                         <h5 className="text-lg font-medium text-grey-600">Firm Information</h5>
                                         <div className="mt-6 space-y-4 text-sm">
@@ -613,7 +626,7 @@ export default function FirmDetails() {
                                                     value: firmDetails?.subscription_plan
                                                         ? firmDetails.subscription_plan.charAt(0).toUpperCase() +
                                                         firmDetails.subscription_plan.slice(1)
-                                                        : 'Not specified'
+                                                        : 'None'
                                                 }
                                             ].map(({ label, value }) => (
                                                 <div
@@ -689,9 +702,16 @@ export default function FirmDetails() {
                             />
                         )}
 
+                        {activeTab === 'Addons' && (
+                            <FirmAddonsTab 
+                                firmId={firmId} 
+                                firmName={firmDetails?.name || firmDetails?.firm_name || 'Firm'}
+                            />
+                        )}
+
                         {activeTab === 'Settings' && (
                             <div className="rounded-xl bg-white/95 p-6">
-                                <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-start justify-between gap-4 firmdetails-settings-header">
                                     <div>
                                         <h5 className="text-xl font-semibold text-[#1E293B]">Firm Settings</h5>
                                         <p className="mt-1 text-sm text-[#64748B]">
@@ -737,7 +757,7 @@ export default function FirmDetails() {
                                             </div>
                                         </div>
 
-                                        <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="grid gap-4 md:grid-cols-2 firmdetails-settings-row">
                                             <div className="flex flex-col gap-2">
                                                 <label className="text-sm font-medium text-[#475569]">Phone Number</label>
                                                 <input
@@ -767,7 +787,7 @@ export default function FirmDetails() {
                                             </div>
                                         </div>
 
-                                        <div className="grid gap-4 md:grid-cols-4">
+                                        <div className="grid gap-4 md:grid-cols-4 firmdetails-settings-row">
                                             <div className="flex flex-col gap-2">
                                                 <label className="text-sm font-medium text-[#475569]">City</label>
                                                 <input
@@ -806,7 +826,7 @@ export default function FirmDetails() {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end firmdetails-settings-actions">
                                             <button
                                                 type="button"
                                                 onClick={handleResetSettingsForm}

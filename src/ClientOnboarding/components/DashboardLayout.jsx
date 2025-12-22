@@ -65,7 +65,7 @@ export default function DashboardLayout() {
           className="sidebar-overlay"
           onClick={() => setIsSidebarOpen(false)}
           style={{
-            position: 'fixed',
+            position: 'absolute',
             top: '60px',
             left: 0,
             right: 0,

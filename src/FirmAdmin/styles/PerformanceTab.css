@@ -1,0 +1,142 @@
+/* Performance Tab Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .performance-main-container {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Header section - stack vertically */
+  .performance-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+    align-items: flex-start !important;
+  }
+
+  .performance-header-content {
+    width: 100% !important;
+  }
+
+  .performance-header-title {
+    font-size: 1rem !important;
+  }
+
+  .performance-header-subtitle {
+    font-size: 0.8rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Period selector */
+  .performance-period-selector {
+    width: 100% !important;
+  }
+
+  .performance-period-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  }
+
+  /* Chart Container - stack vertically */
+  .performance-chart-container {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  /* Chart Area */
+  .performance-chart-area {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* ResponsiveContainer wrapper */
+  .performance-chart-area > div {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Chart height adjustment */
+  .performance-chart-area .recharts-responsive-container {
+    height: 240px !important;
+  }
+
+  /* Legend - full width */
+  .performance-legend {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+  }
+
+  .performance-legend-item {
+    font-size: 0.8rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .performance-legend-color {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  .performance-legend-text {
+    font-size: 0.8rem !important;
+  }
+
+  /* Detailed Metrics Section */
+  .performance-metrics-section {
+    margin-top: 1.5rem !important;
+    padding-top: 1rem !important;
+  }
+
+  .performance-metrics-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Metrics Grid - single column */
+  .performance-metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .performance-metric-card {
+    padding: 0.875rem !important;
+  }
+
+  .performance-metric-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .performance-metric-value {
+    font-size: 1.25rem !important;
+  }
+
+  .performance-metric-total {
+    font-size: 0.8rem !important;
+  }
+
+  .performance-metric-details {
+    font-size: 0.7rem !important;
+    margin-top: 0.5rem !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .performance-metric-details span {
+    font-size: 0.7rem !important;
+  }
+
+  .performance-metric-rate {
+    font-size: 0.7rem !important;
+    margin-top: 0.5rem !important;
+  }
+}
+

@@ -91,6 +91,7 @@ export const FirmPortalColorsProvider = ({ children }) => {
   };
 
   // Apply logo and favicon to document head
+  // Note: Logo is always Seqwens logo and should not be replaced
   const applyLogoAndFavicon = (logoUrl, faviconUrl) => {
     // Update favicon
     let faviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");

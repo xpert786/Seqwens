@@ -1,0 +1,361 @@
+/* Task Details Responsive Styles */
+
+/* Responsive for screens below 767px */
+@media (max-width: 767px) {
+  /* Main container */
+  .taskdetails-main-container {
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Back Button */
+  .taskdetails-back-button {
+    margin-bottom: 1rem !important;
+  }
+
+  .taskdetails-back-button button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Header Section - stack vertically */
+  .taskdetails-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  .taskdetails-header-content {
+    width: 100% !important;
+  }
+
+  .taskdetails-header-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .taskdetails-header-badges {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  .taskdetails-header-badge {
+    font-size: 0.7rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+
+  .taskdetails-header-due {
+    font-size: 0.8rem !important;
+  }
+
+  /* Action Buttons Container */
+  .taskdetails-action-buttons {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Action Buttons - full width */
+  .taskdetails-action-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .taskdetails-action-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Top Information Cards - single column */
+  .taskdetails-info-cards {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .taskdetails-info-card {
+    padding: 0.875rem !important;
+  }
+
+  .taskdetails-info-card-label {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .taskdetails-info-card-value {
+    font-size: 0.9rem !important;
+  }
+
+  .taskdetails-info-card-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Main Content Grid - single column */
+  .taskdetails-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Left Column */
+  .taskdetails-left-column {
+    width: 100% !important;
+  }
+
+  /* Task Details Section */
+  .taskdetails-details-section {
+    padding: 1rem !important;
+  }
+
+  .taskdetails-details-title {
+    font-size: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .taskdetails-details-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .taskdetails-details-text {
+    font-size: 0.875rem !important;
+  }
+
+  .taskdetails-details-row {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .taskdetails-details-tags {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .taskdetails-details-tag {
+    font-size: 0.7rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+
+  /* Task Information Section */
+  .taskdetails-info-section {
+    padding: 1rem !important;
+  }
+
+  .taskdetails-info-section-title {
+    font-size: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .taskdetails-info-row {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+    padding: 0.75rem 0 !important;
+  }
+
+  .taskdetails-info-label {
+    font-size: 0.8rem !important;
+  }
+
+  .taskdetails-info-value {
+    font-size: 0.875rem !important;
+  }
+
+  /* Right Column */
+  .taskdetails-right-column {
+    width: 100% !important;
+  }
+
+  /* Quick Actions Section */
+  .taskdetails-quick-actions {
+    padding: 1rem !important;
+  }
+
+  .taskdetails-quick-actions-title {
+    font-size: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .taskdetails-status-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .taskdetails-status-select {
+    width: 100% !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  }
+
+  /* Timer Display */
+  .taskdetails-timer-display {
+    padding: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .taskdetails-timer-label {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .taskdetails-timer-value {
+    font-size: 1rem !important;
+  }
+
+  .taskdetails-timer-status {
+    font-size: 0.7rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Timer Buttons */
+  .taskdetails-timer-buttons {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .taskdetails-timer-button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .taskdetails-timer-button svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Edit Modal */
+  .taskdetails-edit-modal {
+    margin: 0 !important;
+    padding: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+  }
+
+  .taskdetails-edit-modal-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: calc(100vh - 2rem) !important;
+    border-radius: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  .taskdetails-edit-modal-header {
+    padding: 1rem !important;
+  }
+
+  .taskdetails-edit-modal-header h4 {
+    font-size: 1rem !important;
+  }
+
+  .taskdetails-edit-modal-body {
+    padding: 1rem !important;
+    max-height: calc(100vh - 200px) !important;
+  }
+
+  .taskdetails-edit-modal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .taskdetails-edit-modal-column {
+    width: 100% !important;
+    padding: 0.875rem !important;
+  }
+
+  .taskdetails-edit-modal-column h6 {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .taskdetails-edit-modal-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .taskdetails-edit-modal-input,
+  .taskdetails-edit-modal-textarea,
+  .taskdetails-edit-modal-select {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .taskdetails-edit-modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .taskdetails-edit-modal-tags {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .taskdetails-edit-modal-tag {
+    font-size: 0.7rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+
+  .taskdetails-edit-modal-footer {
+    padding: 1rem !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .taskdetails-edit-modal-footer-buttons {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .taskdetails-edit-modal-footer button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Comments Section */
+  .taskdetails-comments-section {
+    padding: 0.875rem !important;
+    margin-top: 1rem !important;
+  }
+
+  .taskdetails-comments-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .taskdetails-comments-textarea {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .taskdetails-comments-info {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  .taskdetails-comments-info p {
+    font-size: 0.7rem !important;
+  }
+
+  .taskdetails-comments-button {
+    width: 100% !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+

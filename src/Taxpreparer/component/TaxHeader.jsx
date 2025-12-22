@@ -327,7 +327,7 @@ export default function Topbar({
                   <button
                     ref={profileButtonRef}
                     type="button"
-                    className="d-flex align-items-center gap-2 topbar-user border-0 bg-transparent p-0"
+                    className="d-flex align-items-center lg:gap-2 md:gap-1 sm:gap-0 topbar-user border-0 bg-transparent p-0"
                     onClick={handleProfileButtonClick}
                     onKeyDown={handleProfileButtonKeyDown}
                     aria-label={`User menu for ${profileName}`}

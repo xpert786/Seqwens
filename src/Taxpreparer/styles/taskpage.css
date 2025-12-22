@@ -196,6 +196,72 @@
       
       .task-title { font-size: 13px; }
       .task-column-title { font-size: 15px; }
+
+        /* Modal alignment */
+        .task-modal-mobile {
+          align-items: flex-start !important;
+          padding: 12px !important;
+        }
+      
+        /* Full-width modal */
+        .task-modal-box {
+          width: 100% !important;
+          max-width: 100% !important;
+          max-height: 100vh !important;
+          border-radius: 12px !important;
+        }
+      
+        /* Header spacing */
+        .task-modal-box > div:first-child {
+          padding: 16px !important;
+        }
+      
+        /* Form padding */
+        .task-modal-box > div:nth-child(2) {
+          padding: 16px !important;
+        }
+      
+        /* Stack priority / due date / hours */
+        .task-modal-row {
+          flex-direction: column !important;
+          gap: 12px !important;
+        }
+      
+        /* Inputs tap-friendly */
+        .task-modal-box input,
+        .task-modal-box select,
+        .task-modal-box textarea {
+          font-size: 14px;
+          min-height: 44px;
+        }
+      
+        /* Client chips wrap cleanly */
+        .task-modal-box span {
+          max-width: 100%;
+          word-break: break-word;
+        }
+      
+        /* Dropdowns stay inside viewport */
+        .task-modal-box [style*="position: absolute"] {
+          max-height: 220px !important;
+        }
+      
+        /* Footer buttons stack */
+        .task-modal-footer {
+          flex-direction: column !important;
+          gap: 10px !important;
+        }
+      
+        .task-modal-footer button {
+          width: 100%;
+        }
+      
+        /* Sticky footer safe area */
+        .task-modal-footer {
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+      
+      
   }
   
   /* Small Mobile Screens (max-width: 480px) */
