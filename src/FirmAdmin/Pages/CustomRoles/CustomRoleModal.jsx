@@ -1,22 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 
-// Permission groups configuration
-const PERMISSION_GROUPS = [
-  { value: 'client', label: 'Client', description: 'Manage clients - view, create, edit, assign clients' },
-  { value: 'todo', label: 'Todo', description: 'Manage to-dos - create, view, edit, delete tasks' },
-  { value: 'appointment', label: 'Appointment', description: 'Manage appointments - request, view, delete appointments' },
-  { value: 'document', label: 'Document', description: 'Manage documents - request, view, delete documents' },
-  { value: 'esign', label: 'E-Sign', description: 'Manage e-signatures - create e-sign requests, manage signatures' },
-  { value: 'messages', label: 'Messages', description: 'Manage messages - send, view, manage conversations' },
-  { value: 'full_control', label: 'Full Control', description: 'All permissions - grants access to everything (firm admin level)' }
+// Permission categories mapping - same as Tax Preparer Permissions
+const PERMISSION_CATEGORIES = {
+  'Client Access': [
+    'view_assigned_clients_only',
+    'view_all_firm_clients'
+  ],
+  'Client Management': [
+    'create_clients',
+    'edit_client_data'
+  ],
+  'Document Management': [
+    'upload_documents',
+    'download_documents',
+    'delete_documents'
+  ],
+  'Returns & Filing': [
+    'view_returns'
+  ],
+  'E-Signatures': [
+    'initiate_esignature',
+    'track_esignature'
+  ],
+  'Communication': [
+    'send_messages',
+    'receive_messages'
+  ],
+  'Billing': [
+    'create_invoices'
+  ],
+  'Reports & Analytics': [
+    'access_analytics',
+    'export_reports'
+  ],
+  'Team Management': [
+    'manage_team'
+  ]
+};
+
+// All available permissions with labels
+const ALL_PERMISSIONS = [
+  { code: 'view_assigned_clients_only', label: 'View assigned clients only' },
+  { code: 'view_all_firm_clients', label: 'View all firm clients' },
+  { code: 'create_clients', label: 'Create new clients' },
+  { code: 'edit_client_data', label: 'Edit client personal and tax data' },
+  { code: 'upload_documents', label: 'Upload client documents' },
+  { code: 'download_documents', label: 'Download client documents' },
+  { code: 'delete_documents', label: 'Delete client documents' },
+  { code: 'view_returns', label: 'View completed returns and filing status' },
+  { code: 'initiate_esignature', label: 'Initiate e-signature requests' },
+  { code: 'track_esignature', label: 'Track e-signature requests' },
+  { code: 'send_messages', label: 'Send client communications (messages)' },
+  { code: 'receive_messages', label: 'Receive client communications (messages)' },
+  { code: 'create_invoices', label: 'Create invoices' },
+  { code: 'access_analytics', label: 'Access reporting and analytics' },
+  { code: 'export_reports', label: 'Export client or firm reports' },
+  { code: 'manage_team', label: 'Invite, deactivate, or manage other team members' }
 ];
 
 export default function CustomRoleModal({ show, onClose, onSave, role = null }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    permission_groups: [],
+    permissions: [],
     is_active: true
   });
   const [errors, setErrors] = useState({});
@@ -24,17 +71,19 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
 
   useEffect(() => {
     if (role) {
+      // Handle both old format (permission_groups) and new format (permissions)
+      const permissions = role.permissions || [];
       setFormData({
         name: role.name || '',
         description: role.description || '',
-        permission_groups: role.permission_groups || [],
+        permissions: permissions,
         is_active: role.is_active !== undefined ? role.is_active : true
       });
     } else {
       setFormData({
         name: '',
         description: '',
-        permission_groups: [],
+        permissions: [],
         is_active: true
       });
     }
@@ -57,40 +106,92 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     }
   };
 
-  const handlePermissionGroupChange = (groupValue, checked) => {
+  const handlePermissionToggle = (code) => {
     setFormData(prev => {
-      let newGroups = [...prev.permission_groups];
+      let newPermissions = [...prev.permissions];
       
-      if (groupValue === 'full_control') {
-        // If Full Control is checked, clear all others
-        if (checked) {
-          newGroups = ['full_control'];
+      // Handle mutual exclusivity for view permissions
+      if (code === 'view_assigned_clients_only') {
+        if (newPermissions.includes('view_all_firm_clients')) {
+          newPermissions = newPermissions.filter(p => p !== 'view_all_firm_clients');
+        }
+        if (newPermissions.includes(code)) {
+          newPermissions = newPermissions.filter(p => p !== code);
         } else {
-          newGroups = newGroups.filter(g => g !== 'full_control');
+          newPermissions.push(code);
+        }
+      } else if (code === 'view_all_firm_clients') {
+        if (newPermissions.includes('view_assigned_clients_only')) {
+          newPermissions = newPermissions.filter(p => p !== 'view_assigned_clients_only');
+        }
+        if (newPermissions.includes(code)) {
+          newPermissions = newPermissions.filter(p => p !== code);
+        } else {
+          newPermissions.push(code);
         }
       } else {
-        // If any other group is checked, remove full_control
-        if (checked) {
-          newGroups = newGroups.filter(g => g !== 'full_control');
-          if (!newGroups.includes(groupValue)) {
-            newGroups.push(groupValue);
-          }
+        // Regular toggle
+        if (newPermissions.includes(code)) {
+          newPermissions = newPermissions.filter(p => p !== code);
         } else {
-          newGroups = newGroups.filter(g => g !== groupValue);
+          newPermissions.push(code);
         }
       }
       
-      return { ...prev, permission_groups: newGroups };
+      return { ...prev, permissions: newPermissions };
     });
     
-    // Clear permission groups error
-    if (errors.permission_groups) {
+    // Clear permissions error
+    if (errors.permissions) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        delete newErrors.permission_groups;
+        delete newErrors.permissions;
         return newErrors;
       });
     }
+  };
+
+  const handleCategoryToggle = (categoryPermissions, allSelected) => {
+    if (allSelected) {
+      // Deselect all in category
+      setFormData(prev => ({
+        ...prev,
+        permissions: prev.permissions.filter(p => !categoryPermissions.includes(p))
+      }));
+    } else {
+      // Select all in category (handle mutual exclusivity)
+      setFormData(prev => {
+        let updated = [...prev.permissions];
+        categoryPermissions.forEach(code => {
+          if (!updated.includes(code)) {
+            // Handle mutual exclusivity for view permissions
+            if (code === 'view_assigned_clients_only' && updated.includes('view_all_firm_clients')) {
+              updated = updated.filter(p => p !== 'view_all_firm_clients');
+            }
+            if (code === 'view_all_firm_clients' && updated.includes('view_assigned_clients_only')) {
+              updated = updated.filter(p => p !== 'view_assigned_clients_only');
+            }
+            updated.push(code);
+          }
+        });
+        return { ...prev, permissions: updated };
+      });
+    }
+  };
+
+  const getPermissionsByCategory = (category) => {
+    const categoryCodes = PERMISSION_CATEGORIES[category] || [];
+    return ALL_PERMISSIONS.filter(p => categoryCodes.includes(p.code));
+  };
+
+  const isCategoryAllSelected = (category) => {
+    const categoryCodes = PERMISSION_CATEGORIES[category] || [];
+    return categoryCodes.length > 0 && categoryCodes.every(code => formData.permissions.includes(code));
+  };
+
+  const isCategorySomeSelected = (category) => {
+    const categoryCodes = PERMISSION_CATEGORIES[category] || [];
+    return categoryCodes.some(code => formData.permissions.includes(code));
   };
 
   const validate = () => {
@@ -101,8 +202,8 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     if (formData.name.trim().length > 100) {
       newErrors.name = 'Role name must be 100 characters or less';
     }
-    if (formData.permission_groups.length === 0) {
-      newErrors.permission_groups = 'At least one permission group is required';
+    if (formData.permissions.length === 0) {
+      newErrors.permissions = 'At least one permission is required';
     }
     return newErrors;
   };
@@ -118,9 +219,9 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     setSaving(true);
     try {
       if (role) {
-        await onSave(formData.name.trim(), formData.description.trim(), formData.permission_groups, formData.is_active);
+        await onSave(formData.name.trim(), formData.description.trim(), formData.permissions, formData.is_active);
       } else {
-        await onSave(formData.name.trim(), formData.description.trim(), formData.permission_groups);
+        await onSave(formData.name.trim(), formData.description.trim(), formData.permissions);
       }
     } finally {
       setSaving(false);
@@ -131,61 +232,40 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 d-flex align-items-center justify-content-center z-50 p-3"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={onClose}
-      style={{ zIndex: 1050 }}
+      style={{ zIndex: 9999 }}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-100"
-        style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}
+        className="bg-white rounded-xl shadow-lg w-full max-w-4xl relative max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          className="d-flex justify-content-between align-items-center p-4 border-bottom"
-          style={{ borderColor: '#E5E7EB' }}
-        >
-          <h4
-            className="mb-0"
-            style={{
-              color: '#1F2A55',
-              fontSize: '20px',
-              fontWeight: '600',
-              fontFamily: 'BasisGrotesquePro'
-            }}
-          >
-            {role ? 'Edit Custom Role' : 'Create Custom Role'}
-          </h4>
+        <div className="flex justify-between items-start p-6 border-b border-[#E8F0FF]">
+          <div>
+            <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
+              {role ? 'Edit Custom Role' : 'Create Custom Role'}
+            </h4>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+              Configure role permissions for staff members
+            </p>
+          </div>
           <button
             onClick={onClose}
             disabled={saving}
-            className="border-0 bg-transparent p-0"
-            style={{
-              color: '#6B7280',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              fontSize: '24px',
-              lineHeight: '1'
-            }}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors disabled:opacity-50"
           >
-            <FiX size={24} />
+            <FiX size={20} />
           </button>
         </div>
 
         {/* Body */}
         <form onSubmit={handleSubmit}>
-          <div className="p-4">
+          <div className="p-6">
             {/* Role Name */}
             <div className="mb-4">
-              <label
-                className="d-block mb-2"
-                style={{
-                  color: '#3B4A66',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  fontFamily: 'BasisGrotesquePro'
-                }}
-              >
-                Role Name <span style={{ color: '#DC2626' }}>*</span>
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+                Role Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -193,41 +273,28 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
                 value={formData.name}
                 onChange={handleChange}
                 disabled={saving}
-                className="w-100 px-3 py-2 rounded-lg border"
+                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm disabled:bg-gray-100"
                 style={{
-                  borderColor: errors.name ? '#DC2626' : '#E8F0FF',
-                  fontSize: '14px',
-                  fontFamily: 'BasisGrotesquePro',
-                  color: '#1F2A55'
+                  borderColor: errors.name ? '#DC2626' : '#E8F0FF'
                 }}
                 placeholder="e.g., Senior Tax Preparer"
                 maxLength={100}
               />
-              <div className="d-flex justify-content-between align-items-center mt-1">
+              <div className="flex justify-between items-center mt-1">
                 {errors.name ? (
-                  <p className="mb-0" style={{ color: '#DC2626', fontSize: '12px' }}>
-                  {errors.name}
-                </p>
+                  <p className="text-red-600 text-xs font-[BasisGrotesquePro]">{errors.name}</p>
                 ) : (
                   <div></div>
                 )}
-                <p className="mb-0" style={{ color: '#9CA3AF', fontSize: '12px' }}>
+                <p className="text-gray-500 text-xs font-[BasisGrotesquePro]">
                   {formData.name.length}/100
                 </p>
               </div>
             </div>
 
             {/* Description */}
-            <div className="mb-4">
-              <label
-                className="d-block mb-2"
-                style={{
-                  color: '#3B4A66',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  fontFamily: 'BasisGrotesquePro'
-                }}
-              >
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
                 Description
               </label>
               <textarea
@@ -235,134 +302,101 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
                 value={formData.description}
                 onChange={handleChange}
                 disabled={saving}
-                rows={4}
-                className="w-100 px-3 py-2 rounded-lg border"
-                style={{
-                  borderColor: '#E8F0FF',
-                  fontSize: '14px',
-                  fontFamily: 'BasisGrotesquePro',
-                  color: '#1F2A55',
-                  resize: 'vertical'
-                }}
+                rows={3}
+                className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm disabled:bg-gray-100 resize-vertical"
                 placeholder="Describe the role and its responsibilities..."
               />
             </div>
 
-            {/* Permission Groups */}
+            {/* Permissions */}
             <div className="mb-4">
-              <label
-                className="d-block mb-2"
-                style={{
-                  color: '#3B4A66',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  fontFamily: 'BasisGrotesquePro'
-                }}
-              >
-                Permission Groups <span style={{ color: '#DC2626' }}>*</span>
+              <label className="block text-sm font-medium text-gray-700 mb-3 font-[BasisGrotesquePro]">
+                Permissions <span className="text-red-500">*</span>
               </label>
               <div
-                className="p-3 rounded-lg border"
+                className="p-4 rounded-lg border"
                 style={{
-                  borderColor: errors.permission_groups ? '#DC2626' : '#E8F0FF',
+                  borderColor: errors.permissions ? '#DC2626' : '#E8F0FF',
                   backgroundColor: '#FAFBFC'
                 }}
               >
-                {PERMISSION_GROUPS.map((group) => {
-                  const isChecked = formData.permission_groups.includes(group.value);
-                  const isDisabled = saving || 
-                    (group.value !== 'full_control' && formData.permission_groups.includes('full_control')) ||
-                    (group.value === 'full_control' && formData.permission_groups.length > 0 && !formData.permission_groups.includes('full_control'));
-                  
-                  return (
-                    <div
-                      key={group.value}
-                      className="mb-3"
-                      style={{
-                        opacity: isDisabled && !isChecked ? 0.5 : 1
-                      }}
-                    >
-                      <label
-                        className="d-flex align-items-start gap-2"
-                        style={{
-                          cursor: isDisabled ? 'not-allowed' : 'pointer',
-                          marginBottom: 0
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => handlePermissionGroupChange(group.value, e.target.checked)}
-                          disabled={isDisabled}
-                          style={{
-                            cursor: isDisabled ? 'not-allowed' : 'pointer',
-                            marginTop: '4px'
-                          }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              color: '#1F2A55',
-                              fontSize: '14px',
-                              fontWeight: '500',
-                              fontFamily: 'BasisGrotesquePro',
-                              marginBottom: '2px'
-                            }}
+                <div className="space-y-4">
+                  {Object.keys(PERMISSION_CATEGORIES).map((category) => {
+                    const categoryPermissions = getPermissionsByCategory(category);
+                    if (categoryPermissions.length === 0) return null;
+
+                    const allSelected = isCategoryAllSelected(category);
+                    const someSelected = isCategorySomeSelected(category);
+
+                    return (
+                      <div key={category} className="border border-[#E8F0FF] rounded-lg p-4 bg-white">
+                        <div className="flex justify-between items-center mb-3">
+                          <h5 className="text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                            {category}
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() => handleCategoryToggle(
+                              PERMISSION_CATEGORIES[category],
+                              allSelected
+                            )}
+                            disabled={saving}
+                            className="text-sm text-[#3AD6F2] hover:text-[#2BC5E0] font-[BasisGrotesquePro] font-medium disabled:opacity-50"
                           >
-                            {group.label}
-                          </div>
-                          <div
-                            style={{
-                              color: '#6B7280',
-                              fontSize: '12px',
-                              fontFamily: 'BasisGrotesquePro'
-                            }}
-                          >
-                            {group.description}
-                          </div>
+                            {allSelected ? 'Deselect All' : 'Select All'}
+                          </button>
                         </div>
-                      </label>
-                    </div>
-                  );
-                })}
+                        <div className="space-y-2">
+                          {categoryPermissions.map((permission) => (
+                            <label
+                              key={permission.code}
+                              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={formData.permissions.includes(permission.code)}
+                                onChange={() => handlePermissionToggle(permission.code)}
+                                disabled={saving}
+                                className="w-4 h-4 text-[#3AD6F2] border-gray-300 rounded focus:ring-[#3AD6F2] disabled:opacity-50"
+                              />
+                              <span className="text-sm text-gray-700 font-[BasisGrotesquePro] flex-1">
+                                {permission.label}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              {errors.permission_groups && (
-                <p className="mt-1 mb-0" style={{ color: '#DC2626', fontSize: '12px' }}>
-                  {errors.permission_groups}
+              {errors.permissions && (
+                <p className="mt-2 text-red-600 text-xs font-[BasisGrotesquePro]">
+                  {errors.permissions}
                 </p>
               )}
-              <p className="mt-2 mb-0" style={{ color: '#6B7280', fontSize: '12px' }}>
-                Select one or more permission groups. "Full Control" grants all permissions and cannot be combined with other groups.
+              <p className="mt-2 text-gray-600 text-xs font-[BasisGrotesquePro]">
+                Select permissions to grant to users with this role. "View assigned clients only" and "View all firm clients" are mutually exclusive.
               </p>
             </div>
 
             {/* Active Status (only for edit) */}
             {role && (
               <div className="mb-4">
-                <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     name="is_active"
                     checked={formData.is_active}
                     onChange={handleChange}
                     disabled={saving}
-                    style={{ cursor: 'pointer' }}
+                    className="w-4 h-4 text-[#3AD6F2] border-gray-300 rounded focus:ring-[#3AD6F2] disabled:opacity-50"
                   />
-                  <span
-                    style={{
-                      color: '#3B4A66',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      fontFamily: 'BasisGrotesquePro'
-                    }}
-                  >
+                  <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
                     Active
                   </span>
                 </label>
-                <p
-                  className="mt-1 mb-0"
-                  style={{ color: '#6B7280', fontSize: '12px' }}
-                >
+                <p className="mt-1 text-gray-600 text-xs font-[BasisGrotesquePro]">
                   Inactive roles cannot be assigned to new users
                 </p>
               </div>
@@ -370,54 +404,28 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
           </div>
 
           {/* Footer */}
-          <div
-            className="d-flex justify-content-end gap-3 p-4 border-top"
-            style={{ borderColor: '#E5E7EB' }}
-          >
+          <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 rounded-lg border-0 rounded-lg"
-              style={{
-                backgroundColor: '#F3F4F6',
-                color: '#374151',
-                fontSize: '14px',
-                fontWeight: '500',
-                fontFamily: 'BasisGrotesquePro',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (!saving) e.currentTarget.style.backgroundColor = '#E5E7EB';
-              }}
-              onMouseLeave={(e) => {
-                if (!saving) e.currentTarget.style.backgroundColor = '#F3F4F6';
-              }}
+              className="px-4 py-2 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 rounded-lg border-0"
-              style={{
-                backgroundColor: saving ? '#9CA3AF' : '#32B582',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: '500',
-                fontFamily: 'BasisGrotesquePro',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (!saving) e.currentTarget.style.backgroundColor = '#2A9D6F';
-              }}
-              onMouseLeave={(e) => {
-                if (!saving) e.currentTarget.style.backgroundColor = '#32B582';
-              }}
+              className="px-4 py-2 bg-[#32B582] text-white rounded-lg hover:bg-[#2A9D6F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {saving ? 'Saving...' : role ? 'Update Role' : 'Create Role'}
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                role ? 'Update Role' : 'Create Role'
+              )}
             </button>
           </div>
         </form>
@@ -425,4 +433,3 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
     </div>
   );
 }
-

@@ -42,14 +42,14 @@ export const getFullUrl = (path) => {
  * @param {Function} navigate - React Router navigate function (optional)
  */
 export const navigateToUrl = (path, navigate = null) => {
-  const fullUrl = getFullUrl(path);
-  
   if (navigate && typeof navigate === 'function') {
-    // Use React Router navigate for internal navigation
+    // Use React Router navigate for internal navigation (respects basename)
     navigate(path);
   } else {
-    // Use window.location for external navigation
-    window.location.href = fullUrl;
+    // Use relative path for window.location to respect base path
+    // React Router basename is already set, so we use relative paths
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    window.location.href = normalizedPath;
   }
 };
 

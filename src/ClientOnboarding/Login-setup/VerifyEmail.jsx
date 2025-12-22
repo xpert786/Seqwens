@@ -17,16 +17,31 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     // Get user email from localStorage
-    const userData = localStorage.getItem('userData');
+    const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+    const userType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
+    
     if (userData) {
       try {
         const parsedUserData = JSON.parse(userData);
         setUserEmail(parsedUserData.email || '');
         
-        // Check if email is already verified
+        // For clients: check if email is already verified
+        if (userType === 'client' || !userType) {
         if (parsedUserData.is_email_verified) {
           console.log('Email is already verified, redirecting to dashboard');
           navigate("/dashboard");
+          }
+        }
+        // For firm admin: check if 2FA is already enabled
+        else if (userType === 'admin') {
+          if (parsedUserData.two_factor_authentication === true) {
+            console.log('2FA already enabled, redirecting to firm admin dashboard');
+            if (parsedUserData.subscription_plan === null || parsedUserData.subscription_plan === undefined) {
+              navigate("/firmadmin/finalize-subscription", { replace: true });
+            } else {
+              navigate("/firmadmin", { replace: true });
+            }
+          }
         }
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -92,17 +107,32 @@ export default function VerifyEmail() {
       
       // Update userData in both localStorage and sessionStorage with verification status
       const currentUserData = getUserData();
+      const userType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
+      
       if (currentUserData) {
-        // Update with response user data if available, otherwise just update verification status
-        const updatedUserData = response.user 
-          ? { ...currentUserData, ...response.user, is_email_verified: true }
-          : { ...currentUserData, is_email_verified: true };
+        // Update with response user data if available
+        let updatedUserData;
+        if (response.user) {
+          updatedUserData = { ...currentUserData, ...response.user };
+        } else {
+          updatedUserData = { ...currentUserData };
+        }
+        
+        // For clients: update email verification status
+        if (userType === 'client' || !userType) {
+          updatedUserData.is_email_verified = true;
+        }
+        // For firm admin: enable 2FA after email verification
+        else if (userType === 'admin') {
+          updatedUserData.two_factor_authentication = true;
+          updatedUserData.is_email_verified = true;
+        }
         
         // Update both storages to be safe
         setUserData(updatedUserData);
         sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
         
-        console.log('Updated userData with email verification status:', updatedUserData);
+        console.log('Updated userData with verification status:', updatedUserData);
       }
       
       // Show success popup
@@ -118,7 +148,20 @@ export default function VerifyEmail() {
   };
 
   const handleGoToDashboard = () => {
-    navigate("/dashboard");
+    const userType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
+    const userData = getUserData();
+    
+    // For firm admin: redirect to firm admin dashboard
+    if (userType === 'admin') {
+      if (userData?.subscription_plan === null || userData?.subscription_plan === undefined) {
+        navigate("/firmadmin/finalize-subscription", { replace: true });
+      } else {
+        navigate("/firmadmin", { replace: true });
+      }
+    } else {
+      // For clients: redirect to client dashboard
+      navigate("/dashboard", { replace: true });
+    }
   };
 
   return (

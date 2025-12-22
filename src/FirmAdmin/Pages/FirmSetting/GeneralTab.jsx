@@ -301,21 +301,6 @@ export default function GeneralTab() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] mb-2">
-              Website
-            </label>
-            <input
-              type="url"
-              name="website"
-              value={formData.website}
-              onChange={handleInputChange}
-              placeholder="www.taxpracticepro.com"
-              disabled
-              className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2 text-sm text-[#1F2A55] focus:outline-none  font-[BasisGrotesquePro] bg-gray-50 cursor-not-allowed"
-            />
-            <p className="text-xs text-gray-500 mt-1">Website field is not currently stored in the database</p>
-          </div>
         </div>
       </div>
       </div>

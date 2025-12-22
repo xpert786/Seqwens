@@ -20,8 +20,7 @@ export default function FirmManagement() {
         firmName: "",
         ownerName: "",
         email: "",
-        phone: "",
-        plan: ""
+        phone: ""
     });
     const [phoneCountry, setPhoneCountry] = useState('us');
 
@@ -163,7 +162,10 @@ export default function FirmManagement() {
 
     // Helper function to format plan display
     const formatPlan = (plan) => {
-        return plan?.charAt(0).toUpperCase() + plan?.slice(1) || 'Unknown';
+        if (!plan || plan === null) {
+            return 'None';
+        }
+        return plan.charAt(0).toUpperCase() + plan.slice(1);
     };
 
     const formatCurrency = (value) => {
@@ -176,6 +178,14 @@ export default function FirmManagement() {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    };
+
+    // Helper function to format revenue (shows "None" when 0 or null)
+    const formatRevenue = (value) => {
+        if (value === null || value === undefined || value === 0 || Number(value) === 0) {
+            return 'None';
+        }
+        return formatCurrency(value);
     };
 
     const formatDate = (dateString) => {
@@ -543,8 +553,7 @@ export default function FirmManagement() {
             firmName: "",
             ownerName: "",
             email: "",
-            phone: "",
-            plan: ""
+            phone: ""
         });
     };
 
@@ -556,7 +565,7 @@ export default function FirmManagement() {
     };
 
     const handleCreateFirm = async () => {
-        if (!newFirm.firmName.trim() || !newFirm.ownerName.trim() || !newFirm.email.trim() || !newFirm.plan) {
+        if (!newFirm.firmName.trim() || !newFirm.ownerName.trim() || !newFirm.email.trim()) {
             setCreateError('Please fill in all required fields');
             return;
         }
@@ -569,8 +578,7 @@ export default function FirmManagement() {
                 firm_name: newFirm.firmName,
                 owner_name: newFirm.ownerName,
                 email: newFirm.email,
-                phone_number: newFirm.phone,
-                subscription_plan: newFirm.plan.toLowerCase()
+                phone_number: newFirm.phone
             };
 
             const response = await superAdminAPI.createFirm(firmData);
@@ -659,7 +667,7 @@ export default function FirmManagement() {
                                     {firm.staff_count ?? 0}
                                 </td>
                                 <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
-                                    {formatCurrency(firm.monthly_fee)}/month
+                                    {formatRevenue(firm.total_revenue)}
                                 </td>
                                 <td style={{ padding: '10px', fontSize: '11px', color: '#3B4A66', border: '1px solid #E5E7EB' }}>
                                     {formatDate(firm.created_at) || '—'}
@@ -858,7 +866,7 @@ export default function FirmManagement() {
 
                                         {/* Revenue Column */}
                                         <div className="col-span-2 text-sm text-gray-700">
-                                            {formatCurrency(firm.monthly_fee)}/month
+                                            {formatRevenue(firm.total_revenue)}
                                         </div>
 
                                         {/* Last Active Column */}
@@ -1160,124 +1168,112 @@ export default function FirmManagement() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="flex justify-between items-start p-3">
+                        <div className="flex justify-between items-start p-6 border-b border-gray-200">
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-900">Add New Firm</h3>
-                                <p className="text-sm text-gray-500">Create a new firm account on the platform</p>
+                                <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]">Add New Firm</h3>
+                                <p className="text-sm text-gray-500 mt-1 font-[BasisGrotesquePro]">Create a new firm account on the platform</p>
                             </div>
                             <button
                                 onClick={handleCloseModal}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect width="24" height="24" rx="12" fill="#E8F0FF" />
                                     <path d="M16.065 8.99502C16.1367 8.92587 16.1939 8.84314 16.2332 8.75165C16.2726 8.66017 16.2933 8.56176 16.2942 8.46218C16.2951 8.3626 16.2762 8.26383 16.2385 8.17164C16.2009 8.07945 16.1452 7.99568 16.0748 7.92523C16.0044 7.85478 15.9207 7.79905 15.8286 7.7613C15.7364 7.72354 15.6377 7.70452 15.5381 7.70534C15.4385 7.70616 15.3401 7.7268 15.2485 7.76606C15.157 7.80532 15.0742 7.86242 15.005 7.93402L11.999 10.939L8.99402 7.93402C8.92536 7.86033 8.84256 7.80123 8.75056 7.76024C8.65856 7.71925 8.55925 7.69721 8.45854 7.69543C8.35784 7.69365 8.25781 7.71218 8.16442 7.7499C8.07104 7.78762 7.9862 7.84376 7.91498 7.91498C7.84376 7.9862 7.78762 8.07103 7.7499 8.16442C7.71218 8.25781 7.69365 8.35784 7.69543 8.45854C7.69721 8.55925 7.71925 8.65856 7.76024 8.75056C7.80123 8.84256 7.86033 8.92536 7.93402 8.99402L10.937 12L7.93202 15.005C7.79954 15.1472 7.72742 15.3352 7.73085 15.5295C7.73427 15.7238 7.81299 15.9092 7.9504 16.0466C8.08781 16.1841 8.2732 16.2628 8.4675 16.2662C8.6618 16.2696 8.84985 16.1975 8.99202 16.065L11.999 13.06L15.004 16.066C15.1462 16.1985 15.3342 16.2706 15.5285 16.2672C15.7228 16.2638 15.9082 16.1851 16.0456 16.0476C16.1831 15.9102 16.2618 15.7248 16.2652 15.5305C16.2686 15.3362 16.1965 15.1482 16.064 15.006L13.061 12L16.065 8.99502Z" fill="#3B4A66" />
                                 </svg>
-
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-3 space-y-1">
+                        <div className="p-6 space-y-4">
                             {/* Error Message */}
                             {createError && (
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                                    <div className="text-sm text-red-700">{createError}</div>
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                    <div className="text-sm text-red-700 font-[BasisGrotesquePro]">{createError}</div>
                                 </div>
                             )}
 
                             {/* Success Message */}
                             {createSuccess && (
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                                    <div className="text-sm text-green-700">Firm created successfully!</div>
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div className="text-sm text-green-700 font-[BasisGrotesquePro]">Firm created successfully!</div>
                                 </div>
                             )}
                             {/* Firm Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Firm Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Firm Name</label>
                                 <input
                                     type="text"
                                     value={newFirm.firmName}
                                     onChange={(e) => handleInputChange('firmName', e.target.value)}
                                     placeholder="Enter Firm name"
-                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-[BasisGrotesquePro]"
                                 />
                             </div>
 
                             {/* Owner Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Owner Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Owner Name</label>
                                 <input
                                     type="text"
                                     value={newFirm.ownerName}
                                     onChange={(e) => handleInputChange('ownerName', e.target.value)}
                                     placeholder="Enter Owner Name"
-                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-[BasisGrotesquePro]"
                                 />
                             </div>
 
                             {/* Email Address */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Email Address</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">Email Address</label>
                                 <input
                                     type="email"
                                     value={newFirm.email}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
                                     placeholder="Enter Email Address"
-                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-[BasisGrotesquePro]"
                                 />
                             </div>
 
                             {/* Phone Number */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Phone Number</label>
+<div className="relative">
+  <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
+    Phone Number
+  </label>
+
                                 <PhoneInput
                                     country={phoneCountry}
                                     value={newFirm.phone || ''}
                                     onChange={(phone) => handleInputChange('phone', phone)}
-                                    onCountryChange={(countryCode) => {
-                                        setPhoneCountry(countryCode.toLowerCase());
-                                    }}
-                                    inputClass="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                    containerClass="w-full phone-input-container"
-                                    buttonClass="!border-r !border-gray-300"
-                                    dropdownClass="!z-50"
-                                    enableSearch={true}
+    onCountryChange={(countryCode) =>
+      setPhoneCountry(countryCode.toLowerCase())
+    }
+    enableSearch
                                     countryCodeEditable={false}
                                     specialLabel=""
+
+    /* IMPORTANT FIXES */
+    containerClass="!w-full"
+    inputClass="!w-full !h-[40px] !pl-14 !pr-3 !text-sm !border !border-gray-300 !rounded-md focus:!ring-2 focus:!ring-blue-500 focus:!border-transparent"
+    buttonClass="!border !border-gray-300 !rounded-l-md !h-[40px]"
+    dropdownClass="!z-[9999]"
                                 />
                             </div>
 
-                            {/* Subscription Plan */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-0.5">Subscription Plan</label>
-                                <select
-                                    value={newFirm.plan}
-                                    onChange={(e) => handleInputChange('plan', e.target.value)}
-                                    className="w-full px-2 py-0.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="">Select Plan</option>
-                                    <option value="Solo">Solo</option>
-                                    <option value="Professional">Professional</option>
-                                    <option value="Team">Team</option>
-                                    <option value="Enterprise">Enterprise</option>
-                                </select>
-                            </div>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex justify-end space-x-2 p-2 gap-2">
+                        <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
                             <button
                                 onClick={handleCloseModal}
-                                className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreateFirm}
                                 disabled={creatingFirm}
-                                className="px-3 py-1 text-sm font-medium text-white bg-[#F56D2D] rounded hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ borderRadius: '7px' }}
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
                             >
                                 {creatingFirm ? 'Creating...' : 'Create Firm'}
                             </button>

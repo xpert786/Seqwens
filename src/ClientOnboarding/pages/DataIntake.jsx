@@ -8,6 +8,7 @@ import { dataIntakeAPI, handleAPIError } from "../utils/apiUtils";
 import { getAccessToken, getUserData } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
 import { toast } from "react-toastify";
+import SignatureModal from "../components/SignatureModal";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState([]);
@@ -1069,13 +1070,8 @@ export default function DataIntakeForm() {
       // Clear any previous errors on success
       setFieldErrors({});
 
-      // Redirect to dashboard on successful personal data submission
-      if (personalDataResponse.success) {
-        // Show a brief success message before redirecting
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500); // Wait 1.5 seconds to show the success toast
-      }
+      // Don't redirect immediately - allow user to sign form if they want
+      // User can navigate away manually or sign the form
     } catch (err) {
       console.error("Dual API submission error:", err);
 
@@ -1291,6 +1287,68 @@ export default function DataIntakeForm() {
       ...prev,
       [dropdownName]: !prev[dropdownName]
     }));
+  };
+
+  // Handle signature request
+  const handleRequestSign = async () => {
+    try {
+      setSignatureLoading(true);
+      const response = await dataIntakeAPI.requestSignForm();
+      
+      if (response.success) {
+        setSignatureRequested(true);
+        setSignatureStatus(response.data?.status || 'pending');
+        setShowSignatureModal(true);
+        toast.success(response.message || 'Signature request created. Please sign the form.', {
+          position: 'top-right',
+          autoClose: 3000
+        });
+      } else {
+        throw new Error(response.message || 'Failed to create signature request');
+      }
+    } catch (error) {
+      console.error('Error requesting signature:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to create signature request. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } finally {
+      setSignatureLoading(false);
+    }
+  };
+
+  // Handle signature submission
+  const handleSubmitSignature = async (signatureData) => {
+    try {
+      setSignatureLoading(true);
+      const response = await dataIntakeAPI.submitSignature(signatureData);
+      
+      if (response.success) {
+        setSignatureStatus('signed');
+        setShowSignatureModal(false);
+        toast.success(response.message || 'Signature submitted successfully!', {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        
+        // Optionally redirect to dashboard after signing
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
+      } else {
+        throw new Error(response.message || 'Failed to submit signature');
+      }
+    } catch (error) {
+      console.error('Error submitting signature:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to submit signature. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } finally {
+      setSignatureLoading(false);
+    }
   };
 
   return (
@@ -3154,6 +3212,82 @@ export default function DataIntakeForm() {
           Submit
         </button>
       </div>
+
+      {/* Signature Section - Show after form is submitted */}
+      {hasExistingData && (
+        <div className="mt-6 p-4 rounded-lg border" style={{ 
+          borderColor: '#E8F0FF', 
+          backgroundColor: '#F3F7FF',
+          fontFamily: 'BasisGrotesquePro'
+        }}>
+          <div className="d-flex flex-column align-items-start gap-3">
+            <div>
+              <h6 className="mb-1" style={{ 
+                color: '#3B4A66', 
+                fontSize: '18px', 
+                fontWeight: '600',
+                fontFamily: 'BasisGrotesquePro'
+              }}>
+                Sign Your Data Entry Form
+              </h6>
+              <p className="mb-0" style={{ 
+                color: '#4B5563', 
+                fontSize: '14px',
+                fontFamily: 'BasisGrotesquePro'
+              }}>
+                {signatureStatus === 'signed' 
+                  ? 'Your form has been signed successfully!'
+                  : signatureStatus === 'pending'
+                  ? 'Please complete your signature to finalize the form.'
+                  : 'Sign your completed data entry form to create a signed PDF document for your records.'}
+              </p>
+            </div>
+            
+            {signatureStatus !== 'signed' && (
+              <button
+                className="btn text-white"
+                style={{ 
+                  backgroundColor: signatureRequested ? '#3AD6F2' : '#F56D2D',
+                  borderRadius: '8px',
+                  fontFamily: 'BasisGrotesquePro'
+                }}
+                onClick={signatureRequested ? () => setShowSignatureModal(true) : handleRequestSign}
+                disabled={signatureLoading}
+              >
+                {signatureLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    {signatureRequested ? 'Opening Signature...' : 'Requesting Signature...'}
+                  </>
+                ) : signatureRequested ? (
+                  'Sign Form'
+                ) : (
+                  'Request to Sign Form'
+                )}
+              </button>
+            )}
+
+            {signatureStatus === 'signed' && (
+              <div className="d-flex align-items-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
+                  Form Signed Successfully
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Signature Modal */}
+      <SignatureModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        onSubmit={handleSubmitSignature}
+        loading={signatureLoading}
+      />
     </div >
   );
 }

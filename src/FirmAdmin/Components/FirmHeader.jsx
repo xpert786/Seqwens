@@ -9,12 +9,8 @@ import NotificationPanel from "../../ClientOnboarding/components/Notifications/N
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
-import { useFirmPortalColors } from "../Context/FirmPortalColorsContext";
-
-
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const navigate = useNavigate();
-    const { logoUrl } = useFirmPortalColors();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -27,6 +23,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const searchRef = useRef(null);
+    const logoRef = useRef(null);
 
     const menuItems = [
         { label: "Profile", action: "profile" },
@@ -219,6 +216,89 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         }
     }, []);
 
+    // Ensure logo always stays as Seqwens logo and prevent it from being changed
+    useEffect(() => {
+        if (!logoRef.current) return;
+        
+        // Store the original logo path as a constant
+        const originalLogoPath = logo;
+        const img = logoRef.current;
+        
+        // Set data attribute to mark this as Seqwens logo (immutable)
+        img.setAttribute('data-seqwens-logo', 'true');
+        img.setAttribute('data-original-src', originalLogoPath);
+        img.setAttribute('data-immutable', 'true');
+        
+        const ensureSeqwensLogo = () => {
+            if (!img || !img.parentNode) return; // Check if element still exists
+            
+            const currentSrc = img.src || img.getAttribute('src') || '';
+            
+            // Check if src has been changed to a firm logo (backblazeb2, s3, etc.)
+            const isFirmLogo = currentSrc.includes('backblazeb2.com') || 
+                               currentSrc.includes('s3.us-') ||
+                               currentSrc.includes('s3.amazonaws.com') ||
+                               (currentSrc && currentSrc !== originalLogoPath && !currentSrc.includes('logo.png'));
+            
+            if (isFirmLogo) {
+                // Reset to Seqwens logo immediately
+                img.src = originalLogoPath;
+                img.setAttribute('src', originalLogoPath);
+            }
+        };
+
+        // Check immediately and after delays to catch any late changes
+        ensureSeqwensLogo();
+        const check1 = setTimeout(ensureSeqwensLogo, 50);
+        const check2 = setTimeout(ensureSeqwensLogo, 100);
+        const check3 = setTimeout(ensureSeqwensLogo, 300);
+        const check4 = setTimeout(ensureSeqwensLogo, 500);
+        const check5 = setTimeout(ensureSeqwensLogo, 1000);
+
+        // Set up a MutationObserver to watch for src changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                    ensureSeqwensLogo();
+                }
+            });
+        });
+
+        observer.observe(img, {
+            attributes: true,
+            attributeFilter: ['src']
+        });
+
+        // Also check periodically as a safeguard (every 200ms for faster response)
+        const interval = setInterval(ensureSeqwensLogo, 200);
+
+        // Protect against any code that might query and change the logo via DOM
+        const protectLogoFromDOMQueries = () => {
+            const logoImages = document.querySelectorAll('.firm-topbar-logo[data-seqwens-logo="true"]');
+            logoImages.forEach((logoImg) => {
+                const src = logoImg.src || logoImg.getAttribute('src') || '';
+                if (src && (src.includes('backblazeb2.com') || src.includes('s3.us-') || src.includes('s3.amazonaws.com') || (src !== originalLogoPath && !src.includes('logo.png')))) {
+                    logoImg.src = originalLogoPath;
+                    logoImg.setAttribute('src', originalLogoPath);
+                }
+            });
+        };
+
+        // Run protection check periodically (every 200ms)
+        const protectionInterval = setInterval(protectLogoFromDOMQueries, 200);
+
+        return () => {
+            clearTimeout(check1);
+            clearTimeout(check2);
+            clearTimeout(check3);
+            clearTimeout(check4);
+            clearTimeout(check5);
+            observer.disconnect();
+            clearInterval(interval);
+            clearInterval(protectionInterval);
+        };
+    }, [logo]);
+
     return (
         <>
             <nav className="navbar bg-white fixed-top border-bottom custom-topbar px-3">
@@ -226,18 +306,32 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
                     {/* Left Section */}
                     <div className="d-flex align-items-center gap-3 flex-grow-1">
-                        {/* Logo */}
+                        {/* Logo - Always use Seqwens logo, never replace with firm logo */}
                         <Link to="/firmadmin" className="navbar-brand d-flex align-items-center m-0">
                             <img
-                                src={logoUrl || logo}
-                                alt="Logo"
+                                ref={logoRef}
+                                src={logo}
+                                alt="Seqwens Logo"
                                 className="firm-topbar-logo"
+                                data-seqwens-logo="true"
+                                data-immutable="true"
                                 style={{ maxHeight: "40px", width: "auto" }}
-                                crossOrigin="anonymous"
+                                onLoad={(e) => {
+                                    // Ensure logo stays as Seqwens logo even after load
+                                    const img = e.target;
+                                    const currentSrc = img.src || '';
+                                    // Check if it's been changed to a firm logo
+                                    if (currentSrc && (currentSrc.includes('backblazeb2.com') || currentSrc.includes('s3.us-') || currentSrc.includes('s3.amazonaws.com') || (!currentSrc.includes('logo.png') && currentSrc !== logo))) {
+                                        img.src = logo;
+                                        img.setAttribute('src', logo);
+                                    }
+                                }}
                                 onError={(e) => {
-                                    // Fallback to default logo if B2 image fails to load
-                                    if (e.target.src !== logo) {
-                                        e.target.src = logo;
+                                    // If logo fails to load, reset to Seqwens logo
+                                    const img = e.target;
+                                    if (img.src !== logo) {
+                                        img.src = logo;
+                                        img.setAttribute('src', logo);
                                     }
                                 }}
                             />

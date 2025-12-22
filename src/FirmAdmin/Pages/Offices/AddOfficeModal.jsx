@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { toast } from 'react-toastify';
@@ -7,8 +7,7 @@ import { firmOfficeAPI, handleAPIError, firmAdminStaffAPI } from '../../../Clien
 
 const steps = [
     { id: 1, name: 'Basic Information' },
-    { id: 2, name: 'Operating Hours' },
-    { id: 3, name: 'Branding & Identity' }
+    { id: 2, name: 'Operating Hours' }
 ];
 
 const initialFormState = {
@@ -35,15 +34,7 @@ const initialFormState = {
         Friday: { isOpen: true, startTime: '09:00 AM', endTime: '05:00 PM' },
         Saturday: { isOpen: true, startTime: '09:00 AM', endTime: '01:00 PM' },
         Sunday: { isOpen: false, startTime: '', endTime: '' }
-    },
-    
-    // Branding & Identity
-    logo: null,
-    primary_color: '#3AD6F2',
-    secondary_color: '#F56D2D',
-    custom_domain: '',
-    letterhead_template_id: '',
-    digital_signature: null
+    }
 };
 
 export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
@@ -55,11 +46,6 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
     const [staffOptions, setStaffOptions] = useState([]);
     const [staffLoading, setStaffLoading] = useState(false);
     const [staffError, setStaffError] = useState(null);
-    const [signatureTab, setSignatureTab] = useState('draw');
-    const signatureCanvasRef = useRef(null);
-    const [signatureImage, setSignatureImage] = useState(null);
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [typedSignature, setTypedSignature] = useState('');
 
     const handleInputChange = (e) => {
         const { name, value, type, checked, files } = e.target;
@@ -189,79 +175,6 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
         }
     };
 
-    // Signature drawing handlers
-    useEffect(() => {
-        if (signatureTab === 'draw' && signatureCanvasRef.current) {
-            const canvas = signatureCanvasRef.current;
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-        }
-    }, [signatureTab]);
-
-    const startDrawing = (e) => {
-        if (signatureTab !== 'draw' || !signatureCanvasRef.current) return;
-        setIsDrawing(true);
-        const canvas = signatureCanvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const ctx = canvas.getContext('2d');
-        ctx.beginPath();
-        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    };
-
-    const draw = (e) => {
-        if (!isDrawing || signatureTab !== 'draw' || !signatureCanvasRef.current) return;
-        const canvas = signatureCanvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const ctx = canvas.getContext('2d');
-        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-        ctx.stroke();
-    };
-
-    const stopDrawing = () => {
-        setIsDrawing(false);
-    };
-
-    const clearSignature = () => {
-        if (signatureCanvasRef.current) {
-            const ctx = signatureCanvasRef.current.getContext('2d');
-            ctx.clearRect(0, 0, signatureCanvasRef.current.width, signatureCanvasRef.current.height);
-            setSignatureImage(null);
-        }
-        setTypedSignature('');
-    };
-
-    const applySignature = () => {
-        if (signatureTab === 'draw' && signatureCanvasRef.current) {
-            const dataURL = signatureCanvasRef.current.toDataURL('image/png');
-            setSignatureImage(dataURL);
-            // Convert to blob for file upload
-            fetch(dataURL)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], 'signature.png', { type: 'image/png' });
-                    setFormData(prev => ({ ...prev, digital_signature: file }));
-                });
-        } else if (signatureTab === 'type' && typedSignature) {
-            // For typed signature, we could create an image from text
-            // For now, just store the text
-            setFormData(prev => ({ ...prev, typed_signature: typedSignature }));
-        } else if (signatureTab === 'upload' && formData.digital_signature) {
-            // Already set in formData
-            setSignatureImage(URL.createObjectURL(formData.digital_signature));
-        }
-    };
-
-    const handleSignatureFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, digital_signature: file }));
-            setSignatureImage(URL.createObjectURL(file));
-        }
-    };
-
     const handleSubmit = async () => {
         setError(null);
         setLoading(true);
@@ -306,28 +219,8 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                 payload.operation_hours = operationHours;
             }
 
-            // Branding
-            if (formData.primary_color) {
-                payload.primary_color = formData.primary_color;
-            }
-            if (formData.secondary_color) {
-                payload.secondary_color = formData.secondary_color;
-            }
-            if (formData.custom_domain) {
-                payload.custom_domain = formData.custom_domain;
-            }
-            if (formData.letterhead_template_id) {
-                payload.letterhead_template_id = Number(formData.letterhead_template_id);
-            }
-
-            // Prepare files (only logo and signature, letterhead_template_id is sent as ID)
+            // Prepare files (empty object since branding fields are removed)
             const files = {};
-            if (formData.logo) {
-                files.logo = formData.logo;
-            }
-            if (formData.digital_signature) {
-                files.signature = formData.digital_signature;
-            }
 
             const response = await firmOfficeAPI.createOffice(payload, files);
 
@@ -716,78 +609,6 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                                     </div>
                                 );
                             })}
-                        </div>
-                    )}
-
-                    {currentStep === 3 && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Primary Color
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <div
-                                            className="w-8 h-8 rounded border border-gray-300"
-                                            style={{ backgroundColor: formData.primary_color || '#3AD6F2' }}
-                                        />
-                                        <input
-                                            type="text"
-                                            name="primary_color"
-                                            value={formData.primary_color || '#3AD6F2'}
-                                            onChange={handleInputChange}
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                            placeholder="#3AD6F2"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Secondary Color
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <div
-                                            className="w-8 h-8 rounded border border-gray-300"
-                                            style={{ backgroundColor: formData.secondary_color || '#F56D2D' }}
-                                        />
-                                        <input
-                                            type="text"
-                                            name="secondary_color"
-                                            value={formData.secondary_color || '#F56D2D'}
-                                            onChange={handleInputChange}
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                            placeholder="#F56D2D"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Custom Domain (Optional)
-                                </label>
-                                <input
-                                    type="text"
-                                    name="custom_domain"
-                                    value={formData.custom_domain}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                    placeholder="downtown.taxfirm.com"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Letterhead Template ID (Optional)
-                                </label>
-                                <input
-                                    type="number"
-                                    name="letterhead_template_id"
-                                    value={formData.letterhead_template_id}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] text-sm"
-                                    placeholder="Enter letterhead template ID"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Enter the ID of an existing letterhead template</p>
-                            </div>
                         </div>
                     )}
                 </div>

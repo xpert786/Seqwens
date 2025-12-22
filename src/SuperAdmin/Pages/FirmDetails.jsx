@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
-import { setTokens } from '../../ClientOnboarding/utils/userUtils';
+import { setTokens, clearUserData } from '../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
+import FirmAddonsTab from './FirmDetails/FirmAddonsTab';
 import '../style/FirmDetails.css';
 
 const formatCurrency = (amount) => {
@@ -241,6 +242,7 @@ export default function FirmDetails() {
     const tabs = useMemo(() => [
         { id: 'Overview', label: 'Overview' },
         { id: 'Billing', label: 'Billing' },
+        { id: 'Addons', label: 'Addons' },
         { id: 'Settings', label: 'Settings' }
     ], []);
 
@@ -280,7 +282,7 @@ export default function FirmDetails() {
         return {
             plan: firmDetails?.subscription_plan
                 ? firmDetails.subscription_plan.charAt(0).toUpperCase() + firmDetails.subscription_plan.slice(1)
-                : 'Professional',
+                : 'None',
             monthlyCost: formatCurrency(firmDetails?.monthly_fee ?? 0),
             nextBilling: formatDate(firmDetails?.next_billing_date) || 'Not available',
             status: firmDetails?.status
@@ -394,13 +396,23 @@ export default function FirmDetails() {
             if (response.success && response.data) {
                 const { access_token, refresh_token, user, firm } = response.data;
                 
-                // Store tokens and user data in current session (this will log out superadmin and log in as firm admin)
+                // STEP 1: Completely clear all superadmin session data using utility function
+                clearUserData();
+                
+                // Also clear any additional superadmin-specific data
+                localStorage.removeItem('firmLoginData');
+                sessionStorage.removeItem('firmLoginData');
+                
+                // STEP 2: Set new firm admin tokens and user data
+                // Use setTokens to properly set tokens
                 setTokens(access_token, refresh_token, true);
+                
+                // Set user data in both storages for consistency
                 localStorage.setItem('userData', JSON.stringify(user));
                 localStorage.setItem('userType', user.user_type || 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('rememberMe', 'true');
                 
-                // Also set in sessionStorage
                 sessionStorage.setItem('accessToken', access_token);
                 sessionStorage.setItem('refreshToken', refresh_token);
                 sessionStorage.setItem('userData', JSON.stringify(user));
@@ -413,10 +425,11 @@ export default function FirmDetails() {
                     autoClose: 2000,
                 });
 
-                // Navigate to firm admin dashboard in current tab
+                // STEP 3: Navigate to firm admin dashboard with a small delay to ensure state is cleared
+                // Use window.location.href for a hard navigation to ensure clean state and prevent loops
                 setTimeout(() => {
-                    navigate('/firmadmin');
-                }, 500);
+                    window.location.href = '/firmadmin';
+                }, 300);
             } else {
                 throw new Error(response.message || 'Failed to generate login credentials');
             }
@@ -426,7 +439,6 @@ export default function FirmDetails() {
                 position: "top-right",
                 autoClose: 3000,
             });
-        } finally {
             setLoggingIn(false);
         }
     };
@@ -614,7 +626,7 @@ export default function FirmDetails() {
                                                     value: firmDetails?.subscription_plan
                                                         ? firmDetails.subscription_plan.charAt(0).toUpperCase() +
                                                         firmDetails.subscription_plan.slice(1)
-                                                        : 'Not specified'
+                                                        : 'None'
                                                 }
                                             ].map(({ label, value }) => (
                                                 <div
@@ -687,6 +699,13 @@ export default function FirmDetails() {
                                 loading={billingLoading}
                                 error={billingError}
                                 onRetry={fetchFirmBillingOverview}
+                            />
+                        )}
+
+                        {activeTab === 'Addons' && (
+                            <FirmAddonsTab 
+                                firmId={firmId} 
+                                firmName={firmDetails?.name || firmDetails?.firm_name || 'Firm'}
                             />
                         )}
 

@@ -1068,16 +1068,7 @@ const SchedulingCalendar = () => {
                         {/* Event Filters - Right Side */}
                         <div className="flex flex-col sm:flex-row gap-2 mt-2 lg:mt-0">
                             <div className="w-full sm:w-auto">
-                                <input
-                                    type="text"
-                                    value={eventId}
-                                    onChange={(e) => setEventId(e.target.value)}
-                                    placeholder="Event ID"
-                                    className="w-full sm:w-[150px] px-3 py-2 !border border-[#E8F0FF] !rounded-lg focus:outline-none font-[BasisGrotesquePro] bg-white !text-[#4B5563]"
-                                />
-                            </div>
-                            <div className="w-full sm:w-auto">
-                                <div className="relative">
+                                {/* <div className="relative">
                                     <select
                                         value={calendarType}
                                         onChange={(e) => setCalendarType(e.target.value)}
@@ -1092,7 +1083,7 @@ const SchedulingCalendar = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>

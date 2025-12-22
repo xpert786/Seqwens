@@ -15,15 +15,37 @@ export default function TwoFactorAuth() {
     if (userData) {
       try {
         const user = JSON.parse(userData);
-        const isEmailVerified = user.is_email_verified;
-        const isPhoneVerified = user.is_phone_verified;
+        const userType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
         
-        console.log('TwoFactorAuth - User verification status:', { isEmailVerified, isPhoneVerified });
-        
-        // If either email or phone is verified, redirect to dashboard
-        if (isEmailVerified || isPhoneVerified) {
-          console.log('User is already verified, redirecting to dashboard');
-          navigate("/dashboard");
+        // For clients: check email/phone verification
+        if (userType === 'client' || !userType) {
+          const isEmailVerified = user.is_email_verified;
+          const isPhoneVerified = user.is_phone_verified;
+          
+          console.log('TwoFactorAuth - Client verification status:', { isEmailVerified, isPhoneVerified });
+          
+          // If either email or phone is verified, redirect to dashboard
+          if (isEmailVerified || isPhoneVerified) {
+            console.log('Client is already verified, redirecting to dashboard');
+            navigate("/dashboard");
+          }
+        } 
+        // For firm admin: check two_factor_authentication status
+        else if (userType === 'admin') {
+          const twoFactorEnabled = user.two_factor_authentication;
+          
+          console.log('TwoFactorAuth - Firm admin 2FA status:', { twoFactorEnabled });
+          
+          // If 2FA is already enabled, redirect to firm admin dashboard
+          if (twoFactorEnabled === true) {
+            console.log('Firm admin 2FA already enabled, redirecting to firm admin dashboard');
+            // Check subscription plan first
+            if (user.subscription_plan === null || user.subscription_plan === undefined) {
+              navigate("/firmadmin/finalize-subscription", { replace: true });
+            } else {
+              navigate("/firmadmin", { replace: true });
+            }
+          }
         }
       } catch (error) {
         console.error('Error parsing user data:', error);

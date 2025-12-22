@@ -4,12 +4,14 @@ import { FaDollarSign, FaUsers, FaClock, FaExclamationTriangle, FaChevronUp, FaC
 import { BlueDollarIcon, BlueUserIcon, BlueClockIcon, BlueExclamationTriangleIcon, ActiveIcon, ArrowgreenIcon, ClockgreenIcon, RedDownIcon, Action3Icon, AddSubscriptionPlanIcon } from '../Components/icons';
 import EditSubscriptionPlan from './EditSubscriptionPlan';
 import AddSubscription from './AddSubscription';
+import AddonsManagement from './Subscriptions/AddonsManagement';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import '../style/Subscriptions.css';
 
 export default function Subscriptions() {
+  const [activeTab, setActiveTab] = useState('Plans'); // 'Plans' or 'Addons'
   const [showPlanDetails, setShowPlanDetails] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
@@ -595,8 +597,42 @@ export default function Subscriptions() {
           </button>
         </div>
       </div>
-      {/* Metric Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
+
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="bg-white rounded-lg border border-[#E8F0FF] p-1.5 w-fit">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('Plans')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
+                activeTab === 'Plans'
+                  ? 'bg-[#3AD6F2] text-white'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Subscription Plans
+            </button>
+            <button
+              onClick={() => setActiveTab('Addons')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${
+                activeTab === 'Addons'
+                  ? 'bg-[#3AD6F2] text-white'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Addons
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'Addons' ? (
+        <AddonsManagement />
+      ) : (
+        <>
+          {/* Metric Cards and main subscriptions content */}
+          <div className="grid grid-cols-4 gap-6 mb-8 subscriptions-metrics">
         {/* Total Revenue */}
         <div className="bg-white p-4" style={{ border: '1px solid #E8F0FF', borderRadius: '7px' }}>
           <div className="flex justify-between items-start">
@@ -1384,8 +1420,10 @@ export default function Subscriptions() {
               </button>
             </div>
           )}
+          </div>
         </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

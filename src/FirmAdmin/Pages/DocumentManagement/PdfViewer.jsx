@@ -15,6 +15,11 @@ import 'react-pdf/dist/Page/TextLayer.css';
 if (typeof window !== 'undefined') {
   const workerVersion = pdfjs.version || '5.3.31';
   pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${workerVersion}/build/pdf.worker.min.mjs`;
+  
+  // Ensure worker is initialized
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    console.warn('PDF.js worker not initialized');
+  }
 }
 
 // Icons
@@ -42,6 +47,7 @@ export default function PdfViewer() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
   const [pdfPageWidth, setPdfPageWidth] = useState(800);
+  const [documentReady, setDocumentReady] = useState(false);
   const pdfContainerRef = useRef(null);
   const pageRefs = useRef({});
   
@@ -199,6 +205,7 @@ export default function PdfViewer() {
         const blob = await response.blob();
         const file = new File([blob], isDocumentPdf ? 'document.pdf' : 'sample.pdf', { type: 'application/pdf' });
         setPdfFileData(file);
+        setDocumentReady(false); // Reset document ready state when new file is loaded
       } catch (error) {
         console.error('Error loading PDF:', error);
         setPdfError(error.message);
@@ -235,12 +242,17 @@ export default function PdfViewer() {
   // Handle PDF document load success
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
+    // Set document as ready after a small delay to ensure worker is initialized
+    setTimeout(() => {
+      setDocumentReady(true);
+    }, 100);
   };
   
   // Handle PDF document load error
   const onDocumentLoadError = (error) => {
     console.error('Error loading PDF document:', error);
     setPdfError(error.message || 'Failed to load PDF');
+    setDocumentReady(false);
     toast.error('Failed to load PDF document');
   };
   
@@ -628,7 +640,7 @@ export default function PdfViewer() {
 
           <div className="flex border border-gray-200 rounded-lg overflow-hidden" style={{ height: '700px' }}>
             {/* Thumbnails Sidebar */}
-            {pdfFileData && numPages > 0 && (
+            {pdfFileData && numPages > 0 && documentReady && (
               <div className="w-32 bg-gray-50 p-2 overflow-y-auto border-r border-gray-200 flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
                 <Document
                   file={pdfFileData}
@@ -715,7 +727,7 @@ export default function PdfViewer() {
                       options={pdfOptions}
                       className="w-full"
                     >
-                      {numPages && Array.from(new Array(numPages), (el, index) => (
+                      {numPages && documentReady && Array.from(new Array(numPages), (el, index) => (
                         <div
                           key={`page_${index + 1}`}
                           ref={(el) => {
@@ -730,6 +742,16 @@ export default function PdfViewer() {
                               renderAnnotationLayer={true}
                               width={pdfPageWidth}
                               className="max-w-full"
+                              error={
+                                <div className="flex items-center justify-center p-8 bg-gray-50">
+                                  <p className="text-sm text-gray-500">Error loading page {index + 1}</p>
+                                </div>
+                              }
+                              loading={
+                                <div className="flex items-center justify-center p-8 bg-gray-50">
+                                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                                </div>
+                              }
                             />
                           </div>
                         </div>

@@ -30,7 +30,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
     maxUsers: '',
     maxClients: '',
     storage: '',
-    eSignatures: ''
+    eSignatures: '',
+    includedOffices: ''
   });
 
   const [addOns, setAddOns] = useState({
@@ -77,7 +78,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             maxUsers: parseInt(planData.max_users) || 0,
             maxClients: parseInt(planData.max_clients) || 0,
             storage: parseFloat(planData.storage_gb) || 0,
-            eSignatures: parseInt(planData.e_signatures_per_month) || 0
+            eSignatures: parseInt(planData.e_signatures_per_month) || 0,
+            includedOffices: parseInt(planData.included_offices) || 1
           });
           setAddOns({
             additionalStorage: planData.additional_storage_addon || false,
@@ -390,6 +392,29 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
 
                   </div>
                 </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66' }}>Included Offices</label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={limits.includedOffices ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setLimits({ ...limits, includedOffices: v === '' ? '' : v });
+                    }}
+                    onBlur={(e) => {
+                      const n = parseInt(e.target.value);
+                      setLimits({ ...limits, includedOffices: isNaN(n) ? 1 : Math.max(0, n) });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+                    placeholder="1"
+                  />
+                  <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                    Number of office locations included in the base plan
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -429,14 +454,17 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         max_clients: Number(limits.maxClients || 0),
                         storage_gb: Number(limits.storage || 0),
                         e_signatures_per_month: Number(limits.eSignatures || 0),
+                        included_offices: Number(limits.includedOffices || 1),
                         additional_storage_addon: addOns.additionalStorage,
                         additional_user_addon: addOns.additionalUser,
                         priority_support_addon: addOns.prioritySupport,
                         is_active: true
                       };
                       try {
-                        const response = await fetch(`${getApiBaseUrl()}/user/subscription-plans/`, {
-                          method: 'POST',
+                        // Use PATCH for updating existing plan
+                        const planTypeLower = activeTab.toLowerCase();
+                        const response = await fetch(`${getApiBaseUrl()}/user/subscription-plans/${planTypeLower}/`, {
+                          method: 'PATCH',
                           headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${getAccessToken()}`
@@ -445,7 +473,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         });
                         if (!response.ok) {
                           const errData = await response.json();
-                          throw new Error(errData?.detail || 'Failed to update subscription plan');
+                          throw new Error(errData?.message || errData?.detail || 'Failed to update subscription plan');
                         }
                         setSuccess(true);
                         toast.success('Subscription plan updated successfully!', {

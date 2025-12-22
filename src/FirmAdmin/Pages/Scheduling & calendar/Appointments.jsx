@@ -372,29 +372,7 @@ const Appointments = () => {
                 ) : (
                     <>
                         {/* Event Filters - Right Side */}
-                        <div className="flex flex-col sm:flex-row gap-2 mt-2 lg:mt-0 mb-6">
-                            <div className="w-full sm:w-auto">
-                                <input
-                                    type="text"
-                                    placeholder="Event ID"
-                                    className="w-full sm:w-[150px] px-3 py-2 !border border-[#E8F0FF] !rounded-lg focus:outline-none font-[BasisGrotesquePro] bg-white !text-[#4B5563]"
-                                />
-                            </div>
-                            <div className="w-full sm:w-auto">
-                                <div className="relative">
-                                    <select className="w-full sm:w-[150px] appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-3 py-2 pr-10 text-gray-700 focus:outline-none font-[BasisGrotesquePro] cursor-pointer">
-                                        <option>Firm Calendar</option>
-                                        <option>Personal Calendar</option>
-                                        <option>Team Calendar</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         {/* Main Content Area */}
                         <div className="flex flex-col lg:flex-row gap-6">

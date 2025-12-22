@@ -998,14 +998,14 @@ export default function ClientManage() {
                                 >
                                   {client.name}
                                 </div>
-                                <div className="text-xs text-gray-600 flex items-center mb-1">
+                                {/* <div className="text-xs text-gray-600 flex items-center mb-1">
                                   {client.company === "Smith Enterprises" || client.company === "Davis LLC" ? (
                                     <div className="mr-1">
                                       <Building />
                                     </div>
                                   ) : null}
                                   {client.company}
-                                </div>
+                                </div> */}
                                 <div className="text-xs text-gray-400">{client.type}</div>
                               </div>
                             </div>

@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
   const { instanceId } = useParams();
   const [instance, setInstance] = useState(initialInstance);
   const [loading, setLoading] = useState(!initialInstance);
   const [advancing, setAdvancing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (instanceId && !initialInstance) {
@@ -50,6 +53,45 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
       toast.error(handleAPIError(error) || 'Failed to advance workflow');
     } finally {
       setAdvancing(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!instance) return;
+    
+    try {
+      setDeleting(true);
+      const response = await workflowAPI.deleteWorkflowInstance(instance.id);
+      if (response.success) {
+        toast.success('Workflow instance deleted successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setShowDeleteConfirm(false);
+        if (onBack) {
+          onBack();
+        }
+      } else {
+        throw new Error(response.message || 'Failed to delete workflow instance');
+      }
+    } catch (error) {
+      console.error('Error deleting workflow instance:', error);
+      toast.error(handleAPIError(error) || 'Failed to delete workflow instance', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleting) {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -120,7 +162,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
         {/* Header */}
         <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <div>
+            <div className="flex-1">
               <button
                 onClick={onBack}
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2 font-[BasisGrotesquePro]"
@@ -139,6 +181,15 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                   <span>Started: {new Date(instance.started_at).toLocaleDateString()}</span>
                 )}
               </div>
+            </div>
+            <div className="ml-4">
+              <button
+                onClick={handleDeleteClick}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
+                style={{ borderRadius: '8px' }}
+              >
+                Delete
+              </button>
             </div>
           </div>
 
@@ -246,6 +297,19 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Workflow Instance"
+        message={`Are you sure you want to delete this workflow instance? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={deleting}
+        isDestructive={true}
+      />
     </div>
   );
 };

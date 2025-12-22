@@ -145,8 +145,18 @@ export default function Login() {
         // Redirect to admin dashboard
         navigate("/superadmin");
       } else if (userType === 'admin') {
+        // Check if 2FA is required but not enabled
+        // If requires_2fa is false but two_factor_authentication is false, show 2FA setup
+        if (user.requires_2fa === false && user.two_factor_authentication === false) {
+          // Redirect to two-factor authentication page
+          navigate("/two-auth", { replace: true });
+        } else if (user.subscription_plan === null || user.subscription_plan === undefined) {
+          // Check if admin user has no subscription plan
+          navigate("/firmadmin/finalize-subscription", { replace: true });
+        } else {
         // Redirect to firm admin dashboard
         navigate("/firmadmin");
+        }
       } else if (userType === 'tax_preparer') {
         // Redirect to tax preparer dashboard
         navigate("/taxdashboard");

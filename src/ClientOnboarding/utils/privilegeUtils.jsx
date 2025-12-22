@@ -318,3 +318,63 @@ export const isFeatureVisible = (feature) => {
   return hasPrivilege;
 };
 
+/**
+ * Get tax preparer permissions from userData
+ * @returns {Array<string>} Array of permission codes (e.g., ["create_invoices", "view_assigned_clients_only"])
+ */
+export const getTaxPreparerPermissions = () => {
+  try {
+    const userData = getUserData();
+    
+    // Check for tax_preparer_permissions in userData
+    if (userData && userData.tax_preparer_permissions) {
+      if (Array.isArray(userData.tax_preparer_permissions.permissions)) {
+        return userData.tax_preparer_permissions.permissions;
+      }
+      if (Array.isArray(userData.tax_preparer_permissions)) {
+        return userData.tax_preparer_permissions;
+      }
+    }
+    
+    // Check for permissions directly in userData
+    if (userData && userData.permissions && Array.isArray(userData.permissions)) {
+      return userData.permissions;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting tax preparer permissions:', error);
+    return [];
+  }
+};
+
+/**
+ * Check if tax preparer has a specific permission
+ * @param {string} permissionCode - Permission code to check (e.g., "create_invoices")
+ * @returns {boolean} True if user has the permission
+ */
+export const hasTaxPreparerPermission = (permissionCode) => {
+  // If no custom role or permissions, allow by default (backward compatibility)
+  const userData = getUserData();
+  if (!userData) {
+    return false;
+  }
+  
+  // Get permissions from tax_preparer_permissions
+  const permissions = getTaxPreparerPermissions();
+  
+  // If no permissions found, check if user has custom role
+  // If no custom role, allow all (default behavior)
+  if (permissions.length === 0) {
+    const customRole = getCustomRole();
+    if (!customRole) {
+      // No custom role means full access (default)
+      return true;
+    }
+    // Has custom role but no permissions array - deny by default
+    return false;
+  }
+  
+  return permissions.includes(permissionCode);
+};
+

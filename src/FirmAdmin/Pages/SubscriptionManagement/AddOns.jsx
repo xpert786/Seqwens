@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminAddonsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../components/ConfirmationModal';
-
-const API_BASE_URL = getApiBaseUrl();
 
 const AddOns = () => {
     const [activeTab, setActiveTab] = useState('browse');
@@ -22,26 +18,10 @@ const AddOns = () => {
     // Fetch marketplace add-ons
     const fetchMarketplaceAddOns = useCallback(async () => {
         try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/add-ons/marketplace/`;
+            const response = await firmAdminAddonsAPI.listMarketplaceAddons();
 
-            const response = await fetchWithCors(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.success && result.data) {
-                setMarketplaceAddOns(Array.isArray(result.data) ? result.data : []);
+            if (response.success && response.data) {
+                setMarketplaceAddOns(Array.isArray(response.data) ? response.data : []);
             } else {
                 setMarketplaceAddOns([]);
             }
@@ -56,27 +36,11 @@ const AddOns = () => {
     // Fetch active add-ons
     const fetchActiveAddOns = useCallback(async () => {
         try {
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/add-ons/`;
+            const response = await firmAdminAddonsAPI.getFirmAddons();
 
-            const response = await fetchWithCors(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.success && result.data) {
-                setActiveAddOns(result.data.addons || []);
-                setTotalAddonCost(result.data.total_addon_cost || 0);
+            if (response.success && response.data) {
+                setActiveAddOns(response.data.addons || []);
+                setTotalAddonCost(response.data.total_addon_cost || 0);
             } else {
                 setActiveAddOns([]);
                 setTotalAddonCost(0);
@@ -115,41 +79,40 @@ const AddOns = () => {
     const handleAddAddon = async (addonId, addonName) => {
         try {
             setAddingAddon(addonId);
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/add-ons/add/`;
-
-            const response = await fetchWithCors(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    addon_id: addonId
-                })
+            const response = await firmAdminAddonsAPI.addAddonToFirm({
+                addon_id: addonId
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.success) {
-                toast.success(result.message || `Add-on '${addonName}' added successfully!`);
-                // Refresh both lists
-                await Promise.all([
-                    fetchMarketplaceAddOns(),
-                    fetchActiveAddOns()
-                ]);
+            if (response.success) {
+                // Check if payment is required (checkout_url present)
+                if (response.data?.checkout_url) {
+                    toast.info(response.message || 'Redirecting to payment...', {
+                        position: 'top-right',
+                        autoClose: 3000
+                    });
+                    // Redirect to Stripe checkout
+                    window.location.href = response.data.checkout_url;
+                } else {
+                    toast.success(response.message || `Add-on '${addonName}' added successfully!`, {
+                        position: 'top-right',
+                        autoClose: 3000
+                    });
+                    // Refresh both lists
+                    await Promise.all([
+                        fetchMarketplaceAddOns(),
+                        fetchActiveAddOns()
+                    ]);
+                }
             } else {
-                throw new Error(result.message || 'Failed to add add-on');
+                throw new Error(response.message || 'Failed to add add-on');
             }
         } catch (err) {
             console.error('Error adding add-on:', err);
             const errorMsg = handleAPIError(err);
-            toast.error(errorMsg || 'Failed to add add-on. Please try again.');
+            toast.error(errorMsg || 'Failed to add add-on. Please try again.', {
+                position: 'top-right',
+                autoClose: 3000
+            });
         } finally {
             setAddingAddon(null);
         }
@@ -166,26 +129,13 @@ const AddOns = () => {
 
         try {
             setRemovingAddon(addonToRemove.firmAddonId);
-            const token = getAccessToken();
-            const url = `${API_BASE_URL}/user/firm-admin/add-ons/${addonToRemove.firmAddonId}/remove/`;
+            const response = await firmAdminAddonsAPI.removeAddonFromFirm(addonToRemove.firmAddonId);
 
-            const response = await fetchWithCors(url, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.success) {
-                toast.success(result.message || `Add-on '${addonToRemove.addonName}' removed successfully!`);
+            if (response.success) {
+                toast.success(response.message || `Add-on '${addonToRemove.addonName}' removed successfully!`, {
+                    position: 'top-right',
+                    autoClose: 3000
+                });
                 // Refresh both lists
                 await Promise.all([
                     fetchMarketplaceAddOns(),
@@ -194,12 +144,15 @@ const AddOns = () => {
                 setShowRemoveAddonConfirm(false);
                 setAddonToRemove(null);
             } else {
-                throw new Error(result.message || 'Failed to remove add-on');
+                throw new Error(response.message || 'Failed to remove add-on');
             }
         } catch (err) {
             console.error('Error removing add-on:', err);
             const errorMsg = handleAPIError(err);
-            toast.error(errorMsg || 'Failed to remove add-on. Please try again.');
+            toast.error(errorMsg || 'Failed to remove add-on. Please try again.', {
+                position: 'top-right',
+                autoClose: 3000
+            });
         } finally {
             setRemovingAddon(null);
         }
