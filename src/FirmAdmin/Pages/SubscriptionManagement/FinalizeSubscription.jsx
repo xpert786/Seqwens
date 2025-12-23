@@ -89,18 +89,18 @@ const FinalizeSubscription = () => {
         // Fallback: old structure with flat array
         else if (Array.isArray(result.data)) {
           plansData = result.data.filter(plan => 
-            plan.billing_cycle === billingCycle && plan.is_active !== false
+            plan.billing_cycle === billingCycle
           );
         } else if (result.data.plans && Array.isArray(result.data.plans)) {
           // Nested plans structure (old format)
           plansData = result.data.plans.filter(plan => 
-            plan.billing_cycle === billingCycle && plan.is_active !== false
+            plan.billing_cycle === billingCycle
           );
         }
       } else if (Array.isArray(result)) {
         // Direct array response (old format)
         plansData = result.filter(plan => 
-          plan.billing_cycle === billingCycle && plan.is_active !== false
+          plan.billing_cycle === billingCycle
         );
       }
 
@@ -115,10 +115,9 @@ const FinalizeSubscription = () => {
         }
       }
 
-      // Filter only active plans
-      const filteredPlans = plansData.filter(plan => plan.is_active !== false);
-
-      setPlans(filteredPlans);
+      // For public endpoint, show all plans regardless of is_active status
+      // The public endpoint already returns the appropriate plans
+      setPlans(plansData);
 
       // Fetch detailed plan information for each plan (non-blocking)
       if (plansData.length > 0 && token) {

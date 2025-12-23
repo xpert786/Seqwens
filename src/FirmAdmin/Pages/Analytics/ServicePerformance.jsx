@@ -302,6 +302,8 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                     {serviceNames.map((service) => {
                       const serviceKey = getServiceKey(service);
                       const value = row[serviceKey] || 0;
+                      // Format value to 2 decimal places
+                      const formattedValue = typeof value === 'number' ? value.toFixed(2) : parseFloat(value || 0).toFixed(2);
                       return (
                         <div key={service} className="flex items-center">
                           <div 
@@ -311,7 +313,7 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
                               color: value > 30 ? 'white' : 'black'
                             }}
                           >
-                            {value}%
+                            {formattedValue}%
                     </div>
                   </div>
                       );

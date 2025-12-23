@@ -18,14 +18,14 @@ export default function PricingSection() {
           const plansData = billingCycle === 'monthly' 
             ? (data.data.monthly_plans || [])
             : (data.data.yearly_plans || []);
-          // Filter only active plans
-          const filteredPlans = plansData.filter(plan => plan.is_active !== false);
-          setPlans(filteredPlans);
+          // For public endpoint, show all plans regardless of is_active status
+          // The public endpoint already returns the appropriate plans
+          setPlans(plansData);
         } 
         // Fallback: old structure with flat array
         else if (Array.isArray(data.data)) {
           const filteredPlans = data.data.filter(plan => 
-            plan.billing_cycle === billingCycle && plan.is_active !== false
+            plan.billing_cycle === billingCycle
           );
           setPlans(filteredPlans);
         }
