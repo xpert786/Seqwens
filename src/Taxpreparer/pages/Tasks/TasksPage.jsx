@@ -1338,7 +1338,7 @@ export default function TasksPage() {
                        {iconFor(k)} {titleFor(k)} ({tasks[k].length})
                      </h6>
                      {tasks[k].length > 0 ? (
-                       tasks[k].map((t) => (
+                       tasks[k].slice(0, 5).map((t) => (
                          <div key={t.id} className="card task-item" onClick={() => setSelectedTask(t)}>
                            <div className="card-body position-relative">
                              <div className="priority-badge">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getStorage } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminPaymentMethodsAPI, firmAdminSubscriptionAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import AllPlans from './AllPlans';
@@ -9,11 +10,6 @@ import Billing from './Billing';
 import AdminControls from './AdminControls';
 import Security from './Security';
 import Automation from './Automation';
-import EnterpriseOverview from './Enterprise/EnterpriseOverview';
-import EnterpriseOfficeManagement from './Enterprise/EnterpriseOfficeManagement';
-import EnterpriseConsolidatedBilling from './Enterprise/EnterpriseConsolidatedBilling';
-import EnterpriseCostAllocation from './Enterprise/EnterpriseCostAllocation';
-import EnterpriseContracts from './Enterprise/EnterpriseContracts';
 import UpgradePlanModal from './UpgradePlanModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import './SubscriptionManagement.css';
@@ -21,9 +17,9 @@ import './SubscriptionManagement.css';
 const API_BASE_URL = getApiBaseUrl();
 
 const SubscriptionManagement = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('Overview');
     const [isFailoverEnabled, setIsFailoverEnabled] = useState(true);
-    const [activeEnterpriseTab, setActiveEnterpriseTab] = useState('Overview');
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -55,14 +51,7 @@ const SubscriptionManagement = () => {
         cvv: ''
     });
 
-    const tabs = ['Overview', 'All Plan', 'Add-ons', 'Billing', 'Admin', 'Security', 'Automation', 'Enterprise'];
-    const enterpriseTabs = [
-        'Overview',
-        'Office Management',
-        'Consolidated Billing',
-        'Cost Allocation Rules',
-        'Enterprise Contracts',
-    ];
+    const tabs = ['Overview', 'All Plan', 'Add-ons', 'Billing', 'Admin', 'Security', 'Automation'];
 
     // Fetch payment methods from API
     const fetchPaymentMethods = useCallback(async () => {
@@ -152,6 +141,57 @@ const SubscriptionManagement = () => {
     useEffect(() => {
         fetchSubscriptionOverview();
     }, [fetchSubscriptionOverview]);
+
+    // Handle subscription success redirect from Stripe
+    useEffect(() => {
+        const subscriptionSuccess = searchParams.get('subscription_success');
+        const subscriptionCancelled = searchParams.get('subscription_cancelled');
+
+        if (subscriptionSuccess === 'true') {
+            // Show success message
+            toast.success('Subscription activated successfully!', {
+                position: 'top-right',
+                autoClose: 5000,
+            });
+
+            // Refresh user data to get updated subscription info
+            const storage = getStorage();
+            const token = getAccessToken();
+            if (token) {
+                fetchWithCors(`${API_BASE_URL}/user/me/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success && result.data) {
+                            const userData = result.data;
+                            storage.setItem("userData", JSON.stringify(userData));
+                            sessionStorage.setItem("userData", JSON.stringify(userData));
+                            // Remove the query parameter
+                            setSearchParams({});
+                            // Refresh subscription overview to show updated subscription
+                            fetchSubscriptionOverview();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching user data:', err);
+                        setSearchParams({});
+                    });
+            } else {
+                setSearchParams({});
+            }
+        } else if (subscriptionCancelled === 'true') {
+            toast.info('Subscription change was cancelled.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            setSearchParams({});
+        }
+    }, [searchParams, setSearchParams, fetchSubscriptionOverview]);
 
     // Fetch payment methods on mount
     useEffect(() => {
@@ -520,22 +560,6 @@ const SubscriptionManagement = () => {
         };
     };
 
-    const renderEnterpriseTab = () => {
-        switch (activeEnterpriseTab) {
-            case 'Overview':
-                return <EnterpriseOverview />;
-            case 'Office Management':
-                return <EnterpriseOfficeManagement />;
-            case 'Consolidated Billing':
-                return <EnterpriseConsolidatedBilling />;
-            case 'Cost Allocation Rules':
-                return <EnterpriseCostAllocation />;
-            case 'Enterprise Contracts':
-                return <EnterpriseContracts />;
-            default:
-                return null;
-        }
-    };
 
     return (
         <div className="min-h-screen bg-[#F3F7FF] lg:p-4 sm:p-2">
@@ -1119,47 +1143,6 @@ const SubscriptionManagement = () => {
                     </div>
                 )}
 
-                {/* Enterprise Tab Content */}
-                {activeTab === 'Enterprise' && (
-                    <div className="space-y-6 rounded-lg border border-[#E8F0FF] bg-white p-4 sm:p-6">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                                    Multi-Office Enterprise Support
-                                </h3>
-                                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                                    Revenue and cost analysis across all offices
-                                </p>
-                            </div>
-                            <div className="inline-flex items-center gap-2 rounded-full bg-[#F0FAFD] px-3 py-1.5 text-sm text-[#0690AC] font-[BasisGrotesquePro]">
-                                <span className="inline-flex h-2 w-2 rounded-full bg-[#3AD6F2]" />
-                                Enterprise
-                            </div>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                            <div className="inline-flex w-max rounded-lg border border-[#E8F0FF] bg-white p-1.5 sm:p-2">
-                                <div className="flex gap-2 sm:gap-3">
-                                {enterpriseTabs.map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveEnterpriseTab(tab)}
-                                            className={`whitespace-nowrap px-3 py-1.5 text-xs font-[BasisGrotesquePro] font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm !rounded-lg ${
-                                            activeEnterpriseTab === tab
-                                                    ? 'bg-[#3AD6F2] text-white'
-                                                : 'bg-transparent text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">{renderEnterpriseTab()}</div>
-                    </div>
-                )}
 
             </div>
 

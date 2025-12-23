@@ -15,13 +15,14 @@ const AddOns = () => {
     const [showRemoveAddonConfirm, setShowRemoveAddonConfirm] = useState(false);
     const [addonToRemove, setAddonToRemove] = useState(null);
 
-    // Fetch marketplace add-ons
+    // Fetch marketplace add-ons (available addon types)
     const fetchMarketplaceAddOns = useCallback(async () => {
         try {
             const response = await firmAdminAddonsAPI.listMarketplaceAddons();
 
             if (response.success && response.data) {
-                setMarketplaceAddOns(Array.isArray(response.data) ? response.data : []);
+                // Response structure: data.addon_types
+                setMarketplaceAddOns(Array.isArray(response.data.addon_types) ? response.data.addon_types : []);
             } else {
                 setMarketplaceAddOns([]);
             }
@@ -76,12 +77,19 @@ const AddOns = () => {
     }, [activeTab, fetchActiveAddOns]);
 
     // Add add-on to subscription
-    const handleAddAddon = async (addonId, addonName) => {
+    const handleAddAddon = async (addonId, addonName, usageLimit = null) => {
         try {
             setAddingAddon(addonId);
-            const response = await firmAdminAddonsAPI.addAddonToFirm({
+            const payload = {
                 addon_id: addonId
-            });
+            };
+            
+            // Add usage_limit if provided
+            if (usageLimit !== null && usageLimit !== undefined) {
+                payload.usage_limit = usageLimit;
+            }
+            
+            const response = await firmAdminAddonsAPI.addAddonToFirm(payload);
 
             if (response.success) {
                 // Check if payment is required (checkout_url present)
@@ -119,8 +127,11 @@ const AddOns = () => {
     };
 
     // Remove add-on from subscription
-    const handleRemoveAddon = async (firmAddonId, addonName) => {
-        setAddonToRemove({ firmAddonId, addonName });
+    // Note: API uses AddOn type ID, not FirmAddOn ID
+    const handleRemoveAddon = async (firmAddon, addonName) => {
+        // Extract the addon type ID from the firmAddon object
+        const addonTypeId = firmAddon.addon?.id || firmAddon.addon_id;
+        setAddonToRemove({ addonTypeId, addonName, firmAddon });
         setShowRemoveAddonConfirm(true);
     };
 
@@ -128,8 +139,9 @@ const AddOns = () => {
         if (!addonToRemove) return;
 
         try {
-            setRemovingAddon(addonToRemove.firmAddonId);
-            const response = await firmAdminAddonsAPI.removeAddonFromFirm(addonToRemove.firmAddonId);
+            setRemovingAddon(addonToRemove.addonTypeId);
+            // API uses AddOn type ID, not FirmAddOn ID
+            const response = await firmAdminAddonsAPI.removeAddonFromFirm(addonToRemove.addonTypeId);
 
             if (response.success) {
                 toast.success(response.message || `Add-on '${addonToRemove.addonName}' removed successfully!`, {
@@ -261,25 +273,12 @@ const AddOns = () => {
                                             </div>
                                         )}
 
-                                        {/* Usage display for added add-ons */}
-                                        {addon.is_added && addon.firm_status && (
+                                        {/* Status for added add-ons */}
+                                        {addon.is_added && (
                                             <div className="mb-4">
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-xs text-gray-600 font-[BasisGrotesquePro]">Usage</span>
-                                                    <span className="text-xs text-gray-700 font-[BasisGrotesquePro]">
-                                                        {addon.firm_status.usage_display || `${addon.firm_status.usage}/${addon.firm_status.usage_limit}`}
-                                                    </span>
-                                                </div>
-                                                {addon.firm_status.usage_limit && (
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div 
-                                                            className="bg-[#3AD6F2] h-2 rounded-full" 
-                                                            style={{ 
-                                                                width: `${Math.min(addon.firm_status.usage_percentage || 0, 100)}%` 
-                                                            }}
-                                                        ></div>
-                                                    </div>
-                                                )}
+                                                <span className="text-xs text-gray-600 font-[BasisGrotesquePro]">
+                                                    {addon.is_active ? 'Active in your subscription' : 'Added but inactive'}
+                                                </span>
                                             </div>
                                         )}
 
@@ -314,7 +313,7 @@ const AddOns = () => {
 
                     {/* My Add-on's Content */}
                     {activeTab === 'myAddons' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                             {activeAddOns.length === 0 ? (
                                 <div className="col-span-full text-center py-12">
                                     <p className="text-sm text-gray-600">No active add-ons. Browse the marketplace to add some!</p>
@@ -376,22 +375,22 @@ const AddOns = () => {
                                             )}
 
                                             <div className="flex gap-3 mt-4">
-                                                <button 
+                                                {/* <button 
                                                     className="flex-1 px-4 py-2 bg-white !border border-[#3B4A66] text-gray-700 !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
                                                     disabled
                                                 >
                                                     Manage
-                                                </button>
+                                                </button> */}
                                                 <button 
-                                                    onClick={() => handleRemoveAddon(firmAddon.id, addon.name)}
-                                                    disabled={removingAddon === firmAddon.id}
+                                                    onClick={() => handleRemoveAddon(firmAddon, addon.name)}
+                                                    disabled={removingAddon === (firmAddon.addon?.id || firmAddon.addon_id)}
                                                     className={`flex-1 px-4 py-2 !rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium ${
-                                                        removingAddon === firmAddon.id
+                                                        removingAddon === (firmAddon.addon?.id || firmAddon.addon_id)
                                                             ? 'bg-gray-400 text-white cursor-wait'
                                                             : 'bg-white !border border-[#3B4A66] text-gray-700 hover:bg-gray-50'
                                                     }`}
                                                 >
-                                                    {removingAddon === firmAddon.id ? 'Removing...' : 'Remove'}
+                                                    {removingAddon === (firmAddon.addon?.id || firmAddon.addon_id) ? 'Removing...' : 'Remove'}
                                                 </button>
                                             </div>
                                         </div>

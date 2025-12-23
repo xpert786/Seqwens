@@ -1004,7 +1004,7 @@ const SchedulingCalendar = () => {
                             <p className="text-gray-600 font-[BasisGrotesquePro]">Manage appointments, deadlines, and meetings</p>
                         </div>
                         <div className="flex items-center gap-3 mt-4 lg:mt-0">
-                            <button
+                            {/* <button
                                 onClick={() => setIsSetAvailabilityModalOpen(true)}
                                 className="px-4 py-2 bg-white border border-[#E8F0FF] text-[#3B4A66] !rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
                             >
@@ -1012,7 +1012,7 @@ const SchedulingCalendar = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 Set Availability
-                            </button>
+                            </button> */}
                             <button
                                 onClick={() => setIsAddEventModalOpen(true)}
                                 className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro]"
@@ -1089,7 +1089,7 @@ const SchedulingCalendar = () => {
                     </div>
 
                     {/* External Calendar Sync */}
-                    <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mb-6">
+                    {/* <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mb-6">
                         <h4 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]">External Calendar Sync</h4>
                         <div className="flex flex-col sm:flex-row gap-4 items-end">
                             <div className="flex-1">
@@ -1134,7 +1134,7 @@ const SchedulingCalendar = () => {
                                 Sync Now
                             </button>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Main Content Area */}

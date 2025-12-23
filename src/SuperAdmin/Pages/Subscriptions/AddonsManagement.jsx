@@ -15,11 +15,11 @@ export default function AddonsManagement() {
 
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
+    addon_type: '',
     description: '',
     features: [''],
     price: '',
-    price_unit: 'per use',
+    price_unit: 'per month',
     billing_frequency: 'monthly',
     is_active: true
   });
@@ -50,19 +50,25 @@ export default function AddonsManagement() {
     fetchAddons();
   }, [fetchAddons]);
 
-  // Fetch simple addons list
+  // Fetch addon types list for dropdown
   const fetchSimpleAddons = useCallback(async () => {
     try {
       setLoadingSimpleAddons(true);
-      const response = await superAdminAddonsAPI.getSimpleAddons();
+      const response = await superAdminAddonsAPI.listAddons();
       
-      if (response.success && response.data) {
-        setSimpleAddons(Array.isArray(response.data) ? response.data : []);
+      if (response.success && response.data && response.data.addons) {
+        // Extract addon types from the full list
+        const addonTypes = response.data.addons.map(addon => ({
+          addon_type: addon.addon_type,
+          name: addon.name,
+          features: addon.features || []
+        }));
+        setSimpleAddons(addonTypes);
       } else {
         setSimpleAddons([]);
       }
     } catch (err) {
-      console.error('Error fetching simple addons:', err);
+      console.error('Error fetching addon types:', err);
       setSimpleAddons([]);
     } finally {
       setLoadingSimpleAddons(false);
@@ -110,24 +116,24 @@ export default function AddonsManagement() {
     setEditingAddon(null);
     setFormData({
       name: '',
-      code: '',
+      addon_type: '',
       description: '',
       features: [''],
       price: '',
-      price_unit: 'per use',
+      price_unit: 'per month',
       billing_frequency: 'monthly',
       is_active: true
     });
     setShowAddModal(true);
   };
 
-  const handleCodeSelect = (selectedCode) => {
-    const selectedAddon = simpleAddons.find(addon => addon.code === selectedCode);
+  const handleAddonTypeSelect = (selectedAddonType) => {
+    const selectedAddon = simpleAddons.find(addon => addon.addon_type === selectedAddonType);
     if (selectedAddon) {
       setFormData(prev => ({
         ...prev,
-        code: selectedAddon.code,
-        name: selectedAddon.code.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        addon_type: selectedAddon.addon_type,
+        name: selectedAddon.name || selectedAddon.addon_type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
         features: selectedAddon.features && selectedAddon.features.length > 0 ? selectedAddon.features : ['']
       }));
     }
@@ -137,11 +143,11 @@ export default function AddonsManagement() {
     setEditingAddon(addon);
     setFormData({
       name: addon.name || '',
-      code: addon.code || '',
+      addon_type: addon.addon_type || '',
       description: addon.description || '',
       features: Array.isArray(addon.features) && addon.features.length > 0 ? addon.features : [''],
       price: addon.price || '',
-      price_unit: addon.price_unit || 'per use',
+      price_unit: addon.price_unit || 'per month',
       billing_frequency: addon.billing_frequency || 'monthly',
       is_active: addon.is_active !== false
     });
@@ -157,7 +163,7 @@ export default function AddonsManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.code || !formData.price) {
+    if (!formData.name || !formData.addon_type || !formData.price) {
       toast.error('Please fill in all required fields', {
         position: 'top-right',
         autoClose: 3000
@@ -168,13 +174,13 @@ export default function AddonsManagement() {
     try {
       const payload = {
         name: formData.name,
-        code: formData.code,
+        addon_type: formData.addon_type,
         description: formData.description || '',
         features: formData.features.filter(f => f.trim() !== ''),
         price: parseFloat(formData.price).toFixed(2),
-        price_unit: formData.price_unit,
-        billing_frequency: formData.billing_frequency,
-        is_active: formData.is_active
+        price_unit: formData.price_unit || 'per month',
+        billing_frequency: formData.billing_frequency || 'monthly',
+        is_active: formData.is_active !== false
       };
 
       let response;
@@ -278,7 +284,7 @@ export default function AddonsManagement() {
                   Name
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">
-                  Code
+                  Addon Type
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 font-[BasisGrotesquePro]">
                   Price
@@ -314,11 +320,11 @@ export default function AddonsManagement() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
-                      <code className="px-2 py-1 bg-gray-100 rounded text-xs">{addon.code}</code>
+                      <code className="px-2 py-1 bg-gray-100 rounded text-xs">{addon.addon_type}</code>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
                       <div className="font-semibold">{addon.price_display || `$${parseFloat(addon.price || 0).toFixed(2)}`}</div>
-                      <div className="text-xs text-gray-500">{addon.price_unit || 'per use'}</div>
+                      <div className="text-xs text-gray-500">{addon.price_unit || 'per month'}</div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900 font-[BasisGrotesquePro]">
                       <span className="capitalize">{addon.billing_frequency || 'one_time'}</span>
@@ -408,21 +414,21 @@ export default function AddonsManagement() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
-                    Code <span className="text-red-500">*</span>
+                    Addon Type <span className="text-red-500">*</span>
                   </label>
                   {editingAddon ? (
                     <input
                       type="text"
-                      value={formData.code}
+                      value={formData.addon_type}
                       disabled
                       className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm disabled:bg-gray-100"
-                      placeholder="additional_office"
+                      placeholder="additional_office_address"
                     />
                   ) : (
                     <>
                       <select
-                        value={formData.code}
-                        onChange={(e) => handleCodeSelect(e.target.value)}
+                        value={formData.addon_type}
+                        onChange={(e) => handleAddonTypeSelect(e.target.value)}
                         required
                         className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
                       >
@@ -431,15 +437,15 @@ export default function AddonsManagement() {
                           <option value="" disabled>Loading addon types...</option>
                         ) : (
                           simpleAddons.map((addon) => (
-                            <option key={addon.code} value={addon.code}>
-                              {addon.code.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            <option key={addon.addon_type} value={addon.addon_type}>
+                              {addon.name || addon.addon_type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                             </option>
                           ))
                         )}
                       </select>
                       {!editingAddon && (
                         <p className="mt-1 text-xs text-gray-500 font-[BasisGrotesquePro]">
-                          Selecting a code will auto-populate name and features
+                          Selecting an addon type will auto-populate name and features
                         </p>
                       )}
                     </>
@@ -522,7 +528,7 @@ export default function AddonsManagement() {
                     value={formData.price_unit}
                     onChange={(e) => handleInputChange('price_unit', e.target.value)}
                     className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro] text-sm"
-                    placeholder="per office"
+                    placeholder="per month"
                   />
                 </div>
 

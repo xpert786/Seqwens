@@ -804,12 +804,22 @@ export const firmAdminAnalyticsAPI = {
 
 // Data Intake API functions
 export const dataIntakeAPI = {
+  // Get signature status for data entry form
+  getSignatureStatus: async () => {
+    return await apiRequest('/taxpayer/data-entry-form/signature-status/', 'GET');
+  },
+
   // Request to sign data entry form
   requestSignForm: async () => {
     return await apiRequest('/taxpayer/data-entry-form/sign-request/', 'POST');
   },
 
-  // Submit signature for data entry form
+  // Submit signature via SignWell (recommended)
+  signWithSignWell: async () => {
+    return await apiRequest('/taxpayer/data-entry-form/signwell-sign/', 'POST', {});
+  },
+
+  // Submit signature for data entry form (fallback method)
   submitSignature: async (signatureData) => {
     const { signature_image, typed_text } = signatureData;
     const requestBody = {};
@@ -3157,13 +3167,14 @@ export const firmAdminClientsAPI = {
   },
 
   // Get client details
-  // Download client data entry form PDF
+  // Get client data entry form PDF (view or download)
   getClientDataEntryFormPDF: async (clientId) => {
     const token = getAccessToken();
     if (!token) {
       throw new Error('No authentication token found');
     }
 
+    // Endpoint: GET /api/firm/clients/<client_id>/data-entry-form-pdf/
     const url = `${API_BASE_URL}/firm/clients/${clientId}/data-entry-form-pdf/`;
     const config = {
       method: 'GET',
@@ -3180,7 +3191,7 @@ export const firmAdminClientsAPI = {
       throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
-    // Return blob for PDF download
+    // Return blob for PDF download/viewing
     const blob = await response.blob();
     return blob;
   },
@@ -4027,24 +4038,24 @@ export const superAdminAddonsAPI = {
 
 // Firm Admin Addons API functions
 export const firmAdminAddonsAPI = {
-  // Get firm's addons
+  // Get firm's active addons
   getFirmAddons: async () => {
     return await apiRequest('/user/firm-admin/add-ons/', 'GET');
   },
 
-  // List marketplace addons
+  // List all available addon types (marketplace)
   listMarketplaceAddons: async () => {
-    return await apiRequest('/user/firm-admin/add-ons/marketplace/', 'GET');
+    return await apiRequest('/user/firm-admin/add-ons/types/', 'GET');
   },
 
-  // Add addon to firm plan
+  // Add addon to firm subscription
   addAddonToFirm: async (addonData) => {
-    return await apiRequest('/user/firm-admin/add-ons/add/', 'POST', addonData);
+    return await apiRequest('/user/firm-admin/add-ons/', 'POST', addonData);
   },
 
-  // Remove addon from firm
-  removeAddonFromFirm: async (addonId) => {
-    return await apiRequest(`/user/firm-admin/add-ons/${addonId}/remove/`, 'DELETE');
+  // Remove addon from firm subscription (uses AddOn type ID, not FirmAddOn ID)
+  removeAddonFromFirm: async (addonTypeId) => {
+    return await apiRequest(`/user/firm-admin/add-ons/${addonTypeId}/`, 'DELETE');
   }
 };
 
@@ -6098,7 +6109,7 @@ export const firmAdminSubscriptionAPI = {
     });
   },
   // Change subscription plan
-  changeSubscription: async (subscriptionPlanId, billingCycle, paymentMethod = 'stripe', changeImmediately = true, successUrl = null, cancelUrl = null) => {
+  changeSubscription: async (subscriptionPlanId, billingCycle, paymentMethod = 'stripe', changeImmediately = true, successUrl = null, cancelUrl = null, paymentMethodId = null, isDjangoId = false) => {
     const payload = {
       subscription_plan_id: subscriptionPlanId,
       billing_cycle: billingCycle,
@@ -6113,8 +6124,32 @@ export const firmAdminSubscriptionAPI = {
     if (cancelUrl) {
       payload.cancel_url = cancelUrl;
     }
+
+    // If payment method ID is provided
+    if (paymentMethodId) {
+      if (isDjangoId) {
+        // If it's a Django payment method ID (database ID), use saved_payment_method_id
+        // The backend will look up the Stripe payment method ID from its database
+        payload.saved_payment_method_id = paymentMethodId;
+      } else {
+        // If it's a Stripe payment method ID (pm_xxxxx), use payment_method_id
+        payload.payment_method_id = paymentMethodId;
+      }
+    }
     
     return await apiRequest('/user/firm-admin/subscription/change/', 'POST', payload);
+  },
+  // Get Stripe publishable key
+  getStripePublishableKey: async () => {
+    return await apiRequest('/user/firm-admin/subscription/stripe-publishable-key/', 'GET');
+  },
+  // Get auto-renewal settings
+  getAutoRenewalSettings: async () => {
+    return await apiRequest('/user/firm-admin/settings/auto-renewal/', 'GET');
+  },
+  // Update auto-renewal settings
+  updateAutoRenewalSettings: async (settings) => {
+    return await apiRequest('/user/firm-admin/settings/auto-renewal/', 'PATCH', settings);
   },
 };
 

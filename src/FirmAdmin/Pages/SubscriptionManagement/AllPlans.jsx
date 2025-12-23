@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { getAccessToken, getStorage } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminSubscriptionAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = getApiBaseUrl();
 
 const AllPlans = ({ currentPlanName }) => {
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -63,13 +66,13 @@ const AllPlans = ({ currentPlanName }) => {
                 // Fallback: old structure with flat array
                 else if (Array.isArray(result.data)) {
                     plansData = result.data.filter(plan => 
-                        plan.billing_cycle === billingCycle && plan.is_active !== false
+                        plan.billing_cycle === billingCycle
                     );
                 }
             } else if (Array.isArray(result)) {
                 // Direct array response (old format)
                 plansData = result.filter(plan => 
-                    plan.billing_cycle === billingCycle && plan.is_active !== false
+                    plan.billing_cycle === billingCycle
                 );
             }
 
@@ -84,10 +87,9 @@ const AllPlans = ({ currentPlanName }) => {
             }
             }
 
-            // Filter only active plans
-            const filteredPlans = plansData.filter(plan => plan.is_active !== false);
-
-            setPlans(filteredPlans);
+            // For public endpoint, show all plans regardless of is_active status
+            // The public endpoint already returns the appropriate plans
+            setPlans(plansData);
         } catch (err) {
             console.error('Error fetching subscription plans:', err);
             const errorMsg = handleAPIError(err);
@@ -102,6 +104,57 @@ const AllPlans = ({ currentPlanName }) => {
     useEffect(() => {
         fetchPlans();
     }, [fetchPlans, billingCycle]);
+
+    // Handle subscription success redirect from Stripe
+    useEffect(() => {
+        const subscriptionSuccess = searchParams.get('subscription_success');
+        const subscriptionCancelled = searchParams.get('subscription_cancelled');
+
+        if (subscriptionSuccess === 'true') {
+            // Show success message
+            toast.success('Subscription activated successfully!', {
+                position: 'top-right',
+                autoClose: 5000,
+            });
+
+            // Refresh user data to get updated subscription info
+            const storage = getStorage();
+            const token = getAccessToken();
+            if (token) {
+                fetchWithCors(`${API_BASE_URL}/user/me/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success && result.data) {
+                            const userData = result.data;
+                            storage.setItem("userData", JSON.stringify(userData));
+                            sessionStorage.setItem("userData", JSON.stringify(userData));
+                            // Remove the query parameter
+                            setSearchParams({});
+                            // Refresh plans to show updated subscription
+                            fetchPlans();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching user data:', err);
+                        setSearchParams({});
+                    });
+            } else {
+                setSearchParams({});
+            }
+        } else if (subscriptionCancelled === 'true') {
+            toast.info('Subscription change was cancelled.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            setSearchParams({});
+        }
+    }, [searchParams, setSearchParams, fetchPlans]);
 
     // Format plan type name
     const formatPlanType = (type) => {
@@ -203,12 +256,20 @@ const AllPlans = ({ currentPlanName }) => {
             setProcessing(true);
             setShowUpgradeConfirmModal(false);
 
+            // Build success and cancel URLs - use current page
+            const baseUrl = window.location.origin;
+            const currentPath = location.pathname;
+            const successUrl = `${baseUrl}${currentPath}?subscription_success=true`;
+            const cancelUrl = `${baseUrl}${currentPath}?subscription_cancelled=true`;
+
             // Call the change subscription API
             const response = await firmAdminSubscriptionAPI.changeSubscription(
                 selectedPlanForUpgrade.id,
                 billingCycle, // "monthly" or "yearly"
                 "stripe", // payment_method
-                true // change_immediately
+                true, // change_immediately
+                successUrl, // success_url
+                cancelUrl // cancel_url
             );
 
             if (response.success) {

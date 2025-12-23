@@ -3,6 +3,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import ConfirmationModal from '../../../../components/ConfirmationModal';
 
 const API_BASE_URL = getApiBaseUrl();
 

@@ -93,6 +93,59 @@ export default function DataIntakeForm() {
   // Track if user has existing data (to determine POST vs PATCH)
   const [hasExistingData, setHasExistingData] = useState(false);
 
+  // Signature modal state
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [signatureRequested, setSignatureRequested] = useState(false);
+  const [signatureLoading, setSignatureLoading] = useState(false);
+  const [signatureStatus, setSignatureStatus] = useState(null);
+  const [checkingSignatureStatus, setCheckingSignatureStatus] = useState(false);
+
+  // Check signature status on mount and periodically if pending
+  useEffect(() => {
+    const checkSignatureStatus = async () => {
+      try {
+        setCheckingSignatureStatus(true);
+        const response = await dataIntakeAPI.getSignatureStatus();
+        
+        if (response.success && response.data) {
+          const { is_signed, signature_status, signature_request_status } = response.data;
+          
+          // Update signature status based on API response
+          if (is_signed) {
+            setSignatureStatus('signed');
+            setSignatureRequested(true);
+          } else if (signature_status === 'pending' || signature_request_status === 'pending') {
+            setSignatureStatus('pending');
+            setSignatureRequested(true);
+          } else if (signature_status === 'not_requested') {
+            setSignatureStatus('not_requested');
+            setSignatureRequested(false);
+          } else {
+            setSignatureStatus(signature_status || 'not_requested');
+            setSignatureRequested(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking signature status:', error);
+        // If form doesn't exist or error, default to not_requested
+        setSignatureStatus('not_requested');
+        setSignatureRequested(false);
+      } finally {
+        setCheckingSignatureStatus(false);
+      }
+    };
+
+    checkSignatureStatus();
+    
+    // If status is pending, check periodically (every 10 seconds) to see if it's been signed
+    // Use a ref to track the current status to avoid stale closure
+    const interval = setInterval(() => {
+      checkSignatureStatus();
+    }, 10000); // Check every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Check if user already has data intake data and pre-fill form
   useEffect(() => {
     const checkExistingData = async () => {
@@ -1289,29 +1342,55 @@ export default function DataIntakeForm() {
     }));
   };
 
-  // Handle signature request
+  // Handle signature request via SignWell
   const handleRequestSign = async () => {
     try {
       setSignatureLoading(true);
-      const response = await dataIntakeAPI.requestSignForm();
+      const response = await dataIntakeAPI.signWithSignWell();
       
-      if (response.success) {
+      if (response.success && response.data) {
         setSignatureRequested(true);
         setSignatureStatus(response.data?.status || 'pending');
-        setShowSignatureModal(true);
-        toast.success(response.message || 'Signature request created. Please sign the form.', {
-          position: 'top-right',
-          autoClose: 3000
-        });
+        
+        // Get the signing URL (prefer embedded_url if available, otherwise signing_url)
+        const signerUrls = response.data?.signer_urls;
+        const userData = getUserData();
+        const userEmail = userData?.email || userData?.user?.email;
+        
+        let signingUrl = response.data?.signing_url;
+        
+        // Try to get embedded URL for the current user
+        if (signerUrls && userEmail && signerUrls[userEmail]) {
+          signingUrl = signerUrls[userEmail].embedded_url || signerUrls[userEmail].signing_url;
+        } else if (signerUrls && Object.keys(signerUrls).length > 0) {
+          // If no email match, use the first signer's URL
+          const firstSigner = Object.values(signerUrls)[0];
+          signingUrl = firstSigner.embedded_url || firstSigner.signing_url;
+        }
+        
+        if (signingUrl) {
+          toast.success(response.message || 'Redirecting to SignWell for signing...', {
+            position: 'top-right',
+            autoClose: 3000
+          });
+          
+          // Open SignWell in a new tab/window
+          window.open(signingUrl, '_blank', 'noopener,noreferrer');
+          
+          // Optionally, you can also redirect in the same window:
+          // window.location.href = signingUrl;
+        } else {
+          throw new Error('No signing URL received from SignWell');
+        }
       } else {
-        throw new Error(response.message || 'Failed to create signature request');
+        throw new Error(response.message || 'Failed to create SignWell signing request');
       }
     } catch (error) {
-      console.error('Error requesting signature:', error);
+      console.error('Error requesting SignWell signature:', error);
       const errorMsg = handleAPIError(error);
-      toast.error(errorMsg || 'Failed to create signature request. Please try again.', {
+      toast.error(errorMsg || 'Failed to create SignWell signing request. Please try again.', {
         position: 'top-right',
-        autoClose: 3000
+        autoClose: 5000
       });
     } finally {
       setSignatureLoading(false);
@@ -1325,8 +1404,11 @@ export default function DataIntakeForm() {
       const response = await dataIntakeAPI.submitSignature(signatureData);
       
       if (response.success) {
+        // Update signature status
         setSignatureStatus('signed');
+        setSignatureRequested(true);
         setShowSignatureModal(false);
+        
         toast.success(response.message || 'Signature submitted successfully!', {
           position: 'top-right',
           autoClose: 3000
@@ -3236,14 +3318,14 @@ export default function DataIntakeForm() {
                 fontFamily: 'BasisGrotesquePro'
               }}>
                 {signatureStatus === 'signed' 
-                  ? 'Your form has been signed successfully!'
+                  ? 'Your form has been signed successfully via SignWell!'
                   : signatureStatus === 'pending'
-                  ? 'Please complete your signature to finalize the form.'
-                  : 'Sign your completed data entry form to create a signed PDF document for your records.'}
+                  ? 'Please complete your signature in SignWell to finalize the form. If you closed the window, click the button below to open it again.'
+                  : 'Sign your completed data entry form using SignWell to create a professionally signed PDF document for your records.'}
               </p>
             </div>
             
-            {signatureStatus !== 'signed' && (
+            {signatureStatus !== 'signed' && !checkingSignatureStatus && (
               <button
                 className="btn text-white"
                 style={{ 
@@ -3251,20 +3333,37 @@ export default function DataIntakeForm() {
                   borderRadius: '8px',
                   fontFamily: 'BasisGrotesquePro'
                 }}
-                onClick={signatureRequested ? () => setShowSignatureModal(true) : handleRequestSign}
+                onClick={handleRequestSign}
                 disabled={signatureLoading}
               >
                 {signatureLoading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    {signatureRequested ? 'Opening Signature...' : 'Requesting Signature...'}
+                    {signatureRequested ? 'Opening SignWell...' : 'Preparing SignWell...'}
                   </>
                 ) : signatureRequested ? (
-                  'Sign Form'
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    </svg>
+                    Sign with SignWell
+                  </>
                 ) : (
-                  'Request to Sign Form'
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    </svg>
+                    Sign with SignWell
+                  </>
                 )}
               </button>
+            )}
+
+            {checkingSignatureStatus && (
+              <div className="d-flex align-items-center gap-2">
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span style={{ fontFamily: 'BasisGrotesquePro' }}>Checking signature status...</span>
+              </div>
             )}
 
             {signatureStatus === 'signed' && (
