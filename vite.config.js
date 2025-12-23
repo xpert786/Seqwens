@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/seqwens-frontend', // Base path for the application
   optimizeDeps: {
-    include: ['jspdf', 'jspdf-autotable'],
+    include: ['jspdf', 'jspdf-autotable', '@stripe/stripe-js', '@stripe/react-stripe-js'],
   },
   server: {
     port: 5173,
