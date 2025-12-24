@@ -29,13 +29,15 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
-          // Keep React, React-DOM, and React Router in the main bundle
-          // This ensures React is always loaded before any other code tries to use it
+          // Keep React, React-DOM, React Router, and Stripe in the main bundle
+          // This ensures core dependencies are always loaded before any other code tries to use them
           if (id.includes('node_modules')) {
-            // Keep React and React Router in the main bundle
+            // Keep React, React Router, and Stripe in the main bundle
+            // Stripe needs to be with React to avoid initialization order issues
             if (id.includes('/react/') || id.includes('/react-dom/') || 
                 id.includes('react/index') || id.includes('react-dom/index') ||
-                id.includes('/scheduler/') || id.includes('react-router')) {
+                id.includes('/scheduler/') || id.includes('react-router') ||
+                id.includes('@stripe')) {
               return undefined; // Keep in main bundle
             }
             // Material-UI
@@ -52,10 +54,6 @@ export default defineConfig({
             }
             if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
               return 'jspdf-vendor';
-            }
-            // Stripe
-            if (id.includes('@stripe')) {
-              return 'stripe-vendor';
             }
             // Other large vendor libraries
             if (id.includes('axios') || id.includes('html2canvas')) {
