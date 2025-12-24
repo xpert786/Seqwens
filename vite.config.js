@@ -6,17 +6,34 @@ export default defineConfig({
   plugins: [react()],
   base: '/seqwens-frontend', // Base path for the application
   optimizeDeps: {
-    include: ['jspdf', 'jspdf-autotable', '@stripe/stripe-js', '@stripe/react-stripe-js'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'jspdf',
+      'jspdf-autotable',
+      '@stripe/stripe-js',
+      '@stripe/react-stripe-js'
+    ],
   },
   build: {
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Split node_modules into separate chunks
+          // Don't split React - keep it in the main bundle to ensure it's always available
+          // This prevents "Cannot read properties of undefined" errors
           if (id.includes('node_modules')) {
-            // React and React-DOM
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
+            // Keep React and React-DOM in the main index bundle (don't split them)
+            // This ensures React is always loaded before any other code tries to use it
+            if (id.includes('/react/') || id.includes('/react-dom/') || 
+                id.includes('react/index') || id.includes('react-dom/index') ||
+                id.includes('/scheduler/')) {
+              // Return undefined to keep React in the main bundle
+              return undefined;
+            }
+            // React Router - can be split since it depends on React being available
+            if (id.includes('react-router')) {
+              return 'react-router-vendor';
             }
             // Material-UI
             if (id.includes('@mui')) {
@@ -85,6 +102,10 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 1200, // Increase limit to 1.2MB for warnings (route chunks are acceptable at this size)
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    },
   },
   server: {
     port: 5173,
