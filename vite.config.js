@@ -114,9 +114,10 @@ export default defineConfig({
             if (id.includes('Scheduling') || id.includes('calendar')) {
               return 'firm-scheduling';
             }
-            if (id.includes('Offices')) {
-              return 'firm-offices';
-            }
+            // Keep Offices in firm-routes to avoid React initialization issues
+            // if (id.includes('Offices')) {
+            //   return 'firm-offices';
+            // }
             // Other FirmAdmin pages - keep routes together
             if (id.includes('FirmRoutes')) {
               return 'firm-routes';
