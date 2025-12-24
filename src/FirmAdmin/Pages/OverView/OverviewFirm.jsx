@@ -145,6 +145,9 @@ export default function FirmAdminDashboard() {
     const subscriptionCancelled = searchParams.get('subscription_cancelled');
 
     if (subscriptionSuccess === 'true') {
+      // Remove the query parameter first to prevent infinite loop
+      setSearchParams({});
+      
       // Show success message
       toast.success('Subscription activated successfully! Welcome to your dashboard.', {
         position: 'top-right',
@@ -172,24 +175,21 @@ export default function FirmAdminDashboard() {
                   const userData = result.data;
                   storage.setItem("userData", JSON.stringify(userData));
                   sessionStorage.setItem("userData", JSON.stringify(userData));
-                  // Refresh dashboard data to show updated subscription
-                  window.location.reload();
+                  // Refetch dashboard data instead of full page reload
+                  // Trigger a refetch by updating dateRange (which will trigger the fetchDashboardData useEffect)
+                  // Or just reload the page after removing the query parameter
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 500);
                 }
               })
               .catch(err => {
                 console.error('Error fetching user data:', err);
-                // Still remove the parameter even if fetch fails
-                setSearchParams({});
               });
-          } else {
-            setSearchParams({});
           }
         } catch (error) {
           console.error('Error updating user data:', error);
-          setSearchParams({});
         }
-      } else {
-        setSearchParams({});
       }
     } else if (subscriptionCancelled === 'true') {
       // Show cancellation message

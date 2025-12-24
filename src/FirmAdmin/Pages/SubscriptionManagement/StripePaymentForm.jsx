@@ -157,8 +157,20 @@ const StripePaymentForm = ({ onSubmit, onCancel, processing, stripePublishableKe
 
   useEffect(() => {
     if (stripePublishableKey) {
-      const stripe = loadStripe(stripePublishableKey);
-      setStripePromise(stripe);
+      // loadStripe returns a Promise, so we need to handle it properly
+      loadStripe(stripePublishableKey)
+        .then(stripe => {
+          setStripePromise(stripe);
+        })
+        .catch(error => {
+          console.error('Error loading Stripe:', error);
+          toast.error('Failed to load payment form. Please refresh the page.', {
+            position: 'top-right',
+            autoClose: 3000,
+          });
+        });
+    } else {
+      setStripePromise(null);
     }
   }, [stripePublishableKey]);
 
