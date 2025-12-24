@@ -12,10 +12,11 @@ export default defineConfig({
       'react-router-dom',
       'jspdf',
       'jspdf-autotable',
+      'pdf-lib',
       '@stripe/stripe-js',
       '@stripe/react-stripe-js'
     ],
-    // Ensure React is always available for react-pdf
+    // Ensure React is always available
     esbuildOptions: {
       define: {
         global: 'globalThis',
@@ -64,8 +65,12 @@ export default defineConfig({
             if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
               return 'jspdf-vendor';
             }
+            // pdf-lib - keep in main bundle to avoid dependency issues
+            // It's used for PDF manipulation and needs all its dependencies available
             if (id.includes('pdf-lib')) {
-              return 'pdf-lib-vendor';
+              // Return undefined to keep pdf-lib in main bundle
+              // This ensures all its dependencies are available
+              return undefined;
             }
             // Stripe
             if (id.includes('@stripe')) {
