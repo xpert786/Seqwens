@@ -29,11 +29,12 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
-          // CRITICAL: Keep Context providers in main bundle FIRST, before any other checks
+          // CRITICAL: Keep ALL Context providers in main bundle FIRST, before any other checks
           // They use createContext which needs React to be available when the module loads
           // This must be checked before node_modules to catch source files
           if (id.includes('FirmSettingsContext') || id.includes('FirmPortalColorsContext') || 
-              id.includes('FirmAdmin/Context/')) {
+              id.includes('FirmAdmin/Context/') || id.includes('ModalContext') ||
+              id.includes('SuperAdmin/Context/')) {
             return undefined; // Keep in main bundle with React
           }
           
@@ -81,6 +82,11 @@ export default defineConfig({
             return 'tax-routes';
           }
           if (id.includes('SuperRoutes') || id.includes('SuperAdmin')) {
+            // Keep SuperDashboard in main bundle if it uses Context providers
+            // ModalContext is already handled above, but ensure SuperDashboard loads with React
+            if (id.includes('SuperDashboard')) {
+              return undefined; // Keep in main bundle with React and ModalContext
+            }
             return 'super-routes';
           }
           
@@ -110,9 +116,11 @@ export default defineConfig({
             if (id.includes('Workflow') || id.includes('Workflow-temp')) {
               return 'firm-workflow';
             }
-            if (id.includes('DocumentManagement') || id.includes('PdfViewer') || id.includes('FolderContents')) {
-              return 'firm-documents';
-            }
+            // Keep DocumentManagement in main bundle to avoid React initialization issues
+            // It may have dependencies that need React to be available
+            // if (id.includes('DocumentManagement') || id.includes('PdfViewer') || id.includes('FolderContents')) {
+            //   return 'firm-documents';
+            // }
             if (id.includes('ESignatureManagement') || id.includes('ESignature')) {
               return 'firm-esignature';
             }
