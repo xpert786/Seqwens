@@ -23,17 +23,14 @@ export default defineConfig({
           // Don't split React - keep it in the main bundle to ensure it's always available
           // This prevents "Cannot read properties of undefined" errors
           if (id.includes('node_modules')) {
-            // Keep React and React-DOM in the main index bundle (don't split them)
+            // Keep React, React-DOM, and React Router in the main index bundle (don't split them)
             // This ensures React is always loaded before any other code tries to use it
+            // React Router must also be in the main bundle since it depends on React
             if (id.includes('/react/') || id.includes('/react-dom/') || 
                 id.includes('react/index') || id.includes('react-dom/index') ||
-                id.includes('/scheduler/')) {
-              // Return undefined to keep React in the main bundle
+                id.includes('/scheduler/') || id.includes('react-router')) {
+              // Return undefined to keep React and React Router in the main bundle
               return undefined;
-            }
-            // React Router - can be split since it depends on React being available
-            if (id.includes('react-router')) {
-              return 'react-router-vendor';
             }
             // Material-UI
             if (id.includes('@mui')) {
@@ -43,9 +40,15 @@ export default defineConfig({
             if (id.includes('chart.js') || id.includes('react-chartjs-2') || id.includes('recharts')) {
               return 'charts-vendor';
             }
-            // PDF libraries
-            if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('react-pdf') || id.includes('pdf-lib')) {
-              return 'pdf-vendor';
+            // PDF libraries - split into separate chunks to reduce size
+            if (id.includes('react-pdf') || id.includes('pdfjs-dist')) {
+              return 'react-pdf-vendor';
+            }
+            if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
+              return 'jspdf-vendor';
+            }
+            if (id.includes('pdf-lib')) {
+              return 'pdf-lib-vendor';
             }
             // Stripe
             if (id.includes('@stripe')) {
@@ -88,12 +91,30 @@ export default defineConfig({
             if (id.includes('Analytics')) {
               return 'firm-analytics';
             }
-            // Don't split DocumentManagement - keep it with firm-routes to avoid circular dependency issues
-            // if (id.includes('DocumentManagement') || id.includes('Document')) {
-            //   return 'firm-documents';
-            // }
+            // Split DocumentManagement and related components
+            if (id.includes('DocumentManagement') || id.includes('PdfViewer') || id.includes('FolderContents')) {
+              return 'firm-documents';
+            }
+            if (id.includes('ESignatureManagement') || id.includes('ESignature')) {
+              return 'firm-esignature';
+            }
+            if (id.includes('ClientManage') || id.includes('ClientDetails') || id.includes('ClientManagement')) {
+              return 'firm-clients';
+            }
+            if (id.includes('StaffManagement') || id.includes('StaffDetails') || id.includes('Staff')) {
+              return 'firm-staff';
+            }
+            if (id.includes('TaskManagement') || id.includes('TaskDetails') || id.includes('Tasks')) {
+              return 'firm-tasks';
+            }
             if (id.includes('Billing') || id.includes('Invoice')) {
               return 'firm-billing';
+            }
+            if (id.includes('Scheduling') || id.includes('calendar') || id.includes('Appointments')) {
+              return 'firm-scheduling';
+            }
+            if (id.includes('Offices') || id.includes('Office')) {
+              return 'firm-offices';
             }
             // Other FirmAdmin pages
             return 'firm-routes';
