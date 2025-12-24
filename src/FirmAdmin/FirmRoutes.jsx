@@ -77,11 +77,9 @@ function FirmAdminProtectedRoute({ children }) {
   }
 
   // Check if admin user has no subscription plan (except on finalize-subscription page)
-  // Handle both with and without base path
+  // Handle both with and without base path - use includes for better matching
   const pathname = location.pathname;
-  const isFinalizeSubscription = pathname.endsWith('/firmadmin/finalize-subscription') || 
-                                  pathname.endsWith('/finalize-subscription') ||
-                                  pathname.includes('/finalize-subscription');
+  const isFinalizeSubscription = pathname.includes('/finalize-subscription');
   
   if (!isFinalizeSubscription) {
     const userDataStr = storage?.getItem("userData");
@@ -102,6 +100,12 @@ function FirmAdminProtectedRoute({ children }) {
 }
 
 export default function FirmRoutes() {
+  // Debug logging for production issues
+  if (process.env.NODE_ENV === 'production') {
+    console.log('[FirmRoutes] Initializing...');
+    console.log('[FirmRoutes] Current pathname:', window.location.pathname);
+  }
+
   return (
     <FirmPortalColorsProvider>
       <FirmSettingsProvider>

@@ -34,8 +34,8 @@ import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
 import RoleSelectionScreen from "./ClientOnboarding/components/RoleSelectionScreen";
 import TailwindTest from "./TailwindTest";
 import FeedbackWrapper from "./ClientOnboarding/components/FeedbackWrapper";
-// Temporarily import FirmRoutes directly to debug loading issue
-import FirmRoutes from "./FirmAdmin/FirmRoutes";
+// Lazy load FirmRoutes for code splitting
+const FirmRoutes = lazy(() => import("./FirmAdmin/FirmRoutes"));
 
 // Error Boundary Component for lazy-loaded routes
 class RouteErrorBoundary extends React.Component {
@@ -331,7 +331,9 @@ export default function App() {
         {/* Firm Admin Routes - No authentication required */}
         <Route path="/firmadmin/*" element={
           <RouteErrorBoundary>
-            <FirmRoutes />
+            <Suspense fallback={<RouteLoader />}>
+              <FirmRoutes />
+            </Suspense>
           </RouteErrorBoundary>
         } />
       </Routes>
