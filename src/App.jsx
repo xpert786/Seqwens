@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import React from "react";
 // import Homepage from "./pages/Homepage";
 import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
@@ -31,10 +33,154 @@ import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
 import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
 import RoleSelectionScreen from "./ClientOnboarding/components/RoleSelectionScreen";
 import TailwindTest from "./TailwindTest";
-import TaxRoutes from "./Taxpreparer/TaxRoutes";
-import SuperRoutes from "./SuperAdmin/SuperRoutes";
-import FirmRoutes from "./FirmAdmin/FirmRoutes";
 import FeedbackWrapper from "./ClientOnboarding/components/FeedbackWrapper";
+// Temporarily import FirmRoutes directly to debug loading issue
+import FirmRoutes from "./FirmAdmin/FirmRoutes";
+
+// Error Boundary Component for lazy-loaded routes
+class RouteErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Route loading error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          padding: '20px',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ color: '#EF4444', marginBottom: '10px' }}>Error Loading Page</h2>
+          <p style={{ color: '#666', marginBottom: '20px' }}>
+            {this.state.error?.message || 'An error occurred while loading this page.'}
+          </p>
+          <button 
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#3B82F6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Lazy load large route components for code splitting with error handling
+const TaxRoutes = lazy(() => {
+  console.log('Loading TaxRoutes...');
+  return import("./Taxpreparer/TaxRoutes").catch(err => {
+    console.error('Error loading TaxRoutes:', err);
+    throw err;
+  });
+});
+const SuperRoutes = lazy(() => {
+  console.log('Loading SuperRoutes...');
+  return import("./SuperAdmin/SuperRoutes").catch(err => {
+    console.error('Error loading SuperRoutes:', err);
+    throw err;
+  });
+});
+// Temporarily disabled lazy loading for FirmRoutes to debug
+// const FirmRoutes = lazy(() => {
+//   console.log('Loading FirmRoutes...');
+//   return import("./FirmAdmin/FirmRoutes")
+//     .then(module => {
+//       console.log('FirmRoutes loaded successfully:', module);
+//       return module;
+//     })
+//     .catch(err => {
+//       console.error('Error loading FirmRoutes:', err);
+//       console.error('Error stack:', err.stack);
+//       throw err;
+//     });
+// });
+
+// Loading component for lazy routes with timeout detection
+const RouteLoader = () => {
+  const [showTimeout, setShowTimeout] = React.useState(false);
+  
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTimeout(true);
+      console.warn('Route loading is taking longer than expected. This might indicate a problem.');
+    }, 10000); // Show warning after 10 seconds
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      fontSize: '16px',
+      color: '#666'
+    }}>
+      <div>
+        <div style={{ 
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 10px'
+        }}></div>
+        <p>Loading...</p>
+        {showTimeout && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <p style={{ color: '#EF4444', fontSize: '14px', marginBottom: '10px' }}>
+              Loading is taking longer than expected.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#3B82F6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Reload Page
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function App() {
   return (
@@ -165,13 +311,29 @@ export default function App() {
         </Route>
 
         {/* Tax Preparer Routes - No authentication required */}
-        <Route path="/taxdashboard/*" element={<TaxRoutes />} />
+        <Route path="/taxdashboard/*" element={
+          <RouteErrorBoundary>
+            <Suspense fallback={<RouteLoader />}>
+              <TaxRoutes />
+            </Suspense>
+          </RouteErrorBoundary>
+        } />
 
         {/* Super Admin Routes - No authentication required */}
-        <Route path="/superadmin/*" element={<SuperRoutes />} />
+        <Route path="/superadmin/*" element={
+          <RouteErrorBoundary>
+            <Suspense fallback={<RouteLoader />}>
+              <SuperRoutes />
+            </Suspense>
+          </RouteErrorBoundary>
+        } />
 
         {/* Firm Admin Routes - No authentication required */}
-        <Route path="/firmadmin/*" element={<FirmRoutes />} />
+        <Route path="/firmadmin/*" element={
+          <RouteErrorBoundary>
+            <FirmRoutes />
+          </RouteErrorBoundary>
+        } />
       </Routes>
     </FeedbackWrapper>
   );

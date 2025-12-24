@@ -77,7 +77,13 @@ function FirmAdminProtectedRoute({ children }) {
   }
 
   // Check if admin user has no subscription plan (except on finalize-subscription page)
-  if (location.pathname !== '/firmadmin/finalize-subscription') {
+  // Handle both with and without base path
+  const pathname = location.pathname;
+  const isFinalizeSubscription = pathname.endsWith('/firmadmin/finalize-subscription') || 
+                                  pathname.endsWith('/finalize-subscription') ||
+                                  pathname.includes('/finalize-subscription');
+  
+  if (!isFinalizeSubscription) {
     const userDataStr = storage?.getItem("userData");
     if (userDataStr) {
       try {
