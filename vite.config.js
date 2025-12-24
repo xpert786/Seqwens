@@ -78,6 +78,13 @@ export default defineConfig({
           
           // Split FirmAdmin into smaller chunks
           if (id.includes('FirmAdmin')) {
+            // Keep FirmRoutes and Context providers in main bundle to avoid React initialization issues
+            // They use createContext which needs React to be available when the module loads
+            // Must check this FIRST before other FirmAdmin patterns
+            if (id.includes('FirmRoutes') || id.includes('/Context/') || 
+                id.includes('FirmSettingsContext') || id.includes('FirmPortalColorsContext')) {
+              return undefined; // Keep in main bundle with React
+            }
             // Split large pages into separate chunks
             if (id.includes('OverviewFirm') || id.includes('OverView')) {
               return 'firm-overview';
@@ -118,11 +125,7 @@ export default defineConfig({
             // if (id.includes('Offices')) {
             //   return 'firm-offices';
             // }
-            // Other FirmAdmin pages - keep routes together
-            if (id.includes('FirmRoutes')) {
-              return 'firm-routes';
-            }
-            // Other FirmAdmin components
+            // Other FirmAdmin components - keep in firm-routes chunk
             return 'firm-routes';
           }
         },
