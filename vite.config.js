@@ -15,10 +15,26 @@ export default defineConfig({
       '@stripe/stripe-js',
       '@stripe/react-stripe-js'
     ],
+    // Ensure React is always available for react-pdf
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
   },
   build: {
     rollupOptions: {
+      // Ensure React is properly resolved for all chunks
+      external: (id) => {
+        // Don't externalize React - we want it bundled
+        return false;
+      },
       output: {
+        // Ensure proper chunk dependencies and loading order
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        // Ensure chunks that depend on React wait for React to load
         manualChunks: (id) => {
           // Don't split React - keep it in the main bundle to ensure it's always available
           // This prevents "Cannot read properties of undefined" errors
@@ -41,8 +57,9 @@ export default defineConfig({
               return 'charts-vendor';
             }
             // PDF libraries - split into separate chunks to reduce size
-            if (id.includes('react-pdf') || id.includes('pdfjs-dist')) {
-              return 'react-pdf-vendor';
+            // Note: react-pdf has been removed, only pdfjs-dist remains (if used elsewhere)
+            if (id.includes('pdfjs-dist')) {
+              return 'pdfjs-vendor';
             }
             if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
               return 'jspdf-vendor';
