@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { PDFDocument } from 'pdf-lib';
 import SimplePDFViewer from '../../components/SimplePDFViewer';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
 import { firmAdminClientsAPI, firmAdminDocumentsAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
@@ -267,42 +266,16 @@ export default function ESignatureManagement() {
   };
 
   // Merge annotations back to PDF
+  // Note: PDF annotation merging is disabled - returns original file
   const mergeAnnotationsToPdf = async () => {
     if (!uploadedFile) return null;
 
     try {
-      const pdfBytes = await uploadedFile.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(pdfBytes);
-
-      // Add comments as text annotations
-      for (const comment of comments) {
-        try {
-          const page = pdfDoc.getPage(comment.page - 1);
-          const { width, height } = page.getSize();
-
-          // Calculate annotation position (convert from screen coordinates to PDF coordinates)
-          // Note: This is a simplified conversion - you may need to adjust based on actual PDF dimensions
-          const x = comment.position.left;
-          const y = height - comment.position.top; // PDF coordinates are bottom-up
-
-          // Create a text annotation (popup annotation)
-          // pdf-lib supports popup annotations for comments
-          page.drawText(`Comment: ${comment.comment}\nSelected: "${comment.text}"`, {
-            x: Math.max(0, Math.min(x, width - 200)),
-            y: Math.max(0, Math.min(y, height - 50)),
-            size: 10,
-            color: { r: 0, g: 0, b: 0 },
-          });
-        } catch (error) {
-          console.error(`Error adding comment to page ${comment.page}:`, error);
-        }
-      }
-
-      const modifiedPdfBytes = await pdfDoc.save();
-      const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-      return blob;
+      // Return the original file as-is since pdf-lib has been removed
+      // In a production environment, this would be handled by the backend
+      return uploadedFile;
     } catch (error) {
-      console.error('Error merging annotations:', error);
+      console.error('Error preparing PDF:', error);
       return null;
     }
   };
