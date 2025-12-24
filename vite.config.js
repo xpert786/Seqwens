@@ -6,7 +6,134 @@ export default defineConfig({
   plugins: [react()],
   base: '/seqwens-frontend', // Base path for the application
   optimizeDeps: {
-    include: ['jspdf', 'jspdf-autotable', '@stripe/stripe-js', '@stripe/react-stripe-js'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'jspdf',
+      'jspdf-autotable',
+      '@stripe/stripe-js',
+      '@stripe/react-stripe-js'
+    ],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        // Ensure proper chunk dependencies and loading order
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        manualChunks: (id) => {
+          // Keep React, React-DOM, and React Router in the main bundle
+          // This ensures React is always loaded before any other code tries to use it
+          if (id.includes('node_modules')) {
+            // Keep React and React Router in the main bundle
+            if (id.includes('/react/') || id.includes('/react-dom/') || 
+                id.includes('react/index') || id.includes('react-dom/index') ||
+                id.includes('/scheduler/') || id.includes('react-router')) {
+              return undefined; // Keep in main bundle
+            }
+            // Material-UI
+            if (id.includes('@mui')) {
+              return 'mui-vendor';
+            }
+            // Chart libraries
+            if (id.includes('chart.js') || id.includes('react-chartjs-2') || id.includes('recharts')) {
+              return 'charts-vendor';
+            }
+            // PDF libraries
+            if (id.includes('pdfjs-dist')) {
+              return 'pdfjs-vendor';
+            }
+            if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
+              return 'jspdf-vendor';
+            }
+            // Stripe
+            if (id.includes('@stripe')) {
+              return 'stripe-vendor';
+            }
+            // Other large vendor libraries
+            if (id.includes('axios') || id.includes('html2canvas')) {
+              return 'utils-vendor';
+            }
+            // All other node_modules
+            return 'vendor';
+          }
+          
+          // Split large source files
+          if (id.includes('apiUtils.jsx')) {
+            return 'api-utils';
+          }
+          
+          // Split route files into separate chunks
+          if (id.includes('TaxRoutes') || id.includes('Taxpreparer')) {
+            return 'tax-routes';
+          }
+          if (id.includes('SuperRoutes') || id.includes('SuperAdmin')) {
+            return 'super-routes';
+          }
+          
+          // Split FirmAdmin into smaller chunks
+          if (id.includes('FirmAdmin')) {
+            // Split large pages into separate chunks
+            if (id.includes('OverviewFirm') || id.includes('OverView')) {
+              return 'firm-overview';
+            }
+            if (id.includes('SubscriptionManagement') || id.includes('Subscription')) {
+              return 'firm-subscription';
+            }
+            if (id.includes('Workflow') || id.includes('Workflow-temp')) {
+              return 'firm-workflow';
+            }
+            if (id.includes('Analytics')) {
+              return 'firm-analytics';
+            }
+            if (id.includes('DocumentManagement') || id.includes('PdfViewer') || id.includes('FolderContents')) {
+              return 'firm-documents';
+            }
+            if (id.includes('ESignatureManagement') || id.includes('ESignature')) {
+              return 'firm-esignature';
+            }
+            if (id.includes('Billing') || id.includes('Invoice')) {
+              return 'firm-billing';
+            }
+            if (id.includes('Staff')) {
+              return 'firm-staff';
+            }
+            if (id.includes('ClientManagement') || id.includes('ClientManage')) {
+              return 'firm-clients';
+            }
+            if (id.includes('TaskManagement') || id.includes('TaskDetails')) {
+              return 'firm-tasks';
+            }
+            if (id.includes('Scheduling') || id.includes('calendar')) {
+              return 'firm-scheduling';
+            }
+            if (id.includes('Offices')) {
+              return 'firm-offices';
+            }
+            // Other FirmAdmin pages - keep routes together
+            if (id.includes('FirmRoutes')) {
+              return 'firm-routes';
+            }
+            // Other FirmAdmin components
+            return 'firm-routes';
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1200, // Increase limit to 1.2MB
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    },
+    // Ensure proper source maps for debugging
+    sourcemap: false, // Set to true for debugging, false for production
   },
   server: {
     port: 5173,
