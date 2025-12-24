@@ -97,9 +97,11 @@ export default defineConfig({
             if (id.includes('Workflow') || id.includes('Workflow-temp')) {
               return 'firm-workflow';
             }
-            if (id.includes('Analytics')) {
-              return 'firm-analytics';
-            }
+            // Keep Analytics in firm-routes to avoid React initialization issues
+            // It uses Context providers which need React to be available
+            // if (id.includes('Analytics')) {
+            //   return 'firm-analytics';
+            // }
             if (id.includes('DocumentManagement') || id.includes('PdfViewer') || id.includes('FolderContents')) {
               return 'firm-documents';
             }
