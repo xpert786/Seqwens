@@ -1,25 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import { PDFDocument } from 'pdf-lib';
+import SimplePDFViewer from '../../components/SimplePDFViewer';
 import { DocumentSuccessIcon, ESignatureUpload } from '../Components/icons';
 import { firmAdminClientsAPI, firmAdminDocumentsAPI, handleAPIError, refreshAccessToken, clearUserData, getLoginUrl } from '../../ClientOnboarding/utils/apiUtils';
 import { getApiBaseUrl, fetchWithCors } from '../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
-
-// Set up PDF.js worker
-if (typeof window !== 'undefined') {
-  // Try multiple approaches for worker loading
-  const workerVersion = pdfjs.version || '5.3.31';
-
-  // First try: Local file from public folder (most reliable)
-  // If that fails, react-pdf will fall back to CDN
-  const baseUrl = import.meta.env.BASE_URL || '/';
-
-  // Use jsdelivr CDN as primary source (most reliable CDN)
-  // The worker file for pdfjs-dist 5.x is at /build/pdf.worker.min.mjs
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${workerVersion}/build/pdf.worker.min.mjs`;
-}
 
 export default function ESignatureManagement() {
   const [activeTab, setActiveTab] = useState('Signature Request');
@@ -148,10 +134,6 @@ export default function ESignatureManagement() {
   const [creatingTemplate, setCreatingTemplate] = useState(false);
 
   // Memoize PDF options to prevent unnecessary reloads
-  const pdfOptions = useMemo(() => ({
-    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
-    cMapPacked: true,
-  }), []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -2263,55 +2245,16 @@ export default function ESignatureManagement() {
                     <div ref={pdfContainerRef} className="p-6 w-full">
                       <div className="bg-[#EEEEEE] shadow-sm rounded border border-gray-200 p-8 w-full pb-12">
                         {uploadedFile && uploadedFile.type === 'application/pdf' ? (
-                          pdfFileData ? (
-                            <Document
-                              file={pdfFileData}
-                              onLoadSuccess={onDocumentLoadSuccess}
+                          pdfFileData || uploadedFile ? (
+                            <SimplePDFViewer
+                              pdfFile={pdfFileData || uploadedFile}
+                              height="600px"
                               onLoadError={(error) => {
                                 console.error('Error loading PDF in preview:', error);
-                                console.error('Error details:', {
-                                  message: error.message,
-                                  name: error.name,
-                                  file: uploadedFile?.name,
-                                  fileType: uploadedFile?.type,
-                                  fileSize: uploadedFile?.size,
-                                  workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
-                                  hasPdfFileData: !!pdfFileData
-                                });
                                 onDocumentLoadError(error);
                               }}
-                              loading={
-                                <div className="flex items-center justify-center p-8">
-                                  <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                    Loading PDF...
-                                  </p>
-                                </div>
-                              }
-                              options={pdfOptions}
                               className="w-full"
-                            >
-                              {numPages ? (
-                                Array.from(new Array(numPages), (el, index) => (
-                                  <div key={`page_${index + 1}`} className={`w-full flex justify-center ${index === numPages - 1 ? 'mb-0' : 'mb-4'}`}>
-                                    <div className="bg-white shadow-lg" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                                      <Page
-                                        pageNumber={index + 1}
-                                        renderTextLayer={true}
-                                        renderAnnotationLayer={true}
-                                        width={pdfPageWidth}
-                                        className="max-w-full"
-                                      />
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="flex items-center justify-center p-8">
-                                  <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                    Loading pages...
-                                  </p>
-                                </div>
-                              )}
-                            </Document>
+                            />
                           ) : pdfLoading ? (
                             <div className="flex items-center justify-center p-8">
                               <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
@@ -2693,56 +2636,18 @@ export default function ESignatureManagement() {
                         </div>
                       ))}
 
-                    {/* PDF Rendering using react-pdf */}
+                    {/* PDF Rendering using iframe */}
                     {uploadedFile && uploadedFile.type === 'application/pdf' ? (
                       uploadedFile ? (
-                        <Document
-                          file={uploadedFile}
-                          onLoadSuccess={onDocumentLoadSuccess}
+                        <SimplePDFViewer
+                          pdfFile={uploadedFile}
+                          height="calc(100vh - 400px)"
                           onLoadError={(error) => {
                             console.error('Error loading PDF in final modal:', error);
-                            console.error('Error details:', {
-                              message: error.message,
-                              name: error.name,
-                              file: uploadedFile?.name,
-                              fileType: uploadedFile?.type,
-                              fileSize: uploadedFile?.size,
-                              workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
-                            });
                             onDocumentLoadError(error);
                           }}
-                          loading={
-                            <div className="flex items-center justify-center p-8">
-                              <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                Loading PDF...
-                              </p>
-                            </div>
-                          }
-                          options={pdfOptions}
                           className="w-full"
-                        >
-                          {numPages ? (
-                            Array.from(new Array(numPages), (el, index) => (
-                              <div key={`page_${index + 1}`} className={`w-full flex justify-center ${index === numPages - 1 ? 'mb-0' : 'mb-4'}`}>
-                                <div className="bg-white shadow-lg" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                                  <Page
-                                    pageNumber={index + 1}
-                                    renderTextLayer={true}
-                                    renderAnnotationLayer={true}
-                                    width={pdfPageWidth}
-                                    className="max-w-full"
-                                  />
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="flex items-center justify-center p-8">
-                              <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                                Loading pages...
-                              </p>
-                            </div>
-                          )}
-                        </Document>
+                        />
                       ) : (
                         <div className="flex items-center justify-center p-8">
                           <p className="text-sm text-red-500" style={{ fontFamily: 'BasisGrotesquePro' }}>

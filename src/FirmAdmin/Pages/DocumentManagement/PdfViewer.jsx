@@ -1,26 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Document, Page, pdfjs } from 'react-pdf';
+import SimplePDFViewer from '../../../components/SimplePDFViewer';
 import { PdfCalendarIcon, PdfCheckmarkIcon, PdfDocumentIcon, PdfDocumentIconLight, PdfEditIcon, PdfPaperPlaneIcon, PdfProfileIcon } from '../../Components/icons';
 import { firmAdminDocumentsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
-
-// Import required CSS for TextLayer and AnnotationLayer
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-
-// Set up PDF.js worker
-if (typeof window !== 'undefined') {
-  const workerVersion = pdfjs.version || '5.3.31';
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${workerVersion}/build/pdf.worker.min.mjs`;
-  
-  // Ensure worker is initialized
-  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-    console.warn('PDF.js worker not initialized');
-  }
-}
 
 // Icons
 const EyeIcon = () => (
@@ -40,31 +25,16 @@ export default function PdfViewer() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   
   // PDF viewer state
-  const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [selectedPage, setSelectedPage] = useState(0);
   const [pdfFileData, setPdfFileData] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
-  const [pdfPageWidth, setPdfPageWidth] = useState(800);
-  const [documentReady, setDocumentReady] = useState(false);
   const pdfContainerRef = useRef(null);
-  const pageRefs = useRef({});
   
   // Document data state
   const [documentData, setDocumentData] = useState(null);
   const [loadingDocument, setLoadingDocument] = useState(true);
   const [documentError, setDocumentError] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
-  
-  // Default PDF URL as fallback
-  const DEFAULT_PDF_URL = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
-  
-  // Memoize PDF options
-  const pdfOptions = useMemo(() => ({
-    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
-    cMapPacked: true,
-  }), []);
   
   // Helper function to convert backend URL to proxy URL if needed
   const getProxyUrl = (url) => {
@@ -178,154 +148,22 @@ export default function PdfViewer() {
     fetchDocumentData();
   }, [documentId, folderId]);
 
-  // Load PDF file - use default PDF if document PDF is not available
+  // Get PDF URL for iframe viewer
   useEffect(() => {
-    const loadPdf = async () => {
-      // Use document PDF URL if available, otherwise use default PDF
-      const urlToLoad = pdfUrl || DEFAULT_PDF_URL;
-      const isDocumentPdf = !!pdfUrl;
-      
-      try {
-        setPdfLoading(true);
-        setPdfError(null);
-        
-        // Convert to proxy URL if needed to avoid CORS issues
-        const proxiedUrl = getProxyUrl(urlToLoad);
-        
-        // Get access token for authenticated requests (only for document PDFs, not default)
-        const token = getAccessToken();
-        const headers = {};
-        if (token && isDocumentPdf) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-        
-        // Fetch PDF as blob with authentication (if needed)
-        const response = await fetch(proxiedUrl, { headers });
-        if (!response.ok) throw new Error('Failed to fetch PDF');
-        const blob = await response.blob();
-        const file = new File([blob], isDocumentPdf ? 'document.pdf' : 'sample.pdf', { type: 'application/pdf' });
-        setPdfFileData(file);
-        setDocumentReady(false); // Reset document ready state when new file is loaded
-      } catch (error) {
-        console.error('Error loading PDF:', error);
-        setPdfError(error.message);
-        // If document PDF fails, try default PDF as fallback
-        if (isDocumentPdf) {
-          console.log('Document PDF failed, trying default PDF...');
-          try {
-            const defaultResponse = await fetch(DEFAULT_PDF_URL);
-            if (defaultResponse.ok) {
-              const defaultBlob = await defaultResponse.blob();
-              const defaultFile = new File([defaultBlob], 'sample.pdf', { type: 'application/pdf' });
-              setPdfFileData(defaultFile);
-              setPdfError(null);
-              toast.info('Using sample PDF (document PDF unavailable)');
-            } else {
-              toast.error('Failed to load PDF document');
-            }
-          } catch (defaultError) {
-            console.error('Error loading default PDF:', defaultError);
-            toast.error('Failed to load PDF document');
-          }
-        } else {
-          toast.error('Failed to load PDF document');
-        }
-      } finally {
-        setPdfLoading(false);
-      }
-    };
-    
-    // Always load a PDF (default or document)
-    loadPdf();
+    if (pdfUrl) {
+      // Convert to proxy URL if needed to avoid CORS issues
+      const proxiedUrl = getProxyUrl(pdfUrl);
+      setPdfFileData(proxiedUrl);
+      setPdfLoading(false);
+    }
   }, [pdfUrl]);
   
-  // Handle PDF document load success
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
-    // Set document as ready after a small delay to ensure worker is initialized
-    setTimeout(() => {
-      setDocumentReady(true);
-    }, 100);
-  };
-  
-  // Handle PDF document load error
-  const onDocumentLoadError = (error) => {
-    console.error('Error loading PDF document:', error);
-    setPdfError(error.message || 'Failed to load PDF');
-    setDocumentReady(false);
+  // Handle PDF load error
+  const handlePdfError = (error) => {
+    console.error('Error loading PDF:', error);
+    setPdfError('Failed to load PDF document');
     toast.error('Failed to load PDF document');
   };
-  
-  // Scroll to specific page
-  const scrollToPage = useCallback((pageIndex) => {
-    const pageElement = pageRefs.current[`page_${pageIndex + 1}`];
-    if (pageElement && pdfContainerRef.current) {
-      const container = pdfContainerRef.current;
-      const pageTop = pageElement.offsetTop - container.offsetTop - 20; // 20px offset
-      container.scrollTo({
-        top: pageTop,
-        behavior: 'smooth'
-      });
-      setSelectedPage(pageIndex);
-      setPageNumber(pageIndex + 1);
-    }
-  }, []);
-  
-  // Handle thumbnail click
-  const handleThumbnailClick = (pageIndex) => {
-    scrollToPage(pageIndex);
-  };
-  
-  // Handle scroll to detect current page
-  const handleScroll = useCallback(() => {
-    if (!pdfContainerRef.current || !numPages) return;
-    
-    const container = pdfContainerRef.current;
-    const scrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-    const scrollPosition = scrollTop + containerHeight / 2;
-    
-    // Find which page is currently in view
-    for (let i = 0; i < numPages; i++) {
-      const pageElement = pageRefs.current[`page_${i + 1}`];
-      if (pageElement) {
-        const pageTop = pageElement.offsetTop - container.offsetTop;
-        const pageBottom = pageTop + pageElement.offsetHeight;
-        
-        if (scrollPosition >= pageTop && scrollPosition <= pageBottom) {
-          if (selectedPage !== i) {
-            setSelectedPage(i);
-            setPageNumber(i + 1);
-          }
-          break;
-        }
-      }
-    }
-  }, [numPages, selectedPage]);
-  
-  // Attach scroll listener
-  useEffect(() => {
-    const container = pdfContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [handleScroll]);
-  
-  // Calculate PDF page width based on container
-  useEffect(() => {
-    const updatePageWidth = () => {
-      if (pdfContainerRef.current) {
-        const containerWidth = pdfContainerRef.current.clientWidth;
-        // Set page width to be slightly smaller than container (with padding)
-        setPdfPageWidth(Math.min(containerWidth - 64, 800));
-      }
-    };
-    
-    updatePageWidth();
-    window.addEventListener('resize', updatePageWidth);
-    return () => window.removeEventListener('resize', updatePageWidth);
-  }, []);
 
   // Helper function to get icon based on comment type
   const getCommentIcon = (commentType) => {
@@ -705,58 +543,19 @@ export default function PdfViewer() {
               ) : pdfFileData ? (
                 <div
                   ref={pdfContainerRef}
-                  className="flex-1 overflow-y-auto p-6"
+                  className="flex-1 p-6"
                   style={{
                     scrollbarWidth: 'thin',
                     scrollbarColor: '#CBD5E0 #F3F4F6'
                   }}
                 >
-                  <div className="bg-[#EEEEEE] shadow-sm rounded border border-gray-200 p-8 w-full pb-12">
-                    <Document
-                      file={pdfFileData}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      onLoadError={onDocumentLoadError}
-                      loading={
-                        <div className="flex items-center justify-center p-8">
-                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-                          <p className="text-sm text-gray-500" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            Loading PDF...
-                          </p>
-                        </div>
-                      }
-                      options={pdfOptions}
+                  <div className="bg-[#EEEEEE] shadow-sm rounded border border-gray-200 p-4 w-full h-full">
+                    <SimplePDFViewer
+                      pdfUrl={pdfFileData}
+                      height="calc(100vh - 300px)"
+                      onLoadError={handlePdfError}
                       className="w-full"
-                    >
-                      {numPages && documentReady && Array.from(new Array(numPages), (el, index) => (
-                        <div
-                          key={`page_${index + 1}`}
-                          ref={(el) => {
-                            if (el) pageRefs.current[`page_${index + 1}`] = el;
-                          }}
-                          className={`w-full flex justify-center ${index === numPages - 1 ? 'mb-0' : 'mb-4'}`}
-                        >
-                          <div className="bg-white shadow-lg" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                            <Page
-                              pageNumber={index + 1}
-                              renderTextLayer={true}
-                              renderAnnotationLayer={true}
-                              width={pdfPageWidth}
-                              className="max-w-full"
-                              error={
-                                <div className="flex items-center justify-center p-8 bg-gray-50">
-                                  <p className="text-sm text-gray-500">Error loading page {index + 1}</p>
-                                </div>
-                              }
-                              loading={
-                                <div className="flex items-center justify-center p-8 bg-gray-50">
-                                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                                </div>
-                              }
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </Document>
+                    />
                   </div>
                 </div>
               ) : (
