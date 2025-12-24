@@ -82,9 +82,11 @@ export default defineConfig({
             if (id.includes('OverviewFirm') || id.includes('OverView')) {
               return 'firm-overview';
             }
-            if (id.includes('SubscriptionManagement') || id.includes('Subscription')) {
-              return 'firm-subscription';
-            }
+            // Keep SubscriptionManagement in firm-routes to avoid initialization issues
+            // It uses Stripe which is in the main bundle, so keeping it together prevents errors
+            // if (id.includes('SubscriptionManagement') || id.includes('Subscription')) {
+            //   return 'firm-subscription';
+            // }
             if (id.includes('Workflow') || id.includes('Workflow-temp')) {
               return 'firm-workflow';
             }
