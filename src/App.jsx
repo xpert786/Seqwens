@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 // import Homepage from "./pages/Homepage";
 import Home from "./pages/Home/Home";
 import DashboardLayout from "./ClientOnboarding/components/DashboardLayout";
@@ -31,10 +32,26 @@ import AuthRedirect from "./ClientOnboarding/components/AuthRedirect";
 import RootAuthCheck from "./ClientOnboarding/components/RootAuthCheck";
 import RoleSelectionScreen from "./ClientOnboarding/components/RoleSelectionScreen";
 import TailwindTest from "./TailwindTest";
-import TaxRoutes from "./Taxpreparer/TaxRoutes";
-import SuperRoutes from "./SuperAdmin/SuperRoutes";
-import FirmRoutes from "./FirmAdmin/FirmRoutes";
 import FeedbackWrapper from "./ClientOnboarding/components/FeedbackWrapper";
+
+// Lazy load large route components for code splitting
+const TaxRoutes = lazy(() => import("./Taxpreparer/TaxRoutes"));
+const SuperRoutes = lazy(() => import("./SuperAdmin/SuperRoutes"));
+const FirmRoutes = lazy(() => import("./FirmAdmin/FirmRoutes"));
+
+// Loading component for lazy routes
+const RouteLoader = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh',
+    fontSize: '16px',
+    color: '#666'
+  }}>
+    Loading...
+  </div>
+);
 
 export default function App() {
   return (
@@ -165,13 +182,25 @@ export default function App() {
         </Route>
 
         {/* Tax Preparer Routes - No authentication required */}
-        <Route path="/taxdashboard/*" element={<TaxRoutes />} />
+        <Route path="/taxdashboard/*" element={
+          <Suspense fallback={<RouteLoader />}>
+            <TaxRoutes />
+          </Suspense>
+        } />
 
         {/* Super Admin Routes - No authentication required */}
-        <Route path="/superadmin/*" element={<SuperRoutes />} />
+        <Route path="/superadmin/*" element={
+          <Suspense fallback={<RouteLoader />}>
+            <SuperRoutes />
+          </Suspense>
+        } />
 
         {/* Firm Admin Routes - No authentication required */}
-        <Route path="/firmadmin/*" element={<FirmRoutes />} />
+        <Route path="/firmadmin/*" element={
+          <Suspense fallback={<RouteLoader />}>
+            <FirmRoutes />
+          </Suspense>
+        } />
       </Routes>
     </FeedbackWrapper>
   );

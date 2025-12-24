@@ -41,10 +41,49 @@ export default defineConfig({
             // All other node_modules
             return 'vendor';
           }
+          
+          // Split large source files
+          // Split apiUtils into its own chunk since it's very large
+          if (id.includes('apiUtils.jsx')) {
+            return 'api-utils';
+          }
+          
+          // Split route files into separate chunks
+          if (id.includes('TaxRoutes') || id.includes('Taxpreparer')) {
+            return 'tax-routes';
+          }
+          if (id.includes('SuperRoutes') || id.includes('SuperAdmin')) {
+            return 'super-routes';
+          }
+          
+          // Split FirmAdmin into smaller chunks
+          if (id.includes('FirmAdmin')) {
+            // Split large pages into separate chunks
+            if (id.includes('OverviewFirm') || id.includes('OverView')) {
+              return 'firm-overview';
+            }
+            if (id.includes('SubscriptionManagement') || id.includes('Subscription')) {
+              return 'firm-subscription';
+            }
+            if (id.includes('Workflow') || id.includes('Workflow-temp')) {
+              return 'firm-workflow';
+            }
+            if (id.includes('Analytics')) {
+              return 'firm-analytics';
+            }
+            if (id.includes('DocumentManagement') || id.includes('Document')) {
+              return 'firm-documents';
+            }
+            if (id.includes('Billing') || id.includes('Invoice')) {
+              return 'firm-billing';
+            }
+            // Other FirmAdmin pages
+            return 'firm-routes';
+          }
         },
       },
     },
-    chunkSizeWarningLimit: 1000, // Increase limit to 1MB for warnings
+    chunkSizeWarningLimit: 1200, // Increase limit to 1.2MB for warnings (route chunks are acceptable at this size)
   },
   server: {
     port: 5173,
