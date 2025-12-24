@@ -4261,8 +4261,8 @@ export const taxPreparerClientAPI = {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/`, 'PATCH', taxpayerData);
   },
 
-  // Invite taxpayer via link
-  generateInviteLink: async (clientId) => {
+  // Invite taxpayer via link (simple version - takes clientId only)
+  generateInviteLinkForClient: async (clientId) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invite/link/`, 'POST');
   },
 

@@ -8,6 +8,44 @@ export default defineConfig({
   optimizeDeps: {
     include: ['jspdf', 'jspdf-autotable', '@stripe/stripe-js', '@stripe/react-stripe-js'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Split node_modules into separate chunks
+          if (id.includes('node_modules')) {
+            // React and React-DOM
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            // Material-UI
+            if (id.includes('@mui')) {
+              return 'mui-vendor';
+            }
+            // Chart libraries
+            if (id.includes('chart.js') || id.includes('react-chartjs-2') || id.includes('recharts')) {
+              return 'charts-vendor';
+            }
+            // PDF libraries
+            if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('react-pdf') || id.includes('pdf-lib')) {
+              return 'pdf-vendor';
+            }
+            // Stripe
+            if (id.includes('@stripe')) {
+              return 'stripe-vendor';
+            }
+            // Other large vendor libraries
+            if (id.includes('axios') || id.includes('html2canvas')) {
+              return 'utils-vendor';
+            }
+            // All other node_modules
+            return 'vendor';
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // Increase limit to 1MB for warnings
+  },
   server: {
     port: 5173,
     host: true,
