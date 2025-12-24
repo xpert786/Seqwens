@@ -71,9 +71,10 @@ export default defineConfig({
             if (id.includes('Analytics')) {
               return 'firm-analytics';
             }
-            if (id.includes('DocumentManagement') || id.includes('Document')) {
-              return 'firm-documents';
-            }
+            // Don't split DocumentManagement - keep it with firm-routes to avoid circular dependency issues
+            // if (id.includes('DocumentManagement') || id.includes('Document')) {
+            //   return 'firm-documents';
+            // }
             if (id.includes('Billing') || id.includes('Invoice')) {
               return 'firm-billing';
             }
