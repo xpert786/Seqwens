@@ -29,6 +29,14 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
+          // CRITICAL: Keep Context providers in main bundle FIRST, before any other checks
+          // They use createContext which needs React to be available when the module loads
+          // This must be checked before node_modules to catch source files
+          if (id.includes('FirmSettingsContext') || id.includes('FirmPortalColorsContext') || 
+              id.includes('FirmAdmin/Context/')) {
+            return undefined; // Keep in main bundle with React
+          }
+          
           // Keep React, React-DOM, React Router, and Stripe in the main bundle
           // This ensures core dependencies are always loaded before any other code tries to use them
           if (id.includes('node_modules')) {
@@ -78,62 +86,46 @@ export default defineConfig({
           
           // Split FirmAdmin into smaller chunks
           if (id.includes('FirmAdmin')) {
-            // Keep FirmRoutes and Context providers in main bundle to avoid React initialization issues
-            // They use createContext which needs React to be available when the module loads
-            // Must check this FIRST before other FirmAdmin patterns
-            if (id.includes('FirmRoutes') || id.includes('/Context/') || 
-                id.includes('FirmSettingsContext') || id.includes('FirmPortalColorsContext')) {
+            // Keep FirmRoutes in main bundle to avoid React initialization issues
+            // Context providers are already handled above (before node_modules check)
+            if (id.includes('FirmRoutes')) {
               return undefined; // Keep in main bundle with React
             }
-            // Split large pages into separate chunks
+            
+            // Keep ALL pages that use Context providers in main bundle
+            // Pages that import Context need React to be available when they load
+            // This prevents "Cannot read properties of undefined (reading 'createContext')" errors
+            if (id.includes('SubscriptionManagement') || id.includes('Subscription') ||
+                id.includes('Analytics') || id.includes('Offices') ||
+                id.includes('Staff') || id.includes('ClientManagement') || id.includes('ClientManage') ||
+                id.includes('TaskManagement') || id.includes('Billing') || id.includes('Invoice') ||
+                id.includes('SecurityCompliance') || id.includes('FirmSetting')) {
+              return undefined; // Keep in main bundle with React and Context providers
+            }
+            
+            // Split large pages into separate chunks (only pages that don't use Context)
             if (id.includes('OverviewFirm') || id.includes('OverView')) {
               return 'firm-overview';
             }
-            // Keep SubscriptionManagement in firm-routes to avoid initialization issues
-            // It uses Stripe which is in the main bundle, so keeping it together prevents errors
-            // if (id.includes('SubscriptionManagement') || id.includes('Subscription')) {
-            //   return 'firm-subscription';
-            // }
             if (id.includes('Workflow') || id.includes('Workflow-temp')) {
               return 'firm-workflow';
             }
-            // Keep Analytics in firm-routes to avoid React initialization issues
-            // It uses Context providers which need React to be available
-            // if (id.includes('Analytics')) {
-            //   return 'firm-analytics';
-            // }
             if (id.includes('DocumentManagement') || id.includes('PdfViewer') || id.includes('FolderContents')) {
               return 'firm-documents';
             }
             if (id.includes('ESignatureManagement') || id.includes('ESignature')) {
               return 'firm-esignature';
             }
-            if (id.includes('Billing') || id.includes('Invoice')) {
-              return 'firm-billing';
-            }
-            if (id.includes('Staff')) {
-              return 'firm-staff';
-            }
-            if (id.includes('ClientManagement') || id.includes('ClientManage')) {
-              return 'firm-clients';
-            }
-            if (id.includes('TaskManagement') || id.includes('TaskDetails')) {
-              return 'firm-tasks';
-            }
             if (id.includes('Scheduling') || id.includes('calendar')) {
               return 'firm-scheduling';
             }
-            // Keep Offices in firm-routes to avoid React initialization issues
-            // if (id.includes('Offices')) {
-            //   return 'firm-offices';
-            // }
             // Other FirmAdmin components - keep in firm-routes chunk
             return 'firm-routes';
           }
         },
       },
     },
-    chunkSizeWarningLimit: 1200, // Increase limit to 1.2MB
+    chunkSizeWarningLimit: 2000, // Increased to 2MB to accommodate pages with Context providers in main bundle
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true
