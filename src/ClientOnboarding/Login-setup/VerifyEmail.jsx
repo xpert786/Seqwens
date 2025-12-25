@@ -33,7 +33,7 @@ export default function VerifyEmail() {
           }
         }
         // For firm admin: check if 2FA is already enabled
-        else if (userType === 'admin') {
+        else if (userType === 'admin' || userType === 'firm') {
           if (parsedUserData.two_factor_authentication === true) {
             console.log('2FA already enabled, redirecting to firm admin dashboard');
             if (parsedUserData.subscription_plan === null || parsedUserData.subscription_plan === undefined) {
@@ -123,7 +123,7 @@ export default function VerifyEmail() {
           updatedUserData.is_email_verified = true;
         }
         // For firm admin: enable 2FA after email verification
-        else if (userType === 'admin') {
+        else if (userType === 'admin' || userType === 'firm') {
           updatedUserData.two_factor_authentication = true;
           updatedUserData.is_email_verified = true;
         }
@@ -152,7 +152,7 @@ export default function VerifyEmail() {
     const userData = getUserData();
     
     // For firm admin: redirect to firm admin dashboard
-    if (userType === 'admin') {
+    if (userType === 'admin' || userType === 'firm') {
       if (userData?.subscription_plan === null || userData?.subscription_plan === undefined) {
         navigate("/firmadmin/finalize-subscription", { replace: true });
       } else {

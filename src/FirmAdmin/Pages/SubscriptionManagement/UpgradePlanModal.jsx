@@ -20,8 +20,6 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
     const [processing, setProcessing] = useState(false);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [showAddNewCard, setShowAddNewCard] = useState(false);
-    const [stripePublishableKey, setStripePublishableKey] = useState(null);
-    const [loadingStripeKey, setLoadingStripeKey] = useState(false);
     const [savedPaymentMethods, setSavedPaymentMethods] = useState([]);
     const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
@@ -143,43 +141,9 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         }
     }, []);
 
-    // Fetch Stripe publishable key
-    const fetchStripePublishableKey = useCallback(async () => {
-        try {
-            setLoadingStripeKey(true);
-            const response = await firmAdminSubscriptionAPI.getStripePublishableKey();
-            if (response.success && response.data?.publishable_key) {
-                setStripePublishableKey(response.data.publishable_key);
-            } else {
-                // Fallback: try to get from environment variable or use a default test key
-                const envKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-                if (envKey) {
-                    setStripePublishableKey(envKey);
-                } else {
-                    throw new Error('Stripe publishable key not found');
-                }
-            }
-        } catch (err) {
-            console.error('Error fetching Stripe publishable key:', err);
-            // Try environment variable as fallback
-            const envKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-            if (envKey) {
-                setStripePublishableKey(envKey);
-            } else {
-                toast.error('Failed to load payment system. Please refresh the page.', {
-                    position: 'top-right',
-                    autoClose: 5000,
-                });
-            }
-        } finally {
-            setLoadingStripeKey(false);
-        }
-    }, []);
-
     // Fetch plans when modal opens
     useEffect(() => {
         if (isOpen) {
-            fetchStripePublishableKey();
             fetchSavedPaymentMethods();
             setSelectedPlan(null);
             setShowPaymentForm(false);
@@ -191,7 +155,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                 setBillingCycle('monthly');
             }
         }
-    }, [isOpen, fetchStripePublishableKey, fetchSavedPaymentMethods, userBillingCycle]);
+    }, [isOpen, fetchSavedPaymentMethods, userBillingCycle]);
 
     // Fetch plans when modal opens
     useEffect(() => {
@@ -281,8 +245,8 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         return features[type] || [];
     };
 
-    // Handle Pay Now button click - show payment selection
-    const handlePayNow = () => {
+    // Handle Pay Now button click - proceed directly to Stripe checkout (no card selection)
+    const handlePayNow = async () => {
         if (!selectedPlan) {
             toast.error('Please select a plan', {
                 position: 'top-right',
@@ -292,7 +256,9 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
             return;
         }
 
-        setShowPaymentForm(true);
+        // Proceed directly with subscription upgrade without payment method ID
+        // This will redirect to Stripe checkout
+        await handleSubscriptionUpgrade();
     };
 
     // Handle using selected saved payment method
@@ -327,18 +293,85 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
 
     // Handle adding new card
     const handleAddNewCard = () => {
-        if (!stripePublishableKey) {
-            toast.error('Payment system is not ready. Please wait a moment and try again.', {
+        setShowAddNewCard(true);
+    };
+
+    // Handle subscription upgrade - proceed directly to Stripe checkout (no payment method required)
+    const handleSubscriptionUpgrade = async () => {
+        if (!selectedPlan) {
+            toast.error('Please select a plan', {
                 position: 'top-right',
                 autoClose: 3000,
                 pauseOnHover: false
             });
             return;
         }
-        setShowAddNewCard(true);
+
+        try {
+            setProcessing(true);
+
+            // Build success and cancel URLs - use current page with base path
+            const baseUrl = window.location.origin;
+            const basePath = '/seqwens-frontend'; // Base path from vite.config.js
+            const currentPath = location.pathname;
+            // Ensure base path is included in the URL
+            const pathWithBase = currentPath.startsWith(basePath) ? currentPath : `${basePath}${currentPath}`;
+            const successUrl = `${baseUrl}${pathWithBase}?subscription_success=true`;
+            const cancelUrl = `${baseUrl}${pathWithBase}?subscription_cancelled=true`;
+
+            // Call the change subscription API without payment method ID
+            // This will redirect to Stripe checkout for payment
+            const response = await firmAdminSubscriptionAPI.changeSubscription(
+                selectedPlan.id,
+                billingCycle, // "monthly" or "yearly"
+                "stripe", // payment_method
+                true, // change_immediately
+                successUrl, // success_url
+                cancelUrl // cancel_url
+                // No paymentMethodId - will redirect to Stripe checkout
+            );
+
+            if (response.success) {
+                // Check if checkout URL is provided (Stripe checkout flow)
+                if (response.data?.checkout_url) {
+                    // Redirect to Stripe checkout
+                    window.location.href = response.data.checkout_url;
+                } else {
+                    // Success - subscription updated (shouldn't happen without checkout_url, but handle it)
+                    const planName = response.data?.new_plan?.subscription_type_display || 
+                                    response.data?.new_plan?.subscription_type || 
+                                    selectedPlan.subscription_type || 
+                                    'selected plan';
+                    
+                    toast.success(response.message || `Subscription plan changed to ${planName} successfully!`, {
+                        position: 'top-right',
+                        autoClose: 5000,
+                        pauseOnHover: false
+                    });
+                    
+                    onClose();
+                    
+                    // Refresh the page to show updated subscription details
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            } else {
+                throw new Error(response.message || 'Failed to change subscription plan');
+            }
+        } catch (err) {
+            console.error('Error changing subscription plan:', err);
+            toast.error(handleAPIError(err) || 'Failed to change subscription plan. Please try again.', {
+                position: 'top-right',
+                autoClose: 5000,
+                pauseOnHover: false
+            });
+        } finally {
+            setProcessing(false);
+        }
     };
 
-    // Handle payment form submission with payment method ID
+    // Handle payment form submission with payment method ID (legacy function - kept for backward compatibility if needed)
     const handlePaymentSubmit = async (paymentMethodId, isDjangoId = false) => {
         if (!selectedPlan || !paymentMethodId) {
             toast.error('Payment information is missing. Please try again.', {
@@ -352,11 +385,14 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
         try {
             setProcessing(true);
 
-            // Build success and cancel URLs - use current page
+            // Build success and cancel URLs - use current page with base path
             const baseUrl = window.location.origin;
+            const basePath = '/seqwens-frontend'; // Base path from vite.config.js
             const currentPath = location.pathname;
-            const successUrl = `${baseUrl}${currentPath}?subscription_success=true`;
-            const cancelUrl = `${baseUrl}${currentPath}?subscription_cancelled=true`;
+            // Ensure base path is included in the URL
+            const pathWithBase = currentPath.startsWith(basePath) ? currentPath : `${basePath}${currentPath}`;
+            const successUrl = `${baseUrl}${pathWithBase}?subscription_success=true`;
+            const cancelUrl = `${baseUrl}${pathWithBase}?subscription_cancelled=true`;
 
             // Call the change subscription API with payment method ID
             // If isDjangoId is true, pass it as saved_payment_method_id instead
@@ -486,25 +522,11 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                             ← Back to saved cards
                                         </button>
                                     </div>
-                                    {loadingStripeKey ? (
-                                        <div className="text-center py-8">
-                                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                            <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading payment form...</p>
-                                        </div>
-                                    ) : stripePublishableKey ? (
-                                        <StripePaymentForm
-                                            onSubmit={handlePaymentSubmit}
-                                            onCancel={handlePaymentCancel}
-                                            processing={processing}
-                                            stripePublishableKey={stripePublishableKey}
-                                        />
-                                    ) : (
-                                        <div className="text-center py-8">
-                                            <p className="text-sm text-red-600 font-[BasisGrotesquePro]">
-                                                Payment system unavailable. Please try again later.
-                                            </p>
-                                        </div>
-                                    )}
+                                    <StripePaymentForm
+                                        onSubmit={handlePaymentSubmit}
+                                        onCancel={handlePaymentCancel}
+                                        processing={processing}
+                                    />
                                 </div>
                             ) : (
                                 // Saved Payment Methods Selection
@@ -582,7 +604,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 </button>
                                                 <button
                                                     onClick={handleAddNewCard}
-                                                    disabled={processing || loadingStripeKey}
+                                                    disabled={processing}
                                                     className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
                                                 >
                                                     Add New Card
@@ -595,25 +617,11 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                             <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">
                                                 No saved payment methods. Please add a new card to continue.
                                             </p>
-                                            {loadingStripeKey ? (
-                                                <div className="text-center py-8">
-                                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                                    <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading payment form...</p>
-                                                </div>
-                                            ) : stripePublishableKey ? (
-                                                <StripePaymentForm
-                                                    onSubmit={handlePaymentSubmit}
-                                                    onCancel={handlePaymentCancel}
-                                                    processing={processing}
-                                                    stripePublishableKey={stripePublishableKey}
-                                                />
-                                            ) : (
-                                                <div className="text-center py-8">
-                                                    <p className="text-sm text-red-600 font-[BasisGrotesquePro]">
-                                                        Payment system unavailable. Please try again later.
-                                                    </p>
-                                                </div>
-                                            )}
+                                            <StripePaymentForm
+                                                onSubmit={handlePaymentSubmit}
+                                                onCancel={handlePaymentCancel}
+                                                processing={processing}
+                                            />
                                         </div>
                                     )}
                                 </div>
@@ -806,11 +814,11 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                         </button>
                         <button
                             onClick={handlePayNow}
-                            disabled={!selectedPlan || processing || isCurrentPlan(selectedPlan) || loadingStripeKey}
+                            disabled={!selectedPlan || processing || isCurrentPlan(selectedPlan)}
                             className="px-6 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
                             style={{ backgroundColor: '#F97316' }}
                         >
-                            {loadingStripeKey ? 'Loading...' : 'Pay Now'}
+                            Pay Now
                         </button>
                     </div>
                 )}

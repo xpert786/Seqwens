@@ -25,7 +25,7 @@ export default function RootAuthCheck() {
         navigate("/superadmin", { replace: true });
       } else if (userType === 'support_admin' || userType === 'billing_admin') {
         navigate("/superadmin", { replace: true });
-      } else if (userType === 'admin') {
+      } else if (userType === 'admin' || userType === 'firm') {
         navigate("/firmadmin", { replace: true });
       } else if (userType === 'tax_preparer') {
         navigate("/taxdashboard", { replace: true });

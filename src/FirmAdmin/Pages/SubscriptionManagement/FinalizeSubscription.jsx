@@ -18,27 +18,74 @@ const FinalizeSubscription = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [processing, setProcessing] = useState(false);
 
-  // Check if user is admin and has no subscription
+  // Check if user is admin and has active subscription
   useEffect(() => {
-    const storage = getStorage();
-    const userDataStr = storage?.getItem("userData");
-    
-    if (userDataStr) {
+    const checkSubscriptionStatus = async () => {
+      const storage = getStorage();
+      const userDataStr = storage?.getItem("userData");
+      const userType = storage?.getItem("userType");
+      
+      // Check user type first
+      if (userType !== 'admin' && userType !== 'firm') {
+        navigate('/firmadmin', { replace: true });
+        return;
+      }
+
+      if (!userDataStr) {
+        navigate('/login', { replace: true });
+        return;
+      }
+
       try {
         const userData = JSON.parse(userDataStr);
-        const userType = storage?.getItem("userType");
         
-        // If user is not admin or has subscription, redirect
-        if (userType !== 'admin' || userData.subscription_plan !== null) {
+        // First check localStorage - if subscription_plan is set, user has subscription
+        if (userData.subscription_plan !== null && userData.subscription_plan !== undefined) {
           navigate('/firmadmin', { replace: true });
+          return;
+        }
+
+        // Also check subscription status from API to be sure
+        const token = getAccessToken();
+        if (token) {
+          try {
+            // Fetch subscription status from maintenance-mode/status endpoint
+            const statusResponse = await fetchWithCors(`${API_BASE_URL}/user/maintenance-mode/status/`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+
+            if (statusResponse.ok) {
+              const statusResult = await statusResponse.json();
+              
+              // Check if subscription is active - subscription is at top level in response
+              if (statusResult.success && statusResult.subscription && statusResult.subscription.status === 'active') {
+                // Update userData with subscription info
+                userData.subscription_plan = statusResult.subscription.plan_name || statusResult.subscription.plan_type || statusResult.subscription.subscription_type || 'active';
+                storage.setItem("userData", JSON.stringify(userData));
+                sessionStorage.setItem("userData", JSON.stringify(userData));
+                
+                console.log('Active subscription found, redirecting to firmadmin');
+                // Redirect to firm admin dashboard
+                navigate('/firmadmin', { replace: true });
+                return;
+              }
+            }
+          } catch (apiError) {
+            console.error('Error checking subscription status from API:', apiError);
+            // Continue with the page if API check fails - let user select plan
+          }
         }
       } catch (error) {
         console.error('Error checking user data:', error);
         navigate('/login', { replace: true });
       }
-    } else {
-      navigate('/login', { replace: true });
-    }
+    };
+
+    checkSubscriptionStatus();
   }, [navigate]);
 
   // Fetch subscription plans
@@ -82,6 +129,7 @@ const FinalizeSubscription = () => {
       if (result.success && result.data) {
         // New structure: data.monthly_plans and data.yearly_plans
         if (result.data.monthly_plans && result.data.yearly_plans) {
+          // Use current billingCycle state value
           plansData = billingCycle === 'monthly' 
             ? (result.data.monthly_plans || [])
             : (result.data.yearly_plans || []);
@@ -104,8 +152,8 @@ const FinalizeSubscription = () => {
         );
       }
 
-      // Extract user_billing_cycle from response if available
-      if (result.user_billing_cycle) {
+      // Extract user_billing_cycle from response if available (only if not already set)
+      if (result.user_billing_cycle && !billingCycle) {
         setBillingCycle(result.user_billing_cycle);
         // Refetch with correct billing cycle
         if (result.data && result.data.monthly_plans && result.data.yearly_plans) {
@@ -154,10 +202,6 @@ const FinalizeSubscription = () => {
         });
       }
 
-      // Extract user_billing_cycle from response if available
-      if (result.user_billing_cycle) {
-        setBillingCycle(result.user_billing_cycle);
-      }
     } catch (err) {
       console.error('Error fetching subscription plans:', err);
       const errorMsg = handleAPIError(err);
@@ -166,7 +210,7 @@ const FinalizeSubscription = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [billingCycle]);
 
   useEffect(() => {
     fetchPlans();
@@ -303,10 +347,11 @@ const FinalizeSubscription = () => {
     try {
       setProcessing(true);
 
-      // Build success and cancel URLs
+      // Build success and cancel URLs with base path
       const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/firmadmin?subscription_success=true`;
-      const cancelUrl = `${baseUrl}/firmadmin/finalize-subscription?subscription_cancelled=true`;
+      const basePath = '/seqwens-frontend'; // Base path from vite.config.js
+      const successUrl = `${baseUrl}${basePath}/firmadmin?subscription_success=true`;
+      const cancelUrl = `${baseUrl}${basePath}/firmadmin/finalize-subscription?subscription_cancelled=true`;
 
       // Call the change subscription API (this will create checkout session)
       const response = await firmAdminSubscriptionAPI.changeSubscription(
@@ -378,53 +423,53 @@ const FinalizeSubscription = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F6F7FF] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3AD6F2] mx-auto mb-4"></div>
-          <p className="text-gray-600 font-[BasisGrotesquePro]">Loading subscription plans...</p>
+      <div className="min-h-screen bg-[#F6F7FF] flex items-center justify-center px-4">
+        <div className="text-center w-full max-w-md">
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-[#3AD6F2] mx-auto mb-4"></div>
+          <p className="text-sm sm:text-base text-gray-600 font-[BasisGrotesquePro]">Loading subscription plans...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F7FF] py-4 sm:py-6 lg:py-8 px-3 sm:px-4 lg:px-6">
+    <div className="min-h-screen bg-[#F6F7FF] py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
+        <div className="text-center mb-6 sm:mb-8 lg:mb-10">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 font-[BasisGrotesquePro]">
             Finalize Your Subscription
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-[BasisGrotesquePro] px-4">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 font-[BasisGrotesquePro] max-w-2xl mx-auto px-2">
             Please select a subscription plan to continue using the platform
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 mx-2 sm:mx-0">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 max-w-4xl mx-auto">
             <p className="text-xs sm:text-sm text-red-700 font-[BasisGrotesquePro]">{error}</p>
           </div>
         )}
 
         {/* Billing Cycle Toggle */}
-        <div className="flex justify-center mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg p-1 border border-gray-200 inline-flex">
+        <div className="flex justify-center mb-6 sm:mb-8 lg:mb-10">
+          <div className="bg-white rounded-lg p-1 border border-gray-200 inline-flex shadow-sm">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-4 sm:px-6 py-2 rounded-md text-sm sm:text-base font-medium transition-colors font-[BasisGrotesquePro] ${
+              className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${
                 billingCycle === 'monthly'
-                  ? 'bg-[#3AD6F2] text-white'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-[#3AD6F2] text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-4 sm:px-6 py-2 rounded-md text-sm sm:text-base font-medium transition-colors font-[BasisGrotesquePro] ${
+              className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base font-medium transition-all duration-200 font-[BasisGrotesquePro] min-w-[80px] sm:min-w-[100px] ${
                 billingCycle === 'yearly'
-                  ? 'bg-[#3AD6F2] text-white'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-[#3AD6F2] text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               Yearly
@@ -434,7 +479,7 @@ const FinalizeSubscription = () => {
 
         {/* Plans Grid */}
         {plans.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8 lg:mb-10">
             {plans.map((plan) => {
               const isSelected = selectedPlan?.id === plan.id;
               // Get price based on billing cycle - prices come as strings from API
@@ -455,46 +500,51 @@ const FinalizeSubscription = () => {
                 <div
                   key={plan.id}
                   onClick={() => handleSelectPlan(plan)}
-                  className={`bg-white rounded-lg border-2 p-4 sm:p-6 cursor-pointer transition-all hover:shadow-lg relative flex flex-col h-full ${
+                  className={`bg-white rounded-xl border-2 p-5 sm:p-6 lg:p-7 cursor-pointer transition-all duration-200 hover:shadow-xl active:scale-[0.98] relative flex flex-col h-full ${
                     isSelected
-                      ? 'border-[#3AD6F2] shadow-md'
-                      : 'border-gray-200 hover:border-gray-300'
-                  } ${plan.most_popular ? 'ring-2 ring-orange-200' : ''}`}
+                      ? 'border-[#3AD6F2] shadow-lg ring-4 ring-[#3AD6F2] ring-opacity-20'
+                      : 'border-gray-200 hover:border-[#3AD6F2] hover:shadow-md'
+                  } ${plan.most_popular ? 'ring-2 ring-orange-200 sm:ring-4 sm:ring-opacity-30' : ''}`}
                 >
                   {plan.most_popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                      <span className="bg-[#F56D2D] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-semibold font-[BasisGrotesquePro] whitespace-nowrap">
+                    <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-10">
+                      <span className="bg-[#F56D2D] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold font-[BasisGrotesquePro] whitespace-nowrap shadow-md">
                         Most Popular
                       </span>
                     </div>
                   )}
                   
                   {/* Plan Header */}
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 font-[BasisGrotesquePro]">
+                  <div className="text-center mb-5 sm:mb-6">
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 font-[BasisGrotesquePro]">
                       {planName}
                     </h3>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 font-[BasisGrotesquePro]">
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-4 sm:mb-5 font-[BasisGrotesquePro] min-h-[2.5rem] sm:min-h-[3rem] flex items-center justify-center">
                       {getPlanDescription(plan.subscription_type)}
                     </p>
-                    <div className="mb-3 sm:mb-4">
-                      <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                        {priceDisplay}
-                      </span>
+                    <div className="mb-4 sm:mb-5">
+                      <div className="flex items-baseline justify-center gap-1 sm:gap-2">
+                        <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 font-[BasisGrotesquePro]">
+                          {priceDisplay.split('/')[0]}
+                        </span>
+                        <span className="text-base sm:text-lg lg:text-xl text-gray-600 font-[BasisGrotesquePro]">
+                          /{priceDisplay.split('/')[1]}
+                        </span>
+                      </div>
                       {billingCycle === 'yearly' && plan.monthly_equivalent && (
-                        <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
-                          ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month
+                        <div className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-2">
+                          ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month billed annually
                         </div>
                       )}
                       {billingCycle === 'monthly' && plan.yearly_equivalent && (
-                        <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
-                          ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year
+                        <div className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-2">
+                          Save ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year with annual billing
                         </div>
                       )}
                     </div>
                     {billingCycle === 'yearly' && plan.discount_percentage && plan.discount_percentage > 0 && (
-                      <div className="mb-3">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 font-[BasisGrotesquePro]">
+                      <div className="mb-4">
+                        <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-700 font-[BasisGrotesquePro] shadow-sm">
                           Save {plan.discount_percentage || plan.discount_percentage_yearly}%
                         </span>
                       </div>
@@ -502,19 +552,19 @@ const FinalizeSubscription = () => {
                   </div>
 
                   {/* Plan Features */}
-                  <div className="flex-1 mb-4">
-                    <div className="border-t border-gray-200 pt-4">
-                      <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 font-[BasisGrotesquePro]">
+                  <div className="flex-1 mb-5 sm:mb-6">
+                    <div className="border-t border-gray-200 pt-4 sm:pt-5">
+                      <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-3 sm:mb-4 font-[BasisGrotesquePro]">
                         Features:
                       </h4>
-                      <ul className="space-y-2 text-left">
+                      <ul className="space-y-2.5 sm:space-y-3 text-left">
                         {features.length > 0 ? (
                           features.map((feature, index) => (
-                            <li key={index} className="flex items-start text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro]">
-                              <svg className="w-4 h-4 text-[#3AD6F2] mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <li key={index} className="flex items-start text-xs sm:text-sm lg:text-base text-gray-600 font-[BasisGrotesquePro]">
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#3AD6F2] mr-2 sm:mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                               </svg>
-                              <span>{feature}</span>
+                              <span className="leading-relaxed">{feature}</span>
                             </li>
                           ))
                         ) : (
@@ -528,9 +578,9 @@ const FinalizeSubscription = () => {
 
                   {/* Selected Indicator */}
                   {isSelected && (
-                    <div className="mt-auto pt-4 border-t border-gray-200">
-                      <span className="inline-flex items-center justify-center w-full px-3 py-2 rounded-lg text-sm font-medium bg-[#3AD6F2] text-white font-[BasisGrotesquePro]">
-                        Selected
+                    <div className="mt-auto pt-4 sm:pt-5 border-t border-gray-200">
+                      <span className="inline-flex items-center justify-center w-full px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold bg-[#3AD6F2] text-white font-[BasisGrotesquePro] shadow-sm">
+                        ✓ Selected
                       </span>
                     </div>
                   )}
@@ -539,19 +589,39 @@ const FinalizeSubscription = () => {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-lg p-6 sm:p-8 text-center">
-            <p className="text-sm sm:text-base text-gray-600 font-[BasisGrotesquePro]">No subscription plans available</p>
+          <div className="bg-white rounded-lg p-6 sm:p-8 lg:p-10 text-center max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-[BasisGrotesquePro]">No subscription plans available</p>
           </div>
         )}
 
         {/* Finalize Button */}
-        <div className="flex justify-center px-2 sm:px-0">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 px-4 sm:px-0">
+          {selectedPlan && (
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-sm text-gray-600 font-[BasisGrotesquePro] mb-1">
+                Selected Plan:
+              </p>
+              <p className="text-sm sm:text-base font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                {selectedPlan.subscription_type_display || formatPlanType(selectedPlan.subscription_type)}
+              </p>
+            </div>
+          )}
           <button
             onClick={handleFinalizeSubscription}
             disabled={!selectedPlan || processing}
-            className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-[#F56D2D] text-white rounded-lg text-sm sm:text-base font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+            className="w-full sm:w-auto px-8 sm:px-10 lg:px-12 py-3 sm:py-3.5 lg:py-4 bg-[#F56D2D] text-white rounded-lg text-base sm:text-lg lg:text-xl font-semibold hover:bg-orange-600 active:bg-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] shadow-lg hover:shadow-xl disabled:shadow-none min-h-[48px] sm:min-h-[52px]"
           >
-            {processing ? 'Processing...' : 'Finalize Subscription'}
+            {processing ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </span>
+            ) : (
+              'Finalize Subscription'
+            )}
           </button>
         </div>
       </div>

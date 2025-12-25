@@ -20,6 +20,7 @@ import DashboardFirst from "./ClientOnboarding/pages/DashboardFirst";
 import DashboardRouter from "./ClientOnboarding/components/DashboardRouter";
 import CreateAccount from "./ClientOnboarding/create-accounts/CreateAccount";
 import PersonalInfo from "./ClientOnboarding/create-accounts/PersonalInfo";
+import FirmSignup from "./ClientOnboarding/create-accounts/FirmSignup";
 import Login from "./ClientOnboarding/Login-setup/Login";
 import ForgotPassword from "./ClientOnboarding/Login-setup/ForgotPassword";
 import OtpVerification from "./ClientOnboarding/Login-setup/OtpVerification";
@@ -214,6 +215,11 @@ export default function App() {
           </AuthRedirect>
         } />
         <Route path="/personal-info" element={<PersonalInfo />} />
+        <Route path="/firm-signup" element={
+          <AuthRedirect>
+            <FirmSignup />
+          </AuthRedirect>
+        } />
 
         {/* Protected Routes - Top level dashboard routes */}
         <Route path="/dataintake" element={

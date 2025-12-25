@@ -31,7 +31,7 @@ export default function TwoFactorAuth() {
           }
         } 
         // For firm admin: check two_factor_authentication status
-        else if (userType === 'admin') {
+        else if (userType === 'admin' || userType === 'firm') {
           const twoFactorEnabled = user.two_factor_authentication;
           
           console.log('TwoFactorAuth - Firm admin 2FA status:', { twoFactorEnabled });

@@ -76,16 +76,8 @@ const AllPlans = ({ currentPlanName }) => {
                 );
             }
 
-            // Extract user_billing_cycle from response if available
-            if (result.user_billing_cycle) {
-                setBillingCycle(result.user_billing_cycle);
-                // Refetch with correct billing cycle
-                if (result.data && result.data.monthly_plans && result.data.yearly_plans) {
-                    plansData = result.user_billing_cycle === 'monthly' 
-                        ? (result.data.monthly_plans || [])
-                        : (result.data.yearly_plans || []);
-            }
-            }
+            // Note: billingCycle is controlled by user toggle, not API response
+            // Plans are already correctly filtered above based on billingCycle state
 
             // For public endpoint, show all plans regardless of is_active status
             // The public endpoint already returns the appropriate plans
@@ -98,7 +90,7 @@ const AllPlans = ({ currentPlanName }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [billingCycle]); // Add billingCycle to dependency array so plans update when cycle changes
 
     // Fetch plans on mount and when billing cycle changes
     useEffect(() => {
@@ -256,11 +248,14 @@ const AllPlans = ({ currentPlanName }) => {
             setProcessing(true);
             setShowUpgradeConfirmModal(false);
 
-            // Build success and cancel URLs - use current page
+            // Build success and cancel URLs - use current page with base path
             const baseUrl = window.location.origin;
+            const basePath = '/seqwens-frontend'; // Base path from vite.config.js
             const currentPath = location.pathname;
-            const successUrl = `${baseUrl}${currentPath}?subscription_success=true`;
-            const cancelUrl = `${baseUrl}${currentPath}?subscription_cancelled=true`;
+            // Ensure base path is included in the URL
+            const pathWithBase = currentPath.startsWith(basePath) ? currentPath : `${basePath}${currentPath}`;
+            const successUrl = `${baseUrl}${pathWithBase}?subscription_success=true`;
+            const cancelUrl = `${baseUrl}${pathWithBase}?subscription_cancelled=true`;
 
             // Call the change subscription API
             const response = await firmAdminSubscriptionAPI.changeSubscription(

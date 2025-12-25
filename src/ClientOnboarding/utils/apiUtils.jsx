@@ -76,8 +76,9 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
 
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
+      let errorData = null;
       try {
-        const errorData = await response.json();
+        errorData = await response.json();
 
         // If there are specific field errors, show them
         if (errorData.errors) {
@@ -91,7 +92,13 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
       }
-      throw new Error(errorMessage);
+      
+      // Attach original errorData to error for better error handling in components
+      const error = new Error(errorMessage);
+      if (errorData) {
+        error.responseData = errorData;
+      }
+      throw error;
     }
 
     const result = await response.json();
@@ -328,6 +335,21 @@ export const userAPI = {
     return await publicApiRequest('/user/create/', 'POST', payload);
   },
 
+  // Firm signup - creates firm admin account
+  signupFirm: async (firmData) => {
+    const payload = {
+      first_name: firmData.first_name,
+      middle_name: firmData.middle_name || '',
+      last_name: firmData.last_name,
+      email: firmData.email.toLowerCase().trim(),
+      phone_number: firmData.phone_number || '',
+      password: firmData.password,
+      password_confirm: firmData.password_confirm,
+    };
+
+    return await publicApiRequest('/user/create/', 'POST', payload);
+  },
+
   // User login (no auth header needed)
   login: async (credentials) => {
     const payload = {
@@ -546,6 +568,32 @@ export const validatePhoneNumber = (phone) => {
   // More lenient phone validation - just check if it has at least 10 digits
   const digitsOnly = phone.replace(/\D/g, '');
   return digitsOnly.length >= 10;
+};
+
+// Firm signup phone validation - stricter format validation
+export const validateFirmPhoneNumber = (phone) => {
+  if (!phone || phone.trim() === '') {
+    return { isValid: true, error: null }; // Optional field
+  }
+
+  const trimmedPhone = phone.trim();
+
+  // Format 1: International format with + prefix (7-17 digits after +)
+  const internationalFormat = /^\+\d{7,17}$/;
+  if (internationalFormat.test(trimmedPhone)) {
+    return { isValid: true, error: null };
+  }
+
+  // Format 2: National format without + (10-15 digits)
+  const nationalFormat = /^\d{10,15}$/;
+  if (nationalFormat.test(trimmedPhone)) {
+    return { isValid: true, error: null };
+  }
+
+  return {
+    isValid: false,
+    error: "Phone number must be either: (1) International format starting with '+' followed by 7-17 digits (e.g., +1234567890), or (2) 10-15 digits without '+' (e.g., 987654123411)"
+  };
 };
 
 export const validatePassword = (password) => {
@@ -5428,6 +5476,41 @@ export const invitationAPI = {
       invite_type: inviteType || 'client'
     };
     return await publicApiRequest('/user/staff-invite/decline/', 'POST', payload);
+  }
+};
+
+// Client Invite API functions
+export const clientInviteAPI = {
+  // Validate client invitation token (public endpoint, no auth required)
+  // Returns: { success: true, is_valid: true, data: {...}, existing_grant: {...} }
+  validateClientInvite: async (token) => {
+    const params = new URLSearchParams({ token });
+    const endpoint = `/user/client-invite/validate/?${params}`;
+    return await publicApiRequest(endpoint, 'GET');
+  },
+
+  // Accept client invitation with password, phone number, and optional data sharing scope
+  // Returns: { success: true, message: "...", data: {...} } or warning response
+  acceptClientInvite: async (token, password, passwordConfirm, phoneNumber = null, dataSharingScope = null, selectedCategories = null) => {
+    const payload = {
+      token,
+      password,
+      password_confirm: passwordConfirm,
+    };
+
+    if (phoneNumber) {
+      payload.phone_number = phoneNumber;
+    }
+
+    if (dataSharingScope) {
+      payload.data_sharing_scope = dataSharingScope;
+    }
+
+    if (selectedCategories && Array.isArray(selectedCategories) && selectedCategories.length > 0) {
+      payload.selected_categories = selectedCategories;
+    }
+
+    return await publicApiRequest('/user/client-invite/accept/', 'POST', payload);
   }
 };
 

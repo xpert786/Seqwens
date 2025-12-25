@@ -1,0 +1,517 @@
+.firm-signup-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 40px 10px !important;
+  min-height: 100vh !important;
+}
+
+.firm-signup-container {
+  width: 80% !important;
+  max-width: 650px !important;
+  background: var(--Palette2-Dark-blue-900, #3B4A66) !important;
+  padding: 40px !important;
+  border-radius: 25px !important;
+  color: white !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.firm-signup-title {
+  font-family: 'BasisGrotesquePro' !important;
+  font-weight: 700 !important;
+  font-size: 28px !important;
+  margin-bottom: 5px !important;
+  color: #fff !important;
+  text-align: center !important;
+}
+
+.firm-signup-subtitle {
+  font-family: 'BasisGrotesquePro' !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: #ffffff !important;
+  margin-bottom: 25px !important;
+  text-align: center !important;
+}
+
+.form-wrapper {
+  background: #ffffff !important;
+  padding: 30px !important;
+  border-radius: 20px !important;
+  margin-top: 30px !important;
+  color: #000 !important;
+}
+
+.custom-label {
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  color: #3B4A66 !important;
+  font-family: 'BasisGrotesquePro' !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+.form-wrapper .custom-input {
+  font-family: 'BasisGrotesquePro' !important;
+  border: 1px solid #4B5563 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.form-wrapper .custom-input::placeholder {
+  font-size: 13px !important;
+}
+
+.required {
+  color: #EF4444 !important;
+}
+
+.password-input-wrapper {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.toggle-visibility-btn {
+  position: absolute !important;
+  right: 10px !important;
+  background: none !important;
+  border: none !important;
+  color: #4b5563 !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  padding: 5px !important;
+  display: flex !important;
+  align-items: center !important;
+  z-index: 10 !important;
+}
+
+.password-strength {
+  background: #ffffff !important;
+  border: 1px solid #e8f0ff !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+}
+
+.criteria {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  margin-top: 10px !important;
+}
+
+.criteria-item {
+  font-family: "BasisGrotesquePro" !important;
+  font-size: 13px !important;
+}
+
+.criteria-item.valid {
+  color: green !important;
+}
+
+.criteria-item.invalid {
+  color: red !important;
+}
+
+.create-firm-btn {
+  background-color: #F56D2D !important;
+  color: white !important;
+  font-family: 'BasisGrotesquePro' !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  padding: 12px 30px !important;
+  border-radius: 10px !important;
+  margin-top: 20px !important;
+  border: none !important;
+  transition: background 0.3s ease !important;
+  width: 100% !important;
+  cursor: pointer !important;
+}
+
+.create-firm-btn:hover:not(:disabled) {
+  background-color: #e55d1d !important;
+}
+
+.create-firm-btn:disabled {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+}
+
+.txts {
+  color: #3b4a66 !important;
+  font-family: 'BasisGrotesquePro' !important;
+  font-size: 14px !important;
+}
+
+.highlight {
+  color: #F49C2D !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.highlight:hover {
+  text-decoration: underline !important;
+}
+
+.signup-footer {
+  text-align: center !important;
+  margin-top: 25px !important;
+  color: #ffffff !important;
+  font-family: 'BasisGrotesquePro' !important;
+  font-size: 15px !important;
+}
+
+.signin-link {
+  color: #F49C2D !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+}
+
+.signin-link:hover {
+  text-decoration: underline !important;
+}
+
+.form-text {
+  font-size: 12px !important;
+  color: #6c757d !important;
+  margin-top: 4px !important;
+  font-family: 'BasisGrotesquePro' !important;
+}
+
+.invalid-feedback {
+  display: block !important;
+  width: 100% !important;
+  margin-top: 0.25rem !important;
+  font-size: 0.875rem !important;
+  color: #dc3545 !important;
+  font-family: 'BasisGrotesquePro' !important;
+}
+
+.alert {
+  padding: 12px 16px !important;
+  margin-bottom: 20px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  font-family: 'BasisGrotesquePro' !important;
+}
+
+.alert-danger {
+  color: #721c24 !important;
+  background-color: #f8d7da !important;
+  border-color: #f5c6cb !important;
+}
+
+.phone-input-container {
+  width: 100% !important;
+}
+
+.form-check {
+  margin-bottom: 10px !important;
+}
+
+.form-check-input {
+  margin-top: 0.3em !important;
+}
+
+.form-check-label {
+  margin-left: 0.5rem !important;
+}
+
+@media screen and (max-height: 750px) {
+  .firm-signup-wrapper {
+    padding: 20px 5px !important;
+  }
+
+  .firm-signup-container {
+    max-width: 650px !important;
+    padding: 30px !important;
+    border-radius: 15px !important;
+  }
+
+  .firm-signup-title {
+    font-size: 20px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .firm-signup-subtitle {
+    font-size: 14px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .form-wrapper {
+    padding: 15px !important;
+    border-radius: 12px !important;
+    margin-top: 20px !important;
+  }
+
+  .custom-label {
+    font-size: 15px !important;
+  }
+
+  .form-wrapper .custom-input {
+    padding: 8px 10px !important;
+    font-size: 15px !important;
+  }
+
+  .create-firm-btn {
+    margin-top: 20px !important;
+    font-size: 14px !important;
+    padding: 8px 20px !important;
+  }
+}
+
+@media screen and (max-width: 1100px) {
+  .firm-signup-container {
+    max-width: 90% !important;
+    padding: 25px !important;
+  }
+}
+
+@media screen and (max-width: 1100px) and (max-height: 750px) {
+  .firm-signup-container {
+    max-width: 85% !important;
+    padding: 18px !important;
+  }
+  .form-wrapper {
+    padding: 12px !important;
+  }
+}
+
+/* Tablet styles */
+@media (max-width: 768px) {
+  .firm-signup-wrapper {
+    padding: 30px 15px !important;
+    min-height: 100vh;
+  }
+
+  .firm-signup-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 35px 30px !important;
+    border-radius: 20px !important;
+  }
+
+  .firm-signup-title {
+    font-size: 24px !important;
+  }
+
+  .firm-signup-subtitle {
+    font-size: 15px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .form-wrapper {
+    padding: 25px 20px !important;
+    margin-top: 25px !important;
+    border-radius: 15px !important;
+  }
+
+  .custom-label {
+    font-size: 15px !important;
+    margin-bottom: 6px;
+  }
+
+  .form-wrapper .custom-input {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+    width: 100% !important;
+  }
+
+  .create-firm-btn {
+    font-size: 16px !important;
+    padding: 12px 25px !important;
+    width: 100% !important;
+    margin-top: 25px !important;
+  }
+
+  .phone-input-container {
+    width: 100% !important;
+  }
+
+  .password-strength {
+    padding: 12px !important;
+  }
+
+  .criteria {
+    gap: 10px !important;
+  }
+}
+
+/* Mobile phone styles */
+@media (max-width: 480px) {
+  .firm-signup-wrapper {
+    padding: 20px 10px !important;
+    align-items: flex-start !important;
+    padding-top: 30px !important;
+  }
+
+  .firm-signup-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 30px 20px !important;
+    border-radius: 15px !important;
+  }
+
+  .firm-signup-title {
+    font-size: 22px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .firm-signup-subtitle {
+    font-size: 14px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .form-wrapper {
+    padding: 20px 15px !important;
+    margin-top: 20px !important;
+    border-radius: 12px !important;
+  }
+
+  .custom-label {
+    font-size: 14px !important;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-wrapper .custom-input {
+    font-size: 14px !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .form-wrapper .custom-input::placeholder {
+    font-size: 13px !important;
+  }
+
+  .criteria {
+    gap: 10px !important;
+    margin-top: 8px !important;
+  }
+
+  .criteria-item {
+    font-size: 12px !important;
+  }
+
+  .create-firm-btn {
+    font-size: 15px !important;
+    padding: 12px !important;
+    width: 100% !important;
+    margin-top: 20px !important;
+    border-radius: 8px !important;
+  }
+
+  .phone-input-container {
+    width: 100% !important;
+  }
+
+  .phone-input-container .form-control {
+    height: 45px !important;
+    font-size: 14px !important;
+  }
+
+  .invalid-feedback {
+    font-size: 12px !important;
+    margin-top: 4px !important;
+  }
+
+  .alert {
+    font-size: 13px !important;
+    padding: 12px 15px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .form-text {
+    font-size: 11px !important;
+  }
+
+  .signup-footer {
+    font-size: 14px !important;
+    margin-top: 20px !important;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 360px) {
+  .firm-signup-wrapper {
+    padding: 15px 8px !important;
+    padding-top: 25px !important;
+  }
+
+  .firm-signup-container {
+    padding: 25px 15px !important;
+    border-radius: 12px !important;
+  }
+
+  .firm-signup-title {
+    font-size: 20px !important;
+  }
+
+  .firm-signup-subtitle {
+    font-size: 13px !important;
+  }
+
+  .form-wrapper {
+    padding: 18px 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .custom-label {
+    font-size: 13px !important;
+  }
+
+  .form-wrapper .custom-input {
+    font-size: 13px !important;
+    padding: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .form-wrapper .custom-input::placeholder {
+    font-size: 12px !important;
+  }
+
+  .create-firm-btn {
+    font-size: 14px !important;
+    padding: 11px !important;
+  }
+
+  .alert {
+    font-size: 12px !important;
+    padding: 10px 12px !important;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .firm-signup-wrapper {
+    padding: 20px 15px !important;
+    align-items: center !important;
+  }
+
+  .firm-signup-container {
+    padding: 25px 20px !important;
+  }
+
+  .firm-signup-title {
+    font-size: 20px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .firm-signup-subtitle {
+    font-size: 13px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .form-wrapper {
+    padding: 18px 15px !important;
+    margin-top: 15px !important;
+  }
+}
+

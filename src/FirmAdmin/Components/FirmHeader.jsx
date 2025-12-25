@@ -223,6 +223,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         // Store the original logo path as a constant
         const originalLogoPath = logo;
         const img = logoRef.current;
+        let isUpdating = false; // Flag to prevent recursive updates
         
         // Set data attribute to mark this as Seqwens logo (immutable)
         img.setAttribute('data-seqwens-logo', 'true');
@@ -230,7 +231,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         img.setAttribute('data-immutable', 'true');
         
         const ensureSeqwensLogo = () => {
-            if (!img || !img.parentNode) return; // Check if element still exists
+            if (!img || !img.parentNode || isUpdating) return; // Check if element still exists and not updating
             
             const currentSrc = img.src || img.getAttribute('src') || '';
             
@@ -241,9 +242,14 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                (currentSrc && currentSrc !== originalLogoPath && !currentSrc.includes('logo.png'));
             
             if (isFirmLogo) {
+                isUpdating = true;
                 // Reset to Seqwens logo immediately
                 img.src = originalLogoPath;
                 img.setAttribute('src', originalLogoPath);
+                // Reset flag after a short delay
+                setTimeout(() => {
+                    isUpdating = false;
+                }, 50);
             }
         };
 
@@ -255,10 +261,19 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         const check4 = setTimeout(ensureSeqwensLogo, 500);
         const check5 = setTimeout(ensureSeqwensLogo, 1000);
 
-        // Set up a MutationObserver to watch for src changes
+        // Set up a MutationObserver to watch for src changes (only external changes)
         const observer = new MutationObserver((mutations) => {
+            // Only react if we're not currently updating
+            if (isUpdating) return;
+            
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                    // Check if the change was made by us (check old value)
+                    const oldValue = mutation.oldValue;
+                    if (oldValue && oldValue === originalLogoPath) {
+                        // This might be our own change, skip
+                        return;
+                    }
                     ensureSeqwensLogo();
                 }
             });
@@ -266,26 +281,33 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
 
         observer.observe(img, {
             attributes: true,
-            attributeFilter: ['src']
+            attributeFilter: ['src'],
+            attributeOldValue: true // Track old values to detect our own changes
         });
 
-        // Also check periodically as a safeguard (every 200ms for faster response)
-        const interval = setInterval(ensureSeqwensLogo, 200);
+        // Also check periodically as a safeguard (reduced frequency to 1 second to reduce load)
+        const interval = setInterval(ensureSeqwensLogo, 1000);
 
         // Protect against any code that might query and change the logo via DOM
         const protectLogoFromDOMQueries = () => {
+            if (isUpdating) return;
+            
             const logoImages = document.querySelectorAll('.firm-topbar-logo[data-seqwens-logo="true"]');
             logoImages.forEach((logoImg) => {
                 const src = logoImg.src || logoImg.getAttribute('src') || '';
                 if (src && (src.includes('backblazeb2.com') || src.includes('s3.us-') || src.includes('s3.amazonaws.com') || (src !== originalLogoPath && !src.includes('logo.png')))) {
+                    isUpdating = true;
                     logoImg.src = originalLogoPath;
                     logoImg.setAttribute('src', originalLogoPath);
+                    setTimeout(() => {
+                        isUpdating = false;
+                    }, 50);
                 }
             });
         };
 
-        // Run protection check periodically (every 200ms)
-        const protectionInterval = setInterval(protectLogoFromDOMQueries, 200);
+        // Run protection check periodically (reduced frequency to 1 second)
+        const protectionInterval = setInterval(protectLogoFromDOMQueries, 1000);
 
         return () => {
             clearTimeout(check1);

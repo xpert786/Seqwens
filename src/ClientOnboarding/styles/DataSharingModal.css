@@ -1,0 +1,242 @@
+.data-sharing-modal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.data-sharing-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 1.5rem;
+}
+
+.data-sharing-modal-header .modal-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.data-sharing-modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.data-sharing-modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.data-sharing-modal-body {
+  padding: 2rem;
+}
+
+.warning-section {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-title {
+  font-weight: 600;
+  color: #856404;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.warning-message {
+  color: #856404;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.firm-info-section {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.firm-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.firm-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.firm-name {
+  font-size: 1rem;
+  color: #212529;
+  font-weight: 600;
+}
+
+.data-sharing-section {
+  margin-top: 1.5rem;
+}
+
+.section-title {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
+}
+
+.scope-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scope-option {
+  padding: 1.25rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.scope-option:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.scope-option.selected {
+  border-color: #667eea;
+  background: #f0f4ff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.scope-option-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.scope-radio {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.scope-label {
+  font-weight: 600;
+  color: #212529;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0;
+  flex: 1;
+}
+
+.scope-description {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+  margin-left: 2rem;
+  line-height: 1.5;
+}
+
+.categories-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #e7f3ff;
+  border-radius: 8px;
+  border: 1px solid #b3d9ff;
+}
+
+.categories-note {
+  color: #004085;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.data-sharing-modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1.25rem 2rem;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+.data-sharing-modal-footer .btn {
+  padding: 0.625rem 1.5rem;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.data-sharing-modal-footer .btn-primary {
+  background: #667eea;
+  border-color: #667eea;
+}
+
+.data-sharing-modal-footer .btn-primary:hover {
+  background: #5568d3;
+  border-color: #5568d3;
+}
+
+.data-sharing-modal-footer .btn-primary:disabled {
+  background: #6c757d;
+  border-color: #6c757d;
+  opacity: 0.6;
+}
+
+.data-sharing-modal-footer .btn-secondary {
+  background: white;
+  border-color: #dee2e6;
+  color: #6c757d;
+}
+
+.data-sharing-modal-footer .btn-secondary:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .data-sharing-modal-body {
+    padding: 1.5rem;
+  }
+
+  .firm-info-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .warning-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .warning-icon {
+    font-size: 1.5rem;
+  }
+
+  .scope-description {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}
+

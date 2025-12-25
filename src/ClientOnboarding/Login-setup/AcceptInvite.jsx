@@ -4,9 +4,10 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import "../styles/AcceptInvite.css";
 import FixedLayout from "../components/FixedLayout";
-import { invitationAPI, handleAPIError, validatePassword } from "../utils/apiUtils";
+import { invitationAPI, clientInviteAPI, handleAPIError, validatePassword } from "../utils/apiUtils";
 import { setTokens } from "../utils/userUtils";
 import { toast } from "react-toastify";
+import DataSharingModal from "../components/DataSharingModal";
 
 export default function AcceptInvite() {
     const navigate = useNavigate();
@@ -28,6 +29,12 @@ export default function AcceptInvite() {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
+    // Client invite data sharing state
+    const [isClientInvite, setIsClientInvite] = useState(false);
+    const [existingGrant, setExistingGrant] = useState(null);
+    const [showDataSharingModal, setShowDataSharingModal] = useState(false);
+    const [dataSharingDecision, setDataSharingDecision] = useState(null);
+
     // Fetch invitation details on component mount
     useEffect(() => {
         const validateInvitation = async () => {
@@ -44,12 +51,33 @@ export default function AcceptInvite() {
             try {
                 setIsLoading(true);
                 setErrors({});
-                console.log('Validating invitation with token:', token);
-                const response = await invitationAPI.validateInvitation(token);
-                console.log('Validation response:', response);
+                
+                // Try client invite validation first (since client invites are more common for taxpayers)
+                console.log('Validating client invitation with token:', token);
+                let response;
+                let isClient = false;
+
+                try {
+                    response = await clientInviteAPI.validateClientInvite(token);
+                    isClient = true;
+                    setIsClientInvite(true);
+                    console.log('Client invite validation response:', response);
+                } catch (clientError) {
+                    // If client invite validation fails, try staff invite
+                    console.log('Client invite validation failed, trying staff invite:', clientError);
+                    response = await invitationAPI.validateInvitation(token);
+                    isClient = false;
+                    setIsClientInvite(false);
+                    console.log('Staff invite validation response:', response);
+                }
 
                 if (response.success && response.is_valid && response.data) {
                     setInvitationData(response.data);
+                    
+                    // Check for existing grant (client invites only)
+                    if (isClient && response.existing_grant?.has_existing_grant) {
+                        setExistingGrant(response.existing_grant);
+                    }
                 } else {
                     // Handle error cases
                     const errorMessage = response.message || "Invalid invitation token.";
@@ -82,11 +110,18 @@ export default function AcceptInvite() {
         validateInvitation();
     }, [token]);
 
+    // Handle form submission
     const handleAcceptInvitation = async (e) => {
         e?.preventDefault();
 
         if (!token) {
             setErrors({ general: "Invalid invitation token." });
+            return;
+        }
+
+        // Check if we need to show data sharing modal first (before form validation)
+        if (isClientInvite && existingGrant?.has_existing_grant && !dataSharingDecision) {
+            setShowDataSharingModal(true);
             return;
         }
 
@@ -126,16 +161,60 @@ export default function AcceptInvite() {
             return;
         }
 
+        // Proceed with acceptance
+        await performAcceptInvitation(dataSharingDecision);
+    };
+
+    // Handle data sharing decision confirmation
+    const handleDataSharingConfirm = async (decision) => {
+        setDataSharingDecision(decision);
+        setShowDataSharingModal(false);
+        // Proceed with invitation acceptance
+        await performAcceptInvitation(decision);
+    };
+
+    // Perform the actual invitation acceptance
+    const performAcceptInvitation = async (dataSharingDecision = null) => {
         setIsAccepting(true);
         setErrors({});
 
         try {
-            const response = await invitationAPI.acceptInvitation(
-                token,
-                password,
-                passwordConfirm,
-                phoneNumber || null
-            );
+            let response;
+            
+            if (isClientInvite) {
+                // Use client invite API
+                response = await clientInviteAPI.acceptClientInvite(
+                    token,
+                    password,
+                    passwordConfirm,
+                    phoneNumber || null,
+                    dataSharingDecision?.scope || null,
+                    dataSharingDecision?.selectedCategories || null
+                );
+            } else {
+                // Use staff invite API
+                response = await invitationAPI.acceptInvitation(
+                    token,
+                    password,
+                    passwordConfirm,
+                    phoneNumber || null
+                );
+            }
+
+            // Check if API returns a warning response requiring data sharing decision
+            if (response.requires_data_sharing_decision && isClientInvite) {
+                // Show data sharing modal with warning
+                setShowDataSharingModal(true);
+                setExistingGrant({
+                    has_existing_grant: true,
+                    current_firm: response.warning?.current_firm,
+                    warning_message: response.warning?.message || response.message,
+                    requires_data_sharing_decision: true,
+                    data_sharing_options: response.data_sharing_options
+                });
+                setIsAccepting(false);
+                return;
+            }
 
             if (response.success && response.data) {
                 setIsAccepted(true);
@@ -216,7 +295,7 @@ export default function AcceptInvite() {
                         redirectPath = "/superadmin";
                     } else if (userType === 'support_admin' || userType === 'billing_admin') {
                         redirectPath = "/superadmin";
-                    } else if (userType === 'admin') {
+                    } else if (userType === 'admin' || userType === 'firm') {
                         redirectPath = "/firmadmin";
                     } else if (userType === 'tax_preparer') {
                         redirectPath = "/taxdashboard";
@@ -382,6 +461,9 @@ export default function AcceptInvite() {
         }
     };
 
+    // Determine new firm name from invitation data
+    const newFirmName = invitationData?.firm_name || invitationData?.firm?.name;
+
     if (isLoading) {
         return (
             <FixedLayout>
@@ -449,6 +531,7 @@ export default function AcceptInvite() {
     }
 
     return (
+        <>
         <FixedLayout>
             <div className="accept-invite-page">
                 <div className="accept-invite-card">
@@ -468,6 +551,13 @@ export default function AcceptInvite() {
                     {errors.token && errors.token.length > 0 && (
                         <div className="alert alert-danger" role="alert">
                             {Array.isArray(errors.token) ? errors.token[0] : errors.token}
+                        </div>
+                    )}
+
+                    {/* Show existing grant warning if present */}
+                    {existingGrant?.has_existing_grant && !showDataSharingModal && (
+                        <div className="alert alert-warning" role="alert" style={{ marginBottom: '1rem' }}>
+                            <strong>Note:</strong> {existingGrant.warning_message || 'Accepting this invite will affect your current tax office access.'}
                         </div>
                     )}
 
@@ -694,6 +784,334 @@ export default function AcceptInvite() {
                 </div>
             </div>
         </FixedLayout>
+    );
+
+    // Determine new firm name from invitation data
+    const newFirmName = invitationData?.firm_name || invitationData?.firm?.name;
+
+    // Main return with Data Sharing Modal
+    return (
+        <>
+            {/* Original return content stays here - will be rendered below */}
+            {isLoading ? (
+                <FixedLayout>
+                    <div className="accept-invite-page">
+                        <div className="accept-invite-card">
+                            <div className="accept-invite-header">
+                                <h5 className="accept-invite-title">Loading Invitation...</h5>
+                                <p className="accept-invite-subtitle">Please wait while we fetch your invitation details.</p>
+                            </div>
+                        </div>
+                    </div>
+                </FixedLayout>
+            ) : isAccepted ? (
+                <FixedLayout>
+                    <div className="accept-invite-page">
+                        <div className="accept-invite-card">
+                            <div className="accept-invite-header">
+                                <h5 className="accept-invite-title">Invitation Accepted!</h5>
+                                <p className="accept-invite-subtitle">Redirecting you to login page...</p>
+                            </div>
+                        </div>
+                    </div>
+                </FixedLayout>
+            ) : isDenied ? (
+                <FixedLayout>
+                    <div className="accept-invite-page">
+                        <div className="accept-invite-card">
+                            <div className="accept-invite-header">
+                                <h5 className="accept-invite-title">Invitation Declined</h5>
+                                <p className="accept-invite-subtitle">You have declined this invitation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </FixedLayout>
+            ) : errors.general && !invitationData ? (
+                <FixedLayout>
+                    <div className="accept-invite-page">
+                        <div className="accept-invite-card">
+                            <div className="accept-invite-header">
+                                <h5 className="accept-invite-title">Invalid Invitation</h5>
+                                <p className="accept-invite-subtitle">{errors.general}</p>
+                                <button
+                                    className="accept-invite-btn"
+                                    onClick={() => navigate("/login")}
+                                >
+                                    Go to Login
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </FixedLayout>
+            ) : (
+                <FixedLayout>
+                    <div className="accept-invite-page">
+                        <div className="accept-invite-card">
+                            <div className="accept-invite-header">
+                                <h5 className="accept-invite-title">You've Been Invited to Join Firm!</h5>
+                                <p className="accept-invite-subtitle">
+                                    Hello {invitationData?.first_name ? `${invitationData.first_name} ${invitationData.last_name || ''}`.trim() : invitationData?.email || "Staff"},
+                                </p>
+                            </div>
+
+                            {errors.general && (
+                                <div className="alert alert-danger" role="alert">
+                                    {errors.general}
+                                </div>
+                            )}
+
+                            {errors.token && errors.token.length > 0 && (
+                                <div className="alert alert-danger" role="alert">
+                                    {Array.isArray(errors.token) ? errors.token[0] : errors.token}
+                                </div>
+                            )}
+
+                            {/* Show existing grant warning if present */}
+                            {existingGrant?.has_existing_grant && !showDataSharingModal && (
+                                <div className="alert alert-warning" role="alert" style={{ marginBottom: '1rem' }}>
+                                    <strong>Note:</strong> {existingGrant.warning_message || 'Accepting this invite will affect your current tax office access.'}
+                                </div>
+                            )}
+
+                            <div className="invitation-details">
+                                <p className="invitation-text">
+                                    You have been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
+                                    <strong>{invitationData?.role_display || invitationData?.role || "Staff"}</strong> on the Seqwens platform.
+                                </p>
+
+                                {invitationData?.expires_at_formatted && (
+                                    <p className="expiration-text">
+                                        This invitation will expire on <strong>{invitationData.expires_at_formatted}</strong>.
+                                    </p>
+                                )}
+
+                                {invitationData?.invited_by_name && (
+                                    <p className="invitation-text" style={{ fontSize: "14px", opacity: 0.9 }}>
+                                        Invited by: <strong>{invitationData.invited_by_name}</strong>
+                                    </p>
+                                )}
+
+                                <p className="invitation-instruction">
+                                    Please create your account password to accept this invitation:
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleAcceptInvitation}>
+                                {/* Only show form if invitation is valid */}
+                                {invitationData && invitationData.is_valid !== false && !errors.token ? (
+                                    <>
+                                        {/* Password Field */}
+                                        <div className="form-group mb-3">
+                                            <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
+                                                Password
+                                            </label>
+                                            <div style={{ position: "relative" }}>
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                                    placeholder="Enter your password"
+                                                    value={password}
+                                                    onChange={(e) => {
+                                                        setPassword(e.target.value);
+                                                        if (errors.password) {
+                                                            setErrors(prev => ({ ...prev, password: '' }));
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        width: "100%",
+                                                        padding: "10px 40px 10px 12px",
+                                                        borderRadius: "5px",
+                                                        border: errors.password ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
+                                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                        color: "#ffffff",
+                                                        fontSize: "14px"
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    style={{
+                                                        position: "absolute",
+                                                        right: "10px",
+                                                        top: "50%",
+                                                        transform: "translateY(-50%)",
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "#ffffff",
+                                                        cursor: "pointer",
+                                                        fontSize: "16px"
+                                                    }}
+                                                >
+                                                    {showPassword ? "👁️" : "👁️‍🗨️"}
+                                                </button>
+                                            </div>
+                                            {errors.password && (
+                                                <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+                                                    {errors.password}
+                                                </div>
+                                            )}
+                                            <div style={{ color: "#ffffff", fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
+                                                Must contain: 8+ characters, uppercase, lowercase, number, special character
+                                            </div>
+                                        </div>
+
+                                        {/* Confirm Password Field */}
+                                        <div className="form-group mb-3">
+                                            <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
+                                                Confirm Password
+                                            </label>
+                                            <div style={{ position: "relative" }}>
+                                                <input
+                                                    type={showPasswordConfirm ? "text" : "password"}
+                                                    className={`form-control ${errors.passwordConfirm ? 'is-invalid' : ''}`}
+                                                    placeholder="Confirm your password"
+                                                    value={passwordConfirm}
+                                                    onChange={(e) => {
+                                                        setPasswordConfirm(e.target.value);
+                                                        if (errors.passwordConfirm) {
+                                                            setErrors(prev => ({ ...prev, passwordConfirm: '' }));
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        width: "100%",
+                                                        padding: "10px 40px 10px 12px",
+                                                        borderRadius: "5px",
+                                                        border: errors.passwordConfirm ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
+                                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                        color: "#ffffff",
+                                                        fontSize: "14px"
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                                                    style={{
+                                                        position: "absolute",
+                                                        right: "10px",
+                                                        top: "50%",
+                                                        transform: "translateY(-50%)",
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "#ffffff",
+                                                        cursor: "pointer",
+                                                        fontSize: "16px"
+                                                    }}
+                                                >
+                                                    {showPasswordConfirm ? "👁️" : "👁️‍🗨️"}
+                                                </button>
+                                            </div>
+                                            {errors.passwordConfirm && (
+                                                <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+                                                    {errors.passwordConfirm}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Phone Number Field (Optional) */}
+                                        <div className="form-group mb-3">
+                                            <label className="form-label" style={{ color: "#ffffff", fontSize: "14px", fontWeight: "500", marginBottom: "8px", display: "block" }}>
+                                                Phone Number <span style={{ fontSize: "12px", opacity: 0.7 }}>(Optional)</span>
+                                            </label>
+                                            <PhoneInput
+                                                country={phoneCountry}
+                                                value={phoneNumber || ''}
+                                                onChange={(phone) => {
+                                                    setPhoneNumber(phone);
+                                                    if (errors.phoneNumber) {
+                                                        setErrors(prev => ({ ...prev, phoneNumber: '' }));
+                                                    }
+                                                }}
+                                                onCountryChange={(countryCode) => {
+                                                    setPhoneCountry(countryCode.toLowerCase());
+                                                }}
+                                                inputClass={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                                                containerClass="w-100 phone-input-container"
+                                                inputStyle={{
+                                                    width: "100%",
+                                                    padding: "10px 12px 10px 48px",
+                                                    borderRadius: "5px",
+                                                    border: errors.phoneNumber ? "1px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.3)",
+                                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                    color: "#ffffff",
+                                                    fontSize: "14px"
+                                                }}
+                                                buttonStyle={{
+                                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                    border: "1px solid rgba(255, 255, 255, 0.3)",
+                                                    borderRadius: "5px 0 0 5px"
+                                                }}
+                                                dropdownStyle={{
+                                                    backgroundColor: "#1a1a1a",
+                                                    color: "#ffffff"
+                                                }}
+                                                enableSearch={true}
+                                                countryCodeEditable={false}
+                                            />
+                                            {errors.phoneNumber && (
+                                                <div className="invalid-feedback" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+                                                    {errors.phoneNumber}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="invitation-actions">
+                                            <button
+                                                type="submit"
+                                                className="accept-invite-btn accept-btn"
+                                                disabled={isAccepting || isDenying || (invitationData && invitationData.is_valid === false)}
+                                            >
+                                                {isAccepting ? "Creating Account..." : "Accept Invitation & Create Account"}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="accept-invite-btn deny-btn"
+                                                onClick={handleDenyInvitation}
+                                                disabled={isAccepting || isDenying || (invitationData && invitationData.is_valid === false)}
+                                            >
+                                                {isDenying ? "Declining..." : "Deny Invitation"}
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="invitation-actions">
+                                        <button
+                                            className="accept-invite-btn accept-btn"
+                                            onClick={() => navigate("/login")}
+                                        >
+                                            Go to Login
+                                        </button>
+                                    </div>
+                                )}
+                            </form>
+
+                            <div className="invitation-footer">
+                                <p className="invitation-footer-text">
+                                    If you did not expect this invitation, you can safely ignore this page.
+                                </p>
+                                <p className="invitation-footer-signature">
+                                    Best regards,<br />
+                                    The {invitationData?.firm_name || "Firm"} Team
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </FixedLayout>
+            )}
+
+            {/* Data Sharing Modal */}
+            {existingGrant && (
+                <DataSharingModal
+                    show={showDataSharingModal}
+                    onClose={() => setShowDataSharingModal(false)}
+                    onConfirm={handleDataSharingConfirm}
+                    currentFirm={existingGrant.current_firm}
+                    newFirm={{ name: newFirmName }}
+                    warningMessage={existingGrant.warning_message}
+                    dataSharingOptions={existingGrant.data_sharing_options}
+                    loading={isAccepting}
+                />
+            )}
+        </>
     );
 }
 

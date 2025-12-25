@@ -65,8 +65,8 @@ function FirmAdminProtectedRoute({ children }) {
     return <Navigate to="/superadmin" replace />;
   }
 
-  // Only allow admin access
-  if (userType !== 'admin') {
+  // Only allow admin or firm access
+  if (userType !== 'admin' && userType !== 'firm') {
     console.warn('Unauthorized access attempt to Firm Admin Dashboard');
     // Redirect based on user type
     if (userType === 'client') {
