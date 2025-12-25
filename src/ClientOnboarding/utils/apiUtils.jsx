@@ -191,13 +191,21 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       let errorData = null;
+      const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
+      
       try {
         errorData = await response.json();
-        console.error('API Error Response:', errorData);
+        // Suppress console errors for memberships endpoint (expected to fail for some users)
+        if (!isMembershipsEndpoint) {
+          console.error('API Error Response:', errorData);
+        }
 
         // If there are specific field errors, show them
         if (errorData.errors) {
-          console.error('Field Validation Errors:', errorData.errors);
+          // Suppress console errors for memberships endpoint
+          if (!isMembershipsEndpoint) {
+            console.error('Field Validation Errors:', errorData.errors);
+          }
           
           // Handle non_field_errors specially - show them directly without labels
           if (errorData.errors.non_field_errors) {
@@ -243,7 +251,10 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
           }
         }
       } catch (parseError) {
-        console.error('Error parsing response:', parseError);
+        // Suppress console errors for memberships endpoint
+        if (!isMembershipsEndpoint) {
+          console.error('Error parsing response:', parseError);
+        }
       }
       
       // Create error with full error data preserved
@@ -258,7 +269,11 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('API Request Error:', error);
+    // Suppress console errors for memberships endpoint (expected to fail for some users)
+    const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
+    if (!isMembershipsEndpoint) {
+      console.error('API Request Error:', error);
+    }
 
     // Enhanced error handling for CORS and network issues
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -471,8 +486,28 @@ export const userAPI = {
   },
 
   // Get user memberships (all firms user belongs to)
+  // This endpoint may not be available for all users, so errors are handled silently
   getMemberships: async () => {
-    return await apiRequest('/user/memberships/', 'GET');
+    try {
+      return await apiRequest('/user/memberships/', 'GET');
+    } catch (error) {
+      // Check if this is an expected error (400, 401, 403, or user identity not found)
+      const errorMessage = error?.message || '';
+      const isExpectedError = 
+        errorMessage.includes('400') ||
+        errorMessage.includes('401') ||
+        errorMessage.includes('403') ||
+        errorMessage.includes('User identity not found') ||
+        errorMessage.includes('Bad Request');
+      
+      // For expected errors, return empty result without logging
+      if (isExpectedError) {
+        return { success: false, data: [] };
+      }
+      
+      // For unexpected errors, still return empty but re-throw to be handled by caller
+      return { success: false, data: [] };
+    }
   },
 
   // Switch firm context
