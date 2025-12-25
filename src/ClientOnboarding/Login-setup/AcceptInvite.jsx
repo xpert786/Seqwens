@@ -165,10 +165,6 @@ export default function AcceptInvite() {
             newErrors.passwordConfirm = "Passwords do not match.";
         }
 
-        // Validate phone number format if provided
-        if (phoneNumber && !phoneNumber.startsWith("+")) {
-            newErrors.phoneNumber = "Phone number must start with '+' and include country code (e.g., +1234567890).";
-        }
 
         // If there are validation errors, set them and return
         if (Object.keys(newErrors).length > 0) {

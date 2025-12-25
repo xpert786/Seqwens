@@ -13,7 +13,6 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
     last_name: "",
     email: "",
     phone_number: "",
-    role: "tax_preparer",
   });
   const [deliveryMethods, setDeliveryMethods] = useState({
     email: true,
@@ -83,7 +82,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
-        
+
         // Parse array format error messages
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage[0] || errorMessage;
@@ -97,7 +96,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             // Keep original if parsing fails
           }
         }
-        
+
         // Also check errorData.errors or errorData.error fields
         if (errorData.errors) {
           if (Array.isArray(errorData.errors)) {
@@ -106,7 +105,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             errorMessage = errorData.errors;
           }
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -292,55 +291,26 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
               Phone
             </label>
+
             <PhoneInput
               country={phoneCountry}
               value={formData.phone_number || ''}
-              onChange={(phone) => {
-                setFormData(prev => ({ ...prev, phone_number: phone }));
-              }}
-              onCountryChange={(countryCode) => {
-                setPhoneCountry(countryCode.toLowerCase());
-              }}
-              inputClass="w-full border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 font-[BasisGrotesquePro]"
-              containerClass="w-100 phone-input-container"
-              enableSearch={true}
+              onChange={(phone) =>
+                setFormData(prev => ({ ...prev, phone_number: phone }))
+              }
+              onCountryChange={(countryCode) =>
+                setPhoneCountry(countryCode.toLowerCase())
+              }
+
+              inputClass="phone-input"
+              containerClass="phone-input-container"
+              buttonClass="phone-flag-button"
+
+              enableSearch
               countryCodeEditable={false}
             />
           </div>
 
-          {/* Role - Optional */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 font-[BasisGrotesquePro]">
-              Role
-            </label>
-            <div className="relative">
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full !border border-gray-300 rounded-md px-3 py-1.5 text-gray-700 bg-white font-[BasisGrotesquePro] appearance-none"
-              >
-                <option value="tax_preparer">Tax Preparer</option>
-                <option value="senior_tax_preparer">Senior Tax Preparer</option>
-                <option value="team_leader">Team Leader</option>
-                <option value="mentor">Mentor</option>
-                <option value="admin">Admin</option>
-              </select>
-              <svg
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
 
           {/* Delivery Methods */}
           <div>
