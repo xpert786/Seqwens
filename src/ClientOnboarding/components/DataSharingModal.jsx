@@ -100,12 +100,57 @@ const DataSharingModal = ({
             ))}
           </div>
 
-          {/* Note: Categories selection would go here if needed in future */}
-          {selectedScope === 'Selected' && (
+          {/* Category Selection */}
+          {selectedScope === 'Selected' && dataSharingOptions?.categories && (
             <div className="categories-section">
-              <p className="categories-note">
-                Category selection will be available in a future update. Please select "All" or "None" for now.
-              </p>
+              <div className="categories-header">
+                <h6 className="categories-title">Select Data Categories to Share</h6>
+                <div className="categories-actions">
+                  <button
+                    type="button"
+                    className="btn-link categories-action-btn"
+                    onClick={() => {
+                      const allCategoryIds = dataSharingOptions.categories.map(cat => cat.id);
+                      setSelectedCategories(allCategoryIds);
+                    }}
+                  >
+                    Select All
+                  </button>
+                  <span className="categories-separator">|</span>
+                  <button
+                    type="button"
+                    className="btn-link categories-action-btn"
+                    onClick={() => setSelectedCategories([])}
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+              <div className="categories-list">
+                {dataSharingOptions.categories.map((category) => (
+                  <div
+                    key={category.id}
+                    className={`category-item ${selectedCategories.includes(category.id) ? 'selected' : ''}`}
+                    onClick={() => handleCategoryToggle(category.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={() => handleCategoryToggle(category.id)}
+                      className="category-checkbox"
+                    />
+                    <div className="category-content">
+                      <label className="category-label">{category.name}</label>
+                      {category.description && (
+                        <p className="category-description">{category.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {selectedCategories.length === 0 && (
+                <p className="categories-error">Please select at least one category to share.</p>
+              )}
             </div>
           )}
         </div>

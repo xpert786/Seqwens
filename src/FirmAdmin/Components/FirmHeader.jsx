@@ -1,4 +1,27 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
+
+// Simple Error Boundary for AccountSwitcher
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn('AccountSwitcher error (non-blocking):', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null;
+    }
+    return this.props.children;
+  }
+}
 import { Link, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
@@ -6,6 +29,7 @@ import logo from "../../assets/logo.png";
 import image from "../../assets/image.png";
 import { LogoIcon } from "../../ClientOnboarding/components/icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
+import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
@@ -411,6 +435,13 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                         className="d-flex align-items-center gap-3"
                         style={{ minWidth: "fit-content" }}
                     >
+                        {/* Account Switcher - Wrapped in error boundary to prevent blocking */}
+                        <React.Suspense fallback={null}>
+                            <ErrorBoundary fallback={null}>
+                                <AccountSwitcher />
+                            </ErrorBoundary>
+                        </React.Suspense>
+                        
                         {/* Notification Bell */}
                         <div
                             ref={notificationButtonRef}

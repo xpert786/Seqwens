@@ -82,8 +82,22 @@ export default function AcceptInvite() {
                     // Handle error cases
                     const errorMessage = response.message || "Invalid invitation token.";
                     const tokenErrors = response.errors?.token || [];
+                    const validationErrors = response.validation_errors || [];
 
-                    if (response.data) {
+                    // Check if this is an existing email scenario
+                    const isExistingEmail = validationErrors.some(err => 
+                        err.toLowerCase().includes('account already exists') ||
+                        err.toLowerCase().includes('please sign in')
+                    ) || errorMessage.toLowerCase().includes('account already exists');
+
+                    if (isExistingEmail) {
+                        // Set flag for existing email UI
+                        setInvitationData(response.data || {});
+                        setErrors({
+                            general: validationErrors[0] || errorMessage || "An account already exists for this email. Please sign in to accept the invite.",
+                            existingEmail: true
+                        });
+                    } else if (response.data) {
                         // Expired or already accepted - show data but with error
                         setInvitationData(response.data);
                         setErrors({
@@ -332,20 +346,43 @@ export default function AcceptInvite() {
                     }, 2000);
                 }
             } else {
-                setErrors({ general: response.message || "Failed to accept invitation." });
+                // Check for duplicate invite error
+                const errorMessage = response.message || "Failed to accept invitation.";
+                const isDuplicateInvite = errorMessage.toLowerCase().includes('already has access') ||
+                                         errorMessage.toLowerCase().includes('already exists');
+                
+                if (isDuplicateInvite) {
+                    setErrors({ 
+                        general: errorMessage,
+                        duplicateInvite: true
+                    });
+                } else {
+                    setErrors({ general: errorMessage });
+                }
             }
         } catch (error) {
             console.error('Error accepting invitation:', error);
+            
+            // Check for duplicate invite in error message
+            const errorMessage = handleAPIError(error);
+            const isDuplicateInvite = errorMessage.toLowerCase().includes('already has access') ||
+                                     errorMessage.toLowerCase().includes('already exists');
+            
+            if (isDuplicateInvite) {
+                setErrors({ 
+                    general: errorMessage,
+                    duplicateInvite: true
+                });
+            } else {
+                // Handle API error response
+                const fieldErrors = {};
+                const parsedErrorMessage = error.message || handleAPIError(error);
 
-            // Handle API error response
-            const fieldErrors = {};
-            let errorMessage = error.message || handleAPIError(error);
-
-            // Parse error message to extract field-specific errors
-            // Error format from publicApiRequest: "Validation failed. password: error1, error2; phone_number: error3"
-            if (errorMessage.includes(':')) {
+                // Parse error message to extract field-specific errors
+                // Error format from publicApiRequest: "Validation failed. password: error1, error2; phone_number: error3"
+                if (parsedErrorMessage.includes(':')) {
                 // Try to extract field errors from the message
-                const parts = errorMessage.split(';');
+                    const parts = parsedErrorMessage.split(';');
                 let generalMessage = '';
 
                 parts.forEach(part => {
@@ -382,30 +419,31 @@ export default function AcceptInvite() {
                     }
                 });
 
-                // If we have field errors but no general message, use the original message
-                if (Object.keys(fieldErrors).length === 0) {
-                    fieldErrors.general = errorMessage;
-                } else if (generalMessage && !fieldErrors.general) {
-                    fieldErrors.general = generalMessage;
-                }
-            } else {
-                // Simple error message without field structure
-                // Try to detect field from message content
-                const errorLower = errorMessage.toLowerCase();
-                if (errorLower.includes('password') && errorLower.includes('match')) {
-                    fieldErrors.passwordConfirm = errorMessage;
-                } else if (errorLower.includes('password')) {
-                    fieldErrors.password = errorMessage;
-                } else if (errorLower.includes('phone')) {
-                    fieldErrors.phoneNumber = errorMessage;
-                } else if (errorLower.includes('token')) {
-                    fieldErrors.general = errorMessage;
+                    // If we have field errors but no general message, use the original message
+                    if (Object.keys(fieldErrors).length === 0) {
+                        fieldErrors.general = parsedErrorMessage;
+                    } else if (generalMessage && !fieldErrors.general) {
+                        fieldErrors.general = generalMessage;
+                    }
                 } else {
-                    fieldErrors.general = errorMessage;
+                    // Simple error message without field structure
+                    // Try to detect field from message content
+                    const errorLower = parsedErrorMessage.toLowerCase();
+                    if (errorLower.includes('password') && errorLower.includes('match')) {
+                        fieldErrors.passwordConfirm = parsedErrorMessage;
+                    } else if (errorLower.includes('password')) {
+                        fieldErrors.password = parsedErrorMessage;
+                    } else if (errorLower.includes('phone')) {
+                        fieldErrors.phoneNumber = parsedErrorMessage;
+                    } else if (errorLower.includes('token')) {
+                        fieldErrors.general = parsedErrorMessage;
+                    } else {
+                        fieldErrors.general = parsedErrorMessage;
+                    }
                 }
-            }
 
-            setErrors(fieldErrors);
+                setErrors(fieldErrors);
+            }
         } finally {
             setIsAccepting(false);
         }
@@ -510,6 +548,63 @@ export default function AcceptInvite() {
         );
     }
 
+    // Handle existing email scenario
+    if (errors.existingEmail && invitationData) {
+        return (
+            <FixedLayout>
+                <div className="accept-invite-page">
+                    <div className="accept-invite-card">
+                        <div className="accept-invite-header">
+                            <h5 className="accept-invite-title">Invitation from {invitationData?.firm_name || "Firm"}</h5>
+                            <p className="accept-invite-subtitle">
+                                You've been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
+                                <strong>{invitationData?.role_display || invitationData?.role || "Member"}</strong>
+                            </p>
+                        </div>
+                        <div className="alert alert-warning" role="alert" style={{ 
+                            margin: '1.5rem 0',
+                            padding: '1rem',
+                            backgroundColor: '#FFF3CD',
+                            border: '1px solid #FFC107',
+                            borderRadius: '8px',
+                            color: '#856404'
+                        }}>
+                            <strong>⚠️ {errors.general || "An account already exists for this email."}</strong>
+                            <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px' }}>
+                                Please sign in to accept the invite.
+                            </p>
+                        </div>
+                        <div className="invitation-actions" style={{ marginTop: '1.5rem' }}>
+                            <button
+                                className="accept-invite-btn accept-btn"
+                                onClick={() => navigate("/login", { 
+                                    state: { 
+                                        returnTo: `/accept-invite?token=${token}`,
+                                        message: "Please sign in to accept the invitation"
+                                    } 
+                                })}
+                            >
+                                Sign In
+                            </button>
+                            <button
+                                className="accept-invite-btn deny-btn"
+                                onClick={() => navigate("/login", { 
+                                    state: { 
+                                        forgotPassword: true,
+                                        email: invitationData?.email 
+                                    } 
+                                })}
+                                style={{ marginTop: '0.5rem' }}
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </FixedLayout>
+        );
+    }
+
     if (errors.general && !invitationData) {
         return (
             <FixedLayout>
@@ -596,7 +691,30 @@ export default function AcceptInvite() {
                                 </p>
                             </div>
 
-                            {errors.general && (
+                            {errors.duplicateInvite && (
+                                <div className="alert alert-warning" role="alert" style={{
+                                    backgroundColor: '#FFF3CD',
+                                    border: '1px solid #FFC107',
+                                    borderRadius: '8px',
+                                    padding: '1rem',
+                                    color: '#856404',
+                                    marginBottom: '1rem'
+                                }}>
+                                    <strong>⚠️ {errors.general || "This user already has access to your firm."}</strong>
+                                    <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px' }}>
+                                        You can update their office assignments or permissions instead.
+                                    </p>
+                                    <button
+                                        className="btn btn-sm btn-primary mt-2"
+                                        onClick={() => navigate("/firmadmin/staff")}
+                                        style={{ marginTop: '0.5rem' }}
+                                    >
+                                        Go to Staff Management
+                                    </button>
+                                </div>
+                            )}
+
+                            {errors.general && !errors.duplicateInvite && (
                                 <div className="alert alert-danger" role="alert">
                                     {errors.general}
                                 </div>

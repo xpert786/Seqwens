@@ -1,0 +1,28 @@
+.membership-badge-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.membership-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid;
+  font-family: 'BasisGrotesquePro', sans-serif;
+  white-space: nowrap;
+}
+
+.membership-badge-role {
+  font-weight: 500;
+}
+
+.membership-badge-status {
+  font-weight: 600;
+}
+

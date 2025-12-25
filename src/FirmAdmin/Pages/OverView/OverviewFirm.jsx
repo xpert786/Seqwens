@@ -139,14 +139,25 @@ export default function FirmAdminDashboard() {
     fetchDashboardData();
   }, [dateRange]);
 
-  // Handle subscription success redirect
+  // Handle subscription success redirect - use ref to prevent infinite loops
+  const subscriptionHandledRef = useRef(false);
+  
   useEffect(() => {
     const subscriptionSuccess = searchParams.get('subscription_success');
     const subscriptionCancelled = searchParams.get('subscription_cancelled');
 
+    // Prevent handling the same subscription event multiple times
+    if (subscriptionHandledRef.current) {
+      return;
+    }
+
     if (subscriptionSuccess === 'true') {
+      subscriptionHandledRef.current = true;
+      
       // Remove the query parameter first to prevent infinite loop
-      setSearchParams({});
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('subscription_success');
+      setSearchParams(newSearchParams, { replace: true });
       
       // Show success message
       toast.success('Subscription activated successfully! Welcome to your dashboard.', {
@@ -176,11 +187,13 @@ export default function FirmAdminDashboard() {
                   storage.setItem("userData", JSON.stringify(userData));
                   sessionStorage.setItem("userData", JSON.stringify(userData));
                   // Refetch dashboard data instead of full page reload
-                  // Trigger a refetch by updating dateRange (which will trigger the fetchDashboardData useEffect)
-                  // Or just reload the page after removing the query parameter
+                  // This prevents infinite reload loops
+                  setDashboardData(null);
+                  // Trigger refetch by updating dateRange
+                  setDateRange(prev => prev === 'Last 30 days' ? 'Last 7 days' : 'Last 30 days');
                   setTimeout(() => {
-                    window.location.reload();
-                  }, 500);
+                    setDateRange('Last 30 days');
+                  }, 100);
                 }
               })
               .catch(err => {
@@ -192,13 +205,17 @@ export default function FirmAdminDashboard() {
         }
       }
     } else if (subscriptionCancelled === 'true') {
+      subscriptionHandledRef.current = true;
+      
       // Show cancellation message
       toast.info('Subscription setup was cancelled. Please complete your subscription to access all features.', {
         position: 'top-right',
         autoClose: 5000,
       });
       // Remove parameter and redirect to finalize subscription
-      setSearchParams({});
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('subscription_cancelled');
+      setSearchParams(newSearchParams, { replace: true });
       navigate('/firmadmin/finalize-subscription', { replace: true });
     }
   }, [searchParams, setSearchParams, navigate]);

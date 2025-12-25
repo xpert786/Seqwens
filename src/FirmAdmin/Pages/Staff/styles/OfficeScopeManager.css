@@ -1,0 +1,164 @@
+.office-scope-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.office-scope-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.office-scope-value {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1F2937;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.office-scope-edit-btn {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  color: #3B82F6;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.office-scope-edit-btn:hover:not(:disabled) {
+  background: #EFF6FF;
+  border-color: #3B82F6;
+}
+
+.office-scope-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.office-scope-modal-description {
+  margin-bottom: 1.5rem;
+  color: #6B7280;
+  font-size: 14px;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.office-scope-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.office-scope-action-btn {
+  background: none;
+  border: none;
+  color: #3B82F6;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  font-weight: 500;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.office-scope-action-btn:hover {
+  text-decoration: underline;
+  color: #2563EB;
+}
+
+.office-scope-separator {
+  color: #D1D5DB;
+}
+
+.office-scope-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.office-scope-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border: 2px solid #E5E7EB;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.office-scope-item:hover {
+  border-color: #3B82F6;
+  background: #F9FAFB;
+}
+
+.office-scope-item.selected {
+  border-color: #3B82F6;
+  background: #EFF6FF;
+}
+
+.office-scope-checkbox {
+  margin-top: 0.125rem;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #3B82F6;
+}
+
+.office-scope-item-content {
+  flex: 1;
+}
+
+.office-scope-item-name {
+  font-weight: 500;
+  color: #1F2937;
+  margin-bottom: 2px;
+  font-size: 14px;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.office-scope-item-address {
+  color: #6B7280;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.office-scope-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.office-scope-list::-webkit-scrollbar-track {
+  background: #F3F4F6;
+}
+
+.office-scope-list::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+
+.office-scope-list::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+

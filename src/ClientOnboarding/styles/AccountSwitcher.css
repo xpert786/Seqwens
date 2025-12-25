@@ -1,0 +1,193 @@
+.account-switcher-container {
+  margin-right: 12px;
+}
+
+.account-switcher-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'BasisGrotesquePro', sans-serif;
+  min-width: 200px;
+}
+
+.account-switcher-button:hover:not(:disabled) {
+  border-color: #3B82F6;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+.account-switcher-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.account-switcher-content {
+  flex: 1;
+  text-align: left;
+}
+
+.account-switcher-firm-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 2px;
+}
+
+.account-switcher-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.account-switcher-role {
+  font-weight: 500;
+}
+
+.account-switcher-separator {
+  color: #D1D5DB;
+}
+
+.account-switcher-status {
+  font-weight: 500;
+}
+
+.account-switcher-arrow {
+  font-size: 16px;
+  color: #6B7280;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.account-switcher-arrow.open {
+  transform: rotate(180deg);
+}
+
+.account-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  min-width: 280px;
+  max-width: 320px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.account-switcher-dropdown-header {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #F3F4F6;
+  background: #F9FAFB;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.account-switcher-dropdown-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.account-switcher-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F3F4F6;
+  transition: background-color 0.2s ease;
+}
+
+.account-switcher-item:last-child {
+  border-bottom: none;
+}
+
+.account-switcher-item:hover:not(.current) {
+  background-color: #F9FAFB;
+}
+
+.account-switcher-item.current {
+  background-color: #EFF6FF;
+  border-left: 3px solid #3B82F6;
+}
+
+.account-switcher-item.pending {
+  opacity: 0.7;
+}
+
+.account-switcher-item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.account-switcher-check-icon {
+  color: #3B82F6;
+  font-size: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.account-switcher-item-content {
+  flex: 1;
+}
+
+.account-switcher-item-firm-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 4px;
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.account-switcher-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+.account-switcher-item-role {
+  font-weight: 500;
+}
+
+.account-switcher-item-status {
+  font-weight: 500;
+}
+
+.account-switcher-office-scope {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Scrollbar styling */
+.account-switcher-dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.account-switcher-dropdown-list::-webkit-scrollbar-track {
+  background: #F3F4F6;
+}
+
+.account-switcher-dropdown-list::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+
+.account-switcher-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+

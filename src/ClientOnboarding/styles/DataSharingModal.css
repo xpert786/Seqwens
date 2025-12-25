@@ -158,18 +158,133 @@
 }
 
 .categories-section {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #e7f3ff;
-  border-radius: 8px;
-  border: 1px solid #b3d9ff;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #dee2e6;
 }
 
-.categories-note {
-  color: #004085;
-  font-size: 0.9rem;
+.categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.categories-title {
+  font-weight: 600;
+  color: #212529;
   margin: 0;
-  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.categories-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categories-action-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.categories-action-btn:hover {
+  text-decoration: underline;
+  color: #5568d3;
+}
+
+.categories-separator {
+  color: #dee2e6;
+}
+
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.category-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.category-item:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.category-item.selected {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.category-checkbox {
+  margin-top: 0.125rem;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #667eea;
+}
+
+.category-content {
+  flex: 1;
+}
+
+.category-label {
+  font-weight: 500;
+  color: #212529;
+  margin: 0;
+  cursor: pointer;
+  display: block;
+  font-size: 0.9rem;
+}
+
+.category-description {
+  color: #6c757d;
+  margin: 0.25rem 0 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.categories-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin: 0.75rem 0 0 0;
+  font-style: italic;
+}
+
+.categories-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.categories-list::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.categories-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.categories-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 .data-sharing-modal-footer {

@@ -468,6 +468,19 @@ export const userAPI = {
     };
 
     return await apiRequest('/user/verify-email-otp/', 'POST', payload);
+  },
+
+  // Get user memberships (all firms user belongs to)
+  getMemberships: async () => {
+    return await apiRequest('/user/memberships/', 'GET');
+  },
+
+  // Switch firm context
+  switchFirm: async (firmId) => {
+    const payload = {
+      firm_id: firmId,
+    };
+    return await apiRequest('/user/switch-firm/', 'POST', payload);
   }
 };
 
@@ -3516,6 +3529,19 @@ export const firmAdminStaffAPI = {
   // Get tax preparer permissions
   getTaxPreparerPermissions: async (userId) => {
     return await apiRequest(`/user/firm-admin/tax-preparers/${userId}/permissions/`, 'GET');
+  },
+
+  // Get office scope for a staff member
+  getOfficeScope: async (userId) => {
+    return await apiRequest(`/firm/staff/${userId}/office-scope/`, 'GET');
+  },
+
+  // Set office scope for a staff member
+  setOfficeScope: async (userId, officeIds) => {
+    const payload = {
+      office_ids: Array.isArray(officeIds) ? officeIds : [officeIds]
+    };
+    return await apiRequest(`/firm/staff/${userId}/office-scope/`, 'POST', payload);
   },
 
   // Update tax preparer permissions
