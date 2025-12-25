@@ -164,7 +164,7 @@ export default function ActivityLogTab({ staffId, staffMember }) {
       )}
 
       {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 activity-filters-grid">
+      {/* <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 activity-filters-grid">
         <div>
           <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1 activity-filter-label">
             Activity Type
@@ -226,7 +226,7 @@ export default function ActivityLogTab({ staffId, staffMember }) {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-[BasisGrotesquePro] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 activity-filter-input"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Clear Filters Button */}
       {(filters.activity_type || filters.status || filters.start_date || filters.end_date) && (

@@ -1,0 +1,176 @@
+/* Documents Page Responsive Styles */
+
+.documents-page-wrapper {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Stats Cards - Make 3 cards expand to fill full width */
+.documents-page-wrapper .row.g-3.mb-3 {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.documents-page-wrapper .row.g-3.mb-3 > div {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+/* Stat cards should expand to fill available space */
+.documents-page-wrapper .stat-card {
+  width: 100%;
+  min-height: 150px;
+}
+
+/* Header Responsive Styles */
+.documents-header {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.documents-header-title {
+  flex: 1;
+  min-width: 200px;
+}
+
+.documents-header-buttons {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.documents-header-buttons .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Mobile Responsive - Small screens (max-width: 768px) */
+@media (max-width: 768px) {
+  .documents-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .documents-header-title {
+    width: 100%;
+  }
+
+  .documents-header-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .documents-header-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .documents-header-buttons .btn .btn-text {
+    display: inline;
+  }
+
+  /* Stats cards - full width on mobile */
+  .documents-page-wrapper .row.g-3.mb-3 > div {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 0.75rem;
+  }
+
+  .documents-page-wrapper .stat-card {
+    min-height: 120px;
+    padding: 14px;
+  }
+
+  .documents-page-wrapper .stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .documents-page-wrapper .stat-count {
+    font-size: 24px;
+  }
+}
+
+/* Tablet Responsive - Medium screens (max-width: 992px) */
+@media (max-width: 992px) {
+  .documents-header-buttons {
+    flex-wrap: wrap;
+  }
+
+  .documents-header-buttons .btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+}
+
+/* Extra Small screens (max-width: 576px) */
+@media (max-width: 576px) {
+  .documents-page-wrapper {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .documents-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .documents-header small {
+    font-size: 0.75rem;
+  }
+
+  .documents-page-wrapper .stat-card {
+    min-height: 110px;
+    padding: 12px;
+  }
+
+  .documents-page-wrapper .stat-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .documents-page-wrapper .stat-count {
+    font-size: 20px;
+  }
+
+  .documents-page-wrapper .stat-card p.small {
+    font-size: 0.75rem;
+  }
+}
+
+/* File Manager Section Responsive */
+@media (max-width: 768px) {
+  .documents-page-wrapper .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .documents-page-wrapper .d-flex.justify-content-between.align-items-center.mb-4 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .documents-page-wrapper .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Tabs Responsive */
+@media (max-width: 576px) {
+  .documents-page-wrapper .nav-tabs {
+    flex-wrap: wrap;
+  }
+
+  .documents-page-wrapper .nav-item {
+    flex: 1 1 auto;
+    min-width: 50%;
+  }
+
+  .documents-page-wrapper .nav-link {
+    padding: 10px 12px !important;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+}
+

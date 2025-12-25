@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { superAdminAPI, handleAPIError } from '../utils/superAdminAPI';
 import { setTokens, clearUserData } from '../../ClientOnboarding/utils/userUtils';
+import { getPathWithPrefix } from '../../ClientOnboarding/utils/urlUtils';
 import { toast } from 'react-toastify';
 import FirmAddonsTab from './FirmDetails/FirmAddonsTab';
 import '../style/FirmDetails.css';
@@ -428,7 +429,7 @@ export default function FirmDetails() {
                 // STEP 3: Navigate to firm admin dashboard with a small delay to ensure state is cleared
                 // Use window.location.href for a hard navigation to ensure clean state and prevent loops
                 setTimeout(() => {
-                    window.location.href = '/firmadmin';
+                    window.location.href = getPathWithPrefix('/firmadmin');
                 }, 300);
             } else {
                 throw new Error(response.message || 'Failed to generate login credentials');

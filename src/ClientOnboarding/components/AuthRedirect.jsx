@@ -19,6 +19,7 @@ export default function AuthRedirect({ children }) {
       console.log('AuthRedirect - User type:', userType);
       
       // Redirect based on user type
+      // Note: basename="/seqwens-frontend" is set in main.jsx, so paths are relative
       if (userType === 'super_admin') {
         navigate("/superadmin", { replace: true });
       } else if (userType === 'support_admin' || userType === 'billing_admin') {

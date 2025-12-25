@@ -18,6 +18,7 @@ export default function StaffDetails() {
   const [staffData, setStaffData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
   // Fetch staff details from API
   useEffect(() => {
@@ -292,21 +293,10 @@ export default function StaffDetails() {
               Permissions
             </button>
 
-            {/* Staff Role Dropdown - White with dropdown chevron */}
-            <button className="px-3 py-1.5 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs text-gray-700 whitespace-nowrap">
-              Staff Role
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            
 
             {/* Edit Staff Button - White with pencil icon */}
-            <button className="px-3 py-1.5 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center gap-1.5 text-xs text-gray-700 whitespace-nowrap">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2.00015H3.33333C2.97971 2.00015 2.64057 2.14063 2.39052 2.39068C2.14048 2.64072 2 2.97986 2 3.33348V12.6668C2 13.0204 2.14048 13.3596 2.39052 13.6096C2.64057 13.8597 2.97971 14.0002 3.33333 14.0002H12.6667C13.0203 14.0002 13.3594 13.8597 13.6095 13.6096C13.8595 13.3596 14 13.0204 14 12.6668V8.00015M12.25 1.75015C12.5152 1.48493 12.8749 1.33594 13.25 1.33594C13.6251 1.33594 13.9848 1.48493 14.25 1.75015C14.5152 2.01537 14.6642 2.37508 14.6642 2.75015C14.6642 3.12522 14.5152 3.48493 14.25 3.75015L8 10.0002L5.33333 10.6668L6 8.00015L12.25 1.75015Z" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Edit Staff
-            </button>
+            
           </div>
         </div>
       </div>
@@ -421,9 +411,9 @@ export default function StaffDetails() {
         <TaxPreparerPermissionsModal
           isOpen={showPermissionsModal}
           onClose={() => setShowPermissionsModal(false)}
-          preparerId={staffData.id}
-          preparerName={staffData.profile?.full_name || staffData.profile?.name || 'Tax Preparer'}
-          preparerEmail={staffData.profile?.email || staffData.email || ''}
+          preparerId={staffData.profile?.id || staffData.id || id}
+          preparerName={staffData.profile?.full_name || staffData.profile?.name || staffMember?.name || 'Tax Preparer'}
+          preparerEmail={staffData.profile?.email || staffData.email || staffMember?.email || ''}
         />
       )}
     </div>

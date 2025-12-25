@@ -6,6 +6,7 @@ import { CrossesIcon } from "../../Components/icons";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 
 export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefresh }) {
   const [formData, setFormData] = useState({
@@ -22,6 +23,9 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
   const [phoneCountry, setPhoneCountry] = useState('us');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [existingUserInfo, setExistingUserInfo] = useState(null);
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   if (!isOpen) return null;
 
@@ -110,43 +114,58 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       }
 
       const result = await response.json();
-      console.log("Staff member created successfully:", result);
+      console.log("API Response:", result);
 
-      // Reset form
-      setFormData({
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone_number: "",
-        role: "tax_preparer",
-      });
-      setDeliveryMethods({
-        email: true,
-        sms: false,
-        link: false,
-      });
-
-      if (typeof onRefresh === "function") {
-        onRefresh();
-      }
-      onClose();
-
-      if (typeof onInviteCreated === "function" && result.data) {
-        onInviteCreated(result.data);
+      // Check if user exists and confirmation is required
+      if (result.success === false && result.user_exists === true && result.action_required === "send_invite") {
+        // Store existing user info and show confirmation modal
+        setExistingUserInfo(result.user_info);
+        setShowConfirmModal(true);
+        setLoading(false);
+        return;
       }
 
-      // Show success toast
-      toast.success("Staff member added successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: false,
-        className: "custom-toast-success",
-        bodyClassName: "custom-toast-body",
-      });
+      // If successful (new user or confirmed existing user)
+      if (result.success && result.data) {
+        // Reset form
+        setFormData({
+          first_name: "",
+          last_name: "",
+          email: "",
+          phone_number: "",
+          role: "tax_preparer",
+        });
+        setDeliveryMethods({
+          email: true,
+          sms: false,
+          link: false,
+        });
+
+        if (typeof onRefresh === "function") {
+          onRefresh();
+        }
+        onClose();
+
+        if (typeof onInviteCreated === "function" && result.data) {
+          onInviteCreated(result.data);
+        }
+
+        // Show success toast
+        toast.success(result.message || "Staff member added successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
+      } else {
+        // Handle other error cases
+        throw new Error(result.message || "Failed to create staff member");
+      }
     } catch (err) {
       console.error("Error creating staff member:", err);
       const errorMessage = handleAPIError(err);
@@ -183,7 +202,148 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       link: false,
     });
     setError(null);
+    setShowConfirmModal(false);
+    setExistingUserInfo(null);
     onClose();
+  };
+
+  const handleConfirmSendInvite = async () => {
+    if (!existingUserInfo) return;
+
+    setSendingInvite(true);
+    setError(null);
+
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const selectedMethods = Object.entries(deliveryMethods)
+        .filter(([, checked]) => checked)
+        .map(([method]) => method);
+
+      const apiData = {
+        email: formData.email.trim(),
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        role: "tax_preparer", // Default role for staff
+      };
+
+      if (formData.phone_number?.trim()) {
+        apiData.phone_number = formData.phone_number.trim();
+      }
+
+      if (selectedMethods.length > 0) {
+        apiData.delivery_methods = selectedMethods;
+      }
+
+      const config = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(apiData),
+      };
+
+      const apiUrl = `${API_BASE_URL}/user/firm-admin/tax-preparers/send-invite/`;
+      console.log("Sending invite to existing user:", apiData);
+
+      const response = await fetchWithCors(apiUrl, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
+
+        // Parse array format error messages
+        if (Array.isArray(errorMessage)) {
+          errorMessage = errorMessage[0] || errorMessage;
+        } else if (typeof errorMessage === 'string' && errorMessage.trim().startsWith('[')) {
+          try {
+            const parsed = JSON.parse(errorMessage);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              errorMessage = parsed[0];
+            }
+          } catch (e) {
+            // Keep original if parsing fails
+          }
+        }
+
+        // Also check errorData.errors or errorData.error fields
+        if (errorData.errors) {
+          if (Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors[0] || errorMessage;
+          } else if (typeof errorData.errors === 'string') {
+            errorMessage = errorData.errors;
+          }
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log("Invite sent successfully:", result);
+
+      // Reset form
+      setFormData({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone_number: "",
+        role: "tax_preparer",
+      });
+      setDeliveryMethods({
+        email: true,
+        sms: false,
+        link: false,
+      });
+      setShowConfirmModal(false);
+      setExistingUserInfo(null);
+
+      if (typeof onRefresh === "function") {
+        onRefresh();
+      }
+      onClose();
+
+      if (typeof onInviteCreated === "function" && result.data) {
+        onInviteCreated(result.data);
+      }
+
+      // Show success toast
+      toast.success(result.message || "Invitation sent successfully to existing user", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+      });
+    } catch (err) {
+      console.error("Error sending invite:", err);
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+
+      // Show error toast
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-error",
+        bodyClassName: "custom-toast-body",
+      });
+    } finally {
+      setSendingInvite(false);
+    }
   };
 
   return (
@@ -366,6 +526,39 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
           </div>
         </form>
       </div>
+
+      {/* Confirmation Modal for Existing User */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setExistingUserInfo(null);
+          setLoading(false);
+        }}
+        onConfirm={handleConfirmSendInvite}
+        title="Invite Existing User"
+        message={
+          existingUserInfo ? (
+            <div className="font-[BasisGrotesquePro]">
+              <p className="mb-3 text-gray-700">
+                Do you want to invite <strong>{existingUserInfo.name}</strong> ({existingUserInfo.email}) to your team?
+              </p>
+              {existingUserInfo.current_firm && (
+                <p className="text-sm text-gray-600">
+                  Currently at: <strong>{existingUserInfo.current_firm}</strong>
+                </p>
+              )}
+            </div>
+          ) : (
+            "Do you want to invite this preparer to your team?"
+          )
+        }
+        confirmText="Yes, Send Invite"
+        cancelText="Cancel"
+        confirmButtonStyle={{ backgroundColor: '#F56D2D', color: '#FFFFFF' }}
+        cancelButtonStyle={{ border: '1px solid #E8F0FF', color: '#3B4A66' }}
+        isLoading={sendingInvite}
+      />
     </div>
   );
 }

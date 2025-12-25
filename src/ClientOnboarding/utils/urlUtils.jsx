@@ -37,6 +37,31 @@ export const getFullUrl = (path) => {
 };
 
 /**
+ * Get the base path prefix for navigation
+ * @returns {string} The base path prefix (e.g., '/seqwens-frontend')
+ */
+export const getBasePath = () => {
+  return '/seqwens-frontend';
+};
+
+/**
+ * Add base path prefix to a path if it doesn't already have it
+ * @param {string} path - The path to normalize
+ * @returns {string} The path with base prefix
+ */
+export const addBasePath = (path) => {
+  const basePath = getBasePath();
+  // Remove leading slash if present
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  // Check if path already includes base path
+  if (cleanPath.startsWith(basePath)) {
+    return cleanPath;
+  }
+  // Add base path prefix
+  return `${basePath}${cleanPath}`;
+};
+
+/**
  * Navigate to a URL using the appropriate method
  * @param {string} path - The path to navigate to
  * @param {Function} navigate - React Router navigate function (optional)
@@ -44,11 +69,14 @@ export const getFullUrl = (path) => {
 export const navigateToUrl = (path, navigate = null) => {
   if (navigate && typeof navigate === 'function') {
     // Use React Router navigate for internal navigation (respects basename)
-    navigate(path);
+    // Remove base path from navigate calls since basename handles it
+    const cleanPath = path.startsWith('/seqwens-frontend') 
+      ? path.replace('/seqwens-frontend', '') 
+      : path;
+    navigate(cleanPath);
   } else {
-    // Use relative path for window.location to respect base path
-    // React Router basename is already set, so we use relative paths
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    // For window.location.href, include the base path prefix
+    const normalizedPath = addBasePath(path);
     window.location.href = normalizedPath;
   }
 };
@@ -59,6 +87,15 @@ export const navigateToUrl = (path, navigate = null) => {
  */
 export const navigateToLogin = (navigate = null) => {
   navigateToUrl('/login', navigate);
+};
+
+/**
+ * Get a path with base prefix for window.location.href
+ * @param {string} path - The path (e.g., '/login', '/dashboard')
+ * @returns {string} The path with base prefix (e.g., '/seqwens-frontend/login')
+ */
+export const getPathWithPrefix = (path) => {
+  return addBasePath(path);
 };
 
 /**

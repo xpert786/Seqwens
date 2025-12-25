@@ -12,7 +12,8 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.warn('AccountSwitcher error (non-blocking):', error);
+    // Silently handle AccountSwitcher errors - component will not display
+    // No console logging needed
   }
 
   render() {

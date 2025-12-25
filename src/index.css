@@ -66,101 +66,68 @@ button.btn:not([class*="rounded"]):not([style*="borderRadius"]):not([style*="bor
   border-radius: 8px !important;
 }
 
-/* Phone Input Container - Ensure dropdown overlaps modals and is fully visible */
+/* Phone Input Container - Global styles for all phone number fields */
 .phone-input-container {
-  position: relative;
   width: 100%;
-  overflow: visible !important;
 }
 
-.phone-input-container .react-phone-input-2 {
-  width: 100% !important;
-  overflow: visible !important;
-}
-
-/* Phone Input - Fix flag icon and country code overlapping */
-.phone-input-container .react-phone-input-2 .selected-flag,
-.react-phone-input-2 .selected-flag {
-  width: auto !important;
-  min-width: 60px !important;
-  max-width: 90px !important;
-  padding: 0 10px 0 12px !important;
-  border-right: 1px solid #d1d5db !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 6px !important;
-  position: relative !important;
-  overflow: visible !important;
-}
-
-.phone-input-container .react-phone-input-2 .selected-flag .flag,
-.react-phone-input-2 .selected-flag .flag {
-  margin-right: 0 !important;
-  flex-shrink: 0 !important;
-  display: inline-block !important;
-  width: 20px !important;
-  height: 15px !important;
-}
-
-.phone-input-container .react-phone-input-2 .selected-flag .arrow,
-.react-phone-input-2 .selected-flag .arrow {
-  margin-left: auto !important;
-  flex-shrink: 0 !important;
-  width: 8px !important;
-  height: 8px !important;
-}
-
-/* Ensure country code (dial code) has proper spacing */
-.phone-input-container .react-phone-input-2 .selected-flag > *:not(.flag):not(.arrow),
-.react-phone-input-2 .selected-flag > *:not(.flag):not(.arrow) {
-  margin-left: 0 !important;
-  flex-shrink: 0 !important;
-  white-space: nowrap !important;
-  font-size: 14px !important;
-}
-
-.phone-input-container .react-phone-input-2 input,
-.react-phone-input-2 input {
-  padding-left: 75px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  position: relative !important;
-  z-index: 2 !important; /* Above flag dropdown */
-  background-color: white !important;
-}
-
-.phone-input-container .react-phone-input-2 .flag-dropdown {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 1 !important; /* Below input text */
-  overflow: visible !important;
-}
-
-.phone-input-container .react-phone-input-2 .flag-dropdown.open {
-  z-index: 1060 !important; /* Above everything when open */
-}
-
+/* Main input field */
+.phone-input-container .form-control,
+.phone-input-container input,
 .phone-input-container .react-phone-input-2 input {
-  padding-left: 75px !important;
   width: 100% !important;
-  box-sizing: border-box !important;
-  position: relative !important;
-  z-index: 2 !important; /* Above flag dropdown */
-  background-color: white !important;
+  height: 38px !important;
+  padding-left: 52px !important; /* space for flag */
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  font-size: 14px;
+  line-height: 1.25;
+  font-family: BasisGrotesquePro, sans-serif;
 }
 
-/* Invite Taxpayer modal specific tweaks to ensure phone field and dropdown are above modal content */
-.invite-taxpayer-phone-container {
-  position: relative;
-  z-index: 1;
+/* Flag dropdown button */
+.phone-input-container .flag-dropdown,
+.phone-input-container .react-phone-input-2 .flag-dropdown {
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px 0 0 6px !important;
 }
 
-.invite-taxpayer-phone-container .react-phone-input-2 .flag-dropdown,
-.invite-taxpayer-phone-container .react-phone-input-2 .flag-dropdown.open {
-  z-index: 2000 !important; /* Above Bootstrap modal and other overlays */
+/* Selected flag alignment */
+.phone-input-container .selected-flag,
+.phone-input-container .react-phone-input-2 .selected-flag {
+  padding: 0 10px !important;
+}
+
+/* Country dropdown list */
+.phone-input-container .country-list,
+.phone-input-container .react-phone-input-2 .country-list {
+  z-index: 9999;
+}
+
+/* Apply same styles to react-phone-input-2 directly (for components not using phone-input-container class) */
+.react-phone-input-2 .form-control,
+.react-phone-input-2 input {
+  width: 100% !important;
+  height: 38px !important;
+  padding-left: 52px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  font-size: 14px;
+  line-height: 1.25;
+  font-family: BasisGrotesquePro, sans-serif;
+}
+
+.react-phone-input-2 .flag-dropdown {
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px 0 0 6px !important;
+}
+
+.react-phone-input-2 .selected-flag {
+  padding: 0 10px !important;
+}
+
+.react-phone-input-2 .country-list {
+  z-index: 9999;
 }
 
 .Toastify__toast {

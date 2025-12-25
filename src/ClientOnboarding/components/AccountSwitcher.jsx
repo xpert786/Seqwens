@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiChevronDown, FiCheck } from 'react-icons/fi';
 import { userAPI, handleAPIError } from '../utils/apiUtils';
 import { getStorage, setTokens } from '../utils/userUtils';
+import { getPathWithPrefix } from '../utils/urlUtils';
 import { toast } from 'react-toastify';
 import '../styles/AccountSwitcher.css';
 
@@ -221,13 +222,13 @@ export default function AccountSwitcher() {
 
         // Reload to update context
         setTimeout(() => {
-          window.location.href = redirectPath;
+          window.location.href = getPathWithPrefix(redirectPath);
         }, 500);
       } else {
         throw new Error(response.message || 'Failed to switch firm');
       }
     } catch (error) {
-      console.error('Error switching firm:', error);
+      // Silently handle errors - toast will show user-friendly message
       toast.error(handleAPIError(error) || 'Failed to switch firm', {
         position: 'top-right',
         autoClose: 3000,

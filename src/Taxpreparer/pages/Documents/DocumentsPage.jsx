@@ -5,11 +5,13 @@ import { FaFolder } from "react-icons/fa";
 import TaxUploadModal from "../../upload/TaxUploadModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerDocumentsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import { Modal } from "react-bootstrap";
 import FirmSharedDocuments from "./FirmSharedDocuments";
 import SharedDocuments from "./SharedDocuments";
+import "../../styles/MyClients.css";
+import "./DocumentsPage.css";
 
 const SUPPORTED_PREVIEW_TYPES = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
 
@@ -146,6 +148,14 @@ export default function DocumentsPage() {
   const [showPreview, setShowPreview] = useState(false);
   const previewTriggerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('my-documents'); // 'my-documents' or 'firm-shared'
+  const [statistics, setStatistics] = useState({
+    total_clients: 0,
+    reviewed_documents: 0,
+    my_uploads: 0
+  });
+  const [statisticsLoading, setStatisticsLoading] = useState(true);
+  const [statisticsError, setStatisticsError] = useState(null);
+  
   const documents = [
     {
       id: 1,
@@ -216,12 +226,49 @@ export default function DocumentsPage() {
     },
   ];
 
+  // Fetch statistics from API
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      if (isNestedUnderClient) {
+        setStatisticsLoading(false);
+        return;
+      }
+
+      try {
+        setStatisticsLoading(true);
+        setStatisticsError(null);
+        const response = await taxPreparerDocumentsAPI.getStatistics();
+        
+        if (response.success && response.data) {
+          setStatistics({
+            total_clients: response.data.total_clients || 0,
+            reviewed_documents: response.data.reviewed_documents || 0,
+            my_uploads: response.data.my_uploads || 0
+          });
+        } else {
+          throw new Error(response.message || 'Failed to fetch statistics');
+        }
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+        setStatisticsError(handleAPIError(error));
+        // Set default values on error
+        setStatistics({
+          total_clients: 0,
+          reviewed_documents: 0,
+          my_uploads: 0
+        });
+      } finally {
+        setStatisticsLoading(false);
+      }
+    };
+
+    fetchStatistics();
+  }, [isNestedUnderClient]);
+
   const cardData = [
-    { label: "Total Clients", icon: <Doc />, count: clients.length, color: "#00bcd4" },
-    { label: "Pending", icon: <AwaitingIcon />, count: clients.filter(c => c.statuses.includes("Active")).length, color: "#4caf50" },
-    { label: "Reviewed", icon: <Received />, count: clients.filter(c => c.statuses.includes("Pending")).length, color: "#3f51b5" },
-    { label: "Needs Revision", icon: <FaildIcon />, count: clients.filter(c => c.statuses.includes("High Priority")).length, color: "#EF4444" },
-    { label: "My Uploads", icon: <Uploaded />, count: clients.filter(c => c.statuses.includes("My Uploads")).length, color: "#EF4444" },
+    { label: "Total Clients", icon: <Doc />, count: statistics.total_clients, color: "#00bcd4" },
+    { label: "Reviewed", icon: <Received />, count: statistics.reviewed_documents, color: "#3f51b5" },
+    { label: "My Uploads", icon: <Uploaded />, count: statistics.my_uploads, color: "#EF4444" },
   ];
 
   const getDocumentMeta = (doc) => {
@@ -443,7 +490,7 @@ export default function DocumentsPage() {
     }
   };
 
-  const wrapperClass = isNestedUnderClient ? "mt-6" : "lg:p-4 md:p-2 px-1";
+  const wrapperClass = isNestedUnderClient ? "mt-6" : "lg:p-4 md:p-2 px-1 documents-page-wrapper";
 
   return (
     <div className={wrapperClass}>
@@ -455,12 +502,12 @@ export default function DocumentsPage() {
       />
       {/* Header (hide when nested under client) */}
       {!isNestedUnderClient && (
-        <div className="header d-flex justify-content-between align-items-center mb-4">
-          <div>
+        <div className="header d-flex justify-content-between align-items-center mb-4 documents-header">
+          <div className="documents-header-title">
             <h3 className="fw-semibold">Documents</h3>
             <small className="text-muted">Manage client documents and files</small>
           </div>
-          <div className="d-flex gap-2">
+          <div className="d-flex gap-2 documents-header-buttons">
             <button
               className="btn btn-outline-primary d-flex align-items-center gap-2"
               onClick={() => navigate('/taxdashboard/documents/manager')}
@@ -470,14 +517,14 @@ export default function DocumentsPage() {
               }}
             >
               <i className="bi bi-folder2-open me-1"></i>
-              Document Manager
+              <span className="btn-text">Document Manager</span>
             </button>
           <button
             className="btn dashboard-btn btn-upload d-flex align-items-center gap-2"
             onClick={() => setShowUpload(true)}
           >
             <UpIcon />
-            Upload Documents
+            <span className="btn-text">Upload Documents</span>
           </button>
           </div>
         </div>
@@ -537,21 +584,52 @@ export default function DocumentsPage() {
       {/* Stats (hide when nested under client) */}
       {!isNestedUnderClient && (
         <div className="row g-3 mb-3">
-          {cardData.map((item, index) => (
-            <div className="col-md-3 col-sm-6" key={index}>
-              <div className="stat-card ">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="stat-icon" style={{ color: item.color }}>
-                    {item.icon}
+          {statisticsLoading ? (
+            // Loading state - show skeleton or loading cards
+            cardData.map((item, index) => (
+              <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
+                <div className="stat-card">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="stat-icon" style={{ color: item.color }}>
+                      {item.icon}
+                    </div>
+                    <div className="stat-count">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="stat-count">{item.count}</div>
-                </div>
-                <div className="mt-2">
-                  <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                  <div className="mt-2">
+                    <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : statisticsError ? (
+            // Error state
+            <div className="col-12">
+              <div className="alert alert-warning" role="alert">
+                <small>Unable to load statistics: {statisticsError}</small>
+              </div>
             </div>
-          ))}
+          ) : (
+            // Normal state with data
+            cardData.map((item, index) => (
+              <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
+                <div className="stat-card">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="stat-icon" style={{ color: item.color }}>
+                      {item.icon}
+                    </div>
+                    <div className="stat-count">{item.count}</div>
+                  </div>
+                  <div className="mt-2">
+                    <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

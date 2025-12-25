@@ -94,7 +94,7 @@ export default function RoleSelectionScreen() {
       } else if (userType === 'support_admin' || userType === 'billing_admin') {
         navigate("/superadmin", { replace: true });
       } else if (userType === 'admin') {
-        navigate("/firmadmin", { replace: true });
+        navigate("/seqwens-frontend/firmadmin", { replace: true });
       } else if (userType === 'tax_preparer') {
         navigate("/taxdashboard", { replace: true });
       } else if (userType === 'client' || !userType) {

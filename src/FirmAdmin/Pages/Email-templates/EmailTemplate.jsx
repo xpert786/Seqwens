@@ -5,6 +5,7 @@ import TabNavigation from '../Integrations/TabNavigation';
 import AnalyticsView from './AnalyticsView';
 import EmailSettingsView from './EmailSettingsView';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import Pagination from '../../../ClientOnboarding/components/Pagination';
 import '../../styles/EmailTemplate.css';
 const statusClasses = {
     active: '!border border-[#22C55E] bg-transparent text-[#198754]',
@@ -1162,8 +1163,22 @@ function TemplatesView({
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [showSendModal, setShowSendModal] = useState(false);
     const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const transformedTemplates = templates.map(transformTemplateData);
+    
+    // Pagination calculations
+    const totalItems = transformedTemplates.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    const paginatedTemplates = transformedTemplates.slice(startIndex, endIndex);
+
+    // Reset to page 1 when templates change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [templates.length]);
 
     const handlePreview = async (template) => {
         try {
@@ -1263,7 +1278,7 @@ function TemplatesView({
             ) : (
                 <>
                     <div className="hidden xl:block">
-                        {transformedTemplates.map((template, index) => (
+                        {paginatedTemplates.map((template, index) => (
                             <div
                                 key={template.id}
                                 className={`grid grid-cols-[2.4fr_1.2fr_2.2fr_1fr_1.1fr_1fr_auto] items-center gap-4 px-5 py-6 sm:px-6 lg:px-8 text-sm ${index !== 0 ? 'border-t border-[#E8F0FF]' : ''}`}
@@ -1323,7 +1338,7 @@ function TemplatesView({
                     </div>
 
                     <div className="divide-y divide-[#E8F0FF] xl:hidden">
-                        {transformedTemplates.map((template) => (
+                        {paginatedTemplates.map((template) => (
                     <div key={template.id} className="space-y-4 px-5 py-6 sm:px-6">
                         <div className="space-y-2">
                             <div>
@@ -1379,6 +1394,21 @@ function TemplatesView({
                     </div>
                         ))}
                     </div>
+                    
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="px-5 py-4 sm:px-6 lg:px-8 border-t border-[#E8F0FF]">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                totalItems={totalItems}
+                                itemsPerPage={itemsPerPage}
+                                startIndex={startIndex}
+                                endIndex={endIndex}
+                            />
+                        </div>
+                    )}
                 </>
             )}
 
