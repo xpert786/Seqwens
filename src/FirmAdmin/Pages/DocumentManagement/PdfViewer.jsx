@@ -477,47 +477,6 @@ export default function PdfViewer() {
           </div>
 
           <div className="flex border border-gray-200 rounded-lg overflow-hidden" style={{ height: '700px' }}>
-            {/* Thumbnails Sidebar */}
-            {pdfFileData && numPages > 0 && documentReady && (
-              <div className="w-32 bg-gray-50 p-2 overflow-y-auto border-r border-gray-200 flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
-                <Document
-                  file={pdfFileData}
-                  options={pdfOptions}
-                  loading={null}
-                >
-                  {Array.from({ length: numPages }, (_, index) => (
-                  <div
-                      key={index}
-                      onClick={() => handleThumbnailClick(index)}
-                      className={`mb-2 cursor-pointer transition-all relative ${selectedPage === index ? 'opacity-100' : 'opacity-70 hover:opacity-90'}`}
-                    >
-                      <div
-                        className={`aspect-[3/4] bg-white rounded flex flex-col items-center justify-center overflow-hidden relative ${
-                          selectedPage === index ? 'border-2 border-blue-500' : 'border border-gray-300 hover:border-blue-300'
-                        }`}
-                        style={{
-                          borderWidth: selectedPage === index ? '2px' : '1px',
-                          borderColor: selectedPage === index ? '#3B82F6' : '#D1D5DB',
-                          boxShadow: selectedPage === index ? '0 2px 4px rgba(59, 130, 246, 0.3)' : 'none'
-                        }}
-                      >
-                        <Page
-                          pageNumber={index + 1}
-                          width={80}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
-                          className="pointer-events-none"
-                        />
-                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-[10px] py-0.5 text-center">
-                          {index + 1}
-                        </div>
-                      </div>
-                  </div>
-                ))}
-                </Document>
-              </div>
-            )}
-            
             {/* Main PDF Viewer */}
             <div className="flex-1 bg-gray-100 overflow-hidden flex flex-col">
               {pdfLoading ? (
