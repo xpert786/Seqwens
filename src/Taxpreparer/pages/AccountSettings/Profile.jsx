@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import "../../styles/profile.css";
 import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
-const DEFAULT_AVATAR_URL = "https://i.pravatar.cc/120";
+// Removed DEFAULT_AVATAR_URL - use initials placeholder instead of random avatars
 
 export default function Profile({ profileData, companyProfile, onUpdate }) {
     const fileInputRef = useRef(null);
@@ -27,9 +27,15 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
     const [currentProfileImage, setCurrentProfileImage] = useState(
         profileData?.profile_picture ||
         profileData?.profile_image ||
-        DEFAULT_AVATAR_URL
+        null
     );
     const [errorMessage, setErrorMessage] = useState(null);
+    const [profileImageError, setProfileImageError] = useState(false);
+
+    // Reset image error when profile image changes
+    useEffect(() => {
+        setProfileImageError(false);
+    }, [profileData?.profile_picture, profileData?.profile_image, imagePreview]);
 
     const syncHeaderProfile = (data) => {
         if (typeof window === "undefined") return;
@@ -63,7 +69,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         if (nextProfileImage && nextProfileImage !== 'null' && nextProfileImage !== 'undefined') {
             setCurrentProfileImage(nextProfileImage);
         } else if (!imagePreview) {
-            setCurrentProfileImage(DEFAULT_AVATAR_URL);
+            setCurrentProfileImage(null);
         }
     }, [profileData, companyProfile, imagePreview]);
 
@@ -307,7 +313,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
         }
     };
 
-    const effectiveProfilePicture = imagePreview || currentProfileImage || DEFAULT_AVATAR_URL;
+    const effectiveProfilePicture = imagePreview || currentProfileImage || null;
     const fullName = profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || 'User';
 
     return (
@@ -347,7 +353,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
 
                 {/* Profile Image */}
                 <div className="d-flex align-items-center mb-4 mt-6 mobile-profile-img-row">
-                    {effectiveProfilePicture && effectiveProfilePicture !== 'null' && effectiveProfilePicture !== 'undefined' ? (
+                    {effectiveProfilePicture && effectiveProfilePicture !== 'null' && effectiveProfilePicture !== 'undefined' && !profileImageError ? (
                         <div className="me-3" style={{ position: 'relative' }}>
                             <img
                                 src={effectiveProfilePicture}
@@ -361,8 +367,9 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                     border: '3px solid #e0e0e0',
                                     display: 'block'
                                 }}
-                                onError={(e) => {
-                                    e.target.src = DEFAULT_AVATAR_URL;
+                                onError={() => {
+                                    // Hide image on error, show initials placeholder instead
+                                    setProfileImageError(true);
                                 }}
                             />
                         </div>

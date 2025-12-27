@@ -46,6 +46,7 @@ export default function UserProfileWithRoles() {
   const [selectedRoleToRequest, setSelectedRoleToRequest] = useState(null);
   const [selectedCustomRoleInfo, setSelectedCustomRoleInfo] = useState(null); // Store custom role info (name, description)
   const [expandedFirmRole, setExpandedFirmRole] = useState(null); // Track which firm role's permissions are expanded
+  const [profileImageError, setProfileImageError] = useState(false); // Track if profile image failed to load
 
   // Fetch user profile
   const fetchUserProfile = async () => {
@@ -320,6 +321,11 @@ export default function UserProfileWithRoles() {
   // Determine if user is firm admin
   const isFirmAdmin = primaryRole === 'firm' || primaryRole === 'admin' || allUserRoles.includes('firm') || allUserRoles.includes('admin');
 
+  // Reset image error when profile image changes
+  React.useEffect(() => {
+    setProfileImageError(false);
+  }, [profileImage]);
+
   return (
     <div style={{ fontFamily: "BasisGrotesquePro" }}>
       {/* Profile Header Section */}
@@ -327,7 +333,7 @@ export default function UserProfileWithRoles() {
         <div className="d-flex align-items-center gap-4">
           {/* Profile Picture */}
           <div>
-            {profileImage && profileImage !== 'null' && profileImage !== 'undefined' ? (
+            {profileImage && profileImage !== 'null' && profileImage !== 'undefined' && !profileImageError ? (
               <img
                 src={profileImage}
                 alt="Profile"
@@ -339,8 +345,9 @@ export default function UserProfileWithRoles() {
                   border: '4px solid #E8F0FF',
                   display: 'block'
                 }}
-                onError={(e) => {
-                  e.target.src = "https://i.pravatar.cc/120";
+                onError={() => {
+                  // Hide image and show initials instead of random avatar
+                  setProfileImageError(true);
                 }}
               />
             ) : (

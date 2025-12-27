@@ -4,6 +4,7 @@ import "../styles/PersonalInfo.css";
 import { PasswordStrengthBar } from "../components/icons";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validatePassword, handleAPIError } from "../utils/apiUtils";
+import { getPathWithPrefix } from "../utils/urlUtils";
 
 const PersonalInfo = () => {
   const [password, setPassword] = useState("");
@@ -56,7 +57,7 @@ const PersonalInfo = () => {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userData", JSON.stringify(response));
 
-      navigate("/login");
+      window.location.href = getPathWithPrefix("/login");
     } catch (error) {
       console.error('Registration completion error:', error);
       setErrors({

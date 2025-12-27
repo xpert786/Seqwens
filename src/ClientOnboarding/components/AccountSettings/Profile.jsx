@@ -22,6 +22,12 @@ export default function Profile() {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [profileImageError, setProfileImageError] = useState(false);
+
+    // Reset image error when profile image changes
+    useEffect(() => {
+        setProfileImageError(false);
+    }, [userData.profile_image, imagePreview]);
 
     // Fetch user data on component mount
     useEffect(() => {
@@ -460,7 +466,7 @@ export default function Profile() {
 
             {/* Profile Image */}
             <div className="d-flex align-items-center mb-4 mt-6">
-                {imagePreview || (userData.profile_image && userData.profile_image !== 'null' && userData.profile_image !== 'undefined') ? (
+                {(imagePreview || (userData.profile_image && userData.profile_image !== 'null' && userData.profile_image !== 'undefined')) && !profileImageError ? (
                     <div className="me-3" style={{ position: 'relative' }}>
                 <img
                             src={imagePreview || userData.profile_image}
@@ -473,11 +479,11 @@ export default function Profile() {
                                 border: '3px solid #e0e0e0',
                                 display: 'block'
                             }}
-                    onError={(e) => {
-                        console.error('Failed to load profile image:', e.target.src);
-                        // Fallback to default avatar if image fails to load
-                            e.target.src = "https://i.pravatar.cc/120";
-                            }}
+                    onError={() => {
+                        console.error('Failed to load profile image');
+                        // Hide image on error, show initials placeholder instead
+                        setProfileImageError(true);
+                    }}
                         />
                     </div>
                 ) : (

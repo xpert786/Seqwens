@@ -8,6 +8,7 @@ import { invitationAPI, clientInviteAPI, handleAPIError, validatePassword } from
 import { setTokens } from "../utils/userUtils";
 import { toast } from "react-toastify";
 import DataSharingModal from "../components/DataSharingModal";
+import { getPathWithPrefix } from "../utils/urlUtils";
 
 export default function AcceptInvite() {
     const navigate = useNavigate();
@@ -329,7 +330,12 @@ export default function AcceptInvite() {
 
                     // Redirect after a short delay
                     setTimeout(() => {
-                        navigate(redirectPath);
+                        // Use window.location.href for login redirects to ensure full path
+                        if (redirectPath === "/login") {
+                            window.location.href = getPathWithPrefix("/login");
+                        } else {
+                            navigate(redirectPath);
+                        }
                     }, 2000);
                 } else {
                     // No user data, just redirect to login
@@ -338,7 +344,7 @@ export default function AcceptInvite() {
                         autoClose: 3000,
                     });
                     setTimeout(() => {
-                        navigate("/login");
+                        window.location.href = getPathWithPrefix("/login");
                     }, 2000);
                 }
             } else {

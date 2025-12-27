@@ -86,6 +86,11 @@ export default function Login() {
       storage.setItem("isLoggedIn", "true");
       storage.setItem("userData", JSON.stringify(response.user));
       
+      // Store firms data from login response for AccountSwitcher
+      if (response.firms && Array.isArray(response.firms)) {
+        storage.setItem("firmsData", JSON.stringify(response.firms));
+      }
+      
       // Store email if rememberMe is checked
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);

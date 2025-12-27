@@ -5,9 +5,34 @@ import { FiChevronDown } from "react-icons/fi";
 import logo from "../../assets/logo.png";
 import { LogoIcond } from "./icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
+import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { userAPI, taxPreparerSettingsAPI } from "../../ClientOnboarding/utils/apiUtils";
 import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
 import "../styles/topbar.css";
+
+// Simple Error Boundary for AccountSwitcher
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Silently handle AccountSwitcher errors - component will not display
+    // No console logging needed
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null;
+    }
+    return this.props.children;
+  }
+}
 
 export default function Topbar({
   onToggleSidebar = () => {},
@@ -310,6 +335,13 @@ export default function Topbar({
 
               {/* Right side */}
               <div className="d-flex align-items-center gap-3">
+                {/* Account Switcher - Wrapped in error boundary to prevent blocking */}
+                <React.Suspense fallback={null}>
+                  <ErrorBoundary fallback={null}>
+                    <AccountSwitcher />
+                  </ErrorBoundary>
+                </React.Suspense>
+                
                 <button
                   ref={notificationButtonRef}
                   type="button"

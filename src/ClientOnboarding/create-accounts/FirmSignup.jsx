@@ -7,6 +7,7 @@ import FixedLayout from "../components/FixedLayout";
 import { PasswordStrengthBar } from "../components/icons";
 import { userAPI, validateEmail, validateFirmPhoneNumber, validatePassword, handleAPIError } from "../utils/apiUtils";
 import { setTokens } from "../utils/userUtils";
+import { getPathWithPrefix } from "../utils/urlUtils";
 
 const FirmSignup = () => {
   const navigate = useNavigate();
@@ -159,6 +160,11 @@ const FirmSignup = () => {
         localStorage.setItem("userData", JSON.stringify(loginResponse.user));
         localStorage.setItem("userType", loginResponse.user.user_type || 'firm');
         localStorage.setItem("rememberedEmail", signupData.email);
+        
+        // Store firms data from login response for AccountSwitcher
+        if (loginResponse.firms && Array.isArray(loginResponse.firms)) {
+          localStorage.setItem("firmsData", JSON.stringify(loginResponse.firms));
+        }
 
         // Get user info for routing
         const user = loginResponse.user;
@@ -182,12 +188,10 @@ const FirmSignup = () => {
       } catch (loginError) {
         console.error('Auto-login error:', loginError);
         // If auto-login fails, redirect to login page with email pre-filled
-        navigate('/login', { 
-          state: { 
-            message: 'Account created successfully! Please sign in.',
-            email: signupData.email
-          } 
-        });
+        // Store message and email in localStorage since we're using window.location.href
+        localStorage.setItem('signupSuccessMessage', 'Account created successfully! Please sign in.');
+        localStorage.setItem('signupEmail', signupData.email);
+        window.location.href = getPathWithPrefix('/login');
       }
     } catch (error) {
       console.error('Firm signup error:', error);

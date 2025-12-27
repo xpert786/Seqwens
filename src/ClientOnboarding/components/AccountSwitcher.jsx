@@ -9,8 +9,12 @@ import '../styles/AccountSwitcher.css';
 
 const ROLE_DISPLAY_NAMES = {
   team_member: 'Team Member',
+  teammember: 'Team Member', // Handle camelCase from API
+  tax_preparer: 'Tax Preparer',
+  taxpreparer: 'Tax Preparer', // Handle camelCase from API
   taxpayer: 'Taxpayer',
   firm_admin: 'Firm Admin',
+  firmadmin: 'Firm Admin', // Handle camelCase from API
   admin: 'Firm Admin',
   firm: 'Firm Admin',
 };
@@ -32,110 +36,127 @@ export default function AccountSwitcher() {
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // Fetch memberships with timeout and error handling
-  const fetchMemberships = useCallback(async () => {
-    let timeoutId;
+  // Load memberships from login response (firms array) stored in localStorage
+  const loadMembershipsFromStorage = useCallback(() => {
     try {
       setLoading(true);
       
-      // Add timeout to prevent hanging - fail fast
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('Request timeout')), 3000);
-      });
+      const storage = getStorage();
+      const firmsDataStr = storage?.getItem('firmsData');
+      const userDataStr = storage?.getItem('userData');
       
-      // Make API call and silently handle expected errors
-      const apiPromise = userAPI.getMemberships().catch(err => {
-        // Check if this is an expected error that should be silent
-        const errorMessage = err?.message || '';
-        const errorString = String(err);
-        const isExpectedError = 
-          errorMessage.includes('400') ||
-          errorMessage.includes('401') ||
-          errorMessage.includes('403') ||
-          errorMessage.includes('User identity not found') ||
-          errorMessage.includes('Bad Request') ||
-          errorString.includes('memberships');
+      // Try to get firms from stored login response
+      let firms = [];
+      if (firmsDataStr) {
+        try {
+          firms = JSON.parse(firmsDataStr);
+        } catch (e) {
+          // Silently handle parsing errors
+        }
+      }
+      
+      // If no firms data stored, try to get from userData (fallback)
+      if (firms.length === 0 && userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          // Check if firms are stored in userData
+          if (userData.firms && Array.isArray(userData.firms)) {
+            firms = userData.firms;
+          }
+        } catch (e) {
+          // Silently handle parsing errors
+        }
+      }
+      
+      // Map firms array to memberships format
+      const membershipsList = firms.map(firm => {
+        // Normalize role: "TeamMember" -> "team_member", "TaxPreparer" -> "tax_preparer", etc.
+        let role = firm.membership?.role || 'team_member';
+        if (typeof role === 'string') {
+          // Convert camelCase/PascalCase to snake_case
+          role = role.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+        }
         
-        // For expected errors, return empty result silently
-        // For unexpected errors, still return empty but could log (currently silent)
-        return { success: false, data: [] };
+        // Normalize status: "Active" -> "active", etc.
+        let status = firm.membership?.status || firm.status || 'active';
+        if (typeof status === 'string') {
+          status = status.toLowerCase();
+        }
+        
+        return {
+          id: firm.membership?.id || firm.id,
+          firm: {
+            id: firm.id,
+            name: firm.name
+          },
+          firm_id: firm.id,
+          role: role,
+          status: status,
+          office_scope: firm.membership?.office_location_scope?.offices || [],
+          offices: firm.membership?.office_location_scope?.offices || [],
+          is_current: firm.is_current || false
+        };
       });
       
-      const response = await Promise.race([apiPromise, timeoutPromise]);
-
-      if (response && response.success && response.data) {
-        const membershipsList = Array.isArray(response.data) 
-          ? response.data 
-          : (response.data.memberships || []);
-
+      if (membershipsList.length > 0) {
         setMemberships(membershipsList);
-
-        // Find current firm from user data
-        const storage = getStorage();
-        const userDataStr = storage?.getItem('userData');
-        if (userDataStr) {
-          try {
-            const userData = JSON.parse(userDataStr);
-            const currentFirmId = userData.firm?.id || userData.firm_id;
-            const current = membershipsList.find(
-              (m) => m.firm?.id === currentFirmId || m.firm_id === currentFirmId
-            );
-            if (current) {
-              setCurrentFirm(current);
-            } else if (membershipsList.length > 0) {
-              // Fallback to first active membership
-              const active = membershipsList.find((m) => m.status === 'active');
-              setCurrentFirm(active || membershipsList[0]);
+        
+        // Find current firm - prioritize is_current flag, then check userData.firm.id
+        let current = membershipsList.find(m => m.is_current);
+        
+        // If no is_current flag, check userData for current firm
+        if (!current) {
+          const storage = getStorage();
+          const userDataStr = storage?.getItem('userData');
+          if (userDataStr) {
+            try {
+              const userData = JSON.parse(userDataStr);
+              const currentFirmId = userData.firm?.id || userData.firm_id;
+              if (currentFirmId) {
+                current = membershipsList.find(
+                  (m) => m.firm?.id === currentFirmId || m.firm_id === currentFirmId
+                );
+              }
+            } catch (e) {
+              // Silently handle parsing errors
             }
-          } catch (e) {
-            // Silently handle parsing errors
           }
         }
+        
+        // Fallback to first active membership
+        if (!current) {
+          current = membershipsList.find(m => m.status === 'active') || membershipsList[0];
+        }
+        
+        if (current) {
+          setCurrentFirm(current);
+        }
       } else {
-        // No memberships or API not available - set empty state
         setMemberships([]);
         setCurrentFirm(null);
       }
     } catch (error) {
-      // Check if this is an expected error
-      const errorMessage = error?.message || '';
-      const isExpectedError = 
-        errorMessage.includes('Request timeout') ||
-        errorMessage.includes('400') ||
-        errorMessage.includes('401') ||
-        errorMessage.includes('403') ||
-        errorMessage.includes('User identity not found');
-      
-      // Only log unexpected errors
-      if (!isExpectedError) {
-        // Silently handle expected errors
-      }
-      
-      // Set empty state to prevent infinite loading
+      // Silently handle errors
       setMemberships([]);
       setCurrentFirm(null);
     } finally {
-      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // Only fetch once, and only if we haven't tried yet
+    // Only load once, and only if we haven't tried yet
     if (hasTriedFetch) return;
     
     let mounted = true;
-    let timeoutId;
-    let fetchTimeout;
     
-    // Fetch memberships on mount with safety timeout - non-blocking
-    const loadMemberships = async () => {
+    // Load memberships from storage (from login response)
+    const loadMemberships = () => {
       if (!mounted) return;
       
       try {
         setHasTriedFetch(true);
-        setLoading(true);
-        await fetchMemberships();
+        loadMembershipsFromStorage();
       } catch (error) {
         // Silently fail - component will just not show
         if (mounted) {
@@ -146,29 +167,13 @@ export default function AccountSwitcher() {
       }
     };
     
-    // Set a maximum timeout to ensure loading state is cleared - CRITICAL
-    timeoutId = setTimeout(() => {
-      if (mounted) {
-        // Silently clear loading state - no console warning needed
-        setLoading(false);
-        setMemberships([]);
-        setCurrentFirm(null);
-      }
-    }, 3000); // 3 second max timeout - fail fast
-    
-    // Delay the fetch slightly to not block initial page load
-    fetchTimeout = setTimeout(() => {
-      if (mounted) {
-        loadMemberships();
-      }
-    }, 1000); // Wait 1 second before fetching to not block page load
+    // Load immediately (no delay needed since it's from storage)
+    loadMemberships();
     
     return () => {
       mounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
-      if (fetchTimeout) clearTimeout(fetchTimeout);
     };
-  }, []); // Empty deps - only run once
+  }, [loadMembershipsFromStorage]); // Include dependency
 
   // Handle firm switch
   const handleSwitchFirm = async (membership) => {
@@ -193,14 +198,74 @@ export default function AccountSwitcher() {
         }
 
         // Update user data
+        const storage = getStorage();
         if (response.data.user) {
-          const storage = getStorage();
           storage.setItem('userData', JSON.stringify(response.data.user));
-          storage.setItem('userType', response.data.user.user_type || 'client');
           storage.setItem('isLoggedIn', 'true');
         }
+        
+        // Determine userType from membership role (not from user.user_type which might be wrong)
+        // This ensures tax preparers stay as tax_preparer even if user_type says something else
+        let determinedUserType = 'client'; // default
+        const membershipRole = membership.role || membership.user_type;
+        const membershipRoleLower = membershipRole ? String(membershipRole).toLowerCase() : '';
+        
+        // Map role to userType
+        if (membershipRoleLower === 'firm_admin' || membershipRoleLower === 'admin' || membershipRoleLower === 'firm' || membershipRoleLower === 'firmadmin') {
+          determinedUserType = 'admin';
+        } else if (membershipRoleLower === 'team_member' || membershipRoleLower === 'teammember' || membershipRoleLower === 'tax_preparer' || membershipRoleLower === 'taxpreparer' || membershipRoleLower === 'staff') {
+          determinedUserType = 'tax_preparer';
+        } else if (membershipRoleLower === 'taxpayer' || membershipRoleLower === 'client') {
+          determinedUserType = 'client';
+        } else if (response.data.user?.user_type) {
+          // Fallback to user_type from response if role mapping fails
+          determinedUserType = response.data.user.user_type;
+        }
+        
+        // Set userType based on membership role, not user.user_type
+        storage.setItem('userType', determinedUserType);
+        
+        // Update firms data if provided in response
+        // Also update the is_current flag for all firms based on the switched firm
+        const switchedFirmId = membership.firm?.id || membership.firm_id;
+        
+        if (response.data.firms && Array.isArray(response.data.firms)) {
+          // Mark the switched firm as current in the firms array
+          const updatedFirms = response.data.firms.map(firm => ({
+            ...firm,
+            is_current: firm.id === switchedFirmId
+          }));
+          storage.setItem('firmsData', JSON.stringify(updatedFirms));
+        } else {
+          // If no firms in response, update the existing firmsData in storage
+          const firmsDataStr = storage?.getItem('firmsData');
+          if (firmsDataStr) {
+            try {
+              const firms = JSON.parse(firmsDataStr);
+              const updatedFirms = firms.map(firm => ({
+                ...firm,
+                is_current: firm.id === switchedFirmId
+              }));
+              storage.setItem('firmsData', JSON.stringify(updatedFirms));
+            } catch (e) {
+              // Silently handle parsing errors
+            }
+          }
+        }
+        
+        // Also update the local memberships state to reflect the current firm
+        const updatedMemberships = memberships.map(m => ({
+          ...m,
+          is_current: (m.firm?.id === switchedFirmId) || (m.firm_id === switchedFirmId)
+        }));
+        setMemberships(updatedMemberships);
 
-        setCurrentFirm(membership);
+        // Update current firm in state - mark the switched membership as current
+        const updatedMembership = {
+          ...membership,
+          is_current: true
+        };
+        setCurrentFirm(updatedMembership);
         setShowDropdown(false);
 
         toast.success(`Switched to ${membership.firm?.name || 'firm'}`, {
@@ -208,17 +273,44 @@ export default function AccountSwitcher() {
           autoClose: 2000,
         });
 
-        // Navigate based on role
-        const role = membership.role || membership.user_type;
-        let redirectPath = '/dashboard';
+        // Navigate based on determinedUserType (from membership role) - this is the most reliable
+        // The determinedUserType was set based on the membership role, which is what we want
+        const determinedUserTypeLower = determinedUserType ? String(determinedUserType).toLowerCase() : '';
+        
+        let redirectPath = '/dashboard'; // default fallback
 
-        if (role === 'firm_admin' || role === 'admin' || role === 'firm') {
+        console.log('AccountSwitcher - Redirect logic:', {
+          determinedUserType,
+          determinedUserTypeLower,
+          membershipRole: membership.role,
+          membershipUserType: membership.user_type
+        });
+
+        // Use determinedUserType as primary source (from membership role)
+        if (determinedUserTypeLower === 'admin' || determinedUserTypeLower === 'firm') {
           redirectPath = '/firmadmin';
-        } else if (role === 'team_member' || role === 'staff' || role === 'tax_preparer') {
+        } else if (determinedUserTypeLower === 'tax_preparer') {
           redirectPath = '/taxdashboard';
-        } else if (role === 'taxpayer' || role === 'client') {
+        } else if (determinedUserTypeLower === 'client' || determinedUserTypeLower === 'taxpayer') {
           redirectPath = '/dashboard';
+        } else {
+          // Fallback: check membership role directly if determinedUserType didn't match
+          const membershipRole = membership.role || membership.user_type;
+          const membershipRoleLower = membershipRole ? String(membershipRole).toLowerCase() : '';
+          
+          console.log('AccountSwitcher - Fallback to membership role:', membershipRoleLower);
+          
+          if (membershipRoleLower === 'firm_admin' || membershipRoleLower === 'admin' || membershipRoleLower === 'firm' || membershipRoleLower === 'firmadmin') {
+            redirectPath = '/firmadmin';
+          } else if (membershipRoleLower === 'team_member' || membershipRoleLower === 'teammember' || membershipRoleLower === 'staff' || 
+                     membershipRoleLower === 'tax_preparer' || membershipRoleLower === 'taxpreparer') {
+            redirectPath = '/taxdashboard';
+          } else if (membershipRoleLower === 'taxpayer' || membershipRoleLower === 'client') {
+            redirectPath = '/dashboard';
+          }
         }
+        
+        console.log('AccountSwitcher - Final redirect path:', redirectPath);
 
         // Reload to update context
         setTimeout(() => {

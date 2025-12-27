@@ -4569,6 +4569,51 @@ export const taxPreparerClientAPI = {
   }
 };
 
+// Tax Preparer Staff Invites API functions
+export const taxPreparerStaffInvitesAPI = {
+  // List pending staff invites
+  getPendingInvites: async (params = {}) => {
+    const { page, page_size, search, status } = params;
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page);
+    if (page_size) queryParams.append('page_size', page_size);
+    if (search) queryParams.append('search', search);
+    if (status) queryParams.append('status', status);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/tax-preparer/staff-invites/pending/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get invite details
+  getInviteDetails: async (inviteId) => {
+    return await apiRequest(`/user/tax-preparer/staff-invites/${inviteId}/`, 'GET');
+  },
+
+  // Accept invite
+  acceptInvite: async (inviteId, data = {}) => {
+    return await apiRequest(`/user/tax-preparer/staff-invites/${inviteId}/accept/`, 'POST', data);
+  },
+
+  // Decline invite
+  declineInvite: async (inviteId, reason = null) => {
+    const payload = reason ? { reason } : {};
+    return await apiRequest(`/user/tax-preparer/staff-invites/${inviteId}/decline/`, 'POST', payload);
+  },
+
+  // List all invites (history)
+  getAllInvites: async (params = {}) => {
+    const { page, page_size, status, search, sort_by, sort_order } = params;
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page);
+    if (page_size) queryParams.append('page_size', page_size);
+    if (status) queryParams.append('status', status);
+    if (search) queryParams.append('search', search);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (sort_order) queryParams.append('sort_order', sort_order);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/tax-preparer/staff-invites/${queryString ? `?${queryString}` : ''}`, 'GET');
+  }
+};
+
 // Tax Preparer Document Manager API functions
 export const taxPreparerDocumentsAPI = {
   // Browse shared documents (documents shared by Firm Admin)

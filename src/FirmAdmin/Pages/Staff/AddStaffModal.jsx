@@ -287,6 +287,30 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       const result = await response.json();
       console.log("Invite sent successfully:", result);
 
+      // Check if there's a delivery error (e.g., no email template found)
+      let hasDeliveryError = false;
+      if (result.success && result.data?.delivery_summary?.error) {
+        let errorMessage = result.data.delivery_summary.error;
+        
+        // Handle array format (e.g., "[\"No active template found...\"]")
+        if (typeof errorMessage === 'string' && errorMessage.trim().startsWith('[')) {
+          try {
+            const parsed = JSON.parse(errorMessage);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              errorMessage = parsed[0];
+            }
+          } catch (e) {
+            // Keep original if parsing fails
+          }
+        }
+        
+        // Check if error message indicates missing template
+        const errorStr = typeof errorMessage === 'string' ? errorMessage.toLowerCase() : String(errorMessage).toLowerCase();
+        hasDeliveryError = errorStr.includes('no active template') || 
+                          errorStr.includes('no template found') ||
+                          errorStr.includes('email template');
+      }
+
       // Reset form
       setFormData({
         first_name: "",
@@ -312,18 +336,32 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
         onInviteCreated(result.data);
       }
 
-      // Show success toast
-      toast.success(result.message || "Invitation sent successfully to existing user", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: false,
-        className: "custom-toast-success",
-        bodyClassName: "custom-toast-body",
-      });
+      // Show appropriate toast message
+      if (hasDeliveryError) {
+        toast.success("Invitation added successfully but could not send an invite because no staff invite email templates were found for this firm", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
+      } else {
+        toast.success(result.message || "Invitation sent successfully to existing user", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          className: "custom-toast-success",
+          bodyClassName: "custom-toast-body",
+        });
+      }
     } catch (err) {
       console.error("Error sending invite:", err);
       const errorMessage = handleAPIError(err);
