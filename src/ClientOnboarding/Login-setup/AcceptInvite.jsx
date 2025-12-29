@@ -334,7 +334,7 @@ export default function AcceptInvite() {
                         if (redirectPath === "/login") {
                             window.location.href = getPathWithPrefix("/login");
                         } else {
-                            navigate(redirectPath);
+                        navigate(redirectPath);
                         }
                     }, 2000);
                 } else {
@@ -364,7 +364,7 @@ export default function AcceptInvite() {
             }
         } catch (error) {
             console.error('Error accepting invitation:', error);
-            
+
             // Check for duplicate invite in error message
             const errorMessage = handleAPIError(error);
             const isDuplicateInvite = errorMessage.toLowerCase().includes('already has access') ||
@@ -376,12 +376,12 @@ export default function AcceptInvite() {
                     duplicateInvite: true
                 });
             } else {
-                // Handle API error response
-                const fieldErrors = {};
+            // Handle API error response
+            const fieldErrors = {};
                 const parsedErrorMessage = error.message || handleAPIError(error);
 
-                // Parse error message to extract field-specific errors
-                // Error format from publicApiRequest: "Validation failed. password: error1, error2; phone_number: error3"
+            // Parse error message to extract field-specific errors
+            // Error format from publicApiRequest: "Validation failed. password: error1, error2; phone_number: error3"
                 if (parsedErrorMessage.includes(':')) {
                 // Try to extract field errors from the message
                     const parts = parsedErrorMessage.split(';');
@@ -421,30 +421,30 @@ export default function AcceptInvite() {
                     }
                 });
 
-                    // If we have field errors but no general message, use the original message
-                    if (Object.keys(fieldErrors).length === 0) {
+                // If we have field errors but no general message, use the original message
+                if (Object.keys(fieldErrors).length === 0) {
                         fieldErrors.general = parsedErrorMessage;
-                    } else if (generalMessage && !fieldErrors.general) {
-                        fieldErrors.general = generalMessage;
-                    }
-                } else {
-                    // Simple error message without field structure
-                    // Try to detect field from message content
-                    const errorLower = parsedErrorMessage.toLowerCase();
-                    if (errorLower.includes('password') && errorLower.includes('match')) {
-                        fieldErrors.passwordConfirm = parsedErrorMessage;
-                    } else if (errorLower.includes('password')) {
-                        fieldErrors.password = parsedErrorMessage;
-                    } else if (errorLower.includes('phone')) {
-                        fieldErrors.phoneNumber = parsedErrorMessage;
-                    } else if (errorLower.includes('token')) {
-                        fieldErrors.general = parsedErrorMessage;
-                    } else {
-                        fieldErrors.general = parsedErrorMessage;
-                    }
+                } else if (generalMessage && !fieldErrors.general) {
+                    fieldErrors.general = generalMessage;
                 }
+            } else {
+                // Simple error message without field structure
+                // Try to detect field from message content
+                    const errorLower = parsedErrorMessage.toLowerCase();
+                if (errorLower.includes('password') && errorLower.includes('match')) {
+                        fieldErrors.passwordConfirm = parsedErrorMessage;
+                } else if (errorLower.includes('password')) {
+                        fieldErrors.password = parsedErrorMessage;
+                } else if (errorLower.includes('phone')) {
+                        fieldErrors.phoneNumber = parsedErrorMessage;
+                } else if (errorLower.includes('token')) {
+                        fieldErrors.general = parsedErrorMessage;
+                } else {
+                        fieldErrors.general = parsedErrorMessage;
+                }
+            }
 
-                setErrors(fieldErrors);
+            setErrors(fieldErrors);
             }
         } finally {
             setIsAccepting(false);
@@ -558,11 +558,11 @@ export default function AcceptInvite() {
                     <div className="accept-invite-card">
                         <div className="accept-invite-header">
                             <h5 className="accept-invite-title">Invitation from {invitationData?.firm_name || "Firm"}</h5>
-                            <p className="accept-invite-subtitle">
+                        <p className="accept-invite-subtitle">
                                 You've been invited to join <strong>{invitationData?.firm_name || "Firm"}</strong> as a{" "}
                                 <strong>{invitationData?.role_display || invitationData?.role || "Member"}</strong>
-                            </p>
-                        </div>
+                        </p>
+                    </div>
                         <div className="alert alert-warning" role="alert" style={{ 
                             margin: '1.5rem 0',
                             padding: '1rem',
@@ -574,10 +574,10 @@ export default function AcceptInvite() {
                             <strong>⚠️ {errors.general || "An account already exists for this email."}</strong>
                             <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px' }}>
                                 Please sign in to accept the invite.
-                            </p>
-                        </div>
+                        </p>
+                    </div>
                         <div className="invitation-actions" style={{ marginTop: '1.5rem' }}>
-                            <button
+                                        <button
                                 className="accept-invite-btn accept-btn"
                                 onClick={() => navigate("/login", { 
                                     state: { 
@@ -585,10 +585,10 @@ export default function AcceptInvite() {
                                         message: "Please sign in to accept the invitation"
                                     } 
                                 })}
-                            >
+                                        >
                                 Sign In
-                            </button>
-                            <button
+                                        </button>
+                                        <button
                                 className="accept-invite-btn deny-btn"
                                 onClick={() => navigate("/login", { 
                                     state: { 
@@ -597,12 +597,12 @@ export default function AcceptInvite() {
                                     } 
                                 })}
                                 style={{ marginTop: '0.5rem' }}
-                            >
+                                        >
                                 Forgot Password?
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                                        </button>
+                                    </div>
+                                        </div>
+                                </div>
             </FixedLayout>
         );
     }
@@ -615,17 +615,17 @@ export default function AcceptInvite() {
                         <div className="accept-invite-header">
                             <h5 className="accept-invite-title">Invalid Invitation</h5>
                             <p className="accept-invite-subtitle">{errors.general}</p>
-                            <button
+                                    <button
                                 className="accept-invite-btn"
-                                onClick={() => navigate("/login")}
-                            >
-                                Go to Login
-                            </button>
-                        </div>
+                                    onClick={() => navigate("/login")}
+                                >
+                                    Go to Login
+                                </button>
                     </div>
                 </div>
-            </FixedLayout>
-        );
+            </div>
+        </FixedLayout>
+    );
     }
 
     // Main return with Data Sharing Modal

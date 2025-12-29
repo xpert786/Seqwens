@@ -483,7 +483,7 @@ export default function Profile() {
                         console.error('Failed to load profile image');
                         // Hide image on error, show initials placeholder instead
                         setProfileImageError(true);
-                    }}
+                            }}
                         />
                     </div>
                 ) : (

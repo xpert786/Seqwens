@@ -198,14 +198,14 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
         errorData = await response.json();
         // Suppress console errors for memberships endpoint (expected to fail for some users)
         if (!isMembershipsEndpoint) {
-          console.error('API Error Response:', errorData);
+        console.error('API Error Response:', errorData);
         }
 
         // If there are specific field errors, show them
         if (errorData.errors) {
           // Suppress console errors for memberships endpoint
           if (!isMembershipsEndpoint) {
-            console.error('Field Validation Errors:', errorData.errors);
+          console.error('Field Validation Errors:', errorData.errors);
           }
           
           // Handle non_field_errors specially - show them directly without labels
@@ -254,7 +254,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       } catch (parseError) {
         // Suppress console errors for memberships endpoint
         if (!isMembershipsEndpoint) {
-          console.error('Error parsing response:', parseError);
+        console.error('Error parsing response:', parseError);
         }
       }
       
@@ -273,7 +273,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     // Suppress console errors for memberships endpoint (expected to fail for some users)
     const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
     if (!isMembershipsEndpoint) {
-      console.error('API Request Error:', error);
+    console.error('API Request Error:', error);
     }
 
     // Enhanced error handling for CORS and network issues
@@ -4731,7 +4731,7 @@ export const taxPreparerThreadsAPI = {
     return await apiRequest('/firm/staff/clients/list/', 'GET');
   },
   // Get all chat threads for the current tax preparer
-  // Uses same endpoint as taxpayer but with query parameters for filtering
+  // Uses tax-preparer specific endpoint
   getThreads: async (options = {}) => {
     const { status = null, search = null, client_id = null, unread_only = false } = options;
     const params = new URLSearchParams();
@@ -4742,10 +4742,10 @@ export const taxPreparerThreadsAPI = {
     if (unread_only) params.append('unread_only', 'true');
 
     const queryString = params.toString();
-    // Use the Chat Threads API endpoint
+    // Use the Tax Preparer Chat Threads API endpoint
     const endpoint = queryString
-      ? `/taxpayer/chat-threads/?${queryString}`
-      : '/taxpayer/chat-threads/';
+      ? `/taxpayer/tax-preparer/chat-threads/?${queryString}`
+      : `/taxpayer/tax-preparer/chat-threads/`;
     return await apiRequest(endpoint, 'GET');
   },
   // Create a new chat thread (Tax Preparer to client)

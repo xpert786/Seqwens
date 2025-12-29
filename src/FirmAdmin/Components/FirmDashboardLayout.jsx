@@ -44,51 +44,51 @@ export default function FirmDashboardLayout() {
       isApplying = true;
       
       try {
-        const primaryColor = getComputedStyle(document.documentElement)
-          .getPropertyValue('--firm-primary-color')?.trim() || '#32B582';
+      const primaryColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--firm-primary-color')?.trim() || '#32B582';
+      
+      // Find all buttons in firm dashboard layout that haven't been processed
+      const buttons = document.querySelectorAll('.firm-dashboard-layout button:not([data-primary-applied])');
+      
+      buttons.forEach(button => {
+        // Skip buttons that should keep their colors (white, red, etc.)
+        const classList = Array.from(button.classList);
+        const hasExcludedClass = classList.some(cls => 
+          cls.includes('bg-white') || 
+          cls.includes('bg-gray') || 
+          cls.includes('bg-red') || 
+          cls.includes('bg-green') || 
+          cls.includes('bg-blue') || 
+          cls.includes('bg-yellow') ||
+          cls.includes('bg-EF4444') || // Red buttons
+          cls.includes('bg-10B981') // Green buttons
+        );
         
-        // Find all buttons in firm dashboard layout that haven't been processed
-        const buttons = document.querySelectorAll('.firm-dashboard-layout button:not([data-primary-applied])');
+        if (hasExcludedClass) {
+          button.setAttribute('data-primary-applied', 'skip');
+          return;
+        }
         
-        buttons.forEach(button => {
-          // Skip buttons that should keep their colors (white, red, etc.)
-          const classList = Array.from(button.classList);
-          const hasExcludedClass = classList.some(cls => 
-            cls.includes('bg-white') || 
-            cls.includes('bg-gray') || 
-            cls.includes('bg-red') || 
-            cls.includes('bg-green') || 
-            cls.includes('bg-blue') || 
-            cls.includes('bg-yellow') ||
-            cls.includes('bg-EF4444') || // Red buttons
-            cls.includes('bg-10B981') // Green buttons
-          );
-          
-          if (hasExcludedClass) {
-            button.setAttribute('data-primary-applied', 'skip');
-            return;
-          }
-          
-          // Check if button has orange color (#F56D2D) in class name (Tailwind arbitrary value)
-          const hasOrangeClass = button.className.includes('bg-[#F56D2D]') ||
-                                button.className.includes('bg-[#f56d2d]') ||
-                                button.className.includes('F56D2D');
-          
-          // Check inline style for orange color
-          const inlineStyle = button.getAttribute('style') || '';
-          const hasOrangeStyle = inlineStyle.includes('#F56D2D') ||
-                                 inlineStyle.includes('#f56d2d') ||
-                                 inlineStyle.includes('245, 109, 45');
-          
-          if (hasOrangeClass || hasOrangeStyle) {
-            button.style.setProperty('background-color', `var(--firm-primary-color, ${primaryColor})`, 'important');
-            button.style.setProperty('color', 'white', 'important');
-            button.setAttribute('data-primary-applied', 'true');
-          } else {
-            // Mark as processed even if not orange to avoid re-checking
-            button.setAttribute('data-primary-applied', 'checked');
-          }
-        });
+        // Check if button has orange color (#F56D2D) in class name (Tailwind arbitrary value)
+        const hasOrangeClass = button.className.includes('bg-[#F56D2D]') ||
+                              button.className.includes('bg-[#f56d2d]') ||
+                              button.className.includes('F56D2D');
+        
+        // Check inline style for orange color
+        const inlineStyle = button.getAttribute('style') || '';
+        const hasOrangeStyle = inlineStyle.includes('#F56D2D') ||
+                               inlineStyle.includes('#f56d2d') ||
+                               inlineStyle.includes('245, 109, 45');
+        
+        if (hasOrangeClass || hasOrangeStyle) {
+          button.style.setProperty('background-color', `var(--firm-primary-color, ${primaryColor})`, 'important');
+          button.style.setProperty('color', 'white', 'important');
+          button.setAttribute('data-primary-applied', 'true');
+        } else {
+          // Mark as processed even if not orange to avoid re-checking
+          button.setAttribute('data-primary-applied', 'checked');
+        }
+      });
       } finally {
         isApplying = false;
       }
@@ -140,9 +140,9 @@ export default function FirmDashboardLayout() {
         // Reset data attribute when colors change to re-apply (debounced)
         clearTimeout(observerTimeout);
         observerTimeout = setTimeout(() => {
-          document.querySelectorAll('.firm-dashboard-layout button[data-primary-applied="true"]')
-            .forEach(btn => {
-              btn.removeAttribute('data-primary-applied');
+      document.querySelectorAll('.firm-dashboard-layout button[data-primary-applied="true"]')
+        .forEach(btn => {
+          btn.removeAttribute('data-primary-applied');
             });
           applyPrimaryColorToButtons();
         }, 300);
@@ -172,88 +172,88 @@ export default function FirmDashboardLayout() {
       isApplying = true;
       
       try {
-        const secondaryColor = getComputedStyle(document.documentElement)
-          .getPropertyValue('--firm-secondary-color')?.trim() || '#F3F7FF';
-        
-        // Colors to replace with secondary color
-        const colorsToReplace = [
-          '#F3F7FF', '#f3f7ff', 'rgb(243, 247, 255)', 'rgb(243,247,255)',
-          '#F6F7FF', '#f6f7ff', 'rgb(246, 247, 255)', 'rgb(246,247,255)'
-        ];
-        
+      const secondaryColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--firm-secondary-color')?.trim() || '#F3F7FF';
+      
+      // Colors to replace with secondary color
+      const colorsToReplace = [
+        '#F3F7FF', '#f3f7ff', 'rgb(243, 247, 255)', 'rgb(243,247,255)',
+        '#F6F7FF', '#f6f7ff', 'rgb(246, 247, 255)', 'rgb(246,247,255)'
+      ];
+      
         // Find all elements in firm dashboard layout that haven't been processed
         const allElements = document.querySelectorAll('.firm-dashboard-layout *:not([data-secondary-applied])');
+      
+      allElements.forEach(element => {
+        // Skip buttons, inputs, and other form elements (they have their own styling)
+        if (element.tagName === 'BUTTON' || 
+            element.tagName === 'INPUT' || 
+            element.tagName === 'SELECT' || 
+            element.tagName === 'TEXTAREA' ||
+            element.hasAttribute('data-primary-applied')) {
+            element.setAttribute('data-secondary-applied', 'skip');
+          return;
+        }
         
-        allElements.forEach(element => {
-          // Skip buttons, inputs, and other form elements (they have their own styling)
-          if (element.tagName === 'BUTTON' || 
-              element.tagName === 'INPUT' || 
-              element.tagName === 'SELECT' || 
-              element.tagName === 'TEXTAREA' ||
-              element.hasAttribute('data-primary-applied')) {
-            element.setAttribute('data-secondary-applied', 'skip');
-            return;
+        // Skip elements that should keep white background
+        const classList = Array.from(element.classList);
+        const shouldSkip = classList.some(cls => 
+          cls.includes('bg-white') || 
+          cls.includes('bg-gray') || 
+          cls.includes('bg-red') || 
+          cls.includes('bg-green') || 
+          cls.includes('bg-blue') || 
+          cls.includes('bg-yellow') || 
+          cls.includes('bg-black') ||
+          cls.includes('card') ||
+          element.closest('button') ||
+          element.closest('input')
+        );
+        
+        if (shouldSkip) {
+          element.setAttribute('data-secondary-applied', 'skip');
+          return;
+        }
+        
+        // Check computed style
+        const computedStyle = window.getComputedStyle(element);
+        const bgColor = computedStyle.backgroundColor;
+        
+        // Check if background color matches any of the colors to replace
+        const matchesColor = colorsToReplace.some(color => {
+          if (bgColor.includes(color) || 
+              bgColor === color ||
+              (color.startsWith('rgb') && bgColor.replace(/\s/g, '') === color.replace(/\s/g, ''))) {
+            return true;
           }
-          
-          // Skip elements that should keep white background
-          const classList = Array.from(element.classList);
-          const shouldSkip = classList.some(cls => 
-            cls.includes('bg-white') || 
-            cls.includes('bg-gray') || 
-            cls.includes('bg-red') || 
-            cls.includes('bg-green') || 
-            cls.includes('bg-blue') || 
-            cls.includes('bg-yellow') || 
-            cls.includes('bg-black') ||
-            cls.includes('card') ||
-            element.closest('button') ||
-            element.closest('input')
-          );
-          
-          if (shouldSkip) {
-            element.setAttribute('data-secondary-applied', 'skip');
-            return;
-          }
-          
-          // Check computed style
-          const computedStyle = window.getComputedStyle(element);
-          const bgColor = computedStyle.backgroundColor;
-          
-          // Check if background color matches any of the colors to replace
-          const matchesColor = colorsToReplace.some(color => {
-            if (bgColor.includes(color) || 
-                bgColor === color ||
-                (color.startsWith('rgb') && bgColor.replace(/\s/g, '') === color.replace(/\s/g, ''))) {
-              return true;
-            }
-            return false;
-          });
-          
-          // Check class names for background color patterns
-          const hasBgClass = classList.some(cls => 
-            cls.includes('bg-[#F3F7FF]') ||
-            cls.includes('bg-[#F6F7FF]') ||
-            cls.includes('bg-[rgb(243,247,255)]') ||
-            cls.includes('F3F7FF') ||
-            cls.includes('F6F7FF') ||
-            cls.includes('243,247,255')
-          );
-          
-          // Check inline style
-          const inlineStyle = element.getAttribute('style') || '';
-          const hasBgStyle = colorsToReplace.some(color => 
-            inlineStyle.includes(color) || 
-            inlineStyle.includes(color.toLowerCase())
-          );
-          
+          return false;
+        });
+        
+        // Check class names for background color patterns
+        const hasBgClass = classList.some(cls => 
+          cls.includes('bg-[#F3F7FF]') ||
+          cls.includes('bg-[#F6F7FF]') ||
+          cls.includes('bg-[rgb(243,247,255)]') ||
+          cls.includes('F3F7FF') ||
+          cls.includes('F6F7FF') ||
+          cls.includes('243,247,255')
+        );
+        
+        // Check inline style
+        const inlineStyle = element.getAttribute('style') || '';
+        const hasBgStyle = colorsToReplace.some(color => 
+          inlineStyle.includes(color) || 
+          inlineStyle.includes(color.toLowerCase())
+        );
+        
           if (matchesColor || hasBgClass || hasBgStyle) {
-            element.style.setProperty('background-color', `var(--firm-secondary-color, ${secondaryColor})`, 'important');
-            element.setAttribute('data-secondary-applied', 'true');
+          element.style.setProperty('background-color', `var(--firm-secondary-color, ${secondaryColor})`, 'important');
+          element.setAttribute('data-secondary-applied', 'true');
           } else {
             // Mark as checked even if not matching to avoid re-checking
             element.setAttribute('data-secondary-applied', 'checked');
-          }
-        });
+        }
+      });
       } finally {
         isApplying = false;
       }
@@ -305,10 +305,10 @@ export default function FirmDashboardLayout() {
         // Reset data attribute when colors change to re-apply (debounced)
         clearTimeout(observerTimeout);
         observerTimeout = setTimeout(() => {
-          document.querySelectorAll('.firm-dashboard-layout [data-secondary-applied="true"]')
-            .forEach(el => {
-              el.removeAttribute('data-secondary-applied');
-            });
+      document.querySelectorAll('.firm-dashboard-layout [data-secondary-applied="true"]')
+        .forEach(el => {
+          el.removeAttribute('data-secondary-applied');
+        });
           applySecondaryColorToBackgrounds();
         }, 300);
       }

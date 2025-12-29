@@ -52,9 +52,9 @@ const ConfirmationModal = ({
         {/* Body */}
         <div className="p-6">
           {typeof message === 'string' ? (
-            <p className="text-sm text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#4B5563', fontSize: '14px' }}>
-              {message}
-            </p>
+          <p className="text-sm text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#4B5563', fontSize: '14px' }}>
+            {message}
+          </p>
           ) : (
             <div className="text-sm text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#4B5563', fontSize: '14px' }}>
               {message}

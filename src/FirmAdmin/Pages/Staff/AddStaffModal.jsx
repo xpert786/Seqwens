@@ -86,7 +86,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
-
+        
         // Parse array format error messages
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage[0] || errorMessage;
@@ -100,7 +100,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             // Keep original if parsing fails
           }
         }
-
+        
         // Also check errorData.errors or errorData.error fields
         if (errorData.errors) {
           if (Array.isArray(errorData.errors)) {
@@ -109,7 +109,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
             errorMessage = errorData.errors;
           }
         }
-
+        
         throw new Error(errorMessage);
       }
 
@@ -127,41 +127,41 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
 
       // If successful (new user or confirmed existing user)
       if (result.success && result.data) {
-        // Reset form
-        setFormData({
-          first_name: "",
-          last_name: "",
-          email: "",
-          phone_number: "",
-          role: "tax_preparer",
-        });
-        setDeliveryMethods({
-          email: true,
-          sms: false,
-          link: false,
-        });
+      // Reset form
+      setFormData({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone_number: "",
+        role: "tax_preparer",
+      });
+      setDeliveryMethods({
+        email: true,
+        sms: false,
+        link: false,
+      });
 
-        if (typeof onRefresh === "function") {
-          onRefresh();
-        }
-        onClose();
+      if (typeof onRefresh === "function") {
+        onRefresh();
+      }
+      onClose();
 
-        if (typeof onInviteCreated === "function" && result.data) {
-          onInviteCreated(result.data);
-        }
+      if (typeof onInviteCreated === "function" && result.data) {
+        onInviteCreated(result.data);
+      }
 
-        // Show success toast
+      // Show success toast
         toast.success(result.message || "Staff member added successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: false,
-          className: "custom-toast-success",
-          bodyClassName: "custom-toast-body",
-        });
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: false,
+        className: "custom-toast-success",
+        bodyClassName: "custom-toast-body",
+      });
       } else {
         // Handle other error cases
         throw new Error(result.message || "Failed to create staff member");

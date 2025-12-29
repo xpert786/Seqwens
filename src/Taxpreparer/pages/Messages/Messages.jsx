@@ -105,13 +105,18 @@ export default function MessagePage() {
         }
         setThreadsError(null);
 
-        // Try new chat-threads API first, fallback to old threads API
+        // Use tax preparer specific API endpoint
         let response;
         try {
-          response = await chatService.getThreads();
-        } catch (newApiError) {
-          console.log('New chat API failed, trying old API:', newApiError);
           response = await taxPreparerThreadsAPI.getThreads();
+        } catch (apiError) {
+          console.log('Tax preparer chat API failed, trying fallback:', apiError);
+          // Fallback to generic chat service if tax preparer API fails
+          try {
+            response = await chatService.getThreads();
+          } catch (fallbackError) {
+            throw apiError; // Throw original error
+          }
         }
 
         // Handle new API response format (data is array directly)
@@ -121,7 +126,9 @@ export default function MessagePage() {
 
         if (threadsArray.length > 0) {
           const transformedThreads = threadsArray.map(thread => {
+            // Get timestamp from last_message.created_at, updated_at, or created_at
             const lastTimestamp =
+              thread.last_message?.created_at ||
               thread.last_message_at ||
               thread.updated_at ||
               thread.created_at ||
@@ -331,13 +338,18 @@ export default function MessagePage() {
             // Determine if message is sent by current user (tax preparer) or received from client
             let isSentByCurrentUser = false;
             if (senderId && currentUserId) {
-              isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+              // Compare sender ID with current user ID
+              isSentByCurrentUser = String(senderId) === String(currentUserId);
             } else {
               // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
-              const isClient = senderRole === "Client" || senderRole === "client";
+              // Tax preparer, team_member, staff, etc. = sent by current user (right side)
+              // Client, taxpayer = received from client (left side)
+              const isClient = senderRole === "Client" || senderRole === "client" || senderRole === "taxpayer";
               isSentByCurrentUser = !isClient;
             }
 
+            // Tax preparer's sent messages appear on RIGHT (type: "user")
+            // Client's received messages appear on LEFT (type: "admin")
             const messageType = isSentByCurrentUser ? "user" : "admin";
 
             // Handle attachment object from API
@@ -443,14 +455,18 @@ export default function MessagePage() {
           // Determine if message is sent by current user (tax preparer) or received from client
           let isSentByCurrentUser = false;
           if (senderId && currentUserId) {
-            isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+            // Compare sender ID with current user ID
+            isSentByCurrentUser = String(senderId) === String(currentUserId);
           } else {
             // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
-            const isClient = senderRole === "Client" || senderRole === "client";
+            // Tax preparer, team_member, staff, etc. = sent by current user (right side)
+            // Client, taxpayer = received from client (left side)
+            const isClient = senderRole === "Client" || senderRole === "client" || senderRole === "taxpayer";
             isSentByCurrentUser = !isClient;
           }
 
-          // Tax preparer's sent messages appear on RIGHT, client's received messages appear on LEFT
+          // Tax preparer's sent messages appear on RIGHT (type: "user")
+          // Client's received messages appear on LEFT (type: "admin")
           let messageType = isSentByCurrentUser ? "user" : "admin";
 
           return {
@@ -657,8 +673,10 @@ export default function MessagePage() {
 
       if (response.success) {
         // Replace optimistic message with real message
-        const senderRole = response.data?.sender_role || '';
-        const senderId = response.data?.sender_id || response.data?.sender?.id || null;
+        // Handle both old format (sender_role, sender_id) and new format (sender.role, sender.id)
+        const sender = response.data?.sender || {};
+        const senderRole = response.data?.sender_role || sender.role || '';
+        const senderId = response.data?.sender_id || sender.id || null;
 
         // Get current user to compare with sender
         const currentUser = getUserData();
@@ -667,13 +685,18 @@ export default function MessagePage() {
         // Determine if message is sent by current user (tax preparer) or received from client
         let isSentByCurrentUser = false;
         if (senderId && currentUserId) {
-          isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+          // Compare sender ID with current user ID
+          isSentByCurrentUser = String(senderId) === String(currentUserId);
         } else {
           // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
-          const isClient = senderRole === "Client" || senderRole === "client";
+          // Tax preparer, team_member, staff, etc. = sent by current user (right side)
+          // Client, taxpayer = received from client (left side)
+          const isClient = senderRole === "Client" || senderRole === "client" || senderRole === "taxpayer";
           isSentByCurrentUser = !isClient;
         }
 
+        // Tax preparer's sent messages appear on RIGHT (type: "user")
+        // Client's received messages appear on LEFT (type: "admin")
         const finalMessageType = isSentByCurrentUser ? "user" : "admin";
 
         // Handle attachment object from API response
@@ -690,7 +713,7 @@ export default function MessagePage() {
           type: finalMessageType,
           text: messageText || (attachment ? `📎 ${attachment.name}` : ''),
           date: response.data?.created_at || new Date().toISOString(),
-          sender: response.data?.sender_name || 'You',
+          sender: sender.name || response.data?.sender_name || 'You',
           senderRole: senderRole,
           isRead: false,
           isEdited: false,
@@ -731,12 +754,18 @@ export default function MessagePage() {
 
                   let isSentByCurrentUser = false;
                   if (senderId && currentUserId) {
-                    isSentByCurrentUser = String(senderId) === String(currentUserId) || senderId === currentUserId;
+                    // Compare sender ID with current user ID
+                    isSentByCurrentUser = String(senderId) === String(currentUserId);
                   } else {
-                    const isClient = senderRole === "Client" || senderRole === "client";
+                    // Fallback: If sender is NOT a client, assume it's from tax preparer (sent)
+                    // Tax preparer, team_member, staff, etc. = sent by current user (right side)
+                    // Client, taxpayer = received from client (left side)
+                    const isClient = senderRole === "Client" || senderRole === "client" || senderRole === "taxpayer";
                     isSentByCurrentUser = !isClient;
                   }
 
+                  // Tax preparer's sent messages appear on RIGHT (type: "user")
+                  // Client's received messages appear on LEFT (type: "admin")
                   const messageType = isSentByCurrentUser ? "user" : "admin";
 
                   const msgAttachmentObj = msg.attachment || null;

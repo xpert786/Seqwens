@@ -617,17 +617,17 @@ export default function DocumentsPage() {
             cardData.map((item, index) => (
               <div className="col-lg-4 col-md-4 col-sm-12 col-12" key={index}>
                 <div className="stat-card">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="stat-icon" style={{ color: item.color }}>
-                      {item.icon}
-                    </div>
-                    <div className="stat-count">{item.count}</div>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="stat-icon" style={{ color: item.color }}>
+                    {item.icon}
                   </div>
-                  <div className="mt-2">
-                    <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
-                  </div>
+                  <div className="stat-count">{item.count}</div>
+                </div>
+                <div className="mt-2">
+                  <p className="mb-0 text-muted small fw-semibold">{item.label}</p>
                 </div>
               </div>
+            </div>
             ))
           )}
         </div>
