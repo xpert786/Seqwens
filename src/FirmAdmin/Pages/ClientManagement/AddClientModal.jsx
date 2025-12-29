@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
-import { getAccessToken, getUserData } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
+import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -12,58 +12,13 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
     first_name: '',
     last_name: '',
     email: '',
-    phone_number: '',
-    assigned_to_staff: '',
-    notes: ''
+    phone_number: ''
   });
   const [phoneCountry, setPhoneCountry] = useState('us');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // Staff members state
-  const [staffMembers, setStaffMembers] = useState([]);
-  const [staffLoading, setStaffLoading] = useState(true);
-  const [staffError, setStaffError] = useState('');
-
-  // Fetch staff members when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const fetchStaffMembers = async () => {
-        try {
-          setStaffLoading(true);
-          setStaffError('');
-
-          const result = await firmAdminStaffAPI.getFirmWithTaxPreparers();
-
-          if (result.success && result.data && Array.isArray(result.data)) {
-            // Transform the data to match the expected format
-            let staffList = result.data.map(item => ({
-              id: item.id,
-              name: item.display_name || (item.type === 'firm' ? item.name : `${item.first_name || ''} ${item.last_name || ''}`.trim()),
-              email: item.email || '',
-              type: item.type, // 'firm' or 'tax_preparer'
-              ...item // Include all other fields
-            }));
-
-            console.log('Firm and tax preparers loaded:', staffList);
-            setStaffMembers(staffList);
-          } else {
-            setStaffMembers([]);
-          }
-        } catch (err) {
-          console.error('Error fetching firm and tax preparers:', err);
-          setStaffError('Failed to load staff members. Please try again.');
-          setStaffMembers([]);
-        } finally {
-          setStaffLoading(false);
-        }
-      };
-
-      fetchStaffMembers();
-    }
-  }, [isOpen]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -92,10 +47,6 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
       setError('Please enter a valid email address');
       return false;
     }
-    if (!formData.assigned_to_staff) {
-      setError('Please assign the client to a staff member');
-      return false;
-    }
     return true;
   };
 
@@ -115,17 +66,11 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim(),
-        assigned_to_staff: parseInt(formData.assigned_to_staff),
       };
 
       // Add phone_number only if provided
       if (formData.phone_number.trim()) {
         payload.phone_number = formData.phone_number.trim();
-      }
-
-      // Add notes only if provided
-      if (formData.notes.trim()) {
-        payload.notes = formData.notes.trim();
       }
 
       console.log('Creating client with payload:', payload);
@@ -155,9 +100,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         first_name: '',
         last_name: '',
         email: '',
-        phone_number: '',
-        assigned_to_staff: '',
-        notes: ''
+        phone_number: ''
       });
 
       // Close modal after a brief delay
@@ -200,7 +143,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
           <div>
             <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Add New Client</h5>
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-              Create a new client profile and assign to staff member
+              Create a new client profile
             </p>
           </div>
           <button
@@ -300,60 +243,6 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               }}
               enableSearch={true}
               countryCodeEditable={false}
-            />
-          </div>
-
-          {/* Assign to Staff */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-              Assign to Staff <span className="text-red-500">*</span>
-            </label>
-            {staffLoading ? (
-              <div className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-500 text-sm font-[BasisGrotesquePro]">
-                Loading staff members...
-              </div>
-            ) : staffError ? (
-              <div className="w-full border border-red-200 rounded-lg px-3 py-2.5 bg-red-50 text-red-600 text-sm font-[BasisGrotesquePro]">
-                {staffError}
-              </div>
-            ) : (
-              <div className="relative">
-                <select
-                  value={formData.assigned_to_staff}
-                  onChange={(e) => handleInputChange('assigned_to_staff', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 bg-white font-[BasisGrotesquePro] text-sm appearance-none"
-                  required
-                >
-                  <option value="">Select staff member</option>
-                  {staffMembers.map((staff) => (
-                    <option key={staff.id} value={staff.id}>
-                      {staff.name} {staff.email ? `(${staff.email})` : ''} {staff.type === 'firm' ? '- Firm' : staff.role_display ? `- ${staff.role_display}` : ''}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            )}
-            {staffMembers.length === 0 && !staffLoading && !staffError && (
-              <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">No staff members available</p>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5 font-[BasisGrotesquePro]">
-              Notes
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes about the client.."
-              rows={4}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm resize-none"
             />
           </div>
 

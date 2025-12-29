@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
+import { REMINDER_TYPES, TIMING_TYPES, TIMING_UNITS, NOTIFICATION_CHANNELS } from './workflowConstants';
 
 const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
   const [userTypeGroup, setUserTypeGroup] = useState('taxpayer');
   const [timingDays, setTimingDays] = useState(3);
   const [timingType, setTimingType] = useState('before_due');
+  const [timingUnit, setTimingUnit] = useState('days');
   const [messageTemplate, setMessageTemplate] = useState('');
   const [channels, setChannels] = useState({
     email: true,
@@ -108,12 +110,19 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     
+    const selectedChannels = Object.keys(channels).filter(key => channels[key]);
+    if (selectedChannels.length === 0) {
+      alert('At least one notification channel must be selected');
+      return;
+    }
+    
     const reminderData = {
-      user_type_group: userTypeGroup,
-      timing_days: timingDays,
+      reminder_type: userTypeGroup,
+      timing_value: timingDays,
       timing_type: timingType,
+      timing_unit: timingUnit,
       message_template: messageTemplate.trim(),
-      channels: Object.keys(channels).filter(key => channels[key]),
+      notification_channels: selectedChannels,
       is_active: true
     };
     onSave(reminderData);
@@ -121,13 +130,14 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
     setUserTypeGroup('taxpayer');
     setTimingDays(3);
     setTimingType('before_due');
+    setTimingUnit('days');
     setMessageTemplate('');
     setChannels({ email: true, sms: false, in_app: false });
     setIsDraggingOver(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999, position: 'fixed' }}>
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
@@ -155,9 +165,11 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
               onChange={(e) => setUserTypeGroup(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
             >
-              <option value="taxpayer">Taxpayer</option>
-              <option value="preparer">Preparer</option>
-              <option value="admin">Admin</option>
+              {REMINDER_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -174,15 +186,27 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
                 min="0"
                 className="w-24 px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
               />
-              <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">Days</span>
+              <select
+                value={timingUnit}
+                onChange={(e) => setTimingUnit(e.target.value)}
+                className="w-24 px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+              >
+                {TIMING_UNITS.map((unit) => (
+                  <option key={unit.value} value={unit.value}>
+                    {unit.label}
+                  </option>
+                ))}
+              </select>
               <select
                 value={timingType}
                 onChange={(e) => setTimingType(e.target.value)}
                 className="flex-1 px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
               >
-                <option value="before_due">Before Due Date</option>
-                <option value="after_due">After Due Date</option>
-                <option value="after_start">After Stage Start</option>
+                {TIMING_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -237,40 +261,34 @@ const ReminderConfigurationModal = ({ isOpen, onClose, onSave }) => {
             </p>
           </div>
 
-          {/* Channels */}
+          {/* Notification Channels */}
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
-              Channels
+              Notification Channels <span className="text-red-500">*</span>
             </label>
             <div className="space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={channels.email}
-                  onChange={(e) => setChannels({ ...channels, email: e.target.checked })}
-                  className="rounded border-[#E8F0FF]"
-                />
-                <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">📧 Email</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={channels.sms}
-                  onChange={(e) => setChannels({ ...channels, sms: e.target.checked })}
-                  className="rounded border-[#E8F0FF]"
-                />
-                <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">📱 SMS</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={channels.in_app}
-                  onChange={(e) => setChannels({ ...channels, in_app: e.target.checked })}
-                  className="rounded border-[#E8F0FF]"
-                />
-                <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">🔔 In-App Notification</span>
-              </label>
+              {NOTIFICATION_CHANNELS.map((channel) => (
+                <label key={channel.value} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={channels[channel.value]}
+                    onChange={(e) => setChannels({ ...channels, [channel.value]: e.target.checked })}
+                    className="rounded border-[#E8F0FF]"
+                  />
+                  <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                    {channel.value === 'email' && '📧 '}
+                    {channel.value === 'sms' && '📱 '}
+                    {channel.value === 'in_app' && '🔔 '}
+                    {channel.label}
+                  </span>
+                </label>
+              ))}
             </div>
+            {Object.values(channels).every(v => !v) && (
+              <p className="text-xs text-red-500 mt-1 font-[BasisGrotesquePro]">
+                At least one channel must be selected
+              </p>
+            )}
           </div>
         </div>
 

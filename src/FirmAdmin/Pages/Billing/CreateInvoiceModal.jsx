@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminMessagingAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { formatDateInput, formatDateForAPI } from '../../../ClientOnboarding/utils/dateUtils';
+import DateInput from '../../../components/DateInput';
 import '../../styles/CreateInvoiceModel.css';
 const API_BASE_URL = getApiBaseUrl();
 
@@ -139,29 +141,6 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
     };
   }, [showServiceDropdowns]);
 
-  // Format date input with automatic slashes (MM/DD/YYYY)
-  const formatDateInput = (value) => {
-    // Remove all non-digit characters
-    const digits = value.replace(/\D/g, '');
-    
-    // Limit to 8 digits (MMDDYYYY)
-    const limitedDigits = digits.slice(0, 8);
-    
-    // Add slashes after month (2 digits) and day (4 digits)
-    let formatted = '';
-    if (limitedDigits.length > 0) {
-      formatted = limitedDigits.slice(0, 2);
-      if (limitedDigits.length > 2) {
-        formatted += '/' + limitedDigits.slice(2, 4);
-      }
-      if (limitedDigits.length > 4) {
-        formatted += '/' + limitedDigits.slice(4, 8);
-      }
-    }
-    
-    return formatted;
-  };
-
   const handleInputChange = (field, value) => {
     // Special handling for date fields to auto-format with slashes
     if (field === 'due_date' || field === 'issue_date') {
@@ -170,6 +149,20 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
     } else {
       setInvoiceData(prev => ({ ...prev, [field]: value }));
     }
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleDateChange = (field, e) => {
+    const formattedValue = e.target.value;
+    setInvoiceData(prev => ({ ...prev, [field]: formattedValue }));
     
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
@@ -482,10 +475,9 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
                 <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
                   Issue Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <DateInput
                   value={invoiceData.issue_date}
-                  onChange={(e) => handleInputChange('issue_date', e.target.value)}
+                  onChange={(e) => handleDateChange('issue_date', e)}
                   placeholder="mm/dd/yyyy"
                   className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
@@ -495,10 +487,9 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated }) {
                 <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
                   Due Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <DateInput
                   value={invoiceData.due_date}
-                  onChange={(e) => handleInputChange('due_date', e.target.value)}
+                  onChange={(e) => handleDateChange('due_date', e)}
                   placeholder="mm/dd/yyyy"
                   className={`w-full !border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
                     fieldErrors.due_date 

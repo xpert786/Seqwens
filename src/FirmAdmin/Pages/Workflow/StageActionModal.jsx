@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ACTION_TYPES, EXECUTE_ON_OPTIONS, TASK_PRIORITIES } from './workflowConstants';
 
 const StageActionModal = ({ isOpen, onClose, onSave }) => {
   const [actionType, setActionType] = useState('task');
@@ -49,15 +50,19 @@ const StageActionModal = ({ isOpen, onClose, onSave }) => {
       case 'email': return '📧';
       case 'sms': return '📱';
       case 'task': return '✅';
-      case 'document': return '📄';
+      case 'document_request': return '📄';
       case 'esign': return '✍️';
+      case 'appointment': return '📅';
+      case 'status_update': return '🔄';
+      case 'notification': return '🔔';
+      case 'invoice': return '💰';
       default: return '📄';
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999, position: 'fixed' }}>
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px', zIndex: 100000 }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
           <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Add Action to Stage</h3>
@@ -84,11 +89,11 @@ const StageActionModal = ({ isOpen, onClose, onSave }) => {
               onChange={(e) => setActionType(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
             >
-              <option value="task">Task</option>
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
-              <option value="document">Document Request</option>
-              <option value="esign">E-Signature Request</option>
+              {ACTION_TYPES.map((action) => (
+                <option key={action.value} value={action.value}>
+                  {action.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -98,26 +103,18 @@ const StageActionModal = ({ isOpen, onClose, onSave }) => {
               Execute On <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="stage_start"
-                  checked={executeOn === 'stage_start'}
-                  onChange={(e) => setExecuteOn(e.target.value)}
-                  className="text-[#3AD6F2]"
-                />
-                <span className="text-sm font-[BasisGrotesquePro]">Stage Start</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="stage_complete"
-                  checked={executeOn === 'stage_complete'}
-                  onChange={(e) => setExecuteOn(e.target.value)}
-                  className="text-[#3AD6F2]"
-                />
-                <span className="text-sm font-[BasisGrotesquePro]">Stage Complete</span>
-              </label>
+              {EXECUTE_ON_OPTIONS.map((option) => (
+                <label key={option.value} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value={option.value}
+                    checked={executeOn === option.value}
+                    onChange={(e) => setExecuteOn(e.target.value)}
+                    className="text-[#3AD6F2]"
+                  />
+                  <span className="text-sm font-[BasisGrotesquePro]">{option.label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -170,9 +167,11 @@ const StageActionModal = ({ isOpen, onClose, onSave }) => {
                     onChange={(e) => setConfiguration({ ...configuration, priority: e.target.value })}
                     className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    {TASK_PRIORITIES.map((priority) => (
+                      <option key={priority.value} value={priority.value}>
+                        {priority.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

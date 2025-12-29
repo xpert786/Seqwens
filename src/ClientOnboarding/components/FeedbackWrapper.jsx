@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { isLoggedIn, getStorage } from '../utils/userUtils';
-import { firmAdminMessagingAPI } from '../utils/apiUtils';
+import { firmAdminMessagingAPI, maintenanceModeAPI } from '../utils/apiUtils';
 import FeedbackModal from './FeedbackModal';
 
 export default function FeedbackWrapper({ children }) {
@@ -31,6 +31,29 @@ export default function FeedbackWrapper({ children }) {
       }
 
       try {
+        // First, check account age from maintenance mode API
+        console.log('FeedbackWrapper: Checking account age...');
+        const maintenanceResponse = await maintenanceModeAPI.getMaintenanceStatus();
+        
+        if (maintenanceResponse.success) {
+          const accountAgeDays = maintenanceResponse.account_age_days || 0;
+          console.log('FeedbackWrapper: Account age (days):', accountAgeDays);
+          
+          // Only proceed if account is older than 5 days
+          if (accountAgeDays <= 5) {
+            console.log('FeedbackWrapper: Account age is', accountAgeDays, 'days (must be > 5), skipping feedback check');
+            setCheckedFeedback(true);
+            return;
+          }
+          
+          console.log('FeedbackWrapper: Account age is', accountAgeDays, 'days (> 5), proceeding with feedback check');
+        } else {
+          console.log('FeedbackWrapper: Could not get account age, skipping feedback check');
+          setCheckedFeedback(true);
+          return;
+        }
+
+        // Now check feedback status
         console.log('FeedbackWrapper: Calling feedback status API...');
         const response = await firmAdminMessagingAPI.getFeedbackStatus();
         console.log('FeedbackWrapper: API response:', response);

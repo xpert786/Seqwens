@@ -8,6 +8,7 @@ import ESignatureModal from './ClientOnboarding/components/ESignatureModal';
 import NotificationPanel from './ClientOnboarding/components/Notifications/NotificationPanel';
 import Dashboard from "./ClientOnboarding/pages/Dashboard";
 import MyDocuments from "./ClientOnboarding/pages/MyDocuments";
+import TaxpayerWorkflow from "./ClientOnboarding/pages/Workflow/TaxpayerWorkflow";
 import DataIntake from "./ClientOnboarding/pages/DataIntake";
 import Invoices from "./ClientOnboarding/pages/Invoices";
 import PaymentSuccess from "./ClientOnboarding/pages/PaymentSuccess";
@@ -311,6 +312,7 @@ export default function App() {
           <Route path="invoices" element={<Invoices />} />
           <Route path="messages" element={<Messages />} />
           <Route path="appointments" element={<Appointments />} />
+          <Route path="workflow" element={<TaxpayerWorkflow />} />
           <Route path="accounts" element={<Accounts />} />
           <Route path="helpers" element={<Helper />} />
           <Route path="notifications" element={<NotificationPanel />} />

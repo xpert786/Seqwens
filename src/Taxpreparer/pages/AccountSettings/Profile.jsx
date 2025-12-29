@@ -4,7 +4,7 @@ import 'react-phone-input-2/lib/bootstrap.css';
 import { SaveIcon } from "../../component/icons";
 import { toast } from "react-toastify";
 import "../../styles/profile.css";
-import { taxPreparerSettingsAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerSettingsAPI, profileAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 
 // Removed DEFAULT_AVATAR_URL - use initials placeholder instead of random avatars
 
@@ -31,11 +31,38 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
     );
     const [errorMessage, setErrorMessage] = useState(null);
     const [profileImageError, setProfileImageError] = useState(false);
+    const [firmInfo, setFirmInfo] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     // Reset image error when profile image changes
     useEffect(() => {
         setProfileImageError(false);
     }, [profileData?.profile_picture, profileData?.profile_image, imagePreview]);
+
+    // Fetch firm information from account API
+    useEffect(() => {
+        const fetchFirmInfo = async () => {
+            try {
+                const response = await profileAPI.getUserAccount();
+                let userInfo = response;
+                if (response.user) {
+                    userInfo = response.user;
+                } else if (response.data) {
+                    userInfo = response.data;
+                }
+                
+                const firmData = userInfo.firm || response.firm || null;
+                const primaryRole = userInfo.primary_role || userInfo.role || null;
+                setFirmInfo(firmData);
+                setUserRole(primaryRole);
+            } catch (error) {
+                console.error('Error fetching firm information:', error);
+                // Don't show error toast - this is optional information
+            }
+        };
+        
+        fetchFirmInfo();
+    }, []);
 
     const syncHeaderProfile = (data) => {
         if (typeof window === "undefined") return;
@@ -537,6 +564,84 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             )}
                         </div>
                     </div>
+
+                    {/* Firm Information - Show only if user is not firm admin or super admin */}
+                    {firmInfo && userRole && userRole !== 'firm' && userRole !== 'admin' && userRole !== 'super_admin' && (
+                        <div className="mt-4 pt-4 border-top border-[#E8F0FF]">
+                            <h6 
+                                className="mb-3"
+                                style={{ 
+                                    color: "#3B4A66", 
+                                    fontSize: "16px", 
+                                    fontWeight: "600", 
+                                    fontFamily: "BasisGrotesquePro" 
+                                }}
+                            >
+                                Current Firm
+                            </h6>
+                            <div className="row g-3 mb-4">
+                                <div className="col-md-6">
+                                    <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                        Firm Name
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        className="form-control w-full mobile-input" 
+                                        value={firmInfo.name || ''}
+                                        disabled
+                                        style={{ 
+                                            color: "#6B7280", 
+                                            fontSize: "13px", 
+                                            fontWeight: "400", 
+                                            fontFamily: "BasisGrotesquePro",
+                                            backgroundColor: "#F9FAFB",
+                                            cursor: "not-allowed"
+                                        }}
+                                    />
+                                </div>
+                                <div className="col-md-3">
+                                    <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                        Status
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        className="form-control w-full mobile-input" 
+                                        value={firmInfo.status ? firmInfo.status.charAt(0).toUpperCase() + firmInfo.status.slice(1) : ''}
+                                        disabled
+                                        style={{ 
+                                            color: "#6B7280", 
+                                            fontSize: "13px", 
+                                            fontWeight: "400", 
+                                            fontFamily: "BasisGrotesquePro",
+                                            backgroundColor: "#F9FAFB",
+                                            cursor: "not-allowed"
+                                        }}
+                                    />
+                                </div>
+                                {firmInfo.subdomain && (
+                                    <div className="col-md-3">
+                                        <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                            Subdomain
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control w-full mobile-input" 
+                                            value={firmInfo.subdomain || ''}
+                                            disabled
+                                            style={{ 
+                                                color: "#6B7280", 
+                                                fontSize: "13px", 
+                                                fontWeight: "400", 
+                                                fontFamily: "BasisGrotesquePro",
+                                                backgroundColor: "#F9FAFB",
+                                                cursor: "not-allowed"
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mt-1">
                         <button

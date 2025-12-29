@@ -25,6 +25,8 @@ import CalendarPage from './pages/Calender/Calender';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
 import ESignatureDashboard from './pages/ESignature/ESignatureDashboard';
 import TaxPreparerBilling from './pages/Billing/TaxPreparerBilling';
+import TaxPreparerWorkflows from './pages/Workflow/TaxPreparerWorkflows';
+import WorkflowInstanceView from '../FirmAdmin/Pages/Workflow/WorkflowInstanceView';
 
 // Protected Route Component for Admin/Tax Preparer
 function AdminProtectedRoute({ children }) {
@@ -183,6 +185,16 @@ export default function TaxRoutes() {
             <Route path="schedule" element={<SchedulePage />} />
             <Route path="esign-logs" element={<ClientESignLogs />} />
           </Route>
+        </Route>
+
+        {/* Workflows */}
+        <Route path="workflows" element={
+          <PermissionProtectedRoute requiredGroup="workflow">
+            <Outlet />
+          </PermissionProtectedRoute>
+        }>
+          <Route index element={<TaxPreparerWorkflows />} />
+          <Route path=":instanceId" element={<WorkflowInstanceView />} />
         </Route>
         
         {/* Add more routes here as needed */}

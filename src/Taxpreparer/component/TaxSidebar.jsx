@@ -138,6 +138,21 @@ export default function TaxSidebar({ isSidebarOpen = true }) {
           </li>
           )}
 
+          {isFeatureVisible('workflow') && (
+          <li className="mb-2">
+            <Link to="/taxdashboard/workflows" className={linkClass("/taxdashboard/workflows")}>
+              <span className={iconWrapperClass("/taxdashboard/workflows")}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9C3 10.1046 3.89543 11 5 11H9C10.1046 11 11 10.1046 11 9V5C11 3.89543 10.1046 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7 11V15C7 15.5304 7.21071 16.0391 7.58579 16.4142C7.96086 16.7893 8.46957 17 9 17H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 13H15C13.8954 13 13 13.8954 13 15V19C13 20.1046 13.8954 21 15 21H19C20.1046 21 21 20.1046 21 19V15C21 13.8954 20.1046 13 19 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+              Workflows
+            </Link>
+          </li>
+          )}
+
           {hasTaxPreparerPermission('create_invoices') && (
           <li className="mb-2">
             <Link to="/taxdashboard/billing" className={linkClass("/taxdashboard/billing")}>

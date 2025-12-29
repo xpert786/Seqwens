@@ -3343,6 +3343,17 @@ export const firmAdminClientsAPI = {
   // Send invite notifications
   sendInvite: async (inviteId, payload) => {
     return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/send/`, 'POST', payload);
+  },
+
+  // Get pending client invites
+  getPendingInvites: async (params = {}) => {
+    const { page = 1, page_size = 20, search } = params;
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    if (search) queryParams.append('search', search);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/firm-admin/clients/invites/pending/${queryString ? `?${queryString}` : ''}`, 'GET');
   }
 };
 
@@ -3511,6 +3522,11 @@ export const firmAdminStaffAPI = {
   // Get firm with tax preparers (for assign staff dropdown)
   getFirmWithTaxPreparers: async () => {
     return await apiRequest('/firm/with-tax-preparers/', 'GET');
+  },
+
+  // List tax preparers (new API)
+  listTaxPreparers: async () => {
+    return await apiRequest('/firm/tax-preparers/list/', 'GET');
   },
   // Get activity logs for a staff member
   getStaffActivityLogs: async (staffId, params = {}) => {
@@ -6573,6 +6589,16 @@ export const workflowAPI = {
     return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'GET');
   },
 
+  // Get workflow instance with description and logs
+  getInstanceDescriptionLogs: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/description-logs/`, 'GET');
+  },
+
+  // Get workflow statistics
+  getWorkflowStatistics: async () => {
+    return await apiRequest('/taxpayer/firm/workflows/statistics/', 'GET');
+  },
+
   // Start workflow for tax case
   startWorkflow: async (workflowData) => {
     return await apiRequest('/taxpayer/firm/workflows/instances/', 'POST', workflowData);
@@ -6596,6 +6622,105 @@ export const workflowAPI = {
   // Complete workflow
   completeWorkflow: async (instanceId) => {
     return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/complete/`, 'POST');
+  },
+
+  // Delete workflow instance
+  deleteWorkflowInstance: async (instanceId) => {
+    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'DELETE');
+  },
+
+  // Taxpayer Workflow APIs
+  // Get taxpayer workflow
+  getTaxpayerWorkflow: async () => {
+    return await apiRequest('/taxpayer/workflow/', 'GET');
+  },
+
+  // Get workflow instance with documents
+  getWorkflowInstanceWithDocuments: async (instanceId) => {
+    return await apiRequest(`/taxpayer/workflows/instances/${instanceId}/documents/`, 'GET');
+  },
+
+  // Document Request APIs
+  // Create document request
+  createDocumentRequest: async (requestData) => {
+    return await apiRequest('/taxpayer/workflows/document-requests/create/', 'POST', requestData);
+  },
+
+  // Upload document for request
+  uploadDocumentForRequest: async (requestId, file, onProgress) => {
+    const token = getAccessToken() || AUTH_TOKEN;
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      // Track upload progress
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded / e.total) * 100);
+            onProgress(progress);
+          }
+        });
+      }
+      
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (e) {
+            resolve({ success: true, data: xhr.responseText });
+          }
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText);
+            reject(new Error(error.message || error.detail || `HTTP error! status: ${xhr.status}`));
+          } catch (e) {
+            reject(new Error(`HTTP error! status: ${xhr.status}`));
+          }
+        }
+      });
+      
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error'));
+      });
+      
+      xhr.open('POST', `${API_BASE_URL}/taxpayer/workflows/document-requests/${requestId}/upload/`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      // Don't set Content-Type for FormData - let browser set it with boundary
+      xhr.send(formData);
+    });
+  },
+
+  // Verify documents
+  verifyDocuments: async (requestId, verified, notes) => {
+    return await apiRequest('/taxpayer/workflows/document-requests/verify/', 'POST', {
+      document_request_id: requestId,
+      verified: verified,
+      notes: notes || ''
+    });
+  },
+
+  // Get document request details
+  getDocumentRequest: async (requestId) => {
+    return await apiRequest(`/taxpayer/workflows/document-requests/${requestId}/`, 'GET');
+  },
+
+  // List document requests
+  listDocumentRequests: async (params = {}) => {
+    const { workflow_instance_id, status } = params;
+    const queryParams = new URLSearchParams();
+    if (workflow_instance_id) queryParams.append('workflow_instance_id', workflow_instance_id);
+    if (status) queryParams.append('status', status);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/workflows/document-requests/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get storage usage
+  getStorageUsage: async () => {
+    return await apiRequest('/accounts/storage/usage/', 'GET');
   },
 
   // Delete workflow instance

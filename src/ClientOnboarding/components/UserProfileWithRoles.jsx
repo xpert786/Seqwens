@@ -163,6 +163,13 @@ export default function UserProfileWithRoles() {
     loadData();
   }, []);
 
+  // Reset image error when profile image changes
+  // This must be before any early returns to maintain hook order
+  const profileImage = userProfile?.profile_picture || userProfile?.profile_image || null;
+  useEffect(() => {
+    setProfileImageError(false);
+  }, [profileImage]);
+
   const handleDeleteRole = (role) => {
     setRoleToDelete(role);
     setShowDeleteConfirm(true);
@@ -316,15 +323,8 @@ export default function UserProfileWithRoles() {
     ? `${userProfile.first_name || ""} ${userProfile.middle_name || ""} ${userProfile.last_name || ""}`.trim() || "User"
     : "User";
 
-  const profileImage = userProfile?.profile_picture || userProfile?.profile_image || null;
-
   // Determine if user is firm admin
   const isFirmAdmin = primaryRole === 'firm' || primaryRole === 'admin' || allUserRoles.includes('firm') || allUserRoles.includes('admin');
-
-  // Reset image error when profile image changes
-  React.useEffect(() => {
-    setProfileImageError(false);
-  }, [profileImage]);
 
   return (
     <div style={{ fontFamily: "BasisGrotesquePro" }}>

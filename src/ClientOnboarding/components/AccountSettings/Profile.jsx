@@ -23,6 +23,8 @@ export default function Profile() {
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [profileImageError, setProfileImageError] = useState(false);
+    const [firmInfo, setFirmInfo] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     // Reset image error when profile image changes
     useEffect(() => {
@@ -64,6 +66,12 @@ export default function Profile() {
                     avatar: userInfo.avatar,
                     profile_photo: userInfo.profile_photo
                 });
+                
+                // Extract firm information and user role
+                const firmData = userInfo.firm || response.firm || null;
+                const primaryRole = userInfo.primary_role || userInfo.role || null;
+                setFirmInfo(firmData);
+                setUserRole(primaryRole);
                 
                 // Update state with fetched data from API (this takes precedence)
                 const updatedUserData = {
@@ -627,6 +635,84 @@ export default function Profile() {
                         />
                     </div>
                 </div>
+
+                {/* Firm Information - Show only if user is not firm admin or super admin */}
+                {firmInfo && userRole && userRole !== 'firm' && userRole !== 'admin' && userRole !== 'super_admin' && (
+                    <div className="mt-4 pt-4 border-top border-[#E8F0FF]">
+                        <h6 
+                            className="mb-3"
+                            style={{ 
+                                color: "#3B4A66", 
+                                fontSize: "16px", 
+                                fontWeight: "600", 
+                                fontFamily: "BasisGrotesquePro" 
+                            }}
+                        >
+                            Current Firm
+                        </h6>
+                        <div className="row g-3">
+                            <div className="col-md-6">
+                                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                    Firm Name
+                                </label>
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    value={firmInfo.name || ''}
+                                    disabled
+                                    style={{ 
+                                        color: "#6B7280", 
+                                        fontSize: "13px", 
+                                        fontWeight: "400", 
+                                        fontFamily: "BasisGrotesquePro",
+                                        backgroundColor: "#F9FAFB",
+                                        cursor: "not-allowed"
+                                    }}
+                                />
+                            </div>
+                            <div className="col-md-3">
+                                <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                    Status
+                                </label>
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    value={firmInfo.status ? firmInfo.status.charAt(0).toUpperCase() + firmInfo.status.slice(1) : ''}
+                                    disabled
+                                    style={{ 
+                                        color: "#6B7280", 
+                                        fontSize: "13px", 
+                                        fontWeight: "400", 
+                                        fontFamily: "BasisGrotesquePro",
+                                        backgroundColor: "#F9FAFB",
+                                        cursor: "not-allowed"
+                                    }}
+                                />
+                            </div>
+                            {firmInfo.subdomain && (
+                                <div className="col-md-3">
+                                    <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
+                                        Subdomain
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        className="form-control" 
+                                        value={firmInfo.subdomain || ''}
+                                        disabled
+                                        style={{ 
+                                            color: "#6B7280", 
+                                            fontSize: "13px", 
+                                            fontWeight: "400", 
+                                            fontFamily: "BasisGrotesquePro",
+                                            backgroundColor: "#F9FAFB",
+                                            cursor: "not-allowed"
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="mt-4">
                     <button

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 import { MailIcon, CallIcon, WatIcon, DollerIcon, AppointIcon, DoccIcon } from '../../Components/icons';
 import OverviewTab from './ClientTabs/OverviewTab';
 import DocumentsTab from './ClientTabs/DocumentsTab';
@@ -22,6 +25,16 @@ export default function ClientDetails() {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: ''
+  });
+  const [originalFormData, setOriginalFormData] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [phoneCountry, setPhoneCountry] = useState('us');
 
   // Fetch client details from API
   const fetchClientDetails = useCallback(async () => {
@@ -55,6 +68,17 @@ export default function ClientDetails() {
 
       if (result.success && result.data) {
         setClient(result.data);
+        // Initialize edit form data
+        const profile = result.data.profile || {};
+        const contact = result.data.contact_details || {};
+        const initialFormData = {
+          first_name: profile.first_name || result.data.personal_information?.first_name || '',
+          last_name: profile.last_name || result.data.personal_information?.last_name || '',
+          email: profile.email || contact.email || '',
+          phone_number: profile.phone || contact.phone || ''
+        };
+        setEditFormData(initialFormData);
+        setOriginalFormData(initialFormData);
       } else {
         throw new Error('Invalid response format');
       }
@@ -86,17 +110,91 @@ export default function ClientDetails() {
     };
   }, [showDropdown]);
 
+  // Handle edit form changes
+  const handleEditFormChange = (field, value) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle save changes
+  const handleSaveChanges = async () => {
+    if (!id || !editFormData) return;
+
+    try {
+      setSaving(true);
+      
+      // Build payload with only changed fields
+      const payload = {};
+      if (editFormData.first_name !== originalFormData.first_name) {
+        payload.first_name = editFormData.first_name;
+      }
+      if (editFormData.last_name !== originalFormData.last_name) {
+        payload.last_name = editFormData.last_name;
+      }
+      if (editFormData.email !== originalFormData.email) {
+        payload.email = editFormData.email;
+      }
+      if (editFormData.phone_number !== originalFormData.phone_number) {
+        payload.phone = editFormData.phone_number;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        toast.info('No changes to save', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setIsEditMode(false);
+        return;
+      }
+
+      const response = await firmAdminClientsAPI.updateClient(id, payload);
+      
+      if (response.success) {
+        toast.success('Client details updated successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setIsEditMode(false);
+        setOriginalFormData({ ...editFormData });
+        // Refresh client data
+        await fetchClientDetails();
+      } else {
+        throw new Error(response.message || 'Failed to update client');
+      }
+    } catch (err) {
+      console.error('Error updating client:', err);
+      toast.error(handleAPIError(err) || 'Failed to update client details', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    if (originalFormData) {
+      setEditFormData({ ...originalFormData });
+    }
+  };
+
   // Map API data to component format
   const clientData = client ? {
     id: client.profile?.id || client.id,
     initials: client.profile?.initials || '',
-    name: client.profile?.name || client.personal_information?.name || (client.profile?.first_name && client.profile?.last_name ? `${client.profile.first_name} ${client.profile.last_name}` : '') || 'Unknown Client',
-    firstName: client.profile?.first_name || client.personal_information?.first_name || '',
-    lastName: client.profile?.last_name || client.personal_information?.last_name || '',
+    name: isEditMode && editFormData 
+      ? `${editFormData.first_name} ${editFormData.last_name}`.trim() || 'Unknown Client'
+      : client.profile?.name || client.personal_information?.name || (client.profile?.first_name && client.profile?.last_name ? `${client.profile.first_name} ${client.profile.last_name}` : '') || 'Unknown Client',
+    firstName: isEditMode && editFormData ? editFormData.first_name : (client.profile?.first_name || client.personal_information?.first_name || ''),
+    lastName: isEditMode && editFormData ? editFormData.last_name : (client.profile?.last_name || client.personal_information?.last_name || ''),
     profilePicture: client.profile?.profile_picture_url || null,
-    email: client.profile?.email || client.contact_details?.email || '',
-    phone: client.profile?.phone_formatted || client.contact_details?.phone_formatted || client.profile?.phone || client.contact_details?.phone || '',
-    phoneRaw: client.profile?.phone || client.contact_details?.phone || '',
+    email: isEditMode && editFormData ? editFormData.email : (client.profile?.email || client.contact_details?.email || ''),
+    phone: isEditMode && editFormData ? editFormData.phone_number : (client.profile?.phone_formatted || client.contact_details?.phone_formatted || client.profile?.phone || client.contact_details?.phone || ''),
+    phoneRaw: isEditMode && editFormData ? editFormData.phone_number : (client.profile?.phone || client.contact_details?.phone || ''),
     ssn: client.personal_information?.ssn || '',
     ssnValue: client.personal_information?.ssn_value || '',
     status: client.account_details?.status || client.profile?.account_status?.toLowerCase() || 'active',
@@ -249,7 +347,28 @@ export default function ClientDetails() {
           <div className="flex-1">
             {/* Name and Status Badge */}
             <div className="flex items-center gap-3 mb-4">
-              <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">{clientData.name}</h3>
+              {isEditMode ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="text"
+                    value={editFormData.first_name}
+                    onChange={(e) => handleEditFormChange('first_name', e.target.value)}
+                    placeholder="First Name"
+                    className="px-3 py-2 text-xl font-bold text-gray-900 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                    style={{ width: '150px' }}
+                  />
+                  <input
+                    type="text"
+                    value={editFormData.last_name}
+                    onChange={(e) => handleEditFormChange('last_name', e.target.value)}
+                    placeholder="Last Name"
+                    className="px-3 py-2 text-xl font-bold text-gray-900 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                    style={{ width: '150px' }}
+                  />
+                </div>
+              ) : (
+                <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">{clientData.name}</h3>
+              )}
               <span className={`px-3 py-1 text-xs font-semibold rounded-full text-white font-[BasisGrotesquePro] ${clientData.status === 'active' ? 'bg-[#22C55E]' :
                 clientData.status === 'pending' ? 'bg-[#F59E0B]' :
                   'bg-gray-500'
@@ -263,18 +382,46 @@ export default function ClientDetails() {
               {/* Email - Row 1, Col 1 */}
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Email</div>
-                <div className="flex items-center gap-2">
-                  <MailIcon />
-                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.email}</span>
-                </div>
+                {isEditMode ? (
+                  <div className="flex items-center gap-2">
+                    <MailIcon />
+                    <input
+                      type="email"
+                      value={editFormData.email}
+                      onChange={(e) => handleEditFormChange('email', e.target.value)}
+                      className="flex-1 px-2 py-1 text-sm text-gray-900 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <MailIcon />
+                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.email}</span>
+                  </div>
+                )}
               </div>
               {/* Phone - Row 1, Col 2 */}
               <div>
                 <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Phone</div>
-                <div className="flex items-center gap-2">
-                  <CallIcon />
-                  <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.phone}</span>
-                </div>
+                {isEditMode ? (
+                  <div className="flex items-center gap-2">
+                    <CallIcon />
+                    <PhoneInput
+                      country={phoneCountry}
+                      value={editFormData.phone_number || ''}
+                      onChange={(phone) => handleEditFormChange('phone_number', phone)}
+                      onCountryChange={(countryCode) => setPhoneCountry(countryCode.toLowerCase())}
+                      inputClass="flex-1 px-2 py-1 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
+                      containerClass="phone-input-container"
+                      enableSearch={true}
+                      countryCodeEditable={false}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <CallIcon />
+                    <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.phone}</span>
+                  </div>
+                )}
               </div>
               {/* Filing Status - Row 2, Col 1 */}
               <div>
@@ -291,13 +438,50 @@ export default function ClientDetails() {
 
           {/* Right Side - Action Buttons */}
           <div className="flex items-center gap-3">
-            <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.8332 1.16797L8.91649 12.3585C8.85665 12.5295 8.61852 12.5392 8.54495 12.3736L6.4165 7.58464M12.8332 1.16797L1.64265 5.08465C1.47168 5.14449 1.46197 5.38262 1.62749 5.45619L6.4165 7.58464M12.8332 1.16797L6.4165 7.58464" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-
-              Send Message
-            </button>
+            {isEditMode ? (
+              <>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={saving}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 !rounded-lg hover:bg-gray-300 transition font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={saving}
+                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsEditMode(true)}
+                  className="px-4 py-2 bg-[#3AD6F2] text-white !rounded-lg hover:bg-[#00C0C6] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 1.75H3.5C3.08579 1.75 2.75 2.08579 2.75 2.5V11.5C2.75 11.9142 3.08579 12.25 3.5 12.25H12.5C12.9142 12.25 13.25 11.9142 13.25 11.5V6" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M10.2813 1.2199C10.5797 0.92153 10.9844 0.753906 11.4063 0.753906C11.8283 0.753906 12.233 0.92153 12.5313 1.2199C12.8297 1.51826 12.9973 1.92294 12.9973 2.3449C12.9973 2.76685 12.8297 3.17153 12.5313 3.4699L6.77157 10.2304C6.59348 10.4083 6.37347 10.5386 6.13182 10.6091L3.97707 11.2391C3.91253 11.258 3.84412 11.2591 3.779 11.2424C3.71388 11.2257 3.65444 11.1918 3.60691 11.1443C3.55937 11.0968 3.52549 11.0373 3.5088 10.9722C3.49212 10.9071 3.49325 10.8387 3.51207 10.7741L4.14207 8.6194C4.21297 8.37793 4.34347 8.15819 4.52157 7.9804L10.2813 1.2199Z" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Edit
+                </button>
+                <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.8332 1.16797L8.91649 12.3585C8.85665 12.5295 8.61852 12.5392 8.54495 12.3736L6.4165 7.58464M12.8332 1.16797L1.64265 5.08465C1.47168 5.14449 1.46197 5.38262 1.62749 5.45619L6.4165 7.58464M12.8332 1.16797L6.4165 7.58464" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Send Message
+                </button>
+              </>
+            )}
             {/* <div className="relative dropdown-container">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -372,7 +556,14 @@ export default function ClientDetails() {
 
       {/* Tab Content */}
       {activeTab === 'Overview' && (
-        <OverviewTab client={clientData} />
+        <OverviewTab 
+          client={clientData} 
+          isEditMode={isEditMode}
+          editFormData={editFormData}
+          onEditFormChange={handleEditFormChange}
+          phoneCountry={phoneCountry}
+          onPhoneCountryChange={setPhoneCountry}
+        />
       )}
 
       {activeTab === 'Documents' && (

@@ -1,34 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { workflowAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import { getStorage } from '../../../ClientOnboarding/utils/userUtils';
 
 const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
   const { instanceId } = useParams();
+  const navigate = useNavigate();
   const [instance, setInstance] = useState(initialInstance);
   const [loading, setLoading] = useState(!initialInstance);
   const [advancing, setAdvancing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [executionLogs, setExecutionLogs] = useState([]);
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [stageDescription, setStageDescription] = useState('');
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      // Determine the correct back path based on current route
+      const path = window.location.pathname;
+      if (path.includes('/taxdashboard/workflows')) {
+        navigate('/taxdashboard/workflows');
+      } else if (path.includes('/firmadmin/workflows')) {
+        navigate('/firmadmin/workflows');
+      } else {
+        window.history.back();
+      }
+    }
+  };
 
   useEffect(() => {
-    if (instanceId && !initialInstance) {
+    const instanceIdToFetch = instanceId || initialInstance?.id;
+    if (instanceIdToFetch) {
       fetchInstance();
     } else if (initialInstance) {
       setInstance(initialInstance);
       setLoading(false);
     }
-  }, [instanceId, initialInstance]);
+  }, [instanceId]);
 
   const fetchInstance = async () => {
     try {
       setLoading(true);
-      const response = await workflowAPI.getInstance(instanceId);
-      if (response.success) {
+      const idToFetch = instanceId || instance?.id || initialInstance?.id;
+      if (!idToFetch) {
+        throw new Error('No instance ID available');
+      }
+      
+      // Use the description-logs endpoint to get full details
+      const response = await workflowAPI.getInstanceDescriptionLogs(idToFetch);
+      if (response.success && response.data) {
         setInstance(response.data);
+        // Extract execution logs
+        setExecutionLogs(response.data.execution_logs || []);
+        // Extract descriptions
+        setTemplateDescription(response.data.template_description || 
+                              response.data.workflow_template_details?.description || 
+                              '');
+        setStageDescription(response.data.current_stage_description || 
+                          response.data.current_stage_details?.description || 
+                          '');
       } else {
-        throw new Error(response.message || 'Failed to fetch workflow instance');
+        // Fallback to regular getInstance if description-logs fails
+        const fallbackResponse = await workflowAPI.getInstance(idToFetch);
+        if (fallbackResponse.success) {
+          setInstance(fallbackResponse.data);
+          setExecutionLogs([]);
+        } else {
+          throw new Error(fallbackResponse.message || 'Failed to fetch workflow instance');
+        }
       }
     } catch (error) {
       console.error('Error fetching instance:', error);
@@ -72,9 +116,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
           autoClose: 3000,
         });
         setShowDeleteConfirm(false);
-        if (onBack) {
-          onBack();
-        }
+        handleBack();
       } else {
         throw new Error(response.message || 'Failed to delete workflow instance');
       }
@@ -142,7 +184,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
         <div className="text-center py-12">
           <p className="text-gray-500">Workflow instance not found</p>
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors"
             style={{ borderRadius: '8px' }}
           >
@@ -156,6 +198,11 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
   const progressPercentage = instance.progress_percentage || 0;
   const currentStageIndex = instance.current_stage_index || 0;
 
+  // Check if user is admin (can delete workflows)
+  const storage = getStorage();
+  const userType = storage?.getItem("userType");
+  const canDelete = userType === 'admin' || userType === 'super_admin';
+
   return (
     <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6">
       <div className="max-w-5xl mx-auto">
@@ -164,7 +211,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
               <button
-                onClick={onBack}
+                onClick={handleBack}
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2 font-[BasisGrotesquePro]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,24 +220,29 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 Back to Workflows
               </button>
               <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">
-                {instance.tax_case?.name || 'Unknown Client'} - {instance.workflow_template?.name || 'Unknown Workflow'}
+                {instance.tax_case_name || instance.tax_case?.name || 'Unknown Client'} - {instance.template_name || instance.workflow_template?.name || 'Unknown Workflow'}
               </h3>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                <span>Status: <span className="font-medium">{instance.status}</span></span>
+                <span>Status: <span className="font-medium">{instance.status_display || instance.status || 'Active'}</span></span>
                 {instance.started_at && (
                   <span>Started: {new Date(instance.started_at).toLocaleDateString()}</span>
                 )}
+                {instance.tax_case_email && (
+                  <span>Email: {instance.tax_case_email}</span>
+                )}
               </div>
             </div>
-            <div className="ml-4">
-              <button
-                onClick={handleDeleteClick}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
-                style={{ borderRadius: '8px' }}
-              >
-                Delete
-              </button>
-            </div>
+            {canDelete && (
+              <div className="ml-4">
+                <button
+                  onClick={handleDeleteClick}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
+                  style={{ borderRadius: '8px' }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Progress Bar */}
@@ -207,6 +259,78 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
             </div>
           </div>
         </div>
+
+        {/* Template and Stage Descriptions */}
+        {(templateDescription || stageDescription) && (
+          <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 mb-6">
+            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">Details</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {templateDescription && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Template Description</p>
+                  <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">{templateDescription}</p>
+                </div>
+              )}
+              {stageDescription && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1 font-[BasisGrotesquePro]">Current Stage Description</p>
+                  <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">{stageDescription}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Execution Logs */}
+        {executionLogs.length > 0 && (
+          <div className="bg-white rounded-lg border border-[#E8F0FF] p-4 mb-6">
+            <h4 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">
+              Execution Logs ({executionLogs.length})
+            </h4>
+            <div className="space-y-3">
+              {executionLogs.map((log) => {
+                const performedByName = log.performed_by_name || 
+                                      log.performed_by_details?.name ||
+                                      (log.performed_by_details?.first_name && log.performed_by_details?.last_name
+                                        ? `${log.performed_by_details.first_name} ${log.performed_by_details.last_name}`.trim()
+                                        : 'Unknown');
+                const actionType = log.action_type_display || log.action_type || 'Action';
+                const stageName = log.details?.stage_name || 'N/A';
+                
+                return (
+                  <div
+                    key={log.id}
+                    className="border-l-4 border-[#3AD6F2] pl-4 py-3 bg-gray-50 rounded-r-lg"
+                    style={{ borderRadius: '0 8px 8px 0' }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                            {actionType}
+                          </span>
+                          {log.details?.stage_name && (
+                            <span className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                              - {stageName}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-600 mb-1 font-[BasisGrotesquePro]">
+                          Performed by: <span className="font-medium">{performedByName}</span>
+                        </div>
+                        {log.created_at && (
+                          <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">
+                            {new Date(log.created_at).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Timeline */}
         <div className="bg-white rounded-lg border border-[#E8F0FF] p-4">

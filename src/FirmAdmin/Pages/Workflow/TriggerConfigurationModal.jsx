@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { TRIGGER_TYPES, EVENT_TYPES } from './workflowConstants';
 
-const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
+const TriggerConfigurationModal = ({ isOpen, onClose, onSave, stages = [], currentStageId = null }) => {
   const [triggerType, setTriggerType] = useState('time_based');
   const [timeConfig, setTimeConfig] = useState({
     wait_days: 7,
@@ -46,7 +47,7 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999, position: 'fixed' }}>
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ borderRadius: '12px' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
@@ -74,8 +75,11 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
               onChange={(e) => setTriggerType(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
             >
-              <option value="time_based">Time-based</option>
-              <option value="event_based">Event-based</option>
+              {TRIGGER_TYPES.map((trigger) => (
+                <option key={trigger.value} value={trigger.value}>
+                  {trigger.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -103,15 +107,27 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
                   <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
                     Then advance to stage
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={timeConfig.target_stage_id || ''}
-                    onChange={(e) => setTimeConfig({ ...timeConfig, target_stage_id: e.target.value })}
-                    placeholder="Stage name or ID"
+                    onChange={(e) => setTimeConfig({ ...timeConfig, target_stage_id: e.target.value || null })}
                     className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                  />
+                  >
+                    <option value="">Next Stage (Default)</option>
+                    {stages && stages.length > 0 ? (
+                      stages
+                        .filter(stage => stage.id !== currentStageId) // Exclude current stage
+                        .sort((a, b) => (a.stage_order || 0) - (b.stage_order || 0)) // Sort by order
+                        .map((stage) => (
+                          <option key={stage.id} value={stage.id}>
+                            {stage.name || `Stage ${stage.stage_order + 1}`} {stage.id ? `(ID: ${stage.id})` : ''}
+                          </option>
+                        ))
+                    ) : (
+                      <option value="" disabled>No stages available</option>
+                    )}
+                  </select>
                   <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-                    Leave empty to advance to next stage
+                    Select a stage to advance to, or leave as "Next Stage" for default behavior
                   </p>
                 </div>
               </div>
@@ -132,25 +148,38 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave }) => {
                     onChange={(e) => setEventConfig({ ...eventConfig, event_type: e.target.value })}
                     className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
                   >
-                    <option value="task_completed">Task Completed</option>
-                    <option value="document_uploaded">Document Uploaded</option>
-                    <option value="esign_completed">E-Signature Completed</option>
-                    <option value="all_actions_completed">All Actions Completed</option>
+                    {EVENT_TYPES.map((event) => (
+                      <option key={event.value} value={event.value}>
+                        {event.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2 font-[BasisGrotesquePro]">
                     Then advance to stage
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={eventConfig.target_stage_id || ''}
-                    onChange={(e) => setEventConfig({ ...eventConfig, target_stage_id: e.target.value })}
-                    placeholder="Stage name or ID"
+                    onChange={(e) => setEventConfig({ ...eventConfig, target_stage_id: e.target.value || null })}
                     className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
-                  />
+                  >
+                    <option value="">Next Stage (Default)</option>
+                    {stages && stages.length > 0 ? (
+                      stages
+                        .filter(stage => stage.id !== currentStageId) // Exclude current stage
+                        .sort((a, b) => (a.stage_order || 0) - (b.stage_order || 0)) // Sort by order
+                        .map((stage) => (
+                          <option key={stage.id} value={stage.id}>
+                            {stage.name || `Stage ${stage.stage_order + 1}`} {stage.id ? `(ID: ${stage.id})` : ''}
+                          </option>
+                        ))
+                    ) : (
+                      <option value="" disabled>No stages available</option>
+                    )}
+                  </select>
                   <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
-                    Leave empty to advance to next stage
+                    Select a stage to advance to, or leave as "Next Stage" for default behavior
                   </p>
                 </div>
                 <div>

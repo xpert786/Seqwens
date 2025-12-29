@@ -12,7 +12,7 @@ import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 import StartWorkflowModal from '../Workflow/StartWorkflowModal';
 import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminStaffAPI, firmAdminClientsAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
@@ -95,6 +95,12 @@ export default function ClientManage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState('true'); // 'true' for active, 'false' for inactive, 'all' for all
+
+  // Pending invites state
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [pendingInvitesLoading, setPendingInvitesLoading] = useState(false);
+  const [pendingInvitesError, setPendingInvitesError] = useState(null);
   // Filter states
   const [statusFilters, setStatusFilters] = useState({
     allStatus: false,
@@ -188,25 +194,33 @@ export default function ClientManage() {
         setStaffLoading(true);
         setStaffError(null);
 
-        const result = await firmAdminStaffAPI.getFirmWithTaxPreparers();
+        const result = await firmAdminStaffAPI.listTaxPreparers();
 
         if (result.success && result.data && Array.isArray(result.data)) {
           // Transform the data to match the expected format
           const transformedData = result.data.map(item => ({
             id: item.id,
-            name: item.display_name || (item.type === 'firm' ? item.name : `${item.first_name || ''} ${item.last_name || ''}`.trim()),
+            name: item.full_name || `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown',
             email: item.email || '',
-            type: item.type, // 'firm' or 'tax_preparer'
-            ...item // Include all other fields
+            first_name: item.first_name || '',
+            last_name: item.last_name || '',
+            full_name: item.full_name || '',
+            phone_number: item.phone_number || '',
+            role: item.role || '',
+            is_active: item.is_active || false,
+            is_firm_admin: item.is_firm_admin || false,
+            clients_count: item.clients_count || 0,
+            profile_picture_url: item.profile_picture_url || null,
+            type: item.is_firm_admin ? 'firm' : 'tax_preparer' // Map is_firm_admin to type
           }));
           setStaffMembers(transformedData);
-          console.log('Firm and tax preparers loaded:', transformedData);
+          console.log('Tax preparers loaded:', transformedData);
         } else {
           setStaffMembers([]);
         }
       } catch (err) {
-        console.error('Error fetching firm and tax preparers:', err);
-        setStaffError('Failed to load staff members');
+        console.error('Error fetching tax preparers:', err);
+        setStaffError('Failed to load tax preparers');
         setStaffMembers([]);
       } finally {
         setStaffLoading(false);
@@ -243,6 +257,13 @@ export default function ClientManage() {
         const queryParams = new URLSearchParams();
         queryParams.append('page', currentPage.toString());
         queryParams.append('page_size', '10');
+
+        // Add active filter parameter
+        if (activeFilter === 'all') {
+          queryParams.append('active', 'all');
+        } else {
+          queryParams.append('active', activeFilter);
+        }
 
         if (debouncedSearchTerm.trim()) {
           queryParams.append('search', debouncedSearchTerm.trim());
@@ -340,7 +361,14 @@ export default function ClientManage() {
     };
 
     fetchClients();
-  }, [currentPage, debouncedSearchTerm]);
+  }, [currentPage, debouncedSearchTerm, activeFilter]);
+
+  // Reset to page 1 when active filter changes
+  useEffect(() => {
+    if (activeFilter !== undefined) {
+      setCurrentPage(1);
+    }
+  }, [activeFilter]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -367,6 +395,13 @@ export default function ClientManage() {
       const queryParams = new URLSearchParams();
       queryParams.append('page', currentPage.toString());
       queryParams.append('page_size', '10');
+
+      // Add active filter parameter
+      if (activeFilter === 'all') {
+        queryParams.append('active', 'all');
+      } else {
+        queryParams.append('active', activeFilter);
+      }
 
       if (debouncedSearchTerm.trim()) {
         queryParams.append('search', debouncedSearchTerm.trim());
@@ -602,6 +637,13 @@ export default function ClientManage() {
       queryParams.append('page', '1');
       queryParams.append('page_size', '1000'); // Get all clients
 
+      // Add active filter parameter
+      if (activeFilter === 'all') {
+        queryParams.append('active', 'all');
+      } else {
+        queryParams.append('active', activeFilter);
+      }
+
       if (debouncedSearchTerm.trim()) {
         queryParams.append('search', debouncedSearchTerm.trim());
       }
@@ -778,33 +820,33 @@ export default function ClientManage() {
   };
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
+    <div className="p-4 sm:p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
-      <div className="d-flex justify-content-between align-items-center clientmanage-header">
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 clientmanage-header mb-4">
         <div className="clientmanage-header-content">
           <h2 className="taxdashboard-title clientmanage-header-title">Client Management</h2>
           <h5 className="taxdashboard-subtitle clientmanage-header-subtitle">Manage all firm clients and assignments</h5>
         </div>
-        <div className="d-flex gap-3 clientmanage-buttons-container">
+        <div className="d-flex flex-wrap gap-2 sm:gap-3 clientmanage-buttons-container w-100 sm:w-auto">
           {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
             <SettingIcon />
             Build Intake Forms
           </button> */}
           {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }}
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }}
               onClick={() => setShowBulkImportModal(true)}>
               <BulkImport />
-              Bulk Import
+              <span className="d-none d-sm-inline">Bulk Import</span>
             </button>
           )}
-          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
+          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
             <AddClient />
-            Add Client
+            <span className="d-none d-sm-inline">Add Client</span>
           </button>
           {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
               <ExportReport />
-              Export Report
+              <span className="d-none d-sm-inline">Export Report</span>
             </button>
           )}
         </div>
@@ -816,7 +858,7 @@ export default function ClientManage() {
         </div>
       )}
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 mt-4" style={{ gridAutoRows: '1fr' }}>
         {[
           {
             label: "Active Clients",
@@ -850,14 +892,14 @@ export default function ClientManage() {
 
           return (
             <div className="w-full h-full" key={index}>
-              <div className="bg-white p-6 rounded-lg border border-gray-200 h-full flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="text-sm font-medium text-gray-600">{card.label}</div>
+              <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                  <div className="text-xs sm:text-sm font-medium text-gray-600">{card.label}</div>
                   {card.icon}
                 </div>
-                {card.value && <h5 className="text-3xl font-bold text-gray-900 mb-2">{card.value}</h5>}
+                {card.value && <h5 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{card.value}</h5>}
                 {changeValue !== null && (
-                  <p className="text-sm flex items-center gap-1" style={{ color: isPositive ? '#22C55E' : isNegative ? '#EF4444' : '#6B7280' }}>
+                  <p className="text-xs sm:text-sm flex items-center gap-1" style={{ color: isPositive ? '#22C55E' : isNegative ? '#EF4444' : '#6B7280' }}>
                     {isPositive ? (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17l5-5m0 0l-5-5m5 5H6" />
@@ -880,14 +922,84 @@ export default function ClientManage() {
         })}
       </div>
 
+      {/* Pending Invites Section */}
+      {pendingInvites.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 mb-6">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-lg sm:text-xl font-semibold text-gray-900 font-[BasisGrotesquePro] mb-1">
+                  Pending Invites ({pendingInvites.length})
+                </h4>
+                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                  Client invitations awaiting acceptance
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 sm:p-6">
+            {pendingInvitesLoading ? (
+              <div className="text-center py-4">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-sm text-gray-500 font-[BasisGrotesquePro]">Loading invites...</p>
+              </div>
+            ) : pendingInvitesError ? (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {pendingInvitesError}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingInvites.map((invite) => (
+                  <div
+                    key={invite.id}
+                    className="flex items-center justify-between p-4 border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
+                          {invite.email ? invite.email.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 font-[BasisGrotesquePro]">
+                            {invite.email || invite.client_email || 'Unknown'}
+                          </div>
+                          <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                            {invite.first_name || invite.client_first_name ? 
+                              `${invite.first_name || invite.client_first_name} ${invite.last_name || invite.client_last_name || ''}`.trim() 
+                              : 'Client'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 font-[BasisGrotesquePro] ml-13">
+                        Invited: {invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A'}
+                        {invite.expires_at && (
+                          <span className="ml-2">
+                            • Expires: {new Date(invite.expires_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 font-[BasisGrotesquePro]">
+                        Pending
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Client List Section */}
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Section Header */}
-        <div className="p-6">
-          <h4 className="taxdashboardr-titler">
+        <div className="p-4 sm:p-6">
+          <h4 className="taxdashboardr-titler text-lg sm:text-xl">
             All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
           </h4>
-          <h5 className="taxdashboard-subtitle">Complete list of firm clients with status and assignment information</h5>
+          <h5 className="taxdashboard-subtitle text-sm sm:text-base">Complete list of firm clients with status and assignment information</h5>
           {clientsError && (
             <div className="mt-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
               {clientsError}
@@ -896,8 +1008,8 @@ export default function ClientManage() {
         </div>
 
         {/* Toolbar */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-6">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex-1 relative">
               <input
                 type="text"
@@ -926,6 +1038,51 @@ export default function ClientManage() {
                 </button>
               )}
             </div>
+            {/* Active/Inactive Filter Button */}
+            <div className="flex items-center gap-2">
+              <button
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === 'true'
+                    ? 'bg-[#00C0C6] text-white'
+                    : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setActiveFilter('true');
+                  setCurrentPage(1);
+                }}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              >
+                Active
+              </button>
+              <button
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === 'false'
+                    ? 'bg-[#00C0C6] text-white'
+                    : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setActiveFilter('false');
+                  setCurrentPage(1);
+                }}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              >
+                Inactive
+              </button>
+              <button
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === 'all'
+                    ? 'bg-[#00C0C6] text-white'
+                    : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setActiveFilter('all');
+                  setCurrentPage(1);
+                }}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              >
+                All
+              </button>
+            </div>
             {/* <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
@@ -950,7 +1107,7 @@ export default function ClientManage() {
         </div>
 
         {/* Client Table */}
-        <div className="overflow-x-auto px-6">
+        <div className="overflow-x-auto px-4 sm:px-6">
           <table className="min-w-full">
             <thead className="">
               <tr className="flex gap-2 sm:gap-4 md:gap-6 lg:gap-8">
@@ -1475,7 +1632,7 @@ export default function ClientManage() {
           setSelectedClientForWorkflow(null);
         }}
         onSuccess={() => {
-          toast.success('Workflow started successfully!');
+          // Toast is already shown in StartWorkflowModal component, no need to show it again
           // Optionally refresh data or navigate
         }}
         clientId={selectedClientForWorkflow?.id}
@@ -1544,7 +1701,7 @@ export default function ClientManage() {
                     <option value="">Select a tax preparer</option>
                     {staffMembers.map((staff) => (
                       <option key={staff.id} value={staff.id}>
-                        {staff.name} {staff.email ? `(${staff.email})` : ''} {staff.type === 'firm' ? '- Firm' : ''}
+                        {staff.full_name || staff.name} {staff.email ? `(${staff.email})` : ''} {staff.is_firm_admin ? '- Firm Admin' : staff.role ? `- ${staff.role}` : ''}
                       </option>
                     ))}
                   </select>
@@ -1573,9 +1730,9 @@ export default function ClientManage() {
                       const selectElement = document.getElementById('reassign-staff-select');
                       const selectedValue = selectElement?.value;
                       if (selectedValue && selectedClientForReassign) {
-                        // Find the selected staff member to check if it's a firm
+                        // Find the selected staff member to check if it's a firm admin
                         const selectedStaff = staffMembers.find(staff => staff.id.toString() === selectedValue);
-                        const isFirm = selectedStaff?.type === 'firm';
+                        const isFirm = selectedStaff?.is_firm_admin === true;
                         handleReassignTaxPreparer(selectedClientForReassign, selectedValue, isFirm);
                       } else {
                         toast.error('Please select a tax preparer', {

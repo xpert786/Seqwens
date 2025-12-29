@@ -17,16 +17,18 @@ const WorkflowManagement = () => {
   const [selectedInstance, setSelectedInstance] = useState(null);
   const [viewMode, setViewMode] = useState('dashboard'); // 'dashboard', 'template-builder', 'instance-view', 'template-list'
   const [stats, setStats] = useState({
-    total_workflows: 0,
-    active_workflows: 0,
-    avg_completion_time: '0 days',
-    success_rate: '0%'
+    total_workflows: { value: 0, label: 'Total Workflows', subtitle: 'Workflow templates', icon: 'workflow' },
+    active_workflows: { value: 0, label: 'Active Workflows', subtitle: '0% of total workflows', percentage: 0, total_instances: 0, icon: 'active' },
+    avg_completion_time: { value: '0 days', value_days: 0, label: 'Avg. Completion Time', subtitle: 'Average across all workflows', completed_count: 0, icon: 'time' },
+    success_rate: { value: '0%', value_percentage: 0, label: 'Success Rate', subtitle: 'Completion success rate', completed: 0, cancelled: 0, total_finished: 0, icon: 'success' }
   });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (viewMode === 'dashboard' || viewMode === 'template-list') {
       fetchTemplates();
       fetchInstances();
+      fetchStatistics();
     }
   }, [viewMode]);
 
@@ -35,7 +37,6 @@ const WorkflowManagement = () => {
       const response = await workflowAPI.listTemplates();
       if (response.success) {
         setTemplates(response.data || []);
-        calculateStats(response.data || []);
       }
     } catch (error) {
       console.error('Error fetching templates:', error);
@@ -56,15 +57,34 @@ const WorkflowManagement = () => {
     }
   };
 
+  const fetchStatistics = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await workflowAPI.getWorkflowStatistics();
+      if (response.success && response.data) {
+        setStats(response.data);
+      } else {
+        // Fallback to calculate from templates if API fails
+        calculateStats(templates);
+      }
+    } catch (error) {
+      console.error('Error fetching workflow statistics:', error);
+      // Fallback to calculate from templates
+      calculateStats(templates);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const calculateStats = (templatesData) => {
     const total = templatesData.length;
     const active = templatesData.filter(t => t.is_active).length;
-    // Calculate stats from instances if available
+    // Fallback stats structure matching API format
     setStats({
-      total_workflows: total,
-      active_workflows: active,
-      avg_completion_time: '3.2 days', // This would come from API
-      success_rate: '94.2%' // This would come from API
+      total_workflows: { value: total, label: 'Total Workflows', subtitle: 'Workflow templates', icon: 'workflow' },
+      active_workflows: { value: active, label: 'Active Workflows', subtitle: `${total > 0 ? Math.round((active / total) * 100) : 0}% of total workflows`, percentage: total > 0 ? Math.round((active / total) * 100) : 0, total_instances: active, icon: 'active' },
+      avg_completion_time: { value: '0 days', value_days: 0, label: 'Avg. Completion Time', subtitle: 'Average across all workflows', completed_count: 0, icon: 'time' },
+      success_rate: { value: '0%', value_percentage: 0, label: 'Success Rate', subtitle: 'Completion success rate', completed: 0, cancelled: 0, total_finished: 0, icon: 'success' }
     });
   };
 
@@ -158,7 +178,9 @@ const WorkflowManagement = () => {
             {/* Total Workflows Card */}
             <div className="bg-white rounded-lg border border-[#E8F0FF] p-3 sm:p-4 lg:p-6 relative">
               <div className="flex justify-between items-start mb-1.5 sm:mb-2">
-                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">Total Workflows</h6>
+                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">
+                  {stats.total_workflows?.label || 'Total Workflows'}
+                </h6>
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9C3 10.1046 3.89543 11 5 11H9C10.1046 11 11 10.1046 11 9V5C11 3.89543 10.1046 3 9 3Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M7 11V15C7 15.5304 7.21071 16.0391 7.58579 16.4142C7.96086 16.7893 8.46957 17 9 17H13" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -166,53 +188,65 @@ const WorkflowManagement = () => {
                 </svg>
               </div>
               <div className="text-lg sm:text-xl lg:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1 font-[BasisGrotesquePro]">
-                {stats.total_workflows}
+                {statsLoading ? '...' : (stats.total_workflows?.value ?? 0)}
               </div>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">Workflow templates</div>
+              <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">
+                {stats.total_workflows?.subtitle || 'Workflow templates'}
+              </div>
             </div>
 
             {/* Active Workflows Card */}
             <div className="bg-white rounded-lg border border-[#E8F0FF] p-3 sm:p-4 lg:p-6 relative">
               <div className="flex justify-between items-start mb-1.5 sm:mb-2">
-                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">Active Workflows</h6>
+                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">
+                  {stats.active_workflows?.label || 'Active Workflows'}
+                </h6>
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M6 3L20 12L6 21V3Z" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className="text-lg sm:text-xl lg:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1 font-[BasisGrotesquePro]">
-                {stats.active_workflows}
+                {statsLoading ? '...' : (stats.active_workflows?.value ?? 0)}
               </div>
               <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">
-                {stats.total_workflows > 0 ? Math.round((stats.active_workflows / stats.total_workflows) * 100) : 0}% of total workflows
+                {stats.active_workflows?.subtitle || '0% of total workflows'}
               </div>
             </div>
 
             {/* Avg. Completion Time Card */}
             <div className="bg-white rounded-lg border border-[#E8F0FF] p-3 sm:p-4 lg:p-6 relative">
               <div className="flex justify-between items-start mb-1.5 sm:mb-2">
-                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">Avg. Completion Time</h6>
+                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">
+                  {stats.avg_completion_time?.label || 'Avg. Completion Time'}
+                </h6>
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#3AD6F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="text-lg sm:text-xl lg:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1 font-[BasisGrotesquePro]">
-                {stats.avg_completion_time}
+                {statsLoading ? '...' : (stats.avg_completion_time?.value ?? '0 days')}
               </div>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">Average across all workflows</div>
+              <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">
+                {stats.avg_completion_time?.subtitle || 'Average across all workflows'}
+              </div>
             </div>
 
             {/* Success Rate Card */}
             <div className="bg-white rounded-lg border border-[#E8F0FF] p-3 sm:p-4 lg:p-6 relative">
               <div className="flex justify-between items-start mb-1.5 sm:mb-2">
-                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">Success Rate</h6>
+                <h6 className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro]">
+                  {stats.success_rate?.label || 'Success Rate'}
+                </h6>
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22 11.0818V12.0018C21.9988 14.1582 21.3005 16.2565 20.0093 17.9836C18.7182 19.7108 16.9033 20.9743 14.8354 21.5857C12.7674 22.1971 10.5573 22.1237 8.53447 21.3764C6.51168 20.6291 4.78465 19.2479 3.61096 17.4389C2.43727 15.6299 1.87979 13.4899 2.02168 11.3381C2.16356 9.18638 2.99721 7.13814 4.39828 5.49889C5.79935 3.85964 7.69279 2.7172 9.79619 2.24196C11.8996 1.76673 14.1003 1.98415 16.07 2.86182M9.00001 11.0018L12 14.0018L22 4.00182" stroke="#3AD6F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className="text-lg sm:text-lg lg:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1 font-[BasisGrotesquePro]">
-                {stats.success_rate}
+                {statsLoading ? '...' : (stats.success_rate?.value ?? '0%')}
               </div>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">Completion success rate</div>
+              <div className="text-[10px] sm:text-xs text-gray-500 font-[BasisGrotesquePro]">
+                {stats.success_rate?.subtitle || 'Completion success rate'}
+              </div>
             </div>
           </div>
 

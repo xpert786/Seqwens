@@ -662,7 +662,15 @@ export default function Folders({ onFolderSelect }) {
                                                     const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
                                                     const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
                                                     const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
-                                                    const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || doc.category?.name || doc.category || 'General';
+                                                    const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || 'General';
+                                                    // Get category from multiple possible sources
+                                                    const docCategory = doc.category?.name || 
+                                                                      (doc.requested_categories && Array.isArray(doc.requested_categories) && doc.requested_categories.length > 0 
+                                                                        ? doc.requested_categories.map(cat => cat.name || cat).join(', ')
+                                                                        : '') ||
+                                                                      (doc.document_request?.requested_categories && Array.isArray(doc.document_request.requested_categories) && doc.document_request.requested_categories.length > 0
+                                                                        ? doc.document_request.requested_categories.map(cat => cat.name || cat).join(', ')
+                                                                        : '');
                                                     const docStatus = doc.status || 'Pending';
                                                     const docTags = doc.tags || doc.tag_list || [];
                                                     const docVersion = doc.version || '';
@@ -711,19 +719,25 @@ export default function Folders({ onFolderSelect }) {
                                                                 <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
                                                                     Type: {docType} • Size: {formatFileSize(docSize)} • Uploaded: {formatDate(docDate)}
                                                                     {docFolder && ` • Folder: ${docFolder}`}
-                                                                    {doc.category?.name && ` • Category: ${doc.category.name}`}
+                                                                    {docCategory && docCategory.trim() && ` • Category: ${docCategory}`}
                                                                 </div>
 
-                                                                {(docTags.length > 0 || doc.category?.name) && (
+                                                                {(docTags.length > 0 || docCategory) && (
                                                                     <div className="mt-2 d-flex flex-wrap gap-2">
-                                                                        {doc.category?.name && (
+                                                                        {docCategory && docCategory.trim() && docCategory.split(', ').map((category, catIndex) => (
                                                                             <span
+                                                                                key={catIndex}
                                                                                 className="badge rounded-pill bg-white text-dark border"
-                                                                                style={{ fontSize: "0.75rem", fontFamily: "BasisGrotesquePro", padding: "4px 8px" }}
+                                                                                style={{ 
+                                                                                    fontSize: "0.75rem", 
+                                                                                    fontFamily: "BasisGrotesquePro", 
+                                                                                    padding: "4px 8px",
+                                                                                    borderColor: "#E8F0FF"
+                                                                                }}
                                                                             >
-                                                                                {doc.category.name}
+                                                                                {category.trim()}
                                                                             </span>
-                                                                        )}
+                                                                        ))}
                                                                         {docTags.map((tag, tagIdx) => (
                                                                             <span
                                                                                 key={tagIdx}
@@ -1423,7 +1437,15 @@ export default function Folders({ onFolderSelect }) {
                                                 const docSize = doc.file_size_bytes || doc.file_size || doc.size || '0';
                                                 const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
                                                 const docDate = doc.updated_at || doc.updated_at_formatted || doc.created_at || doc.created_at_formatted || doc.date || doc.uploaded_at;
-                                                const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || doc.category?.name || doc.category || 'General';
+                                                const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || 'General';
+                                                // Get category from multiple possible sources
+                                                const docCategory = doc.category?.name || 
+                                                                  (doc.requested_categories && Array.isArray(doc.requested_categories) && doc.requested_categories.length > 0 
+                                                                    ? doc.requested_categories.map(cat => cat.name || cat).join(', ')
+                                                                    : '') ||
+                                                                  (doc.document_request?.requested_categories && Array.isArray(doc.document_request.requested_categories) && doc.document_request.requested_categories.length > 0
+                                                                    ? doc.document_request.requested_categories.map(cat => cat.name || cat).join(', ')
+                                                                    : '');
                                                 const docStatus = doc.status || 'Pending';
                                                 const docTags = doc.tags || doc.tag_list || [];
                                                 const docVersion = doc.version || '';
@@ -1472,19 +1494,25 @@ export default function Folders({ onFolderSelect }) {
                                                             <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
                                                                 Type: {docType} • Size: {formatFileSize(docSize)} • Uploaded: {formatDate(docDate)}
                                                                 {docFolder && ` • Folder: ${docFolder}`}
-                                                                {doc.category?.name && ` • Category: ${doc.category.name}`}
+                                                                {docCategory && docCategory.trim() && ` • Category: ${docCategory}`}
                                                             </div>
 
-                                                            {(docTags.length > 0 || doc.category?.name) && (
+                                                            {(docTags.length > 0 || docCategory) && (
                                                                 <div className="mt-2 d-flex flex-wrap gap-2">
-                                                                    {doc.category?.name && (
+                                                                    {docCategory && docCategory.trim() && docCategory.split(', ').map((category, catIndex) => (
                                                                         <span
+                                                                            key={catIndex}
                                                                             className="badge rounded-pill bg-white text-dark border"
-                                                                            style={{ fontSize: "0.75rem", fontFamily: "BasisGrotesquePro", padding: "4px 8px" }}
+                                                                            style={{ 
+                                                                                fontSize: "0.75rem", 
+                                                                                fontFamily: "BasisGrotesquePro", 
+                                                                                padding: "4px 8px",
+                                                                                borderColor: "#E8F0FF"
+                                                                            }}
                                                                         >
-                                                                            {doc.category.name}
+                                                                            {category.trim()}
                                                                         </span>
-                                                                    )}
+                                                                    ))}
                                                                     {docTags.map((tag, tagIdx) => (
                                                                         <span
                                                                             key={tagIdx}

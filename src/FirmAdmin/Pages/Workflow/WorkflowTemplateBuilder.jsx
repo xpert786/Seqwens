@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import StageActionModal from './StageActionModal';
 import TriggerConfigurationModal from './TriggerConfigurationModal';
 import ReminderConfigurationModal from './ReminderConfigurationModal';
+import { USER_TYPE_GROUPS, TAX_FORM_TYPES } from './workflowConstants';
 
 const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -106,67 +107,176 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
     });
   };
 
+  // Helper function to convert error message to string
+  const errorMessageToString = (msg) => {
+    if (msg === null || msg === undefined) {
+      return 'Unknown error';
+    }
+    if (typeof msg === 'string') {
+      return msg;
+    }
+    if (typeof msg === 'object') {
+      // If it's an array, join it
+      if (Array.isArray(msg)) {
+        return msg.map(m => errorMessageToString(m)).join(', ');
+      }
+      // If it has a message property, use that
+      if (msg.message) {
+        return String(msg.message);
+      }
+      // If it has a detail property, use that
+      if (msg.detail) {
+        return String(msg.detail);
+      }
+      // Try to stringify the object
+      try {
+        return JSON.stringify(msg);
+      } catch (e) {
+        return 'Invalid error format';
+      }
+    }
+    return String(msg);
+  };
+
+  // Helper function to recursively parse nested error objects
+  const parseNestedErrors = (errorObj, prefix = '') => {
+    const messages = [];
+    
+    if (Array.isArray(errorObj)) {
+      errorObj.forEach((item, index) => {
+        if (typeof item === 'object' && item !== null) {
+          messages.push(...parseNestedErrors(item, prefix));
+        } else {
+          const errorMsg = errorMessageToString(item);
+          messages.push(errorMsg);
+        }
+      });
+    } else if (typeof errorObj === 'object' && errorObj !== null) {
+      Object.entries(errorObj).forEach(([key, value]) => {
+        const newPrefix = prefix ? `${prefix}.${key}` : key;
+        
+        if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (typeof item === 'object' && item !== null) {
+              messages.push(...parseNestedErrors(item, `${newPrefix}[${index}]`));
+            } else {
+              const errorMsg = errorMessageToString(item);
+              messages.push(`${newPrefix}: ${errorMsg}`);
+            }
+          });
+        } else if (typeof value === 'object' && value !== null) {
+          messages.push(...parseNestedErrors(value, newPrefix));
+        } else {
+          const errorMsg = errorMessageToString(value);
+          messages.push(`${newPrefix}: ${errorMsg}`);
+        }
+      });
+    } else {
+      const errorMsg = errorMessageToString(errorObj);
+      messages.push(prefix ? `${prefix}: ${errorMsg}` : errorMsg);
+    }
+    
+    return messages;
+  };
+
   // Helper function to parse workflow validation errors
   const parseWorkflowErrors = (error) => {
     const errorMessages = [];
     
-    // Check if error has a response with errors object
-    if (error.response?.data?.errors) {
-      const errors = error.response.data.errors;
-      
-      // Handle stages errors
-      if (errors.stages && Array.isArray(errors.stages)) {
-        errors.stages.forEach((stageError, index) => {
-          if (typeof stageError === 'object' && stageError !== null) {
-            Object.entries(stageError).forEach(([field, messages]) => {
-              const fieldMessages = Array.isArray(messages) ? messages : [messages];
-              const stageName = stages[index]?.name || `Stage ${index + 1}`;
-              fieldMessages.forEach(msg => {
-                errorMessages.push(`${stageName}: ${field} - ${msg}`);
-              });
-            });
-          }
-        });
+    // Get errors from response or direct error object
+    let errors = null;
+    
+    // Check multiple possible locations for errors
+    if (error.response?.data) {
+      // First check if errors object exists (most common case)
+      if (error.response.data.errors) {
+        errors = error.response.data.errors;
+      } 
+      // If response.data itself has stages, it might be the errors object
+      else if (error.response.data.stages) {
+        errors = error.response.data;
       }
-      
-      // Handle other field errors
-      Object.entries(errors).forEach(([field, messages]) => {
-        if (field !== 'stages') {
-          const fieldMessages = Array.isArray(messages) ? messages : [messages];
-          fieldMessages.forEach(msg => {
-            errorMessages.push(`${field}: ${msg}`);
+      // Otherwise use the whole response.data
+      else {
+        errors = error.response.data;
+      }
+    } else if (error.errors) {
+      errors = error.errors;
+    } else if (error.data) {
+      errors = error.data;
+    }
+    
+    if (!errors) {
+      return null;
+    }
+    
+    // Debug logging to help troubleshoot
+    console.log('Parsing workflow errors - errors object:', errors);
+    console.log('Errors structure:', JSON.stringify(errors, null, 2));
+    
+    // Handle stages errors with nested structure
+    if (errors.stages && Array.isArray(errors.stages)) {
+      errors.stages.forEach((stageError, index) => {
+        const stageName = stages[index]?.name || `Stage ${index + 1}`;
+        
+        if (typeof stageError === 'object' && stageError !== null) {
+          // Handle nested errors like actions, triggers, reminders
+          Object.entries(stageError).forEach(([field, fieldErrors]) => {
+            if (Array.isArray(fieldErrors)) {
+              // Handle array of errors (like actions array)
+              fieldErrors.forEach((itemError, itemIndex) => {
+                if (typeof itemError === 'object' && itemError !== null) {
+                  // Nested object errors (like action_type, etc.)
+                  Object.entries(itemError).forEach(([subField, subErrors]) => {
+                    const subErrorMessages = Array.isArray(subErrors) ? subErrors : [subErrors];
+                    subErrorMessages.forEach(subError => {
+                      const errorMsg = errorMessageToString(subError);
+                      errorMessages.push(`${stageName}: ${field}[${itemIndex}].${subField} - ${errorMsg}`);
+                    });
+                  });
+                } else {
+                  const errorMsg = errorMessageToString(itemError);
+                  errorMessages.push(`${stageName}: ${field}[${itemIndex}] - ${errorMsg}`);
+                }
+              });
+            } else if (typeof fieldErrors === 'object' && fieldErrors !== null) {
+              // Handle object errors
+              Object.entries(fieldErrors).forEach(([subField, subErrors]) => {
+                const subErrorMessages = Array.isArray(subErrors) ? subErrors : [subErrors];
+                subErrorMessages.forEach(subError => {
+                  const errorMsg = errorMessageToString(subError);
+                  errorMessages.push(`${stageName}: ${field}.${subField} - ${errorMsg}`);
+                });
+              });
+            } else {
+              const errorMsg = errorMessageToString(fieldErrors);
+              errorMessages.push(`${stageName}: ${field} - ${errorMsg}`);
+            }
           });
+        } else if (typeof stageError === 'string') {
+          errorMessages.push(`${stageName}: ${stageError}`);
         }
       });
     }
     
-    // Check if error has errors property directly (from API response)
-    if (error.errors) {
-      const errors = error.errors;
-      
-      if (errors.stages && Array.isArray(errors.stages)) {
-        errors.stages.forEach((stageError, index) => {
-          if (typeof stageError === 'object' && stageError !== null) {
-            Object.entries(stageError).forEach(([field, messages]) => {
-              const fieldMessages = Array.isArray(messages) ? messages : [messages];
-              const stageName = stages[index]?.name || `Stage ${index + 1}`;
-              fieldMessages.forEach(msg => {
-                errorMessages.push(`${stageName}: ${field} - ${msg}`);
-              });
-            });
-          }
-        });
-      }
-      
-      Object.entries(errors).forEach(([field, messages]) => {
-        if (field !== 'stages') {
-          const fieldMessages = Array.isArray(messages) ? messages : [messages];
-          fieldMessages.forEach(msg => {
-            errorMessages.push(`${field}: ${msg}`);
+    // Handle other field errors (non-stages)
+    Object.entries(errors).forEach(([field, messages]) => {
+      if (field !== 'stages') {
+        if (Array.isArray(messages)) {
+          messages.forEach(msg => {
+            const errorMsg = errorMessageToString(msg);
+            errorMessages.push(`${field}: ${errorMsg}`);
           });
+        } else if (typeof messages === 'object' && messages !== null) {
+          // Recursively parse nested errors
+          const nestedMessages = parseNestedErrors(messages, field);
+          errorMessages.push(...nestedMessages);
+        } else {
+          const errorMsg = errorMessageToString(messages);
+          errorMessages.push(`${field}: ${errorMsg}`);
         }
-      });
-    }
+      }
+    });
     
     return errorMessages.length > 0 ? errorMessages.join('. ') : null;
   };
@@ -234,6 +344,12 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
       }
     } catch (error) {
       console.error('Error saving template:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        errors: error.errors,
+        stack: error.stack
+      });
       
       // Try to parse workflow-specific errors first
       const workflowErrors = parseWorkflowErrors(error);
@@ -244,7 +360,26 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
         });
       } else {
         // Fall back to generic error handling
-        const errorMessage = error.response?.data?.message || error.message || handleAPIError(error) || 'Failed to save workflow template';
+        let errorMessage = 'Failed to save workflow template';
+        
+        if (error.response?.data) {
+          // Try to get message from response
+          if (error.response.data.message) {
+            errorMessage = errorMessageToString(error.response.data.message);
+          } else if (error.response.data.detail) {
+            errorMessage = errorMessageToString(error.response.data.detail);
+          } else if (error.response.data.error) {
+            errorMessage = errorMessageToString(error.response.data.error);
+          }
+        } else if (error.message) {
+          errorMessage = errorMessageToString(error.message);
+        } else {
+          const apiError = handleAPIError(error);
+          if (apiError) {
+            errorMessage = errorMessageToString(apiError);
+          }
+        }
+        
         toast.error(errorMessage);
       }
     } finally {
@@ -323,11 +458,20 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                 disabled={loadingFormTypes}
               >
                 <option value="">Select Tax Form Type</option>
-                {formTypes.map((formType) => (
-                  <option key={formType.value} value={formType.value}>
-                    {formType.label}
-                  </option>
-                ))}
+                {/* Use API form types if available, otherwise use constants */}
+                {formTypes.length > 0 ? (
+                  formTypes.map((formType) => (
+                    <option key={formType.value || formType.id} value={formType.value || formType.id}>
+                      {formType.label || formType.name}
+                    </option>
+                  ))
+                ) : (
+                  TAX_FORM_TYPES.map((formType) => (
+                    <option key={formType.value} value={formType.value}>
+                      {formType.label}
+                    </option>
+                  ))
+                )}
               </select>
               {loadingFormTypes && (
                 <p className="text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">Loading form types...</p>
@@ -425,14 +569,15 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                         User Type
                       </label>
                       <select
-                        value={stage.user_type_group}
+                        value={stage.user_type_group || 'all'}
                         onChange={(e) => handleUpdateStage(stage.id, { user_type_group: e.target.value })}
                         className="w-full px-3 py-2 text-sm border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
                       >
-                        <option value="taxpayer">Taxpayer</option>
-                        <option value="preparer">Preparer</option>
-                        <option value="admin">Admin</option>
-                        <option value="all">All Users</option>
+                        {USER_TYPE_GROUPS.map((group) => (
+                          <option key={group.value} value={group.value}>
+                            {group.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
@@ -473,7 +618,7 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
                                 {action.action_type === 'email' && '📧'}
                                 {action.action_type === 'sms' && '📱'}
                                 {action.action_type === 'task' && '✅'}
-                                {action.action_type === 'document' && '📄'}
+                                {action.action_type === 'document_request' && '📄'}
                                 {action.action_type === 'esign' && '✍️'}
                               </span>
                               <span className="text-sm text-gray-700 font-[BasisGrotesquePro]">
@@ -638,6 +783,8 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
             setShowTriggerModal(false);
             setSelectedStage(null);
           }}
+          stages={stages}
+          currentStageId={selectedStage.id}
         />
       )}
 

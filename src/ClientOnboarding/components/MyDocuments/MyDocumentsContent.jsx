@@ -596,7 +596,14 @@ export default function MyDocumentsContent() {
                                 const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
                                 const docDate = doc.updated_at_formatted || doc.created_at_formatted || doc.updated_at || doc.created_at || doc.date || 'N/A';
                                 const docFolder = doc.folder?.title || doc.folder?.name || doc.folder_name || 'General';
-                                const docCategory = doc.category?.name || '';
+                                // Get category from multiple possible sources
+                                const docCategory = doc.category?.name || 
+                                                  (doc.requested_categories && Array.isArray(doc.requested_categories) && doc.requested_categories.length > 0 
+                                                    ? doc.requested_categories.map(cat => cat.name || cat).join(', ')
+                                                    : '') ||
+                                                  (doc.document_request?.requested_categories && Array.isArray(doc.document_request.requested_categories) && doc.document_request.requested_categories.length > 0
+                                                    ? doc.document_request.requested_categories.map(cat => cat.name || cat).join(', ')
+                                                    : '');
                                 const docStatus = doc.status_display || doc.status || 'Pending';
                                 const docStatusValue = doc.status || 'pending';
                                 const fileUrl = doc.file_url || doc.tax_documents || '';
@@ -649,24 +656,30 @@ export default function MyDocumentsContent() {
                                                             )} */}
                                                         </div>
                                                         <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
-                                                            {/* Type: {docType} • Size: {docSize} • Updated: {docDate} */}
-                                                            {/* {docFolder && docFolder !== 'General' && docFolder !== 'Uncategorized' && ` • Folder: ${docFolder}`} */}
-                                                            {/* {docCategory && docCategory !== 'General' && docCategory !== 'Task Documents' && ` • Category: ${docCategory}`} */}
                                                             Size: {docSize} • Updated: {docDate}
+                                                            {docCategory && docCategory.trim() && (
+                                                                <> • Category: {docCategory}</>
+                                                            )}
                                                         </div>
 
-                                                        {/* {docCategory && docCategory !== 'General' && docCategory !== 'Task Documents' && (
+                                                        {docCategory && docCategory.trim() && (
                                                             <div className="mt-2 d-flex flex-wrap gap-2">
-                                                                {docCategory && (
+                                                                {docCategory.split(', ').map((category, catIndex) => (
                                                                     <span
+                                                                        key={catIndex}
                                                                         className="badge rounded-pill bg-white text-dark border"
-                                                                        style={{ fontSize: "0.75rem", fontFamily: "BasisGrotesquePro", padding: "4px 8px" }}
+                                                                        style={{ 
+                                                                            fontSize: "0.75rem", 
+                                                                            fontFamily: "BasisGrotesquePro", 
+                                                                            padding: "4px 8px",
+                                                                            borderColor: "#E8F0FF"
+                                                                        }}
                                                                     >
-                                                                        {docCategory}
+                                                                        {category.trim()}
                                                                     </span>
-                                                                )}
+                                                                ))}
                                                             </div>
-                                                        )} */}
+                                                        )}
                                                     </div>
                                                 </div>
 
