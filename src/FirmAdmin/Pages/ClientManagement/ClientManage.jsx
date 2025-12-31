@@ -7,6 +7,7 @@ import '../../../Taxpreparer/styles/taxdashboard.css';
 import '../../styles/ClientManage.css';
 import BulkActionModal from './BulkAction';
 import BulkImportModal from './BulkImportModal';
+import BulkTaxpayerImportModal from './BulkTaxpayerImportModal';
 import AddClientModal from "./AddClientModal";
 import IntakeFormBuilderModal from './IntakeFormBuilderModal';
 import StartWorkflowModal from '../Workflow/StartWorkflowModal';
@@ -27,6 +28,7 @@ export default function ClientManage() {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showBulkTaxpayerImportModal, setShowBulkTaxpayerImportModal] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showFormBuilder, setShowFormBuilder] = useState(false);
   const [showReassignStaffModal, setShowReassignStaffModal] = useState(false);
@@ -839,6 +841,13 @@ export default function ClientManage() {
               <span className="d-none d-sm-inline">Bulk Import</span>
             </button>
           )}
+          {!advancedReportingEnabled && (
+            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }}
+              onClick={() => setShowBulkTaxpayerImportModal(true)}>
+              <BulkImport />
+              <span className="d-none d-sm-inline">Bulk Import Taxpayers</span>
+            </button>
+          )}
           <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
             <AddClient />
             <span className="d-none d-sm-inline">Add Client</span>
@@ -1601,10 +1610,19 @@ export default function ClientManage() {
         onClose={() => setShowBulkActionModal(false)}
         selectedCount={0}
       />
-      {/* Bulk Impot modal  */}
+      {/* Bulk Import modal  */}
       <BulkImportModal
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
+        onImportSuccess={async () => {
+          // Refresh clients list after successful import
+          await refreshClientsList();
+        }}
+      />
+      {/* Bulk Taxpayer Import modal  */}
+      <BulkTaxpayerImportModal
+        isOpen={showBulkTaxpayerImportModal}
+        onClose={() => setShowBulkTaxpayerImportModal(false)}
         onImportSuccess={async () => {
           // Refresh clients list after successful import
           await refreshClientsList();

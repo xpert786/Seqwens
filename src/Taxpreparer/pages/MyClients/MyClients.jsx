@@ -8,6 +8,7 @@ import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/co
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError, taxPreparerClientAPI, firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
+import BulkTaxpayerImportModal from "./BulkTaxpayerImportModal";
 import "../../styles/MyClients.css";
 
 export default function MyClients() {
@@ -51,6 +52,7 @@ export default function MyClients() {
   const [showInviteTaxpayerModal, setShowInviteTaxpayerModal] = useState(false);
   const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
   const [showSendInviteModal, setShowSendInviteModal] = useState(false);
+  const [showBulkTaxpayerImportModal, setShowBulkTaxpayerImportModal] = useState(false);
   const [selectedClientForInvite, setSelectedClientForInvite] = useState(null);
   const [inviteLinkForClient, setInviteLinkForClient] = useState(null);
   const [loadingInviteLink, setLoadingInviteLink] = useState(false);
@@ -955,6 +957,21 @@ export default function MyClients() {
           >
             <FaUserPlus size={14} />
             Create Taxpayer
+          </button>
+          <button
+            className="btn btn-primary d-flex align-items-center gap-2"
+            onClick={() => setShowBulkTaxpayerImportModal(true)}
+            style={{
+              backgroundColor: "#F56D2D",
+              borderColor: "#F56D2D",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              fontSize: "14px",
+              fontWeight: "600"
+            }}
+          >
+            <FaPlus size={14} />
+            Bulk Import Taxpayers
           </button>
         </div>
       </div>
@@ -2071,6 +2088,16 @@ export default function MyClients() {
           </div>
         </div>
       )}
+
+      {/* Bulk Taxpayer Import Modal */}
+      <BulkTaxpayerImportModal
+        isOpen={showBulkTaxpayerImportModal}
+        onClose={() => setShowBulkTaxpayerImportModal(false)}
+        onImportSuccess={async () => {
+          // Refresh clients list after successful import
+          await fetchClients();
+        }}
+      />
     </div>
   );
 }

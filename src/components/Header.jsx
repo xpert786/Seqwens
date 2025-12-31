@@ -145,14 +145,18 @@ export default function Header() {
 
   // Navigate to user's dashboard based on user type
   const handleUserLogoClick = () => {
-    if (!isUserLoggedIn || !userData) return;
+    if (!isUserLoggedIn || !userData) {
+      // If not logged in, go to home page
+      navigate("/");
+      return;
+    }
 
     const storage = getStorage();
     const userType = storage?.getItem("userType") || userData?.user_type;
 
     if (userType === 'super_admin' || userType === 'support_admin' || userType === 'billing_admin') {
       navigate("/superadmin");
-    } else if (userType === 'admin') {
+    } else if (userType === 'admin' || userType === 'firm') {
       navigate("/firmadmin");
     } else if (userType === 'tax_preparer') {
       navigate("/taxdashboard");
@@ -196,13 +200,26 @@ export default function Header() {
       <div className="w-full pl-6 md:pl-8 lg:pl-12 xl:pl-16 2xl:pl-20 pr-4 md:pr-6 lg:pr-8 xl:pr-10 2xl:pr-12 py-3 flex items-center justify-between">
         
         {/* Logo */}
-        <Link to="/" className="flex items-center cursor-pointer flex-shrink-0">
-          <img
-            src={seqwensLogo}
-            alt="SeQwens Logo"
-            className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
-          />
-        </Link>
+        {isUserLoggedIn ? (
+          <button
+            onClick={handleUserLogoClick}
+            className="flex items-center cursor-pointer flex-shrink-0 bg-transparent border-none p-0"
+          >
+            <img
+              src={seqwensLogo}
+              alt="SeQwens Logo"
+              className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
+            />
+          </button>
+        ) : (
+          <Link to="/" className="flex items-center cursor-pointer flex-shrink-0">
+            <img
+              src={seqwensLogo}
+              alt="SeQwens Logo"
+              className="h-8 md:h-9 lg:h-10 w-auto max-w-[180px] object-contain"
+            />
+          </Link>
+        )}
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-8 lg:gap-10">

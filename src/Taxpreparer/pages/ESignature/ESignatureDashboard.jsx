@@ -4,6 +4,7 @@ import { Modal } from 'react-bootstrap';
 import { signatureRequestsAPI, taxPreparerClientAPI, taxPreparerDocumentsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus } from 'react-icons/fi';
+import ProcessingModal from '../../../components/ProcessingModal';
 import '../../styles/esignature-dashboard.css';
 
 export default function ESignatureDashboard() {
@@ -31,6 +32,12 @@ export default function ESignatureDashboard() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [deadline, setDeadline] = useState('');
+  
+  // Processing state for async e-sign document creation
+  const [processing, setProcessing] = useState(false);
+  const [documentId, setDocumentId] = useState(null);
+  const [processingStatus, setProcessingStatus] = useState(null);
+  const [processingError, setProcessingError] = useState(null);
   
   // Data for dropdowns
   const [clients, setClients] = useState([]);
@@ -386,6 +393,19 @@ export default function ESignatureDashboard() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    // Reset processing state if modal is closed
+    if (!processing) {
+      setProcessingStatus(null);
+      setProcessingError(null);
+      setDocumentId(null);
+    }
+  };
+
+  const handleCloseProcessingModal = () => {
+    setProcessing(false);
+    setProcessingStatus(null);
+    setProcessingError(null);
+    setDocumentId(null);
   };
 
   // Handle file selection
@@ -409,6 +429,136 @@ export default function ESignatureDashboard() {
     }
   };
 
+  // Poll processing status
+  // Polls the status endpoint every 3 seconds until processing is complete or failed
+  const pollStatus = async (id) => {
+    const POLL_INTERVAL = 3000; // 3 seconds
+    const maxAttempts = 100; // ~5 minutes max (100 * 3 seconds)
+    let attempts = 0;
+    let pollTimeoutId = null;
+    
+    const poll = async () => {
+      try {
+        console.log(`[Poll ${attempts + 1}] Checking status for document ID: ${id}`);
+        const response = await signatureRequestsAPI.pollESignStatus(id);
+        console.log(`[Poll ${attempts + 1}] Response:`, response);
+        
+        if (response.success && response.data) {
+          const { status, processing_status, processing_error, signing_url, signer_urls } = response.data;
+          
+          console.log(`[Poll ${attempts + 1}] Status: ${status}, Processing Status: ${processing_status}`);
+          
+          // Update processing status for UI
+          setProcessingStatus(processing_status);
+          
+          // Check if processing is complete
+          if (processing_status === 'completed' && status === 'ready') {
+            // Ready for signing!
+            console.log('Document processing completed and ready for signing!');
+            setProcessing(false);
+            if (pollTimeoutId) {
+              clearTimeout(pollTimeoutId);
+              pollTimeoutId = null;
+            }
+            
+            toast.success('Document is ready for signing!', {
+              position: "top-right",
+              autoClose: 3000,
+            });
+            handleCloseCreateModal();
+            fetchSignatureRequests(); // Refresh the list
+            
+            // Log signing information for debugging
+            if (signing_url) {
+              console.log('Document ready - Signing URL:', signing_url);
+            }
+            if (signer_urls) {
+              console.log('Document ready - Signer URLs:', signer_urls);
+            }
+            
+            return { ready: true, signingUrl: signing_url };
+          } else if (processing_status === 'failed') {
+            // Processing failed
+            console.error('Document processing failed:', processing_error);
+            setProcessing(false);
+            if (pollTimeoutId) {
+              clearTimeout(pollTimeoutId);
+              pollTimeoutId = null;
+            }
+            setProcessingError(processing_error || 'Processing failed');
+            toast.error(processing_error || 'Processing failed', {
+              position: "top-right",
+              autoClose: 5000,
+            });
+            return { error: processing_error || 'Processing failed' };
+          } else {
+            // Still processing - continue polling
+            attempts++;
+            if (attempts < maxAttempts) {
+              // Update loader message based on status - poll again in 3 seconds
+              console.log(`[Poll ${attempts}] Still processing, will poll again in ${POLL_INTERVAL/1000} seconds...`);
+              pollTimeoutId = setTimeout(poll, POLL_INTERVAL);
+              return { processing: true, status: processing_status };
+            } else {
+              // Timeout reached
+              console.error('Polling timeout reached after', attempts, 'attempts');
+              setProcessing(false);
+              if (pollTimeoutId) {
+                clearTimeout(pollTimeoutId);
+                pollTimeoutId = null;
+              }
+              setProcessingError('Processing timeout. Please check status later.');
+              toast.error('Processing timeout. Please check status later.', {
+                position: "top-right",
+                autoClose: 5000,
+              });
+              return { error: 'Processing timeout' };
+            }
+          }
+        } else {
+          // Invalid response structure
+          console.warn(`[Poll ${attempts + 1}] Invalid response structure:`, response);
+          attempts++;
+          if (attempts < maxAttempts) {
+            pollTimeoutId = setTimeout(poll, POLL_INTERVAL);
+          } else {
+            setProcessing(false);
+            if (pollTimeoutId) {
+              clearTimeout(pollTimeoutId);
+              pollTimeoutId = null;
+            }
+            setProcessingError('Invalid response from server');
+            toast.error('Failed to check processing status', {
+              position: "top-right",
+              autoClose: 5000,
+            });
+          }
+        }
+      } catch (err) {
+        console.error(`[Poll ${attempts + 1}] Error polling status:`, err);
+        attempts++;
+        if (attempts < maxAttempts) {
+          pollTimeoutId = setTimeout(poll, POLL_INTERVAL);
+        } else {
+          setProcessing(false);
+          if (pollTimeoutId) {
+            clearTimeout(pollTimeoutId);
+            pollTimeoutId = null;
+          }
+          setProcessingError('Failed to check status');
+          toast.error('Failed to check processing status', {
+            position: "top-right",
+            autoClose: 5000,
+          });
+        }
+      }
+    };
+    
+    // Start polling immediately, then continue every 3 seconds
+    console.log(`Starting status polling for document ID: ${id} - will poll every ${POLL_INTERVAL/1000} seconds`);
+    poll();
+  };
+
   // Handle create e-signature request
   const handleCreateESignRequest = async () => {
     if (!selectedClient) {
@@ -422,6 +572,7 @@ export default function ESignatureDashboard() {
 
     try {
       setCreating(true);
+      setProcessingError(null);
       
       const requestData = {
         taxpayer_id: selectedClient.id || selectedClient.client_id,
@@ -435,12 +586,45 @@ export default function ESignatureDashboard() {
       const response = await taxPreparerClientAPI.createESignRequest(requestData);
 
       if (response.success) {
-        toast.success('E-Signature request created successfully!', {
-          position: "top-right",
-          autoClose: 3000,
+        // Check if document is being processed asynchronously
+        const documentData = response.data;
+        const status = documentData?.status;
+        const processingStatus = documentData?.processing_status;
+        
+        // Check if response indicates async processing
+        // Response structure: { success: true, data: { id, status: "processing", processing_status: "pending", ... } }
+        console.log('Create response received:', {
+          success: response.success,
+          documentData: documentData,
+          status: status,
+          processingStatus: processingStatus
         });
-        handleCloseCreateModal();
-        fetchSignatureRequests(); // Refresh the list
+        
+        if (status === 'processing' || processingStatus) {
+          // Document is being processed asynchronously
+          console.log('E-sign document created, starting background processing:', {
+            id: documentData.id,
+            status: status,
+            processing_status: processingStatus
+          });
+          
+          setDocumentId(documentData.id);
+          setProcessingStatus(processingStatus || 'pending');
+          setProcessing(true);
+          setCreating(false);
+          
+          // Start polling every 3 seconds
+          console.log('Calling pollStatus with document ID:', documentData.id);
+          pollStatus(documentData.id);
+        } else {
+          // Immediate success (legacy behavior - document ready immediately)
+          toast.success('E-Signature request created successfully!', {
+            position: "top-right",
+            autoClose: 3000,
+          });
+          handleCloseCreateModal();
+          fetchSignatureRequests(); // Refresh the list
+        }
       } else {
         throw new Error(response.message || 'Failed to create e-signature request');
       }
@@ -451,6 +635,7 @@ export default function ESignatureDashboard() {
         position: "top-right",
         autoClose: 5000,
       });
+      setProcessing(false);
     } finally {
       setCreating(false);
     }
@@ -771,9 +956,11 @@ export default function ESignatureDashboard() {
       {/* Create E-Signature Request Modal */}
       <Modal
         show={showCreateModal}
-        onHide={handleCloseCreateModal}
+        onHide={processing ? undefined : handleCloseCreateModal}
         size="lg"
         centered
+        backdrop={processing ? 'static' : true}
+        keyboard={!processing}
         style={{ fontFamily: 'BasisGrotesquePro' }}
       >
         <Modal.Header closeButton>
@@ -793,15 +980,18 @@ export default function ESignatureDashboard() {
                   type="button"
                   className="form-control text-start d-flex justify-content-between align-items-center"
                   onClick={() => {
+                    if (creating || processing) return;
                     setShowClientDropdown(!showClientDropdown);
                     if (!showClientDropdown && clients.length === 0) {
                       fetchClients();
                     }
                   }}
+                  disabled={creating || processing}
                   style={{
                     borderColor: '#E5E7EB',
-                    backgroundColor: 'white',
-                    cursor: 'pointer'
+                    backgroundColor: creating || processing ? '#F3F4F6' : 'white',
+                    cursor: creating || processing ? 'not-allowed' : 'pointer',
+                    opacity: creating || processing ? 0.6 : 1
                   }}
                 >
                   <span style={{ color: selectedClient ? '#3B4A66' : '#9CA3AF' }}>
@@ -870,7 +1060,8 @@ export default function ESignatureDashboard() {
                   type="checkbox"
                   checked={hasSpouse}
                   onChange={(e) => setHasSpouse(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
+                  disabled={creating || processing}
+                  style={{ cursor: creating || processing ? 'not-allowed' : 'pointer', opacity: creating || processing ? 0.6 : 1 }}
                 />
                 <span style={{ color: '#3B4A66', fontWeight: '500' }}>
                   Client has a spouse (spouse signature required)
@@ -885,7 +1076,8 @@ export default function ESignatureDashboard() {
                   type="checkbox"
                   checked={preparerMustSign}
                   onChange={(e) => setPreparerMustSign(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
+                  disabled={creating || processing}
+                  style={{ cursor: creating || processing ? 'not-allowed' : 'pointer', opacity: creating || processing ? 0.6 : 1 }}
                 />
                 <span style={{ color: '#3B4A66', fontWeight: '500' }}>
                   Preparer must sign
@@ -907,9 +1099,10 @@ export default function ESignatureDashboard() {
                 style={{
                   borderColor: '#E5E7EB',
                   padding: '8px',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  opacity: creating || processing ? 0.6 : 1
                 }}
-                disabled={creating}
+                disabled={creating || processing}
               />
               {selectedFile && (
                 <div className="mt-2 p-2 bg-gray-50 rounded" style={{ borderRadius: '8px' }}>
@@ -938,7 +1131,7 @@ export default function ESignatureDashboard() {
                         color: '#EF4444',
                         padding: '4px 8px'
                       }}
-                      disabled={creating}
+                      disabled={creating || processing}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -962,15 +1155,18 @@ export default function ESignatureDashboard() {
                   type="button"
                   className="form-control text-start d-flex justify-content-between align-items-center"
                   onClick={() => {
+                    if (creating || processing) return;
                     setShowFolderDropdown(!showFolderDropdown);
                     if (!showFolderDropdown && folders.length === 0) {
                       fetchFolders();
                     }
                   }}
+                  disabled={creating || processing}
                   style={{
                     borderColor: '#E5E7EB',
-                    backgroundColor: 'white',
-                    cursor: 'pointer'
+                    backgroundColor: creating || processing ? '#F3F4F6' : 'white',
+                    cursor: creating || processing ? 'not-allowed' : 'pointer',
+                    opacity: creating || processing ? 0.6 : 1
                   }}
                 >
                   <span style={{ color: selectedFolder ? '#3B4A66' : '#9CA3AF' }}>
@@ -1051,9 +1247,10 @@ export default function ESignatureDashboard() {
                 min={new Date().toISOString().split('T')[0]}
                 style={{
                   borderColor: '#E5E7EB',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  opacity: creating || processing ? 0.6 : 1
                 }}
-                disabled={creating}
+                disabled={creating || processing}
               />
               <p className="text-muted mt-1" style={{ fontSize: '12px', fontFamily: 'BasisGrotesquePro' }}>
                 Select a date for the signature deadline
@@ -1065,12 +1262,15 @@ export default function ESignatureDashboard() {
           <button
             className="btn"
             onClick={handleCloseCreateModal}
+            disabled={processing}
             style={{
               backgroundColor: '#F9FAFB',
               border: '1px solid #E5E7EB',
-              color: '#3B4A66',
+              color: processing ? '#9CA3AF' : '#3B4A66',
               fontFamily: 'BasisGrotesquePro',
-              borderRadius: '8px'
+              borderRadius: '8px',
+              opacity: processing ? 0.6 : 1,
+              cursor: processing ? 'not-allowed' : 'pointer'
             }}
           >
             Cancel
@@ -1078,9 +1278,9 @@ export default function ESignatureDashboard() {
           <button
             className="btn"
             onClick={handleCreateESignRequest}
-            disabled={creating || !selectedClient || !selectedFile}
+            disabled={creating || processing || !selectedClient || !selectedFile}
             style={{
-              backgroundColor: creating || !selectedClient || !selectedFile ? '#D1D5DB' : '#00C0C6',
+              backgroundColor: creating || processing || !selectedClient || !selectedFile ? '#D1D5DB' : '#00C0C6',
               border: 'none',
               color: 'white',
               fontFamily: 'BasisGrotesquePro',
@@ -1088,10 +1288,18 @@ export default function ESignatureDashboard() {
               borderRadius: '8px'
             }}
           >
-            {creating ? 'Creating...' : 'Create Request'}
+            {creating ? 'Creating...' : processing ? 'Processing...' : 'Create Request'}
           </button>
         </Modal.Footer>
       </Modal>
+
+      {/* Processing Modal */}
+      <ProcessingModal
+        show={processing}
+        processingStatus={processingStatus}
+        processingError={processingError}
+        onClose={handleCloseProcessingModal}
+      />
     </div>
   );
 }

@@ -3814,6 +3814,41 @@ export const firmOfficeAPI = {
   updateBasicDetails: async (officeId, officeData) => {
     return await apiRequest(`/firm/office-locations/${officeId}/basic-details/`, 'PATCH', officeData);
   },
+  // Bulk taxpayer import - Step 1: Preview
+  bulkImportTaxpayersPreview: async (csvFile) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+    formData.append('csv_file', csvFile);
+
+    const url = `${API_BASE_URL}/taxpayer/firm-admin/taxpayers/import/preview/`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    };
+
+    const response = await fetchWithCors(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+  // Bulk taxpayer import - Step 2: Confirm
+  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport) => {
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', {
+      import_log_id: importLogId,
+      rows_to_import: rowsToImport
+    });
+  },
 };
 
 // Firm Admin Meetings API functions
@@ -4582,6 +4617,41 @@ export const taxPreparerClientAPI = {
     if (page_size) queryParams.append('page_size', page_size);
     const queryString = queryParams.toString();
     return await apiRequest(`/user/tax-preparer/clients/invites/pending/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+  // Bulk taxpayer import - Step 1: Preview
+  bulkImportTaxpayersPreview: async (csvFile) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+    formData.append('csv_file', csvFile);
+
+    const url = `${API_BASE_URL}/taxpayer/firm-admin/taxpayers/import/preview/`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    };
+
+    const response = await fetchWithCors(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+  // Bulk taxpayer import - Step 2: Confirm
+  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport) => {
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', {
+      import_log_id: importLogId,
+      rows_to_import: rowsToImport
+    });
   }
 };
 
@@ -5176,11 +5246,12 @@ export const signatureRequestsAPI = {
   },
 
   // Poll e-signature document status
+  // GET /api/taxpayer/esign/poll-status/<id>/
   pollESignStatus: async (esignDocumentId) => {
     if (!esignDocumentId) {
       throw new Error('esign_document_id is required');
     }
-    return await apiRequest(`/taxpayer/esign/poll-status/${esignDocumentId}/`, 'POST');
+    return await apiRequest(`/taxpayer/esign/poll-status/${esignDocumentId}/`, 'GET');
   },
 
   // Check and regenerate signature fields
