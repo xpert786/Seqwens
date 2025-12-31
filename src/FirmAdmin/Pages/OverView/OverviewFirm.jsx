@@ -141,7 +141,7 @@ export default function FirmAdminDashboard() {
 
   // Handle subscription success redirect - use ref to prevent infinite loops
   const subscriptionHandledRef = useRef(false);
-  
+
   useEffect(() => {
     const subscriptionSuccess = searchParams.get('subscription_success');
     const subscriptionCancelled = searchParams.get('subscription_cancelled');
@@ -153,12 +153,12 @@ export default function FirmAdminDashboard() {
 
     if (subscriptionSuccess === 'true') {
       subscriptionHandledRef.current = true;
-      
+
       // Remove the query parameter first to prevent infinite loop
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete('subscription_success');
       setSearchParams(newSearchParams, { replace: true });
-      
+
       // Show success message
       toast.success('Subscription activated successfully! Welcome to your dashboard.', {
         position: 'top-right',
@@ -206,7 +206,7 @@ export default function FirmAdminDashboard() {
       }
     } else if (subscriptionCancelled === 'true') {
       subscriptionHandledRef.current = true;
-      
+
       // Show cancellation message
       toast.info('Subscription setup was cancelled. Please complete your subscription to access all features.', {
         position: 'top-right',
@@ -1033,94 +1033,94 @@ export default function FirmAdminDashboard() {
       <div className="w-full px-2 py-6 bg-[#F6F7FF] min-h-screen">
         {/* Header */}
         <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-3">
-  
-  {/* Left Section */}
-  <div className="flex-1 min-w-0 pr-4 xl:pr-2 max-md:pr-0">
-    <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
-      Firm Dashboard
-    </h4>
-    <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base leading-tight">
-      Welcome Back
-    </p>
-  </div>
 
-  {/* Right Section */}
-  <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1 
+          {/* Left Section */}
+          <div className="flex-1 min-w-0 pr-4 xl:pr-2 max-md:pr-0">
+            <h4 className="text-[16px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] whitespace-nowrap">
+              Firm Dashboard
+            </h4>
+            <p className="text-[#6B7280] mt-1 font-[BasisGrotesquePro] text-[10px] xl:text-base leading-tight">
+              Welcome Back
+            </p>
+          </div>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-1 xl:gap-3 flex-shrink-0 mt-1 
                   max-md:w-full max-md:flex-wrap max-md:gap-2">
 
-    {/* Date Range */}
-    <div className="flex items-center gap-2 bg-white border border-[#E5E7EB] 
+            {/* Date Range */}
+            <div className="flex items-center gap-2 bg-white border border-[#E5E7EB] 
                     !rounded-[7px] px-2 xl:px-3 py-1 xl:py-2
                     max-md:w-full max-md:justify-between">
-      
-      <label className="text-[10px] xl:text-xs text-[#6B7280] font-[BasisGrotesquePro] whitespace-nowrap">
-        Date Range:
-      </label>
 
-      <div className="relative flex-1 max-md:max-w-[140px]">
-        <select
-          value={selectedDateRange}
-          onChange={(e) => setSelectedDateRange(e.target.value)}
-          className="text-[10px] xl:text-sm text-[#3B4A66] font-[BasisGrotesquePro]
+              <label className="text-[10px] xl:text-xs text-[#6B7280] font-[BasisGrotesquePro] whitespace-nowrap">
+                Date Range:
+              </label>
+
+              <div className="relative flex-1 max-md:max-w-[140px]">
+                <select
+                  value={selectedDateRange}
+                  onChange={(e) => setSelectedDateRange(e.target.value)}
+                  className="text-[10px] xl:text-sm text-[#3B4A66] font-[BasisGrotesquePro]
                      bg-transparent border-none focus:outline-none cursor-pointer
                      appearance-none pr-6 w-full"
-        >
-          <option value="Last 7 days">Last 7 days</option>
-          <option value="Last 30 days">Last 30 days</option>
-          <option value="Last 90 days">Last 90 days</option>
-          <option value="Last 6 months">Last 6 months</option>
-          <option value="Last year">Last year</option>
-        </select>
+                >
+                  <option value="Last 7 days">Last 7 days</option>
+                  <option value="Last 30 days">Last 30 days</option>
+                  <option value="Last 90 days">Last 90 days</option>
+                  <option value="Last 6 months">Last 6 months</option>
+                  <option value="Last year">Last year</option>
+                </select>
 
-        <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none pr-1">
-          <svg className="w-3 h-3 xl:w-4 xl:h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
+                <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none pr-1">
+                  <svg className="w-3 h-3 xl:w-4 xl:h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
 
-      <button
-        onClick={handleApplyDateRange}
-        disabled={selectedDateRange === dateRange}
-        className="px-2 xl:px-3 py-1 text-[10px] xl:text-sm font-medium
+              <button
+                onClick={handleApplyDateRange}
+                disabled={selectedDateRange === dateRange}
+                className="px-2 xl:px-3 py-1 text-[10px] xl:text-sm font-medium
                    font-[BasisGrotesquePro] bg-[#3B4A66] text-white
                    !rounded-[5px] hover:bg-[#2d3a52]
                    disabled:opacity-50 whitespace-nowrap"
-      >
-        Apply
-      </button>
-    </div>
+              >
+                Apply
+              </button>
+            </div>
 
-    {!advancedReportingEnabled && (
-      <button
-        onClick={exportDashboardToPDF}
-        className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
+            {!advancedReportingEnabled && (
+              <button
+                onClick={exportDashboardToPDF}
+                className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
                    border border-[#E5E7EB] !rounded-[7px]
                    text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro]
                    hover:bg-gray-50 whitespace-nowrap flex items-center gap-1
                    max-md:flex-1 max-md:justify-center"
-      >
-        <DownsIcon />
-        Export
-      </button>
-    )}
+              >
+                <DownsIcon />
+                Export
+              </button>
+            )}
 
-    <button
-      onClick={() => setIsScheduleModalOpen(true)}
-      className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
                  border border-[#E5E7EB] !rounded-[7px]
                  text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro]
                  hover:bg-gray-50 whitespace-nowrap flex items-center gap-1
                  max-md:flex-1 max-md:justify-center"
-    >
-      <SceheIcon />
-      Schedule
-    </button>
-  </div>
-</div>
+            >
+              <SceheIcon />
+              Schedule
+            </button>
+          </div>
+        </div>
 
 
-      
+
 
         {/* Key Metrics Section */}
         {widgetVisibility.Kpi && (
@@ -1214,7 +1214,7 @@ export default function FirmAdminDashboard() {
                     }}
                   ></div>
                 </div>
-               
+
               </div>
             </div>
 
@@ -1293,7 +1293,7 @@ export default function FirmAdminDashboard() {
                     </svg>
                   </select>
 
-                  <button 
+                  <button
                     onClick={() => setIsRevenueModalOpen(true)}
                     className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-[BasisGrotesquePro] hover:bg-gray-50"
                   >
@@ -1345,12 +1345,13 @@ export default function FirmAdminDashboard() {
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Lead conversion and client journey</p>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-500 hover:text-gray-700">
+                <button className="p-2 text-gray-500 hover:text-gray-700"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700">
+                <button className="p-2 text-gray-500 hover:text-gray-700" onClick={() => navigate('/firmadmin/client-engagement-details')}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -1367,7 +1368,7 @@ export default function FirmAdminDashboard() {
                   <div key={index} className="space-y-1">
                     <div className="flex justify-between items-center">
                       <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
-                      <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.value} {item.percentage}%</div>
+                      <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.percentage}%</div>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3 relative">
                       <div
@@ -1498,7 +1499,9 @@ export default function FirmAdminDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700">
+                <button
+                  onClick={() => navigate('/firmadmin/compliance-details')}
+                  className="p-2 text-gray-500 hover:text-gray-700">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />

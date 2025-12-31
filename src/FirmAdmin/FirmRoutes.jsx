@@ -9,6 +9,9 @@ import { FirmSettingsProvider } from './Context/FirmSettingsContext';
 
 // Pages
 import OverviewFirm from './Pages/OverView/OverviewFirm';
+import ComplianceDetails from './Pages/OverView/ComplianceDetails';
+import ClientEngagementDetails from './Pages/OverView/ClientEngagementDetails';
+
 import StaffManagement from './Pages/Staff/StaffManagement';
 import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
@@ -47,7 +50,7 @@ import CustomRolesManagement from './Pages/CustomRoles/CustomRolesManagement';
 // Protected Route Component for Firm Admin
 function FirmAdminProtectedRoute({ children }) {
   const location = useLocation();
-  
+
   // Check if user is logged in
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />;
@@ -80,7 +83,7 @@ function FirmAdminProtectedRoute({ children }) {
   // Handle both with and without base path - use includes for better matching
   const pathname = location.pathname;
   const isFinalizeSubscription = pathname.includes('/finalize-subscription');
-  
+
   if (!isFinalizeSubscription) {
     const userDataStr = storage?.getItem("userData");
     if (userDataStr) {
@@ -109,68 +112,70 @@ export default function FirmRoutes() {
   return (
     <FirmPortalColorsProvider>
       <FirmSettingsProvider>
-      <Routes>
-        {/* Main firm admin dashboard route with layout */}
-        <Route path="/" element={
-          <FirmAdminProtectedRoute>
-            <FirmDashboardLayout />
-          </FirmAdminProtectedRoute>
-        }>
-        <Route index element={<OverviewFirm />} />
-        <Route path="dashboard" element={<OverviewFirm />} />
+        <Routes>
+          {/* Main firm admin dashboard route with layout */}
+          <Route path="/" element={
+            <FirmAdminProtectedRoute>
+              <FirmDashboardLayout />
+            </FirmAdminProtectedRoute>
+          }>
+            <Route index element={<OverviewFirm />} />
+            <Route path="dashboard" element={<OverviewFirm />} />
 
-        {/* Overview routes */}
-        <Route path="overview" element={<OverviewFirm />} />
+            {/* Overview routes */}
+            <Route path="overview" element={<OverviewFirm />} />
+            <Route path="compliance-details" element={<ComplianceDetails />} />
+            <Route path="client-engagement-details" element={<ClientEngagementDetails />} />
 
-        {/* Firm Management routes */}
-        <Route path="staff" element={<StaffManagement />} />
-        <Route path="staff/:id" element={<StaffDetails />} />
-        <Route path="clients" element={<ClientManage />} />
-        <Route path="clients/:id" element={<ClientDetails />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="tasks" element={<TaskManagementMain />} />
-        <Route path="tasks/:id" element={<TaskDetails />} />
+            {/* Firm Management routes */}
+            <Route path="staff" element={<StaffManagement />} />
+            <Route path="staff/:id" element={<StaffDetails />} />
+            <Route path="clients" element={<ClientManage />} />
+            <Route path="clients/:id" element={<ClientDetails />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="tasks" element={<TaskManagementMain />} />
+            <Route path="tasks/:id" element={<TaskDetails />} />
 
-        {/* Client Management routes */}
-        <Route path="calendar" element={<SchedulingCalendar />} />
-        <Route path="calendar/appointments" element={<Appointments />} />
-        <Route path="calendar/features" element={<Feature />} />
-        <Route path="calendar/staff" element={<Staff />} />
-        <Route path="documents" element={<DocumentManagement />}>
-          <Route path="folder/:folderId" element={<FolderContents />}>
-            <Route path="document/:documentId" element={<PdfViewer />} />
+            {/* Client Management routes */}
+            <Route path="calendar" element={<SchedulingCalendar />} />
+            <Route path="calendar/appointments" element={<Appointments />} />
+            <Route path="calendar/features" element={<Feature />} />
+            <Route path="calendar/staff" element={<Staff />} />
+            <Route path="documents" element={<DocumentManagement />}>
+              <Route path="folder/:folderId" element={<FolderContents />}>
+                <Route path="document/:documentId" element={<PdfViewer />} />
+              </Route>
+            </Route>
+            <Route path="esignature" element={<ESignatureManagement />} />
+            <Route path="messages" element={<Messages />} />
+
+            {/* Business Operations routes */}
+            <Route path="billing" element={<BillingManagement />} />
+            <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
+            <Route path="workflow" element={<WorkflowManagement />} />
+            <Route path="workflow/instances/:instanceId" element={<WorkflowInstanceView />} />
+            <Route path="subscription" element={<SubscriptionManagement />} />
+            <Route path="finalize-subscription" element={<FinalizeSubscription />} />
+            <Route path="email-templates" element={<EmailTemplate />} />
+
+            {/* System Administration routes */}
+            <Route path="security" element={<SecurityCompliance />} />
+            <Route path="settings" element={<FirmSettings />} />
+            <Route path="support" element={<SupportCenter />} />
+            <Route path="account-settings" element={<AccountSettings />} />
+            <Route path="custom-roles" element={<CustomRolesManagement />} />
+            <Route path="offices" element={<Offices />} />
+            <Route path="offices/:officeId" element={<OfficeOverview />} />
+            <Route path="offices/:officeId/dashboard-view" element={<OfficeDashboardView />} />
+            <Route path="offices/:officeId/compare" element={<OfficeComparison />} />
+
+            {/* Add more routes here as needed */}
+
+            {/* 404 - Not Found */}
+            <Route path="*" element={<Navigate to="/firmadmin" replace />} />
           </Route>
-        </Route>
-        <Route path="esignature" element={<ESignatureManagement />} />
-        <Route path="messages" element={<Messages />} />
-
-        {/* Business Operations routes */}
-        <Route path="billing" element={<BillingManagement />} />
-        <Route path="billing/:invoiceId" element={<InvoiceDetails />} />
-        <Route path="workflow" element={<WorkflowManagement />} />
-        <Route path="workflow/instances/:instanceId" element={<WorkflowInstanceView />} />
-        <Route path="subscription" element={<SubscriptionManagement />} />
-        <Route path="finalize-subscription" element={<FinalizeSubscription />} />
-        <Route path="email-templates" element={<EmailTemplate />} />
-        
-        {/* System Administration routes */}
-        <Route path="security" element={<SecurityCompliance />} />
-        <Route path="settings" element={<FirmSettings />} />
-        <Route path="support" element={<SupportCenter />} />
-        <Route path="account-settings" element={<AccountSettings />} />
-        <Route path="custom-roles" element={<CustomRolesManagement />} />
-        <Route path="offices" element={<Offices />} />
-        <Route path="offices/:officeId" element={<OfficeOverview />} />
-        <Route path="offices/:officeId/dashboard-view" element={<OfficeDashboardView />} />
-        <Route path="offices/:officeId/compare" element={<OfficeComparison />} />
-        
-        {/* Add more routes here as needed */}
-
-        {/* 404 - Not Found */}
-        <Route path="*" element={<Navigate to="/firmadmin" replace />} />
-      </Route>
-    </Routes>
-    </FirmSettingsProvider>
+        </Routes>
+      </FirmSettingsProvider>
     </FirmPortalColorsProvider>
   );
 }

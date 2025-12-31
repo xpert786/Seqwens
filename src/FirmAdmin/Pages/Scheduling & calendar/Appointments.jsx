@@ -20,7 +20,7 @@ const Appointments = () => {
     useEffect(() => {
         setSelectedTab(activeTab);
     }, [activeTab]);
-    
+
     // Calendar states
     const [viewMode, setViewMode] = useState('Monthly');
     const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // July 2025
@@ -68,7 +68,7 @@ const Appointments = () => {
 
         fetchStatistics();
     }, [currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()]);
-    
+
     // Add Event Modal State
     const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
     const [eventTitle, setEventTitle] = useState('Consultation Call');
@@ -352,11 +352,10 @@ const Appointments = () => {
                                                     navigate(tabPath, { replace: true });
                                                 }
                                             }}
-                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${
-                                                isActive
-                                                    ? 'bg-[#3AD6F2] !text-white font-semibold'
-                                                    : 'bg-transparent hover:bg-gray-50 !text-black'
-                                            }`}
+                                            className={`px-4 py-2 font-[BasisGrotesquePro] transition-colors !rounded-lg cursor-pointer ${isActive
+                                                ? 'bg-[#3AD6F2] !text-white font-semibold'
+                                                : 'bg-transparent hover:bg-gray-50 !text-black'
+                                                }`}
                                         >
                                             {tab}
                                         </button>
@@ -372,7 +371,7 @@ const Appointments = () => {
                 ) : (
                     <>
                         {/* Event Filters - Right Side */}
-                        
+
 
                         {/* Main Content Area */}
                         <div className="flex flex-col lg:flex-row gap-6">
@@ -384,11 +383,10 @@ const Appointments = () => {
                                         <button
                                             key={tab}
                                             onClick={() => setViewMode(tab)}
-                                            className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg ${
-                                                viewMode === tab
-                                                    ? 'bg-[#F56D2D] text-white'
-                                                    : 'bg-white !border border-[#E8F0FF] text-gray-600 hover:text-gray-900'
-                                            }`}
+                                            className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-[BasisGrotesquePro] transition-colors !rounded-lg ${viewMode === tab
+                                                ? 'bg-[#F56D2D] text-white'
+                                                : 'bg-white !border border-[#E8F0FF] text-gray-600 hover:text-gray-900'
+                                                }`}
                                         >
                                             {tab}
                                         </button>
@@ -510,34 +508,32 @@ const Appointments = () => {
                                                 {calendarDays.map((day, index) => (
                                                     <div
                                                         key={index}
-                                                        className={`min-h-[60px] sm:min-h-[70px] lg:min-h-[80px] p-1 sm:p-2 border-r border-b border-[#E8F0FF] relative ${
-                                                            !day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
-                                                        } ${day.isToday ? 'bg-blue-50' : ''} ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
+                                                        className={`min-h-[60px] sm:min-h-[70px] lg:min-h-[80px] p-1 sm:p-2 border-r border-b border-[#E8F0FF] relative ${!day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'
+                                                            } ${day.isToday ? 'bg-blue-50' : ''} ${(index + 1) % 7 === 0 ? 'border-r-0' : ''}`}
                                                     >
-                                                    {!(day.date === 21 && day.isCurrentMonth) && (
-                                                        <div className={`text-xs sm:text-sm font-[BasisGrotesquePro] mb-1 text-right ${
-                                                            !day.isCurrentMonth ? 'text-gray-400' : day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'
-                                                        }`}>
-                                                            {day.date}
-                                                        </div>
-                                                    )}
-                                                    {day.date === 21 && day.isCurrentMonth && (
-                                                        <>
-                                                            <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                                                <span className="text-white text-xs font-bold font-[BasisGrotesquePro]">{day.date}</span>
+                                                        {!(day.date === 21 && day.isCurrentMonth) && (
+                                                            <div className={`text-xs sm:text-sm font-[BasisGrotesquePro] mb-1 text-right ${!day.isCurrentMonth ? 'text-gray-400' : day.isToday ? 'text-blue-600 font-bold' : 'text-gray-900'
+                                                                }`}>
+                                                                {day.date}
                                                             </div>
-                                                            <div className="mt-6 sm:mt-8">
-                                                                <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 break-words">
-                                                                    <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className="text-[10px] sm:text-xs text-gray-900 font-[BasisGrotesquePro] leading-tight break-words">Schedule a free Phone...</div>
-                                                                        <div className="text-[10px] sm:text-xs font-[BasisGrotesquePro] leading-tight" style={{ color: '#00C0C6' }}>09:00 - 10:00</div>
+                                                        )}
+                                                        {day.date === 21 && day.isCurrentMonth && (
+                                                            <>
+                                                                <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                                                    <span className="text-white text-xs font-bold font-[BasisGrotesquePro]">{day.date}</span>
+                                                                </div>
+                                                                <div className="mt-6 sm:mt-8">
+                                                                    <div className="bg-[#FFF5E0] border border-[#FFE0B2] rounded-lg px-2 py-1.5 flex items-start gap-2 break-words">
+                                                                        <div className="w-2 h-2 bg-[#F56D2D] rounded-full mt-1.5 flex-shrink-0"></div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="text-[10px] sm:text-xs text-gray-900 font-[BasisGrotesquePro] leading-tight break-words">Schedule a free Phone...</div>
+                                                                            <div className="text-[10px] sm:text-xs font-[BasisGrotesquePro] leading-tight" style={{ color: '#00C0C6' }}>09:00 - 10:00</div>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
@@ -548,9 +544,8 @@ const Appointments = () => {
                                             {yearMonths.map((month) => (
                                                 <div
                                                     key={`${month.name}-${month.year}`}
-                                                    className={`rounded-lg border border-[#E8F0FF] p-3 text-center font-[BasisGrotesquePro] text-sm ${
-                                                        month.index === currentDate.getMonth() ? 'bg-blue-50 border-blue-300 text-blue-600 font-semibold' : 'bg-white text-gray-700'
-                                                    }`}
+                                                    className={`rounded-lg border border-[#E8F0FF] p-3 text-center font-[BasisGrotesquePro] text-sm ${month.index === currentDate.getMonth() ? 'bg-blue-50 border-blue-300 text-blue-600 font-semibold' : 'bg-white text-gray-700'
+                                                        }`}
                                                 >
                                                     {month.name}
                                                 </div>
@@ -580,21 +575,21 @@ const Appointments = () => {
                             </div>
 
                             {/* Right Sidebar */}
-                    <div className="w-full lg:w-80 space-y-4">
-                        {/* Today's Events */}
-                        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
-                            <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Today's Events</h6>
-                            <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">7/28/2025</p>
-                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No events scheduled for today</p>
-                        </div>
+                            <div className="w-full lg:w-80 space-y-4">
+                                {/* Today's Events */}
+                                <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 mt-17">
+                                    <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Today's Events</h6>
+                                    <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">7/28/2025</p>
+                                    <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No events scheduled for today</p>
+                                </div>
 
-                        {/* Upcoming Events */}
-                        <div className="bg-white rounded-lg !border border-[#E8F0FF] p-4">
-                            <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Upcoming Events</h6>
-                            <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">Next 7 Days</p>
-                            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No upcoming events</p>
-                        </div>
-                    </div>
+                                {/* Upcoming Events */}
+                                <div className="bg-white rounded-lg !border border-[#E8F0FF] p-4">
+                                    <h6 className="text-lg font-semibold text-gray-900 mb-1 font-[BasisGrotesquePro]">Upcoming Events</h6>
+                                    <p className="text-sm text-gray-500 mb-4 font-[BasisGrotesquePro]">Next 7 Days</p>
+                                    <p className="text-sm text-gray-600 font-[BasisGrotesquePro] text-center">No upcoming events</p>
+                                </div>
+                            </div>
                         </div>
                     </>
                 )}

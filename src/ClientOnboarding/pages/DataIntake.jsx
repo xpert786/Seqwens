@@ -106,10 +106,10 @@ export default function DataIntakeForm() {
       try {
         setCheckingSignatureStatus(true);
         const response = await dataIntakeAPI.getSignatureStatus();
-        
+
         if (response.success && response.data) {
           const { is_signed, signature_status, signature_request_status } = response.data;
-          
+
           // Update signature status based on API response
           if (is_signed) {
             setSignatureStatus('signed');
@@ -136,13 +136,13 @@ export default function DataIntakeForm() {
     };
 
     checkSignatureStatus();
-    
+
     // If status is pending, check periodically (every 10 seconds) to see if it's been signed
     // Use a ref to track the current status to avoid stale closure
     const interval = setInterval(() => {
       checkSignatureStatus();
     }, 10000); // Check every 10 seconds
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -200,7 +200,7 @@ export default function DataIntakeForm() {
                 phoneValue = `+${phoneMatch[1]}`; // Only keep country code
               }
             }
-            
+
             setPersonalInfo({
               firstName: data.first_name || "",
               middleInitial: data.middle_name || "",
@@ -232,7 +232,7 @@ export default function DataIntakeForm() {
                   spousePhoneValue = `+${phoneMatch[1]}`; // Only keep country code
                 }
               }
-              
+
               setSpouseInfo({
                 firstName: data.spouse_info.spouse_first_name || "",
                 middleInitial: "",
@@ -396,16 +396,16 @@ export default function DataIntakeForm() {
   // Handles country codes of 1, 2, or 3 digits
   const validatePhoneNumber = (phoneValue) => {
     if (!phoneValue) return { valid: false, error: 'Phone number is required' };
-    
+
     // Extract all digits from the phone value (react-phone-input-2 includes country code)
     const digitsOnly = phoneValue.replace(/\D/g, '');
-    
+
     // Determine country code length by checking the phone value format
     // react-phone-input-2 formats phone as: +[countryCode][phoneNumber]
     const phoneWithPlus = phoneValue.startsWith('+') ? phoneValue : `+${phoneValue}`;
-    
+
     let countryCodeLength = 1; // Default to 1 digit
-    
+
     // Check for 3-digit country codes (mostly African countries starting with +2)
     // Pattern: +2XX where XX is 12-99 (but not 20 which is Egypt with 2 digits)
     // Examples: +212 (Morocco), +234 (Nigeria), +254 (Kenya), etc.
@@ -421,25 +421,25 @@ export default function DataIntakeForm() {
     else if (phoneWithPlus.startsWith('+1')) {
       countryCodeLength = 1;
     }
-    
+
     // Total digits should be: countryCodeLength + 10 (phone number)
     const expectedTotalDigits = countryCodeLength + 10;
-    
+
     if (digitsOnly.length < expectedTotalDigits) {
       return { valid: false, error: `Phone number must be exactly 10 digits (excluding country code)` };
     }
-    
+
     // Extract the last 10 digits (phone number without country code)
     // This works for all country code lengths: 
     // - 1 digit: 11 total (1 + 10) -> last 10 = phone number ✓
     // - 2 digits: 12 total (2 + 10) -> last 10 = phone number ✓
     // - 3 digits: 13 total (3 + 10) -> last 10 = phone number ✓
     const numberPart = digitsOnly.slice(-10);
-    
+
     if (numberPart.length !== 10) {
       return { valid: false, error: 'Phone number must be exactly 10 digits' };
     }
-    
+
     return { valid: true, error: null };
   };
 
@@ -586,11 +586,11 @@ export default function DataIntakeForm() {
       if (errorData.errors.tax_documents) {
         const taxDocErrors = Array.isArray(errorData.errors.tax_documents)
           ? errorData.errors.tax_documents.map(item => {
-              if (typeof item === 'object' && item !== null && item.string) {
-                return item.string;
-              }
-              return String(item);
-            })
+            if (typeof item === 'object' && item !== null && item.string) {
+              return item.string;
+            }
+            return String(item);
+          })
           : [String(errorData.errors.tax_documents)];
         generalErrorMessages.push(...taxDocErrors);
       }
@@ -602,7 +602,7 @@ export default function DataIntakeForm() {
           if (key === 'tax_documents') {
             return;
           }
-          
+
           if (Array.isArray(value)) {
             // This is a field with error messages
             const fieldPath = prefix ? `${prefix}.${key}` : key;
@@ -843,7 +843,7 @@ export default function DataIntakeForm() {
   const handleSubmit = async () => {
     // Clear previous general errors
     setGeneralErrors([]);
-    
+
     // Validate required fields first
     const validationErrors = validateRequiredFields();
     if (Object.keys(validationErrors).length > 0) {
@@ -1347,18 +1347,18 @@ export default function DataIntakeForm() {
     try {
       setSignatureLoading(true);
       const response = await dataIntakeAPI.signWithSignWell();
-      
+
       if (response.success && response.data) {
         setSignatureRequested(true);
         setSignatureStatus(response.data?.status || 'pending');
-        
+
         // Get the signing URL (prefer embedded_url if available, otherwise signing_url)
         const signerUrls = response.data?.signer_urls;
         const userData = getUserData();
         const userEmail = userData?.email || userData?.user?.email;
-        
+
         let signingUrl = response.data?.signing_url;
-        
+
         // Try to get embedded URL for the current user
         if (signerUrls && userEmail && signerUrls[userEmail]) {
           signingUrl = signerUrls[userEmail].embedded_url || signerUrls[userEmail].signing_url;
@@ -1367,16 +1367,16 @@ export default function DataIntakeForm() {
           const firstSigner = Object.values(signerUrls)[0];
           signingUrl = firstSigner.embedded_url || firstSigner.signing_url;
         }
-        
+
         if (signingUrl) {
           toast.success(response.message || 'Redirecting to SignWell for signing...', {
             position: 'top-right',
             autoClose: 3000
           });
-          
+
           // Open SignWell in a new tab/window
           window.open(signingUrl, '_blank', 'noopener,noreferrer');
-          
+
           // Optionally, you can also redirect in the same window:
           // window.location.href = signingUrl;
         } else {
@@ -1402,18 +1402,18 @@ export default function DataIntakeForm() {
     try {
       setSignatureLoading(true);
       const response = await dataIntakeAPI.submitSignature(signatureData);
-      
+
       if (response.success) {
         // Update signature status
         setSignatureStatus('signed');
         setSignatureRequested(true);
         setShowSignatureModal(false);
-        
+
         toast.success(response.message || 'Signature submitted successfully!', {
           position: 'top-right',
           autoClose: 3000
         });
-        
+
         // Optionally redirect to dashboard after signing
         setTimeout(() => {
           navigate("/dashboard");
@@ -1469,9 +1469,9 @@ export default function DataIntakeForm() {
             gap: "12px"
           }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ marginTop: "2px", flexShrink: 0 }}>
-              <path d="M10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66667 10 1.66667C5.39763 1.66667 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333Z" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10 6.66667V10" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10 13.3333H10.0083" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66667 10 1.66667C5.39763 1.66667 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333Z" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M10 6.66667V10" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M10 13.3333H10.0083" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <div style={{ flex: 1 }}>
               <strong style={{
@@ -3297,38 +3297,38 @@ export default function DataIntakeForm() {
 
       {/* Signature Section - Show after form is submitted */}
       {hasExistingData && (
-        <div className="mt-6 p-4 rounded-lg border" style={{ 
-          borderColor: '#E8F0FF', 
+        <div className="mt-6 p-4 rounded-lg border" style={{
+          borderColor: '#E8F0FF',
           backgroundColor: '#F3F7FF',
           fontFamily: 'BasisGrotesquePro'
         }}>
           <div className="d-flex flex-column align-items-start gap-3">
             <div>
-              <h6 className="mb-1" style={{ 
-                color: '#3B4A66', 
-                fontSize: '18px', 
+              <h6 className="mb-1" style={{
+                color: '#3B4A66',
+                fontSize: '18px',
                 fontWeight: '600',
                 fontFamily: 'BasisGrotesquePro'
               }}>
                 Sign Your Data Entry Form
               </h6>
-              <p className="mb-0" style={{ 
-                color: '#4B5563', 
+              <p className="mb-0" style={{
+                color: '#4B5563',
                 fontSize: '14px',
                 fontFamily: 'BasisGrotesquePro'
               }}>
-                {signatureStatus === 'signed' 
+                {signatureStatus === 'signed'
                   ? 'Your form has been signed successfully via SignWell!'
                   : signatureStatus === 'pending'
-                  ? 'Please complete your signature in SignWell to finalize the form. If you closed the window, click the button below to open it again.'
-                  : 'Sign your completed data entry form using SignWell to create a professionally signed PDF document for your records.'}
+                    ? 'Please complete your signature in SignWell to finalize the form. If you closed the window, click the button below to open it again.'
+                    : 'Sign your completed data entry form using SignWell to create a professionally signed PDF document for your records.'}
               </p>
             </div>
-            
+
             {signatureStatus !== 'signed' && !checkingSignatureStatus && (
               <button
                 className="btn text-white"
-                style={{ 
+                style={{
                   backgroundColor: signatureRequested ? '#3AD6F2' : '#F56D2D',
                   borderRadius: '8px',
                   fontFamily: 'BasisGrotesquePro'
@@ -3344,14 +3344,14 @@ export default function DataIntakeForm() {
                 ) : signatureRequested ? (
                   <>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
-                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     </svg>
                     Sign with SignWell
                   </>
                 ) : (
                   <>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
-                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     </svg>
                     Sign with SignWell
                   </>
@@ -3369,7 +3369,7 @@ export default function DataIntakeForm() {
             {signatureStatus === 'signed' && (
               <div className="d-flex align-items-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
                   Form Signed Successfully

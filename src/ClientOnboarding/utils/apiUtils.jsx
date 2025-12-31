@@ -93,7 +93,7 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
       }
-      
+
       // Attach original errorData to error for better error handling in components
       const error = new Error(errorMessage);
       if (errorData) {
@@ -193,25 +193,25 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       let errorMessage = `HTTP error! status: ${response.status}`;
       let errorData = null;
       const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
-      
+
       try {
         errorData = await response.json();
         // Suppress console errors for memberships endpoint (expected to fail for some users)
         if (!isMembershipsEndpoint) {
-        console.error('API Error Response:', errorData);
+          console.error('API Error Response:', errorData);
         }
 
         // If there are specific field errors, show them
         if (errorData.errors) {
           // Suppress console errors for memberships endpoint
           if (!isMembershipsEndpoint) {
-          console.error('Field Validation Errors:', errorData.errors);
+            console.error('Field Validation Errors:', errorData.errors);
           }
-          
+
           // Handle non_field_errors specially - show them directly without labels
           if (errorData.errors.non_field_errors) {
-            const nonFieldErrors = Array.isArray(errorData.errors.non_field_errors) 
-              ? errorData.errors.non_field_errors 
+            const nonFieldErrors = Array.isArray(errorData.errors.non_field_errors)
+              ? errorData.errors.non_field_errors
               : [errorData.errors.non_field_errors];
             errorMessage = nonFieldErrors.join('. ');
           } else {
@@ -225,7 +225,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
               })
               .filter(Boolean) // Remove null entries
               .join('; ');
-            
+
             if (fieldErrors) {
               errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
             } else {
@@ -254,10 +254,10 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       } catch (parseError) {
         // Suppress console errors for memberships endpoint
         if (!isMembershipsEndpoint) {
-        console.error('Error parsing response:', parseError);
+          console.error('Error parsing response:', parseError);
         }
       }
-      
+
       // Create error with full error data preserved
       const error = new Error(errorMessage);
       if (errorData) {
@@ -273,7 +273,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     // Suppress console errors for memberships endpoint (expected to fail for some users)
     const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
     if (!isMembershipsEndpoint) {
-    console.error('API Request Error:', error);
+      console.error('API Request Error:', error);
     }
 
     // Enhanced error handling for CORS and network issues
@@ -494,18 +494,18 @@ export const userAPI = {
     } catch (error) {
       // Check if this is an expected error (400, 401, 403, or user identity not found)
       const errorMessage = error?.message || '';
-      const isExpectedError = 
+      const isExpectedError =
         errorMessage.includes('400') ||
         errorMessage.includes('401') ||
         errorMessage.includes('403') ||
         errorMessage.includes('User identity not found') ||
         errorMessage.includes('Bad Request');
-      
+
       // For expected errors, return empty result without logging
       if (isExpectedError) {
         return { success: false, data: [] };
       }
-      
+
       // For unexpected errors, still return empty but re-throw to be handled by caller
       return { success: false, data: [] };
     }
@@ -525,7 +525,7 @@ export const roleAPI = {
   // Add role (creates linked user or submits role request)
   addRole: async (role, firmName = null, message = null) => {
     const payload = {};
-    
+
     // Check if it's a custom role (format: custom_role_{id})
     if (role && role.toString().startsWith('custom_role_')) {
       // Extract the custom role ID
@@ -535,7 +535,7 @@ export const roleAPI = {
       // Standard role
       payload.role = role;
     }
-    
+
     if (firmName) {
       payload.firm_name = firmName;
     }
@@ -712,7 +712,7 @@ export const handleAPIError = (error) => {
           const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
           return stringMatch ? stringMatch[1] : null;
         }).filter(Boolean);
-        
+
         if (errorMessages.length > 0) {
           errorMessage = errorMessages.join('. ');
         }
@@ -722,11 +722,11 @@ export const handleAPIError = (error) => {
       console.log('Could not parse ErrorDetail structure:', errorMessage);
     }
   }
-  
+
   // Also handle error.response.data structure (from API responses)
   if (error.response?.data) {
     const errorData = error.response.data;
-    
+
     // Check if message contains ErrorDetail structure
     if (errorData.message && typeof errorData.message === 'string' && errorData.message.includes('ErrorDetail')) {
       try {
@@ -736,7 +736,7 @@ export const handleAPIError = (error) => {
             const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
             return stringMatch ? stringMatch[1] : null;
           }).filter(Boolean);
-          
+
           if (errorMessages.length > 0) {
             errorMessage = errorMessages.join('. ');
           }
@@ -745,7 +745,7 @@ export const handleAPIError = (error) => {
         console.log('Could not parse ErrorDetail from response data:', errorData.message);
       }
     }
-    
+
     // Handle errors object with ErrorDetail structures
     if (errorData.errors && typeof errorData.errors === 'object') {
       try {
@@ -775,7 +775,7 @@ export const handleAPIError = (error) => {
             cleanErrors.push(errorValue);
           }
         });
-        
+
         if (cleanErrors.length > 0) {
           errorMessage = cleanErrors.join('. ');
         }
@@ -787,14 +787,14 @@ export const handleAPIError = (error) => {
 
   // Handle email template errors with user-friendly messages
   const lowerErrorMessage = errorMessage.toLowerCase();
-  if (lowerErrorMessage.includes('no active template') || 
-      lowerErrorMessage.includes('email template') && lowerErrorMessage.includes('configure') ||
-      lowerErrorMessage.includes('template') && lowerErrorMessage.includes('settings')) {
-    
+  if (lowerErrorMessage.includes('no active template') ||
+    lowerErrorMessage.includes('email template') && lowerErrorMessage.includes('configure') ||
+    lowerErrorMessage.includes('template') && lowerErrorMessage.includes('settings')) {
+
     // Extract email type if possible
     const emailTypeMatch = errorMessage.match(/email type ['"]([^'"]+)['"]/i);
     const emailType = emailTypeMatch ? emailTypeMatch[1] : '';
-    
+
     // Create user-friendly message based on email type
     let friendlyMessage = 'Email template not configured. ';
     if (emailType === 'staff_invite') {
@@ -805,7 +805,7 @@ export const handleAPIError = (error) => {
     } else {
       friendlyMessage += 'Please configure the required email template in Settings → Email Templates before sending invitations.';
     }
-    
+
     return friendlyMessage;
   }
 
@@ -920,7 +920,7 @@ export const dataIntakeAPI = {
   submitSignature: async (signatureData) => {
     const { signature_image, typed_text } = signatureData;
     const requestBody = {};
-    
+
     if (typed_text) {
       requestBody.typed_text = typed_text;
     } else if (signature_image) {
@@ -928,7 +928,7 @@ export const dataIntakeAPI = {
     } else {
       throw new Error('Either signature_image or typed_text is required');
     }
-    
+
     return await apiRequest('/taxpayer/data-entry-form/submit-signature/', 'POST', requestBody);
   },
 
@@ -1359,7 +1359,7 @@ export const securityAPI = {
   getAuditLogs: async (params = {}) => {
     const { action, user_id, start_date, end_date, page = 1, page_size = 50 } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (action) queryParams.append('action', action);
     if (user_id) queryParams.append('user_id', user_id);
     if (start_date) queryParams.append('start_date', start_date);
@@ -1375,7 +1375,7 @@ export const securityAPI = {
   getSecurityAlerts: async (params = {}) => {
     const { alert_type, alert_category, status, user_id, start_date, end_date, page = 1, page_size = 50 } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (alert_type) queryParams.append('alert_type', alert_type);
     if (alert_category) queryParams.append('alert_category', alert_category);
     if (status) queryParams.append('status', status);
@@ -1878,7 +1878,7 @@ export const threadsAPI = {
   // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
   downloadMessageAttachment: async (threadId, messageId) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    
+
     if (!token) {
       throw new Error('Authentication token not found');
     }
@@ -1897,7 +1897,7 @@ export const threadsAPI = {
 
     // Get the blob data
     const blob = await response.blob();
-    
+
     // Get filename from Content-Disposition header or use default
     const contentDisposition = response.headers.get('Content-Disposition');
     let filename = 'attachment';
@@ -1910,14 +1910,14 @@ export const threadsAPI = {
 
     // Create a temporary URL for the blob
     const url = window.URL.createObjectURL(blob);
-    
+
     // Create a temporary anchor element to trigger download
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    
+
     // Clean up
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
@@ -1939,12 +1939,12 @@ export const threadsAPI = {
     // If messageIds is an array, mark all messages (or use first one if single item)
     // If messageIds is a single number, mark that specific message
     // If messageIds is null/undefined, mark all messages
-    const requestBody = messageIds 
-      ? (Array.isArray(messageIds) 
-          ? (messageIds.length === 1 ? { message_id: messageIds[0] } : {})
-          : { message_id: messageIds })
+    const requestBody = messageIds
+      ? (Array.isArray(messageIds)
+        ? (messageIds.length === 1 ? { message_id: messageIds[0] } : {})
+        : { message_id: messageIds })
       : {};
-    
+
     // Use new chat-threads endpoint
     return await apiRequest(`/taxpayer/chat-threads/${threadId}/mark-read/`, 'POST', requestBody);
   },
@@ -2083,6 +2083,18 @@ export const firmAdminDashboardAPI = {
     const queryString = queryParams.toString();
     const endpoint = `/user/firm-admin/dashboard/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get client engagement data
+  // GET /taxpayer/firm-admin/clients/engagement/
+  getEngagementData: async () => {
+    return await apiRequest('/taxpayer/firm-admin/clients/engagement/', 'GET');
+  },
+
+  // Get compliance risk data
+  // GET /api/firm/compliance-risk/
+  getComplianceRiskData: async () => {
+    return await apiRequest('/firm/compliance-risk/', 'GET');
   },
 
   // Get account settings
@@ -3128,7 +3140,7 @@ export const firmAdminDocumentsAPI = {
 
     // Create FormData for file upload
     const formData = new FormData();
-    
+
     // Append files - files should be an array of File objects
     if (Array.isArray(files)) {
       files.forEach((file, index) => {
@@ -3189,10 +3201,10 @@ export const firmAdminDocumentsAPI = {
   listSharedDocuments: async (params = {}) => {
     const { document_id, tax_preparer_id } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (document_id) queryParams.append('document_id', document_id);
     if (tax_preparer_id) queryParams.append('tax_preparer_id', tax_preparer_id);
-    
+
     const queryString = queryParams.toString();
     const endpoint = queryString
       ? `/firm/shared-documents/?${queryString}`
@@ -3282,7 +3294,7 @@ export const firmAdminClientsAPI = {
     };
 
     const response = await fetchWithCors(url, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
@@ -3525,9 +3537,9 @@ export const firmAdminStaffAPI = {
   },
 
   // List tax preparers (new API)
-  listTaxPreparers: async () => {
-    return await apiRequest('/firm/tax-preparers/list/', 'GET');
-  },
+  // listTaxPreparers: async () => {
+  //   return await apiRequest('/firm/tax-preparers/list/', 'GET');
+  // },
   // Get activity logs for a staff member
   getStaffActivityLogs: async (staffId, params = {}) => {
     const {
@@ -3618,10 +3630,10 @@ export const firmAdminCustomRolesAPI = {
 
   // Create custom role
   createCustomRole: async (name, description, permissions) => {
-    return await apiRequest('/user/firm-admin/custom-roles/', 'POST', { 
-      name, 
-      description, 
-      permissions 
+    return await apiRequest('/user/firm-admin/custom-roles/', 'POST', {
+      name,
+      description,
+      permissions
     });
   },
 
@@ -4226,10 +4238,10 @@ export const taxPreparerSharedDocumentsAPI = {
   getSharedDocuments: async (params = {}) => {
     const { document_id, search } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (document_id) queryParams.append('document_id', document_id);
     if (search) queryParams.append('search', search);
-    
+
     const queryString = queryParams.toString();
     const endpoint = queryString
       ? `/firm/tax-preparer/shared-documents/?${queryString}`
@@ -4244,12 +4256,12 @@ export const taxPreparerFirmSharedAPI = {
   getFirmSharedDocuments: async (params = {}) => {
     const { folder_id, category_id, search, is_archived } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (folder_id) queryParams.append('folder_id', folder_id);
     if (category_id) queryParams.append('category_id', category_id);
     if (search) queryParams.append('search', search);
     if (is_archived !== undefined) queryParams.append('is_archived', is_archived);
-    
+
     const queryString = queryParams.toString();
     const endpoint = queryString
       ? `/firm/tax-preparer/firm-shared-documents/?${queryString}`
@@ -4265,7 +4277,7 @@ export const taxPreparerFirmSharedAPI = {
       if (folderId) formData.append('folder_id', folderId);
       if (categoryId) formData.append('category_id', categoryId);
       if (comment) formData.append('comment', comment);
-      
+
       const token = getAccessToken() || AUTH_TOKEN;
 
       const config = {
@@ -4365,22 +4377,22 @@ export const taxPreparerFirmSharedAPI = {
     if (!token) {
       throw new Error('No access token available');
     }
-    
+
     const apiBaseUrl = getApiBaseUrl();
     const url = `${apiBaseUrl}/firm/tax-preparer/firm-shared-documents/${documentId}/download/`;
-    
+
     const response = await fetchWithCors(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || 'Failed to download document');
     }
-    
+
     const blob = await response.blob();
     return blob;
   },
@@ -4389,10 +4401,10 @@ export const taxPreparerFirmSharedAPI = {
   getFirmSharedFolders: async (params = {}) => {
     const { parent_id, search } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (parent_id !== undefined && parent_id !== null) queryParams.append('parent_id', parent_id);
     if (search) queryParams.append('search', search);
-    
+
     const queryString = queryParams.toString();
     const endpoint = queryString
       ? `/firm/tax-preparer/firm-shared-folders/?${queryString}`
@@ -4460,7 +4472,7 @@ export const taxPreparerClientAPI = {
   // Body: { client_id: X } or { invite_id: X, regenerate: true } or { client_id: X, regenerate: true }
   generateInviteLink: async (data) => {
     const { client_id, invite_id, regenerate = false } = data;
-    
+
     const payload = {};
     if (client_id) {
       payload.client_id = client_id;
@@ -4502,7 +4514,7 @@ export const taxPreparerClientAPI = {
   // POST /api/taxpayer/esign/create/
   createESignRequest: async (data) => {
     const { taxpayer_id, has_spouse, preparer_must_sign, file, folder_id, deadline } = data;
-    
+
     if (!taxpayer_id) {
       throw new Error('taxpayer_id is required');
     }
@@ -4520,11 +4532,11 @@ export const taxPreparerClientAPI = {
     formData.append('has_spouse', has_spouse ? 'true' : 'false');
     formData.append('preparer_must_sign', preparer_must_sign !== undefined ? (preparer_must_sign ? 'true' : 'false') : 'true');
     formData.append('file', file);
-    
+
     if (folder_id) {
       formData.append('folder_id', folder_id.toString());
     }
-    
+
     if (deadline) {
       // Ensure deadline is in YYYY-MM-DD format (date only)
       // Date input already provides YYYY-MM-DD format
@@ -4543,10 +4555,10 @@ export const taxPreparerClientAPI = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      
+
       // Extract clean error message from ErrorDetail structures
       let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
-      
+
       // Handle ErrorDetail structures in message
       if (typeof errorMessage === 'string' && errorMessage.includes('ErrorDetail')) {
         try {
@@ -4556,7 +4568,7 @@ export const taxPreparerClientAPI = {
               const stringMatch = match.match(/string=['"]([^'"]+)['"]/);
               return stringMatch ? stringMatch[1] : null;
             }).filter(Boolean);
-            
+
             if (errorMessages.length > 0) {
               errorMessage = errorMessages.join('. ');
             }
@@ -4565,7 +4577,7 @@ export const taxPreparerClientAPI = {
           console.log('Could not parse ErrorDetail structure:', errorMessage);
         }
       }
-      
+
       // Handle errors object with ErrorDetail structures
       if (errorData.errors && typeof errorData.errors === 'object') {
         try {
@@ -4593,7 +4605,7 @@ export const taxPreparerClientAPI = {
               cleanErrors.push(errorValue);
             }
           });
-          
+
           if (cleanErrors.length > 0) {
             errorMessage = cleanErrors.join('. ');
           }
@@ -4601,7 +4613,7 @@ export const taxPreparerClientAPI = {
           console.log('Could not parse errors object:', errorData.errors);
         }
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -5014,12 +5026,12 @@ export const taxPreparerThreadsAPI = {
     // If messageIds is an array, mark all messages (or use first one if single item)
     // If messageIds is a single number, mark that specific message
     // If messageIds is null/undefined, mark all messages
-    const requestBody = messageIds 
-      ? (Array.isArray(messageIds) 
-          ? (messageIds.length === 1 ? { message_id: messageIds[0] } : {})
-          : { message_id: messageIds })
+    const requestBody = messageIds
+      ? (Array.isArray(messageIds)
+        ? (messageIds.length === 1 ? { message_id: messageIds[0] } : {})
+        : { message_id: messageIds })
       : {};
-    
+
     // Use new chat-threads endpoint
     return await apiRequest(`/taxpayer/chat-threads/${threadId}/mark-read/`, 'POST', requestBody);
   },
@@ -5047,7 +5059,7 @@ export const taxPreparerThreadsAPI = {
   // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
   downloadMessageAttachment: async (threadId, messageId) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    
+
     if (!token) {
       throw new Error('Authentication token not found');
     }
@@ -5066,7 +5078,7 @@ export const taxPreparerThreadsAPI = {
 
     // Get the blob data
     const blob = await response.blob();
-    
+
     // Get filename from Content-Disposition header or use default
     const contentDisposition = response.headers.get('Content-Disposition');
     let filename = 'attachment';
@@ -5079,14 +5091,14 @@ export const taxPreparerThreadsAPI = {
 
     // Create a temporary URL for the blob
     const url = window.URL.createObjectURL(blob);
-    
+
     // Create a temporary anchor element to trigger download
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    
+
     // Clean up
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
@@ -5145,7 +5157,7 @@ export const paymentsAPI = {
   getCompletedPayments: async (params = {}) => {
     const queryParams = new URLSearchParams();
     queryParams.append('status', 'completed');
-    
+
     // Add optional query parameters
     if (params.page) {
       queryParams.append('page', params.page);
@@ -5162,15 +5174,15 @@ export const paymentsAPI = {
     if (params.search) {
       queryParams.append('search', params.search);
     }
-    
+
     const queryString = queryParams.toString();
     return await apiRequest(`/taxpayer/payments/?${queryString}`, 'GET');
   },
-  
+
   // Get all payments (with optional status filter)
   getPayments: async (params = {}) => {
     const queryParams = new URLSearchParams();
-    
+
     if (params.status) {
       queryParams.append('status', params.status);
     }
@@ -5189,7 +5201,7 @@ export const paymentsAPI = {
     if (params.search) {
       queryParams.append('search', params.search);
     }
-    
+
     const queryString = queryParams.toString();
     return await apiRequest(`/taxpayer/payments/${queryString ? `?${queryString}` : ''}`, 'GET');
   }
@@ -5301,11 +5313,11 @@ export const signWellAPI = {
   // Extract signature fields from PDF
   extractFields: async (data) => {
     const { document_id, pdf_path, esign_id } = data;
-    
+
     if (!document_id && !pdf_path && !esign_id) {
       throw new Error('Either document_id, pdf_path, or esign_id is required');
     }
-    
+
     const requestBody = {};
     // Priority: pdf_path > esign_id > document_id
     if (pdf_path) {
@@ -5315,7 +5327,7 @@ export const signWellAPI = {
     } else if (document_id) {
       requestBody.document_id = document_id;
     }
-    
+
     return await apiRequest('/taxpayer/signwell/extract-fields/', 'POST', requestBody);
   },
 
@@ -5328,7 +5340,7 @@ export const signWellAPI = {
       document_name,
       test_mode = true
     } = data;
-    
+
     if (!document_id) {
       throw new Error('document_id is required');
     }
@@ -5336,11 +5348,11 @@ export const signWellAPI = {
     if (!signer_email) {
       throw new Error('signer_email is required');
     }
-    
+
     if (!signer_name) {
       throw new Error('signer_name is required');
     }
-    
+
     const requestBody = {
       document_id,
       signer_email,
@@ -5348,7 +5360,7 @@ export const signWellAPI = {
       document_name: document_name || 'Document',
       test_mode
     };
-    
+
     return await apiRequest('/taxpayer/signwell/apply-signature/', 'POST', requestBody);
   },
 
@@ -5357,7 +5369,7 @@ export const signWellAPI = {
     if (!signwellDocumentId) {
       throw new Error('signwell_document_id is required');
     }
-    
+
     return await apiRequest(`/taxpayer/signwell/document-status/${signwellDocumentId}/`, 'GET');
   },
 };
@@ -5740,10 +5752,10 @@ export const firmAdminMessagingAPI = {
   getMessages: async (threadId, params = {}) => {
     const { page = 1, page_size = 50 } = params;
     const queryParams = new URLSearchParams();
-    
+
     if (page) queryParams.append('page', page.toString());
     if (page_size) queryParams.append('page_size', page_size.toString());
-    
+
     const queryString = queryParams.toString();
     return await apiRequest(`/taxpayer/chat-threads/${threadId}/messages/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
@@ -5778,7 +5790,7 @@ export const firmAdminMessagingAPI = {
       try {
         const errorData = await response.json();
         console.error('Compose Message Error Response:', errorData);
-        
+
         if (errorData.errors) {
           const fieldErrors = Object.entries(errorData.errors)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
@@ -5864,7 +5876,7 @@ export const firmAdminMessagingAPI = {
       formData.append('content', messageData.content || messageData.message || '');
       // Convert boolean to capitalized string for Django FormData boolean fields
       // Django expects "True" or "False" (capitalized) for boolean form fields
-      const isInternalValue = messageData.is_internal !== undefined 
+      const isInternalValue = messageData.is_internal !== undefined
         ? (messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True')
         : false;
       formData.append('is_internal', isInternalValue ? 'True' : 'False');
@@ -5893,7 +5905,7 @@ export const firmAdminMessagingAPI = {
         content: messageData.content || messageData.message || '',
         is_internal: messageData.is_internal === true || messageData.is_internal === 'true' || messageData.is_internal === 'True'
       };
-      
+
       return await apiRequest(`/taxpayer/chat-threads/${threadId}/send_message/`, 'POST', payload);
     }
   },
@@ -5901,7 +5913,7 @@ export const firmAdminMessagingAPI = {
   // GET /api/chat-threads/<thread_id>/messages/<message_id>/download/
   downloadMessageAttachment: async (threadId, messageId) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    
+
     if (!token) {
       throw new Error('Authentication token not found');
     }
@@ -5920,7 +5932,7 @@ export const firmAdminMessagingAPI = {
 
     // Get the blob data
     const blob = await response.blob();
-    
+
     // Get filename from Content-Disposition header or use default
     const contentDisposition = response.headers.get('Content-Disposition');
     let filename = 'attachment';
@@ -5933,14 +5945,14 @@ export const firmAdminMessagingAPI = {
 
     // Create a temporary URL for the blob
     const url = window.URL.createObjectURL(blob);
-    
+
     // Create a temporary anchor element to trigger download
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    
+
     // Clean up
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
@@ -6162,11 +6174,11 @@ export const firmAdminSettingsAPI = {
   // Accepts: { password, confirmation_text (optional) }
   deleteAccount: async (password, confirmationText = null) => {
     const token = getAccessToken() || AUTH_TOKEN;
-    
+
     const payload = {
       password: password
     };
-    
+
     // Add confirmation_text if provided
     if (confirmationText) {
       payload.confirmation_text = confirmationText;
@@ -6191,7 +6203,7 @@ export const firmAdminSettingsAPI = {
       try {
         const errorData = await response.json();
         console.error('Delete Account Error Response:', errorData);
-        
+
         if (errorData.errors) {
           const fieldErrors = Object.entries(errorData.errors)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
@@ -6399,11 +6411,11 @@ export const firmAdminSubscriptionAPI = {
       payment_method: paymentMethod,
       change_immediately: changeImmediately
     };
-    
+
     if (successUrl) {
       payload.success_url = successUrl;
     }
-    
+
     if (cancelUrl) {
       payload.cancel_url = cancelUrl;
     }
@@ -6419,7 +6431,7 @@ export const firmAdminSubscriptionAPI = {
         payload.payment_method_id = paymentMethodId;
       }
     }
-    
+
     return await apiRequest('/user/firm-admin/subscription/change/', 'POST', payload);
   },
   // Get Stripe publishable key
@@ -6722,10 +6734,10 @@ export const workflowAPI = {
     const token = getAccessToken() || AUTH_TOKEN;
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      
+
       // Track upload progress
       if (onProgress) {
         xhr.upload.addEventListener('progress', (e) => {
@@ -6735,7 +6747,7 @@ export const workflowAPI = {
           }
         });
       }
-      
+
       xhr.addEventListener('load', () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
@@ -6753,11 +6765,11 @@ export const workflowAPI = {
           }
         }
       });
-      
+
       xhr.addEventListener('error', () => {
         reject(new Error('Network error'));
       });
-      
+
       xhr.open('POST', `${API_BASE_URL}/taxpayer/workflows/document-requests/${requestId}/upload/`);
       xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       // Don't set Content-Type for FormData - let browser set it with boundary
