@@ -4,6 +4,7 @@ import 'react-phone-input-2/lib/bootstrap.css';
 import { MailIcon, CallIcon } from '../../../Components/icons';
 
 export default function OverviewTab({ client, isEditMode, editFormData, onEditFormChange, phoneCountry, onPhoneCountryChange }) {
+  console.log(client, 'editFormData');
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column */}
@@ -23,14 +24,14 @@ export default function OverviewTab({ client, isEditMode, editFormData, onEditFo
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      value={editFormData.first_name}
+                      value={client.first_name}
                       onChange={(e) => onEditFormChange('first_name', e.target.value)}
                       placeholder="First Name"
                       className="flex-1 px-2 py-1 text-[13px] font-bold text-[#3B4A66] border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"
                     />
                     <input
                       type="text"
-                      value={editFormData.last_name}
+                      value={client.last_name}
                       onChange={(e) => onEditFormChange('last_name', e.target.value)}
                       placeholder="Last Name"
                       className="flex-1 px-2 py-1 text-[13px] font-bold text-[#3B4A66] border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3AD6F2] font-[BasisGrotesquePro]"

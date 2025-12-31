@@ -1082,7 +1082,7 @@ export default function ClientDetails() {
     }
     if (client.priority && client.priority !== 'medium') {
       const priorityLabel = client.priority === 'high' ? 'High Priority' :
-          client.priority;
+        client.priority;
       statuses.push(priorityLabel);
     }
     // Add client tags
@@ -1177,152 +1177,152 @@ export default function ClientDetails() {
                 ))}
               </div>
 
-                <div className="mt-2">
-                  <div className="flex items-start gap-8">
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs mb-1">Email</span>
-                      <div className="flex items-center gap-2">
-                        <MailMiniIcon />
+              <div className="mt-2">
+                <div className="flex items-start gap-8">
+                  <div className="flex flex-col">
+                    <span className="text-gray-400 text-xs mb-1">Email</span>
+                    <div className="flex items-center gap-2">
+                      <MailMiniIcon />
                       <span className="text-gray-700 text-xs font-medium">{client.email}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs mb-1"> Phone</span>
-                      <div className="flex items-center gap-2">
-                        <PhoneMiniIcon />
-                      <span className="text-gray-700 text-xs font-medium">{client.phone}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs mb-1">Filing Status</span>
-                    <span className="text-gray-700 text-xs font-medium">{client.filingStatus || "N/A"}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs mb-1">SSN</span>
-                    <span className="text-gray-700 text-xs font-medium">{client.ssn || "N/A"}</span>
                     </div>
                   </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-400 text-xs mb-1"> Phone</span>
+                    <div className="flex items-center gap-2">
+                      <PhoneMiniIcon />
+                      <span className="text-gray-700 text-xs font-medium">{client.phone}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-400 text-xs mb-1">Filing Status</span>
+                    <span className="text-gray-700 text-xs font-medium">{client.filingStatus || "N/A"}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-400 text-xs mb-1">SSN</span>
+                    <span className="text-gray-700 text-xs font-medium">{client.ssn || "N/A"}</span>
+                  </div>
                 </div>
+              </div>
             </div>
           </div>
 
           {/* Buttons: visible on all tabs */}
           <div className="flex gap-3 align-items-center" style={{ flexWrap: "nowrap" }}>
-              {/* Send Message Button */}
-              <button
-                className="rounded-md text-sm"
-                style={{
-                  fontSize: "15px",
-                  width: "131px",
-                  gap: "6px",
-                  borderRadius: "6px",
-                  border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                  backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                  color: "#fff",
-                  padding: "5px 12px",
-                  opacity: 1,
+            {/* Send Message Button */}
+            <button
+              className="rounded-md text-sm"
+              style={{
+                fontSize: "15px",
+                width: "131px",
+                gap: "6px",
+                borderRadius: "6px",
+                border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                color: "#fff",
+                padding: "5px 12px",
+                opacity: 1,
                 cursor: "pointer",
                 whiteSpace: "nowrap"
-                }}
-                onClick={() => {
-                  // Navigate to messages page with clientId parameter
-                  if (clientId) {
-                    navigate(`/taxdashboard/messages?clientId=${clientId}`);
-                  } else {
-                    navigate('/taxdashboard/messages');
-                  }
-                }}
-              >
-                Send Message
-              </button>
+              }}
+              onClick={() => {
+                // Navigate to messages page with clientId parameter
+                if (clientId) {
+                  navigate(`/taxdashboard/messages?clientId=${clientId}`);
+                } else {
+                  navigate('/taxdashboard/messages');
+                }
+              }}
+            >
+              Send Message
+            </button>
             {/* Add Task Button */}
-              <button
-                className="rounded-md text-sm"
-                style={{
-                  fontSize: "15px",
-                  width: "131px",
-                  gap: "6px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                  backgroundColor: "#fff",
-                  color: "var(--Palette2-Dark-blue-900, #3B4A66)",
-                  padding: "5px 12px",
-                  opacity: 1,
+            <button
+              className="rounded-md text-sm"
+              style={{
+                fontSize: "15px",
+                width: "131px",
+                gap: "6px",
+                borderRadius: "6px",
+                border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                backgroundColor: "#fff",
+                color: "var(--Palette2-Dark-blue-900, #3B4A66)",
+                padding: "5px 12px",
+                opacity: 1,
                 cursor: "pointer",
                 whiteSpace: "nowrap"
-                }}
-                onClick={() => {
-                  // Pre-fill client ID when opening modal
-                  if (clientId) {
-                    setFormData(prev => ({
-                      ...prev,
-                      client_ids: [clientId.toString()]
-                    }));
-                  }
-                  setShowAddTaskModal(true);
-                }}
-              >
-                Add Task
-              </button>
+              }}
+              onClick={() => {
+                // Pre-fill client ID when opening modal
+                if (clientId) {
+                  setFormData(prev => ({
+                    ...prev,
+                    client_ids: [clientId.toString()]
+                  }));
+                }
+                setShowAddTaskModal(true);
+              }}
+            >
+              Add Task
+            </button>
 
             {/* Edit Details Button */}
-              {canEditClient && (
-                <div className="d-flex gap-2">
-                  {!isEditMode ? (
-                    <button
+            {canEditClient && (
+              <div className="d-flex gap-2">
+                {!isEditMode ? (
+                  <button
                     className="rounded-md text-sm d-flex align-items-center gap-2"
-                      style={{
-                        fontSize: "15px",
-                        borderRadius: "6px",
-                        border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
-                        backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
-                        color: "#fff",
-                        padding: "5px 12px",
-                        opacity: 1,
+                    style={{
+                      fontSize: "15px",
+                      borderRadius: "6px",
+                      border: "0.5px solid var(--Palette2-Orange-900, #F56D2D)",
+                      backgroundColor: "var(--Palette2-Orange-900, #F56D2D)",
+                      color: "#fff",
+                      padding: "5px 12px",
+                      opacity: 1,
                       cursor: "pointer",
                       whiteSpace: "nowrap"
-                      }}
-                      onClick={() => setIsEditMode(true)}
-                    >
-                      <WhiteEdit />
-                      Edit Details
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        className="btn btn-light"
-                        onClick={handleCancelEdit}
-                        disabled={saving}
-                        style={{
-                          borderRadius: "6px",
-                          padding: "5px 12px",
-                          fontSize: "15px",
+                    }}
+                    onClick={() => setIsEditMode(true)}
+                  >
+                    <WhiteEdit />
+                    Edit Details
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="btn btn-light"
+                      onClick={handleCancelEdit}
+                      disabled={saving}
+                      style={{
+                        borderRadius: "6px",
+                        padding: "5px 12px",
+                        fontSize: "15px",
                         border: "1px solid #E5E7EB",
                         whiteSpace: "nowrap"
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="btn btn-primary"
-                        onClick={handleSaveTaxpayer}
-                        disabled={saving}
-                        style={{
-                          borderRadius: "6px",
-                          padding: "5px 12px",
-                          fontSize: "15px",
-                          backgroundColor: "#FF7A2F",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSaveTaxpayer}
+                      disabled={saving}
+                      style={{
+                        borderRadius: "6px",
+                        padding: "5px 12px",
+                        fontSize: "15px",
+                        backgroundColor: "#FF7A2F",
                         borderColor: "#FF7A2F",
                         whiteSpace: "nowrap"
-                        }}
-                      >
-                        {saving ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
         </div>
       </div>

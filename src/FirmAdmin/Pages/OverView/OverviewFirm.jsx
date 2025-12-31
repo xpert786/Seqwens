@@ -1368,7 +1368,7 @@ export default function FirmAdminDashboard() {
                   <div key={index} className="space-y-1">
                     <div className="flex justify-between items-center">
                       <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.stage}</div>
-                      <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.value} {item.percentage}%</div>
+                      <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{item.percentage}%</div>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3 relative">
                       <div

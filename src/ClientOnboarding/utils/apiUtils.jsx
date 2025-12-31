@@ -2085,6 +2085,18 @@ export const firmAdminDashboardAPI = {
     return await apiRequest(endpoint, 'GET');
   },
 
+  // Get client engagement data
+  // GET /taxpayer/firm-admin/clients/engagement/
+  getEngagementData: async () => {
+    return await apiRequest('/taxpayer/firm-admin/clients/engagement/', 'GET');
+  },
+
+  // Get compliance risk data
+  // GET /api/firm/compliance-risk/
+  getComplianceRiskData: async () => {
+    return await apiRequest('/firm/compliance-risk/', 'GET');
+  },
+
   // Get account settings
   // GET /seqwens/api/firm/account-settings/
   getAccountSettings: async () => {

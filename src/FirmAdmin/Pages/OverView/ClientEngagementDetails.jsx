@@ -1,19 +1,72 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { firmAdminDashboardAPI } from '../../../ClientOnboarding/utils/apiUtils';
 
 const ClientEngagementDetails = () => {
     const navigate = useNavigate();
+    const [engagementData, setEngagementData] = useState({ clients: [], funnel: [], summary: {} });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [filterStage, setFilterStage] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
-    const staticData = [
-        { id: 1, leadName: 'John Doe', stage: 'Prospect', lastContact: '2024-10-20', status: 'Active' },
-        { id: 2, leadName: 'Jane Smith', stage: 'Onboarding', lastContact: '2024-10-18', status: 'Pending' },
-        { id: 3, leadName: 'Mike Johnson', stage: 'Retainer', lastContact: '2024-10-15', status: 'Completed' },
-        { id: 4, leadName: 'Emily Davis', stage: 'Prospect', lastContact: '2024-10-10', status: 'Active' },
-        { id: 5, leadName: 'Chris Wilson', stage: 'Consultation', lastContact: '2024-10-05', status: 'Scheduled' },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const result = await firmAdminDashboardAPI.getEngagementData();
+
+                if (result.success && result.data) {
+                    setEngagementData({
+                        clients: result.data.clients || [],
+                        funnel: result.data.client_engagement?.funnel || [],
+                        summary: result.data.client_engagement?.summary || {}
+                    });
+                } else {
+                    throw new Error(result.message || 'Failed to fetch data');
+                }
+            } catch (err) {
+                console.error('Error fetching engagement details:', err);
+                setError('Failed to load data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const getStageFromEngagement = (engagement) => {
+        if (!engagement) return 'New';
+        if (engagement.has_completed_workflows) return 'Completed';
+        if (engagement.has_signed_documents) return 'Signed';
+        if (engagement.has_signature_requests) return 'Proposal';
+        if (engagement.has_appointments) return 'Appointment';
+        return 'New';
+    };
+
+    // Filter Logic
+    const filteredClients = engagementData.clients.filter(client => {
+        if (filterStage === 'All') return true;
+        return getStageFromEngagement(client.engagement) === filterStage;
+    });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const paginatedClients = filteredClients.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (pageNumber) => {
+        if (pageNumber >= 1 && pageNumber <= totalPages) {
+            setCurrentPage(pageNumber);
+        }
+    };
 
     return (
         <div className="w-full px-6 py-6 bg-[#F6F7FF] min-h-screen">
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Client Engagement Details</h2>
@@ -32,62 +85,152 @@ const ClientEngagementDetails = () => {
                 </button>
             </div>
 
+            {/* Summary Cards */}
+            {!loading && !error && engagementData.summary && (
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { setFilterStage('All'); setCurrentPage(1); }}>
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Total Clients</p>
+                        <p className="text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{engagementData.summary.total_clients || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { setFilterStage('Appointment'); setCurrentPage(1); }}>
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Appointments</p>
+                        <p className="text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{engagementData.summary.clients_with_appointments || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { setFilterStage('Proposal'); setCurrentPage(1); }}>
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Proposals</p>
+                        <p className="text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{engagementData.summary.clients_with_signature_requests || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { setFilterStage('Signed'); setCurrentPage(1); }}>
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Signed</p>
+                        <p className="text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{engagementData.summary.clients_with_signed_documents || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { setFilterStage('Completed'); setCurrentPage(1); }}>
+                        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Completed</p>
+                        <p className="text-2xl font-bold text-[#3B4A66] font-[BasisGrotesquePro]">{engagementData.summary.clients_with_completed_workflows || 0}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Filter Bar */}
+            <div className="mb-4">
+                <div className="flex space-x-2">
+                    {['All', 'New', 'Appointment', 'Proposal', 'Signed', 'Completed'].map(stage => (
+                        <button
+                            key={stage}
+                            onClick={() => { setFilterStage(stage); setCurrentPage(1); }}
+                            className={`px-3 py-1.5 rounded-md text-sm font-[BasisGrotesquePro] transition-colors
+                          ${filterStage === stage
+                                    ? 'bg-[#00C0C6] text-white'
+                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                }`}
+                        >
+                            {stage}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">
-                                    Lead Name
+                                    Client Name
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">
+                                    Type
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">
                                     Stage
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">
-                                    Last Contact
+                                    Last Activity
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-[BasisGrotesquePro]">
-                                    Status
-                                </th>
-                                <th scope="col" className="relative px-6 py-3">
-                                    <span className="sr-only">Actions</span>
+                                    Tasks
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {staticData.map((item) => (
-                                <tr key={item.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{item.leadName}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{item.stage}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{item.lastContact}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full font-[BasisGrotesquePro]
-                      ${item.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                                item.status === 'Active' ? 'bg-blue-100 text-blue-800' :
-                                                    item.status === 'Scheduled' ? 'bg-purple-100 text-purple-800' :
-                                                        'bg-yellow-100 text-yellow-800'}`}>
-                                            {item.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button className="text-indigo-600 hover:text-indigo-900 font-[BasisGrotesquePro]">
-                                            View
-                                        </button>
-                                    </td>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-4 text-center text-gray-500 font-[BasisGrotesquePro]">Loading...</td>
                                 </tr>
-                            ))}
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-4 text-center text-red-500 font-[BasisGrotesquePro]">{error}</td>
+                                </tr>
+                            ) : paginatedClients.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-4 text-center text-gray-500 font-[BasisGrotesquePro]">No clients found for this stage.</td>
+                                </tr>
+                            ) : (
+                                paginatedClients.map((client) => (
+                                    <tr key={client.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">{client.full_name || `${client.first_name} ${client.last_name}`}</div>
+                                            <div className="text-xs text-gray-500 font-[BasisGrotesquePro]">{client.email}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{client.client_type}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full font-[BasisGrotesquePro]
+                      ${getStageFromEngagement(client.engagement) === 'Completed' ? 'bg-green-100 text-green-800' :
+                                                    getStageFromEngagement(client.engagement) === 'Signed' ? 'bg-blue-100 text-blue-800' :
+                                                        getStageFromEngagement(client.engagement) === 'Proposal' ? 'bg-purple-100 text-purple-800' :
+                                                            'bg-yellow-100 text-yellow-800'}`}>
+                                                {getStageFromEngagement(client.engagement)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                                                {client.last_activity ? new Date(client.last_activity).toLocaleDateString() : 'N/A'}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">{client.pending_tasks_count} Pending</div>
+                                        </td>
+                                    </tr>
+                                )))}
                         </tbody>
                     </table>
                 </div>
-                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                    <span className="text-sm text-gray-500 font-[BasisGrotesquePro]">Showing 5 of 5 entries</span>
-                </div>
+
+                {/* Pagination Controls */}
+                {!loading && !error && filteredClients.length > 0 && (
+                    <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
+                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClients.length)} of {filteredClients.length} entries
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className={`px-3 py-1 border rounded text-sm font-[BasisGrotesquePro] ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                Previous
+                            </button>
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => handlePageChange(i + 1)}
+                                    className={`px-3 py-1 border rounded text-sm font-[BasisGrotesquePro] ${currentPage === i + 1 ? 'bg-[#00C0C6] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className={`px-3 py-1 border rounded text-sm font-[BasisGrotesquePro] ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

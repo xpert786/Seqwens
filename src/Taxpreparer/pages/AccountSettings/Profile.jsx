@@ -50,7 +50,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 } else if (response.data) {
                     userInfo = response.data;
                 }
-                
+
                 const firmData = userInfo.firm || response.firm || null;
                 const primaryRole = userInfo.primary_role || userInfo.role || null;
                 setFirmInfo(firmData);
@@ -60,7 +60,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 // Don't show error toast - this is optional information
             }
         };
-        
+
         fetchFirmInfo();
     }, []);
 
@@ -344,7 +344,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
     const fullName = profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || 'User';
 
     return (
-        <div   className="mobile-wrapper" style={{
+        <div className="mobile-wrapper" style={{
             backgroundColor: "#F3F7FF",
             padding: "10px",
             borderRadius: "12px",
@@ -568,13 +568,13 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                     {/* Firm Information - Show only if user is not firm admin or super admin */}
                     {firmInfo && userRole && userRole !== 'firm' && userRole !== 'admin' && userRole !== 'super_admin' && (
                         <div className="mt-4 pt-4 border-top border-[#E8F0FF]">
-                            <h6 
+                            <h6
                                 className="mb-3"
-                                style={{ 
-                                    color: "#3B4A66", 
-                                    fontSize: "16px", 
-                                    fontWeight: "600", 
-                                    fontFamily: "BasisGrotesquePro" 
+                                style={{
+                                    color: "#3B4A66",
+                                    fontSize: "16px",
+                                    fontWeight: "600",
+                                    fontFamily: "BasisGrotesquePro"
                                 }}
                             >
                                 Current Firm
@@ -584,15 +584,15 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                     <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                         Firm Name
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        className="form-control w-full mobile-input" 
+                                    <input
+                                        type="text"
+                                        className="form-control w-full mobile-input"
                                         value={firmInfo.name || ''}
                                         disabled
-                                        style={{ 
-                                            color: "#6B7280", 
-                                            fontSize: "13px", 
-                                            fontWeight: "400", 
+                                        style={{
+                                            color: "#6B7280",
+                                            fontSize: "13px",
+                                            fontWeight: "400",
                                             fontFamily: "BasisGrotesquePro",
                                             backgroundColor: "#F9FAFB",
                                             cursor: "not-allowed"
@@ -603,15 +603,15 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                     <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                         Status
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        className="form-control w-full mobile-input" 
+                                    <input
+                                        type="text"
+                                        className="form-control w-full mobile-input"
                                         value={firmInfo.status ? firmInfo.status.charAt(0).toUpperCase() + firmInfo.status.slice(1) : ''}
                                         disabled
-                                        style={{ 
-                                            color: "#6B7280", 
-                                            fontSize: "13px", 
-                                            fontWeight: "400", 
+                                        style={{
+                                            color: "#6B7280",
+                                            fontSize: "13px",
+                                            fontWeight: "400",
                                             fontFamily: "BasisGrotesquePro",
                                             backgroundColor: "#F9FAFB",
                                             cursor: "not-allowed"
@@ -623,15 +623,15 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                                         <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
                                             Subdomain
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control w-full mobile-input" 
+                                        <input
+                                            type="text"
+                                            className="form-control w-full mobile-input"
                                             value={firmInfo.subdomain || ''}
                                             disabled
-                                            style={{ 
-                                                color: "#6B7280", 
-                                                fontSize: "13px", 
-                                                fontWeight: "400", 
+                                            style={{
+                                                color: "#6B7280",
+                                                fontSize: "13px",
+                                                fontWeight: "400",
                                                 fontFamily: "BasisGrotesquePro",
                                                 backgroundColor: "#F9FAFB",
                                                 cursor: "not-allowed"
