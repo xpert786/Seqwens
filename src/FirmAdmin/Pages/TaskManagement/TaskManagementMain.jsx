@@ -14,7 +14,8 @@ const TaskManagementMain = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('All Priorities');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [taskTypeFilter, setTaskTypeFilter] = useState('All Types');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -46,15 +47,35 @@ const TaskManagementMain = () => {
 
       const params = {
         page: currentPage,
-        page_size: 3 // Show 3 tasks per page
+        page_size: 20 // Show 20 tasks per page (matching API default)
       };
 
       // Add filters if needed
       if (priorityFilter !== 'All Priorities') {
         params.priority = priorityFilter.toLowerCase();
       }
-      if (categoryFilter !== 'All Categories') {
-        params.category = categoryFilter;
+      if (statusFilter !== 'All Statuses') {
+        // Map display names to API values
+        const statusMap = {
+          'To Do': 'to_do',
+          'Pending': 'pending',
+          'In Progress': 'in_progress',
+          'Completed': 'completed',
+          'Blocked': 'blocked',
+          'Waiting For Client': 'waiting_for_client',
+          'Cancelled': 'cancelled'
+        };
+        params.status = statusMap[statusFilter] || statusFilter.toLowerCase().replace(/\s+/g, '_');
+      }
+      if (taskTypeFilter !== 'All Types') {
+        // Map display names to API values
+        const taskTypeMap = {
+          'Document Collection': 'document_collection',
+          'Document Review': 'document_review',
+          'Client Onboarding': 'client_onboarding',
+          'Amendment Filing': 'amendment_filing'
+        };
+        params.task_type = taskTypeMap[taskTypeFilter] || taskTypeFilter.toLowerCase().replace(/\s+/g, '_');
       }
       if (searchTerm) {
         params.search = searchTerm;
@@ -63,7 +84,7 @@ const TaskManagementMain = () => {
       const response = await firmAdminTasksAPI.listTasks(params);
 
       if (response.success && response.data) {
-        // Update summary from statistics (new API) or summary (old API) for backward compatibility
+        // Update summary from statistics
         const stats = response.data.statistics || response.data.summary;
         if (stats) {
           setSummary({
@@ -71,28 +92,79 @@ const TaskManagementMain = () => {
             in_progress: stats.in_progress || 0,
             pending: stats.pending || 0,
             overdue: stats.overdue || 0,
+            total: stats.total || (stats.completed || 0) + (stats.in_progress || 0) + (stats.pending || 0) + (stats.overdue || 0),
             total_hours: stats.total_hours || 0
           });
         }
 
         // Transform API tasks to component format
-        const transformedTasks = (response.data.tasks || []).map(task => ({
-          id: task.id,
-          task: task.task_title,
-          description: task.description || task.category || '',
-          assignedTo: {
-            initials: task.assigned_to_initials || (task.assigned_to_name ? task.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'NA'),
-            name: task.assigned_to_name || 'Unassigned'
-          },
-          client: task.client_name || (task.clients_info && task.clients_info.length > 0 ? task.clients_info[0].name : 'No Client'),
-          priority: task.priority_display || task.priority || 'Medium',
-          status: task.status_display || task.status || 'Pending',
-          progress: task.progress_percentage || 0,
-          dueDate: task.due_date_formatted || task.due_date || '',
-          // hours: task.hours_display || `${task.hours_spent || 0}h / ${task.estimated_hours || 0}h`,
-          category: task.category || task.task_type_display || '',
-          is_overdue: task.is_overdue || false
-        }));
+        const transformedTasks = (response.data.tasks || []).map(task => {
+          // Get assigned_to info from API response
+          // API can return assigned_to as an object OR as an ID with separate name/initials fields
+          let assignedToName = 'Unassigned';
+          let assignedToInitials = 'NA';
+          let assignedToId = null;
+          
+          if (task.assigned_to && typeof task.assigned_to === 'object') {
+            // assigned_to is an object with name, initials, id
+            assignedToName = task.assigned_to.name || 'Unassigned';
+            assignedToInitials = task.assigned_to.initials || (assignedToName !== 'Unassigned' ? assignedToName.split(' ').map(n => n[0]).join('').toUpperCase() : 'NA');
+            assignedToId = task.assigned_to.id;
+          } else {
+            // assigned_to is an ID, use separate fields if available
+            assignedToId = task.assigned_to;
+            assignedToName = task.assigned_to_name || 'Unassigned';
+            assignedToInitials = task.assigned_to_initials || (assignedToName !== 'Unassigned' ? assignedToName.split(' ').map(n => n[0]).join('').toUpperCase() : 'NA');
+          }
+          
+          // Get client info from API response
+          // API can return client as an ID with separate client_name, or clients_info array
+          let clientName = 'No Client';
+          if (task.client_name) {
+            clientName = task.client_name;
+          } else if (task.clients_info && task.clients_info.length > 0) {
+            clientName = task.clients_info[0].name || 'No Client';
+          }
+          
+          // Format hours display
+          let hoursDisplay = '';
+          if (task.hours_spent !== undefined && task.hours_spent !== null) {
+            if (task.estimated_hours !== undefined && task.estimated_hours !== null) {
+              hoursDisplay = `${task.hours_spent}h / ${task.estimated_hours}h`;
+            } else {
+              hoursDisplay = `${task.hours_spent}h`;
+            }
+          } else if (task.estimated_hours !== undefined && task.estimated_hours !== null) {
+            hoursDisplay = `0h / ${task.estimated_hours}h`;
+          } else if (task.hours_display) {
+            hoursDisplay = task.hours_display;
+          }
+          
+          return {
+            id: task.id,
+            task: task.task_title || '',
+            description: task.description || '',
+            assignedTo: {
+              initials: assignedToInitials,
+              name: assignedToName,
+              id: assignedToId
+            },
+            client: clientName,
+            priority: task.priority_display || task.priority || 'medium',
+            status: task.status_display || task.status || 'to_do',
+            progress: task.progress_percentage || 0,
+            dueDate: task.due_date_formatted || task.due_date || '',
+            hours: hoursDisplay,
+            category: task.task_type_display || task.category || task.task_type || '',
+            task_type: task.task_type,
+            is_overdue: task.is_overdue || false,
+            folder_info: task.folder_info,
+            file_count: task.file_count || 0,
+            client_count: task.client_count || (task.clients_info ? task.clients_info.length : 0),
+            estimated_hours: task.estimated_hours,
+            hours_spent: task.hours_spent
+          };
+        });
 
         setTaskData(transformedTasks);
 
@@ -101,7 +173,7 @@ const TaskManagementMain = () => {
           setPagination({
             total_count: response.data.pagination.total_count || 0,
             page: response.data.pagination.page || currentPage,
-            page_size: response.data.pagination.page_size || 3,
+            page_size: response.data.pagination.page_size || 20,
             total_pages: response.data.pagination.total_pages || 1
           });
         }
@@ -115,12 +187,12 @@ const TaskManagementMain = () => {
     } finally {
       setLoading(false);
     }
-  }, [priorityFilter, categoryFilter, searchTerm, currentPage]);
+  }, [priorityFilter, statusFilter, taskTypeFilter, searchTerm, currentPage]);
 
   // Reset page to 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, priorityFilter, categoryFilter]);
+  }, [searchTerm, priorityFilter, statusFilter, taskTypeFilter]);
 
   // Fetch tasks when filters or page changes (with debounce for search)
   useEffect(() => {
@@ -129,7 +201,7 @@ const TaskManagementMain = () => {
     }, searchTerm ? 500 : 0); // Only debounce search, not filters
 
     return () => clearTimeout(timer);
-  }, [searchTerm, priorityFilter, categoryFilter, currentPage, fetchTasks]);
+  }, [searchTerm, priorityFilter, statusFilter, taskTypeFilter, currentPage, fetchTasks]);
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -554,15 +626,37 @@ const TaskManagementMain = () => {
 
               <div className="relative">
                 <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
                   className="appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer min-w-[160px] taskmanage-filter-select"
                 >
-                  <option>All Categories</option>
-                  <option>Tax Preparation</option>
-                  <option>Business Review</option>
-                  <option>Amendment</option>
-                  <option>Document Management</option>
+                  <option>All Statuses</option>
+                  <option>To Do</option>
+                  <option>Pending</option>
+                  <option>In Progress</option>
+                  <option>Completed</option>
+                  <option>Blocked</option>
+                  <option>Waiting For Client</option>
+                  <option>Cancelled</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="relative">
+                <select
+                  value={taskTypeFilter}
+                  onChange={(e) => setTaskTypeFilter(e.target.value)}
+                  className="appearance-none bg-white !border border-[#E8F0FF] !rounded-lg px-4 py-2.5 pr-10 text-[#4B5563] focus:outline-none font-[BasisGrotesquePro] cursor-pointer min-w-[160px] taskmanage-filter-select"
+                >
+                  <option>All Types</option>
+                  <option>Document Collection</option>
+                  <option>Document Review</option>
+                  <option>Client Onboarding</option>
+                  <option>Amendment Filing</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg className="w-4 h-4 text-[#4B5563]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -579,6 +673,7 @@ const TaskManagementMain = () => {
           <>
             <TableView
               taskData={taskData}
+              totalCount={pagination.total_count}
               getPriorityColor={getPriorityColor}
               getStatusColor={getStatusColor}
               handleActionClick={handleActionClick}

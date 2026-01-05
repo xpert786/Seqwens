@@ -368,7 +368,16 @@ export default function Topbar({
                     aria-controls="tax-header-profile-menu"
                   >
                     {profilePicture ? (
-                      <img src={profilePicture} alt={`${profileName} avatar`} className="topbar-user-avatar" />
+                      <img 
+                        src={profilePicture} 
+                        alt={`${profileName} avatar`} 
+                        className="topbar-user-avatar"
+                        key={profilePicture}
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          e.target.style.display = 'none';
+                        }}
+                      />
                     ) : (
                       <div className="topbar-user-initials" aria-hidden="true">
                         {profileInitials}

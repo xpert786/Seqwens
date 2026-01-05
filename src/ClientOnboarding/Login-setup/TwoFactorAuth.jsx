@@ -1,55 +1,62 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/TwoAuth.css";
-import { EmailIcon, PhoneIcon } from "../components/icons";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FixedLayout from "../components/FixedLayout";
 
 export default function TwoFactorAuth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already verified and redirect accordingly
+    // Automatically redirect users to their dashboard - skip email/phone verification
     // Check both localStorage and sessionStorage
     let userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
     if (userData) {
       try {
         const user = JSON.parse(userData);
         const userType = localStorage.getItem('userType') || sessionStorage.getItem('userType');
+        const roles = user.role || [];
+        const customRole = user.custom_role;
         
-        // For clients: check email/phone verification
-        if (userType === 'client' || !userType) {
-          const isEmailVerified = user.is_email_verified;
-          const isPhoneVerified = user.is_phone_verified;
-          
-          console.log('TwoFactorAuth - Client verification status:', { isEmailVerified, isPhoneVerified });
-          
-          // If either email or phone is verified, redirect to dashboard
-          if (isEmailVerified || isPhoneVerified) {
-            console.log('Client is already verified, redirecting to dashboard');
-            navigate("/dashboard");
+        // Check if user has custom role and role is tax_preparer
+        if (customRole && roles && Array.isArray(roles) && roles.includes('tax_preparer')) {
+          navigate("/taxdashboard", { replace: true });
+          return;
+        }
+        
+        // Route based on user type
+        if (userType === 'super_admin') {
+          navigate("/superadmin", { replace: true });
+        } else if (userType === 'support_admin' || userType === 'billing_admin') {
+          navigate("/superadmin", { replace: true });
+        } else if (userType === 'admin' || userType === 'firm') {
+          // Check subscription plan first
+          if (user.subscription_plan === null || user.subscription_plan === undefined) {
+            navigate("/firmadmin/finalize-subscription", { replace: true });
+          } else {
+            navigate("/firmadmin", { replace: true });
           }
-        } 
-        // For firm admin: check two_factor_authentication status
-        else if (userType === 'admin' || userType === 'firm') {
-          const twoFactorEnabled = user.two_factor_authentication;
-          
-          console.log('TwoFactorAuth - Firm admin 2FA status:', { twoFactorEnabled });
-          
-          // If 2FA is already enabled, redirect to firm admin dashboard
-          if (twoFactorEnabled === true) {
-            console.log('Firm admin 2FA already enabled, redirecting to firm admin dashboard');
-            // Check subscription plan first
-            if (user.subscription_plan === null || user.subscription_plan === undefined) {
-              navigate("/firmadmin/finalize-subscription", { replace: true });
-            } else {
-              navigate("/firmadmin", { replace: true });
-            }
+        } else if (userType === 'tax_preparer') {
+          navigate("/taxdashboard", { replace: true });
+        } else if (userType === 'client' || !userType) {
+          // For clients, check completion status
+          const isCompleted = user.is_completed;
+          if (isCompleted) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/dashboard-first", { replace: true });
           }
+        } else {
+          // Fallback to dashboard
+          navigate("/dashboard", { replace: true });
         }
       } catch (error) {
         console.error('Error parsing user data:', error);
+        // Fallback to dashboard
+        navigate("/dashboard", { replace: true });
       }
+    } else {
+      // No user data, redirect to login
+      navigate("/login", { replace: true });
     }
   }, [navigate]);
 
@@ -58,52 +65,18 @@ export default function TwoFactorAuth() {
       <div className="twofa-container">
         <div className="twofa-boxs">
           <div className="twofa-content">
-            <div className="twofa-header">
-              <h5>SECURE YOUR ACCOUNT WITH 2FA</h5>
-              <p>
-                Two-Factor Authentication adds an extra security layer,
-                protecting your account with a code and password.
+            <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "300px" }}>
+              <div className="spinner-border text-primary mb-3" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p style={{ 
+                color: "#4B5563", 
+                fontSize: "14px", 
+                fontFamily: "BasisGrotesquePro",
+                textAlign: "center"
+              }}>
+                Redirecting to your dashboard...
               </p>
-            </div>
-
-            <div className="twofa-options">
-              {/* EMAIL OPTION */}
-              <button
-                className="twofa-btn"
-                onClick={() => navigate("/verify-email")}
-              >
-                <div className="twofa-btn-left">
-                  <div className="twofa-icon">
-                    <EmailIcon style={{ color: "#00C2CB" }} />
-                  </div>
-                  <div className="twofa-text">
-                    <div className="twofa-title">EMAIL</div>
-                    <div className="twofa-desc">
-                      We’ll send a verification code to your email address.
-                    </div>
-                  </div>
-                </div>
-                <ArrowForwardIosIcon className="arrow-icon" />
-              </button>
-
-              {/* PHONE OPTION */}
-              <button
-                className="twofa-btn"
-                onClick={() => navigate("/verify-phone")}
-              >
-                <div className="twofa-btn-left">
-                  <div className="twofa-icon">
-                    <PhoneIcon style={{ color: "#00C2CB" }} />
-                  </div>
-                  <div className="twofa-text">
-                    <div className="twofa-title">PHONE</div>
-                    <div className="twofa-desc">
-                      We’ll send an SMS with a verification code to your phone.
-                    </div>
-                  </div>
-                </div>
-                <ArrowForwardIosIcon className="arrow-icon" />
-              </button>
             </div>
           </div>
         </div>

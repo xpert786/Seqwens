@@ -169,16 +169,27 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
             response?.profile ||
             null;
 
+        // Extract profile picture URL - check all possible locations
         const newProfileImageUrl =
             profilePayload?.profile_picture ||
             profilePayload?.profile_image ||
+            profilePayload?.profile_picture_url ||
+            profilePayload?.avatar_url ||
+            profilePayload?.avatar ||
+            response?.data?.profile_information?.profile_picture ||
+            response?.data?.profile_information?.profile_image ||
             response?.data?.profile_picture ||
+            response?.data?.profile_image ||
             response?.profile_picture ||
             response?.profile_image ||
             null;
 
-        if (newProfileImageUrl && newProfileImageUrl !== 'null' && newProfileImageUrl !== 'undefined') {
-            setCurrentProfileImage(newProfileImageUrl);
+        // Add cache-busting parameter to force image reload
+        let finalImageUrl = newProfileImageUrl;
+        if (finalImageUrl && finalImageUrl !== 'null' && finalImageUrl !== 'undefined') {
+            const separator = finalImageUrl.includes('?') ? '&' : '?';
+            finalImageUrl = `${finalImageUrl}${separator}t=${Date.now()}`;
+            setCurrentProfileImage(finalImageUrl);
         }
 
         setSelectedImage(null);
@@ -188,7 +199,20 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
             fileInputRef.current.value = '';
         }
 
-        syncHeaderProfile(profilePayload || response?.data || null);
+        // Sync header with updated profile data - ensure we pass the complete profile_information object
+        const profileDataToSync = profilePayload || response?.data?.profile_information || response?.data || null;
+        if (profileDataToSync && newProfileImageUrl) {
+            // Update the profile_picture in the data with cache-busted URL before syncing
+            // Use finalImageUrl if it was created (has cache-busting), otherwise use newProfileImageUrl
+            profileDataToSync.profile_picture = finalImageUrl || newProfileImageUrl;
+        }
+        syncHeaderProfile(profileDataToSync);
+        
+        // Also explicitly refresh the header to ensure it gets the latest data
+        if (typeof window !== "undefined" && typeof window.refreshTaxHeaderProfile === "function") {
+            window.refreshTaxHeaderProfile();
+        }
+        
         if (onUpdate) {
             onUpdate();
         }
@@ -300,7 +324,9 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
     };
 
     const handleSubmit = async (e) => {
+        if (e && e.preventDefault) {
         e.preventDefault();
+        }
         try {
             setSaving(true);
 
@@ -316,6 +342,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                 email: formData.email,
                 phone_number: formData.phone_number,
                 availability: formData.availability,
+                company_name: formData.company_name || '',
                 ptin: formData.ptin || '',
                 efin: formData.efin || ''
             };
@@ -493,8 +520,8 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                     </div>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
+                {/* Form Fields */}
+                <div>
                     <div className="row g-3 mb-4">
                         <div className="col-12">
                             <label className="form-label" style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>
@@ -642,19 +669,7 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             </div>
                         </div>
                     )}
-
-                    <div className="mt-1">
-                        <button
-                            type="submit"
-                            className="btn d-flex align-items-center gap-2 mobile-btn"
-                            style={{ backgroundColor: "#F56D2D", color: "#ffffff", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
-                            disabled={saving}
-                        >
-                            <SaveIcon />
-                            {saving ? 'Saving...' : 'Save Changes'}
-                        </button>
                     </div>
-                </form>
             </div>
 
             {/* Company Profile Section */}
@@ -724,20 +739,21 @@ export default function Profile({ profileData, companyProfile, onUpdate }) {
                             style={{ color: "#3B4A66", fontSize: "13px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                         />
                     </div>
+                    </div>
                 </div>
 
-                <div className="mt-3">
+            {/* Single Save Button for All Changes */}
+            <div className="mt-4 d-flex justify-content-end">
                     <button
                         type="button"
                         onClick={handleSubmit}
-                        className="btn d-flex align-items-center gap-2"
+                    className="btn d-flex align-items-center gap-2 mobile-btn"
                         style={{ backgroundColor: "#F56D2D", color: "#ffffff", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro" }}
                         disabled={saving}
                     >
                         <SaveIcon />
                         {saving ? 'Saving...' : 'Save Changes'}
                     </button>
-                </div>
             </div>
         </div>
     );

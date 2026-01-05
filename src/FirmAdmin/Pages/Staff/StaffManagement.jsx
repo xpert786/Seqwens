@@ -9,6 +9,7 @@ import { getApiBaseUrl, fetchWithCors } from '../../../ClientOnboarding/utils/co
 import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminStaffAPI } from '../../../ClientOnboarding/utils/apiUtils';
 import BulkImportModal from './BulkImportModal';
+import BulkTaxPreparerImportModal from './BulkTaxPreparerImportModal';
 import DownloadModal from './DownloadModal';
 import AddStaffModal from './AddStaffModal';
 import jsPDF from "jspdf";
@@ -29,6 +30,7 @@ export default function StaffManagement() {
   const [performanceFilter, setPerformanceFilter] = useState('all');
   const [showDropdown, setShowDropdown] = useState(null);
   const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
+  const [isBulkTaxPreparerImportModalOpen, setIsBulkTaxPreparerImportModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [staffData, setStaffData] = useState([]);
@@ -1048,6 +1050,20 @@ export default function StaffManagement() {
         isOpen={isBulkImportModalOpen}
         onClose={() => setIsBulkImportModalOpen(false)}
         onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
+        onImportSuccess={async () => {
+          // Refresh staff list after successful import
+          await fetchStaffMembers();
+          await fetchPendingInvites();
+        }}
+      />
+      <BulkTaxPreparerImportModal
+        isOpen={isBulkTaxPreparerImportModalOpen}
+        onClose={() => setIsBulkTaxPreparerImportModalOpen(false)}
+        onImportSuccess={async () => {
+          // Refresh staff list after successful import
+          await fetchStaffMembers();
+          await fetchPendingInvites();
+        }}
       />
       <DownloadModal isOpen={isDownloadModalOpen} onClose={() => setIsDownloadModalOpen(false)} />
       <AddStaffModal
@@ -1077,13 +1093,22 @@ export default function StaffManagement() {
                 Performance Report
               </button>
               {!advancedReportingEnabled && (
-                <button
-                  onClick={() => setIsBulkImportModalOpen(true)}
-                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
-                >
-                  <UpperDownsIcon />
-                  Bulk Import
-                </button>
+                <>
+                  <button
+                    onClick={() => setIsBulkImportModalOpen(true)}
+                    className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
+                  >
+                    <UpperDownsIcon />
+                    Bulk Import
+                  </button>
+                  <button
+                    onClick={() => setIsBulkTaxPreparerImportModalOpen(true)}
+                    className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
+                  >
+                    <UpperDownsIcon />
+                    Bulk Import Tax Preparers
+                  </button>
+                </>
               )}
               <button
                 onClick={() => setIsAddStaffModalOpen(true)}

@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FixedLayout from "../components/FixedLayout";
 import { userAPI, validateEmail, handleAPIError } from "../utils/apiUtils";
 import { setTokens, getStorage } from "../utils/userUtils";
+import TwoFactorCodeInput from "../components/TwoFactorCodeInput";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,6 +16,15 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  // 2FA states
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [verifying2FA, setVerifying2FA] = useState(false);
+  const [twoFactorError, setTwoFactorError] = useState(null);
+  const [twoFactorMessage, setTwoFactorMessage] = useState('');
+  const [twoFactorInstructions, setTwoFactorInstructions] = useState('');
+  const [twoFactorUIHints, setTwoFactorUIHints] = useState(null);
 
   // Restore rememberMe state and email from storage on component mount
   useEffect(() => {
@@ -79,35 +89,60 @@ export default function Login() {
     try {
       const response = await userAPI.login({ email, password });
       
-      // Choose storage based on Remember Me selection
-      const storage = rememberMe ? localStorage : sessionStorage;
-      
-      // Store user data
-      storage.setItem("isLoggedIn", "true");
-      storage.setItem("userData", JSON.stringify(response.user));
-      
-      // Store firms data from login response for AccountSwitcher
-      if (response.firms && Array.isArray(response.firms)) {
-        storage.setItem("firmsData", JSON.stringify(response.firms));
+      // Check if 2FA is required
+      if (response.requires_2fa === true) {
+        setRequires2FA(true);
+        setTwoFactorMessage(response.message || 'Please enter your 2FA code to complete login');
+        setTwoFactorInstructions(response.instructions || '');
+        setTwoFactorUIHints(response.ui_hints || null);
+        setIsLoading(false);
+        return;
       }
       
-      // Store email if rememberMe is checked
-      if (rememberMe) {
-        localStorage.setItem("rememberedEmail", email);
-        // Clear from sessionStorage if it exists
-        sessionStorage.removeItem("rememberedEmail");
-      } else {
-        // Store in sessionStorage for current session only
-        sessionStorage.setItem("rememberedEmail", email);
-        // Clear from localStorage if it exists
-        localStorage.removeItem("rememberedEmail");
-      }
-      
-      // Store tokens using the utility function
-      setTokens(response.access_token, response.refresh_token, rememberMe);
-      
-      // Check user type and navigate to appropriate dashboard
-      const user = response.user;
+      // If 2FA is not required, proceed with normal login
+      await completeLogin(response);
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({ 
+        general: handleAPIError(error) 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const completeLogin = async (response) => {
+    // Choose storage based on Remember Me selection
+    const storage = rememberMe ? localStorage : sessionStorage;
+    
+    // Store user data
+    storage.setItem("isLoggedIn", "true");
+    storage.setItem("userData", JSON.stringify(response.user || response.data?.user));
+    
+    // Store firms data from login response for AccountSwitcher
+    if (response.firms && Array.isArray(response.firms)) {
+      storage.setItem("firmsData", JSON.stringify(response.firms));
+    }
+    
+    // Store email if rememberMe is checked
+    if (rememberMe) {
+      localStorage.setItem("rememberedEmail", email);
+      // Clear from sessionStorage if it exists
+      sessionStorage.removeItem("rememberedEmail");
+    } else {
+      // Store in sessionStorage for current session only
+      sessionStorage.setItem("rememberedEmail", email);
+      // Clear from localStorage if it exists
+      localStorage.removeItem("rememberedEmail");
+    }
+    
+    // Store tokens using the utility function
+    const accessToken = response.access_token || response.data?.access;
+    const refreshToken = response.refresh_token || response.data?.refresh;
+    setTokens(accessToken, refreshToken, rememberMe);
+    
+    // Check user type and navigate to appropriate dashboard
+    const user = response.user || response.data?.user;
       const userType = user.user_type;
       const roles = user.role; // Array of roles from API response
       const customRole = user.custom_role; // Custom role object if exists
@@ -189,14 +224,72 @@ export default function Login() {
         console.warn('Unknown user type:', userType);
         navigate("/dashboard");
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setErrors({ 
-        general: handleAPIError(error) 
-      });
-    } finally {
-      setIsLoading(false);
+  };
+
+  const handleVerify2FA = async (code) => {
+    if (!code || code.length !== 6) {
+      setTwoFactorError('Please enter a valid 6-digit code');
+      return;
     }
+
+    setVerifying2FA(true);
+    setTwoFactorError(null);
+
+    try {
+      const response = await userAPI.verify2FALogin(email, code);
+      
+      if (response.success) {
+        // 2FA verified, complete login
+        await completeLogin(response.data || response);
+      } else {
+        throw new Error(response.message || 'Invalid verification code');
+      }
+    } catch (error) {
+      console.error('2FA verification error:', error);
+      const errorMessage = handleAPIError(error);
+      setTwoFactorError(errorMessage);
+    } finally {
+      setVerifying2FA(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setRequires2FA(false);
+    setTwoFactorCode('');
+    setTwoFactorError(null);
+    setTwoFactorMessage('');
+    setTwoFactorInstructions('');
+    setTwoFactorUIHints(null);
+    setPassword('');
+  };
+
+  // Get UI hints with defaults
+  const getUIHints = () => {
+    if (twoFactorUIHints) {
+      return {
+        inputPlaceholder: twoFactorUIHints.input_placeholder || 'Enter 6-digit code',
+        inputType: twoFactorUIHints.input_type || 'numeric',
+        inputMaxLength: twoFactorUIHints.input_max_length || 6,
+        backgroundColor: twoFactorUIHints.background_color || '#ffffff',
+        textColor: twoFactorUIHints.text_color || '#000000',
+        borderColor: twoFactorUIHints.border_color || '#007bff',
+        focusBorderColor: twoFactorUIHints.focus_border_color || '#0056b3',
+        errorColor: twoFactorUIHints.error_color || '#dc3545',
+        successColor: twoFactorUIHints.success_color || '#28a745',
+      };
+    }
+    // Default values if no UI hints provided
+    return {
+      inputPlaceholder: 'Enter 6-digit code',
+      inputType: 'numeric',
+      inputMaxLength: 6,
+      backgroundColor: '#ffffff',
+      textColor: '#000000',
+      borderColor: '#007bff',
+      focusBorderColor: '#0056b3',
+      errorColor: '#dc3545',
+      successColor: '#28a745',
+    };
   };
 
   return (
@@ -214,7 +307,8 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="login-form">
+          {!requires2FA ? (
+            <form onSubmit={handleLogin} className="login-form">
             <div className="form-group">
               <label className="form-label">Email or Username</label>
               <input
@@ -303,6 +397,111 @@ export default function Login() {
                </Link> 
               </p>
           </form>
+          ) : (
+            <div className="login-form">
+              {/* 2FA Container with prominent styling */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '400px',
+                padding: '40px 20px',
+                backgroundColor: getUIHints().backgroundColor || '#f8f9fa',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                marginTop: '20px',
+              }}>
+                {/* Message */}
+                {twoFactorMessage && (
+                  <div style={{
+                    fontSize: '18px',
+                    fontWeight: '500',
+                    color: '#212529',
+                    textAlign: 'center',
+                    marginBottom: '16px',
+                    lineHeight: '1.5',
+                    fontFamily: 'BasisGrotesquePro',
+                    maxWidth: '500px',
+                  }}>
+                    {twoFactorMessage}
+                  </div>
+                )}
+
+                {/* Instructions */}
+                {twoFactorInstructions && (
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    marginBottom: '30px',
+                    lineHeight: '1.5',
+                    fontFamily: 'BasisGrotesquePro',
+                    maxWidth: '500px',
+                  }}>
+                    {twoFactorInstructions}
+                  </div>
+                )}
+
+                {/* 2FA Code Input - Highly Visible */}
+                <div style={{ width: '100%', maxWidth: '300px', margin: '0 auto 30px' }}>
+                  <TwoFactorCodeInput
+                    value={twoFactorCode}
+                    onChange={(code) => {
+                      setTwoFactorCode(code);
+                      setTwoFactorError(null);
+                    }}
+                    onComplete={handleVerify2FA}
+                    error={twoFactorError}
+                    disabled={verifying2FA}
+                    uiHints={getUIHints()}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="d-flex gap-2 justify-content-center" style={{ width: '100%', maxWidth: '300px' }}>
+                  <button
+                    type="button"
+                    onClick={handleBackToLogin}
+                    className="btn"
+                    style={{
+                      backgroundColor: "transparent",
+                      color: "#3B4A66",
+                      fontSize: "14px",
+                      fontFamily: "BasisGrotesquePro",
+                      border: "1px solid #E8F0FF",
+                      padding: "10px 20px",
+                      borderRadius: "6px",
+                      flex: 1,
+                    }}
+                  >
+                    Back to Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleVerify2FA(twoFactorCode)}
+                    disabled={verifying2FA || twoFactorCode.length !== 6}
+                    className="btn"
+                    style={{
+                      backgroundColor: "#F56D2D",
+                      color: "#ffffff",
+                      fontSize: "14px",
+                      fontFamily: "BasisGrotesquePro",
+                      border: "none",
+                      padding: "10px 20px",
+                      borderRadius: "6px",
+                      opacity: (verifying2FA || twoFactorCode.length !== 6) ? 0.6 : 1,
+                      cursor: (verifying2FA || twoFactorCode.length !== 6) ? "not-allowed" : "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    {verifying2FA ? 'Verifying...' : 'Verify & Login'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </FixedLayout>

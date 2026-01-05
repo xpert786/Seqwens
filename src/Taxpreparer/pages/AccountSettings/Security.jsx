@@ -2,16 +2,27 @@ import { useState, useEffect } from "react";
 import "../../styles/icon.css";
 import { SaveIcon } from "../../component/icons";
 import { toast } from "react-toastify";
-import { taxPreparerSecurityAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { taxPreparerSecurityAPI, userAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import TwoFactorSetupModal from "./TwoFactorSetupModal";
 
 const Security = ({ security, onUpdate }) => {
   const [twoFactor, setTwoFactor] = useState(false);
+  const [twoFactorEnabledAt, setTwoFactorEnabledAt] = useState(null);
   const [sessionTimeout, setSessionTimeout] = useState(30);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // 2FA Setup Modal state
+  const [show2FASetupModal, setShow2FASetupModal] = useState(false);
+
+  // 2FA Disable states
+  const [showDisable2FA, setShowDisable2FA] = useState(false);
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disabling, setDisabling] = useState(false);
+  const [disableError, setDisableError] = useState(null);
 
   // Password update states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -35,6 +46,7 @@ const Security = ({ security, onUpdate }) => {
           console.log('Security data structure:', securityData);
 
           setTwoFactor(securityData.two_factor_authentication || securityData.two_factor_enabled || false);
+          setTwoFactorEnabledAt(securityData.two_factor_enabled_at || securityData.enabled_at || null);
           setSessionTimeout(securityData.session_timeout || 30);
           setIsEmailVerified(securityData.is_email_verified || false);
           setIsPhoneVerified(securityData.is_phone_verified || false);
@@ -68,7 +80,6 @@ const Security = ({ security, onUpdate }) => {
 
     try {
       const apiData = {
-        two_factor_authentication: twoFactor,
         session_timeout: sessionTimeout,
       };
 
@@ -106,6 +117,78 @@ const Security = ({ security, onUpdate }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // 2FA Setup Functions
+  const handleSetup2FA = () => {
+    setShow2FASetupModal(true);
+  };
+
+  const handle2FASetupSuccess = async () => {
+    // Refresh security preferences to get updated 2FA status
+    try {
+      const data = await taxPreparerSecurityAPI.getSecurityPreferences();
+      if (data) {
+        const securityData = data.data || data;
+        setTwoFactor(securityData.two_factor_authentication || securityData.two_factor_enabled || false);
+        setTwoFactorEnabledAt(securityData.two_factor_enabled_at || securityData.enabled_at || null);
+      }
+    } catch (err) {
+      console.error('Error fetching updated security preferences:', err);
+    }
+    
+    if (onUpdate) {
+      onUpdate();
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    if (!disablePassword) {
+      setDisableError('Please enter your password');
+      return;
+    }
+
+    setDisabling(true);
+    setDisableError(null);
+
+    try {
+      const response = await userAPI.disable2FA(disablePassword);
+      
+      if (response.success) {
+        setTwoFactor(false);
+        setTwoFactorEnabledAt(null);
+        setShowDisable2FA(false);
+        setDisablePassword('');
+        
+        toast.success("2FA disabled successfully", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+
+        if (onUpdate) {
+          onUpdate();
+        }
+      } else {
+        throw new Error(response.message || 'Failed to disable 2FA');
+      }
+    } catch (err) {
+      console.error('Error disabling 2FA:', err);
+      const errorMessage = handleAPIError(err);
+      setDisableError(errorMessage);
+      toast.error(errorMessage || "Failed to disable 2FA", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDisabling(false);
+    }
+  };
+
+
+  const cancelDisable2FA = () => {
+    setShowDisable2FA(false);
+    setDisablePassword('');
+    setDisableError(null);
   };
 
   const handlePasswordUpdate = async () => {
@@ -224,40 +307,163 @@ const Security = ({ security, onUpdate }) => {
         </div>
 
         {/* Two-Factor Authentication */}
-        <div className="flex justify-between items-center py-3 ">
-          <div className="flex-1">
-            <div
-              style={{
-                color: "#3B4A66",
-                fontSize: "16px",
-                fontWeight: "500",
-                fontFamily: "BasisGrotesquePro",
-                marginBottom: "4px"
-              }}
-            >
-              Two-Factor Authentication
+        <div className="py-3 border-bottom" style={{ borderColor: "#E8F0FF" }}>
+          <div className="d-flex justify-content-between align-items-start mb-3">
+            <div className="flex-1">
+              <div
+                style={{
+                  color: "#3B4A66",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  fontFamily: "BasisGrotesquePro",
+                  marginBottom: "4px"
+                }}
+              >
+                Two-Factor Authentication
+              </div>
+              <p
+                className="mb-0"
+                style={{
+                  color: "#4B5563",
+                  fontSize: "14px",
+                  fontWeight: "400",
+                  fontFamily: "BasisGrotesquePro",
+                }}
+              >
+                Add an extra layer of security to your account
+              </p>
+              {twoFactor && twoFactorEnabledAt && (
+                <p
+                  className="mb-0 mt-2"
+                  style={{
+                    color: "#10B981",
+                    fontSize: "12px",
+                    fontWeight: "400",
+                    fontFamily: "BasisGrotesquePro",
+                  }}
+                >
+                  ✓ Enabled {twoFactorEnabledAt ? `on ${new Date(twoFactorEnabledAt).toLocaleDateString()}` : ''}
+                </p>
+              )}
             </div>
-            <p
-              className="mb-0"
-              style={{
-                color: "#4B5563",
-                fontSize: "14px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}
-            >
-              Add an extra layer of security to your account
-            </p>
+            <div>
+              {!twoFactor ? (
+                <button
+                  type="button"
+                  onClick={handleSetup2FA}
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#F56D2D",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: "400",
+                    fontFamily: "BasisGrotesquePro",
+                    border: "none",
+                    padding: "6px 16px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Enable 2FA
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowDisable2FA(true)}
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#dc3545",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: "400",
+                    fontFamily: "BasisGrotesquePro",
+                    border: "none",
+                    padding: "6px 16px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Disable 2FA
+                </button>
+              )}
+            </div>
           </div>
-          <div className="custom-toggle ml-4">
-            <input
-              type="checkbox"
-              id="twoFactor"
-              checked={twoFactor}
-              onChange={() => setTwoFactor(!twoFactor)}
-            />
-            <label htmlFor="twoFactor"></label>
-          </div>
+
+
+          {/* 2FA Disable Modal */}
+          {showDisable2FA && (
+            <div className="mt-4 p-4 border rounded" style={{ borderColor: "#E8F0FF", backgroundColor: "#F9FAFB" }}>
+              <h6 style={{ color: "#3B4A66", fontSize: "16px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px" }}>
+                Disable Two-Factor Authentication
+              </h6>
+              <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro", marginBottom: "16px" }}>
+                For security reasons, please enter your current password to disable 2FA.
+              </p>
+              
+              <div className="mb-3">
+                <label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  className="form-control"
+                  value={disablePassword}
+                  onChange={(e) => {
+                    setDisablePassword(e.target.value);
+                    setDisableError(null);
+                  }}
+                  placeholder="Enter your password"
+                  style={{
+                    color: "#3B4A66",
+                    fontSize: "14px",
+                    fontFamily: "BasisGrotesquePro",
+                    border: disableError ? "1px solid #dc3545" : "1px solid #E8F0FF",
+                    borderRadius: "8px",
+                    padding: "8px 12px"
+                  }}
+                />
+                {disableError && (
+                  <div className="text-danger mt-1" style={{ fontSize: "12px", fontFamily: "BasisGrotesquePro" }}>
+                    {disableError}
+                  </div>
+                )}
+              </div>
+
+              <div className="d-flex gap-2 justify-content-end">
+                <button
+                  type="button"
+                  onClick={cancelDisable2FA}
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: "#3B4A66",
+                    fontSize: "14px",
+                    fontFamily: "BasisGrotesquePro",
+                    border: "1px solid #E8F0FF",
+                    padding: "6px 16px",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDisable2FA}
+                  disabled={disabling || !disablePassword}
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#dc3545",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontFamily: "BasisGrotesquePro",
+                    border: "none",
+                    padding: "6px 16px",
+                    opacity: (disabling || !disablePassword) ? 0.6 : 1,
+                    cursor: (disabling || !disablePassword) ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {disabling ? 'Disabling...' : 'Disable 2FA'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Session Timeout */}
@@ -514,6 +720,13 @@ const Security = ({ security, onUpdate }) => {
           </button>
         </div>
       </div>
+
+      {/* 2FA Setup Modal */}
+      <TwoFactorSetupModal
+        show={show2FASetupModal}
+        onClose={() => setShow2FASetupModal(false)}
+        onSuccess={handle2FASetupSuccess}
+      />
     </div>
   );
 };

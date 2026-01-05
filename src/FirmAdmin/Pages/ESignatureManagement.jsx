@@ -780,17 +780,39 @@ export default function ESignatureManagement() {
           let errorMessage = `HTTP error! status: ${response.status}`;
           try {
             const errorData = await response.json();
-            if (errorData.errors && typeof errorData.errors === 'object') {
-              // Extract only the error messages from errors object, not the generic message
-              const errorMessages = [];
-              Object.entries(errorData.errors).forEach(([field, messages]) => {
-                const fieldMessages = Array.isArray(messages) ? messages : [messages];
-                errorMessages.push(...fieldMessages);
-              });
-              
-              if (errorMessages.length > 0) {
-                errorMessage = errorMessages.join('. ');
-              } else {
+            console.error('Signature/Document Request API Error Response:', errorData);
+            
+            if (errorData.errors) {
+              // Check if errors is an array (file validation errors)
+              if (Array.isArray(errorData.errors)) {
+                const errorMessages = errorData.errors.map((err) => {
+                  if (typeof err === 'object' && err.error) {
+                    // Format: "filename: error message"
+                    return err.filename 
+                      ? `${err.filename}: ${err.error}`
+                      : err.error;
+                  }
+                  return typeof err === 'string' ? err : JSON.stringify(err);
+                });
+                errorMessage = errorMessages.length > 0 
+                  ? `${errorData.message || 'Validation failed'}. ${errorMessages.join('. ')}`
+                  : errorData.message || 'Validation failed';
+              } 
+              // Check if errors is an object (field validation errors)
+              else if (typeof errorData.errors === 'object') {
+                const errorMessages = [];
+                Object.entries(errorData.errors).forEach(([field, messages]) => {
+                  const fieldMessages = Array.isArray(messages) ? messages : [messages];
+                  errorMessages.push(...fieldMessages);
+                });
+                
+                if (errorMessages.length > 0) {
+                  errorMessage = `${errorData.message || 'Validation failed'}. ${errorMessages.join('. ')}`;
+                } else {
+                  errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+                }
+              }
+              else {
                 errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
               }
             } else {

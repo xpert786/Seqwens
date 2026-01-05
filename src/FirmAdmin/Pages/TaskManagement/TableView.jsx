@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const TableView = ({ taskData, getPriorityColor, getStatusColor, handleActionClick, openDropdown, handleActionSelect }) => {
+const TableView = ({ taskData, totalCount, getPriorityColor, getStatusColor, handleActionClick, openDropdown, handleActionSelect }) => {
   const navigate = useNavigate();
 
   return (
     <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-6">
       <div className="mb-6">
-        <h4 className="text-xl font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">All Tasks ({taskData.length})</h4>
+        <h4 className="text-xl font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]">All Tasks ({totalCount || taskData.length})</h4>
         <p className="text-gray-600 font-[BasisGrotesquePro]">Complete list of tasks with status, assignments, and progress</p>
       </div>
 

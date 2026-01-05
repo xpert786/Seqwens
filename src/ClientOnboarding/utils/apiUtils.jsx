@@ -442,6 +442,37 @@ export const userAPI = {
     }
   },
 
+  // Two-Factor Authentication - Setup (Get QR code and secret)
+  setup2FA: async () => {
+    return await apiRequest('/user/two-factor/setup/', 'GET');
+  },
+
+  // Two-Factor Authentication - Verify Setup
+  verify2FASetup: async (code, secret) => {
+    const payload = {
+      code: code,
+      secret: secret,
+    };
+    return await apiRequest('/user/two-factor/verify-setup/', 'POST', payload);
+  },
+
+  // Two-Factor Authentication - Disable
+  disable2FA: async (password) => {
+    const payload = {
+      password: password,
+    };
+    return await apiRequest('/user/two-factor/disable/', 'POST', payload);
+  },
+
+  // Two-Factor Authentication - Verify during login
+  verify2FALogin: async (email, code) => {
+    const payload = {
+      email: email,
+      code: code,
+    };
+    return await publicApiRequest('/user/two-factor/verify-login/', 'POST', payload);
+  },
+
   // User logout
   logout: async () => {
     return await apiRequest('/user/logout/', 'POST');
@@ -2252,13 +2283,31 @@ export const firmAdminTasksAPI = {
   },
 
   // List tasks - GET /firm/tasks/
+  // Supports: page, page_size, priority, status, task_type, client_id, assigned_to, search, sort_by
   listTasks: async (params = {}) => {
+    const {
+      page = 1,
+      page_size = 20,
+      priority,
+      status,
+      task_type,
+      client_id,
+      assigned_to,
+      search,
+      sort_by
+    } = params;
+    
     const queryParams = new URLSearchParams();
-    Object.keys(params).forEach(key => {
-      if (params[key] !== undefined && params[key] !== null) {
-        queryParams.append(key, params[key]);
-      }
-    });
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    if (priority) queryParams.append('priority', priority);
+    if (status) queryParams.append('status', status);
+    if (task_type) queryParams.append('task_type', task_type);
+    if (client_id) queryParams.append('client_id', client_id.toString());
+    if (assigned_to) queryParams.append('assigned_to', assigned_to.toString());
+    if (search) queryParams.append('search', search);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    
     const queryString = queryParams.toString();
     const endpoint = `/firm/tasks/${queryString ? `?${queryString}` : ''}`;
     return await apiRequest(endpoint, 'GET');
@@ -2322,7 +2371,8 @@ export const taskDetailAPI = {
       });
   },
 
-  // Update task status
+  // Update task status - PATCH /firm/tasks/<task_id>/status/
+  // Simple endpoint specifically for status updates (for tax preparers)
   updateTaskStatus: async (taskId, status) => {
     const token = getAccessToken();
     if (!token) {
@@ -2338,7 +2388,59 @@ export const taskDetailAPI = {
       body: JSON.stringify({ status })
     };
 
-    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/detail/`, config)
+    return await fetchWithCors(`${API_BASE_URL}/firm/tasks/${taskId}/status/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+  
+  // Update task (full update) - PUT /taxpayer/tax-preparer/tasks/<task_id>/
+  // Allows updating multiple fields: status, priority, due_date, description, estimated_hours
+  updateTask: async (taskId, taskData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(taskData)
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/tasks/${taskId}/`, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+  
+  // Get task audit log - GET /taxpayer/tasks/<task_id>/audit-log/
+  getTaskAuditLog: async (taskId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(`${API_BASE_URL}/taxpayer/tasks/${taskId}/audit-log/`, config)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -3366,6 +3468,73 @@ export const firmAdminClientsAPI = {
     if (search) queryParams.append('search', search);
     const queryString = queryParams.toString();
     return await apiRequest(`/user/firm-admin/clients/invites/pending/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+  // Bulk taxpayer import - Step 1: Preview
+  bulkImportTaxpayersPreview: async (csvFile) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+    formData.append('csv_file', csvFile);
+
+    const url = `${API_BASE_URL}/taxpayer/firm-admin/taxpayers/import/preview/`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    };
+
+    const response = await fetchWithCors(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+  // Bulk taxpayer import - Step 2: Confirm
+  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport, invitationOptions = {}) => {
+    const payload = {
+      import_log_id: importLogId,
+      rows_to_import: rowsToImport
+    };
+
+    // Add invitation options if provided
+    if (invitationOptions.invitation_timing) {
+      payload.invitation_timing = invitationOptions.invitation_timing;
+    }
+    if (invitationOptions.rows_to_invite && Array.isArray(invitationOptions.rows_to_invite)) {
+      payload.rows_to_invite = invitationOptions.rows_to_invite;
+    }
+    if (invitationOptions.invitation_preferences && typeof invitationOptions.invitation_preferences === 'object') {
+      payload.invitation_preferences = invitationOptions.invitation_preferences;
+    }
+    // Add duplicate handling preferences if provided
+    if (invitationOptions.duplicate_handling && typeof invitationOptions.duplicate_handling === 'object') {
+      payload.duplicate_handling = invitationOptions.duplicate_handling;
+    }
+
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', payload);
+  },
+  // Bulk taxpayer import - Send invitations manually
+  bulkImportTaxpayersSendInvitations: async (importLogId, options = {}) => {
+    const payload = {
+      import_log_id: importLogId
+    };
+
+    if (options.taxpayer_ids && Array.isArray(options.taxpayer_ids)) {
+      payload.taxpayer_ids = options.taxpayer_ids;
+    }
+    if (options.row_indices && Array.isArray(options.row_indices)) {
+      payload.row_indices = options.row_indices;
+    }
+
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
   }
 };
 
@@ -3613,6 +3782,43 @@ export const firmAdminStaffAPI = {
     return await apiRequest(`/user/firm-admin/tax-preparers/${userId}/permissions/`, 'PUT', {
       permissions
     });
+  },
+  // Bulk tax preparer import - Step 1: Preview
+  bulkImportTaxPreparersPreview: async (csvFile) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+    formData.append('file', csvFile);
+
+    const url = `${API_BASE_URL}/taxpayer/firm-admin/tax-preparers/import/preview/`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    };
+
+    const response = await fetchWithCors(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+  // Bulk tax preparer import - Step 2: Confirm
+  bulkImportTaxPreparersConfirm: async (importLogId, rowsToImport) => {
+    const payload = {
+      import_log_id: importLogId,
+      rows_to_import: rowsToImport
+    };
+
+    return await apiRequest('/taxpayer/firm-admin/tax-preparers/import/confirm/', 'POST', payload);
   },
 };
 
@@ -4036,11 +4242,33 @@ export const firmSignatureDocumentRequestsAPI = {
           console.error('Signature/Document Request API Error Response:', errorData);
 
           if (errorData.errors) {
-            console.error('Field Validation Errors:', errorData.errors);
-            const fieldErrors = Object.entries(errorData.errors)
-              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-              .join('; ');
-            errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+            console.error('Validation Errors:', errorData.errors);
+            
+            // Check if errors is an array (file validation errors)
+            if (Array.isArray(errorData.errors)) {
+              const errorMessages = errorData.errors.map((err) => {
+                if (typeof err === 'object' && err.error) {
+                  // Format: "filename: error message"
+                  return err.filename 
+                    ? `${err.filename}: ${err.error}`
+                    : err.error;
+                }
+                return typeof err === 'string' ? err : JSON.stringify(err);
+              });
+              errorMessage = errorMessages.length > 0 
+                ? `${errorData.message || 'Validation failed'}. ${errorMessages.join('. ')}`
+                : errorData.message || 'Validation failed';
+            } 
+            // Check if errors is an object (field validation errors)
+            else if (typeof errorData.errors === 'object') {
+              const fieldErrors = Object.entries(errorData.errors)
+                .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+                .join('; ');
+              errorMessage = `${errorData.message || 'Validation failed'}. ${fieldErrors}`;
+            }
+            else {
+              errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+            }
           } else {
             errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
           }
@@ -5399,13 +5627,17 @@ export const signWellAPI = {
   applySignature: async (data) => {
     const {
       document_id,
+      document,
       signer_email,
       signer_name,
       document_name,
       test_mode = true
     } = data;
 
-    if (!document_id) {
+    // Use 'document_id' parameter if provided, otherwise fall back to 'document' for backward compatibility
+    const documentId = document_id || document;
+
+    if (!documentId) {
       throw new Error('document_id is required');
     }
 
@@ -5418,7 +5650,7 @@ export const signWellAPI = {
     }
 
     const requestBody = {
-      document_id,
+      document_id: documentId, // API expects 'document_id'
       signer_email,
       signer_name,
       document_name: document_name || 'Document',

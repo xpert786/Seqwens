@@ -254,45 +254,7 @@ const Notifications = ({ notifications, onUpdate }) => {
           ))}
         </div>
 
-        {/* Domain Name Section */}
-        <div className="mt-6">
-          <h6
-            style={{
-              color: "#3B4A66",
-              fontSize: "18px",
-              fontWeight: "500",
-              fontFamily: "BasisGrotesquePro",
-              marginBottom: "16px"
-            }}
-          >
-            Domain Name
-          </h6>
-          <div className="flex items-center gap-3 border border-[#E8F0FF] p-3 rounded-lg bg-white">
-            <input
-              type="text"
-              placeholder="Enter domain name"
-              value={domainName}
-              onChange={(e) => setDomainName(e.target.value)}
-              className="flex-1 border-none outline-none bg-transparent"
-              style={{
-                color: "#3B4A66",
-                fontSize: "14px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}
-            />
-            <span
-              style={{
-                color: "#3B4A66",
-                fontSize: "14px",
-                fontWeight: "400",
-                fontFamily: "BasisGrotesquePro",
-              }}
-            >
-              seqwens.com
-            </span>
-          </div>
-        </div>
+        
 
         {/* Save Button */}
         <div className="mt-6">

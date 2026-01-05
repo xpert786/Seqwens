@@ -73,9 +73,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
       if (response.success && response.data) {
         setPreviewData(response.data);
-        // Auto-select all valid rows
+        // Auto-select only valid rows that are NOT duplicates
         const validRowIndices = response.data.preview_data
-          .filter((row, idx) => row.is_valid)
+          .filter((row, idx) => row.is_valid && !(row.existing_taxpayer && row.existing_taxpayer.exists))
           .map((row) => row.row_index);
         setSelectedRows(validRowIndices);
         
@@ -86,13 +86,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           if (row.is_valid && row.has_email) {
             initialInvitationPrefs[row.row_index] = false;
           }
-          // Initialize duplicate handling: default to 'skip' for duplicates in firm, 'import_as_new' for others
+          // Always skip duplicates
           if (row.existing_taxpayer && row.existing_taxpayer.exists) {
-            if (row.existing_taxpayer.match_type === 'email_and_firm' || row.existing_taxpayer.match_type === 'ssn_and_firm') {
-              initialDuplicateHandling[row.row_index] = 'skip'; // Default: skip duplicates in firm
-            } else {
-              initialDuplicateHandling[row.row_index] = 'import_as_new'; // Default: import as new for other matches
-            }
+            initialDuplicateHandling[row.row_index] = 'skip';
           }
         });
         setInvitationPreferences(initialInvitationPrefs);
@@ -140,41 +136,6 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     setInvitationPreferences(newPrefs);
   };
 
-  // Handle duplicate action for a row
-  const handleDuplicateAction = (rowIndex, action) => {
-    setDuplicateHandling(prev => ({
-      ...prev,
-      [rowIndex]: action
-    }));
-  };
-
-  // Skip all duplicates in firm
-  const skipAllDuplicatesInFirm = () => {
-    if (!previewData) return;
-    const newHandling = { ...duplicateHandling };
-    previewData.preview_data.forEach(row => {
-      if (row.existing_taxpayer && row.existing_taxpayer.exists) {
-        if (row.existing_taxpayer.match_type === 'email_and_firm' || row.existing_taxpayer.match_type === 'ssn_and_firm') {
-          newHandling[row.row_index] = 'skip';
-        }
-      }
-    });
-    setDuplicateHandling(newHandling);
-  };
-
-  // Update all duplicates in firm
-  const updateAllDuplicatesInFirm = () => {
-    if (!previewData) return;
-    const newHandling = { ...duplicateHandling };
-    previewData.preview_data.forEach(row => {
-      if (row.existing_taxpayer && row.existing_taxpayer.exists) {
-        if (row.existing_taxpayer.match_type === 'email_and_firm' || row.existing_taxpayer.match_type === 'ssn_and_firm') {
-          newHandling[row.row_index] = 'update';
-        }
-      }
-    });
-    setDuplicateHandling(newHandling);
-  };
 
   // Step 2: Confirm and import selected rows
   const handleConfirmImport = async () => {
@@ -204,11 +165,12 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
         }
       }
 
-      // Build duplicate handling preferences
+      // Build duplicate handling preferences - always skip duplicates
       const duplicateHandlingPrefs = {};
       selectedRows.forEach(rowIndex => {
-        if (duplicateHandling[rowIndex]) {
-          duplicateHandlingPrefs[rowIndex] = duplicateHandling[rowIndex];
+        const row = previewData.preview_data.find(r => r.row_index === rowIndex);
+        if (row && row.existing_taxpayer && row.existing_taxpayer.exists) {
+          duplicateHandlingPrefs[rowIndex] = 'skip';
         }
       });
       
@@ -225,11 +187,19 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       if (response.success && response.data) {
         setImportResults(response.data);
         setCurrentStep(3);
-        toast.success(`Successfully imported ${response.data.imported_count || 0} taxpayers`);
         
-        // Trigger refresh callback if provided
-        if (onImportSuccess) {
-          onImportSuccess(response.data);
+        // Check if there are any errors
+        const hasErrors = (response.data.error_count && response.data.error_count > 0) || 
+                         (response.data.import_results && response.data.import_results.some(r => r.status === 'error'));
+        
+        if (hasErrors) {
+          toast.warning(`Import completed with ${response.data.error_count || 0} error(s). Please review the errors before closing.`);
+        } else {
+          toast.success(`Successfully imported ${response.data.imported_count || 0} taxpayers`);
+          // Only trigger refresh callback and close if there are no errors
+          if (onImportSuccess) {
+            onImportSuccess(response.data);
+          }
         }
       } else {
         throw new Error(response.message || 'Import failed');
@@ -254,11 +224,11 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     });
   };
 
-  // Select all valid rows
+  // Select all valid rows (excluding duplicates)
   const selectAllValid = () => {
     if (!previewData) return;
     const validRowIndices = previewData.preview_data
-      .filter(row => row.is_valid)
+      .filter(row => row.is_valid && !(row.existing_taxpayer && row.existing_taxpayer.exists))
       .map(row => row.row_index);
     setSelectedRows(validRowIndices);
   };
@@ -404,6 +374,11 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
     if (currentStep === 2 && previewData) {
       const { total_rows, valid_rows, error_rows, preview_data, error_summary, existing_taxpayers_count, existing_in_firm_count } = previewData;
+      
+      // Calculate valid non-duplicate rows count
+      const validNonDuplicateRowsCount = preview_data?.filter(row => 
+        row.is_valid && !(row.existing_taxpayer && row.existing_taxpayer.exists)
+      ).length || 0;
 
       return (
         <div>
@@ -486,31 +461,15 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             </div>
           )}
 
-          {/* Duplicate Handling Controls */}
+          {/* Duplicate Info */}
           {existing_taxpayers_count > 0 && (
             <div className="mb-4 p-4 rounded-lg border" style={{ backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }}>
-              <div className="flex justify-between items-center mb-2">
-                <h6 className="text-sm font-semibold text-orange-800 font-[BasisGrotesquePro]">
-                  Duplicate Handling ({existing_taxpayers_count} duplicates found)
-                </h6>
-                <div className="flex gap-2">
-                  <button
-                    onClick={skipAllDuplicatesInFirm}
-                    className="px-3 py-1 text-xs text-orange-700 bg-white border border-orange-300 rounded-lg hover:bg-orange-50 font-[BasisGrotesquePro]"
-                  >
-                    Skip All in Firm
-                  </button>
-                  <button
-                    onClick={updateAllDuplicatesInFirm}
-                    className="px-3 py-1 text-xs text-orange-700 bg-white border border-orange-300 rounded-lg hover:bg-orange-50 font-[BasisGrotesquePro]"
-                  >
-                    Update All in Firm
-                  </button>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-orange-600">⚠️</span>
+                <p className="text-xs text-orange-700 font-[BasisGrotesquePro]">
+                  {existing_taxpayers_count} duplicate(s) found ({existing_in_firm_count || 0} in this firm). Duplicates will be automatically skipped and not imported.
+                </p>
               </div>
-              <p className="text-xs text-orange-700 font-[BasisGrotesquePro]">
-                {existing_in_firm_count || 0} duplicate(s) found in this firm. Choose how to handle each duplicate below.
-              </p>
             </div>
           )}
 
@@ -519,7 +478,8 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             <div className="flex gap-2">
               <button
                 onClick={selectAllValid}
-                className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+                disabled={validNonDuplicateRowsCount === 0}
+                className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Select All Valid
               </button>
@@ -531,9 +491,27 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
               </button>
             </div>
             <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-              {selectedRows.length} of {valid_rows || 0} valid rows selected
+              {selectedRows.length} of {validNonDuplicateRowsCount || 0} valid rows selected (duplicates excluded)
             </div>
           </div>
+
+          {/* Message when all rows are duplicates */}
+          {validNonDuplicateRowsCount === 0 && valid_rows > 0 && (
+            <div className="mb-4 p-4 rounded-lg border bg-orange-50 border-orange-200">
+              <div className="flex items-start gap-3">
+                <div className="text-orange-600 text-xl">⚠️</div>
+                <div className="flex-1">
+                  <h6 className="text-sm font-semibold text-orange-800 mb-1 font-[BasisGrotesquePro]">
+                    All Valid Rows Are Duplicates
+                  </h6>
+                  <p className="text-xs text-orange-700 font-[BasisGrotesquePro]">
+                    All {valid_rows} valid row(s) in this import are duplicates that already exist in your firm. 
+                    No rows have been selected for import. If you want to update existing records, you can manually select individual duplicate rows below.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Preview Table */}
           <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
@@ -544,7 +522,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro] w-12">
                       <input
                         type="checkbox"
-                        checked={selectedRows.length === valid_rows && valid_rows > 0}
+                        checked={selectedRows.length === validNonDuplicateRowsCount && validNonDuplicateRowsCount > 0}
                         onChange={(e) => e.target.checked ? selectAllValid() : deselectAll()}
                         className="rounded"
                       />
@@ -563,14 +541,14 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {preview_data.slice(0, 50).map((row) => {
                     const isSelected = selectedRows.includes(row.row_index);
-                    const isDisabled = !row.is_valid;
-                    const hasEmail = row.has_email !== false && row.data?.email;
-                    const canInvite = isSelected && isDisabled === false && hasEmail;
-                    const isInviteChecked = invitationPreferences[row.row_index] === true;
                     const existingTaxpayer = row.existing_taxpayer;
                     const hasDuplicate = existingTaxpayer && existingTaxpayer.exists;
-                    const duplicateAction = duplicateHandling[row.row_index] || (hasDuplicate && (existingTaxpayer.match_type === 'email_and_firm' || existingTaxpayer.match_type === 'ssn_and_firm') ? 'skip' : 'import_as_new');
                     const isDuplicateInFirm = hasDuplicate && (existingTaxpayer.match_type === 'email_and_firm' || existingTaxpayer.match_type === 'ssn_and_firm');
+                    // Disable selection for invalid rows or duplicates
+                    const isDisabled = !row.is_valid || hasDuplicate;
+                    const hasEmail = row.has_email !== false && row.data?.email;
+                    const canInvite = isSelected && !isDisabled && hasEmail;
+                    const isInviteChecked = invitationPreferences[row.row_index] === true;
                     const rowData = row.data || {};
                     const userName = `${rowData.first_name || ''} ${rowData.last_name || ''}`.trim() || 'N/A';
                     const userEmail = rowData.email || 'N/A';
@@ -589,6 +567,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                             onChange={() => !isDisabled && toggleRowSelection(row.row_index)}
                             disabled={isDisabled}
                             className="rounded"
+                            title={hasDuplicate ? 'Duplicates cannot be selected for import' : isDisabled ? 'Invalid row cannot be selected' : 'Select row for import'}
                           />
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">
@@ -611,38 +590,15 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                         <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userSSN}</td>
                         <td className="px-4 py-3">
                           {hasDuplicate ? (
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-1">
-                                {isDuplicateInFirm ? (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800" title={existingTaxpayer.message}>
-                                    ⚠️ Duplicate in Firm
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={existingTaxpayer.message}>
-                                    ℹ️ Exists Elsewhere
-                                  </span>
-                                )}
-                              </div>
-                              {isSelected && (
-                                <select
-                                  value={duplicateAction}
-                                  onChange={(e) => handleDuplicateAction(row.row_index, e.target.value)}
-                                  className="text-xs border border-gray-300 rounded px-2 py-1 bg-white font-[BasisGrotesquePro]"
-                                  style={{ fontSize: '11px' }}
-                                >
-                                  {isDuplicateInFirm ? (
-                                    <>
-                                      <option value="skip">Skip</option>
-                                      <option value="update">Update Existing</option>
-                                      <option value="import_as_new">Import as New</option>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <option value="import_as_new">Import as New</option>
-                                      <option value="skip">Skip</option>
-                                    </>
-                                  )}
-                                </select>
+                            <div className="flex flex-col gap-1">
+                              {isDuplicateInFirm ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800" title={existingTaxpayer.message}>
+                                  ⚠️ Duplicate (Will Skip)
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={existingTaxpayer.message}>
+                                  ℹ️ Exists Elsewhere (Will Skip)
+                                </span>
                               )}
                               {existingTaxpayer.user_id && (
                                 <div className="text-xs text-gray-600 font-[BasisGrotesquePro]" title={existingTaxpayer.message}>
@@ -783,6 +739,10 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     }
 
     if (currentStep === 3 && importResults) {
+      // Check if there are errors in import results
+      const hasErrors = (importResults.error_count && importResults.error_count > 0) || 
+                       (importResults.import_results && importResults.import_results.some(r => r.status === 'error'));
+      
       return (
         <div>
           {/* Import Completed */}
@@ -840,55 +800,87 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Row</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Status</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Name</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Phone</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Status</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Taxpayer ID</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Invitation</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Message</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Error Message</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
-                      {importResults.import_results.slice(0, 20).map((result, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.row_index + 1}</td>
-                          <td className="px-4 py-2">
-                            {result.status === 'imported' ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Imported
-                              </span>
-                            ) : result.status === 'skipped' ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Skipped
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Error
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.email || 'N/A'}</td>
-                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.taxpayer_id || '-'}</td>
-                          <td className="px-4 py-2">
-                            {result.invitation_sent ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                ✓ Sent
-                              </span>
-                            ) : result.email && result.status === 'imported' ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                Not Sent
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-400 font-[BasisGrotesquePro]">-</span>
-                            )}
-                            {result.invitation_error && (
-                              <div className="text-xs text-red-600 mt-1 font-[BasisGrotesquePro]">
-                                {result.invitation_error}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.message || '-'}</td>
-                        </tr>
-                      ))}
+                      {importResults.import_results.slice(0, 20).map((result, idx) => {
+                        // Use data from API response (new structure) or fallback to preview data
+                        const userName = result.taxpayer_name || 
+                                        (result.first_name && result.last_name ? `${result.first_name} ${result.last_name}` : null) ||
+                                        (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data ? 
+                                          `${previewData.preview_data.find(r => r.row_index === result.row_index).data.first_name || ''} ${previewData.preview_data.find(r => r.row_index === result.row_index).data.last_name || ''}`.trim() : null) ||
+                                        'N/A';
+                        const userEmail = result.email || 
+                                         (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.email) ||
+                                         'N/A';
+                        const userPhone = result.phone || 
+                                        (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.phone) ||
+                                        'N/A';
+                        const ssnDisplay = result.ssn_display || 
+                                         (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.ssn) ||
+                                         '-';
+                        // Use details if available, otherwise use message
+                        const errorMessage = result.details || result.message || '-';
+                        
+                        return (
+                          <tr key={idx} className={`hover:bg-gray-50 ${result.status === 'error' ? 'bg-red-50' : ''}`}>
+                            <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.row_index + 1}</td>
+                            <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro] font-medium">{userName}</td>
+                            <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{userEmail}</td>
+                            <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{userPhone}</td>
+                            <td className="px-4 py-2">
+                              {result.status === 'imported' ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Imported
+                                </span>
+                              ) : result.status === 'skipped' ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Skipped
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Error
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.taxpayer_id || '-'}</td>
+                            <td className="px-4 py-2">
+                              {result.invitation_sent ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  ✓ Sent
+                                </span>
+                              ) : result.email && result.status === 'imported' ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                  Not Sent
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-400 font-[BasisGrotesquePro]">-</span>
+                              )}
+                              {result.invitation_error && (
+                                <div className="text-xs text-red-600 mt-1 font-[BasisGrotesquePro]">
+                                  {result.invitation_error}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {errorMessage && errorMessage !== '-' ? (
+                                <div className="text-red-700 font-[BasisGrotesquePro] font-medium">
+                                  {errorMessage}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 font-[BasisGrotesquePro]">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -934,6 +926,12 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
     return null;
   };
+
+  // Check if there are errors in import results (for backdrop and header X button)
+  const hasErrors = importResults && (
+    (importResults.error_count && importResults.error_count > 0) || 
+    (importResults.import_results && importResults.import_results.some(r => r.status === 'error'))
+  );
 
   return (
     <div
