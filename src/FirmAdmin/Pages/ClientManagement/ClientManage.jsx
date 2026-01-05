@@ -834,13 +834,7 @@ export default function ClientManage() {
             <SettingIcon />
             Build Intake Forms
           </button> */}
-          {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }}
-              onClick={() => setShowBulkImportModal(true)}>
-              <BulkImport />
-              <span className="d-none d-sm-inline">Bulk Import</span>
-            </button>
-          )}
+          
           {!advancedReportingEnabled && (
             <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }}
               onClick={() => setShowBulkTaxpayerImportModal(true)}>

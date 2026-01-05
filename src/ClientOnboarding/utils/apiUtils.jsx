@@ -3855,11 +3855,43 @@ export const firmOfficeAPI = {
     return await response.json();
   },
   // Bulk taxpayer import - Step 2: Confirm
-  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport) => {
-    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', {
+  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport, invitationOptions = {}) => {
+    const payload = {
       import_log_id: importLogId,
       rows_to_import: rowsToImport
-    });
+    };
+
+    // Add invitation options if provided
+    if (invitationOptions.invitation_timing) {
+      payload.invitation_timing = invitationOptions.invitation_timing;
+    }
+    if (invitationOptions.rows_to_invite && Array.isArray(invitationOptions.rows_to_invite)) {
+      payload.rows_to_invite = invitationOptions.rows_to_invite;
+    }
+    if (invitationOptions.invitation_preferences && typeof invitationOptions.invitation_preferences === 'object') {
+      payload.invitation_preferences = invitationOptions.invitation_preferences;
+    }
+    // Add duplicate handling preferences if provided
+    if (invitationOptions.duplicate_handling && typeof invitationOptions.duplicate_handling === 'object') {
+      payload.duplicate_handling = invitationOptions.duplicate_handling;
+    }
+
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', payload);
+  },
+  // Bulk taxpayer import - Send invitations manually
+  bulkImportTaxpayersSendInvitations: async (importLogId, options = {}) => {
+    const payload = {
+      import_log_id: importLogId
+    };
+
+    if (options.taxpayer_ids && Array.isArray(options.taxpayer_ids)) {
+      payload.taxpayer_ids = options.taxpayer_ids;
+    }
+    if (options.row_indices && Array.isArray(options.row_indices)) {
+      payload.row_indices = options.row_indices;
+    }
+
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
   },
 };
 
@@ -4659,11 +4691,43 @@ export const taxPreparerClientAPI = {
     return await response.json();
   },
   // Bulk taxpayer import - Step 2: Confirm
-  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport) => {
-    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', {
+  bulkImportTaxpayersConfirm: async (importLogId, rowsToImport, invitationOptions = {}) => {
+    const payload = {
       import_log_id: importLogId,
       rows_to_import: rowsToImport
-    });
+    };
+
+    // Add invitation options if provided
+    if (invitationOptions.invitation_timing) {
+      payload.invitation_timing = invitationOptions.invitation_timing;
+    }
+    if (invitationOptions.rows_to_invite && Array.isArray(invitationOptions.rows_to_invite)) {
+      payload.rows_to_invite = invitationOptions.rows_to_invite;
+    }
+    if (invitationOptions.invitation_preferences && typeof invitationOptions.invitation_preferences === 'object') {
+      payload.invitation_preferences = invitationOptions.invitation_preferences;
+    }
+    // Add duplicate handling preferences if provided
+    if (invitationOptions.duplicate_handling && typeof invitationOptions.duplicate_handling === 'object') {
+      payload.duplicate_handling = invitationOptions.duplicate_handling;
+    }
+
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/confirm/', 'POST', payload);
+  },
+  // Bulk taxpayer import - Send invitations manually
+  bulkImportTaxpayersSendInvitations: async (importLogId, options = {}) => {
+    const payload = {
+      import_log_id: importLogId
+    };
+
+    if (options.taxpayer_ids && Array.isArray(options.taxpayer_ids)) {
+      payload.taxpayer_ids = options.taxpayer_ids;
+    }
+    if (options.row_indices && Array.isArray(options.row_indices)) {
+      payload.row_indices = options.row_indices;
+    }
+
+    return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
   }
 };
 

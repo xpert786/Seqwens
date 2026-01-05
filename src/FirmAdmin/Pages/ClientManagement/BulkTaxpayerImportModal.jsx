@@ -14,6 +14,10 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
   const [previewData, setPreviewData] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [importResults, setImportResults] = useState(null);
+  const [invitationTiming, setInvitationTiming] = useState('later'); // 'immediate' or 'later'
+  const [invitationPreferences, setInvitationPreferences] = useState({}); // {row_index: true/false}
+  const [sendingInvitations, setSendingInvitations] = useState(false);
+  const [duplicateHandling, setDuplicateHandling] = useState({}); // {row_index: 'skip' | 'update' | 'import_as_new'}
 
   // Reset state when modal closes
   useEffect(() => {
@@ -23,6 +27,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       setPreviewData(null);
       setSelectedRows([]);
       setImportResults(null);
+      setInvitationTiming('later');
+      setInvitationPreferences({});
+      setDuplicateHandling({});
       setError('');
     }
   }, [isOpen]);
@@ -32,9 +39,12 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
-      setError('Please upload a CSV file');
+    // Validate file type (CSV or PDF)
+    const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel';
+    const isPDF = file.name.endsWith('.pdf') || file.type === 'application/pdf';
+    
+    if (!isCSV && !isPDF) {
+      setError('Please upload a CSV or PDF file');
       return;
     }
 
@@ -68,6 +78,26 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           .filter((row, idx) => row.is_valid)
           .map((row) => row.row_index);
         setSelectedRows(validRowIndices);
+        
+        // Initialize invitation preferences (default: false for all rows)
+        const initialInvitationPrefs = {};
+        const initialDuplicateHandling = {};
+        response.data.preview_data.forEach(row => {
+          if (row.is_valid && row.has_email) {
+            initialInvitationPrefs[row.row_index] = false;
+          }
+          // Initialize duplicate handling: default to 'skip' for duplicates in firm, 'import_as_new' for others
+          if (row.existing_taxpayer && row.existing_taxpayer.exists) {
+            if (row.existing_taxpayer.match_type === 'email_and_firm' || row.existing_taxpayer.match_type === 'ssn_and_firm') {
+              initialDuplicateHandling[row.row_index] = 'skip'; // Default: skip duplicates in firm
+            } else {
+              initialDuplicateHandling[row.row_index] = 'import_as_new'; // Default: import as new for other matches
+            }
+          }
+        });
+        setInvitationPreferences(initialInvitationPrefs);
+        setDuplicateHandling(initialDuplicateHandling);
+        
         setCurrentStep(2);
       } else {
         throw new Error(response.message || 'Preview failed');
@@ -81,6 +111,71 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     }
   };
 
+  // Toggle invitation preference for a row
+  const toggleInvitationPreference = (rowIndex) => {
+    setInvitationPreferences(prev => ({
+      ...prev,
+      [rowIndex]: !prev[rowIndex]
+    }));
+  };
+
+  // Select all invitations for valid rows with email
+  const selectAllInvitations = () => {
+    if (!previewData) return;
+    const newPrefs = { ...invitationPreferences };
+    previewData.preview_data.forEach(row => {
+      if (row.is_valid && row.has_email && selectedRows.includes(row.row_index)) {
+        newPrefs[row.row_index] = true;
+      }
+    });
+    setInvitationPreferences(newPrefs);
+  };
+
+  // Deselect all invitations
+  const deselectAllInvitations = () => {
+    const newPrefs = { ...invitationPreferences };
+    Object.keys(newPrefs).forEach(key => {
+      newPrefs[key] = false;
+    });
+    setInvitationPreferences(newPrefs);
+  };
+
+  // Handle duplicate action for a row
+  const handleDuplicateAction = (rowIndex, action) => {
+    setDuplicateHandling(prev => ({
+      ...prev,
+      [rowIndex]: action
+    }));
+  };
+
+  // Skip all duplicates in firm
+  const skipAllDuplicatesInFirm = () => {
+    if (!previewData) return;
+    const newHandling = { ...duplicateHandling };
+    previewData.preview_data.forEach(row => {
+      if (row.existing_taxpayer && row.existing_taxpayer.exists) {
+        if (row.existing_taxpayer.match_type === 'email_and_firm' || row.existing_taxpayer.match_type === 'ssn_and_firm') {
+          newHandling[row.row_index] = 'skip';
+        }
+      }
+    });
+    setDuplicateHandling(newHandling);
+  };
+
+  // Update all duplicates in firm
+  const updateAllDuplicatesInFirm = () => {
+    if (!previewData) return;
+    const newHandling = { ...duplicateHandling };
+    previewData.preview_data.forEach(row => {
+      if (row.existing_taxpayer && row.existing_taxpayer.exists) {
+        if (row.existing_taxpayer.match_type === 'email_and_firm' || row.existing_taxpayer.match_type === 'ssn_and_firm') {
+          newHandling[row.row_index] = 'update';
+        }
+      }
+    });
+    setDuplicateHandling(newHandling);
+  };
+
   // Step 2: Confirm and import selected rows
   const handleConfirmImport = async () => {
     if (!previewData || selectedRows.length === 0) {
@@ -92,9 +187,39 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       setLoading(true);
       setError('');
 
+      // Build invitation options
+      const invitationOptions = {
+        invitation_timing: invitationTiming
+      };
+
+      if (invitationTiming === 'immediate') {
+        // Get rows that should receive invitations
+        const rowsToInvite = selectedRows.filter(rowIndex => {
+          const row = previewData.preview_data.find(r => r.row_index === rowIndex);
+          return row && row.is_valid && row.has_email && invitationPreferences[rowIndex] === true;
+        });
+        
+        if (rowsToInvite.length > 0) {
+          invitationOptions.rows_to_invite = rowsToInvite;
+        }
+      }
+
+      // Build duplicate handling preferences
+      const duplicateHandlingPrefs = {};
+      selectedRows.forEach(rowIndex => {
+        if (duplicateHandling[rowIndex]) {
+          duplicateHandlingPrefs[rowIndex] = duplicateHandling[rowIndex];
+        }
+      });
+      
+      if (Object.keys(duplicateHandlingPrefs).length > 0) {
+        invitationOptions.duplicate_handling = duplicateHandlingPrefs;
+      }
+
       const response = await firmAdminClientsAPI.bulkImportTaxpayersConfirm(
         previewData.import_log_id,
-        selectedRows
+        selectedRows,
+        invitationOptions
       );
 
       if (response.success && response.data) {
@@ -143,6 +268,56 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     setSelectedRows([]);
   };
 
+  // Send invitations manually (after import)
+  const handleSendInvitations = async () => {
+    if (!importResults || !previewData) {
+      setError('No import data available');
+      return;
+    }
+
+    try {
+      setSendingInvitations(true);
+      setError('');
+
+      // Get taxpayer IDs from import results that have email but no invitation sent
+      const taxpayerIdsToInvite = importResults.import_results
+        .filter(result => 
+          result.status === 'imported' && 
+          result.email && 
+          !result.invitation_sent &&
+          result.taxpayer_id
+        )
+        .map(result => result.taxpayer_id);
+
+      if (taxpayerIdsToInvite.length === 0) {
+        setError('No taxpayers available for invitation (all may have already received invitations)');
+        return;
+      }
+
+      const response = await firmAdminClientsAPI.bulkImportTaxpayersSendInvitations(
+        previewData.import_log_id,
+        { taxpayer_ids: taxpayerIdsToInvite }
+      );
+
+      if (response.success && response.data) {
+        toast.success(`Successfully sent ${response.data.sent_count || 0} invitations`);
+        // Refresh import results to show updated invitation status
+        // You might want to refetch the import results here
+        if (onImportSuccess) {
+          onImportSuccess(response.data);
+        }
+      } else {
+        throw new Error(response.message || 'Failed to send invitations');
+      }
+    } catch (err) {
+      console.error('Error sending invitations:', err);
+      const errorMsg = handleAPIError(err);
+      setError(errorMsg || 'Failed to send invitations. Please try again.');
+    } finally {
+      setSendingInvitations(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const renderStepContent = () => {
@@ -151,15 +326,15 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Upload CSV File */}
           <div>
-            <h6 className="taxdashboardr-titler mb-2 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Upload CSV File</h6>
+            <h6 className="taxdashboardr-titler mb-2 font-[BasisGrotesquePro]" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)' }}>Upload File (CSV or PDF)</h6>
             <div
               className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center"
               style={{ borderColor: 'var(--Palette2-Dark-blue-100, #E8F0FF)', backgroundColor: '#F3F7FF' }}
             >
               <div className="text-blue-500 text-2xl mb-2"><Folder /></div>
               <div className="text-xs mb-3" style={{ color: 'var(--Palette2-Dark-blue-900, #3B4A66)', fontSize: '10px' }}>
-                <p>Drop your CSV file here or click to browse</p>
-                <p>Supported format: CSV (Max 10MB)</p>
+                <p>Drop your file here or click to browse</p>
+                <p>Supported formats: CSV, PDF (Max 10MB)</p>
               </div>
               <label className="px-4 py-2 text-black text-sm transition flex items-center gap-2 cursor-pointer"
                 style={{
@@ -170,7 +345,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 <Browse /> Browse Files
                 <input
                   type="file"
-                  accept=".csv"
+                  accept=".csv,.pdf"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
@@ -194,7 +369,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             }}>
               <h4 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>CSV Format:</h4>
               <div className="flex flex-col space-y-1" style={{ fontSize: '12px' }}>
-                <div>• Include headers: First Name, Last Name, Email, Phone, SSN, etc.</div>
+                <div>• Supported formats: CSV and PDF files</div>
+                <div>• CSV: Include headers: First Name, Last Name, Email, Phone, SSN, etc.</div>
+                <div>• PDF: System will extract data using OCR</div>
                 <div>• System will auto-detect column mapping</div>
                 <div>• Required fields: First Name, Last Name, SSN/ITIN</div>
                 <div>• Optional fields: Email, Phone, Address, City, State, ZIP</div>
@@ -232,7 +409,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       return (
         <div>
           {/* Summary Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-5 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
                 {valid_rows || 0}
@@ -244,6 +421,17 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 {error_rows || 0}
               </div>
               <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Error Rows</div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-orange-700 font-[BasisGrotesquePro]">
+                {existing_taxpayers_count || 0}
+              </div>
+              <div className="text-sm text-orange-700 font-[BasisGrotesquePro]">Duplicates Found</div>
+              {existing_taxpayers_count > 0 && (
+                <div className="text-xs text-orange-600 mt-1 font-[BasisGrotesquePro]">
+                  {existing_in_firm_count || 0} in this firm
+                </div>
+              )}
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-yellow-700 font-[BasisGrotesquePro]">
@@ -299,6 +487,34 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             </div>
           )}
 
+          {/* Duplicate Handling Controls */}
+          {existing_taxpayers_count > 0 && (
+            <div className="mb-4 p-4 rounded-lg border" style={{ backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }}>
+              <div className="flex justify-between items-center mb-2">
+                <h6 className="text-sm font-semibold text-orange-800 font-[BasisGrotesquePro]">
+                  Duplicate Handling ({existing_taxpayers_count} duplicates found)
+                </h6>
+                <div className="flex gap-2">
+                  <button
+                    onClick={skipAllDuplicatesInFirm}
+                    className="px-3 py-1 text-xs text-orange-700 bg-white border border-orange-300 rounded-lg hover:bg-orange-50 font-[BasisGrotesquePro]"
+                  >
+                    Skip All in Firm
+                  </button>
+                  <button
+                    onClick={updateAllDuplicatesInFirm}
+                    className="px-3 py-1 text-xs text-orange-700 bg-white border border-orange-300 rounded-lg hover:bg-orange-50 font-[BasisGrotesquePro]"
+                  >
+                    Update All in Firm
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-orange-700 font-[BasisGrotesquePro]">
+                {existing_in_firm_count || 0} duplicate(s) found in this firm. Choose how to handle each duplicate below.
+              </p>
+            </div>
+          )}
+
           {/* Selection Controls */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex gap-2">
@@ -340,6 +556,8 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Phone</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">SSN</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Duplicate</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Invite</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Issues</th>
                   </tr>
                 </thead>
@@ -347,6 +565,13 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                   {preview_data.slice(0, 50).map((row) => {
                     const isSelected = selectedRows.includes(row.row_index);
                     const isDisabled = !row.is_valid;
+                    const hasEmail = row.has_email !== false && row.data?.email;
+                    const canInvite = isSelected && isDisabled === false && hasEmail;
+                    const isInviteChecked = invitationPreferences[row.row_index] === true;
+                    const existingTaxpayer = row.existing_taxpayer;
+                    const hasDuplicate = existingTaxpayer && existingTaxpayer.exists;
+                    const duplicateAction = duplicateHandling[row.row_index] || (hasDuplicate && (existingTaxpayer.match_type === 'email_and_firm' || existingTaxpayer.match_type === 'ssn_and_firm') ? 'skip' : 'import_as_new');
+                    const isDuplicateInFirm = hasDuplicate && (existingTaxpayer.match_type === 'email_and_firm' || existingTaxpayer.match_type === 'ssn_and_firm');
                     const rowData = row.data || {};
                     const userName = `${rowData.first_name || ''} ${rowData.last_name || ''}`.trim() || 'N/A';
                     const userEmail = rowData.email || 'N/A';
@@ -356,7 +581,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     return (
                       <tr 
                         key={row.row_index} 
-                        className={`hover:bg-gray-50 ${isDisabled ? 'opacity-50' : ''}`}
+                        className={`hover:bg-gray-50 ${isDisabled ? 'opacity-50' : ''} ${hasDuplicate ? (isDuplicateInFirm ? 'bg-orange-50' : 'bg-yellow-50') : ''}`}
                       >
                         <td className="px-4 py-3">
                           <input
@@ -385,6 +610,65 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                         <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userEmail}</td>
                         <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userPhone}</td>
                         <td className="px-4 py-3 text-sm text-gray-900 font-[BasisGrotesquePro]">{userSSN}</td>
+                        <td className="px-4 py-3">
+                          {hasDuplicate ? (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-1">
+                                {isDuplicateInFirm ? (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800" title={existingTaxpayer.message}>
+                                    ⚠️ Duplicate in Firm
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={existingTaxpayer.message}>
+                                    ℹ️ Exists Elsewhere
+                                  </span>
+                                )}
+                              </div>
+                              {isSelected && (
+                                <select
+                                  value={duplicateAction}
+                                  onChange={(e) => handleDuplicateAction(row.row_index, e.target.value)}
+                                  className="text-xs border border-gray-300 rounded px-2 py-1 bg-white font-[BasisGrotesquePro]"
+                                  style={{ fontSize: '11px' }}
+                                >
+                                  {isDuplicateInFirm ? (
+                                    <>
+                                      <option value="skip">Skip</option>
+                                      <option value="update">Update Existing</option>
+                                      <option value="import_as_new">Import as New</option>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <option value="import_as_new">Import as New</option>
+                                      <option value="skip">Skip</option>
+                                    </>
+                                  )}
+                                </select>
+                              )}
+                              {existingTaxpayer.user_id && (
+                                <div className="text-xs text-gray-600 font-[BasisGrotesquePro]" title={existingTaxpayer.message}>
+                                  ID: {existingTaxpayer.user_id}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400 font-[BasisGrotesquePro]">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {hasEmail ? (
+                            <input
+                              type="checkbox"
+                              checked={isInviteChecked}
+                              onChange={() => toggleInvitationPreference(row.row_index)}
+                              disabled={!canInvite || invitationTiming === 'later'}
+                              className="rounded"
+                              title={!canInvite ? 'Select row to enable invitation' : invitationTiming === 'later' ? 'Set invitation timing to immediate' : 'Send invitation'}
+                            />
+                          ) : (
+                            <span className="text-xs text-gray-400 font-[BasisGrotesquePro]">No email</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           {row.blocking_errors && row.blocking_errors.length > 0 ? (
                             <div className="flex flex-col gap-1">
@@ -417,6 +701,62 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 Showing first 50 rows of {preview_data.length} total rows
               </div>
             )}
+          </div>
+
+          {/* Invitation Timing Selection */}
+          <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: '#F3F7FF', borderColor: '#E8F0FF' }}>
+            <h6 className="text-sm font-semibold text-[#3B4A66] mb-3 font-[BasisGrotesquePro]">Invitation Settings</h6>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  id="invite-later"
+                  name="invitation-timing"
+                  value="later"
+                  checked={invitationTiming === 'later'}
+                  onChange={(e) => setInvitationTiming(e.target.value)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="invite-later" className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] cursor-pointer">
+                  Send invitations later (manual)
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  id="invite-immediate"
+                  name="invitation-timing"
+                  value="immediate"
+                  checked={invitationTiming === 'immediate'}
+                  onChange={(e) => setInvitationTiming(e.target.value)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="invite-immediate" className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] cursor-pointer">
+                  Send invitations immediately
+                </label>
+              </div>
+              {invitationTiming === 'immediate' && (
+                <div className="ml-7 mt-2">
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={selectAllInvitations}
+                      className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+                    >
+                      Select All Invitations
+                    </button>
+                    <button
+                      onClick={deselectAllInvitations}
+                      className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 font-[BasisGrotesquePro]">
+                    {Object.values(invitationPreferences).filter(v => v === true).length} invitation(s) will be sent to selected taxpayers with email addresses
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Navigation Buttons */}
@@ -458,7 +798,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-5 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-700 font-[BasisGrotesquePro]">
                 {importResults.imported_count || 0}
@@ -476,6 +816,12 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                 {importResults.error_count || 0}
               </div>
               <div className="text-sm text-red-700 font-[BasisGrotesquePro]">Errors</div>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="text-2xl font-bold text-purple-700 font-[BasisGrotesquePro]">
+                {importResults.invitations_sent || 0}
+              </div>
+              <div className="text-sm text-purple-700 font-[BasisGrotesquePro]">Invitations Sent</div>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-700 font-[BasisGrotesquePro]">
@@ -498,6 +844,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Status</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Taxpayer ID</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Invitation</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Message</th>
                       </tr>
                     </thead>
@@ -522,6 +869,24 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                           </td>
                           <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.email || 'N/A'}</td>
                           <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.taxpayer_id || '-'}</td>
+                          <td className="px-4 py-2">
+                            {result.invitation_sent ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✓ Sent
+                              </span>
+                            ) : result.email && result.status === 'imported' ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                Not Sent
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400 font-[BasisGrotesquePro]">-</span>
+                            )}
+                            {result.invitation_error && (
+                              <div className="text-xs text-red-600 mt-1 font-[BasisGrotesquePro]">
+                                {result.invitation_error}
+                              </div>
+                            )}
+                          </td>
                           <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.message || '-'}</td>
                         </tr>
                       ))}
@@ -537,14 +902,32 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
             </div>
           )}
 
-          {/* Close Button */}
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={onClose}
-              className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] rounded-lg font-semibold font-[BasisGrotesquePro]"
-            >
-              Close
-            </button>
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center mt-6">
+            {/* Send Invitations Button (if there are imported taxpayers without invitations) */}
+            {importResults.import_results && importResults.import_results.some(r => 
+              r.status === 'imported' && r.email && !r.invitation_sent && r.taxpayer_id
+            ) && (
+              <button
+                onClick={handleSendInvitations}
+                disabled={sendingInvitations}
+                className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#32B582] rounded-lg font-semibold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingInvitations ? 'Sending...' : (
+                  <>
+                    <span>Send Invitations to Remaining Taxpayers</span>
+                  </>
+                )}
+              </button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <button
+                onClick={onClose}
+                className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#F56D2D] rounded-lg font-semibold font-[BasisGrotesquePro]"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       );
