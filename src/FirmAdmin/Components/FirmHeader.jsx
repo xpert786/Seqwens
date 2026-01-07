@@ -460,13 +460,15 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                             <FaBell size={14} color="white" />
                             {unreadNotifications > 0 && (
                                 <span
-                                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"
                                     style={{
                                         fontSize: "10px",
                                         minWidth: "18px",
                                         height: "18px",
                                         padding: "2px 6px",
                                         border: "2px solid white",
+                                        color: "#ffffff",
+                                        fontWeight: "600",
                                     }}
                                 >
                                     {unreadNotifications > 99 ? "99+" : unreadNotifications}

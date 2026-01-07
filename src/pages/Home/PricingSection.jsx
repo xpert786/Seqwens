@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getApiBaseUrl } from "../../ClientOnboarding/utils/corsConfig";
 
 export default function PricingSection() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export default function PricingSection() {
   const fetchPlans = async () => {
     try {
       const res = await fetch(
-        "http://168.231.121.7/seqwens/api/user/subscriptions/plans/public/"
+        `${getApiBaseUrl()}/user/subscriptions/plans/public/`
       );
       const data = await res.json();
       if (data.success && data.data) {
@@ -164,11 +165,11 @@ export default function PricingSection() {
                     ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month
                   </p>
                 )}
-                {billingCycle === "monthly" && plan.yearly_equivalent && (
+                {/* {billingCycle === "monthly" && plan.yearly_equivalent && (
                   <p className={`text-xs opacity-80 mb-2 ${cardText}`}>
                     ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year
                   </p>
-                )}
+                )} */}
 
                 {/* Discount for yearly */}
                 {billingCycle === "yearly" && plan.discount_percentage && plan.discount_percentage > 0 && (

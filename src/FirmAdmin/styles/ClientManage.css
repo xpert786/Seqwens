@@ -2,11 +2,11 @@
 
 /* Responsive for screens below 767px */
 @media (max-width: 767px) {
-  /* Header Section - stack vertically */
+  /* Main container */
   .clientmanage-header {
     flex-direction: column !important;
     gap: 1rem !important;
-    align-items: flex-start !important;
+    margin-bottom: 1rem !important;
   }
 
   .clientmanage-header-content {
@@ -14,18 +14,28 @@
   }
 
   .clientmanage-header-title {
-    font-size: 1.25rem !important;
+    font-size: 1rem !important;
   }
 
   .clientmanage-header-subtitle {
-    font-size: 0.875rem !important;
+    font-size: 0.8rem !important;
   }
 
-  /* Buttons Container */
+  /* Action Buttons Container */
   .clientmanage-buttons-container {
     width: 100% !important;
     flex-direction: column !important;
     gap: 0.75rem !important;
+  }
+
+  .clientmanage-actions-top-row {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .clientmanage-actions-bottom-row {
+    width: 100% !important;
   }
 
   /* Action Buttons - full width */
@@ -40,5 +50,109 @@
     width: 16px !important;
     height: 16px !important;
   }
+}
+
+/* Phone Input Dropdown Fix for Share Taxpayer Invite modal */
+.invite-actions-modal .modal-dialog,
+.invite-actions-modal .modal-content,
+.invite-actions-modal .modal-body {
+  overflow: visible !important;
+}
+
+.invite-actions-phone-container {
+  position: relative;
+  z-index: 2000; /* Ensure container is above other modal elements */
+}
+
+/* Override react-phone-input-2 default 300px widths inside Share Taxpayer Invite modal */
+.invite-actions-phone-container.react-tel-input,
+.invite-actions-phone-container.react-tel-input .form-control {
+  width: 100% !important;
+}
+
+.invite-actions-phone-container.react-tel-input .form-control {
+  max-width: 100% !important;
+}
+
+/* Ensure the dropdown opens below the input and above modal footer */
+.invite-actions-phone-container .country-list {
+  position: absolute !important;
+  top: calc(100% + 6px) !important; /* Position below the input */
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important; /* Ensure it takes full width */
+  max-width: 100% !important; /* Ensure it takes full width */
+  box-sizing: border-box !important;
+  margin: 6px 0 0 0 !important; /* Remove default margin */
+  z-index: 2002 !important; /* Above modal content and footer */
+
+  /* General styling for the list */
+  background: #fff !important;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+}
+
+.invite-actions-phone-container .flag-dropdown { z-index: 2001 !important; }
+.invite-actions-phone-container .flag-dropdown.open { width: 100% !important; left: 0 !important; }
+
+/* Improve country dropdown layout (flag/name spacing + remove unwanted lines) */
+.invite-actions-phone-container.react-tel-input .country-list .search {
+  padding: 8px 10px !important;
+  border-bottom: none !important; /* Remove line under search */
+  margin: 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  background: #fff !important;
+  z-index: 1 !important; /* Ensure search bar is above list items */
+}
+
+.invite-actions-phone-container.react-tel-input .country-list .search input {
+  width: 100% !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.invite-actions-phone-container.react-tel-input .country-list .divider {
+  display: none !important; /* Remove separator lines */
+}
+
+.invite-actions-phone-container.react-tel-input .country-list .country {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important; /* Spacing between flag and name */
+  padding: 8px 12px !important;
+  border: none !important; /* Remove default borders */
+  position: relative !important;
+  z-index: 0 !important; /* Ensure country items are below search bar */
+}
+
+.invite-actions-phone-container.react-tel-input .country-list .country .flag {
+  margin: 0 !important;
+  flex: 0 0 18px; /* Fixed width for flag to align names */
+  position: absolute; /* Position flag within the padding */
+  left: 12px;
+  top: 8px;
+}
+
+.invite-actions-phone-container.react-tel-input .country-list .country .country-name {
+  margin: 0 !important;
+  flex: 1 1 auto !important;
+  min-width: 0;
+  line-height: 1.2;
+  padding-left: 34px; /* Create space for the flag */
+}
+
+.invite-actions-phone-container.react-tel-input .country-list .country .dial-code {
+  margin: 0 !important;
+  padding-left: 10px !important;
+  border-left: none !important;
+  color: #6B7280 !important;
+  white-space: nowrap;
 }
 

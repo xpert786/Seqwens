@@ -6,7 +6,7 @@ import { firmAdminStaffAPI, handleAPIError } from '../../../ClientOnboarding/uti
 // Permission categories mapping with icons
 const PERMISSION_CATEGORIES = {
   'Client Access': {
-    codes: ['view_assigned_clients_only', 'view_all_firm_clients'],
+    codes: ['view_assigned_clients_only', 'view_all_firm_clients', 'view_unlinked_taxpayers'],
     icon: '👥',
     color: 'blue'
   },

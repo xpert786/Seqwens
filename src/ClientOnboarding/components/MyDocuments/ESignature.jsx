@@ -785,10 +785,9 @@ export default function ESignature() {
                               throw new Error('Signer email is required for SignWell signature');
                             }
 
-                            // Extract document ID - API response has 'document' field (integer)
-                            const documentId = selectedRequest.document || selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
+                            const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
                             const applyResponse = await signWellAPI.applySignature({
-                              document_id: documentId, // API expects 'document_id'
+                              document_id: documentId,
                               signer_email: signerEmail,
                               signer_name: signerName,
                               document_name: documentName,
@@ -1007,10 +1006,9 @@ export default function ESignature() {
                         throw new Error('Signer email is required for SignWell signature');
                       }
 
-                      // Extract document ID - API response has 'document' field (integer)
-                      const documentId = selectedRequest.document || selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
+                      const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
                       const applyResponse = await signWellAPI.applySignature({
-                        document_id: documentId, // API expects 'document_id'
+                        document_id: documentId,
                         signer_email: signerEmail,
                         signer_name: signerName,
                         document_name: documentName,

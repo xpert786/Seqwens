@@ -412,11 +412,11 @@ const AllPlans = ({ currentPlanName }) => {
                                                             ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month
                                                         </div>
                                                     )}
-                                                    {billingCycle === 'monthly' && plan.yearly_equivalent && (
+                                                    {/* {billingCycle === 'monthly' && plan.yearly_equivalent && (
                                                         <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mt-1">
                                                             ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year
                                                         </div>
-                                                    )}
+                                                    )} */}
                                                     {billingCycle === 'yearly' && discountPercentage > 0 && (
                                                         <div className="mt-1">
                                                             <span className="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded font-[BasisGrotesquePro]">

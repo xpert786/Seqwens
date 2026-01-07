@@ -31,7 +31,6 @@ const createDefaultFormState = () => ({
     },
     security_settings: {
         admin_2fa_required: false,
-        password_complexity_enabled: false,
         ip_whitelisting_enabled: false,
         audit_logging_enabled: false,
         max_login_attempts: 5,
@@ -129,8 +128,6 @@ export default function Profile() {
                 security_settings: {
                     admin_2fa_required:
                         formState.security_settings.admin_2fa_required,
-                    password_complexity_enabled:
-                        formState.security_settings.password_complexity_enabled,
                     ip_whitelisting_enabled:
                         formState.security_settings.ip_whitelisting_enabled,
                     audit_logging_enabled:
@@ -690,50 +687,6 @@ export default function Profile() {
                             <label htmlFor="admin2FA"></label>
                         </div>
                     </div>
-
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <div
-                                style={{
-                                    color: "#3B4A66",
-                                    fontSize: "16px",
-                                    fontWeight: "500",
-                                    fontFamily: "BasisGrotesquePro",
-                                }}
-                            >
-                                Password Complexity
-                            </div>
-                            <p
-                                style={{
-                                    color: "#6B7280",
-                                    fontSize: "14px",
-                                    fontWeight: "400",
-                                    fontFamily: "BasisGrotesquePro",
-                                    margin: "4px 0 0 0",
-                                }}
-                            >
-                                Require strong passwords for all users
-                            </p>
-                        </div>
-                        <div className="custom-toggle">
-                            <input
-                                type="checkbox"
-                                id="passwordComplexity"
-                                checked={
-                                    formState.security_settings.password_complexity_enabled
-                                }
-                                onChange={() =>
-                                    handleToggle(
-                                        "security_settings",
-                                        "password_complexity_enabled"
-                                    )
-                                }
-                                disabled={isLoading || isSaving}
-                            />
-                            <label htmlFor="passwordComplexity"></label>
-                        </div>
-                    </div>
-
 
                     <div className="flex justify-between items-center">
                         <div>

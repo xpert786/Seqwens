@@ -1338,7 +1338,7 @@ export default function Messages() {
                           <div className="d-flex align-items-center gap-2">
                             <div style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "500", fontFamily: "BasisGrotesquePro" }}>{conv.name}</div>
                             {conv.unreadCount > 0 && (
-                              <span className="badge bg-danger" style={{ fontSize: "10px" }}>
+                              <span className="badge bg-danger text-white" style={{ fontSize: "10px", color: "#ffffff" }}>
                                 {conv.unreadCount}
                               </span>
                             )}

@@ -19,7 +19,7 @@ export const corsConfig = {
 
 // Alternative API base URL for development (using proxy)
 export const getApiBaseUrl = () => {
-  // Always use the full URL with IP address
+  // Use server backend URL
   return 'http://168.231.121.7/seqwens/api';
   
   // Uncomment below to use proxy in development (if needed)

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding } from 'react-icons/fa';
+import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding, FaCopy, FaLink, FaSms } from 'react-icons/fa';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/bootstrap.css';
 import { SettingIcon, } from '../../../Taxpreparer/component/icons';
 import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, SearchIcon, MailIcon, CallIcon, Building, DocumentIcon, AppointmentIcon, CustomerIcon, MsgIcon, Doc, Action, CrossesIcon } from '../../Components/icons';
 import '../../../Taxpreparer/styles/taxdashboard.css';
@@ -17,6 +19,7 @@ import { handleAPIError, firmAdminStaffAPI, firmAdminClientsAPI } from '../../..
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from 'react-toastify';
+import { getToastOptions } from '../../../utils/toastConfig';
 import { useFirmSettings } from '../../Context/FirmSettingsContext';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -99,10 +102,46 @@ export default function ClientManage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('true'); // 'true' for active, 'false' for inactive, 'all' for all
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState('clients'); // 'clients', 'pending-invites', or 'unlinked-taxpayers'
+
   // Pending invites state
   const [pendingInvites, setPendingInvites] = useState([]);
   const [pendingInvitesLoading, setPendingInvitesLoading] = useState(false);
   const [pendingInvitesError, setPendingInvitesError] = useState(null);
+  const [pendingInvitesPagination, setPendingInvitesPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
+
+  // Share Taxpayer Invite modal state
+  const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
+  const [activeInviteDetails, setActiveInviteDetails] = useState(null);
+  const [editedInviteEmail, setEditedInviteEmail] = useState('');
+  const [smsPhoneOverride, setSmsPhoneOverride] = useState("");
+  const [smsPhoneCountry, setSmsPhoneCountry] = useState('us');
+  const [inviteActionLoading, setInviteActionLoading] = useState(false);
+  const [inviteActionMethod, setInviteActionMethod] = useState(null);
+  const [inviteLinkRefreshing, setInviteLinkRefreshing] = useState(false);
+  const [deletingInvite, setDeletingInvite] = useState(false);
+  const [showDeleteInviteConfirmModal, setShowDeleteInviteConfirmModal] = useState(false);
+
+  // Unlinked taxpayers state
+  const [unlinkedTaxpayers, setUnlinkedTaxpayers] = useState([]);
+  const [unlinkedTaxpayersLoading, setUnlinkedTaxpayersLoading] = useState(false);
+  const [unlinkedTaxpayersError, setUnlinkedTaxpayersError] = useState(null);
+  const [unlinkedTaxpayersPagination, setUnlinkedTaxpayersPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
   // Filter states
   const [statusFilters, setStatusFilters] = useState({
     allStatus: false,
@@ -387,6 +426,380 @@ export default function ClientManage() {
   }, [showDropdown]);
 
 
+  // Fetch unlinked taxpayers
+  const fetchUnlinkedTaxpayers = useCallback(async (page = 1, pageSize = 20) => {
+    try {
+      setUnlinkedTaxpayersLoading(true);
+      setUnlinkedTaxpayersError(null);
+
+      const params = {
+        page,
+        page_size: pageSize
+      };
+
+      // Add search if available
+      if (debouncedSearchTerm.trim()) {
+        params.search = debouncedSearchTerm.trim();
+      }
+
+      const response = await firmAdminClientsAPI.getUnlinkedTaxpayers(params);
+
+      if (response.success && response.data) {
+        setUnlinkedTaxpayers(response.data.taxpayers || []);
+        setUnlinkedTaxpayersPagination({
+          page: response.data.page || page,
+          page_size: response.data.page_size || pageSize,
+          total_count: response.data.total_count || 0,
+          total_pages: response.data.total_pages || 1,
+          has_next: response.data.has_next || false,
+          has_previous: response.data.has_previous || false
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch unlinked taxpayers');
+      }
+    } catch (error) {
+      console.error('Error fetching unlinked taxpayers:', error);
+      setUnlinkedTaxpayersError(handleAPIError(error));
+      setUnlinkedTaxpayers([]);
+    } finally {
+      setUnlinkedTaxpayersLoading(false);
+    }
+  }, [debouncedSearchTerm]);
+
+  // Fetch unlinked taxpayers when tab is switched to unlinked taxpayers or search changes
+  useEffect(() => {
+    if (activeTab === 'unlinked-taxpayers') {
+      fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size);
+    }
+  }, [activeTab, debouncedSearchTerm, fetchUnlinkedTaxpayers]);
+
+  // Fetch pending invites
+  const fetchPendingInvites = useCallback(async (page = 1) => {
+    try {
+      setPendingInvitesLoading(true);
+      setPendingInvitesError(null);
+
+      const response = await firmAdminClientsAPI.getPendingInvites({
+        page,
+        page_size: pendingInvitesPagination.page_size,
+        search: debouncedSearchTerm.trim() || undefined
+      });
+
+      if (response.success && response.data) {
+        // API returns data.taxpayers array
+        setPendingInvites(response.data.taxpayers || []);
+        setPendingInvitesPagination({
+          page: response.data.page || page,
+          page_size: response.data.page_size || 20,
+          total_count: response.data.total_count || 0,
+          total_pages: response.data.total_pages || 1,
+          has_next: response.data.has_next || false,
+          has_previous: response.data.has_previous || false
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch pending invites');
+      }
+    } catch (error) {
+      console.error('Error fetching pending invites:', error);
+      setPendingInvitesError(handleAPIError(error));
+      setPendingInvites([]);
+    } finally {
+      setPendingInvitesLoading(false);
+    }
+  }, [debouncedSearchTerm, pendingInvitesPagination.page_size]);
+
+  // Fetch pending invites when tab is switched to pending invites or search changes
+  useEffect(() => {
+    if (activeTab === 'pending-invites') {
+      fetchPendingInvites(1);
+    }
+  }, [activeTab, debouncedSearchTerm, fetchPendingInvites]);
+
+  // Helper functions for Share Taxpayer Invite modal
+  useEffect(() => {
+    if (activeInviteDetails?.phone_number) {
+      setSmsPhoneOverride(activeInviteDetails.phone_number);
+    } else if (!showInviteActionsModal) {
+      setSmsPhoneOverride("");
+    }
+  }, [activeInviteDetails, showInviteActionsModal]);
+
+  const openInviteActionsModal = async (inviteData) => {
+    // Map the API response structure to match what the modal expects
+    const mappedInviteData = {
+      id: inviteData.invite_id || inviteData.id,
+      invite_id: inviteData.invite_id || inviteData.id,
+      client_id: inviteData.id,
+      first_name: inviteData.first_name,
+      last_name: inviteData.last_name,
+      email: inviteData.email,
+      phone_number: inviteData.phone_number,
+      invite_link: inviteData.invite_link,
+      expires_at: inviteData.expires_at,
+      invited_at: inviteData.invited_at,
+      status: inviteData.status,
+      invited_by_name: inviteData.invited_by?.name,
+      invited_by_email: inviteData.invited_by?.email,
+      firm_name: inviteData.firm_name,
+      is_expired: inviteData.is_expired
+    };
+    
+    setActiveInviteDetails(mappedInviteData);
+    setShowInviteActionsModal(true);
+    if (mappedInviteData?.email) {
+      setEditedInviteEmail(mappedInviteData.email);
+    } else {
+      setEditedInviteEmail('');
+    }
+    
+    // If invite link is missing, try to fetch it
+    if (!mappedInviteData.invite_link && mappedInviteData.invite_id) {
+      try {
+        const linkResponse = await firmAdminClientsAPI.getInviteLink(mappedInviteData.invite_id);
+        if (linkResponse.success) {
+          const link = linkResponse.data?.invite_link || linkResponse.invite_link;
+          if (link) {
+            setActiveInviteDetails(prev => ({
+              ...prev,
+              invite_link: link
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching invite link:", error);
+      }
+    }
+  };
+
+  const closeInviteActionsModal = () => {
+    setShowInviteActionsModal(false);
+    setActiveInviteDetails(null);
+    setEditedInviteEmail('');
+    setSmsPhoneOverride('');
+  };
+
+  // Helper function to parse phone number
+  const parsePhoneNumber = (phoneValue, countryCode = 'us') => {
+    if (!phoneValue || !phoneValue.trim()) {
+      return { country_code: null, phone_number: null };
+    }
+    const digitsOnly = phoneValue.replace(/\D/g, '');
+    const countryToDialCode = {
+      'us': '1', 'ca': '1', 'do': '1', 'pr': '1', 'vi': '1', 'gu': '1', 'as': '1',
+      'gb': '44', 'im': '44', 'je': '44', 'gg': '44', 'ax': '358',
+      'au': '61', 'cx': '61', 'cc': '61', 'nz': '64', 'pn': '64',
+      'in': '91', 'jp': '81', 'kr': '82', 'cn': '86', 'tw': '886', 'hk': '852', 'mo': '853',
+      'de': '49', 'at': '43', 'ch': '41', 'li': '423',
+      'fr': '33', 'mc': '377', 're': '262', 'bl': '590', 'mf': '590', 'gp': '590', 'pm': '508',
+      'it': '39', 'va': '39', 'sm': '378',
+      'es': '34', 'ad': '376', 'gi': '350', 'pt': '351',
+      'nl': '31', 'be': '32', 'lu': '352',
+      'se': '46', 'no': '47', 'dk': '45', 'fi': '358', 'is': '354', 'fo': '298',
+      'pl': '48', 'cz': '420', 'sk': '421', 'hu': '36', 'ro': '40', 'bg': '359',
+      'gr': '30', 'cy': '357', 'mt': '356',
+      'ie': '353',
+      'br': '55', 'mx': '52', 'ar': '54', 'cl': '56', 'co': '57', 'pe': '51', 've': '58',
+      'za': '27', 'ng': '234', 'ke': '254', 'eg': '20', 'et': '251', 'gh': '233',
+      'ma': '212', 'dz': '213', 'tn': '216', 'ly': '218', 'sd': '249', 'sn': '221',
+      'ae': '971', 'sa': '966', 'il': '972', 'tr': '90', 'iq': '964', 'ir': '98',
+      'ru': '7', 'kz': '7',
+      'th': '66', 'sg': '65', 'my': '60', 'ph': '63', 'id': '62', 'vn': '84',
+      'bd': '880', 'pk': '92', 'lk': '94', 'np': '977', 'mm': '95'
+    };
+    const dialCode = countryToDialCode[countryCode.toLowerCase()] || '1';
+    if (digitsOnly.startsWith(dialCode)) {
+      const phoneNumber = digitsOnly.substring(dialCode.length);
+      return {
+        country_code: `+${dialCode}`,
+        phone_number: phoneNumber
+      };
+    }
+    return {
+      country_code: `+${dialCode}`,
+      phone_number: digitsOnly
+    };
+  };
+
+  const handleSendInviteNotifications = async (methods, options = {}) => {
+    // Use invite_id if available, otherwise fall back to id
+    const inviteId = activeInviteDetails?.invite_id || activeInviteDetails?.id;
+    if (!inviteId || !methods?.length) return;
+    try {
+      setInviteActionLoading(true);
+      setInviteActionMethod(methods.join(","));
+      const payload = { methods };
+      if (options.email) {
+        payload.email = options.email;
+      }
+      if (options.phone_number) {
+        const phoneData = parsePhoneNumber(options.phone_number, smsPhoneCountry);
+        if (phoneData.country_code && phoneData.phone_number) {
+          payload.country_code = phoneData.country_code.replace(/^\+/, '');
+          payload.phone_number = phoneData.phone_number;
+        } else {
+          payload.phone_number = options.phone_number;
+        }
+      }
+      const response = await firmAdminClientsAPI.sendInvite(inviteId, payload);
+      if (response.success && response.data) {
+        setActiveInviteDetails((prev) => ({
+          ...prev,
+          ...response.data
+        }));
+
+        const deliverySummary = response.data?.delivery_summary;
+
+        if (deliverySummary?.sms_error) {
+          toast.error(deliverySummary.sms_error, getToastOptions({ autoClose: 5000 }));
+        }
+
+        const emailSent = deliverySummary?.email_sent === true;
+        const smsSent = deliverySummary?.sms_sent === true;
+        const hasError = deliverySummary?.sms_error || (deliverySummary?.email_sent === false && methods.includes('email'));
+
+        if ((emailSent || smsSent) && !hasError) {
+          toast.success(response.message || "Invite notifications processed.", getToastOptions());
+          closeInviteActionsModal();
+        } else if (emailSent && deliverySummary?.sms_error) {
+          toast.success("Email sent successfully.", getToastOptions());
+          closeInviteActionsModal();
+        } else if (deliverySummary?.sms_error && !emailSent) {
+          // Only SMS was attempted and failed - don't close modal so user can try again
+        }
+      } else {
+        throw new Error(response.message || "Failed to send invite notifications");
+      }
+    } catch (error) {
+      console.error("Error sending invite notifications:", error);
+      toast.error(handleAPIError(error), getToastOptions());
+    } finally {
+      setInviteActionLoading(false);
+      setInviteActionMethod(null);
+    }
+  };
+
+  const handleCopyInviteLink = async () => {
+    if (!activeInviteDetails?.invite_link) return;
+    try {
+      await navigator.clipboard.writeText(activeInviteDetails.invite_link);
+      toast.success("Invite link copied to clipboard!", getToastOptions({ autoClose: 2000 }));
+      closeInviteActionsModal();
+    } catch (error) {
+      console.error("Error copying invite link:", error);
+      toast.error("Failed to copy invite link. Please try again.", getToastOptions());
+    }
+  };
+
+  const handleRefreshInviteLink = async () => {
+    if (!activeInviteDetails) return;
+    try {
+      setInviteLinkRefreshing(true);
+      const payload = {};
+      // Use invite_id if available, otherwise fall back to id
+      const inviteId = activeInviteDetails.invite_id || activeInviteDetails.id;
+      if (inviteId) {
+        payload.invite_id = inviteId;
+      } else if (activeInviteDetails.client_id) {
+        payload.client_id = activeInviteDetails.client_id;
+      } else {
+        throw new Error("No invite ID or client ID available");
+      }
+      payload.regenerate = true;
+      
+      const response = await firmAdminClientsAPI.generateInviteLink(payload);
+      if (response.success) {
+        const newLink = response.data?.invite_link || response.invite_link;
+        if (newLink) {
+          setActiveInviteDetails((prev) => ({
+            ...prev,
+            invite_link: newLink,
+            expires_at: response.data?.expires_at || prev.expires_at
+          }));
+          toast.success("Invite link regenerated successfully.", {
+            position: "top-right",
+            autoClose: 3000
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error regenerating invite link:", error);
+      toast.error(handleAPIError(error), {
+        position: "top-right",
+        autoClose: 3000
+      });
+    } finally {
+      setInviteLinkRefreshing(false);
+    }
+  };
+
+  const handleSendEmailInviteNow = () => {
+    const trimmed = (editedInviteEmail || '').trim();
+    if (!trimmed || !trimmed.includes('@')) {
+      toast.error("Please enter a valid email address.", getToastOptions());
+      return;
+    }
+    handleSendInviteNotifications(["email"], { email: trimmed });
+  };
+
+  const handleSendSmsInviteNow = () => {
+    const trimmedPhone = smsPhoneOverride?.trim();
+    if (!trimmedPhone) {
+      toast.error("Please enter a phone number to send the SMS invite.", getToastOptions());
+      return;
+    }
+    handleSendInviteNotifications(["sms"], { phone_number: trimmedPhone });
+  };
+
+  const handleDeleteInvite = () => {
+    const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
+    
+    if (!inviteId) {
+      toast.error("No invite found to delete.", getToastOptions());
+      return;
+    }
+
+    // Show confirmation modal
+    setShowDeleteInviteConfirmModal(true);
+  };
+
+  const confirmDeleteInvite = async () => {
+    const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
+    
+    if (!inviteId) {
+      toast.error("No invite found to delete.", getToastOptions());
+      setShowDeleteInviteConfirmModal(false);
+      return;
+    }
+
+    try {
+      setDeletingInvite(true);
+      setShowDeleteInviteConfirmModal(false);
+      
+      const response = await firmAdminClientsAPI.deleteInvite(inviteId);
+
+      if (response.success) {
+        toast.success(response.message || "Invitation deleted successfully.", getToastOptions());
+        closeInviteActionsModal();
+        
+        // Refresh pending invites list
+        if (activeTab === 'pending-invites') {
+          await fetchPendingInvites(pendingInvitesPagination.page);
+        }
+      } else {
+        throw new Error(response.message || "Failed to delete invitation");
+      }
+    } catch (error) {
+      console.error("Error deleting invite:", error);
+      toast.error(handleAPIError(error) || "Failed to delete invitation. Please try again.", getToastOptions());
+    } finally {
+      setDeletingInvite(false);
+    }
+  };
+
+  const inviteExpiresOn = activeInviteDetails?.expires_at 
+    ? new Date(activeInviteDetails.expires_at).toLocaleDateString()
+    : null;
+
   // Helper function to refresh clients list
   const refreshClientsList = async () => {
     try {
@@ -504,10 +917,7 @@ export default function ClientManage() {
       const result = await response.json();
       
       if (result.success) {
-        toast.success(result.message || 'Client deleted successfully', {
-          position: "top-right",
-          autoClose: 3000,
-        });
+        toast.success(result.message || 'Client deleted successfully', getToastOptions());
         setShowDeleteConfirmModal(false);
         setSelectedClientForDelete(null);
         // Refresh clients list
@@ -518,10 +928,7 @@ export default function ClientManage() {
     } catch (err) {
       console.error('Error deleting client:', err);
       const errorMsg = handleAPIError(err);
-      toast.error(errorMsg || 'Failed to delete client', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.error(errorMsg || 'Failed to delete client', getToastOptions());
     } finally {
       setDeleting(false);
     }
@@ -558,10 +965,7 @@ export default function ClientManage() {
         const successMessage = isAssignMode 
           ? (result.message || 'Tax preparer assigned successfully')
           : (result.message || 'Tax preparer reassigned successfully');
-        toast.success(successMessage, {
-          position: "top-right",
-          autoClose: 3000,
-        });
+        toast.success(successMessage, getToastOptions());
         setShowReassignStaffModal(false);
         setSelectedClientForReassign(null);
         setIsAssignMode(false);
@@ -573,10 +977,7 @@ export default function ClientManage() {
     } catch (err) {
       console.error('Error assigning/reassigning tax preparer:', err);
       const errorMsg = handleAPIError(err);
-      toast.error(errorMsg || 'Failed to assign/reassign tax preparer', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.error(errorMsg || 'Failed to assign/reassign tax preparer', getToastOptions());
     } finally {
       setReassigning(false);
     }
@@ -824,34 +1225,46 @@ export default function ClientManage() {
   return (
     <div className="p-4 sm:p-6 min-h-screen" style={{ backgroundColor: 'var(--Color-purple-50, #F6F7FF)' }}>
       {/* Header Section */}
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 clientmanage-header mb-4">
-        <div className="clientmanage-header-content">
-          <h2 className="taxdashboard-title clientmanage-header-title">Client Management</h2>
-          <h5 className="taxdashboard-subtitle clientmanage-header-subtitle">Manage all firm clients and assignments</h5>
+      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start mb-6 gap-4 clientmanage-header">
+        <div className="flex-1 clientmanage-header-content">
+          <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro] clientmanage-header-title">Client Management</h4>
+          <p className="text-gray-600 font-[BasisGrotesquePro] text-sm clientmanage-header-subtitle">Manage all firm clients and assignments</p>
         </div>
-        <div className="d-flex flex-wrap gap-2 sm:gap-3 clientmanage-buttons-container w-100 sm:w-auto">
-          {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "15px", borderRadius: "7px" }} onClick={() => setShowFormBuilder(true)}>
-            <SettingIcon />
-            Build Intake Forms
-          </button> */}
-          
-          {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }}
-              onClick={() => setShowBulkTaxpayerImportModal(true)}>
-              <BulkImport />
-              <span className="d-none d-sm-inline">Bulk Import Taxpayers</span>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 clientmanage-buttons-container">
+          {/* Top Row - 2-3 buttons */}
+          <div className="flex flex-wrap items-center gap-2 clientmanage-actions-top-row">
+            {!advancedReportingEnabled && (
+              <button 
+                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+                onClick={() => setShowBulkTaxpayerImportModal(true)}
+              >
+                <BulkImport />
+                Bulk Import Taxpayers
+              </button>
+            )}
+            <button 
+              className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              onClick={() => setShowAddClientModal(true)}
+            >
+              <AddClient />
+              Add Client
             </button>
-          )}
-          <button className="btn taxdashboard-btn btn-uploaded d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }} onClick={() => setShowAddClientModal(true)}>
-            <AddClient />
-            <span className="d-none d-sm-inline">Add Client</span>
-          </button>
-          {!advancedReportingEnabled && (
-            <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2 clientmanage-action-button" style={{ fontSize: "14px", borderRadius: "7px" }} onClick={exportClientsToPDF}>
-              <ExportReport />
-              <span className="d-none d-sm-inline">Export Report</span>
-            </button>
-          )}
+          </div>
+
+          {/* Bottom Row - 1 button */}
+          <div className="flex items-center clientmanage-actions-bottom-row">
+            {!advancedReportingEnabled && (
+              <button
+                className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+                onClick={exportClientsToPDF}
+              >
+                <ExportReport />
+                Export Report
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {/* Dashboard Error Display */}
@@ -925,77 +1338,389 @@ export default function ClientManage() {
         })}
       </div>
 
-      {/* Pending Invites Section */}
-      {pendingInvites.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 mb-6">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-lg sm:text-xl font-semibold text-gray-900 font-[BasisGrotesquePro] mb-1">
-                  Pending Invites ({pendingInvites.length})
-                </h4>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                  Client invitations awaiting acceptance
-                </p>
+      {/* Tabs */}
+      <div className="d-flex gap-2 mb-4 align-items-center" style={{ 
+        borderBottom: '2px solid #E8F0FF',
+        paddingBottom: '0',
+        marginTop: '20px',
+        minHeight: '50px'
+      }}>
+        <button
+          className={`btn border-0`}
+          onClick={() => setActiveTab('clients')}
+          style={{
+            borderRadius: '8px 8px 0 0',
+            borderBottom: activeTab === 'clients' ? '3px solid #00C0C6' : '3px solid transparent',
+            marginBottom: '-2px',
+            fontWeight: activeTab === 'clients' ? '600' : '500',
+            padding: '10px 20px',
+            fontSize: '14px',
+            color: activeTab === 'clients' ? '#00C0C6' : '#6B7280',
+            backgroundColor: activeTab === 'clients' ? '#F0FDFF' : 'transparent',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          All Clients
+        </button>
+        <button
+          className={`btn border-0 position-relative`}
+          onClick={() => setActiveTab('pending-invites')}
+          style={{
+            borderRadius: '8px 8px 0 0',
+            borderBottom: activeTab === 'pending-invites' ? '3px solid #00C0C6' : '3px solid transparent',
+            marginBottom: '-2px',
+            fontWeight: activeTab === 'pending-invites' ? '600' : '500',
+            padding: '10px 20px',
+            fontSize: '14px',
+            color: activeTab === 'pending-invites' ? '#00C0C6' : '#6B7280',
+            backgroundColor: activeTab === 'pending-invites' ? '#F0FDFF' : 'transparent',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Pending Invites
+          {(pendingInvites.length > 0 || pendingInvitesPagination.total_count > 0) && (
+            <span className="badge bg-danger text-white ms-2" style={{ 
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '10px',
+              color: '#ffffff'
+            }}>
+              {pendingInvitesPagination.total_count > 0 ? pendingInvitesPagination.total_count : pendingInvites.length}
+            </span>
+          )}
+        </button>
+        <button
+          className={`btn border-0 position-relative`}
+          onClick={() => setActiveTab('unlinked-taxpayers')}
+          style={{
+            borderRadius: '8px 8px 0 0',
+            borderBottom: activeTab === 'unlinked-taxpayers' ? '3px solid #00C0C6' : '3px solid transparent',
+            marginBottom: '-2px',
+            fontWeight: activeTab === 'unlinked-taxpayers' ? '600' : '500',
+            padding: '10px 20px',
+            fontSize: '14px',
+            color: activeTab === 'unlinked-taxpayers' ? '#00C0C6' : '#6B7280',
+            backgroundColor: activeTab === 'unlinked-taxpayers' ? '#F0FDFF' : 'transparent',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Unlinked Taxpayers
+          {(unlinkedTaxpayers.length > 0 || unlinkedTaxpayersPagination.total_count > 0) && (
+            <span className="badge bg-warning ms-2" style={{ 
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '10px'
+            }}>
+              {unlinkedTaxpayersPagination.total_count > 0 ? unlinkedTaxpayersPagination.total_count : unlinkedTaxpayers.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Unlinked Taxpayers Section - Only show for unlinked taxpayers tab */}
+      {activeTab === 'unlinked-taxpayers' && (
+        <div className="card client-list-card p-3" style={{
+          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+        }}>
+          {unlinkedTaxpayersLoading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
+              <p className="mt-3 text-muted">Loading unlinked taxpayers...</p>
             </div>
-          </div>
-          <div className="p-4 sm:p-6">
-            {pendingInvitesLoading ? (
-              <div className="text-center py-4">
-                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <p className="mt-2 text-sm text-gray-500 font-[BasisGrotesquePro]">Loading invites...</p>
-              </div>
-            ) : pendingInvitesError ? (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {pendingInvitesError}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingInvites.map((invite) => (
-                  <div
-                    key={invite.id}
-                    className="flex items-center justify-between p-4 border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                          {invite.email ? invite.email.charAt(0).toUpperCase() : '?'}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900 font-[BasisGrotesquePro]">
-                            {invite.email || invite.client_email || 'Unknown'}
+          ) : unlinkedTaxpayersError ? (
+            <div className="alert alert-danger" role="alert">
+              <strong>Error:</strong> {unlinkedTaxpayersError}
+              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
+                Retry
+              </button>
+            </div>
+          ) : unlinkedTaxpayers.length === 0 ? (
+            <div className="text-center py-5">
+              <p className="text-muted">No unlinked taxpayers found</p>
+            </div>
+          ) : (
+            <>
+              <div className="row g-3">
+                {unlinkedTaxpayers.map((taxpayer) => (
+                  <div key={taxpayer.id} className="col-md-6 col-12">
+                    <div
+                      className="card client-card"
+                      onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
+                      style={{
+                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div className="d-flex gap-3">
+                          <div
+                            className="client-initials"
+                            style={{
+                              width: "48px",
+                              height: "48px",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#00C0C6",
+                              color: "white",
+                              fontWeight: "600",
+                              fontSize: "16px",
+                              flexShrink: 0
+                            }}
+                          >
+                            {taxpayer.first_name?.[0]?.toUpperCase() || ''}{taxpayer.last_name?.[0]?.toUpperCase() || ''}
                           </div>
-                          <div className="text-sm text-gray-500 font-[BasisGrotesquePro]">
-                            {invite.first_name || invite.client_first_name ? 
-                              `${invite.first_name || invite.client_first_name} ${invite.last_name || invite.client_last_name || ''}`.trim() 
-                              : 'Client'}
+                          <div>
+                            <div className="fw-semibold mb-1">
+                              {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
+                            </div>
+                            {taxpayer.email && (
+                              <div className="text-muted small mb-2">
+                                <FaEnvelope className="me-1" size={12} />
+                                {taxpayer.email}
+                              </div>
+                            )}
+                            {taxpayer.phone_number && (
+                              <div className="text-muted small mb-2">
+                                <FaPhone className="me-1" size={12} />
+                                {taxpayer.phone_number}
+                              </div>
+                            )}
+                            <div className="d-flex flex-wrap gap-2 mt-2">
+                              {taxpayer.is_active ? (
+                                <span className="badge bg-success" style={{ fontSize: '10px' }}>
+                                  Active
+                                </span>
+                              ) : (
+                                <span className="badge bg-secondary" style={{ fontSize: '10px' }}>
+                                  Inactive
+                                </span>
+                              )}
+                              {taxpayer.is_email_verified && (
+                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                                  Email Verified
+                                </span>
+                              )}
+                              {taxpayer.is_phone_verified && (
+                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                                  Phone Verified
+                                </span>
+                              )}
+                              {taxpayer.is_suspended && (
+                                <span className="badge bg-danger text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
+                                  Suspended
+                                </span>
+                              )}
+                            </div>
+                            {taxpayer.last_login_formatted && (
+                              <div className="text-muted small mt-2">
+                                Last login: {taxpayer.last_login_formatted}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                      <div className="text-xs text-gray-500 font-[BasisGrotesquePro] ml-13">
-                        Invited: {invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A'}
-                        {invite.expires_at && (
-                          <span className="ml-2">
-                            • Expires: {new Date(invite.expires_at).toLocaleDateString()}
+                        <div className="d-flex gap-2">
+                          <span className="badge bg-warning" style={{ fontSize: '10px' }}>
+                            Unlinked
                           </span>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 font-[BasisGrotesquePro]">
-                        Pending
-                      </span>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+
+              {/* Pagination for unlinked taxpayers */}
+              {unlinkedTaxpayersPagination.total_pages > 1 && (
+                <div className="d-flex justify-content-between align-items-center mt-4">
+                  <div className="text-muted small">
+                    Showing {((unlinkedTaxpayersPagination.page - 1) * unlinkedTaxpayersPagination.page_size) + 1} to{' '}
+                    {Math.min(unlinkedTaxpayersPagination.page * unlinkedTaxpayersPagination.page_size, unlinkedTaxpayersPagination.total_count)} of{' '}
+                    {unlinkedTaxpayersPagination.total_count} taxpayers
+                  </div>
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page - 1, unlinkedTaxpayersPagination.page_size)}
+                      disabled={unlinkedTaxpayersPagination.page === 1 || unlinkedTaxpayersLoading}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page + 1, unlinkedTaxpayersPagination.page_size)}
+                      disabled={unlinkedTaxpayersPagination.page >= unlinkedTaxpayersPagination.total_pages || unlinkedTaxpayersLoading}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
-      {/* Client List Section */}
+
+      {/* Pending Invites Section - Only show for pending invites tab */}
+      {activeTab === 'pending-invites' && (
+        <div className="card client-list-card p-3" style={{
+          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+        }}>
+          <h6 className="fw-semibold mb-3">Pending Invites</h6>
+          <div className="mb-3">Client invites awaiting acceptance</div>
+
+          {pendingInvitesLoading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3 text-muted">Loading pending invites...</p>
+            </div>
+          ) : pendingInvitesError ? (
+            <div className="alert alert-danger" role="alert">
+              <strong>Error:</strong> {pendingInvitesError}
+              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+                Retry
+              </button>
+            </div>
+          ) : pendingInvites.length === 0 ? (
+            <div className="text-center py-5">
+              <p className="text-muted">No pending invites found</p>
+            </div>
+          ) : (
+            <>
+              <div className="row g-3">
+                {pendingInvites.map((invite) => (
+                  <div key={invite.id} className="col-md-6 col-12">
+                    <div
+                      className="card client-card"
+                      onClick={() => openInviteActionsModal(invite)}
+                      style={{
+                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div className="d-flex gap-3">
+                          <div
+                            className="client-initials"
+                            style={{
+                              width: "48px",
+                              height: "48px",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#00C0C6",
+                              color: "white",
+                              fontWeight: "600",
+                              fontSize: "16px",
+                              flexShrink: 0
+                            }}
+                          >
+                            {invite.first_name?.[0]?.toUpperCase() || ''}{invite.last_name?.[0]?.toUpperCase() || ''}
+                          </div>
+                          <div>
+                            <div className="fw-semibold mb-1">
+                              {invite.first_name} {invite.last_name}
+                            </div>
+                            <div className="text-muted small mb-2">
+                              <FaEnvelope className="me-1" size={12} />
+                              {invite.email}
+                            </div>
+                            {invite.phone_number && (
+                              <div className="text-muted small mb-2">
+                                <FaPhone className="me-1" size={12} />
+                                {invite.phone_number}
+                              </div>
+                            )}
+                            <div className="d-flex flex-wrap gap-2 mt-2">
+                              {invite.is_expired ? (
+                                <span className="badge bg-danger text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
+                                  Expired
+                                </span>
+                              ) : (
+                                <span className="badge bg-warning" style={{ fontSize: '10px' }}>
+                                  Pending
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-muted small mt-2">
+                              <div>Invited: {invite.invited_at_formatted || (invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A')}</div>
+                              {invite.expires_at && (
+                                <div>
+                                  Expires: {invite.expires_at_formatted || new Date(invite.expires_at).toLocaleDateString()}
+                                  {invite.days_until_expiry !== undefined && (
+                                    <span className="ms-1">({invite.days_until_expiry} days left)</span>
+                                  )}
+                                </div>
+                              )}
+                              {invite.invited_by?.name && (
+                                <div>
+                                  Invited by: {invite.invited_by.name}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="d-flex gap-2">
+                          {invite.invite_link && (
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(invite.invite_link);
+                                toast.success('Invite link copied to clipboard!');
+                              }}
+                              title="Copy invite link"
+                            >
+                              <FaCopy size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination for invites */}
+              {pendingInvitesPagination.total_pages > 1 && (
+                <div className="d-flex justify-content-between align-items-center mt-4">
+                  <div className="text-muted small">
+                    Showing {((pendingInvitesPagination.page - 1) * pendingInvitesPagination.page_size) + 1} to{' '}
+                    {Math.min(pendingInvitesPagination.page * pendingInvitesPagination.page_size, pendingInvitesPagination.total_count)} of{' '}
+                    {pendingInvitesPagination.total_count} invites
+                  </div>
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => fetchPendingInvites(pendingInvitesPagination.page - 1)}
+                      disabled={pendingInvitesPagination.page === 1 || pendingInvitesLoading}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => fetchPendingInvites(pendingInvitesPagination.page + 1)}
+                      disabled={pendingInvitesPagination.page >= pendingInvitesPagination.total_pages || pendingInvitesLoading}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Client List Section - Only show for clients tab */}
+      {activeTab === 'clients' && (
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Section Header */}
         <div className="p-4 sm:p-6">
@@ -1010,7 +1735,8 @@ export default function ClientManage() {
           )}
         </div>
 
-        {/* Toolbar */}
+        {/* Toolbar - Only show for clients tab */}
+        {activeTab === 'clients' && (
         <div className="p-4 sm:p-6 border-b border-gray-200">
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex-1 relative">
@@ -1108,6 +1834,36 @@ export default function ClientManage() {
             </button> */}
           </div>
         </div>
+        )}
+
+        {/* Search Bar for Pending Invites Tab */}
+        {activeTab === 'pending-invites' && (
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search invites by name, email or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <SearchIcon />
+              </div>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Client Table */}
         <div className="overflow-x-auto px-4 sm:px-6">
@@ -1391,6 +2147,7 @@ export default function ClientManage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Filters Modal */}
       {showFiltersModal && (
@@ -1652,6 +2409,159 @@ export default function ClientManage() {
         assignedPreparerId={selectedClientForWorkflow?.assignedPreparerId}
       />
 
+      {/* Share Taxpayer Invite Modal */}
+      {showInviteActionsModal && activeInviteDetails && (
+        <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
+                <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
+              </div>
+              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
+                <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
+                  <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
+                    {activeInviteDetails.first_name} {activeInviteDetails.last_name}
+                  </p>
+                  <p className="mb-1 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.email}</p>
+                  {activeInviteDetails.phone_number && (
+                    <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>{activeInviteDetails.phone_number}</p>
+                  )}
+                  {inviteExpiresOn && (
+                    <small className="text-muted">Expires {inviteExpiresOn}</small>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                    <FaLink size={14} /> Shareable Link
+                  </label>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={activeInviteDetails.invite_link || ""}
+                      readOnly
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={handleCopyInviteLink}
+                      disabled={!activeInviteDetails.invite_link}
+                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                    >
+                      <FaCopy size={12} className="me-1" />
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary"
+                      onClick={handleRefreshInviteLink}
+                      disabled={inviteLinkRefreshing}
+                      style={{ borderRadius: '8px', whiteSpace: 'nowrap' }}
+                    >
+                      {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                  </div>
+                  <small className="text-muted d-block mt-1">
+                    Share this link with the taxpayer. They can use it anytime before it expires.
+                  </small>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                    <FaEnvelope size={14} /> Send Email Invite
+                  </label>
+                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
+                    We'll email a secure link to the address below.
+                  </p>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={editedInviteEmail}
+                      onChange={(e) => setEditedInviteEmail(e.target.value)}
+                      placeholder={activeInviteDetails.email || 'Enter email'}
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleSendEmailInviteNow}
+                      disabled={inviteActionLoading}
+                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                    >
+                      {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
+                    </button>
+                  </div>
+                  {activeInviteDetails.delivery_summary && (
+                    <div className="mt-2 text-muted small">
+                      Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-1">
+                  <label className="form-label fw-semibold d-flex align-items-center gap-2" style={{ color: '#3B4A66' }}>
+                    <FaSms size={14} /> Send SMS Invite
+                  </label>
+                  <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
+                    We'll text the invite link to the phone number you provide3333.
+                  </p>
+                  <div className="d-flex gap-2 mb-2">
+                    <PhoneInput
+                      country={smsPhoneCountry}
+                      value={smsPhoneOverride || ''}
+                      onChange={(phone) => setSmsPhoneOverride(phone)}
+                      onCountryChange={(countryCode) => {
+                        setSmsPhoneCountry(countryCode.toLowerCase());
+                      }}
+                      inputClass="form-control"
+                      containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
+                      inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleSendSmsInviteNow}
+                      disabled={inviteActionLoading}
+                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                    >
+                      {inviteActionLoading && inviteActionMethod === "sms" ? "Sending..." : "Send SMS"}
+                    </button>
+                  </div>
+                  {activeInviteDetails.delivery_summary && (
+                    <div className="text-muted small">
+                      SMS sent: {activeInviteDetails.delivery_summary.sms_sent ? "Yes" : "No"}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
+                {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
+                  <button 
+                    className="btn btn-outline-danger d-flex align-items-center" 
+                    style={{ borderRadius: '8px' }} 
+                    onClick={handleDeleteInvite}
+                    disabled={deletingInvite}
+                  >
+                    <FaTrash size={12} className="me-1" />
+                    {deletingInvite ? 'Deleting...' : 'Delete Invite'}
+                  </button>
+                )}
+                <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
+                  Invite Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Reassign/Assign Staff Modal */}
       {showReassignStaffModal && (
         <div
@@ -1769,7 +2679,69 @@ export default function ClientManage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Invite Confirmation Modal */}
+      {showDeleteInviteConfirmModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ zIndex: 10000 }}
+          onClick={() => {
+            if (!deletingInvite) {
+              setShowDeleteInviteConfirmModal(false);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            style={{
+              borderRadius: '12px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900" style={{ color: '#3B4A66' }}>Delete Invitation</h2>
+              <button
+                onClick={() => {
+                  if (!deletingInvite) {
+                    setShowDeleteInviteConfirmModal(false);
+                  }
+                }}
+                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                disabled={deletingInvite}
+              >
+                <CrossesIcon />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 font-[BasisGrotesquePro]">
+                Are you sure you want to delete this invitation? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteInviteConfirmModal(false);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-[BasisGrotesquePro]"
+                disabled={deletingInvite}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteInvite}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                style={{ background: 'var(--color-red-500, #EF4444)' }}
+                disabled={deletingInvite}
+              >
+                {deletingInvite ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Client Confirmation Modal */}
       {showDeleteConfirmModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"

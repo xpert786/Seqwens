@@ -456,6 +456,7 @@ span.info-item {
   .badge.bg-danger {
     font-size: 9px !important;
     padding: 2px 5px !important;
+    color: #ffffff !important;
   }
 
   /* Filter Dropdown */
@@ -619,4 +620,111 @@ span.info-item {
     font-size: 0.75rem;
     padding: 0.375rem 0.75rem;
   }
+}
+
+/* Phone Input Dropdown Fix for Invite Taxpayer Modal */
+.invite-taxpayer-phone-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure phone input dropdown appears above modal */
+.invite-taxpayer-phone-container .flag-dropdown {
+  z-index: 1060 !important;
+}
+
+.invite-taxpayer-phone-container .country-list {
+  z-index: 1061 !important;
+  position: absolute !important;
+}
+
+/* Modal body should allow overflow for dropdown */
+.modal-dialog .modal-content .modal-body {
+  overflow: visible !important;
+}
+
+/* Ensure modal backdrop doesn't interfere */
+.modal.show {
+  overflow-y: auto;
+}
+
+.modal.show .modal-dialog {
+  overflow: visible;
+}
+
+/* Phone Input Dropdown Fix for Share Taxpayer Invite modal */
+.invite-actions-modal .modal-dialog,
+.invite-actions-modal .modal-content,
+.invite-actions-modal .modal-body {
+  overflow: visible !important;
+}
+
+.invite-actions-phone-container {
+  position: relative;
+  z-index: 2000;
+}
+
+/* Override react-phone-input-2 default 300px widths inside Share Taxpayer Invite modal */
+.invite-actions-phone-container.react-tel-input,
+.invite-actions-phone-container.react-tel-input .form-control {
+  width: 100% !important;
+}
+
+.invite-actions-phone-container.react-tel-input .form-control {
+  max-width: 100% !important;
+}
+
+/* Ensure the dropdown opens below the input and above modal footer */
+.invite-actions-phone-container .country-list {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 6px 0 0 0 !important;
+  z-index: 2002 !important;
+}
+
+.invite-actions-phone-container .flag-dropdown { z-index: 2001 !important; }
+.invite-actions-phone-container .flag-dropdown.open { width: 100% !important; left: 0 !important; }
+
+/* Fix search bar positioning to prevent overlap with country list */
+.invite-actions-phone-container .country-list .search {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
+  background-color: #fff !important;
+  padding: 8px 10px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #E5E7EB !important;
+}
+
+.invite-actions-phone-container .country-list .search-box {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 6px 8px !important;
+}
+
+/* Ensure country items are below search bar */
+.invite-actions-phone-container .country-list .country {
+  position: relative !important;
+  z-index: 0 !important;
+  padding-left: 46px !important; /* reserve space for flag */
+}
+
+/* Keep flag inside reserved gutter */
+.invite-actions-phone-container .country-list .flag {
+  left: 12px !important;
+  top: 8px !important;
+}
+
+/* Tidy text alignment next to flag */
+.invite-actions-phone-container .country-list .country-name {
+  margin-right: 6px !important;
+}
+.invite-actions-phone-container .country-list .dial-code {
+  color: #6B7280 !important;
 }

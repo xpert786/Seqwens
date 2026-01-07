@@ -301,6 +301,7 @@ import { useState, useRef, useEffect } from "react";
 import imgss1 from "../../assets/imgss1.png";
 import imgss2 from "../../assets/imgss2.png";
 import imgss3 from "../../assets/imgss3.png";
+import { getApiBaseUrl } from "../../ClientOnboarding/utils/corsConfig";
 
 // Map technical role names to user-friendly display names
 const getDisplayRole = (role) => {
@@ -344,7 +345,7 @@ export default function Testimonials() {
   const fetchFeedbackList = async () => {
     try {
       const res = await fetch(
-        "http://168.231.121.7/seqwens/api/user/feedback/list/"
+        `${getApiBaseUrl()}/user/feedback/list/`
       );
       const data = await res.json();
       if (data.success) {
@@ -359,7 +360,7 @@ export default function Testimonials() {
   const fetchAverageRating = async () => {
     try {
       const res = await fetch(
-        "http://168.231.121.7/seqwens/api/user/feedback/average/"
+        `${getApiBaseUrl()}/user/feedback/average/`
       );
       const data = await res.json();
       if (data.success) {
@@ -442,12 +443,14 @@ export default function Testimonials() {
               ref={scrollContainerRef}
               className="flex gap-6 overflow-x-auto scroll-smooth pb-10 hide-scrollbar"
             >
-              {feedbacks.map((item) => (
+              {feedbacks.map((item) => {
+                const starCount = parseInt(item.stars) || 0;
+                return (
                 <div key={item.id} className="flex-shrink-0 w-[350px] min-w-[350px]">
                   <div className="bg-white border border-gray-200 rounded-2xl p-6">
                     {/* Stars */}
                     <div className="flex gap-1 mb-4">
-                      {[...Array(item.stars)].map((_, i) => (
+                      {[...Array(starCount)].map((_, i) => (
                         <svg
                           key={i}
                           className="w-5 h-5 text-[#FFB84D]"
@@ -469,8 +472,8 @@ export default function Testimonials() {
                       <img
                         src={
                           item.profile_picture
-                            ? `http://168.231.121.7${item.profile_picture}`
-                            : "https://ui-avatars.com/api/?name=User&background=00C0C6&color=fff"
+                            ? item.profile_picture
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.user_name || 'User')}&background=00C0C6&color=fff`
                         }
                         alt={item.user_name}
                         className="w-12 h-12 rounded-full"
@@ -484,7 +487,8 @@ export default function Testimonials() {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             {/* Scroll Buttons */}
@@ -507,7 +511,10 @@ export default function Testimonials() {
 
           {/* Average Rating Box */}
           <div className="w-[97%] mx-auto rounded-2xl p-8 mt-10 border bg-white">
-
+            {(() => {
+              const avgStars = Math.round(parseFloat(average.average_stars) || 0);
+              const starDisplay = Math.max(0, Math.min(5, avgStars)); // Clamp between 0 and 5
+              return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {/* Score */}
               <div className="text-center flex flex-col items-center">
@@ -523,9 +530,9 @@ export default function Testimonials() {
               <div className="text-center flex flex-col items-center">
                 <img src={imgss1} className="h-6 mb-2" />
                 <div className="flex gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
+                  {[...Array(starDisplay)].map((_, i) => (
                     <svg key={i} className="w-5 h-5 text-[#FFB84D]" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292..." />
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
                 </div>
@@ -535,8 +542,10 @@ export default function Testimonials() {
               <div className="text-center flex flex-col items-center">
                 <img src={imgss2} className="h-6 mb-2" />
                 <div className="flex gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-[#FFB84D]" fill="currentColor" />
+                  {[...Array(starDisplay)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-[#FFB84D]" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
                   ))}
                 </div>
               </div>
@@ -545,13 +554,17 @@ export default function Testimonials() {
               <div className="text-center flex flex-col items-center">
                 <img src={imgss3} className="h-6 mb-2" />
                 <div className="flex gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-[#FFB84D]" fill="currentColor" />
+                  {[...Array(starDisplay)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-[#FFB84D]" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
                   ))}
                 </div>
               </div>
 
             </div>
+              );
+            })()}
           </div>
         </div>
       </div>

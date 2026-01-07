@@ -45,7 +45,7 @@ export const useChatWebSocket = (threadId, enabled = true) => {
       return `${wsHost}/ws/chat-thread/${threadId}/?token=${token}`;
     } catch (error) {
       console.error('Error constructing WebSocket URL:', error);
-      // Fallback to default localhost
+      // Fallback to default server
       return `ws://168.231.121.7/ws/chat-thread/${threadId}/?token=${token}`;
     }
   }, [threadId]);

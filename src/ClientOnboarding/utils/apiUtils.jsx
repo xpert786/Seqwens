@@ -102,8 +102,22 @@ const publicApiRequest = async (endpoint, method = 'GET', data = null) => {
       throw error;
     }
 
+    // Check content-type before parsing JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
     const result = await response.json();
     return result;
+    } else {
+      // If not JSON, read as text to see what we got
+      const text = await response.text();
+      console.error('Non-JSON response received:', text.substring(0, 200));
+      // Try to parse as JSON anyway
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        throw new Error(`Server returned non-JSON response. Expected JSON but got: ${contentType || 'unknown content type'}`);
+      }
+    }
   } catch (error) {
     console.error('Public API Request Error:', error);
 
@@ -133,9 +147,11 @@ export const taxpayerPublicAPI = {
 // Generic API request function with CORS handling
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
+    const headers = getHeaders();
+    
     const config = {
       method,
-      headers: getHeaders(),
+      headers,
     };
 
     if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE')) {
@@ -195,7 +211,22 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
 
       try {
+        // Check content-type before parsing JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
         errorData = await response.json();
+        } else {
+          // If not JSON, read as text to see what we got
+          const text = await response.text();
+          console.error('Non-JSON error response:', text.substring(0, 200));
+          // Try to parse as JSON anyway, but handle gracefully
+          try {
+            errorData = JSON.parse(text);
+          } catch {
+            // If parsing fails, create a generic error
+            errorData = { message: `Server returned non-JSON response (${response.status})` };
+          }
+        }
         // Suppress console errors for memberships endpoint (expected to fail for some users)
         if (!isMembershipsEndpoint) {
           console.error('API Error Response:', errorData);
@@ -267,8 +298,22 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       throw error;
     }
 
+    // Check content-type before parsing JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
     const result = await response.json();
     return result;
+    } else {
+      // If not JSON, read as text to see what we got
+      const text = await response.text();
+      console.error('Non-JSON response received:', text.substring(0, 200));
+      // Try to parse as JSON anyway
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        throw new Error(`Server returned non-JSON response. Expected JSON but got: ${contentType || 'unknown content type'}`);
+      }
+    }
   } catch (error) {
     // Suppress console errors for memberships endpoint (expected to fail for some users)
     const isMembershipsEndpoint = endpoint.includes('/user/memberships/');
@@ -3372,6 +3417,19 @@ export const firmAdminClientsAPI = {
     return await apiRequest(endpoint, 'GET');
   },
 
+  // Get unlinked taxpayers (clients not assigned to any tax preparer)
+  // GET /api/user/unlinked-taxpayers/
+  getUnlinkedTaxpayers: async (params = {}) => {
+    const { search, page, page_size, is_active } = params;
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    if (is_active !== undefined) queryParams.append('is_active', is_active.toString());
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/unlinked-taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
   // Invite existing taxpayer
   inviteClient: async (inviteData) => {
     return await apiRequest('/user/firm-admin/clients/invite/', 'POST', inviteData);
@@ -3450,8 +3508,29 @@ export const firmAdminClientsAPI = {
   },
 
   // Get shareable invite link
-  getInviteLink: async (inviteId) => {
-    return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/link/`, 'GET');
+  // Supports both URL path parameter and query parameters
+  getInviteLink: async (inviteIdOrParams) => {
+    // If it's a number or string (invite_id), use URL path
+    if (typeof inviteIdOrParams === 'number' || (typeof inviteIdOrParams === 'string' && !inviteIdOrParams.includes('='))) {
+      return await apiRequest(`/user/firm-admin/clients/invite/${inviteIdOrParams}/link/`, 'GET');
+    }
+    // If it's an object with query params
+    const { invite_id, client_id } = inviteIdOrParams || {};
+    const queryParams = new URLSearchParams();
+    if (invite_id) queryParams.append('invite_id', invite_id.toString());
+    if (client_id) queryParams.append('client_id', client_id.toString());
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/firm-admin/clients/invite/link/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Generate or regenerate invite link (POST method)
+  generateInviteLink: async (data) => {
+    const { invite_id, client_id, regenerate = false } = data;
+    const payload = {};
+    if (invite_id) payload.invite_id = invite_id;
+    if (client_id) payload.client_id = client_id;
+    if (regenerate) payload.regenerate = true;
+    return await apiRequest('/user/firm-admin/clients/invite/link/', 'POST', payload);
   },
 
   // Send invite notifications
@@ -3459,15 +3538,21 @@ export const firmAdminClientsAPI = {
     return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/send/`, 'POST', payload);
   },
 
+  deleteInvite: async (inviteId) => {
+    return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/delete/`, 'DELETE');
+  },
+
   // Get pending client invites
   getPendingInvites: async (params = {}) => {
-    const { page = 1, page_size = 20, search } = params;
+    const { page = 1, page_size = 20, search, sort_by, sort_order } = params;
     const queryParams = new URLSearchParams();
     if (page) queryParams.append('page', page.toString());
     if (page_size) queryParams.append('page_size', page_size.toString());
     if (search) queryParams.append('search', search);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (sort_order) queryParams.append('sort_order', sort_order);
     const queryString = queryParams.toString();
-    return await apiRequest(`/user/firm-admin/clients/invites/pending/${queryString ? `?${queryString}` : ''}`, 'GET');
+    return await apiRequest(`/user/firm-admin/pending-taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
   // Bulk taxpayer import - Step 1: Preview
   bulkImportTaxpayersPreview: async (csvFile) => {
@@ -3755,8 +3840,14 @@ export const firmAdminStaffAPI = {
   },
 
   // List all tax preparers with permission status
-  listTaxPreparers: async () => {
-    return await apiRequest('/user/firm-admin/tax-preparers/', 'GET');
+  listTaxPreparers: async (params = {}) => {
+    const { page, page_size, search } = params;
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    if (search) queryParams.append('search', search);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/firm-admin/tax-preparers/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
   // Get tax preparer permissions
@@ -4679,6 +4770,40 @@ export const taxPreparerFirmSharedAPI = {
 };
 
 export const taxPreparerClientAPI = {
+  // Get all invoices for a client (with filtering)
+  getClientInvoices: async (clientId, params = {}) => {
+    const { status, search, start_date, end_date, sort_by, page, page_size } = params;
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    if (search) queryParams.append('search', search);
+    if (start_date) queryParams.append('start_date', start_date);
+    if (end_date) queryParams.append('end_date', end_date);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Get individual invoice details
+  getClientInvoiceDetail: async (clientId, invoiceId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${invoiceId}/`, 'GET');
+  },
+
+  // Get paid invoices only (backward compatibility)
+  getPaidInvoices: async (clientId, params = {}) => {
+    const { search, start_date, end_date, sort_by, page, page_size } = params;
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+    if (start_date) queryParams.append('start_date', start_date);
+    if (end_date) queryParams.append('end_date', end_date);
+    if (sort_by) queryParams.append('sort_by', sort_by);
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/paid/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
   // Check if client has a spouse
   checkClientSpouse: async (clientId) => {
     return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/spouse/check/`, 'GET');
@@ -4754,8 +4879,13 @@ export const taxPreparerClientAPI = {
 
   // Get eSign activity logs for a client
   // GET /taxpayer/tax-preparer/clients/{client_id}/esign-logs/
-  getESignLogs: async (clientId) => {
-    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/esign-logs/`, 'GET');
+  getESignLogs: async (clientId, params = {}) => {
+    const { status, limit } = params;
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    if (limit) queryParams.append('limit', limit.toString());
+    const queryString = queryParams.toString();
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/esign-logs/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
   // Get list of clients for tax preparer
@@ -4768,6 +4898,25 @@ export const taxPreparerClientAPI = {
     if (priority) queryParams.append('priority', priority);
     const queryString = queryParams.toString();
     return await apiRequest(`/taxpayer/tax-preparer/clients/${queryString ? `?${queryString}` : ''}`, 'GET');
+  },
+
+  // Check if tax preparer has permission to view unlinked taxpayers
+  // GET /api/user/tax-preparer/permissions/check-unlinked-taxpayers/
+  checkUnlinkedTaxpayersPermission: async () => {
+    return await apiRequest('/user/tax-preparer/permissions/check-unlinked-taxpayers/', 'GET');
+  },
+
+  // Get unlinked taxpayers (clients not assigned to any tax preparer)
+  // GET /api/user/unlinked-taxpayers/
+  getUnlinkedTaxpayers: async (params = {}) => {
+    const { search, page, page_size, is_active } = params;
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+    if (page) queryParams.append('page', page.toString());
+    if (page_size) queryParams.append('page_size', page_size.toString());
+    if (is_active !== undefined) queryParams.append('is_active', is_active.toString());
+    const queryString = queryParams.toString();
+    return await apiRequest(`/user/unlinked-taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
   // Create e-signature request
@@ -4793,19 +4942,46 @@ export const taxPreparerClientAPI = {
     formData.append('preparer_must_sign', preparer_must_sign !== undefined ? (preparer_must_sign ? 'true' : 'false') : 'true');
     formData.append('file', file);
 
-    if (folder_id) {
+    if (folder_id !== undefined && folder_id !== null && folder_id !== '') {
       formData.append('folder_id', folder_id.toString());
     }
 
-    if (deadline) {
-      // Ensure deadline is in YYYY-MM-DD format (date only)
-      // Date input already provides YYYY-MM-DD format
-      const deadlineDate = deadline.split('T')[0]; // Remove time if present
-      formData.append('deadline', deadlineDate);
+    // Always include deadline field (backend can decide how to handle empty value)
+    // Convert to MM/DD/YYYY format as required by backend
+    const rawDeadline = (deadline ?? '').toString();
+    let deadlineFormatted = '';
+    if (rawDeadline) {
+      // Handle possible ISO datetime or date-only formats
+      const datePart = rawDeadline.split('T')[0]; // e.g. "2026-01-31"
+      const parts = datePart.split('-');          // [YYYY, MM, DD]
+      if (parts.length === 3) {
+        const [year, month, day] = parts;
+        deadlineFormatted = `${month}/${day}/${year}`; // MM/DD/YYYY
+      } else {
+        // Fallback: if not in expected format, send raw value
+        deadlineFormatted = rawDeadline;
+      }
     }
+    formData.append('deadline', deadlineFormatted);
 
     const API_BASE_URL = getApiBaseUrl();
-    const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/esign/create/`, {
+    const requestUrl = `${API_BASE_URL}/taxpayer/esign/create/`;
+    
+    // Console log request data (excluding file content)
+    console.log('ESign Create API Request:', {
+      url: requestUrl,
+      method: 'POST',
+      data: {
+        taxpayer_id,
+        has_spouse,
+        preparer_must_sign,
+        folder_id,
+        deadline,
+        file: file ? { name: file.name, size: file.size, type: file.type } : null
+      }
+    });
+    
+    const response = await fetchWithCors(requestUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -4814,7 +4990,29 @@ export const taxPreparerClientAPI = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      // Check content-type before parsing JSON
+      const contentType = response.headers.get('content-type');
+      let errorData = {};
+      
+      if (contentType && contentType.includes('application/json')) {
+        errorData = await response.json().catch(() => ({}));
+      } else {
+        const text = await response.text().catch(() => '');
+        console.error('Non-JSON error response:', text.substring(0, 500));
+        try {
+          errorData = JSON.parse(text);
+        } catch {
+          errorData = { message: `Server returned non-JSON response (${response.status})` };
+        }
+      }
+      
+      // Console log the received JSON for debugging
+      console.error('ESign Create API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData: errorData,
+        fullError: JSON.stringify(errorData, null, 2)
+      });
 
       // Extract clean error message from ErrorDetail structures
       let errorMessage = errorData.message || errorData.detail || `HTTP error! status: ${response.status}`;
@@ -5597,6 +5795,179 @@ export const signatureRequestsAPI = {
     }
 
     return await apiRequest('/taxpayer/signatures/requests/submit/', 'POST', requestBody);
+  },
+};
+
+// Custom E-Sign API functions
+export const customESignAPI = {
+  // Upload PDF document
+  // POST /api/taxpayer/esign/custom/upload/
+  uploadPDF: async (data) => {
+    const { file, taxpayer_id, taxpayer_email, folder_id } = data;
+
+    if (!file) {
+      throw new Error('PDF file is required');
+    }
+    if (!taxpayer_id && !taxpayer_email) {
+      throw new Error('Either taxpayer_id or taxpayer_email is required');
+    }
+
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    if (taxpayer_id) {
+      formData.append('taxpayer_id', taxpayer_id.toString());
+    }
+    if (taxpayer_email) {
+      formData.append('taxpayer_email', taxpayer_email);
+    }
+    if (folder_id !== undefined && folder_id !== null && folder_id !== '') {
+      formData.append('folder_id', folder_id.toString());
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    const requestUrl = `${API_BASE_URL}/taxpayer/esign/custom/upload/`;
+
+    const response = await fetchWithCors(requestUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorData = {};
+      
+      if (contentType && contentType.includes('application/json')) {
+        errorData = await response.json().catch(() => ({}));
+      } else {
+        const text = await response.text().catch(() => '');
+        errorData = { message: text || 'Upload failed' };
+      }
+
+      throw new Error(errorData.message || errorData.detail || `Upload failed: ${response.status}`);
+    }
+
+    return await response.json();
+  },
+
+  // Create e-sign request with custom fields
+  // POST /api/taxpayer/esign/custom/create/
+  createESignRequest: async (data) => {
+    const {
+      esign_draft_id,
+      document_id,
+      taxpayer_id,
+      taxpayer_email,
+      taxpayer_name,
+      has_spouse,
+      spouse_email,
+      spouse_name,
+      preparer_must_sign,
+      deadline,
+      message,
+      send_reminders,
+      fields
+    } = data;
+
+    if (!esign_draft_id && !document_id) {
+      throw new Error('Either esign_draft_id or document_id is required');
+    }
+    if (!taxpayer_id && !taxpayer_email) {
+      throw new Error('Either taxpayer_id or taxpayer_email is required');
+    }
+    if (!deadline) {
+      throw new Error('deadline is required');
+    }
+    if (!fields || !Array.isArray(fields) || fields.length === 0) {
+      throw new Error('At least one field is required');
+    }
+    if (has_spouse && !spouse_email) {
+      throw new Error('spouse_email is required when has_spouse is true');
+    }
+
+    // Format deadline to MM/DD/YYYY
+    let deadlineFormatted = '';
+    if (deadline) {
+      const datePart = deadline.toString().split('T')[0];
+      const parts = datePart.split('-');
+      if (parts.length === 3) {
+        const [year, month, day] = parts;
+        deadlineFormatted = `${month}/${day}/${year}`;
+      } else {
+        deadlineFormatted = deadline.toString();
+      }
+    }
+
+    const requestBody = {
+      deadline: deadlineFormatted,
+      fields: fields
+    };
+
+    if (esign_draft_id) requestBody.esign_draft_id = esign_draft_id;
+    if (document_id) requestBody.document_id = document_id;
+    if (taxpayer_id) requestBody.taxpayer_id = taxpayer_id;
+    if (taxpayer_email) requestBody.taxpayer_email = taxpayer_email;
+    if (taxpayer_name) requestBody.taxpayer_name = taxpayer_name;
+    if (has_spouse !== undefined) requestBody.has_spouse = has_spouse;
+    if (spouse_email) requestBody.spouse_email = spouse_email;
+    if (spouse_name) requestBody.spouse_name = spouse_name;
+    if (preparer_must_sign !== undefined) requestBody.preparer_must_sign = preparer_must_sign;
+    if (message) requestBody.message = message;
+    if (send_reminders !== undefined) requestBody.send_reminders = send_reminders;
+
+    return await apiRequest('/taxpayer/esign/custom/create/', 'POST', requestBody);
+  },
+
+  // List e-sign documents
+  // GET /api/taxpayer/esign/custom/list/
+  listESignDocuments: async (options = {}) => {
+    const { status, page, page_size } = options;
+    const params = new URLSearchParams();
+    
+    if (status) params.append('status', status);
+    if (page) params.append('page', page.toString());
+    if (page_size) params.append('page_size', page_size.toString());
+
+    const queryString = params.toString();
+    const endpoint = queryString
+      ? `/taxpayer/esign/custom/list/?${queryString}`
+      : '/taxpayer/esign/custom/list/';
+    
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Get e-sign document details
+  // GET /api/taxpayer/esign/custom/<esign_id>/
+  getESignDocument: async (esignId) => {
+    if (!esignId) {
+      throw new Error('esign_id is required');
+    }
+    return await apiRequest(`/taxpayer/esign/custom/${esignId}/`, 'GET');
+  },
+
+  // Refresh status from SignWell
+  // POST /api/taxpayer/esign/custom/<esign_id>/refresh/
+  refreshStatus: async (esignId) => {
+    if (!esignId) {
+      throw new Error('esign_id is required');
+    }
+    return await apiRequest(`/taxpayer/esign/custom/${esignId}/refresh/`, 'POST');
+  },
+
+  // Cancel/Delete e-sign document
+  // DELETE /api/taxpayer/esign/custom/<esign_id>/
+  deleteESignDocument: async (esignId) => {
+    if (!esignId) {
+      throw new Error('esign_id is required');
+    }
+    return await apiRequest(`/taxpayer/esign/custom/${esignId}/`, 'DELETE');
   },
 };
 

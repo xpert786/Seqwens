@@ -8,24 +8,13 @@ import "./ClientOnboarding/styles/fonts.css";
 import "./index.css";
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { toastConfig } from './utils/toastConfig';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter basename="/seqwens-frontend">
       <App />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover={false}
-        theme="light"
-        toastClassName="custom-toast"
-      />
+      <ToastContainer {...toastConfig} />
     </BrowserRouter>
   </React.StrictMode>
 );

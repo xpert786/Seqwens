@@ -46,19 +46,18 @@ export const useNotificationWebSocket = (enabled = true, onNotification = null, 
         const apiUrl = new URL(apiBaseUrl);
         const host = apiUrl.hostname;
         
-        // For development, use localhost:8000
-        // For production, use the same host with port 8000
-        const isDevelopment = import.meta.env.DEV;
-        if (isDevelopment && host.includes('localhost')) {
-          wsServerUrl = 'ws://168.231.121.7/';
+        // Extract WebSocket server URL from API base URL
+        // If API URL is http://168.231.121.7/seqwens/api, WebSocket should be ws://168.231.121.7
+        if (host === '168.231.121.7') {
+          wsServerUrl = 'ws://168.231.121.7';
         } else {
-          // Use the same host with port 8000 for WebSocket
-          wsServerUrl = `ws://${host}:8000`;
+          // Use the same host for WebSocket
+          wsServerUrl = `ws://${host}`;
         }
       } catch (urlError) {
         // If URL parsing fails, use default
         console.warn('Failed to parse API base URL, using default WebSocket URL');
-        wsServerUrl = 'ws://168.231.121.7/';
+        wsServerUrl = 'ws://168.231.121.7';
       }
       
       const wsUrl = `${wsServerUrl}/ws/notifications/?token=${token}`;

@@ -536,11 +536,11 @@ const FinalizeSubscription = () => {
                           ${parseFloat(plan.monthly_equivalent).toFixed(2)}/month billed annually
                         </div>
                       )}
-                      {billingCycle === 'monthly' && plan.yearly_equivalent && (
+                      {/* {billingCycle === 'monthly' && plan.yearly_equivalent && (
                         <div className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro] mt-2">
                           Save ${parseFloat(plan.yearly_equivalent).toFixed(2)}/year with annual billing
                         </div>
-                      )}
+                      )} */}
                     </div>
                     {billingCycle === 'yearly' && plan.discount_percentage && plan.discount_percentage > 0 && (
                       <div className="mb-4">

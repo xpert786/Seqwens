@@ -1,14 +1,15 @@
 # Complete List of Tax Preparer Permissions
 
-## Total: 16 Permissions
+## Total: 17 Permissions
 
 ---
 
-## 1. Client Access (2 permissions)
+## 1. Client Access (3 permissions)
 - **`view_assigned_clients_only`** - View assigned clients only
 - **`view_all_firm_clients`** - View all firm clients
+- **`view_unlinked_taxpayers`** - View unlinked taxpayers (clients not assigned to any tax preparer)
 
-> **Note:** These two permissions are mutually exclusive - only one can be selected at a time.
+> **Note:** `view_assigned_clients_only` and `view_all_firm_clients` are mutually exclusive - only one can be selected at a time. `view_unlinked_taxpayers` can be selected independently.
 
 ---
 
@@ -62,7 +63,7 @@
 
 | Category | Count | Permission Codes |
 |----------|-------|------------------|
-| Client Access | 2 | `view_assigned_clients_only`, `view_all_firm_clients` |
+| Client Access | 3 | `view_assigned_clients_only`, `view_all_firm_clients`, `view_unlinked_taxpayers` |
 | Client Management | 2 | `create_clients`, `edit_client_data` |
 | Document Management | 3 | `upload_documents`, `download_documents`, `delete_documents` |
 | Returns & Filing | 1 | `view_returns` |
@@ -71,7 +72,7 @@
 | Billing | 1 | `create_invoices` |
 | Reports & Analytics | 2 | `access_analytics`, `export_reports` |
 | Team Management | 1 | `manage_team` |
-| **TOTAL** | **16** | |
+| **TOTAL** | **17** | |
 
 ---
 
@@ -93,6 +94,7 @@
 14. `view_all_firm_clients`
 15. `view_assigned_clients_only`
 16. `view_returns`
+17. `view_unlinked_taxpayers`
 
 ---
 
@@ -114,4 +116,5 @@
 14. View all firm clients
 15. View assigned clients only
 16. View completed returns and filing status
+17. View unlinked taxpayers (clients not assigned to any tax preparer)
 

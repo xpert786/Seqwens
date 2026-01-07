@@ -1,11 +1,9 @@
+// Import centralized toast config
+import { toastConfig } from '../../utils/toastConfig';
+
+// Use centralized config for SuperAdmin toasts
 export const superToastOptions = {
-  position: "top-right",
-  autoClose: 3000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  theme: "light",
+  ...toastConfig,
+  pauseOnHover: true, // Override for SuperAdmin if needed
 };
 

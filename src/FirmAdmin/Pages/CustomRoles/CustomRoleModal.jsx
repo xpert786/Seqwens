@@ -5,7 +5,8 @@ import { FiX } from 'react-icons/fi';
 const PERMISSION_CATEGORIES = {
   'Client Access': [
     'view_assigned_clients_only',
-    'view_all_firm_clients'
+    'view_all_firm_clients',
+    'view_unlinked_taxpayers'
   ],
   'Client Management': [
     'create_clients',
@@ -43,6 +44,7 @@ const PERMISSION_CATEGORIES = {
 const ALL_PERMISSIONS = [
   { code: 'view_assigned_clients_only', label: 'View assigned clients only' },
   { code: 'view_all_firm_clients', label: 'View all firm clients' },
+  { code: 'view_unlinked_taxpayers', label: 'View unlinked taxpayers (clients not assigned to any tax preparer)' },
   { code: 'create_clients', label: 'Create new clients' },
   { code: 'edit_client_data', label: 'Edit client personal and tax data' },
   { code: 'upload_documents', label: 'Upload client documents' },

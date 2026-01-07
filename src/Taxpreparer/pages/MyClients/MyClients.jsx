@@ -28,7 +28,24 @@ export default function MyClients() {
   const [error, setError] = useState(null);
 
   // Tab state
-  const [activeTab, setActiveTab] = useState('clients'); // 'clients' or 'pending-invites'
+  const [activeTab, setActiveTab] = useState('clients'); // 'clients', 'pending-invites', or 'unlinked-taxpayers'
+
+  // Permission check state
+  const [hasUnlinkedTaxpayersPermission, setHasUnlinkedTaxpayersPermission] = useState(false);
+  const [checkingPermission, setCheckingPermission] = useState(true);
+
+  // Unlinked taxpayers state
+  const [unlinkedTaxpayers, setUnlinkedTaxpayers] = useState([]);
+  const [loadingUnlinkedTaxpayers, setLoadingUnlinkedTaxpayers] = useState(false);
+  const [unlinkedTaxpayersError, setUnlinkedTaxpayersError] = useState(null);
+  const [unlinkedTaxpayersPagination, setUnlinkedTaxpayersPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total_count: 0,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false
+  });
 
   // Pending invites state
   const [pendingInvites, setPendingInvites] = useState([]);
@@ -52,6 +69,7 @@ export default function MyClients() {
   const [showInviteTaxpayerModal, setShowInviteTaxpayerModal] = useState(false);
   const [showInviteActionsModal, setShowInviteActionsModal] = useState(false);
   const [showSendInviteModal, setShowSendInviteModal] = useState(false);
+  const [editedInviteEmail, setEditedInviteEmail] = useState('');
   const [showBulkTaxpayerImportModal, setShowBulkTaxpayerImportModal] = useState(false);
   const [selectedClientForInvite, setSelectedClientForInvite] = useState(null);
   const [inviteLinkForClient, setInviteLinkForClient] = useState(null);
@@ -98,6 +116,12 @@ export default function MyClients() {
   const openInviteActionsModal = async (inviteData) => {
     setActiveInviteDetails(inviteData);
     setShowInviteActionsModal(true);
+    // Pre-fill editable email with the invite's current email
+    if (inviteData?.email) {
+      setEditedInviteEmail(inviteData.email);
+    } else {
+      setEditedInviteEmail('');
+    }
     
     // If invite link is missing, try to fetch it
     if (!inviteData.invite_link && (inviteData.id || inviteData.invite_id || inviteData.client_id)) {
@@ -131,6 +155,7 @@ export default function MyClients() {
     setShowInviteActionsModal(false);
     setActiveInviteDetails(null);
     setSmsPhoneOverride("");
+    setEditedInviteEmail('');
   };
 
   // Fetch pending invites from API
@@ -205,11 +230,32 @@ export default function MyClients() {
       const response = await fetchWithCors(url, config);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        // Check content-type before parsing JSON
+        const contentType = response.headers.get('content-type');
+        let errorData = {};
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json().catch(() => ({}));
+        } else {
+          const text = await response.text().catch(() => '');
+          console.error('Non-JSON error response:', text.substring(0, 200));
+        }
         throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      // Check content-type before parsing JSON
+      const contentType = response.headers.get('content-type');
+      let result;
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text.substring(0, 200));
+        try {
+          result = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned non-JSON response. Expected JSON but got: ${contentType || 'unknown content type'}`);
+        }
+      }
       console.log('Clients API response:', result);
 
       if (result.success && result.data) {
@@ -243,12 +289,81 @@ export default function MyClients() {
     fetchClients();
   }, [searchQuery, statusFilter, priorityFilter]);
 
+  // Check permission for unlinked taxpayers on component mount
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        setCheckingPermission(true);
+        const response = await taxPreparerClientAPI.checkUnlinkedTaxpayersPermission();
+        if (response.success && response.data) {
+          setHasUnlinkedTaxpayersPermission(response.data.has_permission || false);
+        } else {
+          setHasUnlinkedTaxpayersPermission(false);
+        }
+      } catch (error) {
+        console.error('Error checking unlinked taxpayers permission:', error);
+        setHasUnlinkedTaxpayersPermission(false);
+      } finally {
+        setCheckingPermission(false);
+      }
+    };
+    checkPermission();
+  }, []);
+
   // Fetch pending invites when tab is switched to pending invites
   useEffect(() => {
     if (activeTab === 'pending-invites') {
       fetchPendingInvites();
     }
   }, [activeTab]);
+
+  // Fetch unlinked taxpayers when tab is switched to unlinked taxpayers or search changes
+  useEffect(() => {
+    if (activeTab === 'unlinked-taxpayers' && hasUnlinkedTaxpayersPermission) {
+      fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size);
+    }
+  }, [activeTab, hasUnlinkedTaxpayersPermission, searchQuery]);
+
+  // Fetch unlinked taxpayers
+  const fetchUnlinkedTaxpayers = async (page = 1, pageSize = 20) => {
+    try {
+      setLoadingUnlinkedTaxpayers(true);
+      setUnlinkedTaxpayersError(null);
+
+      const params = {
+        page,
+        page_size: pageSize
+      };
+
+      // Add search if available
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+
+      const response = await taxPreparerClientAPI.getUnlinkedTaxpayers(params);
+
+      if (response.success && response.data) {
+        setUnlinkedTaxpayers(response.data.taxpayers || []);
+        // Update pagination
+        setUnlinkedTaxpayersPagination({
+          page: response.data.page || page,
+          page_size: response.data.page_size || pageSize,
+          total_count: response.data.total_count || 0,
+          total_pages: response.data.total_pages || 1,
+          has_next: response.data.has_next || false,
+          has_previous: response.data.has_previous || false
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch unlinked taxpayers');
+      }
+    } catch (error) {
+      console.error('Error fetching unlinked taxpayers:', error);
+      setUnlinkedTaxpayersError(handleAPIError(error));
+      setUnlinkedTaxpayers([]);
+    } finally {
+      setLoadingUnlinkedTaxpayers(false);
+    }
+  };
 
   // Handle click outside for dropdowns
   useEffect(() => {
@@ -537,6 +652,8 @@ export default function MyClients() {
         position: "top-right",
         autoClose: 2000
       });
+      // Close the modal after copying
+      closeInviteActionsModal();
     } catch (error) {
       console.error("Error copying invite link:", error);
       toast.error("Failed to copy invite link. Please try again.", {
@@ -600,14 +717,103 @@ export default function MyClients() {
     }
   };
 
+  // Helper function to parse phone number and extract country code and main number
+  const parsePhoneNumber = (phoneValue, countryCode = 'us') => {
+    if (!phoneValue || !phoneValue.trim()) {
+      return { country_code: null, phone_number: null };
+    }
+
+    // Remove all non-digit characters
+    const digitsOnly = phoneValue.replace(/\D/g, '');
+    
+    // Country code (ISO) to dial code mapping
+    // Source: https://countrycode.org/
+    const countryToDialCode = {
+      'us': '1', 'ca': '1', 'do': '1', 'pr': '1', 'vi': '1', 'gu': '1', 'as': '1',
+      'gb': '44', 'im': '44', 'je': '44', 'gg': '44', 'ax': '358',
+      'au': '61', 'cx': '61', 'cc': '61', 'nz': '64', 'pn': '64',
+      'in': '91', 'jp': '81', 'kr': '82', 'cn': '86', 'tw': '886', 'hk': '852', 'mo': '853',
+      'de': '49', 'at': '43', 'ch': '41', 'li': '423',
+      'fr': '33', 'mc': '377', 're': '262', 'bl': '590', 'mf': '590', 'gp': '590', 'pm': '508',
+      'it': '39', 'va': '39', 'sm': '378',
+      'es': '34', 'ad': '376', 'gi': '350', 'pt': '351',
+      'nl': '31', 'be': '32', 'lu': '352',
+      'se': '46', 'no': '47', 'dk': '45', 'fi': '358', 'is': '354', 'fo': '298',
+      'pl': '48', 'cz': '420', 'sk': '421', 'hu': '36', 'ro': '40', 'bg': '359',
+      'gr': '30', 'cy': '357', 'mt': '356',
+      'ie': '353', 'ie': '353',
+      'br': '55', 'mx': '52', 'ar': '54', 'cl': '56', 'co': '57', 'pe': '51', 've': '58',
+      'za': '27', 'ng': '234', 'ke': '254', 'eg': '20', 'et': '251', 'gh': '233',
+      'ma': '212', 'dz': '213', 'tn': '216', 'ly': '218', 'sd': '249', 'sn': '221',
+      'ae': '971', 'sa': '966', 'il': '972', 'tr': '90', 'iq': '964', 'ir': '98',
+      'ru': '7', 'kz': '7',
+      'th': '66', 'sg': '65', 'my': '60', 'ph': '63', 'id': '62', 'vn': '84',
+      'bd': '880', 'pk': '92', 'lk': '94', 'np': '977', 'mm': '95'
+    };
+
+    // Get dial code for the country (default to '1' if not found)
+    const dialCode = countryToDialCode[countryCode.toLowerCase()] || '1';
+    
+    // PhoneInput value format: [dialCode][phoneNumber] (e.g., "1234567890" for US)
+    // If phone starts with the dial code, extract it
+    let extractedCountryCode = dialCode;
+    let extractedPhoneNumber = digitsOnly;
+
+    if (digitsOnly.startsWith(dialCode)) {
+      extractedPhoneNumber = digitsOnly.substring(dialCode.length);
+    } else {
+      // Fallback: if dial code doesn't match, try to infer from length
+      // This handles cases where the country might have been changed after entering the number
+      if (digitsOnly.length >= 11) {
+        // Try 1-digit country code first (US, Canada)
+        if (digitsOnly.startsWith('1') && digitsOnly.length === 11) {
+          extractedCountryCode = '1';
+          extractedPhoneNumber = digitsOnly.substring(1);
+        }
+        // Try 2-digit country codes
+        else if (digitsOnly.length >= 12) {
+          const firstTwo = digitsOnly.substring(0, 2);
+          if (['20', '27', '30', '31', '32', '33', '34', '36', '39', '40', '41', '43', '44', '45', '46', '47', '48', '49', '51', '52', '53', '54', '55', '56', '57', '58', '60', '61', '62', '63', '64', '65', '66', '81', '82', '84', '86', '90', '91', '92', '93', '94', '95', '98'].includes(firstTwo)) {
+            extractedCountryCode = firstTwo;
+            extractedPhoneNumber = digitsOnly.substring(2);
+          }
+        }
+        // Try 3-digit country codes
+        if (extractedPhoneNumber === digitsOnly && digitsOnly.length >= 13) {
+          const firstThree = digitsOnly.substring(0, 3);
+          if (['212', '234', '254', '233', '255', '256', '257', '258', '260', '261', '263', '264', '265', '266', '267', '268', '269', '290', '291', '297', '298', '299', '350', '351', '352', '353', '354', '355', '356', '357', '358', '359', '370', '371', '372', '373', '374', '375', '376', '377', '378', '380', '381', '382', '383', '385', '386', '387', '389', '420', '421', '423', '880', '886', '960', '961', '962', '963', '964', '965', '966', '967', '968', '970', '971', '972', '973', '974', '975', '976', '977', '992', '993', '994', '995', '996', '998'].includes(firstThree)) {
+            extractedCountryCode = firstThree;
+            extractedPhoneNumber = digitsOnly.substring(3);
+          }
+        }
+      }
+    }
+
+    return {
+      country_code: extractedCountryCode,
+      phone_number: extractedPhoneNumber
+    };
+  };
+
   const handleSendInviteNotifications = async (methods, options = {}) => {
     if (!activeInviteDetails?.id || !methods?.length) return;
     try {
       setInviteActionLoading(true);
       setInviteActionMethod(methods.join(","));
       const payload = { methods };
+      if (options.email) {
+        payload.email = options.email;
+      }
       if (options.phone_number) {
-        payload.phone_number = options.phone_number;
+        // Parse phone number to extract country code and main number
+        const phoneData = parsePhoneNumber(options.phone_number, smsPhoneCountry);
+        if (phoneData.country_code && phoneData.phone_number) {
+          payload.country_code = phoneData.country_code;
+          payload.phone_number = phoneData.phone_number;
+        } else {
+          // Fallback: send as is if parsing fails
+          payload.phone_number = options.phone_number;
+        }
       }
       const response = await firmAdminClientsAPI.sendInvite(activeInviteDetails.id, payload);
       if (response.success && response.data) {
@@ -615,10 +821,41 @@ export default function MyClients() {
           ...prev,
           ...response.data
         }));
-        toast.success(response.message || "Invite notifications processed.", {
-          position: "top-right",
-          autoClose: 3000
-        });
+        
+        // Check for errors in delivery_summary
+        const deliverySummary = response.data?.delivery_summary;
+        
+        // Show SMS error if present
+        if (deliverySummary?.sms_error) {
+          toast.error(deliverySummary.sms_error, {
+            position: "top-right",
+            autoClose: 5000
+          });
+        }
+        
+        // Show success message if at least one method was sent successfully
+        const emailSent = deliverySummary?.email_sent === true;
+        const smsSent = deliverySummary?.sms_sent === true;
+        const hasError = deliverySummary?.sms_error || (deliverySummary?.email_sent === false && methods.includes('email'));
+        
+        if ((emailSent || smsSent) && !hasError) {
+          toast.success(response.message || "Invite notifications processed.", {
+            position: "top-right",
+            autoClose: 3000
+          });
+          // Close the modal after successful send
+          closeInviteActionsModal();
+        } else if (emailSent && deliverySummary?.sms_error) {
+          // If email was sent but SMS failed, show both messages
+          toast.success("Email sent successfully.", {
+            position: "top-right",
+            autoClose: 3000
+          });
+          // Close the modal even if SMS failed but email succeeded
+          closeInviteActionsModal();
+        } else if (deliverySummary?.sms_error && !emailSent) {
+          // Only SMS was attempted and failed - don't close modal so user can try again
+        }
       } else {
         throw new Error(response.message || "Failed to send invite notifications");
       }
@@ -635,7 +872,15 @@ export default function MyClients() {
   };
 
   const handleSendEmailInviteNow = () => {
-    handleSendInviteNotifications(["email"]);
+    const trimmed = (editedInviteEmail || '').trim();
+    if (!trimmed || !trimmed.includes('@')) {
+      toast.error("Please enter a valid email address.", {
+        position: "top-right",
+        autoClose: 3000
+      });
+      return;
+    }
+    handleSendInviteNotifications(["email"], { email: trimmed });
   };
 
   const handleSendSmsInviteNow = () => {
@@ -648,6 +893,8 @@ export default function MyClients() {
       return;
     }
     handleSendInviteNotifications(["sms"], { phone_number: trimmedPhone });
+    // Close the modal after sending SMS
+    closeInviteActionsModal();
   };
 
   // Fetch or create invite link for the selected client
@@ -1038,19 +1285,39 @@ export default function MyClients() {
         >
           Pending Invites
           {(pendingInvites.length > 0 || invitesPagination.total_count > 0) && (
-            <span className="badge bg-danger ms-2" style={{ 
+            <span className="badge bg-danger text-white ms-2" style={{ 
               fontSize: '10px',
               padding: '2px 6px',
-              borderRadius: '10px'
+              borderRadius: '10px',
+              color: '#ffffff'
             }}>
               {invitesPagination.total_count > 0 ? invitesPagination.total_count : pendingInvites.length}
             </span>
           )}
         </button>
+        {hasUnlinkedTaxpayersPermission && (
+          <button
+            className={`btn border-0`}
+            onClick={() => setActiveTab('unlinked-taxpayers')}
+            style={{
+              borderRadius: '8px 8px 0 0',
+              borderBottom: activeTab === 'unlinked-taxpayers' ? '3px solid #00C0C6' : '3px solid transparent',
+              marginBottom: '-2px',
+              fontWeight: activeTab === 'unlinked-taxpayers' ? '600' : '500',
+              padding: '10px 20px',
+              fontSize: '14px',
+              color: activeTab === 'unlinked-taxpayers' ? '#00C0C6' : '#6B7280',
+              backgroundColor: activeTab === 'unlinked-taxpayers' ? '#F0FDFF' : 'transparent',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Unlinked Taxpayers
+          </button>
+        )}
       </div>
 
-      {/* Search & Filter - Only show for clients tab */}
-      {activeTab === 'clients' && (
+      {/* Search & Filter - Show for clients and unlinked taxpayers tabs */}
+      {(activeTab === 'clients' || activeTab === 'unlinked-taxpayers') && (
       <div className="d-flex align-items-center gap-2 mb-3 mt-3" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
         <div className="position-relative " style={{ width: '260px', flexShrink: 0 }}>
           <input
@@ -1113,7 +1380,7 @@ export default function MyClients() {
             <FiltIcon className="me-2 text-muted" style={{ fontSize: "14px" }} />
             <span>Filter</span>
             {(statusFilter || priorityFilter) && (
-              <span className="badge bg-danger ms-2" style={{ fontSize: "10px" }}>
+              <span className="badge bg-danger text-white ms-2" style={{ fontSize: "10px", color: "#ffffff" }}>
                 {(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0)}
               </span>
             )}
@@ -1413,8 +1680,10 @@ export default function MyClients() {
                 <div key={invite.id} className="col-md-6 col-12">
                   <div
                     className="card client-card"
+                    onClick={() => openInviteActionsModal(invite)}
                     style={{
-                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)"
+                      border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                      cursor: "pointer"
                     }}
                   >
                     <div className="d-flex justify-content-between align-items-start">
@@ -1456,7 +1725,7 @@ export default function MyClients() {
                               {invite.firm_name}
                             </span>
                             {invite.is_expired ? (
-                              <span className="badge bg-danger" style={{ fontSize: '10px' }}>
+                              <span className="badge bg-danger text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
                                 Expired
                               </span>
                             ) : (
@@ -1523,6 +1792,154 @@ export default function MyClients() {
                 </button>
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Unlinked Taxpayers Card - Only show for unlinked taxpayers tab */}
+      {activeTab === 'unlinked-taxpayers' && hasUnlinkedTaxpayersPermission && (
+        <div className="card client-list-card p-3" style={{
+          border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+        }}>
+          <h6 className="fw-semibold mb-3">Unlinked Taxpayers</h6>
+          <div className="mb-3">Clients not assigned to any tax preparer</div>
+
+          {loadingUnlinkedTaxpayers ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3 text-muted">Loading unlinked taxpayers...</p>
+            </div>
+          ) : unlinkedTaxpayersError ? (
+            <div className="alert alert-danger" role="alert">
+              <strong>Error:</strong> {unlinkedTaxpayersError}
+              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers()}>
+                Retry
+              </button>
+            </div>
+          ) : unlinkedTaxpayers.length === 0 ? (
+            <div className="text-center py-5">
+              <p className="text-muted">No unlinked taxpayers found</p>
+            </div>
+          ) : (
+            <>
+              <div className="row g-3">
+                {unlinkedTaxpayers.map((taxpayer) => (
+                  <div key={taxpayer.id} className="col-md-6 col-12">
+                    <div
+                      className="card client-card"
+                      style={{
+                        border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+                        cursor: "pointer"
+                      }}
+                      onClick={() => {
+                        // Navigate to client details if needed
+                        navigate(`/taxdashboard/clients/${taxpayer.id}`);
+                      }}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div className="d-flex gap-3">
+                          <div
+                            className="client-initials"
+                            style={{
+                              width: "48px",
+                              height: "48px",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#00C0C6",
+                              color: "white",
+                              fontWeight: "600",
+                              fontSize: "16px",
+                              flexShrink: 0
+                            }}
+                          >
+                            {taxpayer.first_name?.[0]?.toUpperCase() || ''}{taxpayer.last_name?.[0]?.toUpperCase() || ''}
+                          </div>
+                          <div className="flex-1">
+                            <div className="fw-semibold mb-1">
+                              {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
+                            </div>
+                            {taxpayer.email && (
+                              <div className="text-muted small mb-2">
+                                <FaEnvelope className="me-1" size={12} />
+                                {taxpayer.email}
+                              </div>
+                            )}
+                            {taxpayer.phone_number && (
+                              <div className="text-muted small mb-2">
+                                <Phone className="me-1" />
+                                {taxpayer.phone_number}
+                              </div>
+                            )}
+                            <div className="d-flex flex-wrap gap-2 mt-2">
+                              {taxpayer.is_active ? (
+                                <span className="badge bg-success" style={{ fontSize: '10px' }}>
+                                  Active
+                                </span>
+                              ) : (
+                                <span className="badge bg-secondary" style={{ fontSize: '10px' }}>
+                                  Inactive
+                                </span>
+                              )}
+                              {taxpayer.is_email_verified && (
+                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                                  Email Verified
+                                </span>
+                              )}
+                              {taxpayer.is_phone_verified && (
+                                <span className="badge bg-info" style={{ fontSize: '10px' }}>
+                                  Phone Verified
+                                </span>
+                              )}
+                              {taxpayer.is_suspended && (
+                                <span className="badge bg-danger text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
+                                  Suspended
+                                </span>
+                              )}
+                            </div>
+                            {taxpayer.last_login_formatted && (
+                              <div className="text-muted small mt-2">
+                                Last login: {taxpayer.last_login_formatted}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination for unlinked taxpayers */}
+              {unlinkedTaxpayersPagination.total_pages > 1 && (
+                <div className="d-flex justify-content-between align-items-center mt-4">
+                  <div className="text-muted small">
+                    Showing {((unlinkedTaxpayersPagination.page - 1) * unlinkedTaxpayersPagination.page_size) + 1} to{' '}
+                    {Math.min(unlinkedTaxpayersPagination.page * unlinkedTaxpayersPagination.page_size, unlinkedTaxpayersPagination.total_count)} of{' '}
+                    {unlinkedTaxpayersPagination.total_count} taxpayers
+                  </div>
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page - 1)}
+                      disabled={unlinkedTaxpayersPagination.page === 1 || loadingUnlinkedTaxpayers}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page + 1)}
+                      disabled={unlinkedTaxpayersPagination.page >= unlinkedTaxpayersPagination.total_pages || loadingUnlinkedTaxpayers}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1665,14 +2082,14 @@ export default function MyClients() {
 
       {/* Invite actions modal */}
       {showInviteActionsModal && activeInviteDetails && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px' }}>
+        <div className="modal invite-actions-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '520px', overflow: 'visible' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>Share Taxpayer Invite</h5>
                 <button type="button" className="btn-close" onClick={closeInviteActionsModal} aria-label="Close"></button>
               </div>
-              <div className="modal-body" style={{ padding: '24px' }}>
+              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
                 <div className="p-3 mb-4" style={{ backgroundColor: '#F9FAFB', borderRadius: '12px', border: '1px solid #E8F0FF' }}>
                   <p className="mb-1 fw-semibold" style={{ color: '#3B4A66' }}>
                     {activeInviteDetails.first_name} {activeInviteDetails.last_name}
@@ -1728,17 +2145,27 @@ export default function MyClients() {
                     <FaEnvelope size={14} /> Send Email Invite
                   </label>
                   <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll email {activeInviteDetails.email} a secure link to join Seqwens.
+                    We'll email a secure link to the address below.
                   </p>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleSendEmailInviteNow}
-                    disabled={inviteActionLoading}
-                    style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6' }}
-                  >
-                    {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
-                  </button>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={editedInviteEmail}
+                      onChange={(e) => setEditedInviteEmail(e.target.value)}
+                      placeholder={activeInviteDetails.email || 'Enter email'}
+                      style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleSendEmailInviteNow}
+                      disabled={inviteActionLoading}
+                      style={{ borderRadius: '8px', backgroundColor: '#00C0C6', borderColor: '#00C0C6', whiteSpace: 'nowrap' }}
+                    >
+                      {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
+                    </button>
+                  </div>
                   {activeInviteDetails.delivery_summary && (
                     <div className="mt-2 text-muted small">
                       Email sent: {activeInviteDetails.delivery_summary.email_sent ? "Yes" : "No"}
@@ -1751,7 +2178,7 @@ export default function MyClients() {
                     <FaSms size={14} /> Send SMS Invite
                   </label>
                   <p className="text-muted mb-2" style={{ fontSize: '14px' }}>
-                    We'll text the invite link to the phone number you provide.
+                    We'll text the invite link to the phone number you provide2222.
                   </p>
                   <div className="d-flex gap-2 mb-2">
                     <PhoneInput
@@ -1762,8 +2189,9 @@ export default function MyClients() {
                         setSmsPhoneCountry(countryCode.toLowerCase());
                       }}
                       inputClass="form-control"
-                      containerClass="w-100 phone-input-container flex-1"
-                      inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      containerClass="w-100 phone-input-container flex-1 invite-actions-phone-container"
+                      inputStyle={{ width: '100%', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      dropdownStyle={{ zIndex: 2002, maxHeight: 240, overflowY: 'auto', width: '100%', minWidth: '100%', boxSizing: 'border-box' }}
                       enableSearch={true}
                       countryCodeEditable={false}
                     />
@@ -1786,7 +2214,7 @@ export default function MyClients() {
               </div>
               <div className="modal-footer" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
                 <button className="btn btn-light" style={{ borderRadius: '8px' }} onClick={closeInviteActionsModal}>
-                  Done
+                  Invite Later
                 </button>
               </div>
             </div>
@@ -1797,8 +2225,8 @@ export default function MyClients() {
       {/* Invite Taxpayer Modal (existing clients) */}
       {showInviteTaxpayerModal && (
         <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px' }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ overflow: 'visible' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', maxWidth: '500px', overflow: 'visible' }}>
               <div className="modal-header" style={{ borderBottom: '1px solid #E8F0FF' }}>
                 <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
                   Invite Taxpayer
@@ -1818,7 +2246,7 @@ export default function MyClients() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body" style={{ padding: '24px' }}>
+              <div className="modal-body" style={{ padding: '24px', overflow: 'visible' }}>
                 <form onSubmit={handleInviteExistingTaxpayer}>
                   <div className="mb-3">
                     <label className="form-label fw-semibold" style={{ color: '#3B4A66' }}>
@@ -1876,6 +2304,7 @@ export default function MyClients() {
                       inputClass="form-control"
                       containerClass="w-100 phone-input-container invite-taxpayer-phone-container"
                       inputStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                      dropdownStyle={{ zIndex: 1061 }}
                       enableSearch={true}
                       countryCodeEditable={false}
                     />

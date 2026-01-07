@@ -103,7 +103,7 @@ export default function Footer() {
                 {/* Bottom Section - Copyright and Policy Links */}
                 <div className="pt-4 pb-4 sm:pt-5 sm:pb-5 md:py-5 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
                     <p className="text-white text-xs sm:text-sm font-[BasisGrotesquePro] text-center sm:text-left">
-                        © 2024 SeQwens. All rights reserved.
+                        © 2026 SeQwens. All rights reserved.
                     </p>
                     <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4 text-xs sm:text-sm font-[BasisGrotesquePro]">
                         <Link to="/privacy" className="text-white hover:text-white/90 transition-colors">

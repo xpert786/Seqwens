@@ -23,6 +23,7 @@ export default function TaxPreparerBilling() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isInvoiceDetailsModalOpen, setIsInvoiceDetailsModalOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
+  const [selectedClientId, setSelectedClientId] = useState(null);
   const [filters, setFilters] = useState({
     status: "",
     client_id: ""
@@ -272,7 +273,16 @@ export default function TaxPreparerBilling() {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((invoice) => (
+                {invoices.map((invoice) => {
+                  // Extract client ID from various possible fields
+                  // client can be a number (ID) or an object with id property
+                  const clientId = invoice.client_id || 
+                                  (typeof invoice.client === 'number' ? invoice.client : null) ||
+                                  invoice.client?.id || 
+                                  invoice.taxpayer_id || 
+                                  invoice.taxpayer?.id;
+                  
+                  return (
                   <tr key={invoice.id} className="border-b border-[#E8F0FF] hover:bg-gray-50">
                     <td className="py-4 px-6">
                       <span className="text-sm font-medium text-gray-900">{invoice.invoice_number || `#${invoice.id}`}</span>
@@ -300,6 +310,14 @@ export default function TaxPreparerBilling() {
                       <button
                         onClick={() => {
                           setSelectedInvoiceId(invoice.id);
+                          // Use the clientId extracted above
+                          if (clientId) {
+                            setSelectedClientId(clientId);
+                          } else {
+                            // If clientId is not available, still open modal but let it use fallback
+                            console.warn('Client ID not found in invoice, using fallback endpoint. Invoice:', invoice);
+                            setSelectedClientId(null);
+                          }
                           setIsInvoiceDetailsModalOpen(true);
                         }}
                         className="text-[#3AD6F2] hover:text-[#2BC4E0] text-sm font-medium"
@@ -308,7 +326,8 @@ export default function TaxPreparerBilling() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -330,8 +349,10 @@ export default function TaxPreparerBilling() {
           onClose={() => {
             setIsInvoiceDetailsModalOpen(false);
             setSelectedInvoiceId(null);
+            setSelectedClientId(null);
           }}
           invoiceId={selectedInvoiceId}
+          clientId={selectedClientId}
         />
       )}
     </div>

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { File } from "../../component/icons";
-import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
-import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import { FaEye, FaFilePdf } from "react-icons/fa";
+import { taxPreparerClientAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
+import TaxPreparerInvoiceDetailsModal from "../Billing/TaxPreparerInvoiceDetailsModal";
 
 export default function ClientInvoices() {
   const { clientId } = useParams();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState('paid');
-  const [paidInvoices, setPaidInvoices] = useState([]);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'paid', 'pending', 'overdue', 'outstanding'
+  const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState({
     total_invoices: 0,
     paid_invoices_count: 0,
@@ -34,89 +34,88 @@ export default function ClientInvoices() {
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [sortBy, setSortBy] = useState("-amount");
+  const [sortBy, setSortBy] = useState("-issue_date");
+  const [statusFilter, setStatusFilter] = useState(""); // Empty means all
+  
+  // Invoice detail modal state
+  const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
 
-  // Fetch paid invoices from API
-  const fetchPaidInvoices = async () => {
+  // Fetch invoices from API
+  const fetchInvoices = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const API_BASE_URL = getApiBaseUrl();
-      const token = getAccessToken();
-
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
 
       if (!clientId) {
         throw new Error('Client ID is required');
       }
 
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (searchQuery) {
-        params.append('search', searchQuery);
-      }
-      if (startDate) {
-        params.append('start_date', startDate);
-      }
-      if (endDate) {
-        params.append('end_date', endDate);
-      }
-      if (sortBy) {
-        params.append('sort_by', sortBy);
-      }
-      if (pagination.page > 1) {
-        params.append('page', pagination.page);
-      }
-      if (pagination.page_size !== 20) {
-        params.append('page_size', pagination.page_size);
+      // Determine status filter based on active tab
+      let status = statusFilter;
+      if (!statusFilter && activeTab !== 'all') {
+        if (activeTab === 'paid') {
+          status = 'paid';
+        } else if (activeTab === 'pending') {
+          status = 'pending';
+        } else if (activeTab === 'overdue') {
+          status = 'overdue';
+        } else if (activeTab === 'outstanding') {
+          // Outstanding means not fully paid (pending, overdue, partial)
+          status = ''; // We'll filter client-side or use a different approach
+        }
       }
 
-      const queryString = params.toString();
-      const url = `${API_BASE_URL}/taxpayer/tax-preparer/clients/${clientId}/invoices/paid/${queryString ? `?${queryString}` : ''}`;
-
-      const config = {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      const params = {
+        page: pagination.page,
+        page_size: pagination.page_size,
+        sort_by: sortBy
       };
 
-      console.log('Fetching paid invoices from:', url);
-
-      const response = await fetchWithCors(url, config);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      if (status) {
+        params.status = status;
+      }
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+      if (startDate) {
+        params.start_date = startDate;
+      }
+      if (endDate) {
+        params.end_date = endDate;
       }
 
-      const result = await response.json();
-      console.log('Paid invoices API response:', result);
+      const response = await taxPreparerClientAPI.getClientInvoices(clientId, params);
 
-      if (result.success && result.data) {
-        setPaidInvoices(result.data.paid_invoices || []);
-        setSummary(result.data.summary || {
+      if (response.success && response.data) {
+        let invoicesList = response.data.invoices || [];
+        
+        // Filter for outstanding if needed (pending, overdue, partial)
+        if (activeTab === 'outstanding' && !statusFilter) {
+          invoicesList = invoicesList.filter(inv => 
+            inv.status === 'pending' || inv.status === 'overdue' || inv.status === 'partial'
+          );
+        }
+
+        setInvoices(invoicesList);
+        setSummary(response.data.summary || {
           total_invoices: 0,
           paid_invoices_count: 0,
           paid_total: 0,
           outstanding_total: 0,
           overdue_total: 0
         });
-        setClientInfo(result.data.client || null);
-        if (result.data.pagination) {
-          setPagination(result.data.pagination);
+        setClientInfo(response.data.client || null);
+        if (response.data.pagination) {
+          setPagination(response.data.pagination);
         }
       } else {
-        throw new Error(result.message || 'Failed to fetch paid invoices');
+        throw new Error(response.message || 'Failed to fetch invoices');
       }
     } catch (error) {
-      console.error('Error fetching paid invoices:', error);
+      console.error('Error fetching invoices:', error);
       setError(handleAPIError(error));
-      setPaidInvoices([]);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -124,11 +123,11 @@ export default function ClientInvoices() {
 
   // Fetch invoices when filters change
   useEffect(() => {
-    if (clientId && activeTab === 'paid') {
-      fetchPaidInvoices();
+    if (clientId) {
+      fetchInvoices();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId, activeTab, searchQuery, startDate, endDate, sortBy, pagination.page, pagination.page_size]);
+  }, [clientId, activeTab, searchQuery, startDate, endDate, sortBy, statusFilter, pagination.page, pagination.page_size]);
 
   // Format currency - handles both string and number amounts
   const formatCurrency = (amount) => {
@@ -176,6 +175,62 @@ export default function ClientInvoices() {
     setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
   };
 
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setStatusFilter(""); // Clear status filter when changing tabs
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+  };
+
+  // Handle invoice click to view details
+  const handleInvoiceClick = (invoiceId) => {
+    setSelectedInvoiceId(invoiceId);
+    setShowInvoiceDetailModal(true);
+  };
+
+  // Get status badge color
+  const getStatusBadge = (status, isOverdue) => {
+    const statusLower = status?.toLowerCase() || '';
+    if (isOverdue || statusLower === 'overdue') {
+      return 'bg-danger text-white';
+    }
+    switch (statusLower) {
+      case 'paid':
+        return 'bg-success text-white';
+      case 'pending':
+        return 'bg-warning text-dark';
+      case 'partial':
+        return 'bg-info text-white';
+      case 'draft':
+        return 'bg-secondary text-white';
+      case 'cancelled':
+        return 'bg-dark text-white';
+      default:
+        return 'bg-secondary text-white';
+    }
+  };
+
+  // Get status display text
+  const getStatusDisplay = (status) => {
+    const statusLower = status?.toLowerCase() || '';
+    switch (statusLower) {
+      case 'paid':
+        return 'Paid';
+      case 'pending':
+        return 'Pending';
+      case 'overdue':
+        return 'Overdue';
+      case 'partial':
+        return 'Partial';
+      case 'draft':
+        return 'Draft';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status || 'Unknown';
+    }
+  };
+
   if (loading) {
     return (
       <div className="mt-6">
@@ -194,7 +249,7 @@ export default function ClientInvoices() {
       <div className="mt-6">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchPaidInvoices}>
+          <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchInvoices}>
             Retry
           </button>
         </div>
@@ -250,6 +305,16 @@ export default function ClientInvoices() {
                 </div>
               </div>
             </div>
+            {summary.overdue_total > 0 && (
+              <div className="col-md-3 col-sm-6">
+                <div className="bg-light rounded p-3" style={{ border: "2px solid #EF4444" }}>
+                  <div className="text-muted small mb-1">Overdue</div>
+                  <div className="fw-semibold" style={{ fontSize: "20px", color: "#EF4444" }}>
+                    {formatCurrency(summary.overdue_total)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -261,10 +326,28 @@ export default function ClientInvoices() {
           borderRadius: "15px",
           fontFamily: "BasisGrotesquePro",
         }}>
-          <ul className="d-flex mb-0" style={{ listStyle: "none", padding: 0, margin: 0, gap: "10px" }}>
+          <ul className="d-flex mb-0 flex-wrap" style={{ listStyle: "none", padding: 0, margin: 0, gap: "10px" }}>
             <li>
               <button
-                onClick={() => setActiveTab('paid')}
+                onClick={() => handleTabChange('all')}
+                style={{
+                  padding: "8px 22px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontSize: "15px",
+                  fontFamily: "BasisGrotesquePro",
+                  backgroundColor: activeTab === 'all' ? "#00C0C6" : "transparent",
+                  color: activeTab === 'all' ? "#ffffff" : "#3B4A66",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+              >
+                All Invoices ({summary.total_invoices || 0})
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => handleTabChange('paid')}
                 style={{
                   padding: "8px 22px",
                   borderRadius: "8px",
@@ -277,12 +360,12 @@ export default function ClientInvoices() {
                   cursor: "pointer",
                 }}
               >
-                Paid Invoices ({summary.paid_invoices_count || 0})
+                Paid ({summary.paid_invoices_count || 0})
               </button>
             </li>
             <li>
               <button
-                onClick={() => setActiveTab('outstanding')}
+                onClick={() => handleTabChange('outstanding')}
                 style={{
                   padding: "8px 22px",
                   borderRadius: "8px",
@@ -298,11 +381,47 @@ export default function ClientInvoices() {
                 Outstanding
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => handleTabChange('pending')}
+                style={{
+                  padding: "8px 22px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontSize: "15px",
+                  fontFamily: "BasisGrotesquePro",
+                  backgroundColor: activeTab === 'pending' ? "#00C0C6" : "transparent",
+                  color: activeTab === 'pending' ? "#ffffff" : "#3B4A66",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+              >
+                Pending
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => handleTabChange('overdue')}
+                style={{
+                  padding: "8px 22px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontSize: "15px",
+                  fontFamily: "BasisGrotesquePro",
+                  backgroundColor: activeTab === 'overdue' ? "#00C0C6" : "transparent",
+                  color: activeTab === 'overdue' ? "#ffffff" : "#3B4A66",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+              >
+                Overdue
+              </button>
+            </li>
           </ul>
         </div>
 
-        {/* Paid Invoices Tab */}
-        {activeTab === 'paid' && (
+        {/* Invoices Tab */}
+        {(activeTab === 'all' || activeTab === 'paid' || activeTab === 'outstanding' || activeTab === 'pending' || activeTab === 'overdue') && (
           <>
             {/* Search and Filters */}
             <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
@@ -310,7 +429,7 @@ export default function ClientInvoices() {
                 <input
                   type="text"
                   className="form-control ps-5"
-                  placeholder="Search invoices..."
+                  placeholder="Search by invoice number or description..."
                   value={searchQuery}
                   onChange={handleSearchChange}
                   style={{
@@ -319,6 +438,26 @@ export default function ClientInvoices() {
                 />
                 <i className="bi bi-search" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6B7280" }}></i>
               </div>
+              <select
+                className="form-select"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
+                style={{
+                  border: "1px solid #E8F0FF",
+                  width: "150px"
+                }}
+              >
+                <option value="">All Statuses</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+                <option value="partial">Partial</option>
+                <option value="draft">Draft</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
               <input
                 type="date"
                 className="form-control"
@@ -347,49 +486,109 @@ export default function ClientInvoices() {
                 onChange={(e) => handleSortChange(e.target.value)}
                 style={{
                   border: "1px solid #E8F0FF",
-                  width: "150px"
+                  width: "180px"
                 }}
               >
+                <option value="-issue_date">Issue Date (Newest)</option>
+                <option value="issue_date">Issue Date (Oldest)</option>
+                <option value="-due_date">Due Date (Latest)</option>
+                <option value="due_date">Due Date (Earliest)</option>
                 <option value="-amount">Amount (High to Low)</option>
                 <option value="amount">Amount (Low to High)</option>
-                <option value="-paid_date_value">Date (Newest)</option>
-                <option value="paid_date_value">Date (Oldest)</option>
                 <option value="-invoice_number">Invoice # (Desc)</option>
                 <option value="invoice_number">Invoice # (Asc)</option>
+                <option value="status">Status (A-Z)</option>
+                <option value="-status">Status (Z-A)</option>
               </select>
+              {(searchQuery || startDate || endDate || statusFilter) && (
+                <button
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStartDate("");
+                    setEndDate("");
+                    setStatusFilter("");
+                  }}
+                  style={{
+                    border: "1px solid #E8F0FF",
+                  }}
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
 
-            {/* Paid Invoices List */}
-            {paidInvoices.length > 0 ? (
+            {/* Invoices List */}
+            {invoices.length > 0 ? (
               <>
                 <div className="table-responsive">
                   <table className="table table-hover">
                     <thead>
-                      <tr>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Invoice #</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Description</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Amount</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Issue Date</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Due Date</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Paid Date</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Payment Method</th>
-                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500", color: "#4B5563" }}>Status</th>
+                      <tr style={{ backgroundColor: "#F9FAFB" }}>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Invoice #</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Description</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Amount</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Paid</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Remaining</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Issue Date</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Due Date</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Status</th>
+                        <th style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600", color: "#3B4A66" }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {paidInvoices.map((invoice) => (
-                        <tr key={invoice.id} style={{ cursor: "pointer" }} onClick={() => navigate(`/taxdashboard/invoices/${invoice.id}`)}>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{invoice.invoice_number}</td>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{invoice.description || 'N/A'}</td>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500" }}>{formatCurrency(invoice.amount)}</td>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{formatDate(invoice.issue_date)}</td>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{formatDate(invoice.due_date)}</td>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{formatDate(invoice.paid_date)}</td>
-                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>{invoice.payment_method || 'N/A'}</td>
+                      {invoices.map((invoice) => (
+                        <tr 
+                          key={invoice.id} 
+                          style={{ cursor: "pointer" }}
+                          className="hover:bg-[#F0FDFF] transition-colors"
+                          onClick={() => handleInvoiceClick(invoice.id)}
+                        >
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "500" }}>
+                            {invoice.invoice_number || `#${invoice.id}`}
+                          </td>
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                            {invoice.description || 'N/A'}
+                          </td>
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", fontWeight: "600" }}>
+                            {formatCurrency(invoice.amount)}
+                          </td>
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", color: "#22C55E" }}>
+                            {formatCurrency(invoice.paid_amount || 0)}
+                          </td>
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px", color: invoice.remaining_amount > 0 ? "#EF4444" : "#22C55E", fontWeight: "500" }}>
+                            {formatCurrency(invoice.remaining_amount || 0)}
+                          </td>
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                            {formatDate(invoice.issue_date || invoice.formatted_issue_date)}
+                          </td>
+                          <td style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>
+                            {formatDate(invoice.due_date || invoice.formatted_due_date)}
+                          </td>
                           <td>
-                            <span className="badge bg-success text-white px-2 py-1" style={{ borderRadius: "12px", fontSize: "12px" }}>
-                              Paid
+                            <span className={`badge px-3 py-1 ${getStatusBadge(invoice.status, invoice.is_overdue)}`} style={{ borderRadius: "12px", fontSize: "12px", fontFamily: "BasisGrotesquePro" }}>
+                              {getStatusDisplay(invoice.status)}
                             </span>
+                          </td>
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleInvoiceClick(invoice.id);
+                                }}
+                                title="View Details"
+                                style={{
+                                  border: "1px solid #00C0C6",
+                                  color: "#00C0C6",
+                                  borderRadius: "6px",
+                                  padding: "4px 8px"
+                                }}
+                              >
+                                <FaEye size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -427,13 +626,24 @@ export default function ClientInvoices() {
               </>
             ) : (
               <div className="text-center py-5">
-                <p className="text-muted">No paid invoices found</p>
-                {(searchQuery || startDate || endDate) && (
-                  <button className="btn btn-sm btn-outline-primary mt-2" onClick={() => {
-                    setSearchQuery("");
-                    setStartDate("");
-                    setEndDate("");
-                  }}>
+                <div className="mb-3">
+                  <File size={48} color="#9CA3AF" />
+                </div>
+                <p className="text-muted mb-2">No invoices found</p>
+                {(searchQuery || startDate || endDate || statusFilter) && (
+                  <button 
+                    className="btn btn-sm btn-outline-primary mt-2" 
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStartDate("");
+                      setEndDate("");
+                      setStatusFilter("");
+                    }}
+                    style={{
+                      border: "1px solid #00C0C6",
+                      color: "#00C0C6"
+                    }}
+                  >
                     Clear Filters
                   </button>
                 )}
@@ -442,12 +652,18 @@ export default function ClientInvoices() {
           </>
         )}
 
-        {/* Outstanding Invoices Tab - Placeholder */}
-        {activeTab === 'outstanding' && (
-          <div className="text-center py-5">
-            <p className="text-muted">Outstanding invoices will be displayed here</p>
-          </div>
-        )}
+      {/* Invoice Detail Modal */}
+      {showInvoiceDetailModal && selectedInvoiceId && (
+        <TaxPreparerInvoiceDetailsModal
+          isOpen={showInvoiceDetailModal}
+          onClose={() => {
+            setShowInvoiceDetailModal(false);
+            setSelectedInvoiceId(null);
+          }}
+          invoiceId={selectedInvoiceId}
+          clientId={clientId}
+        />
+      )}
       </div>
     </div>
   );

@@ -8,7 +8,6 @@ import AiAutomation from "./AiAutomation";
 import PricingSection from "./PricingSection";
 import Testimonials from "./Testimonials";
 import FaqSection from "./FaqSection";
-import NewsletterSection from "./NewsletterSection";
 
 export default function Home() {
     return (
@@ -29,7 +28,6 @@ export default function Home() {
             <PricingSection />
             <Testimonials />
             <FaqSection />
-            <NewsletterSection />
 
             <Footer />
         </div>

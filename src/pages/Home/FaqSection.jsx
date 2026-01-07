@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getApiBaseUrl } from "../../ClientOnboarding/utils/corsConfig";
 
 export default function FaqSection() {
   const [faqs, setFaqs] = useState([]);
@@ -9,7 +10,7 @@ export default function FaqSection() {
   // FETCH FAQ API
   const fetchFaqs = async () => {
     try {
-      const res = await fetch("http://168.231.121.7/seqwens/api/taxpayer/faqs/");
+      const res = await fetch(`${getApiBaseUrl()}/taxpayer/faqs/`);
       const data = await res.json();
 
       if (data.success) {
