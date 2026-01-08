@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils/corsConfig';
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
-import { handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
+import { handleAPIError, firmAdminMeetingsAPI } from '../../../../ClientOnboarding/utils/apiUtils';
+import { toast } from 'react-toastify';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -9,6 +10,18 @@ export default function AppointmentsTab({ client }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Schedule appointment form state
+  const [scheduleForm, setScheduleForm] = useState({
+    event_title: '',
+    appointment_date: '',
+    appointment_time: '',
+    duration: 30,
+    description: '',
+    meeting_type: 'zoom'
+  });
   const [filters, setFilters] = useState({
     status: 'all',
     type: 'all',
@@ -106,6 +119,118 @@ export default function AppointmentsTab({ client }) {
     fetchAppointments();
   }, [fetchAppointments]);
 
+  // Format date for API (YYYY-MM-DD)
+  const formatDateForAPI = (dateString) => {
+    if (!dateString) return '';
+    // If already in YYYY-MM-DD format, return as is
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateString;
+    }
+    // Try to parse and format
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return date.toISOString().split('T')[0];
+  };
+
+  // Format time for API (HH:MM:SS)
+  const formatTimeForAPI = (timeString) => {
+    if (!timeString) return '';
+    // Remove AM/PM if present
+    const isPM = timeString.toUpperCase().includes('PM');
+    const isAM = timeString.toUpperCase().includes('AM');
+    let time = timeString.replace(/\s*(AM|PM)\s*/i, '').trim();
+    const parts = time.split(':');
+    
+    if (parts.length >= 2) {
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1] || '00';
+      
+      if (isPM && hours !== 12) hours += 12;
+      if (isAM && hours === 12) hours = 0;
+      
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+    }
+    
+    // If already in HH:MM format, add :00 seconds
+    if (timeString.match(/^\d{2}:\d{2}$/)) {
+      return `${timeString}:00`;
+    }
+    
+    return timeString;
+  };
+
+  // Handle schedule appointment
+  const handleScheduleAppointment = async () => {
+    if (!scheduleForm.event_title.trim()) {
+      toast.error('Please enter an event title');
+      return;
+    }
+    if (!scheduleForm.appointment_date) {
+      toast.error('Please select a date');
+      return;
+    }
+    if (!scheduleForm.appointment_time) {
+      toast.error('Please select a time');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const meetingData = {
+        event_title: scheduleForm.event_title,
+        event_type: 'consultation',
+        date: formatDateForAPI(scheduleForm.appointment_date),
+        time: formatTimeForAPI(scheduleForm.appointment_time),
+        duration: scheduleForm.duration || 30,
+        location: '',
+        description: scheduleForm.description || '',
+        meeting_type: scheduleForm.meeting_type || 'zoom',
+        client_id: client.id,
+        appointment_with_id: client.id,
+        timezone: 'America/New_York'
+      };
+
+      const response = await firmAdminMeetingsAPI.createMeeting(meetingData);
+
+      if (response.status === 201 && response.success) {
+        toast.success('Appointment scheduled successfully!', {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        
+        // Reset form and close modal
+        setScheduleForm({
+          event_title: '',
+          appointment_date: '',
+          appointment_time: '',
+          duration: 30,
+          description: '',
+          meeting_type: 'zoom'
+        });
+        setShowScheduleModal(false);
+        
+        // Refresh appointments list
+        fetchAppointments();
+      } else if (response.status === 409 && response.has_overlap) {
+        toast.warning('There is a scheduling conflict. Please choose a different time.', {
+          position: 'top-right',
+          autoClose: 5000
+        });
+      } else {
+        throw new Error(response.message || 'Failed to schedule appointment');
+      }
+    } catch (err) {
+      console.error('Error scheduling appointment:', err);
+      toast.error(handleAPIError(err), {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -202,9 +327,18 @@ export default function AppointmentsTab({ client }) {
 
   return (
     <div className="bg-white !rounded-lg p-6 !border border-[#E8F0FF]">
-      <div className="mb-6">
-        <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">Appointments</h5>
-        <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Scheduled meetings and consultations</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">Appointments</h5>
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Scheduled meetings and consultations</p>
+        </div>
+        <button
+          onClick={() => setShowScheduleModal(true)}
+          className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition font-[BasisGrotesquePro]"
+          style={{ backgroundColor: '#178109' }}
+        >
+          + Schedule Appointment
+        </button>
       </div>
 
       {/* Filters */}
@@ -382,6 +516,149 @@ export default function AppointmentsTab({ client }) {
             );
           })()}
         </>
+      )}
+
+      {/* Schedule Appointment Modal */}
+      {showScheduleModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowScheduleModal(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between p-6 border-b border-[#E8F0FF]">
+              <div>
+                <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
+                  Schedule Appointment
+                </h5>
+                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                  Schedule a new appointment with {client?.name || 'client'}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="24" height="24" rx="12" fill="#E8F0FF" />
+                  <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Event Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Event Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={scheduleForm.event_title}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, event_title: e.target.value })}
+                  placeholder="Enter appointment title"
+                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
+                />
+              </div>
+
+              {/* Date & Time */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={scheduleForm.appointment_date}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, appointment_date: e.target.value })}
+                    className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Time <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={scheduleForm.appointment_time}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, appointment_time: e.target.value })}
+                    className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
+                  />
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Duration (minutes)
+                </label>
+                <input
+                  type="number"
+                  value={scheduleForm.duration}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, duration: parseInt(e.target.value) || 30 })}
+                  min="15"
+                  step="15"
+                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro]"
+                />
+              </div>
+
+              {/* Meeting Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Meeting Type
+                </label>
+                <select
+                  value={scheduleForm.meeting_type}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, meeting_type: e.target.value })}
+                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] bg-white"
+                >
+                  <option value="zoom">Zoom</option>
+                  <option value="google_meet">Google Meet</option>
+                  <option value="in_person">In Person</option>
+                  <option value="on_call">Phone Call</option>
+                </select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Description
+                </label>
+                <textarea
+                  value={scheduleForm.description}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, description: e.target.value })}
+                  placeholder="Add appointment notes or description..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-[BasisGrotesquePro] resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                disabled={submitting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleScheduleAppointment}
+                disabled={submitting}
+                className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition font-[BasisGrotesquePro] disabled:opacity-50"
+                style={{ backgroundColor: '#178109' }}
+              >
+                {submitting ? 'Scheduling...' : 'Schedule Appointment'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

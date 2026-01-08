@@ -15,7 +15,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   });
 
   const [invoiceItems, setInvoiceItems] = useState([
-    { description: '', value: '', service_id: null, service_search: '' }
+    { description: '', value: '', service_id: null }
   ]);
 
   const [clients, setClients] = useState([]);
@@ -30,18 +30,18 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   const [fieldErrors, setFieldErrors] = useState({});
   const [services, setServices] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
-  const [serviceSearchQueries, setServiceSearchQueries] = useState({});
-  const [showServiceDropdowns, setShowServiceDropdowns] = useState({});
-  const serviceDropdownRefs = useRef({});
+  const [serviceSearchQuery, setServiceSearchQuery] = useState('');
+  const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+  const serviceDropdownRef = useRef(null);
 
-  // Fetch clients when modal opens - use tax preparer endpoint
+  // Fetch taxpayers when modal opens - use tax preparer endpoint
   useEffect(() => {
     const fetchClients = async () => {
       try {
         setLoadingClients(true);
         setClientsError('');
         const token = getAccessToken();
-        const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/clients/`, {
+        const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/taxpayers/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -51,11 +51,11 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
 
         if (response.ok) {
           const result = await response.json();
-          if (result.success && result.data && result.data.clients) {
-            setClients(result.data.clients);
-            console.log('Clients loaded:', result.data.clients);
+          if (result.success && result.data && result.data.taxpayers) {
+            setClients(result.data.taxpayers);
+            console.log('Taxpayers loaded:', result.data.taxpayers);
           } else {
-            setClientsError('No clients found');
+            setClientsError('No taxpayers found');
             setClients([]);
           }
         } else {
@@ -63,8 +63,8 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
           throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
         }
       } catch (err) {
-        console.error('Error fetching clients:', err);
-        setClientsError('Failed to load clients. Please try again.');
+        console.error('Error fetching taxpayers:', err);
+        setClientsError('Failed to load taxpayers. Please try again.');
         setClients([]);
       } finally {
         setLoadingClients(false);
@@ -100,46 +100,54 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
 
   // Debounced search for services
   useEffect(() => {
-    const searchTimeouts = {};
+    let searchTimeout;
     
-    Object.keys(serviceSearchQueries).forEach((index) => {
-      const query = serviceSearchQueries[index];
-      if (query && query.trim()) {
-        searchTimeouts[index] = setTimeout(async () => {
-          try {
-            const response = await firmAdminMessagingAPI.getActiveServicePricing({ search: query });
-            if (response.success && response.data && response.data.services) {
-              setServices(response.data.services || []);
-            }
-          } catch (err) {
-            console.error('Error searching services:', err);
+    if (serviceSearchQuery && serviceSearchQuery.trim()) {
+      searchTimeout = setTimeout(async () => {
+        try {
+          const response = await firmAdminMessagingAPI.getActiveServicePricing({ search: serviceSearchQuery });
+          if (response.success && response.data && response.data.services) {
+            setServices(response.data.services || []);
           }
-    }, 300);
-      }
-    });
+        } catch (err) {
+          console.error('Error searching services:', err);
+        }
+      }, 300);
+    } else {
+      // If search is empty, fetch all services
+      const fetchAllServices = async () => {
+        try {
+          const response = await firmAdminMessagingAPI.getActiveServicePricing();
+          if (response.success && response.data && response.data.services) {
+            setServices(response.data.services || []);
+          }
+        } catch (err) {
+          console.error('Error fetching services:', err);
+        }
+      };
+      fetchAllServices();
+    }
 
     return () => {
-      Object.values(searchTimeouts).forEach(timeout => clearTimeout(timeout));
+      if (searchTimeout) clearTimeout(searchTimeout);
     };
-  }, [serviceSearchQueries]);
+  }, [serviceSearchQuery]);
 
-  // Close dropdowns when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      Object.keys(showServiceDropdowns).forEach((index) => {
-        if (showServiceDropdowns[index] && serviceDropdownRefs.current[index]) {
-          if (!serviceDropdownRefs.current[index].contains(event.target)) {
-            setShowServiceDropdowns(prev => ({ ...prev, [index]: false }));
-          }
+      if (showServiceDropdown && serviceDropdownRef.current) {
+        if (!serviceDropdownRef.current.contains(event.target)) {
+          setShowServiceDropdown(false);
         }
-      });
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showServiceDropdowns]);
+  }, [showServiceDropdown]);
 
   const handleInputChange = (field, value) => {
     // Special handling for date fields to auto-format with slashes
@@ -180,35 +188,25 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
     setInvoiceItems(updatedItems);
   };
 
-  const handleServiceSelect = (index, service) => {
-    const updatedItems = [...invoiceItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
+  const handleServiceSelect = (service) => {
+    // Add a new invoice item with the selected service immediately
+    const newItem = {
       description: service.name,
       value: service.base_price.toString(),
-      service_id: service.id,
-      service_search: service.name
+      service_id: service.id
     };
-    setInvoiceItems(updatedItems);
-    setShowServiceDropdowns(prev => ({ ...prev, [index]: false }));
-    setServiceSearchQueries(prev => ({ ...prev, [index]: service.name }));
+    setInvoiceItems([newItem,...invoiceItems]);
+    setShowServiceDropdown(false);
+    setServiceSearchQuery('');
   };
 
-  const handleServiceSearchChange = (index, value) => {
-    setServiceSearchQueries(prev => ({ ...prev, [index]: value }));
-    setShowServiceDropdowns(prev => ({ ...prev, [index]: true }));
-    
-    const updatedItems = [...invoiceItems];
-    updatedItems[index].service_search = value;
-    // Clear service_id if user is typing manually
-    if (value !== updatedItems[index].description) {
-      updatedItems[index].service_id = null;
-    }
-    setInvoiceItems(updatedItems);
+  const handleServiceSearchChange = (value) => {
+    setServiceSearchQuery(value);
+    setShowServiceDropdown(true);
   };
 
   const handleAddItem = () => {
-    setInvoiceItems([...invoiceItems, { description: '', value: '', service_id: null, service_search: '' }]);
+    setInvoiceItems([...invoiceItems, { description: '', value: '', service_id: null }]);
   };
 
   const handleRemoveItem = (index) => {
@@ -216,6 +214,15 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
       setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
     }
   };
+
+  const filteredServices = services.filter(service => {
+    const searchQuery = (serviceSearchQuery || '').toLowerCase();
+    if (!searchQuery) return true;
+    return (
+      service.name.toLowerCase().includes(searchQuery) ||
+      (service.description || '').toLowerCase().includes(searchQuery)
+    );
+  });
 
   const calculateTotal = () => {
     return invoiceItems.reduce((sum, item) => {
@@ -264,7 +271,18 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
       return;
     }
 
-    if (invoiceItems.some(item => !item.description || !item.value || parseFloat(item.value) <= 0)) {
+    // Filter out empty items (items with no description and no value)
+    const validItems = invoiceItems.filter(item => 
+      item.description && item.description.trim() && item.value && item.value.toString().trim()
+    );
+
+    if (validItems.length === 0) {
+      setError('Please add at least one invoice item');
+      return;
+    }
+
+    // Validate that all non-empty items have valid data
+    if (validItems.some(item => !item.description.trim() || !item.value || parseFloat(item.value) <= 0)) {
       setError('Please fill in all invoice item fields correctly');
       return;
     }
@@ -279,8 +297,8 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
       const formattedIssueDate = formatDateForAPI(invoiceData.issue_date);
       const formattedDueDate = formatDateForAPI(invoiceData.due_date);
 
-      // Convert invoice items to description/value format
-      const invoice_items = invoiceItems.map(item => ({
+      // Convert invoice items to description/value format (only valid items)
+      const invoice_items = validItems.map(item => ({
         description: item.description.trim(),
         value: parseFloat(item.value).toFixed(2) // Keep as string to match API format
       }));
@@ -357,7 +375,19 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ml-20 mt-10 invoice-modal-mobile" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 invoice-modal-mobile" 
+      onClick={onClose} 
+      style={{ 
+        zIndex: 9999,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto invoice-modal-box" onClick={(e) => e.stopPropagation()} style={{ zIndex: 10000 }}>
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#E5E7EB' }}>
@@ -487,109 +517,91 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
                 Invoice Items
               </h5>
             </div>
-            <div className="space-y-3">
-              {invoiceItems.map((item, index) => {
-                const filteredServices = services.filter(service => {
-                  const searchQuery = (serviceSearchQueries[index] || '').toLowerCase();
-                  if (!searchQuery) return true;
-                  return (
-                    service.name.toLowerCase().includes(searchQuery) ||
-                    (service.description || '').toLowerCase().includes(searchQuery)
-                  );
-                });
+            
+            {/* Single Service Selection Dropdown */}
+            <div className="relative mb-4" ref={serviceDropdownRef}>
+              <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                Select Service to Add
+              </label>
+              <input
+                type="text"
+                value={serviceSearchQuery}
+                onChange={(e) => handleServiceSearchChange(e.target.value)}
+                onFocus={() => {
+                  setShowServiceDropdown(true);
+                  setServiceSearchQuery('');
+                }}
+                placeholder="Search services..."
+                className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {loadingServices && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
 
-                return (
-                  <div key={index} className="space-y-2">
-                    {/* Service Selection */}
-                    <div className="relative" ref={el => serviceDropdownRefs.current[index] = el}>
-                      <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                        Select Service (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={serviceSearchQueries[index] || item.service_search || ''}
-                        onChange={(e) => handleServiceSearchChange(index, e.target.value)}
-                        onFocus={() => setShowServiceDropdowns(prev => ({ ...prev, [index]: true }))}
-                        placeholder="Search services..."
-                        className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      {loadingServices && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        </div>
-                      )}
-
-                      {/* Service Dropdown */}
-                      {showServiceDropdowns[index] && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {filteredServices.length === 0 ? (
-                            <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
-                              {loadingServices ? 'Loading...' : 'No services found'}
-                            </div>
-                          ) : (
-                            filteredServices.map((service) => {
-                              const isSelected = item.service_id === service.id;
-                                return (
-                                <div
-                                  key={service.id}
-                                  onClick={() => handleServiceSelect(index, service)}
-                                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    isSelected ? 'bg-[#FFF4E6]' : ''
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                      <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate">
-                                        {service.name}
-                                      </p>
-                                        {isSelected && (
-                                          <svg className="w-4 h-4 text-[#F56D2D] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                          </svg>
-                                        )}
-                                      </div>
-                                      {service.description && (
-                                        <p className="text-xs text-gray-600 font-[BasisGrotesquePro] truncate mt-1">
-                                          {service.description}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div className="ml-3 flex-shrink-0">
-                                      <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
-                                        {service.formatted_price}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      )}
+              {/* Service Dropdown */}
+              {showServiceDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {filteredServices.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
+                      {loadingServices ? 'Loading...' : 'No services found'}
                     </div>
+                  ) : (
+                    filteredServices.map((service) => (
+                      <div
+                        key={service.id}
+                        onClick={() => handleServiceSelect(service)}
+                        className="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-900 font-[BasisGrotesquePro] truncate m-0">
+                                {service.name}
+                              </p>
+                            </div>
+                            {service.description && (
+                              <p className="text-xs text-gray-600 font-[BasisGrotesquePro] truncate mt-1">
+                                {service.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="ml-3 flex-shrink-0">
+                            <p className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro]">
+                              {service.formatted_price}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
-                    {/* Item Details */}
-                    <div className="grid grid-cols-12 gap-3 items-end">
-                      <div className="col-span-12 md:col-span-5">
-                        <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                          Description <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={item.description}
-                          onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                          placeholder="Enter item description"
-                          className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
+            <div className="space-y-3">
+              {invoiceItems.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-3 items-end">
+                  <div className="col-span-12 md:col-span-5">
+                    <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
+                      Description <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                      placeholder="Enter item description"
+                      className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                   </div>
                   <div className="col-span-12 md:col-span-4">
                     <label className="block text-xs font-medium mb-1 font-[BasisGrotesquePro]" style={{ color: '#6B7280' }}>
-                          Amount ($) <span className="text-red-500">*</span>
+                      Amount ($) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -606,21 +618,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
                     {invoiceItems.length > 1 && (
                       <button
                         type="button"
-                            onClick={() => {
-                              handleRemoveItem(index);
-                              // Clean up refs and state for removed item
-                              delete serviceDropdownRefs.current[index];
-                              setServiceSearchQueries(prev => {
-                                const newQueries = { ...prev };
-                                delete newQueries[index];
-                                return newQueries;
-                              });
-                              setShowServiceDropdowns(prev => {
-                                const newDropdowns = { ...prev };
-                                delete newDropdowns[index];
-                                return newDropdowns;
-                              });
-                            }}
+                        onClick={() => handleRemoveItem(index)}
                         className="w-full px-3 py-2 text-red-600 !rounded-lg text-sm font-medium !border border-red-200 hover:bg-red-50 transition"
                       >
                         Remove
@@ -628,9 +626,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
                     )}
                   </div>
                 </div>
-                  </div>
-                );
-              })}
+              ))}
               <button
                 onClick={handleAddItem}
                 className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] hover:bg-gray-50 transition"

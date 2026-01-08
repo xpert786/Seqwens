@@ -7,7 +7,7 @@
 
 /* Main background theme uses secondary color */
 .firm-dashboard-layout main {
-  background-color: var(--firm-secondary-color, #F3F7FF) !important;
+  background-color: var(--firm-secondary-color, #ffffff) !important;
 }
 
 /* Target specific background color classes and replace with secondary color */
@@ -49,7 +49,7 @@
 .firm-dashboard-layout .btn-primary,
 .firm-panel button[class*="primary"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-blue"]):not([class*="bg-yellow"]),
 .firm-dashboard-layout button[class*="primary"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-blue"]):not([class*="bg-yellow"]) {
-  background-color: var(--firm-primary-color, #32B582) !important;
+  background-color: var(--firm-primary-color, #178109) !important;
   color: white !important;
 }
 
@@ -62,7 +62,7 @@
 .firm-dashboard-layout button[style*="background-color: #f56d2d"],
 .firm-panel button[style*="245, 109, 45"],
 .firm-dashboard-layout button[style*="245, 109, 45"] {
-  background-color: var(--firm-primary-color, #32B582) !important;
+  background-color: var(--firm-primary-color, #178109) !important;
   color: white !important;
 }
 
@@ -71,7 +71,7 @@
 .firm-dashboard-layout button[class*="bg-\\[\\#F56D2D\\]"],
 .firm-panel button[class*="bg-\\[\\#f56d2d\\]"],
 .firm-dashboard-layout button[class*="bg-\\[\\#f56d2d\\]"] {
-  background-color: var(--firm-primary-color, #32B582) !important;
+  background-color: var(--firm-primary-color, #178109) !important;
   color: white !important;
 }
 
@@ -99,7 +99,7 @@
 /* Secondary buttons and accents use secondary color */
 .firm-panel .btn-secondary,
 .firm-panel [class*="secondary"] {
-  background-color: var(--firm-secondary-color, #F56D2D) !important;
+  background-color: var(--firm-secondary-color, #ffffff) !important;
 }
 
 /* Text colors use secondary color - apply to body text and labels */
@@ -130,12 +130,12 @@
 /* Links and hover states */
 .firm-panel a:hover,
 .firm-panel [class*="hover"]:hover {
-  color: var(--firm-primary-color, #32B582) !important;
+  color: var(--firm-primary-color, #178109) !important;
 }
 
 /* Active states */
 .firm-panel .active,
 .firm-panel [aria-current="page"] {
-  background-color: var(--firm-secondary-color, #F56D2D) !important;
+  background-color: var(--firm-secondary-color, #ffffff) !important;
 }
 

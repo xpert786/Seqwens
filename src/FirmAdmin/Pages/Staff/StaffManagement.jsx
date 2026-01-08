@@ -1093,14 +1093,7 @@ export default function StaffManagement() {
                 Performance Report
               </button>
               {!advancedReportingEnabled && (
-                <>
-                  <button
-                    onClick={() => setIsBulkImportModalOpen(true)}
-                    className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
-                  >
-                    <UpperDownsIcon />
-                    Bulk Import
-                  </button>
+                
                   <button
                     onClick={() => setIsBulkTaxPreparerImportModalOpen(true)}
                     className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
@@ -1108,7 +1101,6 @@ export default function StaffManagement() {
                     <UpperDownsIcon />
                     Bulk Import Tax Preparers
                   </button>
-                </>
               )}
               <button
                 onClick={() => setIsAddStaffModalOpen(true)}

@@ -4,8 +4,8 @@ import { getMediaUrl } from '../../ClientOnboarding/utils/urlUtils';
 import { getStorage } from '../../ClientOnboarding/utils/userUtils';
 
 const FirmPortalColorsContext = createContext({
-  primaryColor: '#32B582',
-  secondaryColor: '#F56D2D',
+  primaryColor: '#178109',
+  secondaryColor: '#ffffff',
   logoUrl: null,
   faviconUrl: null,
   loading: false,
@@ -22,8 +22,8 @@ export const useFirmPortalColors = () => {
 };
 
 export const FirmPortalColorsProvider = ({ children }) => {
-  const [primaryColor, setPrimaryColor] = useState('#32B582');
-  const [secondaryColor, setSecondaryColor] = useState('#F56D2D');
+  const [primaryColor, setPrimaryColor] = useState('#178109');
+  const [secondaryColor, setSecondaryColor] = useState('#ffffff');
   const [logoUrl, setLogoUrl] = useState(null);
   const [faviconUrl, setFaviconUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,8 +48,8 @@ export const FirmPortalColorsProvider = ({ children }) => {
       const response = await firmAdminSettingsAPI.getSubdomainSettings();
       
       if (response.success && response.data) {
-        const primary = response.data.primary_color || '#32B582';
-        const secondary = response.data.secondary_color || '#F56D2D';
+        const primary = response.data.primary_color || '#178109';
+        const secondary = response.data.secondary_color || '#ffffff';
         const logo = response.data.logo_url ? getMediaUrl(response.data.logo_url) : null;
         const favicon = response.data.favicon_url ? getMediaUrl(response.data.favicon_url) : null;
         
@@ -65,14 +65,14 @@ export const FirmPortalColorsProvider = ({ children }) => {
         applyLogoAndFavicon(logo, favicon);
       } else {
         // Use default colors if API fails
-        applyColorsToDocument('#32B582', '#F56D2D');
+        applyColorsToDocument('#178109', '#ffffff');
         applyLogoAndFavicon(null, null);
       }
     } catch (err) {
       console.error('Error fetching portal colors:', err);
       setError(handleAPIError(err));
       // Use default colors on error
-      applyColorsToDocument('#32B582', '#F56D2D');
+      applyColorsToDocument('#178109', '#ffffff');
       applyLogoAndFavicon(null, null);
     } finally {
       setLoading(false);

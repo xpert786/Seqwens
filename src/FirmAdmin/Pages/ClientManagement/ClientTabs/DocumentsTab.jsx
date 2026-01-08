@@ -4,6 +4,8 @@ import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import ClientDocumentUploadModal from './ClientDocumentUploadModal';
+import DocumentDetailsModal from './DocumentDetailsModal';
 
 export default function DocumentsTab({ client }) {
   const navigate = useNavigate();
@@ -18,6 +20,9 @@ export default function DocumentsTab({ client }) {
   const itemsPerPage = 3;
   const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [viewingPDF, setViewingPDF] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   // Fetch documents from API
   const fetchDocuments = useCallback(async (folderId = null) => {
@@ -124,14 +129,46 @@ export default function DocumentsTab({ client }) {
   const getStatusColor = (status) => {
     const statusLower = (status || '').toLowerCase();
     switch (statusLower) {
-      case 'approved':
-        return 'bg-green-100 text-green-700';
       case 'reviewed':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'compliant':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'under_review':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'need_clarification':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'pending_sign':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'processed':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'approved':
+        return 'bg-green-100 text-green-700 border-green-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  // Quick update document status
+  const handleQuickStatusUpdate = async (documentId, status) => {
+    if (!client?.id) return;
+
+    try {
+      const response = await firmAdminClientsAPI.updateClientDocument(client.id, documentId, { status });
+      if (response.success) {
+        toast.success(`Document marked as ${status.replace('_', ' ')}`, {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        fetchDocuments(currentFolderId);
+      }
+    } catch (error) {
+      console.error('Error updating document status:', error);
+      toast.error(handleAPIError(error) || 'Failed to update document status', {
+        position: 'top-right',
+        autoClose: 3000
+      });
     }
   };
 
@@ -305,6 +342,15 @@ export default function DocumentsTab({ client }) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro]"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V14M2 8H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              Upload Documents
+            </button>
+            <button
               onClick={handleViewPDF}
               disabled={viewingPDF || downloadingPDF}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#3AD6F2] bg-white border border-[#3AD6F2] rounded-lg hover:bg-blue-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -442,25 +488,82 @@ export default function DocumentsTab({ client }) {
                   {paginatedDocuments.map((document) => (
                     <div
                       key={document.id}
-                      onClick={() => window.open(document.file_url, '_blank')}
-                      className="flex items-center gap-4 p-4 bg-white !border border-[#E8F0FF] !rounded-lg hover:border-[#F49C2D] transition-colors cursor-pointer"
+                      className="flex items-center gap-4 p-4 bg-white !border border-[#E8F0FF] !rounded-lg hover:border-[#F49C2D] transition-colors"
                     >
                       <div className="flex-shrink-0">
                         {getFileIcon(document.file_extension)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h6 className="text-sm font-semibold text-gray-900 font-[BasisGrotesquePro] truncate">
                             {document.file_name}
                           </h6>
+                          {document.status && (
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(document.status)}`}>
+                              {document.status_display || document.status}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 font-[BasisGrotesquePro]">
+                        <div className="flex items-center gap-4 text-xs text-gray-500 font-[BasisGrotesquePro] flex-wrap">
                           <span>{document.file_size_formatted || 'N/A'}</span>
                           <span>{document.category?.name || 'Uncategorized'}</span>
                           <span>{document.created_at_formatted || formatDate(document.created_at)}</span>
                         </div>
+                        {document.tags && document.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {document.tags.slice(0, 3).map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="px-1.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded font-[BasisGrotesquePro]"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {document.tags.length > 3 && (
+                              <span className="px-1.5 py-0.5 text-xs font-medium text-gray-500 font-[BasisGrotesquePro]">
+                                +{document.tags.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 flex items-center gap-2 flex-wrap">
+                        {/* Quick Actions - Show only if not already reviewed/compliant */}
+                        {document.status !== 'reviewed' && document.status !== 'compliant' && (
+                          <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickStatusUpdate(document.id, 'reviewed');
+                              }}
+                              className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors font-[BasisGrotesquePro]"
+                              title="Mark as Reviewed"
+                            >
+                              ✓ Reviewed
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickStatusUpdate(document.id, 'compliant');
+                              }}
+                              className="px-2 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded hover:bg-green-100 transition-colors font-[BasisGrotesquePro]"
+                              title="Mark as Compliant"
+                            >
+                              ✓ Compliant
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDocumentId(document.id);
+                            setShowDetailsModal(true);
+                          }}
+                          className="px-3 py-1.5 text-sm font-medium text-[#F56D2D] bg-orange-50 border border-orange-200 !rounded-lg hover:bg-orange-100 transition-colors font-[BasisGrotesquePro]"
+                          title="View details and comments"
+                        >
+                          Details
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -468,7 +571,7 @@ export default function DocumentsTab({ client }) {
                           }}
                           className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 !rounded-lg hover:bg-blue-100 transition-colors font-[BasisGrotesquePro]"
                         >
-                          View
+                          View PDF
                         </button>
                       </div>
                     </div>
@@ -539,9 +642,40 @@ export default function DocumentsTab({ client }) {
       {(!documentsData.folders || documentsData.folders.length === 0) &&
        (!documentsData.documents || documentsData.documents.length === 0) && (
         <div className="text-center py-12">
-          <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">No folders or documents found</p>
+          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">No folders or documents found</p>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro]"
+          >
+            Upload Documents
+          </button>
         </div>
       )}
+
+      {/* Upload Modal */}
+      <ClientDocumentUploadModal
+        show={showUploadModal}
+        handleClose={() => setShowUploadModal(false)}
+        clientId={client?.id}
+        currentFolderId={currentFolderId}
+        onUploadSuccess={() => {
+          fetchDocuments(currentFolderId);
+        }}
+      />
+
+      {/* Document Details Modal */}
+      <DocumentDetailsModal
+        show={showDetailsModal}
+        handleClose={() => {
+          setShowDetailsModal(false);
+          setSelectedDocumentId(null);
+        }}
+        clientId={client?.id}
+        documentId={selectedDocumentId}
+        onUpdate={() => {
+          fetchDocuments(currentFolderId);
+        }}
+      />
     </div>
   );
 }

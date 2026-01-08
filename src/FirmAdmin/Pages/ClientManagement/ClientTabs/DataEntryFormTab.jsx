@@ -201,7 +201,7 @@ export default function DataEntryFormTab({ client }) {
     );
   }
 
-  const { personal_info, bank_info, income_information, tax_documents_count } = formData;
+  const { personal_info, bank_info, income_information, tax_documents_count, taxpayer_id } = formData;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -213,10 +213,18 @@ export default function DataEntryFormTab({ client }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Taxpayer ID
+            </label>
+            <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+              {renderFieldValue('taxpayer_id', taxpayer_id)}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
               Name
             </label>
             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-              {formData.taxpayer_name || 'N/A'}
+              {renderFieldValue('taxpayer_name', formData.taxpayer_name)}
             </div>
           </div>
           <div className="space-y-1">
@@ -224,7 +232,7 @@ export default function DataEntryFormTab({ client }) {
               Email
             </label>
             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-              {formData.taxpayer_email || 'N/A'}
+              {renderFieldValue('taxpayer_email', formData.taxpayer_email)}
             </div>
           </div>
           <div className="space-y-1">
@@ -232,7 +240,7 @@ export default function DataEntryFormTab({ client }) {
               Phone
             </label>
             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-              {formData.taxpayer_phone || 'N/A'}
+              {renderFieldValue('taxpayer_phone', formData.taxpayer_phone)}
             </div>
           </div>
           <div className="space-y-1">
@@ -240,19 +248,28 @@ export default function DataEntryFormTab({ client }) {
               Tax Documents Count
             </label>
             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-              {tax_documents_count || 0} document{tax_documents_count !== 1 ? 's' : ''}
+              {renderFieldValue('tax_documents_count', tax_documents_count)}
             </div>
           </div>
         </div>
       </div>
 
       {/* Personal Information */}
-      {personal_info && (
-        <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-            Personal Information
-          </h3>
+      <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+          Personal Information
+        </h3>
+        {personal_info ? (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Personal Info ID
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('id', personal_info.id)}
+              </div>
+            </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
                 First Name
@@ -392,11 +409,12 @@ export default function DataEntryFormTab({ client }) {
           </div>
 
           {/* Spouse Information */}
-          {personal_info.spouse_info && (
-            <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
-              <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-                Spouse Information
-              </h4>
+          <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
+            <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Spouse Information
+            </h4>
+            {personal_info.spouse_info ? (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
@@ -463,15 +481,20 @@ export default function DataEntryFormTab({ client }) {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+              </>
+            ) : (
+              <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+                No spouse information available
+              </div>
+            )}
+          </div>
 
           {/* Dependents */}
-          {personal_info.dependents && personal_info.dependents.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
-              <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-                Dependents ({personal_info.dependents.length})
-              </h4>
+          <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
+            <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Dependents ({personal_info.dependents?.length || 0})
+            </h4>
+            {personal_info.dependents && personal_info.dependents.length > 0 ? (
               <div className="space-y-4">
                 {personal_info.dependents.map((dependent, index) => (
                   <div key={dependent.id || index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -520,17 +543,27 @@ export default function DataEntryFormTab({ client }) {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            ) : (
+              <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+                No dependents listed
+              </div>
+            )}
+          </div>
+          </>
+        ) : (
+          <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+            No personal information available
+          </div>
+        )}
+      </div>
 
       {/* Bank Information */}
-      {bank_info && (
-        <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-            Bank Information
-          </h3>
+      <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+          Bank Information
+        </h3>
+        {bank_info ? (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
@@ -557,47 +590,56 @@ export default function DataEntryFormTab({ client }) {
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </>
+        ) : (
+          <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+            No bank information available
+          </div>
+        )}
+      </div>
 
       {/* Income Information */}
-      {income_information && (
-        <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-            Income Information
-          </h3>
+      <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+          Income Information
+        </h3>
+        {income_information ? (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {income_information.income_information_types_display && income_information.income_information_types_display.length > 0 ? (
+            <div className="space-y-1">
+              
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('income_information', income_information.income_information_display || income_information.income_information)}
+              </div>
+            </div>
+            {income_information.income_information_types && income_information.income_information_types.length > 0 && (
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-                  Income Types
+                  Income Information Types
                 </label>
                 <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-                  {income_information.income_information_types_display.join(', ')}
+                  {renderFieldValue('income_information_types', income_information.income_information_types)}
                 </div>
               </div>
-            ) : income_information.income_information_display ? (
+            )}
+            {income_information.income_information_types_display && income_information.income_information_types_display.length > 0 && (
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-                  Income Type
+                  Income Information Types (Display)
                 </label>
                 <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-                  {renderFieldValue('income_information', income_information.income_information_display)}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
-                  Income Type
-                </label>
-                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
-                  <span className="text-gray-400 italic">Not provided</span>
+                  {renderFieldValue('income_information_types_display', income_information.income_information_types_display)}
                 </div>
               </div>
             )}
           </div>
-        </div>
-      )}
+          </>
+        ) : (
+          <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+            No income information available
+          </div>
+        )}
+      </div>
     </div>
   );
 }

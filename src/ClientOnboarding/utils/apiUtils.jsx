@@ -3630,6 +3630,98 @@ export const firmAdminClientsAPI = {
     }
 
     return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
+  },
+
+  // ========== Client Document Management ==========
+  
+  // Upload documents for a client/taxpayer
+  // POST /api/firm/clients/<client_id>/documents/upload/
+  uploadClientDocuments: async (clientId, uploadData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const { files, category_id, folder_id, tags } = uploadData;
+    
+    // Create FormData for file upload
+    const formData = new FormData();
+
+    // Append files - files should be an array of File objects
+    if (Array.isArray(files)) {
+      files.forEach((file) => {
+        if (file instanceof File) {
+          formData.append('files', file);
+        }
+      });
+    } else if (files instanceof File) {
+      formData.append('files', files);
+    }
+
+    // Append optional fields
+    if (category_id !== undefined && category_id !== null) {
+      formData.append('category_id', category_id.toString());
+    }
+    if (folder_id !== undefined && folder_id !== null) {
+      formData.append('folder_id', folder_id.toString());
+    }
+    if (tags !== undefined && tags !== null) {
+      // Handle tags as array or JSON string
+      if (Array.isArray(tags)) {
+        formData.append('tags', JSON.stringify(tags));
+      } else if (typeof tags === 'string') {
+        formData.append('tags', tags);
+      }
+    }
+
+    const url = `${API_BASE_URL}/firm/clients/${clientId}/documents/upload/`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type for FormData, browser will set it with boundary
+      },
+      body: formData
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      });
+  },
+
+  // Get document details
+  // GET /api/firm/clients/<client_id>/documents/<document_id>/
+  getClientDocumentDetails: async (clientId, documentId) => {
+    const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
+    return await apiRequest(endpoint, 'GET');
+  },
+
+  // Update document details
+  // PATCH /api/firm/clients/<client_id>/documents/<document_id>/
+  updateClientDocument: async (clientId, documentId, updateData) => {
+    const { status, category_id, folder_id, tags } = updateData;
+    const payload = {};
+
+    if (status !== undefined && status !== null) {
+      payload.status = status;
+    }
+    if (category_id !== undefined) {
+      payload.category_id = category_id; // Can be null to remove category
+    }
+    if (folder_id !== undefined) {
+      payload.folder_id = folder_id; // Can be null to remove folder
+    }
+    if (tags !== undefined && tags !== null) {
+      payload.tags = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags) : tags);
+    }
+
+    const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
+    return await apiRequest(endpoint, 'PATCH', payload);
   }
 };
 
@@ -6522,7 +6614,7 @@ export const firmAdminMessagingAPI = {
     if (search) queryParams.append('search', search);
 
     const queryString = queryParams.toString();
-    const url = `/firm/services/pricing/${queryString ? `?${queryString}` : ''}`;
+    const url = `/firm/services/pricing/`;
     return await apiRequest(url, 'GET');
   },
 
