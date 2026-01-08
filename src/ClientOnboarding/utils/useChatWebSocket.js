@@ -86,8 +86,17 @@ export const useChatWebSocket = (threadId, enabled = true) => {
 
           switch (data.type) {
             case 'connection_established':
-              // Connection established message
+              // Connection established - messages are automatically marked as read
               console.log('✅ WebSocket connection confirmed to thread:', data.thread_id);
+              console.log(`✅ ${data.unread_count || 0} messages were automatically marked as read`);
+              // Mark all existing messages as read in local state
+              setMessages((prev) =>
+                prev.map((msg) => ({
+                  ...msg,
+                  is_read: true,
+                  read_at: msg.read_at || new Date().toISOString()
+                }))
+              );
               break;
 
             case 'message':
@@ -125,8 +134,40 @@ export const useChatWebSocket = (threadId, enabled = true) => {
               }
               break;
 
+            case 'messages_read':
+              // Another user has read messages (broadcast notification)
+              console.log(`${data.user_name || 'User'} has read messages in thread ${data.thread_id}`);
+              // Update messages to reflect read status if needed
+              // Note: This is just a notification, actual read status is handled server-side
+              break;
+
+            case 'read_confirmation':
+              // Response to mark_read command
+              console.log('✅ Messages marked as read:', data.message || 'All messages');
+              // Update local state to reflect read status
+              if (data.message_id) {
+                // Specific message marked as read
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === data.message_id
+                      ? { ...msg, is_read: true, read_at: data.read_at || new Date().toISOString() }
+                      : msg
+                  )
+                );
+              } else {
+                // All messages marked as read
+                setMessages((prev) =>
+                  prev.map((msg) => ({
+                    ...msg,
+                    is_read: true,
+                    read_at: msg.read_at || new Date().toISOString()
+                  }))
+                );
+              }
+              break;
+
             case 'message_read':
-              // Message marked as read (matching guide format)
+              // Legacy: Message marked as read (matching guide format)
               if (data.message_id) {
                 setMessages((prev) =>
                   prev.map((msg) =>
@@ -299,14 +340,14 @@ export const useChatWebSocket = (threadId, enabled = true) => {
     }
   }, []);
 
-  // Mark specific message as read
+  // Mark specific message as read (optional - messages are auto-marked on connect/fetch)
   const markAsRead = useCallback(async (messageId) => {
     // Try WebSocket first if available
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       try {
         const message = {
           type: 'mark_read',
-          message_id: messageId,
+          message_id: messageId || null, // null to mark all, or specific message_id
         };
         wsRef.current.send(JSON.stringify(message));
         return true;

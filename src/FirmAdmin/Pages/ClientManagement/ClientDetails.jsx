@@ -13,6 +13,7 @@ import BillingTab from './ClientTabs/BillingTab';
 import TimelineTab from './ClientTabs/TimelineTab';
 import AppointmentsTab from './ClientTabs/AppointmentsTab';
 import NotesTab from './ClientTabs/NotesTab';
+import DataEntryFormTab from './ClientTabs/DataEntryFormTab';
 import '../../styles/ClientDetails.css';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -252,6 +253,7 @@ export default function ClientDetails() {
   const tabs = [
     'Overview',
     'Documents',
+    'Data Entry Form',
     'Billing',
     'Timeline',
     'Appointments',
@@ -474,7 +476,16 @@ export default function ClientDetails() {
                   </svg>
                   Edit
                 </button>
-                <button className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    if (id) {
+                      navigate(`/firmadmin/messages?clientId=${id}`);
+                    } else {
+                      navigate('/firmadmin/messages');
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2"
+                >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12.8332 1.16797L8.91649 12.3585C8.85665 12.5295 8.61852 12.5392 8.54495 12.3736L6.4165 7.58464M12.8332 1.16797L1.64265 5.08465C1.47168 5.14449 1.46197 5.38262 1.62749 5.45619L6.4165 7.58464M12.8332 1.16797L6.4165 7.58464" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -568,6 +579,10 @@ export default function ClientDetails() {
 
       {activeTab === 'Documents' && (
         <DocumentsTab client={clientData} />
+      )}
+
+      {activeTab === 'Data Entry Form' && (
+        <DataEntryFormTab client={clientData} />
       )}
 
       {activeTab === 'Billing' && (

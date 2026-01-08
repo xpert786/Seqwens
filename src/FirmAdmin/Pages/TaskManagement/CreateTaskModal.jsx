@@ -28,8 +28,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     folder_id: '',
     due_date: '',
     priority: 'medium',
-    description: '',
-    estimated_hours: ''
+    description: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -73,8 +72,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
       folder_id: '',
       due_date: '',
       priority: 'medium',
-      description: '',
-      estimated_hours: ''
+      description: ''
     });
     setSelectedFiles([]);
     setErrors({});
@@ -377,11 +375,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
         priority: formData.priority || 'medium',
         description: formData.description.trim() || '',
       };
-
-      // Add optional fields only if they have values
-      if (formData.estimated_hours && formData.estimated_hours !== '') {
-        taskData.estimated_hours = parseFloat(formData.estimated_hours);
-      }
 
       console.log('Calling API with taskData:', taskData);
       const response = await firmAdminTasksAPI.createTask(taskData, selectedFiles);
@@ -786,24 +779,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                   />
                   {errors.due_date && <div className="invalid-feedback">{errors.due_date}</div>}
                 </div>
-              </div>
-
-              {/* Estimated Hours */}
-              <div className="mb-3">
-                <label className="form-label mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 500, fontSize: '14px', color: '#3B4A66' }}>
-                  Estimated Hours
-                </label>
-                <input
-                  type="number"
-                  className={`form-control form-control-sm ${errors.estimated_hours ? 'is-invalid' : ''}`}
-                  value={formData.estimated_hours}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}
-                />
-                {errors.estimated_hours && <div className="invalid-feedback">{errors.estimated_hours}</div>}
               </div>
 
               {/* Files/Attachments */}

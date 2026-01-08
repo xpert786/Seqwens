@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Task1, Clocking, Completed, Overdue, Progressing, Customize, Doc, Pendinge, Progressingg, Completeded, Overduer, MiniContact, Dot, AddTask, Cut } from "../../component/icons";
-import { FaChevronDown, FaChevronRight, FaFolder, FaSearch } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaFolder, FaSearch, FaUpload, FaTimes, FaCheckCircle, FaEye, FaCheck, FaRedo, FaFilePdf } from "react-icons/fa";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError, taxPreparerClientAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerClientAPI, taskDetailAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import "../../styles/taskpage.css";
 // Custom checkbox styles
@@ -81,11 +81,27 @@ export default function TasksPage() {
     folder_id: '',
     due_date: '',
     priority: '',
-    estimated_hours: '',
     description: '',
     files: [],
     spouse_signature_required: false
   });
+  
+  // Document upload state for document requests
+  const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
+  const [uploadFiles, setUploadFiles] = useState([]);
+  const [uploadingDocuments, setUploadingDocuments] = useState(false);
+  const [documentCategories, setDocumentCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  
+  // Preview, approve, re-request state
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showReRequestModal, setShowReRequestModal] = useState(false);
+  const [reRequestComments, setReRequestComments] = useState('');
+  const [processingAction, setProcessingAction] = useState(false);
+  
   const [tasks, setTasks] = useState({
     pending: [],
     inprogress: [],
@@ -304,6 +320,7 @@ export default function TasksPage() {
               : 'No due date',
             priority: task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Medium',
             note: task.description || '',
+            description: task.description || '',
             task_type: task.task_type,
             status: task.status,
             created_by: task.created_by_name || 'Admin',
@@ -311,7 +328,11 @@ export default function TasksPage() {
             clients_info: task.clients_info || [],
             due_date: task.due_date,
             estimated_hours: task.estimated_hours,
-            signature_requests_info: task.signature_requests_info || []
+            signature_requests_info: task.signature_requests_info || [],
+            files: task.files || [],
+            submission_info: task.submission_info || null,
+            completed_at: task.completed_at || null,
+            comments: task.comments || []
           };
 
           // Check if overdue
@@ -794,10 +815,6 @@ export default function TasksPage() {
       formDataToSend.append('folder_id', formData.folder_id);
     }
 
-    if (formData.estimated_hours) {
-      formDataToSend.append('estimated_hours', formData.estimated_hours.toString());
-    }
-
     if (formData.description) {
       formDataToSend.append('description', formData.description);
     }
@@ -885,12 +902,40 @@ export default function TasksPage() {
 
       const response = await fetchWithCors(apiUrl, config);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      
+      // Check if API returned success: false with errors
+      if (!response.ok || (result.success === false && result.errors)) {
+        // Extract all error messages from the errors object
+        const errorMessages = [];
+        
+        if (result.errors && typeof result.errors === 'object') {
+          Object.keys(result.errors).forEach(field => {
+            const fieldErrors = result.errors[field];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(err => errorMessages.push(err));
+            } else if (typeof fieldErrors === 'string') {
+              errorMessages.push(fieldErrors);
+            }
+          });
+        }
+        
+        // Show all error messages in toast notifications
+        if (errorMessages.length > 0) {
+          errorMessages.forEach(msg => {
+            toast.error(msg, { position: "top-right", autoClose: 5000 });
+          });
+        } else {
+          // Fallback to general error message
+          toast.error(result.message || result.detail || 'Failed to update task. Please try again.', { position: "top-right", autoClose: 5000 });
+        }
+        
+        // Mark that errors have been shown and throw
+        const error = new Error(result.message || result.detail || `HTTP error! status: ${response.status}`);
+        error.errorsShown = true;
+        throw error;
       }
 
-      const result = await response.json();
       console.log('Task updated successfully:', result);
 
       // Reset form and close modal
@@ -901,7 +946,6 @@ export default function TasksPage() {
         folder_id: '',
         due_date: '',
         priority: '',
-        estimated_hours: '',
         description: '',
         files: [],
         spouse_signature_required: false
@@ -922,8 +966,11 @@ export default function TasksPage() {
 
     } catch (error) {
       console.error('Error updating task:', error);
-      const errorMessage = handleAPIError(error);
-      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to update task. Please try again.'), { position: "top-right", autoClose: 3000 });
+      // Only show generic error if we haven't already shown specific errors
+      if (!error.errorsShown) {
+        const errorMessage = handleAPIError(error);
+        toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to update task. Please try again.'), { position: "top-right", autoClose: 5000 });
+      }
     } finally {
       setLoading(false);
     }
@@ -958,7 +1005,6 @@ export default function TasksPage() {
       console.log('folder_id:', formData.folder_id);
       console.log('due_date:', formData.due_date);
       console.log('priority:', formData.priority);
-      console.log('estimated_hours:', formData.estimated_hours);
       console.log('description:', formData.description);
       console.log('spouse_signature_required:', formData.spouse_signature_required);
       console.log('files count:', formData.files.length);
@@ -983,12 +1029,40 @@ export default function TasksPage() {
 
       const response = await fetchWithCors(apiUrl, config);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      
+      // Check if API returned success: false with errors
+      if (!response.ok || (result.success === false && result.errors)) {
+        // Extract all error messages from the errors object
+        const errorMessages = [];
+        
+        if (result.errors && typeof result.errors === 'object') {
+          Object.keys(result.errors).forEach(field => {
+            const fieldErrors = result.errors[field];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(err => errorMessages.push(err));
+            } else if (typeof fieldErrors === 'string') {
+              errorMessages.push(fieldErrors);
+            }
+          });
+        }
+        
+        // Show all error messages in toast notifications
+        if (errorMessages.length > 0) {
+          errorMessages.forEach(msg => {
+            toast.error(msg, { position: "top-right", autoClose: 5000 });
+          });
+        } else {
+          // Fallback to general error message
+          toast.error(result.message || result.detail || 'Failed to create task. Please try again.', { position: "top-right", autoClose: 5000 });
+        }
+        
+        // Mark that errors have been shown and throw
+        const error = new Error(result.message || result.detail || `HTTP error! status: ${response.status}`);
+        error.errorsShown = true;
+        throw error;
       }
 
-      const result = await response.json();
       console.log('Task created successfully:', result);
 
       // Reset form and close modal
@@ -999,7 +1073,6 @@ export default function TasksPage() {
         folder_id: '',
         due_date: '',
         priority: '',
-        estimated_hours: '',
         description: '',
         files: [],
         spouse_signature_required: false
@@ -1020,11 +1093,258 @@ export default function TasksPage() {
 
     } catch (error) {
       console.error('Error creating task:', error);
-      const errorMessage = handleAPIError(error);
-      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to create task. Please try again.'), { position: "top-right", autoClose: 3000 });
+      // Only show generic error if we haven't already shown specific errors
+      if (!error.errorsShown) {
+        const errorMessage = handleAPIError(error);
+        toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to create task. Please try again.'), { position: "top-right", autoClose: 5000 });
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle file selection for document upload
+  const handleDocumentFileSelect = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setUploadFiles(prev => [...prev, ...selectedFiles]);
+    e.target.value = ''; // Reset input
+  };
+
+  // Remove file from upload list
+  const removeUploadFile = (index) => {
+    setUploadFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Submit/Complete document request
+  const handleSubmitDocumentRequest = async () => {
+    if (!selectedTask) {
+      toast.error('No task selected', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await taskDetailAPI.updateTaskStatus(selectedTask.id, 'completed');
+
+      if (response.success) {
+        toast.success(response.message || 'Document request submitted successfully!', { position: "top-right", autoClose: 3000 });
+        setSelectedTask(null);
+        // Refresh tasks list
+        fetchReceivedTasks();
+      } else {
+        throw new Error(response.message || 'Failed to submit document request');
+      }
+    } catch (error) {
+      console.error('Error submitting document request:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to submit document request', { position: "top-right", autoClose: 5000 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Upload documents for document request task
+  const handleUploadDocumentsForRequest = async () => {
+    if (uploadFiles.length === 0) {
+      toast.error('Please select at least one file to upload', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    if (!selectedTask || !selectedTask.clients_info || selectedTask.clients_info.length === 0) {
+      toast.error('Client information is missing', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setUploadingDocuments(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const formData = new FormData();
+      
+      // Get client ID from task
+      const clientId = selectedTask.clients_info[0]?.id;
+      if (!clientId) {
+        throw new Error('Client ID is missing');
+      }
+      
+      formData.append('client_id', clientId.toString());
+      
+      // Add all files
+      uploadFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      // Create documents_metadata array - one entry per file
+      // Using folder_id from task if available, otherwise null
+      const folderId = selectedTask.folder_info?.id || null;
+      const documentsMetadata = uploadFiles.map(() => ({
+        category_id: selectedCategory || null,
+        folder_id: folderId || selectedFolder || null
+      }));
+
+      formData.append('documents_metadata', JSON.stringify(documentsMetadata));
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`, config);
+      const result = await response.json();
+
+      if (!response.ok || (result.success === false && result.errors)) {
+        // Extract all error messages from the errors object
+        const errorMessages = [];
+        
+        if (result.errors && typeof result.errors === 'object') {
+          Object.keys(result.errors).forEach(field => {
+            const fieldErrors = result.errors[field];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(err => errorMessages.push(err));
+            } else if (typeof fieldErrors === 'string') {
+              errorMessages.push(fieldErrors);
+            }
+          });
+        }
+        
+        // Show all error messages in toast notifications
+        if (errorMessages.length > 0) {
+          errorMessages.forEach(msg => {
+            toast.error(msg, { position: "top-right", autoClose: 5000 });
+          });
+        } else {
+          toast.error(result.message || result.detail || 'Failed to upload documents. Please try again.', { position: "top-right", autoClose: 5000 });
+        }
+        return;
+      }
+
+      if (result.success) {
+        toast.success(result.message || 'Documents uploaded successfully!', { position: "top-right", autoClose: 3000 });
+        setShowDocumentUploadModal(false);
+        setUploadFiles([]);
+        setSelectedCategory(null);
+        setSelectedFolder(null);
+        setSelectedTask(null);
+        // Refresh tasks list
+        fetchReceivedTasks();
+      } else {
+        throw new Error(result.message || 'Failed to upload documents');
+      }
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+      toast.error(handleAPIError(error) || 'Failed to upload documents', { position: "top-right", autoClose: 5000 });
+    } finally {
+      setUploadingDocuments(false);
+    }
+  };
+
+  // Handle approve task
+  const handleApproveTask = async () => {
+    if (!selectedTask || !selectedTask.id) {
+      toast.error('No task selected', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setProcessingAction(true);
+      const response = await taskDetailAPI.updateTaskStatus(selectedTask.id, 'completed');
+
+      if (response.success) {
+        toast.success(response.message || 'Task approved successfully!', { position: "top-right", autoClose: 3000 });
+        setShowApproveModal(false);
+        setSelectedTask(null);
+        // Refresh tasks list
+        fetchReceivedTasks();
+      } else {
+        throw new Error(response.message || 'Failed to approve task');
+      }
+    } catch (error) {
+      console.error('Error approving task:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to approve task', { position: "top-right", autoClose: 5000 });
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  // Handle re-request document
+  const handleReRequestDocument = async () => {
+    if (!selectedTask || !selectedTask.id) {
+      toast.error('No task selected', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    if (!reRequestComments.trim()) {
+      toast.error('Please provide comments for the re-request', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setProcessingAction(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Step 1: Update task status to pending
+      const statusResponse = await taskDetailAPI.updateTaskStatus(selectedTask.id, 'pending');
+
+      if (!statusResponse.success) {
+        throw new Error(statusResponse.message || 'Failed to update task status');
+      }
+
+      // Step 2: Add comment with re-request reason
+      const commentConfig = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: reRequestComments,
+          mentioned_user_ids: []
+        })
+      };
+
+      const commentResponse = await fetchWithCors(`${API_BASE_URL}/firm/tasks/${selectedTask.id}/comments/`, commentConfig);
+      const commentResult = await commentResponse.json();
+
+      if (!commentResponse.ok || !commentResult.success) {
+        // Status was updated but comment failed - still show success but warn about comment
+        console.warn('Status updated but comment failed:', commentResult);
+        toast.warning('Task status updated but comment may not have been added', { position: "top-right", autoClose: 5000 });
+      }
+
+      toast.success('Document re-requested successfully!', { position: "top-right", autoClose: 3000 });
+      setShowReRequestModal(false);
+      setReRequestComments('');
+      setSelectedTask(null);
+      // Refresh tasks list
+      fetchReceivedTasks();
+    } catch (error) {
+      console.error('Error re-requesting document:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to re-request document', { position: "top-right", autoClose: 5000 });
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  // Open preview modal
+  const handlePreviewFile = (file) => {
+    setPreviewFile(file);
+    setShowPreviewModal(true);
   };
 
   // Calculate stats from API data
@@ -1099,14 +1419,14 @@ export default function TasksPage() {
       {/* Stat cards row (Bootstrap grid) */}
       <div className="tasks-stats-row row g-3 mb-4">
         {stats.map((s, i) => (
-          <div key={i} className="col-12 col-sm-6 col-md-4 col-lg">
+          <div key={i} className="col-12 col-sm-6 col-md-6 col-lg-3">
             <div className="card h-100 " style={{
               borderRadius: 16,
               border: "1px solid #E8F0FF",
               minHeight: '120px'
             }}>
-              <div className="card-body d-flex flex-column p-3">
-                <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="card-body d-flex flex-column p-3 stat-card-body">
+                <div className="d-flex justify-content-between align-items-center mb-3 stat-card-header">
                   <div className="stat-icon" style={{
                     color: "#00C0C6",
                     width: '40px',
@@ -1414,11 +1734,34 @@ export default function TasksPage() {
 
       {/* Task Details Modal */}
       {selectedTask && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '16px' }}>
-              <div className="modal-header">
-                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>{selectedTask.title}</h5>
+        <div 
+          className="modal" 
+          style={{ 
+            display: 'block', 
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1050,
+            overflow: 'auto',
+            padding: '1rem'
+          }}
+          onClick={() => setSelectedTask(null)}
+        >
+          <div 
+            className="modal-dialog modal-dialog-centered"
+            style={{
+              maxWidth: '600px',
+              width: '100%',
+              margin: '0 auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content" style={{ borderRadius: '16px', maxHeight: '90vh', overflow: 'auto' }}>
+              <div className="modal-header" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10, borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', fontSize: '1.125rem' }}>{selectedTask.title}</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -1426,18 +1769,18 @@ export default function TasksPage() {
                   aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ padding: '1.5rem' }}>
                 <div className="mb-3">
-                  <div className="d-flex align-items-center mb-2">
-                    <span className="me-2 fw-medium" style={{ color: '#6B7280' }}>Client:</span>
-                    <span>{selectedTask.client}</span>
+                  <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Client:</span>
+                    <span style={{ fontSize: '0.875rem', color: '#3B4A66', wordBreak: 'break-word' }}>{selectedTask.client}</span>
                   </div>
-                  <div className="d-flex align-items-center mb-2">
-                    <span className="me-2 fw-medium" style={{ color: '#6B7280' }}>Due:</span>
-                    <span>{selectedTask.due}</span>
+                  <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Due:</span>
+                    <span style={{ fontSize: '0.875rem', color: '#3B4A66' }}>{selectedTask.due}</span>
                   </div>
-                  <div className="d-flex align-items-center mb-2">
-                    <span className="me-2 fw-medium" style={{ color: '#6B7280' }}>Priority:</span>
+                  <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                    <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Priority:</span>
                     <span
                       className="badge"
                       style={{
@@ -1449,7 +1792,7 @@ export default function TasksPage() {
                             selectedTask.priority.toLowerCase() === 'low' ? '#065F46' : '#4B5563',
                         borderRadius: '12px',
                         padding: '4px 12px',
-                        fontSize: '12px',
+                        fontSize: '0.75rem',
                         fontWeight: '600'
                       }}
                     >
@@ -1457,56 +1800,373 @@ export default function TasksPage() {
                     </span>
                   </div>
                   <div className="mt-3">
-                    <h6 className="fw-medium mb-2" style={{ color: '#4B5563' }}>Notes:</h6>
-                    <div className="p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-                      {selectedTask.note}
+                    <h6 className="fw-medium mb-2" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Description:</h6>
+                    <div className="p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '0.875rem', color: '#3B4A66', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                      {selectedTask.note || selectedTask.description || 'No description provided'}
                     </div>
                   </div>
+
+                  {/* Status Badge */}
+                  <div className="mt-3">
+                    <div className="d-flex align-items-center mb-2 flex-wrap" style={{ gap: '0.5rem' }}>
+                      <span className="fw-medium" style={{ color: '#6B7280', fontSize: '0.875rem', minWidth: '80px' }}>Status:</span>
+                      <span
+                        className="badge"
+                        style={{
+                          backgroundColor: selectedTask.status === 'completed' ? '#D1FAE5' :
+                            selectedTask.status === 'submitted' ? '#DBEAFE' :
+                            selectedTask.status === 'in_progress' ? '#FEF3C7' :
+                            selectedTask.status === 'pending' ? '#FEE2E2' : '#F3F4F6',
+                          color: selectedTask.status === 'completed' ? '#065F46' :
+                            selectedTask.status === 'submitted' ? '#1E40AF' :
+                            selectedTask.status === 'in_progress' ? '#92400E' :
+                            selectedTask.status === 'pending' ? '#B91C1C' : '#4B5563',
+                          borderRadius: '12px',
+                          padding: '4px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {selectedTask.status || 'Pending'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Completed Task Details Section - Show for all completed tasks */}
+                  {selectedTask.status === 'completed' && (
+                    <div className="mt-4">
+                      {/* Show documents if available (for document request tasks) */}
+                      {selectedTask.task_type === 'document_request' && selectedTask.files && selectedTask.files.length > 0 && (
+                        <>
+                          <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Submitted Documents:</h6>
+                      <div className="d-flex flex-column gap-2" style={{ maxWidth: '100%' }}>
+                        {selectedTask.files.map((file, index) => (
+                          <div
+                            key={file.id || index}
+                            className="d-flex align-items-center justify-content-between p-3"
+                            style={{ 
+                              backgroundColor: '#F9FAFB', 
+                              borderRadius: '8px', 
+                              border: '1px solid #E5E7EB',
+                              flexWrap: 'wrap',
+                              gap: '0.75rem'
+                            }}
+                          >
+                            <div className="d-flex align-items-center gap-2" style={{ flex: 1, minWidth: 0 }}>
+                              <FaFilePdf style={{ color: '#EF4444', fontSize: '20px', flexShrink: 0 }} />
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ 
+                                  fontWeight: '500', 
+                                  color: '#3B4A66',
+                                  fontSize: '0.875rem',
+                                  wordBreak: 'break-word',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }}>
+                                  {file.file_name || file.name || `Document ${index + 1}`}
+                                </div>
+                                {file.file_size && (
+                                  <small style={{ color: '#6B7280', fontSize: '0.75rem' }}>
+                                    {(file.file_size / 1024).toFixed(2)} KB
+                                  </small>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+                              onClick={() => handlePreviewFile(file)}
+                              style={{ 
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                padding: '0.375rem 0.75rem',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
+                              }}
+                            >
+                              <FaEye />
+                              Preview
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Submission Info */}
+                      {selectedTask.submission_info && (
+                        <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
+                          <div className="d-flex flex-column gap-2" style={{ fontSize: '0.875rem' }}>
+                            {selectedTask.submission_info.submitted_by && (
+                              <div>
+                                <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted by: </span>
+                                <span style={{ color: '#3B4A66' }}>
+                                  {selectedTask.submission_info.submitted_by.name || selectedTask.submission_info.submitted_by.email}
+                                </span>
+                              </div>
+                            )}
+                            {selectedTask.submission_info.submitted_at && (
+                              <div>
+                                <span style={{ color: '#6B7280', fontWeight: '500' }}>Submitted at: </span>
+                                <span style={{ color: '#3B4A66' }}>
+                                  {new Date(selectedTask.submission_info.submitted_at).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                            {selectedTask.submission_info.file_count !== undefined && (
+                              <div>
+                                <span style={{ color: '#6B7280', fontWeight: '500' }}>Files submitted: </span>
+                                <span style={{ color: '#3B4A66' }}>{selectedTask.submission_info.file_count}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      </>
+                      )}
+
+                      {/* Show completed at info for all completed tasks */}
+                      {selectedTask.completed_at && (
+                        <div className="mt-3 p-3" style={{ backgroundColor: '#F0FDF4', borderRadius: '8px', border: '1px solid #D1FAE5' }}>
+                          <div style={{ fontSize: '0.875rem' }}>
+                            <span style={{ color: '#6B7280', fontWeight: '500' }}>Completed at: </span>
+                            <span style={{ color: '#3B4A66' }}>
+                              {new Date(selectedTask.completed_at).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Show comments if available */}
+                      {selectedTask.comments && selectedTask.comments.length > 0 && (
+                        <div className="mt-4">
+                          <h6 className="fw-medium mb-3" style={{ color: '#4B5563', fontSize: '0.875rem' }}>Comments:</h6>
+                          <div className="d-flex flex-column gap-2">
+                            {selectedTask.comments.map((comment, index) => (
+                              <div
+                                key={comment.id || index}
+                                className="p-3"
+                                style={{ 
+                                  backgroundColor: '#F9FAFB', 
+                                  borderRadius: '8px', 
+                                  border: '1px solid #E5E7EB',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                  <div>
+                                    <span style={{ fontWeight: '500', color: '#3B4A66' }}>
+                                      {comment.created_by_name || comment.created_by || 'Unknown'}
+                                    </span>
+                                    {comment.created_at && (
+                                      <small style={{ color: '#6B7280', marginLeft: '0.5rem' }}>
+                                        {new Date(comment.created_at).toLocaleString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </small>
+                                    )}
+                                  </div>
+                                </div>
+                                <div style={{ color: '#3B4A66', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                                  {comment.content}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Submitted Documents Section for Submitted Document Request Tasks */}
+                  {selectedTask.task_type === 'document_request' && selectedTask.status === 'submitted' && selectedTask.files && selectedTask.files.length > 0 && (
+                    <div className="mt-4">
+                      <h6 className="fw-medium mb-3" style={{ color: '#4B5563' }}>Submitted Documents:</h6>
+                      <div className="d-flex flex-column gap-2">
+                        {selectedTask.files.map((file, index) => (
+                          <div
+                            key={file.id || index}
+                            className="d-flex align-items-center justify-content-between p-3"
+                            style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                          >
+                            <div className="d-flex align-items-center gap-2">
+                              <FaFilePdf style={{ color: '#EF4444', fontSize: '20px' }} />
+                              <div>
+                                <div style={{ fontWeight: '500', color: '#3B4A66' }}>
+                                  {file.file_name || file.name || `Document ${index + 1}`}
+                                </div>
+                                {file.file_size && (
+                                  <small style={{ color: '#6B7280' }}>
+                                    {(file.file_size / 1024).toFixed(2)} KB
+                                  </small>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+                              onClick={() => handlePreviewFile(file)}
+                              style={{ borderRadius: '6px' }}
+                            >
+                              <FaEye />
+                              Preview
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-4 d-flex gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          className="btn btn-success d-flex align-items-center gap-2"
+                          style={{ backgroundColor: '#32B582', borderColor: '#32B582', borderRadius: '8px' }}
+                          onClick={() => setShowApproveModal(true)}
+                          disabled={processingAction}
+                        >
+                          <FaCheck />
+                          Approve Task
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-warning d-flex align-items-center gap-2"
+                          style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B', color: 'white', borderRadius: '8px' }}
+                          onClick={() => setShowReRequestModal(true)}
+                          disabled={processingAction}
+                        >
+                          <FaRedo />
+                          Re-request Document
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Upload Documents Section for Document Request Tasks (non-submitted, non-completed) */}
+                  {selectedTask.task_type === 'document_request' && selectedTask.status !== 'submitted' && selectedTask.status !== 'completed' && (
+                    <div className="mt-4 d-flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        className="btn btn-primary d-flex align-items-center gap-2"
+                        style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6', borderRadius: '8px' }}
+                        onClick={() => {
+                          setShowDocumentUploadModal(true);
+                          setUploadFiles([]);
+                          setSelectedCategory(null);
+                          setSelectedFolder(selectedTask.folder_info?.id || null);
+                        }}
+                      >
+                        <FaUpload />
+                        Upload Documents
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-success d-flex align-items-center gap-2"
+                        style={{ backgroundColor: '#32B582', borderColor: '#32B582', borderRadius: '8px' }}
+                        onClick={handleSubmitDocumentRequest}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <FaCheckCircle />
+                            Submit Document Request
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="modal-footer border-0 pt-0">
+              <div 
+                className="modal-footer border-0"
+                style={{
+                  padding: '1rem 1.5rem',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap'
+                }}
+              >
                 <button
                   type="button"
                   className="btn btn-light"
-                  style={{ border: '1px solid #E5E7EB', borderRadius: '8px' }}
-                  onClick={() => setSelectedTask(null)}
+                  style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => {
+                    setSelectedTask(null);
+                    setShowDocumentUploadModal(false);
+                    setUploadFiles([]);
+                  }}
                 >
                   Close
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{ backgroundColor: '#FF7A2F', borderColor: '#FF7A2F', borderRadius: '8px' }}
-                  onClick={() => {
-                    // Populate form with selected task data
-                    if (selectedTask) {
-                      const taskClientIds = selectedTask.clients_info && selectedTask.clients_info.length > 0
-                        ? selectedTask.clients_info.map(c => c.id.toString())
-                        : [];
-                      
-                      setFormData({
-                        task_type: selectedTask.task_type || 'signature_request',
-                        task_title: selectedTask.title || '',
-                        client_ids: taskClientIds,
-                        folder_id: selectedTask.folder_info?.id || '',
-                        due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : '',
-                        priority: selectedTask.priority?.toLowerCase() || '',
-                        estimated_hours: selectedTask.estimated_hours || '',
-                        description: selectedTask.note || '',
-                        files: [],
-                        spouse_signature_required: selectedTask.signature_requests_info?.some(sr => sr.spouse_signature_required) || false
-                      });
-                      
-                      setSelectedFolderPath(selectedTask.folder_info?.title || selectedTask.folder_info?.name || '');
-                      setEditingTaskId(selectedTask.id);
-                      setIsEditMode(true);
-                      setShowAddTaskModal(true);
-                      setSelectedTask(null); // Close the details modal
-                    }
-                  }}
-                >
-                  Edit Task
-                </button>
+                {selectedTask?.task_type !== 'document_request' && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ 
+                      backgroundColor: '#FF7A2F', 
+                      borderColor: '#FF7A2F', 
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      padding: '0.5rem 1rem',
+                      fontWeight: '500'
+                    }}
+                    onClick={() => {
+                      // Populate form with selected task data
+                      if (selectedTask) {
+                        const taskClientIds = selectedTask.clients_info && selectedTask.clients_info.length > 0
+                          ? selectedTask.clients_info.map(c => c.id.toString())
+                          : [];
+                        
+                        setFormData({
+                          task_type: selectedTask.task_type || 'signature_request',
+                          task_title: selectedTask.title || '',
+                          client_ids: taskClientIds,
+                          folder_id: selectedTask.folder_info?.id || '',
+                          due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : '',
+                          priority: selectedTask.priority?.toLowerCase() || '',
+                          description: selectedTask.note || '',
+                          files: [],
+                          spouse_signature_required: selectedTask.signature_requests_info?.some(sr => sr.spouse_signature_required) || false
+                        });
+                        
+                        setSelectedFolderPath(selectedTask.folder_info?.title || selectedTask.folder_info?.name || '');
+                        setEditingTaskId(selectedTask.id);
+                        setIsEditMode(true);
+                        setShowAddTaskModal(true);
+                        setSelectedTask(null); // Close the details modal
+                      }
+                    }}
+                  >
+                    Edit Task
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1578,7 +2238,6 @@ export default function TasksPage() {
                     folder_id: '',
                     due_date: '',
                     priority: '',
-                    estimated_hours: '',
                     description: '',
                     files: [],
                     spouse_signature_required: false
@@ -2150,7 +2809,7 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                {/* Priority, Due Date, and Estimated Hours in one row */}
+                {/* Priority and Due Date in one row */}
                 <div className="task-modal-row" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                   {/* Priority */}
                   <div style={{ flex: 1 }}>
@@ -2226,39 +2885,6 @@ export default function TasksPage() {
                       />
                     </div>
                   </div>
-
-                  {/* Estimated Hours */}
-                  <div style={{ flex: 1 }}>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
-                      Est. Hours
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={formData.estimated_hours}
-                      onChange={(e) => handleInputChange('estimated_hours', e.target.value)}
-                      placeholder="0.0"
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        color: '#111827',
-                        outline: 'none',
-                        transition: 'border-color 0.2s',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                    />
-                  </div>
                 </div>
 
                 {/* File Upload - Hidden for document_request */}
@@ -2326,7 +2952,6 @@ export default function TasksPage() {
                     folder_id: '',
                     due_date: '',
                     priority: '',
-                    estimated_hours: '',
                     description: '',
                     files: [],
                     spouse_signature_required: false
@@ -2397,6 +3022,530 @@ export default function TasksPage() {
               >
                 {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Task' : 'Create Task')}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Upload Modal for Document Request Tasks */}
+      {showDocumentUploadModal && selectedTask && (
+        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header">
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66' }}>
+                  Upload Documents for {selectedTask.title}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowDocumentUploadModal(false);
+                    setUploadFiles([]);
+                    setSelectedCategory(null);
+                    setSelectedFolder(null);
+                  }}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <p className="text-muted small mb-3">
+                    Upload documents for this document request. Files will be associated with the client and folder from the task.
+                  </p>
+                  
+                  {/* File Upload Area */}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium mb-2" style={{ color: '#4B5563' }}>
+                      Select Files <span className="text-danger">*</span>
+                    </label>
+                    <div
+                      className="border border-dashed rounded p-4 text-center"
+                      style={{ 
+                        borderColor: '#E8F0FF', 
+                        cursor: 'pointer',
+                        backgroundColor: '#F9FAFB',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#00C0C6';
+                        e.currentTarget.style.backgroundColor = '#F0FDFF';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#E8F0FF';
+                        e.currentTarget.style.backgroundColor = '#F9FAFB';
+                      }}
+                      onClick={() => document.getElementById('document-upload-input').click()}
+                    >
+                      <FaUpload size={32} style={{ color: '#00C0C6', marginBottom: '8px' }} />
+                      <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+                        Click to upload files
+                      </div>
+                      <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                        PDF, XLSX, XLS, DOCX, JPG, JPEG, PNG (Max 10MB each)
+                      </div>
+                      <input
+                        id="document-upload-input"
+                        type="file"
+                        className="d-none"
+                        onChange={handleDocumentFileSelect}
+                        multiple
+                        accept=".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Selected Files List */}
+                  {uploadFiles.length > 0 && (
+                    <div className="mb-3">
+                      <label className="form-label fw-medium mb-2" style={{ color: '#4B5563' }}>
+                        Selected Files ({uploadFiles.length})
+                      </label>
+                      <div className="list-group">
+                        {uploadFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="list-group-item d-flex justify-content-between align-items-center"
+                            style={{ borderColor: '#E8F0FF' }}
+                          >
+                            <div className="d-flex align-items-center gap-2">
+                              <Doc />
+                              <div>
+                                <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                                  {file.name}
+                                </div>
+                                <div style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280' }}>
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-link text-danger p-0"
+                              onClick={() => removeUploadFile(index)}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Task Info */}
+                  <div className="alert alert-info mb-0" style={{ backgroundColor: '#F0FDFF', borderColor: '#E8F0FF', color: '#3B4A66' }}>
+                    <small>
+                      <strong>Client:</strong> {selectedTask.clients_info?.[0]?.name || selectedTask.client || 'N/A'}<br />
+                      <strong>Folder:</strong> {selectedTask.folder_info?.title || selectedTask.folder_info?.name || 'Default'}
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ border: '1px solid #E5E7EB', borderRadius: '8px' }}
+                  onClick={() => {
+                    setShowDocumentUploadModal(false);
+                    setUploadFiles([]);
+                    setSelectedCategory(null);
+                    setSelectedFolder(null);
+                  }}
+                  disabled={uploadingDocuments}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6', borderRadius: '8px' }}
+                  onClick={handleUploadDocumentsForRequest}
+                  disabled={uploadingDocuments || uploadFiles.length === 0}
+                >
+                  {uploadingDocuments ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <FaUpload className="me-2" />
+                      Upload Documents
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && previewFile && (
+        <div 
+          className="modal" 
+          style={{ 
+            display: 'block', 
+            backgroundColor: 'rgba(0,0,0,0.7)', 
+            zIndex: 1060,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overflow: 'auto'
+          }}
+          onClick={() => {
+            setShowPreviewModal(false);
+            setPreviewFile(null);
+          }}
+        >
+          <div 
+            className="modal-dialog modal-dialog-centered"
+            style={{
+              maxWidth: '95vw',
+              width: '100%',
+              margin: '1rem auto',
+              height: 'calc(100vh - 2rem)',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              className="modal-content" 
+              style={{ 
+                borderRadius: '16px',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                maxHeight: '100%'
+              }}
+            >
+              <div 
+                className="modal-header"
+                style={{
+                  flexShrink: 0,
+                  borderBottom: '1px solid #E5E7EB',
+                  padding: '1rem 1.5rem'
+                }}
+              >
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', fontSize: '1.125rem' }}>
+                  {previewFile.file_name || previewFile.name || 'Document Preview'}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    setPreviewFile(null);
+                  }}
+                  aria-label="Close"
+                  style={{ fontSize: '1.25rem' }}
+                ></button>
+              </div>
+              <div 
+                className="modal-body" 
+                style={{ 
+                  padding: 0,
+                  flex: 1,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <iframe
+                  src={previewFile.preview_url || previewFile.file_url || previewFile.file}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    flex: 1,
+                    minHeight: 0
+                  }}
+                  title="Document Preview"
+                />
+              </div>
+              <div 
+                className="modal-footer border-0"
+                style={{
+                  flexShrink: 0,
+                  padding: '1rem 1.5rem',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    setPreviewFile(null);
+                  }}
+                >
+                  Close
+                </button>
+                <a
+                  href={previewFile.file_url || previewFile.file}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ 
+                    backgroundColor: '#FF7A2F', 
+                    borderColor: '#FF7A2F', 
+                    borderRadius: '8px',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <FaFilePdf />
+                  Download
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Modal */}
+      {showApproveModal && selectedTask && (
+        <div 
+          className="modal" 
+          style={{ 
+            display: 'block', 
+            backgroundColor: 'rgba(0,0,0,0.5)', 
+            zIndex: 1060,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overflow: 'auto',
+            padding: '1rem'
+          }}
+          onClick={() => setShowApproveModal(false)}
+        >
+          <div 
+            className="modal-dialog modal-dialog-centered"
+            style={{
+              maxWidth: '500px',
+              width: '100%',
+              margin: '0 auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E5E7EB', padding: '1rem 1.5rem' }}>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', fontSize: '1.125rem' }}>
+                  Approve Task
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowApproveModal(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body" style={{ padding: '1.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: '#3B4A66', marginBottom: '0.5rem' }}>Are you sure you want to approve this document request task?</p>
+                <p className="text-muted" style={{ fontSize: '0.75rem', margin: 0 }}>This will mark the task as completed.</p>
+              </div>
+              <div 
+                className="modal-footer border-0"
+                style={{
+                  padding: '1rem 1.5rem',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => setShowApproveModal(false)}
+                  disabled={processingAction}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  style={{ 
+                    backgroundColor: '#32B582', 
+                    borderColor: '#32B582', 
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={handleApproveTask}
+                  disabled={processingAction}
+                >
+                  {processingAction ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck className="me-2" />
+                      Approve
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Re-request Modal */}
+      {showReRequestModal && selectedTask && (
+        <div 
+          className="modal" 
+          style={{ 
+            display: 'block', 
+            backgroundColor: 'rgba(0,0,0,0.5)', 
+            zIndex: 1060,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overflow: 'auto',
+            padding: '1rem'
+          }}
+          onClick={() => {
+            setShowReRequestModal(false);
+            setReRequestComments('');
+          }}
+        >
+          <div 
+            className="modal-dialog modal-dialog-centered"
+            style={{
+              maxWidth: '500px',
+              width: '100%',
+              margin: '0 auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid #E5E7EB', padding: '1rem 1.5rem' }}>
+                <h5 className="modal-title fw-semibold" style={{ color: '#3B4A66', fontSize: '1.125rem' }}>
+                  Re-request Document
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowReRequestModal(false);
+                    setReRequestComments('');
+                  }}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body" style={{ padding: '1.5rem' }}>
+                <p className="mb-3" style={{ fontSize: '0.875rem', color: '#3B4A66' }}>Please provide comments explaining why the document needs to be re-requested:</p>
+                <textarea
+                  className="form-control"
+                  rows="4"
+                  placeholder="Enter your comments here..."
+                  value={reRequestComments}
+                  onChange={(e) => setReRequestComments(e.target.value)}
+                  style={{
+                    borderRadius: '8px',
+                    border: '1px solid #E5E7EB',
+                    padding: '0.75rem',
+                    fontSize: '0.875rem',
+                    width: '100%',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+              <div 
+                className="modal-footer border-0"
+                style={{
+                  padding: '1rem 1.5rem',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => {
+                    setShowReRequestModal(false);
+                    setReRequestComments('');
+                  }}
+                  disabled={processingAction}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  style={{ 
+                    backgroundColor: '#F59E0B', 
+                    borderColor: '#F59E0B', 
+                    color: 'white', 
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={handleReRequestDocument}
+                  disabled={processingAction || !reRequestComments.trim()}
+                >
+                  {processingAction ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FaRedo className="me-2" />
+                      Re-request
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

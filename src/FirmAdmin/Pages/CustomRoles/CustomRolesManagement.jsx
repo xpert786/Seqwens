@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { FiSearch, FiShield, FiUsers, FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
+import { FiSearch, FiShield, FiUsers, FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
 import { firmAdminStaffAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import TaxPreparerPermissionsModal from '../Staff/TaxPreparerPermissionsModal';
 
@@ -23,15 +23,25 @@ export default function CustomRolesManagement() {
     has_previous: false
   });
 
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1); // Reset to first page when search changes
-    }, 500);
+  // Handle search - trigger on button click or Enter key
+  const handleSearch = () => {
+    setDebouncedSearchTerm(searchTerm);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
 
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setCurrentPage(1);
+  };
+
+  // Also allow Enter key to trigger search
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   useEffect(() => {
     loadTaxPreparers();
@@ -54,15 +64,20 @@ export default function CustomRolesManagement() {
       const response = await firmAdminStaffAPI.listTaxPreparers(params);
       
       if (response.success) {
-        // Handle both paginated and non-paginated responses
+        // Handle different response structures
         if (response.data && Array.isArray(response.data)) {
-          // Non-paginated response (backward compatibility)
+          // Response with data as array and total_count at root level
+          const totalCount = response.total_count !== undefined ? response.total_count : response.data.length;
+          const totalPages = Math.ceil(totalCount / pageSize);
+          
           setTaxPreparers(response.data);
           setPagination({
-            total_count: response.data.length,
-            total_pages: 1,
-            has_next: false,
-            has_previous: false
+            total_count: totalCount,
+            total_pages: totalPages,
+            has_next: currentPage < totalPages,
+            has_previous: currentPage > 1,
+            page: currentPage,
+            page_size: pageSize
           });
         } else if (response.data && response.data.tax_preparers) {
           // Paginated response with tax_preparers array
@@ -115,8 +130,15 @@ export default function CustomRolesManagement() {
     }
   };
 
-  // Use tax preparers directly (no client-side filtering since we're using server-side search)
-  const filteredPreparers = taxPreparers;
+  // Apply client-side filtering if search term exists (fallback if API doesn't filter)
+  const filteredPreparers = debouncedSearchTerm.trim() 
+    ? taxPreparers.filter(preparer => {
+        const searchLower = debouncedSearchTerm.toLowerCase();
+        const nameMatch = preparer.full_name?.toLowerCase().includes(searchLower);
+        const emailMatch = preparer.email?.toLowerCase().includes(searchLower);
+        return nameMatch || emailMatch;
+      })
+    : taxPreparers;
 
   // Calculate summary statistics
   const summary = {
@@ -212,18 +234,48 @@ export default function CustomRolesManagement() {
         <div className="p-6 border-b border-[#E8F0FF] bg-gradient-to-r from-[#F0FDFF] to-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Search Bar */}
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <FiSearch className="text-[#00C0C6]" size={18} />
+            <div className="relative flex-1 max-w-2xl flex gap-2">
+              <div className="relative flex-1">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <FiSearch className="text-[#00C0C6]" size={18} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search tax preparers by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full pl-10 pr-10 py-2.5 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00C0C6] focus:border-[#00C0C6] font-[BasisGrotesquePro] text-sm transition-all duration-200 bg-white hover:border-[#00C0C6]/50"
+                  style={{ backgroundColor: '#FFFFFF' }}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Clear search"
+                  >
+                    <FiX size={18} />
+                  </button>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Search tax preparers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00C0C6] focus:border-[#00C0C6] font-[BasisGrotesquePro] text-sm transition-all duration-200 bg-white hover:border-[#00C0C6]/50"
-                style={{ backgroundColor: '#FFFFFF' }}
-              />
+              <button
+                onClick={handleSearch}
+                className="px-6 py-2.5 bg-gradient-to-r from-[#00C0C6] to-[#3AD6F2] text-white rounded-lg hover:from-[#00a8b0] hover:to-[#2BC4E0] transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
+                title="Search"
+              >
+                <FiSearch size={16} />
+                Search
+              </button>
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="px-4 py-2.5 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
+                  title="Clear search"
+                >
+                  <FiX size={16} />
+                  Clear
+                </button>
+              )}
             </div>
 
           </div>

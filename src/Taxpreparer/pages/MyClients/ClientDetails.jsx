@@ -212,7 +212,6 @@ export default function ClientDetails() {
     folder_id: '',
     due_date: '',
     priority: '',
-    estimated_hours: '',
     description: '',
     files: [],
     spouse_signature_required: false
@@ -958,10 +957,6 @@ export default function ClientDetails() {
         formDataToSend.append('folder_id', formData.folder_id);
       }
 
-      if (formData.estimated_hours) {
-        formDataToSend.append('estimated_hours', formData.estimated_hours.toString());
-      }
-
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
@@ -994,12 +989,40 @@ export default function ClientDetails() {
       const apiUrl = `${API_BASE_URL}/taxpayer/tax-preparer/tasks/create/`;
       const response = await fetchWithCors(apiUrl, config);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      
+      // Check if API returned success: false with errors
+      if (!response.ok || (result.success === false && result.errors)) {
+        // Extract all error messages from the errors object
+        const errorMessages = [];
+        
+        if (result.errors && typeof result.errors === 'object') {
+          Object.keys(result.errors).forEach(field => {
+            const fieldErrors = result.errors[field];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(err => errorMessages.push(err));
+            } else if (typeof fieldErrors === 'string') {
+              errorMessages.push(fieldErrors);
+            }
+          });
+        }
+        
+        // Show all error messages in toast notifications
+        if (errorMessages.length > 0) {
+          errorMessages.forEach(msg => {
+            toast.error(msg, { position: "top-right", autoClose: 5000 });
+          });
+        } else {
+          // Fallback to general error message
+          toast.error(result.message || result.detail || 'Failed to create task. Please try again.', { position: "top-right", autoClose: 5000 });
+        }
+        
+        // Mark that errors have been shown and throw
+        const error = new Error(result.message || result.detail || `HTTP error! status: ${response.status}`);
+        error.errorsShown = true;
+        throw error;
       }
 
-      const result = await response.json();
       console.log('Task created successfully:', result);
 
       // Reset form and close modal
@@ -1010,7 +1033,6 @@ export default function ClientDetails() {
         folder_id: '',
         due_date: '',
         priority: '',
-        estimated_hours: '',
         description: '',
         files: [],
         spouse_signature_required: false
@@ -1027,7 +1049,10 @@ export default function ClientDetails() {
 
     } catch (error) {
       console.error('Error creating task:', error);
-      toast.error(handleAPIError(error));
+      // Only show generic error if we haven't already shown specific errors
+      if (!error.errorsShown) {
+        toast.error(handleAPIError(error), { position: "top-right", autoClose: 5000 });
+      }
     } finally {
       setLoadingTask(false);
     }
@@ -2017,7 +2042,6 @@ export default function ClientDetails() {
                     folder_id: '',
                     due_date: '',
                     priority: '',
-                    estimated_hours: '',
                     description: '',
                     files: [],
                     spouse_signature_required: false
@@ -2433,7 +2457,7 @@ export default function ClientDetails() {
                   </div>
                 </div>
 
-                {/* Priority, Due Date, and Estimated Hours */}
+                {/* Priority and Due Date */}
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                   {/* Priority */}
                   <div style={{ flex: 1 }}>
@@ -2506,39 +2530,6 @@ export default function ClientDetails() {
                       onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
                   </div>
-
-                  {/* Estimated Hours */}
-                  <div style={{ flex: 1 }}>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#4B5563'
-                    }}>
-                      Est. Hours
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={formData.estimated_hours}
-                      onChange={(e) => handleInputChange('estimated_hours', e.target.value)}
-                      placeholder="0.0"
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        color: '#111827',
-                        outline: 'none',
-                        transition: 'border-color 0.2s',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                    />
-                  </div>
                 </div>
 
                 {/* File Upload - Hidden for document_request */}
@@ -2604,7 +2595,6 @@ export default function ClientDetails() {
                     folder_id: '',
                     due_date: '',
                     priority: '',
-                    estimated_hours: '',
                     description: '',
                     files: [],
                     spouse_signature_required: false

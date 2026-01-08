@@ -1,3 +1,13 @@
+/* Compose Modal User Dropdown - Ensure it appears above footer */
+.compose-modal-user-dropdown {
+  z-index: 9999 !important;
+  position: absolute !important;
+}
+
+.compose-modal-user-search {
+  position: relative;
+}
+
 /* Mobile Responsive Styles for Message Thread - Below 767px */
 @media (max-width: 767px) {
   .message-thread-card {
@@ -124,6 +134,7 @@
 
   .compose-modal-user-search {
     width: 100%;
+    position: relative;
   }
 
   .compose-modal-user-search input {
@@ -133,6 +144,8 @@
 
   .compose-modal-user-dropdown {
     max-height: 200px !important;
+    z-index: 9999 !important;
+    position: absolute !important;
   }
 
   .compose-modal-selected-user {

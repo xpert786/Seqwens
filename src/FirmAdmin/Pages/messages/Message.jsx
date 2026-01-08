@@ -15,7 +15,6 @@ const Messages = () => {
   const [conversationSearch, setConversationSearch] = useState('');
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
   const [messageType, setMessageType] = useState('');
-  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [recipientInput, setRecipientInput] = useState('');
   const [recipients, setRecipients] = useState([]);
@@ -553,7 +552,6 @@ const Messages = () => {
         toast.success('Message sent successfully');
         setIsComposeModalOpen(false);
         // Reset form
-        setSubject('');
         setMessage('');
         setSelectedStaffId('');
         setSelectedUserId('');
@@ -1479,7 +1477,7 @@ const Messages = () => {
 
                   {/* User Dropdown */}
                   {showUserDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto compose-modal-user-dropdown">
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-[#E8F0FF] rounded-lg shadow-lg max-h-60 overflow-y-auto compose-modal-user-dropdown" style={{ zIndex: 9999 }}>
                       {activeUsers.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-gray-500 font-[BasisGrotesquePro]">
                           {activeUsersLoading ? 'Loading...' : 'No users found'}
@@ -1552,29 +1550,8 @@ const Messages = () => {
                 )}
               </div>
 
-              {/* Subject */}
-              <div className="compose-modal-section">
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Subject</label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Enter subject"
-                  className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] compose-modal-input"
-                />
-              </div>
-
               {/* Message */}
-              <div className="compose-modal-section">
-                <label className="block text-sm font-medium text-gray-900 mb-1 font-[BasisGrotesquePro]">Message</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message.."
-                  rows={3}
-                  className="w-full px-3 py-1.5 !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] resize-none compose-modal-textarea"
-                />
-              </div>
+              
             </div>
 
             {/* Modal Footer */}
@@ -1615,7 +1592,7 @@ const Messages = () => {
                 </button>
                 <button
                   onClick={handleComposeMessage}
-                  disabled={sending || !subject.trim() || !message.trim() || (!selectedUserId && !selectedStaffId)}
+                  disabled={sending || !message.trim() || (!selectedUserId && !selectedStaffId)}
                   className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed compose-modal-send-btn"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

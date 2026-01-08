@@ -3542,6 +3542,16 @@ export const firmAdminClientsAPI = {
     return await apiRequest(`/user/firm-admin/clients/invite/${inviteId}/delete/`, 'DELETE');
   },
 
+  // Get pending invite details by invite_id
+  getPendingInviteDetails: async (inviteId) => {
+    return await apiRequest(`/user/firm-admin/clients/invites/pending/${inviteId}/`, 'GET');
+  },
+
+  // Update pending invite details
+  updatePendingInvite: async (inviteId, payload) => {
+    return await apiRequest(`/user/firm-admin/clients/invites/pending/${inviteId}/`, 'PATCH', payload);
+  },
+
   // Get pending client invites
   getPendingInvites: async (params = {}) => {
     const { page = 1, page_size = 20, search, sort_by, sort_order } = params;

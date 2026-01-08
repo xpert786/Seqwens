@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaEye, FaUpload, FaDownload, FaSearch, FaFilter, FaUsers, FaTrash, FaEllipsisV, FaFileAlt, FaUser, FaCalendar, FaComment, FaEnvelope, FaClock, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaPhone, FaBuilding, FaCopy, FaLink, FaSms } from 'react-icons/fa';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
@@ -27,6 +27,7 @@ const API_BASE_URL = getApiBaseUrl();
 export default function ClientManage() {
   const { advancedReportingEnabled } = useFirmSettings();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showDropdown, setShowDropdown] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
@@ -101,9 +102,30 @@ export default function ClientManage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('true'); // 'true' for active, 'false' for inactive, 'all' for all
+  const [linkStatusFilter, setLinkStatusFilter] = useState('all'); // 'all', 'linked', 'unlinked'
 
   // Tab state
   const [activeTab, setActiveTab] = useState('clients'); // 'clients', 'pending-invites', or 'unlinked-taxpayers'
+
+  // Handle URL parameter for tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['clients', 'pending-invites', 'unlinked-taxpayers'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (tab === 'clients') {
+      newSearchParams.delete('tab');
+    } else {
+      newSearchParams.set('tab', tab);
+    }
+    setSearchParams(newSearchParams);
+  };
 
   // Pending invites state
   const [pendingInvites, setPendingInvites] = useState([]);
@@ -235,11 +257,30 @@ export default function ClientManage() {
         setStaffLoading(true);
         setStaffError(null);
 
-        const result = await firmAdminStaffAPI.listTaxPreparers();
+        // Fetch all tax preparers (handle pagination if needed)
+        const result = await firmAdminStaffAPI.listTaxPreparers({ page_size: 100 });
 
-        if (result.success && result.data && Array.isArray(result.data)) {
+        // Handle different response formats
+        let dataArray = [];
+        if (result.success) {
+          if (result.data) {
+            // Check if it's a paginated response with 'results' array
+            if (Array.isArray(result.data.results)) {
+              dataArray = result.data.results;
+            } else if (Array.isArray(result.data)) {
+              dataArray = result.data;
+            } else if (Array.isArray(result.data.data)) {
+              dataArray = result.data.data;
+            }
+          } else if (Array.isArray(result.results)) {
+            // Direct results array
+            dataArray = result.results;
+          }
+        }
+
+        if (dataArray.length > 0) {
           // Transform the data to match the expected format
-          const transformedData = result.data.map(item => ({
+          const transformedData = dataArray.map(item => ({
             id: item.id,
             name: item.full_name || `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown',
             email: item.email || '',
@@ -248,7 +289,7 @@ export default function ClientManage() {
             full_name: item.full_name || '',
             phone_number: item.phone_number || '',
             role: item.role || '',
-            is_active: item.is_active || false,
+            is_active: item.is_active !== undefined ? item.is_active : true,
             is_firm_admin: item.is_firm_admin || false,
             clients_count: item.clients_count || 0,
             profile_picture_url: item.profile_picture_url || null,
@@ -257,11 +298,13 @@ export default function ClientManage() {
           setStaffMembers(transformedData);
           console.log('Tax preparers loaded:', transformedData);
         } else {
+          console.warn('No tax preparers data found in response:', result);
           setStaffMembers([]);
         }
       } catch (err) {
         console.error('Error fetching tax preparers:', err);
-        setStaffError('Failed to load tax preparers');
+        const errorMsg = handleAPIError(err);
+        setStaffError(errorMsg || 'Failed to load tax preparers');
         setStaffMembers([]);
       } finally {
         setStaffLoading(false);
@@ -381,7 +424,9 @@ export default function ClientManage() {
                 compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
                 pendingTasks: client.pending_tasks_count || 0,
                 documentsCount: client.documents_count || 0,
-                assignedStaff: client.assigned_staff || []
+                assignedStaff: client.assigned_staff || [],
+                is_linked: client.is_linked !== undefined ? client.is_linked : true, // Default to true if not provided
+                link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked')
               };
             });
             setClients(mappedClients);
@@ -404,12 +449,35 @@ export default function ClientManage() {
     fetchClients();
   }, [currentPage, debouncedSearchTerm, activeFilter]);
 
+  // Filter clients by link status
+  const filteredClients = useMemo(() => {
+    if (!clients || clients.length === 0) return [];
+    
+    const filtered = clients.filter(client => {
+      if (linkStatusFilter === 'linked') {
+        return client.is_linked === true || client.link_status === 'linked';
+      } else if (linkStatusFilter === 'unlinked') {
+        return client.is_linked === false || client.link_status === 'unlinked';
+      }
+      return true; // 'all' - show all clients
+    });
+    
+    return filtered;
+  }, [clients, linkStatusFilter]);
+
   // Reset to page 1 when active filter changes
   useEffect(() => {
     if (activeFilter !== undefined) {
       setCurrentPage(1);
     }
   }, [activeFilter]);
+
+  // Reset to page 1 when link status filter changes
+  useEffect(() => {
+    if (linkStatusFilter !== undefined) {
+      setCurrentPage(1);
+    }
+  }, [linkStatusFilter]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -877,7 +945,9 @@ export default function ClientManage() {
               compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
               pendingTasks: client.pending_tasks_count || 0,
               documentsCount: client.documents_count || 0,
-              assignedStaff: client.assigned_staff || []
+              assignedStaff: client.assigned_staff || [],
+              is_linked: client.is_linked !== undefined ? client.is_linked : true,
+              link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked')
             };
           });
           setClients(mappedClients);
@@ -971,6 +1041,10 @@ export default function ClientManage() {
         setIsAssignMode(false);
         // Refresh clients list
         await refreshClientsList();
+        // Refresh unlinked taxpayers list if on that tab
+        if (activeTab === 'unlinked-taxpayers') {
+          await fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page, unlinkedTaxpayersPagination.page_size);
+        }
       } else {
         throw new Error(result.message || 'Failed to assign/reassign tax preparer');
       }
@@ -1088,7 +1162,9 @@ export default function ClientManage() {
               lastActivity: client.next_due_date || 'N/A',
               totalBilled: '$0',
               compliance: (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : (client.status || profile.account_status?.toLowerCase() || 'new') === 'pending' ? 'Pending' : 'New',
-              assignedStaff: client.assigned_staff || []
+              assignedStaff: client.assigned_staff || [],
+              is_linked: client.is_linked !== undefined ? client.is_linked : true,
+              link_status: client.link_status || (client.is_linked ? 'linked' : 'unlinked')
             };
           });
         }
@@ -1347,7 +1423,7 @@ export default function ClientManage() {
       }}>
         <button
           className={`btn border-0`}
-          onClick={() => setActiveTab('clients')}
+          onClick={() => handleTabChange('clients')}
           style={{
             borderRadius: '8px 8px 0 0',
             borderBottom: activeTab === 'clients' ? '3px solid #00C0C6' : '3px solid transparent',
@@ -1364,7 +1440,7 @@ export default function ClientManage() {
         </button>
         <button
           className={`btn border-0 position-relative`}
-          onClick={() => setActiveTab('pending-invites')}
+          onClick={() => handleTabChange('pending-invites')}
           style={{
             borderRadius: '8px 8px 0 0',
             borderBottom: activeTab === 'pending-invites' ? '3px solid #00C0C6' : '3px solid transparent',
@@ -1391,7 +1467,7 @@ export default function ClientManage() {
         </button>
         <button
           className={`btn border-0 position-relative`}
-          onClick={() => setActiveTab('unlinked-taxpayers')}
+          onClick={() => handleTabChange('unlinked-taxpayers')}
           style={{
             borderRadius: '8px 8px 0 0',
             borderBottom: activeTab === 'unlinked-taxpayers' ? '3px solid #00C0C6' : '3px solid transparent',
@@ -1447,14 +1523,17 @@ export default function ClientManage() {
                   <div key={taxpayer.id} className="col-md-6 col-12">
                     <div
                       className="card client-card"
-                      onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
                       style={{
                         border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-                        cursor: "pointer"
+                        padding: '16px',
                       }}
                     >
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div className="d-flex gap-3">
+                      <div className="d-flex justify-content-between align-items-start" style={{ gap: '12px' }}>
+                        <div 
+                          className="d-flex gap-3 flex-grow-1"
+                          onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
+                          style={{ cursor: "pointer" }}
+                        >
                           <div
                             className="client-initials"
                             style={{
@@ -1473,7 +1552,7 @@ export default function ClientManage() {
                           >
                             {taxpayer.first_name?.[0]?.toUpperCase() || ''}{taxpayer.last_name?.[0]?.toUpperCase() || ''}
                           </div>
-                          <div>
+                          <div className="flex-grow-1">
                             <div className="fw-semibold mb-1">
                               {taxpayer.full_name || `${taxpayer.first_name} ${taxpayer.last_name}`}
                             </div>
@@ -1522,10 +1601,40 @@ export default function ClientManage() {
                             )}
                           </div>
                         </div>
-                        <div className="d-flex gap-2">
-                          <span className="badge bg-warning" style={{ fontSize: '10px' }}>
+                        <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
+                          <span className="badge bg-warning" style={{ fontSize: '10px', marginBottom: '4px' }}>
                             Unlinked
                           </span>
+                          <button
+                            className="btn btn-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedClientForReassign(taxpayer.id);
+                              setIsAssignMode(true);
+                              setShowReassignStaffModal(true);
+                            }}
+                            style={{
+                              backgroundColor: '#F56D2D',
+                              color: 'white',
+                              border: 'none',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              padding: '6px 16px',
+                              borderRadius: '7px',
+                              whiteSpace: 'nowrap',
+                              fontFamily: 'BasisGrotesquePro, sans-serif',
+                              transition: 'background-color 0.2s ease',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#E55A1D';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#F56D2D';
+                            }}
+                          >
+                            Assign
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1598,7 +1707,7 @@ export default function ClientManage() {
                   <div key={invite.id} className="col-md-6 col-12">
                     <div
                       className="card client-card"
-                      onClick={() => openInviteActionsModal(invite)}
+                      onClick={() => navigate(`/firmadmin/pending-invites/${invite.id || invite.invite_id || invite.client_id}`)}
                       style={{
                         border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
                         cursor: "pointer"
@@ -1667,18 +1776,43 @@ export default function ClientManage() {
                             </div>
                           </div>
                         </div>
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 flex-column align-items-end">
+                          <button
+                            className="btn btn-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openInviteActionsModal(invite);
+                            }}
+                            title="Share Taxpayer Invite"
+                            style={{
+                              backgroundColor: '#00C0C6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <FaLink className="me-1" size={11} />
+                            Share Invite
+                          </button>
                           {invite.invite_link && (
                             <button
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-outline-secondary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigator.clipboard.writeText(invite.invite_link);
                                 toast.success('Invite link copied to clipboard!');
                               }}
                               title="Copy invite link"
+                              style={{
+                                fontSize: '11px',
+                                padding: '4px 8px'
+                              }}
                             >
-                              <FaCopy size={12} />
+                              <FaCopy size={11} />
                             </button>
                           )}
                         </div>
@@ -1724,10 +1858,14 @@ export default function ClientManage() {
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Section Header */}
         <div className="p-4 sm:p-6">
-          <h4 className="taxdashboardr-titler text-lg sm:text-xl">
-            All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
-          </h4>
-          <h5 className="taxdashboard-subtitle text-sm sm:text-base">Complete list of firm clients with status and assignment information</h5>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h4 className="taxdashboardr-titler text-lg sm:text-xl">
+                All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
+              </h4>
+              <h5 className="taxdashboard-subtitle text-sm sm:text-base">Complete list of firm clients with status and assignment information</h5>
+            </div>
+          </div>
           {clientsError && (
             <div className="mt-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
               {clientsError}
@@ -1768,49 +1906,104 @@ export default function ClientManage() {
               )}
             </div>
             {/* Active/Inactive Filter Button */}
-            <div className="flex items-center gap-2">
-              <button
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === 'true'
-                    ? 'bg-[#00C0C6] text-white'
-                    : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setActiveFilter('true');
-                  setCurrentPage(1);
-                }}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                Active
-              </button>
-              <button
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === 'false'
-                    ? 'bg-[#00C0C6] text-white'
-                    : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setActiveFilter('false');
-                  setCurrentPage(1);
-                }}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                Inactive
-              </button>
-              <button
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === 'all'
-                    ? 'bg-[#00C0C6] text-white'
-                    : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setActiveFilter('all');
-                  setCurrentPage(1);
-                }}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
-              >
-                All
-              </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <button
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    activeFilter === 'true'
+                      ? 'bg-[#00C0C6] text-white'
+                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setActiveFilter('true');
+                    setCurrentPage(1);
+                  }}
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                >
+                  Active
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    activeFilter === 'false'
+                      ? 'bg-[#00C0C6] text-white'
+                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setActiveFilter('false');
+                    setCurrentPage(1);
+                  }}
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                >
+                  Inactive
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    activeFilter === 'all'
+                      ? 'bg-[#00C0C6] text-white'
+                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setActiveFilter('all');
+                    setCurrentPage(1);
+                  }}
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                >
+                  All
+                </button>
+              </div>
+              
+              {/* Link Status Filter */}
+              <div className="flex items-center gap-2 border-l border-gray-300 pl-2 ml-2">
+                <span className="text-xs text-gray-600 font-[BasisGrotesquePro] mr-1">Link:</span>
+                <button
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    linkStatusFilter === 'all'
+                      ? 'bg-[#00C0C6] text-white'
+                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setLinkStatusFilter('all');
+                    setCurrentPage(1);
+                  }}
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                >
+                  All
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+                    linkStatusFilter === 'linked'
+                      ? 'bg-[#00C0C6] text-white'
+                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setLinkStatusFilter('linked');
+                    setCurrentPage(1);
+                  }}
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Linked
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+                    linkStatusFilter === 'unlinked'
+                      ? 'bg-[#00C0C6] text-white'
+                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setLinkStatusFilter('unlinked');
+                    setCurrentPage(1);
+                  }}
+                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Unlinked
+                </button>
+              </div>
             </div>
             {/* <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
@@ -1892,14 +2085,14 @@ export default function ClientManage() {
                     {clientsError}
                   </td>
                 </tr>
-              ) : clients.length === 0 ? (
+              ) : filteredClients.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-6 text-center text-gray-500">
                     No clients found
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
+                filteredClients.map((client) => (
                   <tr key={client.id}>
                     <td colSpan="6" className="p-0">
                       <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
@@ -1908,11 +2101,29 @@ export default function ClientManage() {
                           <div className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px]">
                             <div className="flex items-center">
                               <div className="flex-1 min-w-0">
-                                <div
-                                  className="font-semibold text-gray-900 text-sm mb-1 cursor-pointer hover:text-blue-600 transition-colors"
-                                  onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
-                                >
-                                  {client.name}
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <div
+                                    className="font-semibold text-gray-900 text-sm cursor-pointer hover:text-blue-600 transition-colors"
+                                    onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
+                                  >
+                                    {client.name}
+                                  </div>
+                                  {/* Link Status Badge */}
+                                  {client.is_linked === true || client.link_status === 'linked' ? (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                      Linked
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-300">
+                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                      Unlinked
+                                    </span>
+                                  )}
                                 </div>
                                 {/* <div className="text-xs text-gray-600 flex items-center mb-1">
                                   {client.company === "Smith Enterprises" || client.company === "Davis LLC" ? (

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FileIcon, BlackDateIcon, UpIcon } from "../icons";
 import "../../styles/MyDocuments.css";
 import { documentsAPI, handleAPIError } from "../../utils/apiUtils";
+import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
+import { getAccessToken } from "../../utils/userUtils";
 import { toast } from "react-toastify";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaCheckCircle } from "react-icons/fa";
 
 export default function DocumentRequests() {
   const [activeCard, setActiveCard] = useState(null);
@@ -23,6 +25,7 @@ export default function DocumentRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [submittingRequest, setSubmittingRequest] = useState(false);
 
   useEffect(() => {
     const fetchDocumentRequests = async () => {
@@ -142,21 +145,95 @@ export default function DocumentRequests() {
       return;
     }
 
+    if (!selectedRequest) {
+      toast.error('No document request selected');
+      return;
+    }
+
     try {
       setUploading(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
       const formData = new FormData();
+      
+      // Get client_id from the document request
+      // API response structure: clients_info: [{ id, name, email }] or clients: [id]
+      const clientId = selectedRequest.clients_info?.[0]?.id || 
+                       selectedRequest.clients?.[0] ||
+                       selectedRequest.client_id || 
+                       selectedRequest.taxpayer_id || 
+                       selectedRequest.taxpayer?.id ||
+                       selectedRequest.client?.id;
+      
+      if (!clientId) {
+        throw new Error('Client ID is missing from document request');
+      }
+      
+      formData.append('client_id', clientId.toString());
       
       // Add all files
       uploadFiles.forEach(file => {
         formData.append('files', file);
       });
 
+      // Create documents_metadata array - one entry per file
+      // Use folder_id from request if available, otherwise null
+      const folderId = selectedRequest.folder_id || 
+                       selectedRequest.folder?.id || 
+                       null;
+      
+      const documentsMetadata = uploadFiles.map(() => ({
+        category_id: null, // Can be set if category selection is added
+        folder_id: folderId
+      }));
 
-      const response = await documentsAPI.submitDocumentRequest(selectedRequest.id, formData);
+      formData.append('documents_metadata', JSON.stringify(documentsMetadata));
 
-      if (response.success) {
-        toast.success(response.message || 'Documents submitted successfully!');
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`, config);
+      const result = await response.json();
+
+      if (!response.ok || (result.success === false && result.errors)) {
+        // Extract all error messages from the errors object
+        const errorMessages = [];
+        
+        if (result.errors && typeof result.errors === 'object') {
+          Object.keys(result.errors).forEach(field => {
+            const fieldErrors = result.errors[field];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(err => errorMessages.push(err));
+            } else if (typeof fieldErrors === 'string') {
+              errorMessages.push(fieldErrors);
+            }
+          });
+        }
+        
+        // Show all error messages in toast notifications
+        if (errorMessages.length > 0) {
+          errorMessages.forEach(msg => {
+            toast.error(msg, { position: "top-right", autoClose: 5000 });
+          });
+        } else {
+          toast.error(result.message || result.detail || 'Failed to upload documents. Please try again.', { position: "top-right", autoClose: 5000 });
+        }
+        return;
+      }
+
+      if (result.success) {
+        toast.success(result.message || 'Documents uploaded successfully!', { position: "top-right", autoClose: 3000 });
         
         // Refresh document requests list
         const refreshResponse = await documentsAPI.getDocumentRequests({ status: filterStatus, sort_by: '-due_date' });
@@ -169,11 +246,12 @@ export default function DocumentRequests() {
         setSelectedRequest(null);
         setUploadFiles([]);
       } else {
-        throw new Error(response.message || 'Failed to submit documents');
+        throw new Error(result.message || 'Failed to upload documents');
       }
     } catch (error) {
       console.error('Error submitting documents:', error);
-      toast.error(handleAPIError(error));
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to upload documents', { position: "top-right", autoClose: 5000 });
     } finally {
       setUploading(false);
     }
@@ -192,6 +270,109 @@ export default function DocumentRequests() {
     setShowUploadModal(false);
     setSelectedRequest(null);
     setUploadFiles([]);
+  };
+
+  // Open submit modal (with upload)
+  const handleSubmitRequestClick = (e, request) => {
+    e.stopPropagation();
+    setSelectedRequest(request);
+    setShowUploadModal(true);
+    setUploadFiles([]);
+  };
+
+  // Submit/Complete document request after uploading
+  const handleSubmitDocumentRequest = async () => {
+    if (uploadFiles.length === 0) {
+      toast.error('Please select at least one PDF file to upload', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    if (!selectedRequest || !selectedRequest.id) {
+      toast.error('No document request selected', { position: "top-right", autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const formData = new FormData();
+      
+      // Add task_id (document request task ID)
+      formData.append('task_id', selectedRequest.id.toString());
+      
+      // Add all files
+      uploadFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
+        body: formData
+      };
+
+      // Upload documents - API automatically submits the document request
+      const uploadResponse = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/documents/upload/`, config);
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResponse.ok || (uploadResult.success === false && uploadResult.errors)) {
+        const errorMessages = [];
+        
+        if (uploadResult.errors && typeof uploadResult.errors === 'object') {
+          Object.keys(uploadResult.errors).forEach(field => {
+            const fieldErrors = uploadResult.errors[field];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(err => errorMessages.push(err));
+            } else if (typeof fieldErrors === 'string') {
+              errorMessages.push(fieldErrors);
+            }
+          });
+        }
+        
+        if (errorMessages.length > 0) {
+          errorMessages.forEach(msg => {
+            toast.error(msg, { position: "top-right", autoClose: 5000 });
+          });
+        } else {
+          toast.error(uploadResult.message || uploadResult.detail || 'Failed to upload documents. Please try again.', { position: "top-right", autoClose: 5000 });
+        }
+        return;
+      }
+
+      if (uploadResult.success) {
+        // API automatically submits the document request, so we just show success
+        toast.success(uploadResult.message || 'Documents uploaded and request submitted successfully!', { position: "top-right", autoClose: 3000 });
+        
+        // Refresh document requests list
+        const refreshResponse = await documentsAPI.getDocumentRequests({ status: filterStatus, sort_by: '-due_date' });
+        if (refreshResponse.success && refreshResponse.data && refreshResponse.data.tasks) {
+          setDocuments(refreshResponse.data.tasks);
+        }
+
+        // Close modal and reset
+        setShowUploadModal(false);
+        setSelectedRequest(null);
+        setUploadFiles([]);
+      } else {
+        throw new Error(uploadResult.message || 'Failed to upload documents');
+      }
+    } catch (error) {
+      console.error('Error submitting document request:', error);
+      const errorMsg = handleAPIError(error);
+      toast.error(errorMsg || 'Failed to submit document request', { position: "top-right", autoClose: 5000 });
+    } finally {
+      setUploading(false);
+      setSubmittingRequest(false);
+    }
   };
 
   // Format date helper
@@ -397,14 +578,26 @@ export default function DocumentRequests() {
                         </span>
                       </div>
 
-                      {(doc.status === 'pending' || !doc.status) && (
-                        <button 
-                          className="btn btn-sm mydocs-upload-btn d-flex align-items-center gap-2"
-                          onClick={(e) => handleUploadClick(e, doc)}
-                        >
-                          <UpIcon />
-                          Upload
-                        </button>
+                      {(doc.status === 'pending' || !doc.status || doc.status === 'in_progress') && (
+                        <div className="d-flex gap-2 mt-2">
+                          <button 
+                            className="btn btn-sm d-flex align-items-center gap-2"
+                            onClick={(e) => handleSubmitRequestClick(e, doc)}
+                            style={{
+                              backgroundColor: '#32B582',
+                              borderColor: '#32B582',
+                              color: 'white',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              padding: '6px 12px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <FaCheckCircle />
+                            Submit Request
+                          </button>
+                        </div>
                       )}
 
                     </div>
@@ -507,10 +700,10 @@ export default function DocumentRequests() {
             }}>
               <div>
                 <h5 style={{ margin: 0, color: '#111827', fontSize: '18px', fontWeight: '600' }}>
-                  Upload Documents
+                  Submit Document Request
                 </h5>
                 <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: '14px' }}>
-                  {selectedRequest.task_title || 'Document Request'}
+                  {selectedRequest.task_title || 'Document Request'} - Upload PDF files to submit
                 </p>
               </div>
               <button
@@ -624,20 +817,35 @@ export default function DocumentRequests() {
                 Cancel
               </button>
               <button
-                onClick={handleSubmitDocuments}
-                disabled={uploading || uploadFiles.length === 0}
+                onClick={handleSubmitDocumentRequest}
+                disabled={uploading || submittingRequest || uploadFiles.length === 0}
                 style={{
                   padding: '10px 20px',
-                  backgroundColor: uploading || uploadFiles.length === 0 ? '#9CA3AF' : '#FF7A2F',
+                  backgroundColor: (uploading || submittingRequest || uploadFiles.length === 0) ? '#9CA3AF' : '#32B582',
                   border: 'none',
                   borderRadius: '8px',
                   color: 'white',
                   fontSize: '14px',
                   fontWeight: '500',
-                  cursor: uploading || uploadFiles.length === 0 ? 'not-allowed' : 'pointer'
+                  cursor: (uploading || submittingRequest || uploadFiles.length === 0) ? 'not-allowed' : 'pointer'
                 }}
               >
-                {uploading ? 'Uploading...' : 'Submit Documents'}
+                {uploading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Uploading...
+                  </>
+                ) : submittingRequest ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <FaCheckCircle className="me-2" />
+                    Upload & Submit Request
+                  </>
+                )}
               </button>
             </div>
           </div>

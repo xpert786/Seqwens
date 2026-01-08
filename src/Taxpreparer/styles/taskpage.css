@@ -137,6 +137,38 @@
     font-size: 13px;
     padding: 0.25rem 0;
   }
+  /* Stat cards responsive - switch to list view on smaller screens */
+  .tasks-stats-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .stat-card-body {
+    min-height: 120px;
+  }
+  
+  @media (max-width: 991px) {
+    .tasks-stats-row {
+      flex-direction: column;
+      display: flex !important;
+    }
+    
+    .tasks-stats-row > div {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex: 0 0 100% !important;
+    }
+    
+    .stat-card-body {
+      min-height: auto;
+    }
+    
+    .stat-card-header {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+  
   /* Tablet Screens (max-width: 767px) */
   @media (max-width: 767px) {
     .tasks-header-wrapper {
@@ -158,6 +190,17 @@
       justify-content: center;
       font-size: 14px;
       padding: 8px 12px;
+    }
+    
+    /* Ensure stat cards are in list view */
+    .tasks-stats-row {
+      flex-direction: column;
+    }
+    
+    .tasks-stats-row > div {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex: 0 0 100% !important;
     }
     .options-wrapper .d-flex {
         flex-direction: column;
@@ -191,7 +234,14 @@
         max-width: 90vw;
       }
       .tasks-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: 1fr; /* Single column list view on tablets */
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .task-column {
+        width: 100% !important;
+        max-width: 100% !important;
       }
       
       .task-title { font-size: 13px; }
@@ -284,6 +334,13 @@
       }
       .tasks-grid {
         grid-template-columns: 1fr; /* stack single column */
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .task-column {
+        width: 100% !important;
+        max-width: 100% !important;
       }
     
       .task-title { font-size: 12px; }
