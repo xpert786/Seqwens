@@ -10,6 +10,8 @@ export default function DataEntryFormTab({ client }) {
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [signedPdfUrl, setSignedPdfUrl] = useState(null);
+  const [signedPdfLoading, setSignedPdfLoading] = useState(false);
 
   // Mask SSN for display
   const maskSSN = (ssn) => {
@@ -39,6 +41,49 @@ export default function DataEntryFormTab({ client }) {
       return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     } catch (e) {
       return dateString;
+    }
+  };
+
+  // Fetch signed PDF form
+  const fetchSignedPdf = async () => {
+    if (!client?.id) return;
+
+    try {
+      setSignedPdfLoading(true);
+
+      const token = getAccessToken();
+      const url = `${API_BASE_URL}/firm/clients/${client.id}/signed-data-entry-form/`;
+
+      const response = await fetchWithCors(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.info('No signed PDF form available for this client');
+          return;
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      // Assuming the API returns a PDF blob or URL
+      const blob = await response.blob();
+      const pdfUrl = URL.createObjectURL(blob);
+      setSignedPdfUrl(pdfUrl);
+
+      // Open PDF in new tab
+      window.open(pdfUrl, '_blank');
+
+    } catch (err) {
+      console.error('Error fetching signed PDF:', err);
+      const errorMsg = handleAPIError(err);
+      toast.error(errorMsg || 'Failed to load signed PDF form');
+    } finally {
+      setSignedPdfLoading(false);
     }
   };
 
@@ -92,6 +137,15 @@ export default function DataEntryFormTab({ client }) {
 
     fetchFormData();
   }, [client?.id]);
+
+  // Cleanup signed PDF URL on unmount
+  useEffect(() => {
+    return () => {
+      if (signedPdfUrl) {
+        URL.revokeObjectURL(signedPdfUrl);
+      }
+    };
+  }, [signedPdfUrl]);
 
   // Render form field value
   const renderFieldValue = (key, value) => {
@@ -201,10 +255,41 @@ export default function DataEntryFormTab({ client }) {
     );
   }
 
-  const { personal_info, bank_info, income_information, tax_documents_count, taxpayer_id } = formData;
+  const { personal_info, bank_info, income_information, tax_documents_count, taxpayer_id, business_info, business_income, rental_property } = formData;
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Actions Bar */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-900 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+            Data Entry Form Actions
+          </h3>
+          <button
+            onClick={fetchSignedPdf}
+            disabled={signedPdfLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {signedPdfLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              </>
+            ) : (
+              <>
+                <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                View Signed PDF Form
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Taxpayer Summary */}
       <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
@@ -640,6 +725,490 @@ export default function DataEntryFormTab({ client }) {
           </div>
         )}
       </div>
+
+      {/* Business Income */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+          Business Income & Expenses
+        </h3>
+        {business_income ? (
+          <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Business Income ID
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('id', business_income.id)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Work Description
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('work_description', business_income.work_description)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Business Name
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('business_name', business_income.business_name)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Business Address
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('business_address', business_income.business_address)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Total Income
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                ${renderFieldValue('total_income', business_income.total_income)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Tax Forms Received
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('tax_forms_received', business_income.tax_forms_received)}
+              </div>
+            </div>
+          </div>
+
+          {/* Business Expenses */}
+          <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
+            <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Business Expenses
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Advertising
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('advertising', business_income.advertising)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Office Supplies
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('office_supplies', business_income.office_supplies)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Cleaning & Repairs
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('cleaning_repairs', business_income.cleaning_repairs)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Insurance
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('insurance', business_income.insurance)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Legal & Professional
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('legal_professional', business_income.legal_professional)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Phone/Internet/Utilities
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('phone_internet_utilities', business_income.phone_internet_utilities)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Contractors Paid
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('total_paid_contractors', business_income.total_paid_contractors)}
+                </div>
+              </div>
+            </div>
+
+            {/* Vehicle & Travel Expenses */}
+            <div className="mt-4">
+              <h5 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Vehicle & Travel
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Used Vehicle
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    {renderFieldValue('used_vehicle', business_income.used_vehicle)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Business Miles
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    {renderFieldValue('business_miles', business_income.business_miles)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Parking/Tolls/Travel
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    ${renderFieldValue('parking_tolls_travel', business_income.parking_tolls_travel)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Business Meals
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    ${renderFieldValue('business_meals', business_income.business_meals)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Other Expenses */}
+            {business_income.other_expenses && business_income.other_expenses.length > 0 && (
+              <div className="mt-4">
+                <h5 className="text-sm font-semibold text-gray-900 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Other Expenses
+                </h5>
+                <div className="space-y-2">
+                  {business_income.other_expenses.map((expense, index) => (
+                    <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                      <span className="text-sm text-gray-900 font-[BasisGrotesquePro]">{expense.description || 'N/A'}</span>
+                      <span className="text-sm text-gray-900 font-[BasisGrotesquePro] font-medium">${expense.amount || '0'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Home Office & Inventory */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Home Office Used
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('home_office_use', business_income.home_office_use)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Home Office Size
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('home_office_size', business_income.home_office_size)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Sells Products
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('sell_products', business_income.sell_products)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Health Insurance Business
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('health_insurance_business', business_income.health_insurance_business)}
+                </div>
+              </div>
+            </div>
+
+            {/* Timestamps */}
+            <div className="mt-6 pt-4 border-t border-[#E8F0FF]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Created At
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    {renderFieldValue('created_at', business_income.created_at)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Updated At
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    {renderFieldValue('updated_at', business_income.updated_at)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </>
+        ) : (
+          <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+            No business income information available
+          </div>
+        )}
+      </div>
+
+      {/* Rental Property */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+          Rental Property Information
+        </h3>
+        {rental_property ? (
+          <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Rental Property ID
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('id', rental_property.id)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Is Rental Property
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('is_rental_property', rental_property.is_rental_property)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Property Address
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('property_address', rental_property.property_address)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Property Type
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('property_type', rental_property.property_type)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Total Rent Received
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                ${renderFieldValue('total_rent_received', rental_property.total_rent_received)}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                Rented Out During Year
+              </label>
+              <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                {renderFieldValue('rented_out_during_year', rental_property.rented_out_during_year)}
+              </div>
+            </div>
+          </div>
+
+          {/* Rental Expenses */}
+          <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
+            <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Rental Property Expenses
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Advertising
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('advertising', rental_property.advertising)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Cleaning & Maintenance
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('cleaning_maintenance', rental_property.cleaning_maintenance)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Repairs
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('repairs', rental_property.repairs)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Property Management Fees
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('property_management_fees', rental_property.property_management_fees)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Insurance
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('insurance', rental_property.insurance)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Mortgage Interest
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('mortgage_interest', rental_property.mortgage_interest)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Property Taxes
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('property_taxes', rental_property.property_taxes)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Utilities
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('utilities', rental_property.utilities)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Legal & Professional
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  ${renderFieldValue('legal_professional', rental_property.legal_professional)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rental Property Details */}
+          <div className="mt-6 pt-6 border-t border-[#E8F0FF]">
+            <h4 className="text-md font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+              Additional Details
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Days Rented Out
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('days_rented_out', rental_property.days_rented_out)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Family Use
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('family_use', rental_property.family_use)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Used Vehicle
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('used_vehicle', rental_property.used_vehicle)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Sold/Stopped Renting
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('sold_or_stopped_renting', rental_property.sold_or_stopped_renting)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Bought Major Items
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('bought_major_items', rental_property.bought_major_items)}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                  Has Rental Losses
+                </label>
+                <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                  {renderFieldValue('has_rental_losses', rental_property.has_rental_losses)}
+                </div>
+              </div>
+            </div>
+
+            {/* Timestamps */}
+            <div className="mt-6 pt-4 border-t border-[#E8F0FF]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Created At
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    {renderFieldValue('created_at', rental_property.created_at)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+                    Updated At
+                  </label>
+                  <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">
+                    {renderFieldValue('updated_at', rental_property.updated_at)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </>
+        ) : (
+          <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+            No rental property information available
+          </div>
+        )}
+      </div>
+
+      {/* Business Info (if available) */}
+      {business_info && (
+        <div className="bg-white rounded-xl p-4 sm:p-6 !border border-[#E8F0FF]">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
+            Business Information
+          </h3>
+          <div className="text-sm text-gray-400 italic font-[BasisGrotesquePro]">
+            Basic business information available (detailed business income shown above)
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

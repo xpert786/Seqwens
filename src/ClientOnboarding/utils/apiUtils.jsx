@@ -982,17 +982,7 @@ export const dataIntakeAPI = {
     return await apiRequest('/taxpayer/data-entry-form/signature-status/', 'GET');
   },
 
-  // Request to sign data entry form
-  requestSignForm: async () => {
-    return await apiRequest('/taxpayer/data-entry-form/sign-request/', 'POST');
-  },
-
-  // Submit signature via SignWell (recommended)
-  signWithSignWell: async () => {
-    return await apiRequest('/taxpayer/data-entry-form/signwell-sign/', 'POST', {});
-  },
-
-  // Submit signature for data entry form (fallback method)
+  // Submit signature for data entry form
   submitSignature: async (signatureData) => {
     const { signature_image, typed_text } = signatureData;
     const requestBody = {};

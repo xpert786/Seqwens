@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { workflowAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
-import { FaTimes, FaFilePdf, FaSpinner, FaUpload } from 'react-icons/fa';
+import { FaTimes, FaFilePdf, FaSpinner, FaUpload, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa';
 
 /**
  * DocumentUploadComponent
@@ -40,17 +40,46 @@ const DocumentUploadComponent = ({
     return true;
   };
 
+  // Validate file type
+  const isValidFileType = (file) => {
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+    
+    // Allowed file extensions
+    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
+    const fileExtension = '.' + fileName.split('.').pop();
+    
+    // Check by extension
+    if (allowedExtensions.includes(fileExtension)) {
+      return true;
+    }
+    
+    // Check by MIME type
+    const allowedMimeTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    return allowedMimeTypes.includes(fileType);
+  };
+
   // Validate file
   const validateFile = (file) => {
-    // Check file type (PDF only)
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      return { valid: false, error: 'Only PDF files are allowed' };
+    // Check file type
+    if (!isValidFileType(file)) {
+      return { valid: false, error: 'Unsupported file type. Allowed: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX' };
     }
 
-    // Check file size (10MB = 10 * 1024 * 1024 bytes)
-    const maxSize = 10 * 1024 * 1024;
+    // Check file size (50MB = 50 * 1024 * 1024 bytes)
+    const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      return { valid: false, error: 'File size exceeds 10MB limit' };
+      return { valid: false, error: 'File size exceeds 50MB limit' };
     }
 
     // Check storage
@@ -203,6 +232,21 @@ const DocumentUploadComponent = ({
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  // Get appropriate icon for file type
+  const getFileIcon = (fileName) => {
+    const fileNameLower = fileName.toLowerCase();
+    if (fileNameLower.endsWith('.pdf')) {
+      return <FaFilePdf className="text-red-500 text-xl flex-shrink-0" />;
+    } else if (fileNameLower.endsWith('.doc') || fileNameLower.endsWith('.docx')) {
+      return <FaFileWord className="text-blue-500 text-xl flex-shrink-0" />;
+    } else if (fileNameLower.endsWith('.xls') || fileNameLower.endsWith('.xlsx')) {
+      return <FaFileExcel className="text-green-500 text-xl flex-shrink-0" />;
+    } else if (fileNameLower.endsWith('.jpg') || fileNameLower.endsWith('.jpeg') || fileNameLower.endsWith('.png')) {
+      return <FaFileImage className="text-purple-500 text-xl flex-shrink-0" />;
+    }
+    return <FaFilePdf className="text-gray-500 text-xl flex-shrink-0" />;
+  };
+
   return (
     <div className="document-upload-component">
       <div className="mb-4">
@@ -215,7 +259,7 @@ const DocumentUploadComponent = ({
           </p>
         )}
         <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">
-          Supported: PDF only (max 10MB per file)
+          Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (max 50MB per file)
         </p>
       </div>
 
@@ -234,7 +278,7 @@ const DocumentUploadComponent = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,application/pdf"
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           multiple
           onChange={handleFileSelect}
           className="hidden"
@@ -244,7 +288,7 @@ const DocumentUploadComponent = ({
           {isDragActive ? 'Drop files here' : 'Drag and drop files here, or click to browse'}
         </p>
         <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">
-          PDF files only, maximum 10MB per file
+          Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX - Maximum 50MB per file
         </p>
       </div>
 
@@ -260,7 +304,7 @@ const DocumentUploadComponent = ({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <FaFilePdf className="text-red-500 text-xl flex-shrink-0" />
+                {getFileIcon(fileItem.file.name)}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate font-[BasisGrotesquePro]">
                     {fileItem.file.name}

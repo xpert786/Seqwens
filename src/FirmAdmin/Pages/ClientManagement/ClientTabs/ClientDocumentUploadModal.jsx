@@ -93,34 +93,68 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
     processFiles(droppedFiles);
   }, []);
 
+  // Validate file type and size
+  const isValidFileType = (file) => {
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+    
+    // Allowed file extensions
+    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
+    const fileExtension = '.' + fileName.split('.').pop();
+    
+    // Check by extension
+    if (allowedExtensions.includes(fileExtension)) {
+      return true;
+    }
+    
+    // Check by MIME type
+    const allowedMimeTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    return allowedMimeTypes.includes(fileType);
+  };
+
   // Process files (from drag-drop or file input)
   const processFiles = (selectedFiles) => {
-    // Filter only PDF files
-    const pdfFiles = selectedFiles.filter(file => {
-      const fileName = file.name.toLowerCase();
-      const fileType = file.type.toLowerCase();
-      return fileName.endsWith('.pdf') || fileType === 'application/pdf';
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    
+    // Filter valid files
+    const validFiles = selectedFiles.filter(file => {
+      if (!isValidFileType(file)) {
+        return false;
+      }
+      if (file.size > maxSize) {
+        toast.error(`File ${file.name} exceeds 50MB limit and was skipped.`, {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        return false;
+      }
+      return true;
     });
 
-    // Show error for non-PDF files
-    const nonPdfFiles = selectedFiles.filter(file => {
-      const fileName = file.name.toLowerCase();
-      const fileType = file.type.toLowerCase();
-      return !fileName.endsWith('.pdf') && fileType !== 'application/pdf';
-    });
-
-    if (nonPdfFiles.length > 0) {
-      toast.error(`Only PDF files are allowed. ${nonPdfFiles.length} non-PDF file(s) were ignored.`, {
+    // Show error for invalid files
+    const invalidFiles = selectedFiles.filter(file => !isValidFileType(file));
+    if (invalidFiles.length > 0) {
+      toast.error(`${invalidFiles.length} file(s) have unsupported formats and were ignored. Supported: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX`, {
         position: 'top-right',
         autoClose: 5000
       });
     }
 
-    if (pdfFiles.length === 0) {
+    if (validFiles.length === 0) {
       return;
     }
 
-    const newFiles = pdfFiles.map((file) => ({
+    const newFiles = validFiles.map((file) => ({
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
       fileObject: file
@@ -209,7 +243,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
     <Modal show={show} onHide={resetModal} centered backdrop="static" size="lg" className="upload-modal">
       <Modal.Body className="p-4">
         <h5 className="upload-heading">Upload Documents</h5>
-        <p className="upload-subheading">Upload PDF documents for this client</p>
+        <p className="upload-subheading">Upload documents for this client</p>
 
         <p className="upload-section-title">Add Files</p>
 
@@ -235,14 +269,14 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
           <p className="upload-text">
             <strong className="texts">Drop files here or click to browse</strong>
           </p>
-          <p className="upload-hint">Supported formats: PDF only - Max 10MB per file</p>
+          <p className="upload-hint">Supported formats: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX - Max 50MB per file</p>
           <input
             type="file"
             multiple
             hidden
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept=".pdf,application/pdf"
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             disabled={uploading}
           />
         </div>

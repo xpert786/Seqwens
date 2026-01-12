@@ -49,19 +49,22 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative" style={{ maxHeight: '90vh', overflowY: 'auto', border: '1px solid #E8F0FF' }}>
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Sign Data Entry Form</h5>
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+            <h5 className="text-xl font-bold mb-1" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>Sign Data Entry Form</h5>
+            <p className="text-sm mb-0" style={{ color: '#4B5563', fontFamily: 'BasisGrotesquePro' }}>
               Please sign your data entry form to complete the process
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center !rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors"
+            style={{ backgroundColor: '#F3F7FF', color: '#3B4A66' }}
             disabled={loading}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#E8F0FF'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#F3F7FF'}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -76,10 +79,24 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
             onClick={() => setSignatureType('draw')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors font-[BasisGrotesquePro] ${
               signatureType === 'draw'
-                ? 'bg-[#3AD6F2] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'text-white'
+                : 'text-gray-700'
             }`}
+            style={{
+              backgroundColor: signatureType === 'draw' ? '#F56D2D' : '#F3F7FF',
+              border: signatureType === 'draw' ? '1px solid #F56D2D' : '1px solid #E8F0FF'
+            }}
             disabled={loading}
+            onMouseEnter={(e) => {
+              if (signatureType !== 'draw') {
+                e.target.style.backgroundColor = '#E8F0FF';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (signatureType !== 'draw') {
+                e.target.style.backgroundColor = '#F3F7FF';
+              }
+            }}
           >
             Draw Signature
           </button>
@@ -88,10 +105,24 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
             onClick={() => setSignatureType('type')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors font-[BasisGrotesquePro] ${
               signatureType === 'type'
-                ? 'bg-[#3AD6F2] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'text-white'
+                : 'text-gray-700'
             }`}
+            style={{
+              backgroundColor: signatureType === 'type' ? '#F56D2D' : '#F3F7FF',
+              border: signatureType === 'type' ? '1px solid #F56D2D' : '1px solid #E8F0FF'
+            }}
             disabled={loading}
+            onMouseEnter={(e) => {
+              if (signatureType !== 'type') {
+                e.target.style.backgroundColor = '#E8F0FF';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (signatureType !== 'type') {
+                e.target.style.backgroundColor = '#F3F7FF';
+              }
+            }}
           >
             Type Name
           </button>
@@ -100,13 +131,14 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
         {/* Signature Canvas */}
         {signatureType === 'draw' ? (
           <div className="mb-4">
-            <div className="border-2 border-[#E8F0FF] rounded-lg p-4 bg-white">
+            <div className="border-2 rounded-lg p-4 bg-white" style={{ borderColor: '#E8F0FF' }}>
               <SignatureCanvas
                 ref={signaturePadRef}
                 canvasProps={{
                   width: 600,
                   height: 200,
-                  className: 'signature-canvas w-full border border-gray-200 rounded'
+                  className: 'signature-canvas w-full border rounded',
+                  style: { borderColor: '#E8F0FF' }
                 }}
                 backgroundColor="#ffffff"
                 penColor="#3B4A66"
@@ -116,7 +148,8 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
               <button
                 type="button"
                 onClick={handleClear}
-                className="text-sm text-[#3AD6F2] hover:text-[#2BA5C0] font-medium font-[BasisGrotesquePro]"
+                className="text-sm font-medium transition-colors font-[BasisGrotesquePro]"
+                style={{ color: '#F56D2D' }}
                 disabled={loading}
               >
                 Clear
@@ -125,7 +158,7 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
           </div>
         ) : (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#3B4A66', fontFamily: 'BasisGrotesquePro' }}>
               Enter your full name
             </label>
             <input
@@ -133,8 +166,22 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
               value={typedSignature}
               onChange={(e) => setTypedSignature(e.target.value)}
               placeholder="John Doe"
-              className="w-full rounded-lg border border-[#E8F0FF] px-4 py-2.5 text-gray-900 placeholder-gray-400 font-[BasisGrotesquePro] text-sm focus:border-[#3AD6F2] focus:outline-none focus:ring-2 focus:ring-[#3AD6F2]/30"
+              className="w-full rounded-lg px-4 py-2.5 text-sm font-[BasisGrotesquePro] focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                color: '#3B4A66',
+                backgroundColor: '#ffffff',
+                borderColor: '#E8F0FF',
+                border: '1px solid #E8F0FF'
+              }}
               disabled={loading}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#F56D2D';
+                e.target.style.boxShadow = '0 0 0 2px rgba(245, 109, 45, 0.2)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#E8F0FF';
+                e.target.style.boxShadow = 'none';
+              }}
             />
           </div>
         )}
@@ -144,16 +191,42 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
           <button
             type="button"
             onClick={handleClose}
-            className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-[#F8FAFC] font-[BasisGrotesquePro]"
+            className="inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro]"
+            style={{
+              color: '#4B5563',
+              backgroundColor: '#ffffff',
+              borderColor: '#E8F0FF'
+            }}
             disabled={loading}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#F3F7FF';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#ffffff';
+            }}
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: '#F56D2D',
+              color: '#ffffff',
+              border: '1px solid #F56D2D'
+            }}
             disabled={loading}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.backgroundColor = '#E67E47';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.target.style.backgroundColor = '#F56D2D';
+              }
+            }}
           >
             {loading ? (
               <>

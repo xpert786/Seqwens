@@ -9,6 +9,8 @@ import { getAccessToken, getUserData } from "../utils/userUtils";
 import { getApiBaseUrl } from "../utils/corsConfig";
 import { toast } from "react-toastify";
 import SignatureModal from "../components/SignatureModal";
+import ComprehensiveBusinessForm from "../components/ComprehensiveBusinessForm";
+import RentalPropertyForm from "../components/RentalPropertyForm";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState([]);
@@ -76,7 +78,97 @@ export default function DataIntakeForm() {
   const [openDropdowns, setOpenDropdowns] = useState({
     businessInfo: false,
     rentalProperty: false,
+    rentalProperty: false,
   });
+
+  // Business Information State
+  const [businesses, setBusinesses] = useState([]);
+  const [isAddingBusiness, setIsAddingBusiness] = useState(false);
+  const [editingBusinessId, setEditingBusinessId] = useState(null);
+  
+  // Comprehensive Business Data State
+  const [businessData, setBusinessData] = useState({
+    workDescription: '',
+    businessName: '',
+    businessNameType: 'same',
+    differentBusinessName: '',
+    startedDuringYear: false,
+    homeBased: false,
+    businessAddress: '',
+    businessCity: '',
+    businessState: '',
+    businessZip: '',
+    totalIncome: '',
+    taxFormsReceived: 'none',
+    issuedRefunds: false,
+    totalRefunded: '',
+    otherBusinessIncome: false,
+    otherBusinessIncomeAmount: '',
+    advertising: '',
+    officeSupplies: '',
+    cleaningRepairs: '',
+    insurance: '',
+    legalProfessional: '',
+    phoneInternetUtilities: '',
+    paidContractors: false,
+    totalPaidContractors: '',
+    otherExpenses: [],
+    otherExpenseDescription: '',
+    otherExpenseAmount: '',
+    usedVehicle: false,
+    businessMiles: '',
+    parkingTollsTravel: '',
+    businessMeals: '',
+    travelExpenses: '',
+    homeOfficeUse: false,
+    homeOfficeSize: '',
+    sellProducts: false,
+    costItemsResold: '',
+    inventoryLeftEnd: '',
+    healthInsuranceBusiness: false,
+    selfEmployedRetirement: false,
+    retirementAmount: '',
+    isAccurate: false
+  });
+
+  // Rental Property Data State
+  const [rentalData, setRentalData] = useState({
+    isRentalProperty: false,
+    propertyAddress: '',
+    propertyCity: '',
+    propertyState: '',
+    propertyZip: '',
+    propertyType: 'single',
+    ownershipType: '',
+    rentedOutDuringYear: false,
+    daysRentedOut: '',
+    familyUse: false,
+    familyUseDays: '',
+    totalRentReceived: '',
+    taxFormsReceived: 'none',
+    advertising: '',
+    cleaningMaintenance: '',
+    repairs: '',
+    propertyManagementFees: '',
+    insurance: '',
+    mortgageInterest: '',
+    propertyTaxes: '',
+    utilities: '',
+    legalProfessional: '',
+    supplies: '',
+    otherExpenses: [],
+    otherExpenseDescription: '',
+    otherExpenseAmount: '',
+    soldOrStoppedRenting: false,
+    boughtMajorItems: false,
+    hasRentalLosses: false,
+    isComplete: false
+  });
+
+  // Rental Properties List State
+  const [rentalProperties, setRentalProperties] = useState([]);
+  const [isAddingRentalProperty, setIsAddingRentalProperty] = useState(false);
+  const [editingRentalPropertyId, setEditingRentalPropertyId] = useState(null);
 
   const navigate = useNavigate();
   const firstDependentFirstNameRef = useRef(null);
@@ -92,59 +184,326 @@ export default function DataIntakeForm() {
 
   // Track if user has existing data (to determine POST vs PATCH)
   const [hasExistingData, setHasExistingData] = useState(false);
+  const [hasExistingBusinessData, setHasExistingBusinessData] = useState(false);
+  const [hasExistingRentalData, setHasExistingRentalData] = useState(false);
 
-  // Signature modal state
+  // Signature state
   const [showSignatureModal, setShowSignatureModal] = useState(false);
-  const [signatureRequested, setSignatureRequested] = useState(false);
   const [signatureLoading, setSignatureLoading] = useState(false);
-  const [signatureStatus, setSignatureStatus] = useState(null);
-  const [checkingSignatureStatus, setCheckingSignatureStatus] = useState(false);
+  const [isSigned, setIsSigned] = useState(false);
 
-  // Check signature status on mount and periodically if pending
-  useEffect(() => {
-    const checkSignatureStatus = async () => {
-      try {
-        setCheckingSignatureStatus(true);
-        const response = await dataIntakeAPI.getSignatureStatus();
+  // Submit loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-        if (response.success && response.data) {
-          const { is_signed, signature_status, signature_request_status } = response.data;
 
-          // Update signature status based on API response
-          if (is_signed) {
-            setSignatureStatus('signed');
-            setSignatureRequested(true);
-          } else if (signature_status === 'pending' || signature_request_status === 'pending') {
-            setSignatureStatus('pending');
-            setSignatureRequested(true);
-          } else if (signature_status === 'not_requested') {
-            setSignatureStatus('not_requested');
-            setSignatureRequested(false);
-          } else {
-            setSignatureStatus(signature_status || 'not_requested');
-            setSignatureRequested(false);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking signature status:', error);
-        // If form doesn't exist or error, default to not_requested
-        setSignatureStatus('not_requested');
-        setSignatureRequested(false);
-      } finally {
-        setCheckingSignatureStatus(false);
+  // Handle Rental Property Save
+  const handleSaveRentalProperty = async (rentalData) => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        toast.error("Authentication required. Please login again.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
       }
-    };
 
-    checkSignatureStatus();
+      console.log("Saving rental property info directly...");
+      
+      const apiBaseUrl = getApiBaseUrl();
+      const response = await fetch(`${apiBaseUrl}/taxpayer/rental-property-info/`, {
+        method: hasExistingRentalData ? "PATCH" : "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          is_rental_property: rentalData.isRentalProperty || false,
+          property_address: rentalData.propertyAddress || "",
+          property_city: rentalData.propertyCity || "",
+          property_state: rentalData.propertyState || "",
+          property_zip: rentalData.propertyZip || "",
+          property_type: rentalData.propertyType || "single_family",
+          ownership_type: rentalData.ownershipType || "",
+          rented_out_during_year: rentalData.rentedOutDuringYear || false,
+          days_rented_out: rentalData.daysRentedOut || 0,
+          family_use: rentalData.familyUse || false,
+          family_use_days: rentalData.familyUseDays || 0,
+          total_rent_received: rentalData.totalRentReceived || "0.00",
+          tax_forms_received: rentalData.taxFormsReceived || [],
+          advertising: rentalData.advertising || "0.00",
+          cleaning_maintenance: rentalData.cleaningMaintenance || "0.00",
+          repairs: rentalData.repairs || "0.00",
+          property_management_fees: rentalData.propertyManagementFees || "0.00",
+          insurance: rentalData.insurance || "0.00",
+          mortgage_interest: rentalData.mortgageInterest || "0.00",
+          property_taxes: rentalData.propertyTaxes || "0.00",
+          utilities: rentalData.utilities || "0.00",
+          legal_professional: rentalData.legalProfessional || "0.00",
+          supplies: rentalData.supplies || "0.00",
+          other_expenses: rentalData.otherExpenses || [],
+          sold_or_stopped_renting: rentalData.soldOrStoppedRenting || false,
+          bought_major_items: rentalData.boughtMajorItems || false,
+          has_rental_losses: rentalData.hasRentalLosses || false
+        })
+      });
 
-    // If status is pending, check periodically (every 10 seconds) to see if it's been signed
-    // Use a ref to track the current status to avoid stale closure
-    const interval = setInterval(() => {
-      checkSignatureStatus();
-    }, 10000); // Check every 10 seconds
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Update local state
+        if (editingRentalPropertyId) {
+          // Update existing rental property
+          setRentalProperties(prev => prev.map(rp => 
+            rp.id === editingRentalPropertyId ? { ...rp, ...rentalData } : rp
+          ));
+        } else {
+          // Add new rental property
+          const newRentalProperty = {
+            id: result.data?.id || Date.now(),
+            ...rentalData
+          };
+          setRentalProperties(prev => [...prev, newRentalProperty]);
+        }
+        setHasExistingRentalData(true);
+        setEditingRentalPropertyId(null);
+        setIsAddingRentalProperty(false);
+        
+        // Show success message
+        toast.success('Rental property information saved successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        console.log("Rental property info saved successfully:", result);
+      } else {
+        // Handle error
+        const errorMessage = result?.message || 'Failed to save rental property information';
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        console.error("Rental property save error:", result);
+      }
+    } catch (error) {
+      console.error("Error saving rental property info:", error);
+      toast.error('Failed to save rental property information', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
 
-    return () => clearInterval(interval);
-  }, []);
+  const handleCancelRentalProperty = () => {
+    setRentalData({
+      isRentalProperty: false,
+      propertyAddress: '',
+      propertyCity: '',
+      propertyState: '',
+      propertyZip: '',
+      propertyType: 'single',
+      ownershipType: '',
+      rentedOutDuringYear: false,
+      daysRentedOut: '',
+      familyUse: false,
+      familyUseDays: '',
+      totalRentReceived: '',
+      taxFormsReceived: 'none',
+      advertising: '',
+      cleaningMaintenance: '',
+      repairs: '',
+      propertyManagementFees: '',
+      insurance: '',
+      mortgageInterest: '',
+      propertyTaxes: '',
+      utilities: '',
+      legalProfessional: '',
+      supplies: '',
+      otherExpenses: [],
+      otherExpenseDescription: '',
+      otherExpenseAmount: '',
+      soldOrStoppedRenting: false,
+      boughtMajorItems: false,
+      hasRentalLosses: false,
+      isComplete: false
+    });
+    setIsAddingRentalProperty(false);
+    setEditingRentalPropertyId(null);
+  };
+
+  const handleEditRentalProperty = (rentalPropertyId) => {
+    const rentalProperty = rentalProperties.find(rp => rp.id === rentalPropertyId);
+    if (rentalProperty) {
+      setRentalData(rentalProperty);
+      setEditingRentalPropertyId(rentalPropertyId);
+      setIsAddingRentalProperty(true);
+    }
+  };
+
+  const handleRemoveRentalProperty = (rentalPropertyId) => {
+    setRentalProperties(prev => prev.filter(rp => rp.id !== rentalPropertyId));
+  };
+
+  // Handle Business Info Save
+  const handleSaveBusiness = async (businessData) => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        toast.error("Authentication required. Please login again.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      console.log("Saving business info directly...");
+      
+      const apiBaseUrl = getApiBaseUrl();
+      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
+        method: hasExistingBusinessData ? "PATCH" : "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          // Basic Business Info
+          business_name: businessData.businessName || "",
+          business_address: businessData.businessAddress || "",
+          business_city: businessData.businessCity || "",
+          business_state: businessData.businessState || "",
+          business_zip: businessData.businessZip || "",
+
+          // About Your Business
+          work_description: businessData.workDescription || "",
+          business_name_type: businessData.businessNameType || "same",
+          different_business_name: businessData.differentBusinessName || "",
+          started_during_year: businessData.startedDuringYear || false,
+          home_based: businessData.homeBased || false,
+
+          // Income Information
+          total_income: businessData.totalIncome || "",
+          tax_forms_received: businessData.taxFormsReceived || "none",
+          issued_refunds: businessData.issuedRefunds || false,
+          total_refunded: businessData.totalRefunded || "",
+          other_business_income: businessData.otherBusinessIncome || false,
+          other_business_income_amount: businessData.otherBusinessIncomeAmount || "",
+
+          // Business Expenses
+          advertising: businessData.advertising || "",
+          office_supplies: businessData.officeSupplies || "",
+          cleaning_repairs: businessData.cleaningRepairs || "",
+          insurance: businessData.insurance || "",
+          legal_professional: businessData.legalProfessional || "",
+          phone_internet_utilities: businessData.phoneInternetUtilities || "",
+          paid_contractors: businessData.paidContractors || false,
+          total_paid_contractors: businessData.totalPaidContractors || "",
+          other_expenses: businessData.otherExpenses || [],
+
+          // Vehicle & Travel
+          used_vehicle: businessData.usedVehicle || false,
+          business_miles: businessData.businessMiles || "",
+          parking_tolls_travel: businessData.parkingTollsTravel || "",
+
+          // Food & Travel
+          business_meals: businessData.businessMeals || "",
+          travel_expenses: businessData.travelExpenses || "",
+
+          // Home Office
+          home_office_use: businessData.homeOfficeUse || false,
+          home_office_size: businessData.homeOfficeSize || "",
+
+          // Inventory
+          sell_products: businessData.sellProducts || false,
+          cost_items_resold: businessData.costItemsResold || "",
+          inventory_left_end: businessData.inventoryLeftEnd || "",
+
+          // Health Insurance & Retirement
+          health_insurance_business: businessData.healthInsuranceBusiness || false,
+          self_employed_retirement: businessData.selfEmployedRetirement || false,
+          retirement_amount: businessData.retirementAmount || "",
+
+          // Confirmation
+          is_accurate: businessData.isAccurate || false
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Update local state
+        setBusinessData(businessData);
+        setHasExistingBusinessData(true);
+        
+        // Update businesses list for UI display
+        const businessForDisplay = {
+          id: result.data?.id || businessData.id || Date.now(),
+          businessName: businessData.businessName || "",
+          businessType: "Self-Employment",
+          income: businessData.totalIncome || "0",
+          address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
+          workDescription: businessData.workDescription || "",
+          updated_at: new Date().toISOString()
+        };
+
+        setBusinesses(prev => {
+          const existingIndex = prev.findIndex(b => b.id === businessForDisplay.id);
+          if (existingIndex >= 0) {
+            // Update existing business
+            const updated = [...prev];
+            updated[existingIndex] = businessForDisplay;
+            return updated;
+          } else {
+            // Add new business
+            return [...prev, businessForDisplay];
+          }
+        });
+        
+        // Show success message
+        toast.success('Business information saved successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        console.log("Business info saved successfully:", result);
+      } else {
+        // Handle error
+        const errorMessage = result?.message || 'Failed to save business information';
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        console.error("Business info save error:", result);
+      }
+    } catch (error) {
+      console.error("Error saving business info:", error);
+      toast.error('Failed to save business information', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const handleEditBusiness = (businessId) => {
+    setEditingBusinessId(businessId);
+    setIsAddingBusiness(true);
+  };
+
+  const handleRemoveBusiness = (businessId) => {
+    setBusinesses(prev => prev.filter(b => b.id !== businessId));
+  };
+
+  const handleCancelBusiness = () => {
+    setIsAddingBusiness(false);
+    setEditingBusinessId(null);
+  };
 
   // Check if user already has data intake data and pre-fill form
   useEffect(() => {
@@ -158,9 +517,9 @@ export default function DataIntakeForm() {
 
         console.log("Checking for existing data intake data...");
 
-        // Call both APIs to check for existing data
+        // Call APIs to check for existing data
         const apiBaseUrl = getApiBaseUrl();
-        const [personalDataResponse, fileDataResponse] = await Promise.all([
+        const [personalDataResponse, fileDataResponse, businessInfoResponse, rentalPropertyResponse] = await Promise.all([
           // Check for personal data
           fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
             method: "GET",
@@ -171,6 +530,22 @@ export default function DataIntakeForm() {
           }),
           // Check for uploaded files
           fetch(`${apiBaseUrl}/taxpayer/income-data-intake/`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }),
+          // Check for business info
+          fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }),
+          // Check for rental property info
+          fetch(`${apiBaseUrl}/taxpayer/rental-property-info/`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -191,15 +566,8 @@ export default function DataIntakeForm() {
             setHasExistingData(true);
 
             // Pre-fill ALL form fields with existing data
-            // Extract only country code from phone number if it exists
-            let phoneValue = "";
-            if (data.phone_number) {
-              // Extract country code from phone number (format: +1XXXXXXXXXX)
-              const phoneMatch = data.phone_number.match(/^\+(\d{1,3})/);
-              if (phoneMatch) {
-                phoneValue = `+${phoneMatch[1]}`; // Only keep country code
-              }
-            }
+            // Use full phone number if it exists
+            let phoneValue = data.phone_number || "";
 
             setPersonalInfo({
               firstName: data.first_name || "",
@@ -208,7 +576,7 @@ export default function DataIntakeForm() {
               dateOfBirth: formatDateToYYYYMMDD(data.dateOfBirth),
               ssn: data.ssn || "",
               email: data.email || "",
-              phone: phoneValue, // Only country code, not full number
+              phone: phoneValue, // Full phone number
               address: data.address || "",
               city: data.city || "",
               state: data.state || "",
@@ -303,6 +671,16 @@ export default function DataIntakeForm() {
               setDependents(emptyDependents);
             }
 
+            // Set businesses
+            // Assuming businesses are stored in personal_info.businesses based on plan
+            // Fallback to empty array if not present
+            if (data.businesses && Array.isArray(data.businesses)) {
+              setBusinesses(data.businesses);
+            }
+
+            // Set signature status
+            setIsSigned(data.is_signed || false);
+
             console.log("Form pre-filled with existing personal data");
           }
         } else {
@@ -343,6 +721,143 @@ export default function DataIntakeForm() {
           }
         } else {
           console.log("No existing file data found");
+        }
+
+        // Handle business info response
+        if (businessInfoResponse.ok) {
+          const businessResult = await businessInfoResponse.json();
+          console.log("Existing business info found:", businessResult);
+
+          if (businessResult.success && businessResult.data && Array.isArray(businessResult.data) && businessResult.data.length > 0) {
+            const businessData = businessResult.data[0]; // Get first business from array
+
+            // Set flag for existing business data - will use PATCH
+            setHasExistingBusinessData(true);
+
+            // Update business data state with fetched info
+            setBusinessData({
+              // Map API data to form structure
+              businessName: businessData.business_name || "",
+              businessAddress: businessData.business_address || "",
+              businessCity: businessData.business_city || "",
+              businessState: businessData.business_state || "",
+              businessZip: businessData.business_zip || "",
+              workDescription: businessData.work_description || "",
+              businessNameType: businessData.business_name_type || "same",
+              differentBusinessName: businessData.different_business_name || "",
+              startedDuringYear: businessData.started_during_year || false,
+              homeBased: businessData.home_based || false,
+              totalIncome: businessData.total_income || "",
+              taxFormsReceived: businessData.tax_forms_received || "none",
+              issuedRefunds: businessData.issued_refunds || false,
+              totalRefunded: businessData.total_refunded || "",
+              otherBusinessIncome: businessData.other_business_income || false,
+              otherBusinessIncomeAmount: businessData.other_business_income_amount || "",
+              advertising: businessData.advertising || "",
+              officeSupplies: businessData.office_supplies || "",
+              cleaningRepairs: businessData.cleaning_repairs || "",
+              insurance: businessData.insurance || "",
+              legalProfessional: businessData.legal_professional || "",
+              phoneInternetUtilities: businessData.phone_internet_utilities || "",
+              paidContractors: businessData.paid_contractors || false,
+              totalPaidContractors: businessData.total_paid_contractors || "",
+              otherExpenses: businessData.other_expenses || [],
+              usedVehicle: businessData.used_vehicle || false,
+              businessMiles: businessData.business_miles || "",
+              parkingTollsTravel: businessData.parking_tolls_travel || "",
+              businessMeals: businessData.business_meals || "",
+              travelExpenses: businessData.travel_expenses || "",
+              homeOfficeUse: businessData.home_office_use || false,
+              homeOfficeSize: businessData.home_office_size || "",
+              sellProducts: businessData.sell_products || false,
+              costItemsResold: businessData.cost_items_resold || "",
+              inventoryLeftEnd: businessData.inventory_left_end || "",
+              healthInsuranceBusiness: businessData.health_insurance_business || false,
+              selfEmployedRetirement: businessData.self_employed_retirement || false,
+              retirementAmount: businessData.retirement_amount || "",
+              isAccurate: businessData.is_accurate || false,
+              id: businessData.id || null
+            });
+
+            // Also populate the businesses array for UI display
+            const businessForDisplay = {
+              id: businessData.id || Date.now(),
+              businessName: businessData.business_name || "",
+              businessType: "Self-Employment", // Default type for business-info API
+              income: businessData.total_income || "0",
+              address: `${businessData.business_address || ""} ${businessData.business_city || ""} ${businessData.business_state || ""} ${businessData.business_zip || ""}`.trim(),
+              workDescription: businessData.work_description || "",
+              created_at: businessData.created_at,
+              updated_at: businessData.updated_at
+            };
+            setBusinesses([businessForDisplay]);
+
+            console.log("Business info exists - will use PATCH for future operations:", businessData);
+          } else {
+            // No existing business data found - will use POST for future operations
+            console.log("No existing business info found - will use POST for future operations");
+            setHasExistingBusinessData(false);
+          }
+        } else {
+          console.log("Business info API call failed");
+        }
+
+        // Handle rental property response
+        if (rentalPropertyResponse.ok) {
+          const rentalResult = await rentalPropertyResponse.json();
+          console.log("Existing rental property info found:", rentalResult);
+
+          if (rentalResult.success && rentalResult.data && Array.isArray(rentalResult.data) && rentalResult.data.length > 0) {
+            const rentalData = rentalResult.data[0]; // Get first rental property from array
+
+            // Set flag for existing rental data - will use PATCH
+            setHasExistingRentalData(true);
+
+            // Update rental properties list with fetched info
+            const rentalProperty = {
+              id: rentalData.id || Date.now(),
+              isRentalProperty: rentalData.is_rental_property || false,
+              propertyAddress: rentalData.property_address || "",
+              propertyCity: rentalData.property_city || "",
+              propertyState: rentalData.property_state || "",
+              propertyZip: rentalData.property_zip || "",
+              propertyType: rentalData.property_type || "single_family",
+              ownershipType: rentalData.ownership_type || "",
+              rentedOutDuringYear: rentalData.rented_out_during_year || false,
+              daysRentedOut: rentalData.days_rented_out || 0,
+              familyUse: rentalData.family_use || false,
+              familyUseDays: rentalData.family_use_days || 0,
+              totalRentReceived: rentalData.total_rent_received || "0.00",
+              taxFormsReceived: rentalData.tax_forms_received || [],
+              advertising: rentalData.advertising || "0.00",
+              cleaningMaintenance: rentalData.cleaning_maintenance || "0.00",
+              repairs: rentalData.repairs || "0.00",
+              propertyManagementFees: rentalData.property_management_fees || "0.00",
+              insurance: rentalData.insurance || "0.00",
+              mortgageInterest: rentalData.mortgage_interest || "0.00",
+              propertyTaxes: rentalData.property_taxes || "0.00",
+              utilities: rentalData.utilities || "0.00",
+              legalProfessional: rentalData.legal_professional || "0.00",
+              supplies: rentalData.supplies || "0.00",
+              otherExpenses: rentalData.other_expenses || [],
+              soldOrStoppedRenting: rentalData.sold_or_stopped_renting || false,
+              boughtMajorItems: rentalData.bought_major_items || false,
+              hasRentalLosses: rentalData.has_rental_losses || false,
+              isComplete: rentalData.is_complete || false
+            };
+
+            setRentalProperties([rentalProperty]);
+            console.log("Rental property info exists - will use PATCH for future operations:", rentalData);
+          } else {
+            // No existing rental property data found - will use POST for future operations
+            console.log("No existing rental property info found - will use POST for future operations");
+            setHasExistingRentalData(false);
+            setRentalProperties([]);
+          }
+        } else {
+          console.log("Rental property info API call failed");
+          setHasExistingRentalData(false);
+          setRentalProperties([]);
         }
       } catch (error) {
         console.error("Error checking existing data:", error);
@@ -593,6 +1108,21 @@ export default function DataIntakeForm() {
           })
           : [String(errorData.errors.tax_documents)];
         generalErrorMessages.push(...taxDocErrors);
+        
+        // Check if the error message indicates tax documents are required
+        const hasRequiredError = taxDocErrors.some(error => 
+          error.toLowerCase().includes('tax documents are required') ||
+          error.toLowerCase().includes('supporting document') ||
+          error.toLowerCase().includes('upload at least one')
+        );
+        
+        if (hasRequiredError) {
+          // Clear the uploaded file when tax documents are required
+          setUploadedFile(null);
+          setUploadStatus(null);
+          setUploadProgress(0);
+          setUploadError(null);
+        }
       }
 
       // Helper function to recursively parse nested error objects
@@ -837,12 +1367,18 @@ export default function DataIntakeForm() {
       });
     }
 
+    if (Object.keys(errors).length > 0) {
+      console.log("Validation failed with errors:", errors);
+    }
     return errors;
   };
 
   const handleSubmit = async () => {
     // Clear previous general errors
     setGeneralErrors([]);
+    
+    // Set loading state to true
+    setIsSubmitting(true);
 
     // Validate required fields first
     const validationErrors = validateRequiredFields();
@@ -863,8 +1399,11 @@ export default function DataIntakeForm() {
         className: "custom-toast-error",
         bodyClassName: "custom-toast-body",
       });
+      setIsSubmitting(false);
       return;
     }
+
+    console.log("Submit button clicked - Initializing submission...");
 
     try {
       // Reset upload states if file exists
@@ -874,7 +1413,7 @@ export default function DataIntakeForm() {
         setUploadError(null);
       }
 
-      // Build the personal data payload for first API
+      // Build the personal data payload for first API (without business and rental data)
       const personalDataPayload = {
         personal_info: {
           first_name: personalInfo.firstName || "",
@@ -883,7 +1422,7 @@ export default function DataIntakeForm() {
           dateOfBirth: personalInfo.dateOfBirth ? formatDateToYYYYMMDD(personalInfo.dateOfBirth) : "",
           ssn: personalInfo.ssn || "",
           email: personalInfo.email || "",
-          phone: personalInfo.phone || "",
+          phone_number: personalInfo.phone || "",
           address: personalInfo.address || "",
           city: personalInfo.city || "",
           state: personalInfo.state || "",
@@ -910,7 +1449,8 @@ export default function DataIntakeForm() {
             dependent_last_name: dep.lastName || "",
             dependent_dateOfBirth: dep.dob ? formatDateToYYYYMMDD(dep.dob) : "",
             dependent_ssn: dep.ssn || ""
-          })) : []
+          })) : [],
+          businesses: businesses // Include businesses in payload
         },
         bank_info: {
           bank_name: bankInfo.bankName || "",
@@ -919,6 +1459,15 @@ export default function DataIntakeForm() {
           account_number: bankInfo.accountNumber || "",
           confirm_account_number: bankInfo.confirmAccountNumber || ""
         }
+      };
+
+      // Build separate payloads for business and rental data
+      const businessDataPayload = {
+        business_income: businessData
+      };
+
+      const rentalDataPayload = {
+        rental_properties: rentalProperties // Include list of rental properties
       };
 
       // Log the payload for debugging
@@ -970,8 +1519,10 @@ export default function DataIntakeForm() {
         confirm_account_number: bankInfo.confirmAccountNumber
       });
 
-      // Call both APIs simultaneously using Promise.all
+      // Call all APIs simultaneously using Promise.all
       const apiBaseUrl = getApiBaseUrl();
+      console.log(`Making request to: ${apiBaseUrl}/taxpayer/personal-data-intake/`);
+
       const [personalDataResult, fileUploadResult] = await Promise.all([
         // First API: Personal data (JSON) - Use PATCH if data exists, POST if new
         fetch(`${apiBaseUrl}/taxpayer/personal-data-intake/`, {
@@ -1029,7 +1580,7 @@ export default function DataIntakeForm() {
         })
       ]);
 
-      // Check if both requests were successful
+      // Check if all requests were successful
       if (!personalDataResult.ok) {
         // Try to parse error response for field-level errors
         try {
@@ -1043,6 +1594,7 @@ export default function DataIntakeForm() {
         }
         throw new Error(`Personal data API failed: ${personalDataResult.status} ${personalDataResult.statusText}`);
       }
+
 
       // Handle file upload response (could be XMLHttpRequest or Response)
       if (hasFileToUpload) {
@@ -1093,32 +1645,28 @@ export default function DataIntakeForm() {
       // Store original state before updating
       const wasNewSubmission = !hasExistingData;
 
-      // Handle success response
+      // Handle success response - show single consolidated success message
       if (personalDataResponse.success) {
         // Mark that data now exists (for future updates)
         setHasExistingData(true);
-
-        // Show success message 
-        toast.success(personalDataResponse.message || "Data saved successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
       }
 
-      if (fileUploadResponse && fileUploadResponse.success) {
-        toast.success(fileUploadResponse.message || "Documents uploaded successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+      // Show single success message for the entire form submission
+      const hasFileUpload = fileUploadResponse && fileUploadResponse.success;
+
+      let message = "Data intake form updated successfully!";
+      if (hasFileUpload) {
+        message = "Data intake form and documents updated successfully!";
       }
+      
+      toast.success(message, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
 
       // Clear any previous errors on success
       setFieldErrors({});
@@ -1154,6 +1702,9 @@ export default function DataIntakeForm() {
         className: "custom-toast-error",
         bodyClassName: "custom-toast-body",
       });
+    } finally {
+      // Reset loading state
+      setIsSubmitting(false);
     }
   };
 
@@ -1342,59 +1893,9 @@ export default function DataIntakeForm() {
     }));
   };
 
-  // Handle signature request via SignWell
-  const handleRequestSign = async () => {
-    try {
-      setSignatureLoading(true);
-      const response = await dataIntakeAPI.signWithSignWell();
-
-      if (response.success && response.data) {
-        setSignatureRequested(true);
-        setSignatureStatus(response.data?.status || 'pending');
-
-        // Get the signing URL (prefer embedded_url if available, otherwise signing_url)
-        const signerUrls = response.data?.signer_urls;
-        const userData = getUserData();
-        const userEmail = userData?.email || userData?.user?.email;
-
-        let signingUrl = response.data?.signing_url;
-
-        // Try to get embedded URL for the current user
-        if (signerUrls && userEmail && signerUrls[userEmail]) {
-          signingUrl = signerUrls[userEmail].embedded_url || signerUrls[userEmail].signing_url;
-        } else if (signerUrls && Object.keys(signerUrls).length > 0) {
-          // If no email match, use the first signer's URL
-          const firstSigner = Object.values(signerUrls)[0];
-          signingUrl = firstSigner.embedded_url || firstSigner.signing_url;
-        }
-
-        if (signingUrl) {
-          toast.success(response.message || 'Redirecting to SignWell for signing...', {
-            position: 'top-right',
-            autoClose: 3000
-          });
-
-          // Open SignWell in a new tab/window
-          window.open(signingUrl, '_blank', 'noopener,noreferrer');
-
-          // Optionally, you can also redirect in the same window:
-          // window.location.href = signingUrl;
-        } else {
-          throw new Error('No signing URL received from SignWell');
-        }
-      } else {
-        throw new Error(response.message || 'Failed to create SignWell signing request');
-      }
-    } catch (error) {
-      console.error('Error requesting SignWell signature:', error);
-      const errorMsg = handleAPIError(error);
-      toast.error(errorMsg || 'Failed to create SignWell signing request. Please try again.', {
-        position: 'top-right',
-        autoClose: 5000
-      });
-    } finally {
-      setSignatureLoading(false);
-    }
+  // Handle manual signature submission
+  const handleManualSign = () => {
+    setShowSignatureModal(true);
   };
 
   // Handle signature submission
@@ -1405,8 +1906,7 @@ export default function DataIntakeForm() {
 
       if (response.success) {
         // Update signature status
-        setSignatureStatus('signed');
-        setSignatureRequested(true);
+        setIsSigned(true);
         setShowSignatureModal(false);
 
         toast.success(response.message || 'Signature submitted successfully!', {
@@ -1414,7 +1914,7 @@ export default function DataIntakeForm() {
           autoClose: 3000
         });
 
-        // Optionally redirect to dashboard after signing
+        // Redirect to dashboard after successful signature
         setTimeout(() => {
           navigate("/dashboard");
         }, 1500);
@@ -1706,19 +2206,19 @@ export default function DataIntakeForm() {
               Phone
             </label>
             <PhoneInput
-              country={spousePhoneCountry}
-              value={spouseInfo.phone || ''}
+              country={personalPhoneCountry}
+              value={personalInfo.phone || ''}
               onChange={(phone) => {
-                handleSpouseInfoChange('phone', phone);
+                handlePersonalInfoChange('phone', phone);
                 // Clear error when user starts typing
                 if (getFieldError('personalInfo.phone')) {
                   clearFieldError('personalInfo.phone');
                 }
               }}
               onCountryChange={(countryCode) => {
-                setSpousePhoneCountry(countryCode.toLowerCase());
+                setPersonalPhoneCountry(countryCode.toLowerCase());
               }}
-              inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
+              inputClass={`form-control ${getFieldError('personalInfo.phone') ? 'is-invalid' : ''}`}
               containerClass="w-100 phone-input-container"
               inputStyle={{
                 height: '45px',
@@ -1728,28 +2228,28 @@ export default function DataIntakeForm() {
                 paddingBottom: '6px',
                 width: '100%',
                 fontSize: '1rem',
-                border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
+                border: getFieldError('personalInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
                 borderRadius: '0.375rem',
                 backgroundColor: '#fff'
               }}
               enableSearch={true}
               countryCodeEditable={false}
-              data-field="spouseInfo.phone"
+              data-field="personalInfo.phone"
               ref={(el) => {
                 if (el && el.inputElement) {
-                  if (!fieldRefs.current['spouseInfo.phone']) {
-                    fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                  if (!fieldRefs.current['personalInfo.phone']) {
+                    fieldRefs.current['personalInfo.phone'] = el.inputElement;
                   }
                 }
               }}
             />
-            {getFieldError('spouseInfo.phone') && (
+            {getFieldError('personalInfo.phone') && (
               <div className="invalid-feedback d-block" style={{
                 fontSize: "12px",
                 color: "#EF4444",
                 marginTop: "4px"
               }}>
-                {getFieldError('spouseInfo.phone')}
+                {getFieldError('personalInfo.phone')}
               </div>
             )}
           </div>
@@ -2814,14 +3314,85 @@ export default function DataIntakeForm() {
                 padding: "16px",
                 marginTop: "8px"
               }}>
-                <p style={{
-                  fontFamily: "BasisGrotesquePro",
-                  fontSize: "14px",
-                  color: "#4B5563",
-                  margin: 0
-                }}>
-                  Business Information form will be displayed here. This is static data for now.
-                </p>
+                {/* List of existing businesses */}
+                {businesses.length > 0 && !isAddingBusiness && (
+                  <div className="mb-4">
+                    {businesses.map((business) => (
+                      <div key={business.id} className="d-flex justify-content-between align-items-start p-3 mb-2 rounded border border-gray-100 bg-gray-50">
+                        <div className="flex-grow-1">
+                          <h6 className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: 600 }}>{business.businessName}</h6>
+                          <div className="text-muted small mb-1">{business.workDescription}</div>
+                          <div className="text-muted small">Total Income: ${parseFloat(business.income).toLocaleString()}</div>
+                          {business.address && (
+                            <div className="text-muted small">Address: {business.address}</div>
+                          )}
+                          {business.created_at && (
+                            <div className="text-muted small">
+                              Last updated: {new Date(business.updated_at || business.created_at).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="d-flex gap-2 ms-3">
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleEditBusiness(business.id)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleRemoveBusiness(business.id)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      className="btn btn-sm btn-outline-primary mt-2"
+                      onClick={() => {
+                        setEditingBusinessId(null);
+                        setIsAddingBusiness(true);
+                      }}
+                    >
+                      <FaPlus className="me-1" /> Add Another Business
+                    </button>
+                  </div>
+                )}
+
+                {/* Initial Add Button (when no businesses and not adding) */}
+                {businesses.length === 0 && !isAddingBusiness && (
+                  <div className="text-center py-4">
+                    <p style={{
+                      fontFamily: "BasisGrotesquePro",
+                      fontSize: "14px",
+                      color: "#4B5563",
+                    }}>
+                      Do you have any business income to report?
+                    </p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setIsAddingBusiness(true)}
+                      style={{
+                        fontFamily: "BasisGrotesquePro",
+                        fontWeight: 500,
+                        background: "#3B4A66",
+                        borderColor: "#3B4A66"
+                      }}
+                    >
+                      Add a Business
+                    </button>
+                  </div>
+                )}
+
+                {/* Business Form */}
+                {isAddingBusiness && (
+                  <ComprehensiveBusinessForm
+                    onSave={handleSaveBusiness}
+                    onCancel={handleCancelBusiness}
+                    initialData={editingBusinessId ? businessData : null}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -2841,12 +3412,12 @@ export default function DataIntakeForm() {
               }}
             >
               <span style={{
-                fontFamily: "BasisGrotesquePro",
+                color: "#3B4A66",
                 fontSize: "14px",
                 fontWeight: "500",
-                color: "#3B4A66"
+                fontFamily: "BasisGrotesquePro"
               }}>
-                Rental Property Details
+                Rental Property Information
               </span>
               {openDropdowns.rentalProperty ? (
                 <FaChevronUp style={{ color: "#3B4A66" }} />
@@ -2862,14 +3433,146 @@ export default function DataIntakeForm() {
                 padding: "16px",
                 marginTop: "8px"
               }}>
-                <p style={{
-                  fontFamily: "BasisGrotesquePro",
-                  fontSize: "14px",
-                  color: "#4B5563",
-                  margin: 0
-                }}>
-                  Rental Property Details form will be displayed here. This is static data for now.
-                </p>
+                {/* Add Rental Property Button */}
+                {!isAddingRentalProperty && (
+                  <div className="mb-3 text-center">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setEditingRentalPropertyId(null);
+                        setIsAddingRentalProperty(true);
+                        setRentalData({
+                          isRentalProperty: false,
+                          propertyAddress: '',
+                          propertyCity: '',
+                          propertyState: '',
+                          propertyZip: '',
+                          propertyType: 'single',
+                          ownershipType: '',
+                          rentedOutDuringYear: false,
+                          daysRentedOut: '',
+                          familyUse: false,
+                          familyUseDays: '',
+                          totalRentReceived: '',
+                          taxFormsReceived: 'none',
+                          advertising: '',
+                          cleaningMaintenance: '',
+                          repairs: '',
+                          propertyManagementFees: '',
+                          insurance: '',
+                          mortgageInterest: '',
+                          propertyTaxes: '',
+                          utilities: '',
+                          legalProfessional: '',
+                          supplies: '',
+                          otherExpenses: [],
+                          otherExpenseDescription: '',
+                          otherExpenseAmount: '',
+                          soldOrStoppedRenting: false,
+                          boughtMajorItems: false,
+                          hasRentalLosses: false,
+                          isComplete: false
+                        });
+                      }}
+                      style={{
+                        fontFamily: "BasisGrotesquePro",
+                        fontWeight: 500,
+                        background: "#3B4A66",
+                        borderColor: "#3B4A66"
+                      }}
+                    >
+                      Add a Rental Property
+                    </button>
+                  </div>
+                )}
+
+                {/* Rental Properties List */}
+                {rentalProperties.length > 0 && (
+                  <div className="mb-3">
+                    <h6 style={{
+                      color: "#3B4A66",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      fontFamily: "BasisGrotesquePro",
+                      marginBottom: "12px"
+                    }}>
+                      Your Rental Properties
+                    </h6>
+                    {rentalProperties.map((property, index) => (
+                      <div key={property.id} className="border rounded p-3 mb-2" style={{
+                        borderColor: "#E8F0FF",
+                        backgroundColor: "#F9FAFF"
+                      }}>
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 style={{
+                              color: "#3B4A66",
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              fontFamily: "BasisGrotesquePro",
+                              marginBottom: "4px"
+                            }}>
+                              {property.propertyAddress || `Property ${index + 1}`}
+                            </h6>
+                            <p style={{
+                              color: "#4B5563",
+                              fontSize: "12px",
+                              fontFamily: "BasisGrotesquePro",
+                              marginBottom: "0"
+                            }}>
+                              {property.propertyCity && property.propertyState ? 
+                                `${property.propertyCity}, ${property.propertyState} ${property.propertyZip}` : 
+                                'Address not specified'
+                              }
+                            </p>
+                            {property.totalRentReceived && (
+                              <p style={{
+                                color: "#F56D2D",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                fontFamily: "BasisGrotesquePro",
+                                marginBottom: "0"
+                              }}>
+                                Rent: ${property.totalRentReceived}
+                              </p>
+                            )}
+                          </div>
+                          <div className="d-flex gap-2">
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => handleEditRentalProperty(property.id)}
+                              style={{ 
+                                fontFamily: "BasisGrotesquePro",
+                                fontSize: "12px"
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => handleRemoveRentalProperty(property.id)}
+                              style={{ 
+                                fontFamily: "BasisGrotesquePro",
+                                fontSize: "12px"
+                              }}
+                            >
+                              <FaTrash size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Rental Property Form */}
+                {isAddingRentalProperty && (
+                  <RentalPropertyForm
+                    onSave={handleSaveRentalProperty}
+                    onCancel={handleCancelRentalProperty}
+                    initialData={editingRentalPropertyId ? rentalProperties.find(rp => rp.id === editingRentalPropertyId) : null}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -3288,10 +3991,29 @@ export default function DataIntakeForm() {
         <button
           className="btn text-white"
           style={{ backgroundColor: '#F56D2D' }}
-          onClick={handleSubmit}
-
+          onClick={(e) => {
+            console.log("Submit button onClick triggered");
+            handleSubmit();
+          }}
+          disabled={isSubmitting}
         >
-          Submit
+          {isSubmitting ? (
+            <>
+              <span 
+                className="spinner-border spinner-border-sm me-2" 
+                role="status" 
+                aria-hidden="true"
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  borderWidth: '2px'
+                }}
+              ></span>
+              Submitting...
+            </>
+          ) : (
+            'Save & Submit Information'
+          )}
         </button>
       </div>
 
@@ -3317,56 +4039,13 @@ export default function DataIntakeForm() {
                 fontSize: '14px',
                 fontFamily: 'BasisGrotesquePro'
               }}>
-                {signatureStatus === 'signed'
-                  ? 'Your form has been signed successfully via SignWell!'
-                  : signatureStatus === 'pending'
-                    ? 'Please complete your signature in SignWell to finalize the form. If you closed the window, click the button below to open it again.'
-                    : 'Sign your completed data entry form using SignWell to create a professionally signed PDF document for your records.'}
+                {isSigned
+                  ? 'Your form has been signed successfully!'
+                  : 'Sign your completed data entry form to create a professionally signed PDF document for your records.'}
               </p>
             </div>
 
-            {signatureStatus !== 'signed' && !checkingSignatureStatus && (
-              <button
-                className="btn text-white"
-                style={{
-                  backgroundColor: signatureRequested ? '#3AD6F2' : '#F56D2D',
-                  borderRadius: '8px',
-                  fontFamily: 'BasisGrotesquePro'
-                }}
-                onClick={handleRequestSign}
-                disabled={signatureLoading}
-              >
-                {signatureLoading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    {signatureRequested ? 'Opening SignWell...' : 'Preparing SignWell...'}
-                  </>
-                ) : signatureRequested ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
-                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                    </svg>
-                    Sign with SignWell
-                  </>
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
-                      <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                    </svg>
-                    Sign with SignWell
-                  </>
-                )}
-              </button>
-            )}
-
-            {checkingSignatureStatus && (
-              <div className="d-flex align-items-center gap-2">
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span style={{ fontFamily: 'BasisGrotesquePro' }}>Checking signature status...</span>
-              </div>
-            )}
-
-            {signatureStatus === 'signed' && (
+            {isSigned ? (
               <div className="d-flex align-items-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -3374,6 +4053,33 @@ export default function DataIntakeForm() {
                 <span style={{ color: '#22C55E', fontFamily: 'BasisGrotesquePro', fontWeight: '500' }}>
                   Form Signed Successfully
                 </span>
+              </div>
+            ) : (
+              <div className="w-100 d-flex justify-content-center">
+                <button
+                  className="btn text-white"
+                  style={{
+                    backgroundColor: '#F56D2D',
+                    borderRadius: '8px',
+                    fontFamily: 'BasisGrotesquePro'
+                  }}
+                  onClick={handleManualSign}
+                  disabled={signatureLoading}
+                >
+                  {signatureLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                        <path d="M8 2L10 6L14 7L10 8L8 12L6 8L2 7L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      </svg>
+                      Sign Form
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
