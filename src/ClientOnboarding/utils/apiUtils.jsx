@@ -7482,9 +7482,7 @@ export const workflowAPI = {
   },
 
   // Delete workflow instance
-  deleteWorkflowInstance: async (instanceId) => {
-    return await apiRequest(`/taxpayer/firm/workflows/instances/${instanceId}/`, 'DELETE');
-  },
+
 
   // Taxpayer Workflow APIs
   // Get taxpayer workflow

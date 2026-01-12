@@ -78,7 +78,6 @@ export default function DataIntakeForm() {
   const [openDropdowns, setOpenDropdowns] = useState({
     businessInfo: false,
     rentalProperty: false,
-    rentalProperty: false,
   });
 
   // Business Information State
