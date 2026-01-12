@@ -1,0 +1,175 @@
+.pdf-annotation-modal .modal-dialog {
+  max-width: 95vw;
+  height: 95vh;
+}
+
+.pdf-annotation-modal .modal-content {
+  height: 100%;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.pdf-annotation-modal .modal-header {
+  border-bottom: 1px solid #444;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.pdf-annotation-modal .modal-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+}
+
+.pdf-annotation-modal .modal-footer {
+  border-top: 1px solid #444;
+  background: #1a1a1a;
+}
+
+.toolbox {
+  background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+  border-bottom: 2px solid #555;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.canvas-container {
+  background: #1a1a1a;
+  background-image: 
+    linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+    linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  overflow: auto;
+}
+
+.canvas-container canvas {
+  background: white;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.canvas-container canvas:hover {
+  transform: scale(1.01);
+}
+
+/* Button styles */
+.toolbox .btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.toolbox .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.toolbox .btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-color: #0056b3;
+}
+
+.toolbox .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-color: #0056b3;
+}
+
+.toolbox .btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border-color: #1e7e34;
+}
+
+.toolbox .btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border-color: #c82333;
+}
+
+.toolbox .btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  border-color: #545b62;
+}
+
+.toolbox .btn-outline-secondary:hover {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  border-color: #545b62;
+}
+
+/* Vertical divider */
+.vr {
+  height: 30px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, #666, transparent);
+  margin: 0 10px;
+}
+
+/* Annotation info badge */
+.position-absolute.top-0.start-0.mt-2.ms-2 {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pdf-annotation-modal .modal-dialog {
+    max-width: 100vw;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  .toolbox .btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .toolbox .btn span {
+    display: none;
+  }
+}
+
+/* Loading state */
+.canvas-container.loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #333;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Annotation highlight */
+.annotation-highlight {
+  border: 2px dashed #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  pointer-events: none;
+  position: absolute;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}

@@ -441,7 +441,7 @@ export default function DataIntakeForm() {
         // Update businesses list for UI display
         const businessForDisplay = {
           id: result.data?.id || businessData.id || Date.now(),
-          businessName: businessData.businessName || "",
+            businessName: businessData.businessName || "",
           businessType: "Self-Employment",
           income: businessData.totalIncome || "0",
           address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
@@ -459,7 +459,7 @@ export default function DataIntakeForm() {
           } else {
             // Add new business
             return [...prev, businessForDisplay];
-          }
+        }
         });
         
         // Show success message
@@ -730,10 +730,10 @@ export default function DataIntakeForm() {
 
           if (businessResult.success && businessResult.data && Array.isArray(businessResult.data) && businessResult.data.length > 0) {
             const businessData = businessResult.data[0]; // Get first business from array
-
+            
             // Set flag for existing business data - will use PATCH
             setHasExistingBusinessData(true);
-
+            
             // Update business data state with fetched info
             setBusinessData({
               // Map API data to form structure
@@ -809,10 +809,10 @@ export default function DataIntakeForm() {
 
           if (rentalResult.success && rentalResult.data && Array.isArray(rentalResult.data) && rentalResult.data.length > 0) {
             const rentalData = rentalResult.data[0]; // Get first rental property from array
-
+            
             // Set flag for existing rental data - will use PATCH
             setHasExistingRentalData(true);
-
+            
             // Update rental properties list with fetched info
             const rentalProperty = {
               id: rentalData.id || Date.now(),
@@ -1653,10 +1653,10 @@ export default function DataIntakeForm() {
 
       // Show single success message for the entire form submission
       const hasFileUpload = fileUploadResponse && fileUploadResponse.success;
-
+      
       let message = "Data intake form updated successfully!";
       if (hasFileUpload) {
-        message = "Data intake form and documents updated successfully!";
+        message = "Data intake form and documents updated successfully!"; 
       }
       
       toast.success(message, {
@@ -3329,7 +3329,7 @@ export default function DataIntakeForm() {
                           {business.created_at && (
                             <div className="text-muted small">
                               Last updated: {new Date(business.updated_at || business.created_at).toLocaleDateString()}
-                            </div>
+                        </div>
                           )}
                         </div>
                         <div className="d-flex gap-2 ms-3">

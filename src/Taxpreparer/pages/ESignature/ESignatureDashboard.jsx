@@ -6,6 +6,7 @@ import { getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus } from 'react-icons/fi';
 import ProcessingModal from '../../../components/ProcessingModal';
+import PdfSignatureModal from '../components/PdfSignatureModal';
 import '../../styles/esignature-dashboard.css';
 
 export default function ESignatureDashboard() {
@@ -47,6 +48,10 @@ export default function ESignatureDashboard() {
   const [signWellEmbeddedUrl, setSignWellEmbeddedUrl] = useState(null);
   const [currentSigningRequest, setCurrentSigningRequest] = useState(null);
   const signWellIframeRef = useRef(null);
+  
+  // PDF Signature Modal state
+  const [showPdfSignatureModal, setShowPdfSignatureModal] = useState(false);
+  const [currentSignatureRequest, setCurrentSignatureRequest] = useState(null);
   
   // Data for dropdowns
   const [clients, setClients] = useState([]);
@@ -126,8 +131,8 @@ export default function ESignatureDashboard() {
       setLoading(true);
       setError(null);
       
-      // Fetch all e-sign documents using new custom API
-      const response = await customESignAPI.listESignDocuments();
+      // Fetch signature requests using the new API endpoint
+      const response = await customESignAPI.listSignatureRequests();
       
       if (response.success && response.data) {
         let requests = [];
@@ -141,13 +146,13 @@ export default function ESignatureDashboard() {
         setSignatureRequests(requests);
         calculateStatistics(requests);
       } else {
-        throw new Error(response.message || 'Failed to fetch e-sign documents');
+        throw new Error(response.message || 'Failed to fetch signature requests');
       }
     } catch (err) {
-      console.error('Error fetching e-sign documents:', err);
+      console.error('Error fetching signature requests:', err);
       const errorMsg = handleAPIError(err);
       setError(errorMsg);
-      toast.error(errorMsg || 'Failed to load e-sign documents', {
+      toast.error(errorMsg || 'Failed to load signature requests', {
         position: "top-right",
         autoClose: 3000,
       });
@@ -360,6 +365,12 @@ export default function ESignatureDashboard() {
         autoClose: 5000
       });
     }
+  };
+
+  const handleSignDocument = (request, e) => {
+    e?.stopPropagation();
+    setCurrentSignatureRequest(request);
+    setShowPdfSignatureModal(true);
   };
 
   const handleViewDetails = (request, e) => {
@@ -1143,7 +1154,7 @@ export default function ESignatureDashboard() {
                         }
                         return null;
                       })()}
-                      <div className="d-flex flex-wrap gap-3" style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                      <div className="d-flex flex-wrap gap-3 align-items-center" style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '12px' }}>
                         <span>
                           Created: {formatDate(request.created_at)}
                         </span>
@@ -1158,6 +1169,27 @@ export default function ESignatureDashboard() {
                           </span>
                         )}
                       </div>
+                      {/* Sign Document Button for Ready Status */}
+                      {request.status === 'ready' && (
+                        <div className="mt-2">
+                          <button
+                            onClick={(e) => handleSignDocument(request, e)}
+                            className="btn"
+                            style={{
+                              backgroundColor: '#00C0C6',
+                              color: 'white',
+                              border: 'none',
+                              fontFamily: 'BasisGrotesquePro',
+                              fontWeight: '500',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              fontSize: '14px'
+                            }}
+                          >
+                            Sign Document
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1317,49 +1349,9 @@ export default function ESignatureDashboard() {
             </div>
 
             {/* Spouse Email (required if has_spouse) */}
-            {hasSpouse && (
-              <div>
-                <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
-                  Spouse Email <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={spouseEmail}
-                  onChange={(e) => setSpouseEmail(e.target.value)}
-                  placeholder="spouse@example.com"
-                  style={{
-                    borderColor: '#E5E7EB',
-                    borderRadius: '8px',
-                    opacity: creating || processing ? 0.6 : 1
-                  }}
-                  disabled={creating || processing}
-                  required
-                />
-              </div>
-            )}
+            
 
-            {/* Spouse Name (optional) */}
-            {hasSpouse && (
-              <div>
-                <label style={{ color: '#3B4A66', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
-                  Spouse Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={spouseName}
-                  onChange={(e) => setSpouseName(e.target.value)}
-                  placeholder="Jane Doe"
-                  style={{
-                    borderColor: '#E5E7EB',
-                    borderRadius: '8px',
-                    opacity: creating || processing ? 0.6 : 1
-                  }}
-                  disabled={creating || processing}
-                />
-              </div>
-            )}
+          
 
             {/* Preparer Must Sign Checkbox */}
             <div>
@@ -1719,6 +1711,19 @@ export default function ESignatureDashboard() {
           </button>
         </Modal.Footer>
       </Modal>
+
+      {/* PDF Signature Modal */}
+      <PdfSignatureModal
+        isOpen={showPdfSignatureModal}
+        onClose={() => {
+          setShowPdfSignatureModal(false);
+          setCurrentSignatureRequest(null);
+        }}
+        request={currentSignatureRequest}
+        onSignComplete={() => {
+          fetchSignatureRequests();
+        }}
+      />
 
     </div>
   );

@@ -6061,6 +6061,21 @@ export const customESignAPI = {
     }
     return await apiRequest(`/taxpayer/esign/custom/${esignId}/`, 'DELETE');
   },
+
+  // List signature requests
+  // GET /api/taxpayer/signatures/requests/
+  listSignatureRequests: async () => {
+    return await apiRequest('/taxpayer/signatures/requests/', 'GET');
+  },
+
+  // Submit signature with coordinates
+  // POST /api/taxpayer/signatures/<request_id>/sign/
+  submitSignature: async (requestId, signatureData) => {
+    if (!requestId) {
+      throw new Error('request_id is required');
+    }
+    return await apiRequest(`/taxpayer/signatures/${requestId}/sign/`, 'POST', signatureData);
+  },
 };
 
 // SignWell API functions

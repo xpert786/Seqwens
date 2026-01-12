@@ -13,7 +13,8 @@ export default defineConfig({
       'jspdf',
       'jspdf-autotable',
       '@stripe/stripe-js',
-      '@stripe/react-stripe-js'
+      '@stripe/react-stripe-js',
+      'pdfjs-dist'
     ],
     esbuildOptions: {
       define: {

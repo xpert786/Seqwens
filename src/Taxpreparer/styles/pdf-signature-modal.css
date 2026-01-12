@@ -1,0 +1,16 @@
+.pdf-signature-modal {
+  font-family: 'BasisGrotesquePro', sans-serif;
+}
+
+.signature-canvas {
+  background-color: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 4px;
+  cursor: crosshair;
+}
+
+.signature-canvas:focus {
+  outline: none;
+  border-color: #00C0C6;
+}
+

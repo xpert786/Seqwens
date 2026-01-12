@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaEye, FaSyncAlt } from "react-icons/fa";
+import { FiPenTool } from "react-icons/fi";
 import { Modal } from 'react-bootstrap';
 import "../../styles/Popup.css";
 import "../../styles/Esignpop.css"
 import ESignatureModal from "../../components/ESignatureModal";
+import AdvancedPDFViewer from "../../../components/AdvancedPDFViewer";
 import page1Image from "../../../assets/page1.png";
 import page2Image from "../../../assets/page2.png";
 import page3Image from "../../../assets/page3.png";
@@ -12,6 +14,8 @@ import { signatureRequestsAPI, signWellAPI, handleAPIError } from "../../utils/a
 import { getUserData } from "../../utils/userUtils";
 import { toast } from "react-toastify";
 import PDFViewer from "../../../components/PDFViewer";
+import { annotationAPI, prepareAnnotationDataForPython } from "../../../utils/annotationAPI";
+import PdfAnnotationModal from "../../components/PdfAnnotationModal";
 
 import { FileIcon, ProfileIcon, LegalIcon, SignatureIcon, DateIcon, InitialIcon, CompletedIcon, AwaitingIcon, Sign2WhiteIcon } from "../icons";
 import Pagination from "../Pagination";
@@ -21,6 +25,9 @@ export default function ESignature() {
   const [showModal, setShowModal] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showAdvancedPDFModal, setShowAdvancedPDFModal] = useState(false);
+  const [showAnnotationModal, setShowAnnotationModal] = useState(false);
+  const [selectedDocumentForAnnotation, setSelectedDocumentForAnnotation] = useState(null);
   const [activePage, setActivePage] = useState(0);
   const [showCommentPanel, setShowCommentPanel] = useState(false);
   const [markers, setMarkers] = useState([]);
@@ -313,6 +320,7 @@ export default function ESignature() {
   const getStatusDisplay = (status) => {
     const statusMap = {
       'pending': 'Signature Required',
+      'ready': 'Ready',
       'sent': 'Sent',
       'viewed': 'Viewed',
       'created': 'Created',
@@ -327,6 +335,7 @@ export default function ESignature() {
   const getStatusBadgeColor = (status) => {
     const colorMap = {
       'pending': { bg: '#FFF4E6', color: '#F49C2D', border: '#F49C2D' },
+      'ready': { bg: '#D1FAE5', color: '#065F46', border: '#065F46' },
       'sent': { bg: '#E0F2FE', color: '#0369A1', border: '#0369A1' },
       'viewed': { bg: '#DBEAFE', color: '#1E40AF', border: '#1E40AF' },
       'completed': { bg: '#D1FAE5', color: '#065F46', border: '#065F46' },
@@ -596,24 +605,51 @@ export default function ESignature() {
 
                 <div className="d-flex gap-4 mt-3 mt-md-0">
                   {request.document_url && (
-                    <button
-                      className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        setSelectedIndex(originalIndex);
-                        
-                        // Check signature fields when opening preview
-                        const esignDocId = request.id || request.esign_id || request.document;
-                        if (esignDocId) {
-                          await checkSignatureFieldsForDocument(esignDocId);
-                        }
-                        
-                        setShowPreviewModal(true);
-                      }}
-                    >
-                      <FaEye size={14} className="icon-eye" />
-                      Preview
-                    </button>
+                    <>
+                      <button
+                        className="btn d-flex align-items-center gap-2 rounded btn-preview-trigger"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          setSelectedIndex(originalIndex);
+                          
+                          // Check signature fields when opening preview
+                          const esignDocId = request.id || request.esign_id || request.document;
+                          if (esignDocId) {
+                            await checkSignatureFieldsForDocument(esignDocId);
+                          }
+                          
+                          setShowPreviewModal(true);
+                        }}
+                      >
+                        <FaEye size={14} className="icon-eye" />
+                        Preview
+                      </button>
+                      
+                      <button
+                        className="btn d-flex align-items-center gap-2 rounded"
+                        style={{
+                          backgroundColor: "#00C0C6",
+                          color: "#fff",
+                          border: "none",
+                          fontSize: "12px",
+                          fontWeight: "500"
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedIndex(originalIndex);
+                          setSelectedDocumentForAnnotation({
+                            url: request.document_url,
+                            name: request.document_name || request.title || 'Document',
+                            id: request.id || request.esign_id || request.document
+                          });
+                          setShowAnnotationModal(true);
+                        }}
+                        title="Open PDF Annotation Tool"
+                      >
+                        <FiPenTool size={14} />
+                        Annotate PDF
+                      </button>
+                    </>
                   )}
 
                   {request.document_url && (() => {
@@ -647,7 +683,7 @@ export default function ESignature() {
                     );
                   })()}
 
-                  {((request.status === 'pending' || request.status === 'sent' || request.status === 'viewed' || request.status === 'created') || request.embedded_url) && 
+                  {((request.status === 'pending' || request.status === 'ready' || request.status === 'sent' || request.status === 'viewed' || request.status === 'created') || request.embedded_url) && 
                    request.status !== 'signed' && 
                    request.status !== 'completed' && (
                     <button
@@ -773,8 +809,6 @@ export default function ESignature() {
                           }
 
                           // Fallback to existing SignWell API workflow if embedded_url is not available
-                          const sendingToast = toast.loading('Sending document to SignWell...');
-
                           try {
                             const userData = getUserData();
                             const signerEmail = userData?.email || selectedRequest.client_email || '';
@@ -785,7 +819,7 @@ export default function ESignature() {
                               throw new Error('Signer email is required for SignWell signature');
                             }
 
-                            const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
+                            const documentId = selectedRequest.document || selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
                             const applyResponse = await signWellAPI.applySignature({
                               document_id: documentId,
                               signer_email: signerEmail,
@@ -795,7 +829,6 @@ export default function ESignature() {
                             });
 
                             if (applyResponse.success && applyResponse.data && applyResponse.data.signing_url) {
-                              toast.dismiss(sendingToast);
                               toast.success('Document sent to SignWell. Opening signing page...', {
                                 autoClose: 3000
                               });
@@ -811,7 +844,11 @@ export default function ESignature() {
                                 }
                               }, 2000);
                             } else {
-                              throw new Error(applyResponse.message || 'Failed to apply SignWell signature');
+                              // API returned success: false - show error but don't open modal
+                              toast.error(applyResponse.message || 'Failed to apply SignWell signature', {
+                                autoClose: 5000
+                              });
+                              return; // Don't proceed to modal
                             }
                           } catch (applyError) {
                             console.error('Error applying SignWell signature:', applyError);
@@ -843,6 +880,37 @@ export default function ESignature() {
                         <Sign2WhiteIcon size={14} />
                       </div>
                       Sign Document
+                    </button>
+                  )}
+
+                  {/* Advanced PDF Editor Button -> Opens Annotation Modal */}
+                  {request.document_url && (
+                    <button
+                      className="btn d-flex align-items-center gap-2 rounded text-white"
+                      style={{ backgroundColor: "#00C0C6" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedIndex(originalIndex);
+                        setSelectedDocumentForAnnotation({
+                          url: request.document_url,
+                          name: request.document_name || request.title || 'Document',
+                          id: request.id || request.esign_id || request.document
+                        });
+                        setShowAnnotationModal(true);
+                      }}
+                    >
+                      <div
+                        className="d-flex align-items-center justify-content-center"
+                        style={{
+                          width: "30px",
+                          height: "30px",
+                          borderRadius: "50%",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        <FaEye size={14} />
+                      </div>
+                      Advanced Editor
                     </button>
                   )}
                 </div>
@@ -994,8 +1062,6 @@ export default function ESignature() {
                       return;
                     }
 
-                    const sendingToast = toast.loading('Sending document to SignWell...');
-
                     try {
                       const userData = getUserData();
                       const signerEmail = userData?.email || selectedRequest.client_email || '';
@@ -1006,7 +1072,7 @@ export default function ESignature() {
                         throw new Error('Signer email is required for SignWell signature');
                       }
 
-                      const documentId = selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
+                      const documentId = selectedRequest.document || selectedRequest.document_id || selectedRequest.document?.id || selectedRequest.id;
                       const applyResponse = await signWellAPI.applySignature({
                         document_id: documentId,
                         signer_email: signerEmail,
@@ -1016,7 +1082,6 @@ export default function ESignature() {
                       });
 
                       if (applyResponse.success && applyResponse.data && applyResponse.data.signing_url) {
-                        toast.dismiss(sendingToast);
                         toast.success('Document sent to SignWell. Opening signing page...', {
                           autoClose: 3000
                         });
@@ -1024,7 +1089,7 @@ export default function ESignature() {
                         // Open SignWell signing URL in new tab
                         window.open(applyResponse.data.signing_url, '_blank');
 
-                        // Close the modal
+                        // Close modal
                         setShowModal(false);
                         setSelectedIndex(null);
 
@@ -1036,7 +1101,11 @@ export default function ESignature() {
                           }
                         }, 2000);
                       } else {
-                        throw new Error(applyResponse.message || 'Failed to apply SignWell signature');
+                        // API returned success: false - show error but don't open modal
+                        toast.error(applyResponse.message || 'Failed to apply SignWell signature', {
+                          autoClose: 5000
+                        });
+                        return; // Don't proceed to modal
                       }
                     } catch (applyError) {
                       console.error('Error applying SignWell signature:', applyError);
@@ -1194,6 +1263,124 @@ export default function ESignature() {
         </Modal.Footer>
       </Modal>
 
+      {/* PDF Annotation Modal */}
+      {showAnnotationModal && selectedDocumentForAnnotation && (
+        <PdfAnnotationModal
+          isOpen={showAnnotationModal}
+          onClose={() => {
+            setShowAnnotationModal(false);
+            setSelectedDocumentForAnnotation(null);
+          }}
+          documentUrl={selectedDocumentForAnnotation.url}
+          documentName={selectedDocumentForAnnotation.name}
+          requestId={selectedDocumentForAnnotation.id}
+          onSave={async (annotationData) => {
+            try {
+              // Prepare data for Python backend
+              const canvasInfo = {
+                width: 800,
+                height: 600,
+                pdfWidth: annotationData.pdf_scale * 612 || 612, // Standard PDF width in points
+                pdfHeight: annotationData.pdf_scale * 792 || 792, // Standard PDF height in points
+                scale: annotationData.pdf_scale || 1.5
+              };
+
+              // Format annotations for backend
+              const formattedAnnotations = {
+                ...annotationData,
+                metadata: {
+                  request_id: selectedDocumentForAnnotation.id,
+                  document_url: selectedDocumentForAnnotation.url,
+                  document_name: selectedDocumentForAnnotation.name,
+                  timestamp: new Date().toISOString(),
+                  canvas_info: canvasInfo
+                }
+              };
+
+              // Send to backend using annotationAPI
+              const response = await annotationAPI.saveAnnotations({
+                pdfUrl: selectedDocumentForAnnotation.url,
+                annotations: formattedAnnotations.annotations,
+                images: formattedAnnotations.images,
+                metadata: formattedAnnotations.metadata,
+                requestId: selectedDocumentForAnnotation.id
+              });
+
+              if (response.success) {
+                toast.success('PDF annotations saved successfully! Your Python script will process them.', {
+                  position: 'top-right',
+                  autoClose: 5000
+                });
+                
+                // Refresh signature requests
+                setTimeout(() => {
+                  fetchSignatureRequests();
+                }, 1000);
+              } else {
+                throw new Error(response.message || 'Failed to save annotations');
+              }
+            } catch (error) {
+              console.error('Error saving annotations:', error);
+              const errorMsg = handleAPIError(error);
+              toast.error(errorMsg || 'Failed to save annotations', {
+                position: 'top-right',
+                autoClose: 5000
+              });
+            }
+          }}
+        />
+      )}
+
+      {/* Advanced PDF Viewer Modal */}
+      {showAdvancedPDFModal && selectedIndex !== null && signatureRequests[selectedIndex] && (
+        <AdvancedPDFViewer
+          show={showAdvancedPDFModal}
+          onHide={() => {
+            setShowAdvancedPDFModal(false);
+            setSelectedIndex(null);
+          }}
+          pdfUrl={signatureRequests[selectedIndex]?.document_url}
+          onSaveAnnotations={async (annotationData) => {
+            try {
+              // Prepare data for Python backend
+              const canvasInfo = {
+                width: 800, // This will be updated by the component
+                height: 600,
+                pdfWidth: annotationData.metadata?.canvasWidth || 800,
+                pdfHeight: annotationData.metadata?.canvasHeight || 600
+              };
+
+              const processedData = prepareAnnotationDataForPython(annotationData.annotations, canvasInfo);
+              
+              // Send to backend
+              const response = await annotationAPI.saveAnnotations({
+                ...annotationData,
+                processedAnnotations: processedData,
+                requestId: signatureRequests[selectedIndex]?.id,
+                documentName: signatureRequests[selectedIndex]?.document_name
+              });
+
+              if (response.success) {
+                toast.success('PDF annotations saved and sent for processing!');
+                
+                // Optionally refresh the signature requests
+                setTimeout(async () => {
+                  const refreshResponse = await signatureRequestsAPI.getSignatureRequests();
+                  if (refreshResponse.success && refreshResponse.data && refreshResponse.data.requests) {
+                    setSignatureRequests(refreshResponse.data.requests);
+                  }
+                }, 2000);
+              } else {
+                toast.error(response.message || 'Failed to save annotations');
+              }
+            } catch (error) {
+              console.error('Error saving annotations:', error);
+              toast.error('Failed to save annotations');
+            }
+          }}
+          initialAnnotations={[]} // Can be populated from backend if needed
+        />
+      )}
 
 
 

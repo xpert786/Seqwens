@@ -1,0 +1,121 @@
+.pdf-annotation-modal .modal-content {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-annotation-modal .modal-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.annotation-toolbox {
+  flex-shrink: 0;
+}
+
+.pdf-viewer-container {
+  position: relative;
+  overflow: auto;
+}
+
+.pdf-page-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.pdf-page-wrapper canvas {
+  display: block;
+  border: 1px solid #E5E7EB;
+}
+
+.page-navigation {
+  flex-shrink: 0;
+}
+
+/* Tool button styles */
+.annotation-toolbox .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.annotation-toolbox .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.annotation-toolbox .btn-primary {
+  background-color: #00C0C6;
+  border-color: #00C0C6;
+}
+
+.annotation-toolbox .btn-primary:hover {
+  background-color: #00a8ad;
+  border-color: #00a8ad;
+}
+
+/* Range input styling */
+.annotation-toolbox input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #E5E7EB;
+  outline: none;
+}
+
+.annotation-toolbox input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00C0C6;
+  cursor: pointer;
+}
+
+.annotation-toolbox input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00C0C6;
+  cursor: pointer;
+  border: none;
+}
+
+/* Color input styling */
+.annotation-toolbox input[type="color"] {
+  cursor: pointer;
+  border: 2px solid #E5E7EB;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.annotation-toolbox input[type="color"]:hover {
+  border-color: #00C0C6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .annotation-toolbox {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .annotation-toolbox > div {
+    width: 100%;
+  }
+}
+

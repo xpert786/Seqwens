@@ -123,7 +123,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
 
   const validate = () => {
     const newErrors = {};
-
+    
     // Required validations
     if (!formData.workDescription.trim()) newErrors.workDescription = 'Work description is required';
     if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
@@ -140,7 +140,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
       newErrors.differentBusinessName = 'Business name is required when different from personal name';
     }
     if (!formData.totalIncome.trim()) newErrors.totalIncome = 'Total income is required';
-
+    
     // Conditional validations
     if (formData.issuedRefunds && !formData.totalRefunded.trim()) {
       newErrors.totalRefunded = 'Refunded amount is required when refunds were issued';
