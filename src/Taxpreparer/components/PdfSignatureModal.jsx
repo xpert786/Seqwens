@@ -8,7 +8,7 @@ import '../styles/pdf-signature-modal.css';
 
 // Configure PDF.js worker - use CDN for production builds
 if (typeof window !== 'undefined') {
-  GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${require('pdfjs-dist/package.json').version}/pdf.worker.min.js`;
+  GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
 export default function PdfSignatureModal({ 

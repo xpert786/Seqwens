@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
-import { FiPenTool, FiEraser, FiImage, FiSave, FiX, FiZoomIn, FiZoomOut, FiRotateCw, FiDownload, FiTrash2 } from 'react-icons/fi';
+import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiZoomIn, FiZoomOut, FiRotateCw, FiDownload, FiTrash2 } from 'react-icons/fi';
 import { handleAPIError } from '../utils/apiUtils';
 import '../styles/PdfAnnotationModal.css';
 
 // Configure PDF.js worker - use CDN for production builds
 if (typeof window !== 'undefined') {
-  GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${require('pdfjs-dist/package.json').version}/pdf.worker.min.js`;
+  GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
 const TOOLS = {
