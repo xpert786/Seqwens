@@ -3,12 +3,13 @@ import { Modal } from 'react-bootstrap';
 import SignatureCanvas from 'react-signature-canvas';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
-import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { customESignAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
-import '../../styles/pdf-signature-modal.css';
+import { customESignAPI, handleAPIError } from '../../ClientOnboarding/utils/apiUtils';
+import '../styles/pdf-signature-modal.css';
 
-// Configure PDF.js worker once
-GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
+// Configure PDF.js worker - use CDN for production builds
+if (typeof window !== 'undefined') {
+  GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${require('pdfjs-dist/package.json').version}/pdf.worker.min.js`;
+}
 
 export default function PdfSignatureModal({ 
   isOpen, 

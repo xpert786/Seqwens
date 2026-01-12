@@ -6,7 +6,7 @@ import { getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
 import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus } from 'react-icons/fi';
 import ProcessingModal from '../../../components/ProcessingModal';
-import PdfSignatureModal from '../components/PdfSignatureModal';
+import PdfSignatureModal from '../../components/PdfSignatureModal.jsx';
 import '../../styles/esignature-dashboard.css';
 
 export default function ESignatureDashboard() {
