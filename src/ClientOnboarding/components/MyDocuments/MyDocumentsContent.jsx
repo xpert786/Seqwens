@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { FileIcon, OverdueIcon, UploadIcons, CompletedIcon, AwaitingIcon } from "../icons";
 import "../../styles/Document.css";
-import { handleAPIError } from "../../utils/apiUtils";
+import { handleAPIError, esignAssignAPI } from "../../utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../utils/corsConfig";
 import { getAccessToken } from "../../utils/userUtils";
 import { toast } from "react-toastify";
 import Pagination from "../Pagination";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import { Modal } from "react-bootstrap";
 
 export default function MyDocumentsContent() {
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -32,9 +33,24 @@ export default function MyDocumentsContent() {
     const [documentToDelete, setDocumentToDelete] = useState(null);
     const [deletingDocumentId, setDeletingDocumentId] = useState(null);
     const [showMenuIndex, setShowMenuIndex] = useState(null);
+    
+    // Assign for E-Sign states
+    const [showAssignModal, setShowAssignModal] = useState(false);
+    const [documentToAssign, setDocumentToAssign] = useState(null);
+    const [taxpayers, setTaxpayers] = useState([]);
+    const [selectedTaxpayerId, setSelectedTaxpayerId] = useState('');
+    const [deadline, setDeadline] = useState('');
+    const [hasSpouse, setHasSpouse] = useState(false);
+    const [preparerMustSign, setPreparerMustSign] = useState(false);
+    const [assigning, setAssigning] = useState(false);
+    const [pollingStatus, setPollingStatus] = useState(null);
+    
+    // Folder navigation state
+    const [currentFolderId, setCurrentFolderId] = useState(null);
+    const [breadcrumbs, setBreadcrumbs] = useState([]);
 
-    // Fetch all documents from the documents API
-    const fetchAllDocuments = async () => {
+    // Fetch documents using browse API (supports folder navigation)
+    const fetchAllDocuments = async (folderId = null) => {
         try {
             setLoading(true);
             setError(null);
@@ -56,7 +72,10 @@ export default function MyDocumentsContent() {
                 },
             };
 
-            const url = `${API_BASE_URL}/taxpayer/documents/`;
+            // Use browse API with folder_id parameter for folder navigation
+            const url = folderId
+                ? `${API_BASE_URL}/taxpayer/my-documents/browse/?folder_id=${folderId}`
+                : `${API_BASE_URL}/taxpayer/my-documents/browse/`;
 
             const response = await fetchWithCors(url, config);
 
@@ -65,11 +84,28 @@ export default function MyDocumentsContent() {
             }
 
             const result = await response.json();
-            console.log('Documents API response:', result);
+            console.log('Browse API response:', result);
 
             if (result.success && result.data) {
-                // Get documents array
-                const docs = result.data.documents || [];
+                // Get documents array - check multiple possible locations
+                let docs = [];
+                if (result.data.documents && Array.isArray(result.data.documents)) {
+                    docs = result.data.documents;
+                } else if (result.data.current_folder && result.data.current_folder.files && Array.isArray(result.data.current_folder.files)) {
+                    docs = result.data.current_folder.files;
+                }
+                
+                // Also include folders in the documents list for navigation
+                if (result.data.subfolders && Array.isArray(result.data.subfolders)) {
+                    const foldersAsDocs = result.data.subfolders.map(folder => ({
+                        ...folder,
+                        is_folder: true,
+                        type: 'folder',
+                        document_type: 'folder'
+                    }));
+                    docs = [...foldersAsDocs, ...docs];
+                }
+                
                 setDocuments(docs);
 
                 // Get statistics from API response
@@ -82,8 +118,9 @@ export default function MyDocumentsContent() {
                         uploaded: statsData.total_documents || docs.length
                     };
 
-                    // Calculate overdue from documents
+                    // Calculate overdue from documents (excluding folders)
                     const overdueCount = docs.filter(d => {
+                        if (d.is_folder) return false;
                         if (d.due_date || d.dueDate) {
                             const due = new Date(d.due_date || d.dueDate);
                             const today = new Date();
@@ -93,20 +130,22 @@ export default function MyDocumentsContent() {
                         return false;
                     }).length;
                     newStats.overdue = overdueCount;
+                    newStats.uploaded = statsData.total_documents || docs.filter(d => !d.is_folder).length;
 
                     setStats(newStats);
                 } else {
-                    // Fallback: calculate stats from documents
+                    // Fallback: calculate stats from documents (excluding folders)
+                    const fileDocs = docs.filter(d => !d.is_folder);
                     const newStats = {
-                        pending: docs.filter(d => {
+                        pending: fileDocs.filter(d => {
                             const status = (d.status || '').toLowerCase();
                             return status === 'pending_sign' || status === 'pending' || status === 'waiting signature';
                         }).length,
-                        completed: docs.filter(d => {
+                        completed: fileDocs.filter(d => {
                             const status = (d.status || '').toLowerCase();
                             return status === 'processed' || status === 'completed';
                         }).length,
-                        overdue: docs.filter(d => {
+                        overdue: fileDocs.filter(d => {
                             if (d.due_date || d.dueDate) {
                                 const due = new Date(d.due_date || d.dueDate);
                                 const today = new Date();
@@ -115,27 +154,83 @@ export default function MyDocumentsContent() {
                             }
                             return false;
                         }).length,
-                        uploaded: docs.length
+                        uploaded: fileDocs.length
                     };
                     setStats(newStats);
+                }
+                
+                // Update breadcrumbs if we have current folder info
+                if (result.data.current_folder) {
+                    const currentFolder = result.data.current_folder;
+                    const newBreadcrumbs = [];
+                    
+                    // Build breadcrumb trail
+                    if (currentFolder.parent) {
+                        // Add parent folders to breadcrumbs
+                        let parent = currentFolder.parent;
+                        while (parent) {
+                            newBreadcrumbs.unshift({
+                                id: parent.id,
+                                title: parent.title || parent.name
+                            });
+                            parent = parent.parent;
+                        }
+                    }
+                    
+                    // Add current folder
+                    newBreadcrumbs.push({
+                        id: currentFolder.id,
+                        title: currentFolder.title || currentFolder.name
+                    });
+                    
+                    setBreadcrumbs(newBreadcrumbs);
+                } else {
+                    // Root level - no breadcrumbs
+                    setBreadcrumbs([]);
                 }
             } else {
                 setDocuments([]);
                 setStats({ pending: 0, completed: 0, overdue: 0, uploaded: 0 });
+                setBreadcrumbs([]);
             }
         } catch (error) {
             console.error('Error fetching documents:', error);
             setError(handleAPIError(error));
             setDocuments([]);
             setStats({ pending: 0, completed: 0, overdue: 0, uploaded: 0 });
+            setBreadcrumbs([]);
         } finally {
             setLoading(false);
         }
     };
 
+    // Handle folder click - navigate into folder
+    const handleFolderClick = (folder) => {
+        const folderId = folder.id || folder.folder_id;
+        setCurrentFolderId(folderId);
+        setSelectedIndex(null);
+        setShowMenuIndex(null);
+        fetchAllDocuments(folderId);
+    };
+
+    // Handle breadcrumb click - navigate to parent folder
+    const handleBreadcrumbClick = (folderId) => {
+        if (folderId === null) {
+            // Root level
+            setCurrentFolderId(null);
+            fetchAllDocuments(null);
+        } else {
+            setCurrentFolderId(folderId);
+            fetchAllDocuments(folderId);
+        }
+        setSelectedIndex(null);
+        setShowMenuIndex(null);
+    };
+
     // Fetch all documents on component mount
     useEffect(() => {
-        fetchAllDocuments();
+        fetchAllDocuments(currentFolderId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Format file size helper
@@ -313,6 +408,183 @@ export default function MyDocumentsContent() {
         return 'bg-darkblue text-white';
     };
 
+    // Check if document is a file (not a folder)
+    const isFile = (doc) => {
+        // Folders typically have is_folder: true or type: 'folder'
+        return !doc.is_folder && doc.type !== 'folder' && doc.document_type !== 'folder';
+    };
+
+    // Fetch taxpayers/clients for assignment
+    const fetchTaxpayers = async () => {
+        try {
+            const API_BASE_URL = getApiBaseUrl();
+            const token = getAccessToken();
+            const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/clients/`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const clients = result.data.clients || result.data || [];
+                    setTaxpayers(clients);
+                    if (clients.length > 0 && !selectedTaxpayerId) {
+                        setSelectedTaxpayerId(clients[0].id?.toString() || '');
+                    }
+                }
+            } else {
+                throw new Error('Failed to fetch taxpayers');
+            }
+        } catch (error) {
+            console.error('Error fetching taxpayers:', error);
+            toast.error('Failed to load taxpayers', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        }
+    };
+
+    // Open assign modal
+    const handleOpenAssignModal = (doc) => {
+        if (!isFile(doc)) {
+            toast.warning('Only files can be assigned for e-signing, not folders', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+        setDocumentToAssign(doc);
+        setShowAssignModal(true);
+        fetchTaxpayers();
+        // Set default deadline to 30 days from now
+        const defaultDeadline = new Date();
+        defaultDeadline.setDate(defaultDeadline.getDate() + 30);
+        setDeadline(defaultDeadline.toISOString().split('T')[0]);
+    };
+
+    // Poll for e-sign status
+    const pollESignStatus = async (esignDocumentId, maxAttempts = 30) => {
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const response = await esignAssignAPI.pollESignStatus(esignDocumentId);
+                
+                if (response.success && response.data) {
+                    const status = response.data.processing_status;
+                    setPollingStatus({
+                        status,
+                        message: status === 'completed' ? 'Processing complete!' : `Processing... (${i + 1}/${maxAttempts})`,
+                        data: response.data
+                    });
+
+                    if (status === 'completed') {
+                        return response.data;
+                    }
+                    
+                    if (status === 'failed') {
+                        throw new Error(response.data.processing_error || 'Processing failed');
+                    }
+                }
+                
+                // Wait 2 seconds before next poll
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                if (i === maxAttempts - 1) {
+                    throw error;
+                }
+                // Wait before retry
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        
+        throw new Error('Processing timeout');
+    };
+
+    // Handle assign document for e-sign
+    const handleAssignDocument = async () => {
+        if (!documentToAssign || !selectedTaxpayerId || !deadline) {
+            toast.error('Please fill in all required fields', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        try {
+            setAssigning(true);
+            setPollingStatus({ status: 'pending', message: 'Assigning document...' });
+            
+            const assignmentData = {
+                document_id: documentToAssign.id || documentToAssign.document_id,
+                taxpayer_id: parseInt(selectedTaxpayerId),
+                has_spouse: hasSpouse,
+                preparer_must_sign: preparerMustSign,
+                deadline: deadline
+            };
+
+            const response = await esignAssignAPI.assignDocumentForESign(assignmentData);
+
+            if (response.success && response.data) {
+                const esignDocId = response.data.id;
+                
+                setPollingStatus({ 
+                    status: 'processing', 
+                    message: 'Document assigned. Processing in background...' 
+                });
+
+                // Poll for status
+                try {
+                    const statusData = await pollESignStatus(esignDocId);
+                    
+                    toast.success('Document assigned for e-signing successfully!', {
+                        position: "top-right",
+                        autoClose: 5000,
+                    });
+
+                    // Close modal and reset
+                    setShowAssignModal(false);
+                    setDocumentToAssign(null);
+                    setSelectedTaxpayerId('');
+                    setDeadline('');
+                    setHasSpouse(false);
+                    setPreparerMustSign(false);
+                    setPollingStatus(null);
+                    
+                    // Refresh documents
+                    fetchAllDocuments();
+                } catch (pollError) {
+                    console.error('Polling error:', pollError);
+                    toast.warning('Document assigned but processing is still in progress. Check status later.', {
+                        position: "top-right",
+                        autoClose: 5000,
+                    });
+                    setShowAssignModal(false);
+                    setDocumentToAssign(null);
+                    setSelectedTaxpayerId('');
+                    setDeadline('');
+                    setHasSpouse(false);
+                    setPreparerMustSign(false);
+                    setPollingStatus(null);
+                }
+            } else {
+                throw new Error(response.message || 'Failed to assign document');
+            }
+        } catch (error) {
+            console.error('Error assigning document:', error);
+            const errorMessage = handleAPIError(error);
+            toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to assign document'), {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            setPollingStatus(null);
+        } finally {
+            setAssigning(false);
+        }
+    };
+
     // Filter documents based on selected filter and search term
     const getFilteredDocuments = () => {
         let filtered = documents;
@@ -416,6 +688,55 @@ export default function MyDocumentsContent() {
 
     return (
         <div  >
+
+            {/* Breadcrumb Navigation */}
+            {breadcrumbs.length > 0 && (
+                <div className="mb-3 d-flex align-items-center gap-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    <button
+                        onClick={() => handleBreadcrumbClick(null)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#00C0C6',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            padding: '4px 8px',
+                            borderRadius: '4px'
+                        }}
+                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                    >
+                        Home
+                    </button>
+                    {breadcrumbs.map((crumb, idx) => (
+                        <React.Fragment key={crumb.id}>
+                            <span style={{ color: '#6B7280' }}>/</span>
+                            {idx === breadcrumbs.length - 1 ? (
+                                <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                                    {crumb.title}
+                                </span>
+                            ) : (
+                                <button
+                                    onClick={() => handleBreadcrumbClick(crumb.id)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#00C0C6',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                >
+                                    {crumb.title}
+                                </button>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
+            )}
 
             <div className="row g-3 mb-3">
                 {["Pending", "Completed", "Overdue", "Uploaded"].map((label, index) => {
@@ -591,7 +912,10 @@ export default function MyDocumentsContent() {
                     <div className="pt-2 pb-2">
                         <div className={`row g-3 ${view === "grid" ? "" : ""}`}>
                             {paginatedDocuments.map((doc, index) => {
-                                const docName = doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document';
+                                const isFolder = doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder';
+                                const docName = isFolder 
+                                    ? (doc.title || doc.name || doc.folder_name || 'Untitled Folder')
+                                    : (doc.file_name || doc.name || doc.document_name || doc.filename || 'Untitled Document');
                                 const docSize = doc.file_size_formatted || (doc.file_size_bytes ? formatFileSize(doc.file_size_bytes) : (doc.file_size ? formatFileSize(doc.file_size) : '0 KB'));
                                 const docType = doc.file_type || doc.file_extension?.toUpperCase() || doc.type || doc.document_type || 'PDF';
                                 const docDate = doc.updated_at_formatted || doc.created_at_formatted || doc.updated_at || doc.created_at || doc.date || 'N/A';
@@ -623,6 +947,13 @@ export default function MyDocumentsContent() {
                                                     setShowMenuIndex(null);
                                                     return;
                                                 }
+                                                
+                                                // Check if it's a folder - navigate into it
+                                                if (doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder') {
+                                                    handleFolderClick(doc);
+                                                    return;
+                                                }
+                                                
                                                 setSelectedIndex(startIndex + index);
                                                 // Check if document is a PDF
                                                 const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
@@ -631,7 +962,7 @@ export default function MyDocumentsContent() {
                                                     setShowPdfModal(true);
                                                 }
                                             }}
-                                            title={(docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && fileUrl ? 'Click to view PDF' : ''}
+                                            title={doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? 'Click to open folder' : ((docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf') && fileUrl ? 'Click to view PDF' : '')}
                                         >
                                             <div className="d-flex justify-content-between align-items-start flex-wrap">
                                                 {/* Left Side: File Info */}
@@ -640,9 +971,13 @@ export default function MyDocumentsContent() {
                                                         className="d-flex align-items-center justify-content-center"
                                                         style={{ width: 40, height: 40, flexShrink: 0 }}
                                                     >
-                                                        <span className="mydocs-icon-wrapper">
-                                                            <FileIcon />
-                                                        </span>
+                                                        {doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? (
+                                                            <i className="bi bi-folder-fill" style={{ fontSize: '40px', color: '#F49C2D' }}></i>
+                                                        ) : (
+                                                            <span className="mydocs-icon-wrapper">
+                                                                <FileIcon />
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -656,9 +991,13 @@ export default function MyDocumentsContent() {
                                                             )} */}
                                                         </div>
                                                         <div className="text-muted" style={{ fontSize: "13px", fontFamily: "BasisGrotesquePro", color: "#6B7280", fontWeight: "400" }}>
-                                                            Size: {docSize} • Updated: {docDate}
-                                                            {docCategory && docCategory.trim() && (
-                                                                <> • Category: {docCategory}</>
+                                                            {doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? (
+                                                                <>Folder • Updated: {docDate}</>
+                                                            ) : (
+                                                                <>Size: {docSize} • Updated: {docDate}
+                                                                {docCategory && docCategory.trim() && (
+                                                                    <> • Category: {docCategory}</>
+                                                                )}</>
                                                             )}
                                                         </div>
 
@@ -683,48 +1022,88 @@ export default function MyDocumentsContent() {
                                                     </div>
                                                 </div>
 
-                                                {/* Right Side: Status + Menu */}
+                                                {/* Right Side: Status + Actions + Menu */}
                                                 <div className="d-flex align-items-center gap-2 mt-2 mt-md-0" style={{ flexShrink: 0 }}>
-                                                    {/* Show Preview button for pending_sign status, otherwise show status badge */}
-                                                    {(docStatusValue.toLowerCase() === 'pending_sign' || docStatusValue.toLowerCase() === 'pending sign') ? (
-                                                        <button
-                                                            className="btn px-3 py-2"
-                                                            style={{
-                                                                borderRadius: "20px",
-                                                                fontSize: "0.75rem",
-                                                                fontWeight: "500",
-                                                                fontFamily: "BasisGrotesquePro",
-                                                                backgroundColor: "#3AD6F2",
-                                                                color: "#FFFFFF",
-                                                                border: "none",
-                                                                cursor: "pointer"
-                                                            }}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
-                                                                if (isPdf && fileUrl) {
-                                                                    setSelectedDocument(doc);
-                                                                    setShowPdfModal(true);
-                                                                }
-                                                            }}
-                                                        >
-                                                            Preview
-                                                        </button>
-                                                    ) : (
-                                                        <span
-                                                            className={`badge ${getStatusBadgeClass(docStatusValue)} px-3 py-2`}
-                                                            style={{
-                                                                borderRadius: "20px",
-                                                                fontSize: "0.75rem",
-                                                                fontWeight: "500",
-                                                                fontFamily: "BasisGrotesquePro",
-                                                                color: "#FFFFFF"
-                                                            }}
-                                                        >
-                                                            {docStatus}
-                                                        </span>
+                                                    {/* Only show status/actions/menu for files, not folders */}
+                                                    {!(doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder') && (
+                                                        <>
+                                                            {/* Assign for E-Sign button - Always visible */}
+                                                            {isFile(doc) && (
+                                                                <button
+                                                                    className="btn px-3 py-2"
+                                                                    style={{
+                                                                        borderRadius: "8px",
+                                                                        fontSize: "0.75rem",
+                                                                        fontWeight: "500",
+                                                                        fontFamily: "BasisGrotesquePro",
+                                                                        backgroundColor: "#00C0C6",
+                                                                        color: "#FFFFFF",
+                                                                        border: "none",
+                                                                        cursor: "pointer",
+                                                                        whiteSpace: "nowrap"
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setShowMenuIndex(null);
+                                                                        handleOpenAssignModal(doc);
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundColor = "#00A8B0";
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundColor = "#00C0C6";
+                                                                    }}
+                                                                    title="Assign this document for e-signing"
+                                                                >
+                                                                    <i className="bi bi-pen me-1"></i>
+                                                                    Assign
+                                                                </button>
+                                                            )}
+                                                            
+                                                            {/* Show Preview button for pending_sign status, otherwise show status badge */}
+                                                            {(docStatusValue.toLowerCase() === 'pending_sign' || docStatusValue.toLowerCase() === 'pending sign') ? (
+                                                                <button
+                                                                    className="btn px-3 py-2"
+                                                                    style={{
+                                                                        borderRadius: "20px",
+                                                                        fontSize: "0.75rem",
+                                                                        fontWeight: "500",
+                                                                        fontFamily: "BasisGrotesquePro",
+                                                                        backgroundColor: "#3AD6F2",
+                                                                        color: "#FFFFFF",
+                                                                        border: "none",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
+                                                                        if (isPdf && fileUrl) {
+                                                                            setSelectedDocument(doc);
+                                                                            setShowPdfModal(true);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Preview
+                                                                </button>
+                                                            ) : (
+                                                                <span
+                                                                    className={`badge ${getStatusBadgeClass(docStatusValue)} px-3 py-2`}
+                                                                    style={{
+                                                                        borderRadius: "20px",
+                                                                        fontSize: "0.75rem",
+                                                                        fontWeight: "500",
+                                                                        fontFamily: "BasisGrotesquePro",
+                                                                        color: "#FFFFFF"
+                                                                    }}
+                                                                >
+                                                                    {docStatus}
+                                                                </span>
+                                                            )}
+                                                        </>
                                                     )}
 
+                                                    {/* Only show menu for files, not folders */}
+                                                    {!(doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder') && (
                                                     <div style={{ position: 'relative' }} data-menu-container>
                                                         <button
                                                             className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
@@ -733,13 +1112,32 @@ export default function MyDocumentsContent() {
                                                                 height: "32px",
                                                                 borderRadius: "50%",
                                                                 fontFamily: "BasisGrotesquePro",
+                                                                backgroundColor: showMenuIndex === (startIndex + index) ? '#F3F4F6' : 'transparent',
+                                                                border: '1px solid #E5E7EB',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s ease'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#F3F4F6';
+                                                                e.currentTarget.style.borderColor = '#D1D5DB';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                if (showMenuIndex !== (startIndex + index)) {
+                                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                                    e.currentTarget.style.borderColor = '#E5E7EB';
+                                                                }
                                                             }}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setShowMenuIndex(showMenuIndex === (startIndex + index) ? null : (startIndex + index));
                                                             }}
+                                                            title="More options"
                                                         >
-                                                            <i className="bi bi-three-dots-vertical" />
+                                                            <i className="bi bi-three-dots-vertical" style={{ 
+                                                                fontSize: '18px', 
+                                                                color: '#6B7280',
+                                                                fontWeight: 'bold'
+                                                            }} />
                                                         </button>
                                                         {showMenuIndex === (startIndex + index) && (
                                                             <div
@@ -758,6 +1156,33 @@ export default function MyDocumentsContent() {
                                                                 }}
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
+                                                                {/* Only show Assign for E-Sign for files, not folders */}
+                                                                {isFile(doc) && (
+                                                                    <button
+                                                                        className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                                                        style={{
+                                                                            fontFamily: 'BasisGrotesquePro',
+                                                                            fontSize: '14px',
+                                                                            color: '#00C0C6',
+                                                                            cursor: 'pointer',
+                                                                            borderBottom: '1px solid #E5E7EB'
+                                                                        }}
+                                                                        onMouseEnter={(e) => {
+                                                                            e.target.style.backgroundColor = '#F0FDFF';
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            e.target.style.backgroundColor = 'white';
+                                                                        }}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setShowMenuIndex(null);
+                                                                            handleOpenAssignModal(doc);
+                                                                        }}
+                                                                    >
+                                                                        <i className="bi bi-pen me-2"></i>
+                                                                        Assign for E-Sign
+                                                                    </button>
+                                                                )}
                                                                 <button
                                                                     className="btn btn-white border-0 w-100 text-start px-3 py-2"
                                                                     style={{
@@ -783,6 +1208,7 @@ export default function MyDocumentsContent() {
                                                             </div>
                                                         )}
                                                     </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1025,6 +1451,169 @@ export default function MyDocumentsContent() {
                 confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
                 isLoading={!!deletingDocumentId}
             />
+
+            {/* Assign Document for E-Sign Modal */}
+            <Modal
+                show={showAssignModal}
+                onHide={() => {
+                    if (!assigning) {
+                        setShowAssignModal(false);
+                        setDocumentToAssign(null);
+                        setSelectedTaxpayerId('');
+                        setDeadline('');
+                        setHasSpouse(false);
+                        setPreparerMustSign(false);
+                        setPollingStatus(null);
+                    }
+                }}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+                        Assign Document for E-Sign
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ fontFamily: 'BasisGrotesquePro' }}>
+                    {documentToAssign && (
+                        <div className="mb-3 p-3" style={{ backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+                            <div style={{ fontSize: '14px', color: '#6B7280', marginBottom: '4px' }}>Document</div>
+                            <div style={{ fontSize: '16px', color: '#3B4A66', fontWeight: '500' }}>
+                                {documentToAssign.file_name || documentToAssign.name || documentToAssign.document_name || 'Untitled Document'}
+                            </div>
+                        </div>
+                    )}
+
+                    {pollingStatus && (
+                        <div className="mb-3 p-3" style={{ 
+                            backgroundColor: pollingStatus.status === 'completed' ? '#F0FDF4' : '#FEF3C7',
+                            borderRadius: '8px',
+                            border: `1px solid ${pollingStatus.status === 'completed' ? '#10B981' : '#F59E0B'}`
+                        }}>
+                            <div style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+                                {pollingStatus.status === 'completed' ? '✓' : '⏳'} {pollingStatus.message}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="mb-3">
+                        <label className="form-label" style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+                            Taxpayer/Client <span style={{ color: '#EF4444' }}>*</span>
+                        </label>
+                        <select
+                            className="form-control"
+                            value={selectedTaxpayerId}
+                            onChange={(e) => setSelectedTaxpayerId(e.target.value)}
+                            disabled={assigning}
+                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                        >
+                            <option value="">Select taxpayer...</option>
+                            {taxpayers.map((taxpayer) => (
+                                <option key={taxpayer.id} value={taxpayer.id}>
+                                    {taxpayer.full_name || `${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || taxpayer.email || `Taxpayer ${taxpayer.id}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label" style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+                            Signing Deadline <span style={{ color: '#EF4444' }}>*</span>
+                        </label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={deadline}
+                            onChange={(e) => setDeadline(e.target.value)}
+                            disabled={assigning}
+                            min={new Date().toISOString().split('T')[0]}
+                            style={{ fontFamily: 'BasisGrotesquePro' }}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={hasSpouse}
+                                onChange={(e) => setHasSpouse(e.target.checked)}
+                                disabled={assigning}
+                                id="hasSpouse"
+                            />
+                            <label className="form-check-label" htmlFor="hasSpouse" style={{ fontSize: '14px', color: '#3B4A66' }}>
+                                Spouse signature required
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={preparerMustSign}
+                                onChange={(e) => setPreparerMustSign(e.target.checked)}
+                                disabled={assigning}
+                                id="preparerMustSign"
+                            />
+                            <label className="form-check-label" htmlFor="preparerMustSign" style={{ fontSize: '14px', color: '#3B4A66' }}>
+                                Preparer must also sign
+                            </label>
+                        </div>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+                    <button
+                        className="btn"
+                        onClick={() => {
+                            if (!assigning) {
+                                setShowAssignModal(false);
+                                setDocumentToAssign(null);
+                                setSelectedTaxpayerId('');
+                                setDeadline('');
+                                setHasSpouse(false);
+                                setPreparerMustSign(false);
+                                setPollingStatus(null);
+                            }
+                        }}
+                        disabled={assigning}
+                        style={{
+                            fontFamily: 'BasisGrotesquePro',
+                            backgroundColor: '#FFFFFF',
+                            color: '#3B4A66',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '8px',
+                            padding: '8px 16px'
+                        }}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className="btn"
+                        onClick={handleAssignDocument}
+                        disabled={assigning || !selectedTaxpayerId || !deadline}
+                        style={{
+                            fontFamily: 'BasisGrotesquePro',
+                            backgroundColor: assigning ? '#9CA3AF' : '#00C0C6',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '8px 16px',
+                            cursor: assigning || !selectedTaxpayerId || !deadline ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        {assigning ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Assigning...
+                            </>
+                        ) : (
+                            'Assign Document'
+                        )}
+                    </button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }

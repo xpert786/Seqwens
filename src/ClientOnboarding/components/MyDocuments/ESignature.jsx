@@ -625,63 +625,43 @@ export default function ESignature() {
                         Preview
                       </button>
                       
-                      <button
-                        className="btn d-flex align-items-center gap-2 rounded"
-                        style={{
-                          backgroundColor: "#00C0C6",
-                          color: "#fff",
-                          border: "none",
-                          fontSize: "12px",
-                          fontWeight: "500"
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedIndex(originalIndex);
-                          setSelectedDocumentForAnnotation({
-                            url: request.document_url,
-                            name: request.document_name || request.title || 'Document',
-                            id: request.id || request.esign_id || request.document
-                          });
-                          setShowAnnotationModal(true);
-                        }}
-                        title="Open PDF Annotation Tool"
-                      >
-                        <FiPenTool size={14} />
-                        Annotate PDF
-                      </button>
+                      {/* Hide Annotate PDF button for taxpayers when status is "processing" */}
+                      {request.status !== 'processing' && (
+                        <button
+                          className="btn d-flex align-items-center gap-2 rounded"
+                          style={{
+                            backgroundColor: "#00C0C6",
+                            color: "#fff",
+                            border: "none",
+                            fontSize: "12px",
+                            fontWeight: "500"
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedIndex(originalIndex);
+                            setSelectedDocumentForAnnotation({
+                              url: request.document_url,
+                              name: request.document_name || request.title || 'Document',
+                              id: request.id || request.esign_id,  // E-signature request ID
+                              document_id: request.document  // Actual document ID for backend
+                            });
+                            console.log('📄 Opening annotation modal for:', {
+                              esign_request_id: request.id,
+                              document_id: request.document,
+                              document_name: request.document_name
+                            });
+                            setShowAnnotationModal(true);
+                          }}
+                          title="Open PDF Annotation Tool"
+                        >
+                          <FiPenTool size={14} />
+                          Annotate PDF
+                        </button>
+                      )}
                     </>
                   )}
 
-                  {request.document_url && (() => {
-                    const esignDocId = request.id || request.esign_id || request.document;
-                    const fieldsStatus = esignDocId ? signatureFieldsStatus[esignDocId] : null;
-                    const isRegenerating = fieldsStatus?.regenerating || false;
-                    
-                    return (
-                      <button
-                        className="btn d-flex align-items-center gap-2 rounded"
-                        style={{
-                          backgroundColor: "#fff",
-                          color: "#3B4A66",
-                          border: "1px solid #E8F0FF",
-                          fontSize: "12px",
-                          fontWeight: "500"
-                        }}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (esignDocId) {
-                            // Regenerate fields
-                            await regenerateSignatureFields(esignDocId);
-                          }
-                        }}
-                        disabled={isRegenerating}
-                        title="Regenerate signature fields"
-                      >
-                        <FaSyncAlt size={14} style={{ animation: isRegenerating ? 'spin 1s linear infinite' : 'none' }} />
-                        {isRegenerating ? 'Regenerating...' : 'Regenerate Fields'}
-                      </button>
-                    );
-                  })()}
+                 
 
                   {((request.status === 'pending' || request.status === 'ready' || request.status === 'sent' || request.status === 'viewed' || request.status === 'created') || request.embedded_url) && 
                    request.status !== 'signed' && 
@@ -883,36 +863,7 @@ export default function ESignature() {
                     </button>
                   )}
 
-                  {/* Advanced PDF Editor Button -> Opens Annotation Modal */}
-                  {request.document_url && (
-                    <button
-                      className="btn d-flex align-items-center gap-2 rounded text-white"
-                      style={{ backgroundColor: "#00C0C6" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedIndex(originalIndex);
-                        setSelectedDocumentForAnnotation({
-                          url: request.document_url,
-                          name: request.document_name || request.title || 'Document',
-                          id: request.id || request.esign_id || request.document
-                        });
-                        setShowAnnotationModal(true);
-                      }}
-                    >
-                      <div
-                        className="d-flex align-items-center justify-content-center"
-                        style={{
-                          width: "30px",
-                          height: "30px",
-                          borderRadius: "50%",
-                          color: "#FFFFFF",
-                        }}
-                      >
-                        <FaEye size={14} />
-                      </div>
-                      Advanced Editor
-                    </button>
-                  )}
+                  
                 </div>
               </div>
             );
@@ -1276,34 +1227,32 @@ export default function ESignature() {
           requestId={selectedDocumentForAnnotation.id}
           onSave={async (annotationData) => {
             try {
-              // Prepare data for Python backend
-              const canvasInfo = {
-                width: 800,
-                height: 600,
-                pdfWidth: annotationData.pdf_scale * 612 || 612, // Standard PDF width in points
-                pdfHeight: annotationData.pdf_scale * 792 || 792, // Standard PDF height in points
-                scale: annotationData.pdf_scale || 1.5
-              };
-
-              // Format annotations for backend
-              const formattedAnnotations = {
-                ...annotationData,
-                metadata: {
-                  request_id: selectedDocumentForAnnotation.id,
-                  document_url: selectedDocumentForAnnotation.url,
-                  document_name: selectedDocumentForAnnotation.name,
-                  timestamp: new Date().toISOString(),
-                  canvas_info: canvasInfo
-                }
-              };
+              console.log('💾 Preparing to save annotations:', {
+                esign_request_id: selectedDocumentForAnnotation.id,
+                document_id: selectedDocumentForAnnotation.document_id,
+                annotations_count: annotationData.annotations?.length || 0,
+                images_count: annotationData.images?.length || 0,
+                pdf_scale: annotationData.pdf_scale,
+                canvas_info: annotationData.canvas_info
+              });
 
               // Send to backend using annotationAPI
               const response = await annotationAPI.saveAnnotations({
                 pdfUrl: selectedDocumentForAnnotation.url,
-                annotations: formattedAnnotations.annotations,
-                images: formattedAnnotations.images,
-                metadata: formattedAnnotations.metadata,
-                requestId: selectedDocumentForAnnotation.id
+                annotations: annotationData.annotations || [],
+                images: annotationData.images || [],
+                pdf_scale: annotationData.pdf_scale || 1.5,
+                canvas_info: annotationData.canvas_info,
+                requestId: selectedDocumentForAnnotation.document_id, // Use document_id from signature request
+                esign_document_id: selectedDocumentForAnnotation.id,  // Keep esign request ID for reference
+                metadata: {
+                  request_id: selectedDocumentForAnnotation.id,
+                  document_id: selectedDocumentForAnnotation.document_id,
+                  document_url: selectedDocumentForAnnotation.url,
+                  document_name: selectedDocumentForAnnotation.name,
+                  timestamp: new Date().toISOString(),
+                  canvas_info: annotationData.canvas_info
+                }
               });
 
               if (response.success) {

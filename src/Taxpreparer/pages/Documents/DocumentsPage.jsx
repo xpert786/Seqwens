@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useNavigate, useLocation, Outlet, useParams } from "react-router-dom";
 import { File, UpIcon, Doc, FaildIcon, FiltIcon, CompletedIcon, AwaitingIcon, Received, Uploaded, FileIcon } from "../../component/icons";
 import { FaFolder } from "react-icons/fa";
 import TaxUploadModal from "../../upload/TaxUploadModal";
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
-import { handleAPIError, taxPreparerDocumentsAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { handleAPIError, taxPreparerDocumentsAPI, esignAssignAPI } from "../../../ClientOnboarding/utils/apiUtils";
 import { toast } from "react-toastify";
 import { Modal } from "react-bootstrap";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 import FirmSharedDocuments from "./FirmSharedDocuments";
 import SharedDocuments from "./SharedDocuments";
 import "../../styles/MyClients.css";
@@ -142,7 +143,10 @@ const getStatusBadgeClass = (status) => {
 export default function DocumentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const isNestedUnderClient = location.pathname.includes("/taxdashboard/client/");
+  // Extract client ID from URL if available
+  const clientIdFromUrl = params.clientId || (location.pathname.match(/\/client\/(\d+)/)?.[1]);
   const [showUpload, setShowUpload] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -318,6 +322,256 @@ export default function DocumentsPage() {
     document.body.removeChild(link);
   };
 
+  // Check if document is a file (not a folder)
+  const isFile = (doc) => {
+    return !doc.is_folder && doc.type !== 'folder' && doc.document_type !== 'folder';
+  };
+
+  // Fetch taxpayers/clients for assignment
+  const fetchTaxpayers = async () => {
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+      const response = await fetchWithCors(`${API_BASE_URL}/taxpayer/tax-preparer/clients/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const clients = result.data.clients || result.data || [];
+          setTaxpayers(clients);
+          if (clients.length > 0 && !selectedTaxpayerId) {
+            setSelectedTaxpayerId(clients[0].id?.toString() || '');
+          }
+        }
+      } else {
+        throw new Error('Failed to fetch taxpayers');
+      }
+    } catch (error) {
+      console.error('Error fetching taxpayers:', error);
+      toast.error('Failed to load taxpayers', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  // Open assign modal
+  const handleOpenAssignModal = (doc) => {
+    if (!isFile(doc)) {
+      toast.warning('Only files can be assigned for e-signing, not folders', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+    setDocumentToAssign(doc);
+    setShowAssignModal(true);
+    setShowMenuIndex(null);
+    
+    // If client ID is available from URL, use it
+    if (clientIdFromUrl) {
+      setSelectedTaxpayerId(clientIdFromUrl);
+      // Fetch taxpayers to get client info for display
+      fetchTaxpayers();
+    } else {
+      fetchTaxpayers();
+    }
+    
+    // Set default deadline to 30 days from now
+    const defaultDeadline = new Date();
+    defaultDeadline.setDate(defaultDeadline.getDate() + 30);
+    setDeadline(defaultDeadline.toISOString().split('T')[0]);
+  };
+
+  // Poll for e-sign status
+  const pollESignStatus = async (esignDocumentId, maxAttempts = 30) => {
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const response = await esignAssignAPI.pollESignStatus(esignDocumentId);
+        
+        if (response.success && response.data) {
+          const status = response.data.processing_status;
+          setPollingStatus({
+            status,
+            message: status === 'completed' ? 'Processing complete!' : `Processing... (${i + 1}/${maxAttempts})`,
+            data: response.data
+          });
+
+          if (status === 'completed') {
+            return response.data;
+          }
+          
+          if (status === 'failed') {
+            throw new Error(response.data.processing_error || 'Processing failed');
+          }
+        }
+        
+        // Wait 2 seconds before next poll
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        if (i === maxAttempts - 1) {
+          throw error;
+        }
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    throw new Error('Processing timeout');
+  };
+
+  // Handle assign document for e-sign
+  const handleAssignDocument = async () => {
+    const taxpayerId = clientIdFromUrl || selectedTaxpayerId;
+    
+    if (!documentToAssign || !taxpayerId || !deadline) {
+      toast.error('Please fill in all required fields', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    try {
+      setAssigning(true);
+      setPollingStatus({ status: 'pending', message: 'Assigning document...' });
+      
+      const assignmentData = {
+        document_id: documentToAssign.id || documentToAssign.document_id,
+        taxpayer_id: parseInt(taxpayerId),
+        has_spouse: hasSpouse,
+        preparer_must_sign: preparerMustSign,
+        deadline: deadline
+      };
+
+      const response = await esignAssignAPI.assignDocumentForESign(assignmentData);
+
+      if (response.success && response.data) {
+        const esignDocId = response.data.id;
+        
+        setPollingStatus({ 
+          status: 'processing', 
+          message: 'Document assigned. Processing in background...' 
+        });
+
+        // Poll for status
+        try {
+          const statusData = await pollESignStatus(esignDocId);
+          
+          toast.success('Document assigned for e-signing successfully!', {
+            position: "top-right",
+            autoClose: 5000,
+          });
+
+          // Close modal and reset
+          setShowAssignModal(false);
+          setDocumentToAssign(null);
+          setSelectedTaxpayerId('');
+          setDeadline('');
+          setHasSpouse(false);
+          setPreparerMustSign(false);
+          setPollingStatus(null);
+          
+          // Refresh documents
+          fetchFileManagerDocuments(fileManagerCurrentFolder?.id || null, fileManagerSearchQuery);
+        } catch (pollError) {
+          console.error('Polling error:', pollError);
+          toast.warning('Document assigned but processing is still in progress. Check status later.', {
+            position: "top-right",
+            autoClose: 5000,
+          });
+          setShowAssignModal(false);
+          setDocumentToAssign(null);
+          setSelectedTaxpayerId('');
+          setDeadline('');
+          setHasSpouse(false);
+          setPreparerMustSign(false);
+          setPollingStatus(null);
+        }
+      } else {
+        throw new Error(response.message || 'Failed to assign document');
+      }
+    } catch (error) {
+      console.error('Error assigning document:', error);
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to assign document'), {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      setPollingStatus(null);
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  // Handle delete document
+  const handleDeleteDocument = (doc) => {
+    setDocumentToDelete(doc);
+    setShowDeleteDocumentConfirm(true);
+  };
+
+  const confirmDeleteDocument = async () => {
+    if (!documentToDelete) return;
+
+    try {
+      setDeletingDocumentId(documentToDelete.id || documentToDelete.document_id);
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      const docId = documentToDelete.id || documentToDelete.document_id;
+      const url = `${API_BASE_URL}/taxpayer/documents/${docId}/`;
+
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Remove document from list
+      setFileManagerDocuments(prevDocuments =>
+        prevDocuments.filter(doc =>
+          (doc.id !== docId && doc.document_id !== docId)
+        )
+      );
+
+      toast.success('Document deleted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+
+      setShowDeleteDocumentConfirm(false);
+      setDocumentToDelete(null);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      const errorMessage = handleAPIError(error);
+      toast.error(typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || 'Failed to delete document'), {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setDeletingDocumentId(null);
+    }
+  };
+
   // File Manager State
   const [fileManagerView, setFileManagerView] = useState("grid");
   const [fileManagerFolders, setFileManagerFolders] = useState([]);
@@ -339,6 +593,41 @@ export default function DocumentsPage() {
   const [fileManagerNewFolderName, setFileManagerNewFolderName] = useState("");
   const [fileManagerNewFolderDescription, setFileManagerNewFolderDescription] = useState("");
   const [fileManagerCreatingFolderLoading, setFileManagerCreatingFolderLoading] = useState(false);
+  
+  // Assign for E-Sign states
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [documentToAssign, setDocumentToAssign] = useState(null);
+  const [taxpayers, setTaxpayers] = useState([]);
+  const [selectedTaxpayerId, setSelectedTaxpayerId] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [hasSpouse, setHasSpouse] = useState(false);
+  const [preparerMustSign, setPreparerMustSign] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [pollingStatus, setPollingStatus] = useState(null);
+  
+  // Delete document states
+  const [showDeleteDocumentConfirm, setShowDeleteDocumentConfirm] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  const [deletingDocumentId, setDeletingDocumentId] = useState(null);
+  
+  // Menu state
+  const [showMenuIndex, setShowMenuIndex] = useState(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showMenuIndex !== null && !event.target.closest('[data-menu-container]')) {
+        setShowMenuIndex(null);
+      }
+    };
+
+    if (showMenuIndex !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showMenuIndex]);
 
   // Fetch documents and folders for file manager
   const fetchFileManagerDocuments = async (folderId = null, search = "") => {
@@ -875,7 +1164,7 @@ export default function DocumentsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {fileManagerDocuments.map((doc) => {
+                        {fileManagerDocuments.map((doc, index) => {
                           const meta = getDocumentMeta(doc);
                           const docStatus = getDocumentStatus(doc);
                           const updatedAt = formatDateDisplay(getDocumentUpdatedAt(doc));
@@ -887,7 +1176,7 @@ export default function DocumentsPage() {
                               key={doc.id || doc.document_id || meta.name}
                               style={{ cursor: meta.url ? "pointer" : "default" }}
                               onClick={() => {
-                                if (meta.url) {
+                                if (meta.url && showMenuIndex !== index) {
                                   window.open(meta.url, "_blank", "noopener,noreferrer");
                                 }
                               }}
@@ -909,35 +1198,139 @@ export default function DocumentsPage() {
                                   {docStatus}
                                 </span>
                               </td>
-                              <td>
-                                <div className="d-flex gap-2 flex-wrap">
+                              <td style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                <div style={{ position: 'relative', zIndex: showMenuIndex === index ? 9999 : 'auto' }} data-menu-container>
                                   <button
                                     type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    disabled={!meta.canPreview}
-                                    title={meta.canPreview ? "Preview" : "Preview not available for this file type"}
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      if (meta.canPreview) {
-                                        openPreviewModal(doc, event.currentTarget);
+                                    className="btn btn-white border-0 p-2 d-flex align-items-center justify-content-center"
+                                    style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      borderRadius: "50%",
+                                      fontFamily: "BasisGrotesquePro",
+                                      backgroundColor: showMenuIndex === index ? '#F3F4F6' : 'transparent',
+                                      border: '1px solid #E5E7EB',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#F3F4F6';
+                                      e.currentTarget.style.borderColor = '#D1D5DB';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (showMenuIndex !== index) {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                        e.currentTarget.style.borderColor = '#E5E7EB';
                                       }
                                     }}
-                                  >
-                                    <i className="bi bi-eye me-1" />
-                                    Preview
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-secondary btn-sm"
-                                    disabled={!meta.url}
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      handleDownload(doc);
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowMenuIndex(showMenuIndex === index ? null : index);
                                     }}
+                                    title="More options"
                                   >
-                                    <i className="bi bi-download me-1" />
-                                    Download
+                                    <i className="bi bi-three-dots-vertical" style={{ 
+                                      fontSize: '18px', 
+                                      color: '#6B7280',
+                                      fontWeight: 'bold'
+                                    }} />
                                   </button>
+                                  {showMenuIndex === index && (
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        right: 0,
+                                        top: '100%',
+                                        marginTop: '4px',
+                                        backgroundColor: 'white',
+                                        border: '1px solid #E5E7EB',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                        zIndex: 9999,
+                                        minWidth: '150px',
+                                        padding: '4px 0'
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {meta.canPreview && (
+                                        <button
+                                          className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                          style={{
+                                            fontFamily: 'BasisGrotesquePro',
+                                            fontSize: '14px',
+                                            color: '#3B4A66',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #E5E7EB'
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.target.style.backgroundColor = '#F9FAFB';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.target.style.backgroundColor = 'white';
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowMenuIndex(null);
+                                            if (meta.canPreview) {
+                                              openPreviewModal(doc, e.currentTarget);
+                                            }
+                                          }}
+                                        >
+                                          <i className="bi bi-eye me-2"></i>
+                                          Preview
+                                        </button>
+                                      )}
+                                      {isFile(doc) && (
+                                        <button
+                                          className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                          style={{
+                                            fontFamily: 'BasisGrotesquePro',
+                                            fontSize: '14px',
+                                            color: '#00C0C6',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #E5E7EB'
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.target.style.backgroundColor = '#F0FDFF';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.target.style.backgroundColor = 'white';
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowMenuIndex(null);
+                                            handleOpenAssignModal(doc);
+                                          }}
+                                        >
+                                          <i className="bi bi-pen me-2"></i>
+                                          Assign
+                                        </button>
+                                      )}
+                                      <button
+                                        className="btn btn-white border-0 w-100 text-start px-3 py-2"
+                                        style={{
+                                          fontFamily: 'BasisGrotesquePro',
+                                          fontSize: '14px',
+                                          color: '#EF4444',
+                                          cursor: 'pointer'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.target.style.backgroundColor = '#FEF2F2';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.target.style.backgroundColor = 'white';
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowMenuIndex(null);
+                                          handleDeleteDocument(doc);
+                                        }}
+                                      >
+                                        <i className="bi bi-trash me-2"></i>
+                                        Delete
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -1051,6 +1444,220 @@ export default function DocumentsPage() {
           )}
         </Modal.Body>
       </Modal>
+
+      {/* Assign Document for E-Sign Modal */}
+      <Modal
+        show={showAssignModal}
+        onHide={() => {
+          if (!assigning) {
+            setShowAssignModal(false);
+            setDocumentToAssign(null);
+            setSelectedTaxpayerId('');
+            setDeadline('');
+            setHasSpouse(false);
+            setPreparerMustSign(false);
+            setPollingStatus(null);
+          }
+        }}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', color: '#3B4A66' }}>
+            Assign Document for E-Sign
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ fontFamily: 'BasisGrotesquePro' }}>
+          {documentToAssign && (
+            <div className="mb-3">
+              <label className="form-label" style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+                Document <span style={{ color: '#EF4444' }}>*</span>
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                value={getDocumentName(documentToAssign)}
+                disabled={true}
+                style={{ 
+                  fontFamily: 'BasisGrotesquePro',
+                  backgroundColor: '#F3F4F6',
+                  cursor: 'not-allowed'
+                }}
+              />
+            </div>
+          )}
+
+          {pollingStatus && (
+            <div className="mb-3 p-3" style={{ 
+              backgroundColor: pollingStatus.status === 'completed' ? '#F0FDF4' : '#FEF3C7',
+              borderRadius: '8px',
+              border: `1px solid ${pollingStatus.status === 'completed' ? '#10B981' : '#F59E0B'}`
+            }}>
+              <div style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+                {pollingStatus.status === 'completed' ? '✓' : '⏳'} {pollingStatus.message}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-3">
+            <label className="form-label" style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+              Taxpayer/Client <span style={{ color: '#EF4444' }}>*</span>
+            </label>
+            {clientIdFromUrl ? (
+              <input
+                type="text"
+                className="form-control"
+                value={(() => {
+                  const client = taxpayers.find(t => t.id?.toString() === clientIdFromUrl);
+                  if (client) {
+                    return client.full_name || 
+                           `${client.first_name || ''} ${client.last_name || ''}`.trim() || 
+                           client.email || 
+                           `Taxpayer ${clientIdFromUrl}`;
+                  }
+                  return `Client ID: ${clientIdFromUrl}`;
+                })()}
+                disabled={true}
+                style={{ 
+                  fontFamily: 'BasisGrotesquePro',
+                  backgroundColor: '#F3F4F6',
+                  cursor: 'not-allowed'
+                }}
+              />
+            ) : (
+              <select
+                className="form-control"
+                value={selectedTaxpayerId}
+                onChange={(e) => setSelectedTaxpayerId(e.target.value)}
+                disabled={assigning}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
+              >
+                <option value="">Select taxpayer...</option>
+                {taxpayers.map((taxpayer) => (
+                  <option key={taxpayer.id} value={taxpayer.id}>
+                    {taxpayer.full_name || `${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || taxpayer.email || `Taxpayer ${taxpayer.id}`}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label" style={{ fontSize: '14px', color: '#3B4A66', fontWeight: '500' }}>
+              Signing Deadline <span style={{ color: '#EF4444' }}>*</span>
+            </label>
+            <input
+              type="date"
+              className="form-control"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              disabled={assigning}
+              min={new Date().toISOString().split('T')[0]}
+              style={{ fontFamily: 'BasisGrotesquePro' }}
+            />
+          </div>
+
+          <div className="mb-3">
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={hasSpouse}
+                onChange={(e) => setHasSpouse(e.target.checked)}
+                disabled={assigning}
+                id="hasSpouse"
+              />
+              <label className="form-check-label" htmlFor="hasSpouse" style={{ fontSize: '14px', color: '#3B4A66' }}>
+                Spouse signature required
+              </label>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={preparerMustSign}
+                onChange={(e) => setPreparerMustSign(e.target.checked)}
+                disabled={assigning}
+                id="preparerMustSign"
+              />
+              <label className="form-check-label" htmlFor="preparerMustSign" style={{ fontSize: '14px', color: '#3B4A66' }}>
+                Preparer must also sign
+              </label>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+          <button
+            className="btn"
+            onClick={() => {
+              if (!assigning) {
+                setShowAssignModal(false);
+                setDocumentToAssign(null);
+                setSelectedTaxpayerId('');
+                setDeadline('');
+                setHasSpouse(false);
+                setPreparerMustSign(false);
+                setPollingStatus(null);
+              }
+            }}
+            disabled={assigning}
+            style={{
+              fontFamily: 'BasisGrotesquePro',
+              backgroundColor: '#FFFFFF',
+              color: '#3B4A66',
+              border: '1px solid #E5E7EB',
+              borderRadius: '8px',
+              padding: '8px 16px'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn"
+            onClick={handleAssignDocument}
+            disabled={assigning || (!selectedTaxpayerId && !clientIdFromUrl) || !deadline}
+            style={{
+              fontFamily: 'BasisGrotesquePro',
+              backgroundColor: assigning ? '#9CA3AF' : '#00C0C6',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              cursor: assigning || !selectedTaxpayerId || !deadline ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {assigning ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Assigning...
+              </>
+            ) : (
+              'Assign Document'
+            )}
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Document Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteDocumentConfirm}
+        onClose={() => {
+          if (!deletingDocumentId) {
+            setShowDeleteDocumentConfirm(false);
+            setDocumentToDelete(null);
+          }
+        }}
+        onConfirm={confirmDeleteDocument}
+        title="Delete Document"
+        message={documentToDelete ? `Are you sure you want to delete "${getDocumentName(documentToDelete)}"? This action cannot be undone.` : "Are you sure you want to delete this document? This action cannot be undone."}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmButtonStyle={{ backgroundColor: '#EF4444', borderColor: '#EF4444' }}
+        isLoading={!!deletingDocumentId}
+      />
     </div>
   );
 }

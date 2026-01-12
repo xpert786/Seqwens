@@ -5249,6 +5249,112 @@ export const taxPreparerClientAPI = {
   }
 };
 
+// E-Sign Assign Document API functions
+export const esignAssignAPI = {
+  // Assign existing document to taxpayer for e-signing
+  // POST /taxpayer/esign/custom/create/
+  assignDocumentForESign: async (assignmentData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/taxpayer/esign/custom/create/`;
+
+    // Format deadline to MM/DD/YYYY if it's provided
+    let deadlineFormatted = '';
+    if (assignmentData.deadline) {
+      const deadline = assignmentData.deadline;
+      if (typeof deadline === 'string') {
+        // Check if it's already in MM/DD/YYYY format
+        if (deadline.includes('/')) {
+          deadlineFormatted = deadline;
+        } else {
+          // Assume it's in YYYY-MM-DD format
+          const datePart = deadline.split('T')[0];
+          const parts = datePart.split('-');
+          if (parts.length === 3) {
+            const [year, month, day] = parts;
+            deadlineFormatted = `${month}/${day}/${year}`;
+          } else {
+            deadlineFormatted = deadline;
+          }
+        }
+      } else {
+        deadlineFormatted = deadline.toString();
+      }
+    }
+
+    // Prepare payload for custom/create endpoint
+    const payload = {
+      document_id: assignmentData.document_id,
+      taxpayer_id: assignmentData.taxpayer_id,
+      deadline: deadlineFormatted || assignmentData.deadline,
+      fields: assignmentData.fields || [], // Default to empty array if not provided
+    };
+
+    // Add optional fields
+    if (assignmentData.has_spouse !== undefined) {
+      payload.has_spouse = assignmentData.has_spouse;
+    }
+    if (assignmentData.preparer_must_sign !== undefined) {
+      payload.preparer_must_sign = assignmentData.preparer_must_sign;
+    }
+    if (assignmentData.message) {
+      payload.message = assignmentData.message;
+    }
+    if (assignmentData.send_reminders !== undefined) {
+      payload.send_reminders = assignmentData.send_reminders;
+    }
+
+    const config = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || data.detail || `HTTP error! status: ${response.status}`);
+        }
+        return data;
+      });
+  },
+
+  // Poll for e-sign document processing status
+  // GET /taxpayer/esign/poll-status/{id}/
+  pollESignStatus: async (esignDocumentId) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const url = `${API_BASE_URL}/taxpayer/esign/poll-status/${esignDocumentId}/`;
+
+    const config = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return await fetchWithCors(url, config)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || data.detail || `HTTP error! status: ${response.status}`);
+        }
+        return data;
+      });
+  }
+};
+
 // Tax Preparer Staff Invites API functions
 export const taxPreparerStaffInvitesAPI = {
   // List pending staff invites
@@ -7604,7 +7710,8 @@ export const maintenanceModeAPI = {
   // Session timeout logout
   sessionTimeoutLogout: async () => {
     return await apiRequest('/user/session-timeout/logout/', 'POST');
-  }
+  },
+
 };
 
 // Re-export utility functions for convenience

@@ -4,9 +4,11 @@ import { Modal } from 'react-bootstrap';
 import { customESignAPI, taxPreparerClientAPI, taxPreparerDocumentsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
-import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus } from 'react-icons/fi';
+import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus, FiPenTool } from 'react-icons/fi';
 import ProcessingModal from '../../../components/ProcessingModal';
 import PdfSignatureModal from '../../components/PdfSignatureModal.jsx';
+import PdfAnnotationModal from '../../../ClientOnboarding/components/PdfAnnotationModal';
+import { annotationAPI } from '../../../utils/annotationAPI';
 import '../../styles/esignature-dashboard.css';
 
 export default function ESignatureDashboard() {
@@ -52,6 +54,10 @@ export default function ESignatureDashboard() {
   // PDF Signature Modal state
   const [showPdfSignatureModal, setShowPdfSignatureModal] = useState(false);
   const [currentSignatureRequest, setCurrentSignatureRequest] = useState(null);
+  
+  // PDF Annotation Modal state
+  const [showAnnotationModal, setShowAnnotationModal] = useState(false);
+  const [selectedDocumentForAnnotation, setSelectedDocumentForAnnotation] = useState(null);
   
   // Data for dropdowns
   const [clients, setClients] = useState([]);
@@ -1169,6 +1175,40 @@ export default function ESignatureDashboard() {
                           </span>
                         )}
                       </div>
+                      {/* Annotate PDF Button - Show when preparer needs to sign and taxpayer has signed, or when status is processing */}
+                      {request.preparer_must_sign === true && 
+                       request.preparer_signed === false &&
+                       (request.status === 'processing' || 
+                        (request.taxpayer_signed === true && request.preparer_needs_to_sign === true)) && (
+                        <div className="mt-2 d-flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDocumentForAnnotation({
+                                url: request.document_url,
+                                name: request.document_name || request.title || 'Document',
+                                id: request.id,
+                                document_id: request.document
+                              });
+                              setShowAnnotationModal(true);
+                            }}
+                            className="btn d-flex align-items-center gap-2"
+                            style={{
+                              backgroundColor: '#00C0C6',
+                              color: 'white',
+                              border: 'none',
+                              fontFamily: 'BasisGrotesquePro',
+                              fontWeight: '500',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              fontSize: '14px'
+                            }}
+                          >
+                            <FiPenTool size={14} />
+                            Annotate PDF
+                          </button>
+                        </div>
+                      )}
                       {/* Sign Document Button for Ready Status */}
                       {request.status === 'ready' && (
                         <div className="mt-2">
@@ -1724,6 +1764,72 @@ export default function ESignatureDashboard() {
           fetchSignatureRequests();
         }}
       />
+
+      {/* PDF Annotation Modal */}
+      {showAnnotationModal && selectedDocumentForAnnotation && (
+        <PdfAnnotationModal
+          isOpen={showAnnotationModal}
+          onClose={() => {
+            setShowAnnotationModal(false);
+            setSelectedDocumentForAnnotation(null);
+          }}
+          documentUrl={selectedDocumentForAnnotation.url}
+          documentName={selectedDocumentForAnnotation.name}
+          requestId={selectedDocumentForAnnotation.id}
+          onSave={async (annotationData) => {
+            try {
+              console.log('💾 Preparing to save annotations:', {
+                esign_request_id: selectedDocumentForAnnotation.id,
+                document_id: selectedDocumentForAnnotation.document_id,
+                annotations_count: annotationData.annotations?.length || 0,
+                images_count: annotationData.images?.length || 0,
+                pdf_scale: annotationData.pdf_scale,
+                canvas_info: annotationData.canvas_info
+              });
+
+              // Send to backend using annotationAPI
+              const response = await annotationAPI.saveAnnotations({
+                pdfUrl: selectedDocumentForAnnotation.url,
+                annotations: annotationData.annotations || [],
+                images: annotationData.images || [],
+                pdf_scale: annotationData.pdf_scale || 1.5,
+                canvas_info: annotationData.canvas_info,
+                requestId: selectedDocumentForAnnotation.document_id,
+                esign_document_id: selectedDocumentForAnnotation.id,
+                metadata: {
+                  request_id: selectedDocumentForAnnotation.id,
+                  document_id: selectedDocumentForAnnotation.document_id,
+                  document_url: selectedDocumentForAnnotation.url,
+                  document_name: selectedDocumentForAnnotation.name,
+                  timestamp: new Date().toISOString(),
+                  canvas_info: annotationData.canvas_info
+                }
+              });
+
+              if (response.success) {
+                toast.success('PDF annotations saved successfully!', {
+                  position: 'top-right',
+                  autoClose: 5000
+                });
+                
+                // Refresh signature requests
+                setTimeout(() => {
+                  fetchSignatureRequests();
+                }, 1000);
+              } else {
+                throw new Error(response.message || 'Failed to save annotations');
+              }
+            } catch (error) {
+              console.error('Error saving annotations:', error);
+              const errorMsg = handleAPIError(error);
+              toast.error(errorMsg || 'Failed to save annotations', {
+                position: 'top-right',
+                autoClose: 5000
+              });
+            }
+          }}
+        />
+      )}
 
     </div>
   );

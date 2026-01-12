@@ -25,40 +25,61 @@ export const annotationAPI = {
       const API_BASE_URL = getAPIBaseUrl();
       const token = getAccessToken();
       
-      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/save`, {
+      const payload = {
+        document_id: annotationData.requestId || annotationData.documentId,  // Backend expects document_id
+        esign_document_id: annotationData.esign_document_id,  // E-signature request ID
+        pdf_url: annotationData.pdfUrl || annotationData.document_url,
+        annotations: annotationData.annotations || [],
+        images: annotationData.images || [],
+        pdf_scale: annotationData.pdf_scale || 1.5,
+        canvas_info: annotationData.canvas_info || annotationData.metadata?.canvas_info,
+        metadata: annotationData.metadata || {},
+        // Backend processing instructions for Python script
+        processing_options: {
+          add_signatures: true,
+          merge_images: true,
+          preserve_quality: true,
+          output_format: 'pdf'
+        }
+      };
+      
+      console.log('📤 Saving annotations to backend:', {
+        url: `${API_BASE_URL}/taxpayer/pdf/annotations/save/`,
+        document_id: payload.document_id,
+        esign_document_id: payload.esign_document_id,
+        annotations_count: payload.annotations.length,
+        images_count: payload.images.length,
+        pdf_scale: payload.pdf_scale
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/save/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          request_id: annotationData.requestId,
-          pdf_url: annotationData.pdfUrl || annotationData.document_url,
-          annotations: annotationData.annotations || [],
-          images: annotationData.images || [],
-          metadata: annotationData.metadata || {},
-          // Backend processing instructions for Python script
-          processing_options: {
-            add_signatures: true,
-            merge_images: true,
-            preserve_quality: true,
-            output_format: 'pdf'
-          }
-        })
+        body: JSON.stringify(payload)
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error('❌ Backend error response:', {
+          status: response.status,
+          message: data.message || 'Unknown error',
+          data: data
+        });
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      console.log('✅ Annotations saved successfully:', data);
       return {
         success: true,
         data: data,
-        message: 'Annotations saved and processed successfully'
+        message: data.message || 'Annotations saved and processed successfully'
       };
     } catch (error) {
-      console.error('Error saving annotations:', error);
+      console.error('❌ Error saving annotations:', error);
       return {
         success: false,
         message: error.message || 'Failed to save annotations'
@@ -73,7 +94,7 @@ export const annotationAPI = {
    */
   getProcessedPDF: async (annotationId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/${annotationId}/processed`, {
+      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/${annotationId}/processed/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -111,7 +132,7 @@ export const annotationAPI = {
       formData.append('image', imageFile);
       formData.append('image_type', imageType);
 
-      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/upload-image`, {
+      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/upload-image/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -145,7 +166,7 @@ export const annotationAPI = {
    */
   getAnnotationHistory: async (pdfUrl) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/history`, {
+      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/history/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +202,7 @@ export const annotationAPI = {
    */
   deleteAnnotations: async (annotationId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/${annotationId}`, {
+      const response = await fetch(`${API_BASE_URL}/taxpayer/pdf/annotations/${annotationId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
-import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiZoomIn, FiZoomOut, FiRotateCw, FiDownload, FiTrash2 } from 'react-icons/fi';
+import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiZoomIn, FiZoomOut, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove } from 'react-icons/fi';
 import { handleAPIError } from '../utils/apiUtils';
 import '../styles/PdfAnnotationModal.css';
 
@@ -40,12 +40,26 @@ export default function PdfAnnotationModal({
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedAnnotation, setSelectedAnnotation] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [history, setHistory] = useState([]); // History of annotation states for undo
+  const [historyIndex, setHistoryIndex] = useState(-1); // Current position in history
+  const [draggingImage, setDraggingImage] = useState(null); // Currently dragging image
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 }); // Offset for smooth dragging
   
   const canvasRefs = useRef({});
   const containerRef = useRef(null);
   const imageInputRef = useRef(null);
   const startPosRef = useRef(null);
   const annotationIdCounter = useRef(0);
+  const eraserRemovedIdsRef = useRef(new Set()); // Track IDs removed in current erase session
+  const lastEraseTimeRef = useRef(0); // Throttle eraser re-renders
+
+  // Initialize history when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setHistory([{ annotations: [], images: [] }]);
+      setHistoryIndex(0);
+    }
+  }, [isOpen]);
 
   // Load PDF
   useEffect(() => {
@@ -61,24 +75,119 @@ export default function PdfAnnotationModal({
     }
   }, [currentPage, scale, pdfDoc]);
 
-  // Redraw annotations when they change
+  // Only redraw when images change (not on every annotation stroke)
   useEffect(() => {
     if (pdfDoc && currentPage) {
       renderPage(pdfDoc, currentPage);
     }
-  }, [annotations, images, currentPage]);
+  }, [images]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+Z or Cmd+Z for Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Ctrl+Shift+Z or Cmd+Shift+Z or Ctrl+Y for Redo
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || 
+          (e.ctrlKey && e.key === 'y')) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, historyIndex, history]);
+
+  // Debug: Log when draggingImage changes
+  useEffect(() => {
+    console.log('draggingImage state changed:', draggingImage ? draggingImage.id : 'null');
+  }, [draggingImage]);
+
+  // Update cursor for all page wrappers and canvases when tool changes
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const wrappers = container.querySelectorAll('.pdf-page-wrapper');
+    const canvases = container.querySelectorAll('canvas');
+    
+    wrappers.forEach(wrapper => {
+      if (activeTool === TOOLS.PEN) {
+        wrapper.style.cursor = 'crosshair';
+      } else if (activeTool === TOOLS.TRASH) {
+        wrapper.style.cursor = 'not-allowed';
+      } else if (activeTool === TOOLS.IMAGE) {
+        wrapper.style.cursor = 'copy';
+      } else if (activeTool === TOOLS.SELECT) {
+        wrapper.style.cursor = draggingImage ? 'grabbing' : 'grab';
+      } else {
+        wrapper.style.cursor = 'default';
+      }
+    });
+    
+    // Also update canvas cursors
+    // For SELECT mode, we don't set it here because it's dynamic based on hover
+    canvases.forEach(canvas => {
+      if (activeTool === TOOLS.PEN) {
+        canvas.style.cursor = 'crosshair';
+      } else if (activeTool === TOOLS.TRASH) {
+        canvas.style.cursor = 'not-allowed';
+      } else if (activeTool === TOOLS.IMAGE) {
+        canvas.style.cursor = 'copy';
+      } else if (activeTool === TOOLS.SELECT) {
+        // Don't set cursor here - it's handled dynamically in handleMouseMove
+        canvas.style.cursor = draggingImage ? 'grabbing' : 'pointer';
+      } else {
+        canvas.style.cursor = 'default';
+      }
+    });
+  }, [activeTool, draggingImage]);
 
   const loadPdf = async (url) => {
     try {
       setLoading(true);
       
-      // Fetch PDF as blob
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      let pdfBlobUrl = url;
       
-      // Load PDF document
-      const loadingTask = getDocument({ url: blobUrl });
+      // Try to fetch PDF as blob to avoid CORS issues, with fallback to direct URL
+      try {
+        const response = await fetch(url, { 
+          mode: 'cors',
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          pdfBlobUrl = URL.createObjectURL(blob);
+          console.log('PDF loaded as blob successfully');
+        } else {
+          console.warn('Failed to fetch PDF as blob, using direct URL:', response.status, response.statusText);
+        }
+      } catch (fetchError) {
+        console.warn('Could not fetch PDF as blob, using direct URL:', fetchError.message);
+        // Fall back to direct URL
+      }
+      
+      // Load PDF document with error handling
+      const loadingTask = getDocument({ 
+        url: pdfBlobUrl,
+        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/'
+      });
+      
+      loadingTask.onProgress = (progress) => {
+        console.log('PDF loading progress:', progress);
+      };
+      
       const pdf = await loadingTask.promise;
       
       setPdfDoc(pdf);
@@ -91,21 +200,40 @@ export default function PdfAnnotationModal({
       }
       setPdfPages(pages);
       
+      toast.success(`PDF loaded successfully (${numPages} pages)`);
       setLoading(false);
     } catch (error) {
       console.error('Error loading PDF:', error);
-      toast.error('Failed to load PDF document');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to load PDF document';
+      
+      if (error.name === 'UnexpectedResponseException') {
+        errorMessage = 'PDF file not found or access denied';
+      } else if (error.name === 'InvalidPDFException') {
+        errorMessage = 'The file is not a valid PDF';
+      } else if (error.name === 'MissingPDFException') {
+        errorMessage = 'PDF file is missing or corrupted';
+      } else if (error.message && error.message.includes('fetch')) {
+        errorMessage = 'Network error: Could not download PDF. Please check your internet connection.';
+      }
+      
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
 
-  const renderPage = async (pdf, pageNum) => {
+  const renderPage = useCallback(async (pdf, pageNum) => {
+    if (!pdf || !pageNum || isNaN(pageNum)) return;
+    
     const canvasId = `page-${pageNum}`;
     const container = containerRef.current;
     if (!container) return;
     
     try {
       const page = await pdf.getPage(pageNum);
+      if (!page) return;
+      
       const viewport = page.getViewport({ scale });
       
       // Find or create wrapper
@@ -118,8 +246,20 @@ export default function PdfAnnotationModal({
         wrapper.style.marginBottom = '20px';
         wrapper.style.display = 'flex';
         wrapper.style.justifyContent = 'center';
-        wrapper.style.cursor = activeTool === TOOLS.PEN || activeTool === TOOLS.TRASH ? 'crosshair' : 'default';
         container.appendChild(wrapper);
+      }
+      
+      // Update cursor based on active tool
+      if (activeTool === TOOLS.PEN) {
+        wrapper.style.cursor = 'crosshair';
+      } else if (activeTool === TOOLS.TRASH) {
+        wrapper.style.cursor = 'not-allowed';
+      } else if (activeTool === TOOLS.IMAGE) {
+        wrapper.style.cursor = 'copy';
+      } else if (activeTool === TOOLS.SELECT) {
+        wrapper.style.cursor = draggingImage ? 'grabbing' : 'grab';
+      } else {
+        wrapper.style.cursor = 'default';
       }
       
       // Find or create canvas
@@ -135,6 +275,7 @@ export default function PdfAnnotationModal({
       canvas.height = viewport.height;
       
       const context = canvas.getContext('2d');
+      if (!context) return;
       
       // Clear canvas
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -155,8 +296,9 @@ export default function PdfAnnotationModal({
       
     } catch (error) {
       console.error('Error rendering page:', error);
+      // Don't show error toast to avoid spam during erasing
     }
-  };
+  }, [scale, activeTool, annotations, images, draggingImage]);
 
   const drawAnnotations = (context, pageNum, viewport) => {
     const pageAnnotations = annotations.filter(a => a.page === pageNum);
@@ -192,14 +334,84 @@ export default function PdfAnnotationModal({
       imageObj.onload = () => {
         context.drawImage(
           imageObj,
-          img.x * scale,
-          img.y * scale,
-          img.width * scale,
-          img.height * scale
+          img.x,
+          img.y,
+          img.width,
+          img.height
         );
+        
+        // Draw border if this image is being dragged
+        if (draggingImage && draggingImage.id === img.id) {
+          context.strokeStyle = '#00C0C6';
+          context.lineWidth = 2;
+          context.strokeRect(img.x, img.y, img.width, img.height);
+        }
       };
     });
   };
+
+  // Helper to check if click is on an image
+  const getImageAtPosition = useCallback((x, y, pageNum) => {
+    const pageImages = images.filter(img => img.page === pageNum);
+    console.log(`Checking position (${x.toFixed(0)}, ${y.toFixed(0)}) on page ${pageNum}`);
+    console.log('Page images:', pageImages.map(img => ({
+      id: img.id,
+      x: img.x.toFixed(0),
+      y: img.y.toFixed(0),
+      width: img.width,
+      height: img.height
+    })));
+    
+    // Check from top to bottom (last drawn = on top)
+    for (let i = pageImages.length - 1; i >= 0; i--) {
+      const img = pageImages[i];
+      const inBounds = x >= img.x && x <= img.x + img.width &&
+                       y >= img.y && y <= img.y + img.height;
+      console.log(`Image ${img.id}: inBounds=${inBounds}`);
+      if (inBounds) {
+        console.log('Found image at position!', img.id);
+        return img;
+      }
+    }
+    return null;
+  }, [images]);
+
+  // Helper function to check if point is near eraser
+  const isPointNearEraser = useCallback((point, eraserX, eraserY, eraserRadius) => {
+    if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') return false;
+    const dx = point.x - eraserX;
+    const dy = point.y - eraserY;
+    return (dx * dx + dy * dy) <= (eraserRadius * eraserRadius);
+  }, []);
+
+  // Optimized function to find annotations to erase
+  const findAnnotationsToErase = useCallback((x, y, pageNum, currentAnnotations) => {
+    if (!Array.isArray(currentAnnotations) || currentAnnotations.length === 0) return [];
+    
+    const annotationsToRemove = new Set();
+    const eraserRadiusSquared = eraserWidth * eraserWidth;
+    
+    for (const ann of currentAnnotations) {
+      // Skip invalid annotations
+      if (!ann || ann.page !== pageNum || !ann.path || !Array.isArray(ann.path) || ann.path.length === 0) {
+        continue;
+      }
+      
+      // Check if eraser intersects with any point in the annotation path
+      for (const point of ann.path) {
+        if (point && typeof point.x === 'number' && typeof point.y === 'number') {
+          const dx = point.x - x;
+          const dy = point.y - y;
+          if ((dx * dx + dy * dy) <= eraserRadiusSquared) {
+            annotationsToRemove.add(ann.id);
+            break; // Found a hit, no need to check other points
+          }
+        }
+      }
+    }
+    
+    return Array.from(annotationsToRemove);
+  }, [eraserWidth]);
 
   const handleMouseDown = (e) => {
     const target = e.target;
@@ -209,13 +421,33 @@ export default function PdfAnnotationModal({
     if (!wrapper) return;
     
     const pageNum = parseInt(wrapper.getAttribute('data-page'));
+    if (isNaN(pageNum)) return;
+    
     const canvas = target;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Validate coordinates
+    if (isNaN(x) || isNaN(y)) return;
+    
+    // Check if clicking on an existing image (for dragging)
+    const clickedImage = getImageAtPosition(x, y, pageNum);
+    console.log('Mouse down - Active tool:', activeTool, 'Clicked image:', clickedImage ? clickedImage.id : 'none');
+    console.log('Images on this page:', images.filter(img => img.page === pageNum).length);
+    
+    if (clickedImage && activeTool === TOOLS.SELECT) {
+      console.log('Starting drag for image:', clickedImage.id);
+      canvas.style.cursor = 'grabbing';
+      setDraggingImage(clickedImage);
+      setDragOffset({
+        x: x - clickedImage.x,
+        y: y - clickedImage.y
+      });
+      return;
+    }
     
     if (activeTool === TOOLS.PEN || activeTool === TOOLS.TRASH) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-      
       setIsDrawing(true);
       startPosRef.current = { x, y, page: pageNum };
       
@@ -230,36 +462,93 @@ export default function PdfAnnotationModal({
         };
         setAnnotations(prev => [...prev, newAnnotation]);
         setSelectedAnnotation(newAnnotation.id);
+      } else if (activeTool === TOOLS.TRASH) {
+        // Reset eraser session tracking
+        eraserRemovedIdsRef.current = new Set();
+        
+        console.log('Eraser clicked at:', { x, y, pageNum, eraserWidth });
+        console.log('Current annotations count:', annotations.length);
+        console.log('Current images count:', images.length);
+        
+        // Erase on click - check both annotations and images
+        const annotationsToRemove = findAnnotationsToErase(x, y, pageNum, annotations);
+        console.log('Annotations to remove:', annotationsToRemove);
+        
+        // Also check if eraser is over any image
+        const imagesToRemove = images.filter(img => {
+          if (img.page !== pageNum) return false;
+          const imgCenterX = img.x + img.width / 2;
+          const imgCenterY = img.y + img.height / 2;
+          const dx = imgCenterX - x;
+          const dy = imgCenterY - y;
+          return (dx * dx + dy * dy) <= (eraserWidth * eraserWidth);
+        }).map(img => img.id);
+        console.log('Images to remove:', imagesToRemove);
+        
+        if (annotationsToRemove.length > 0 || imagesToRemove.length > 0) {
+          annotationsToRemove.forEach(id => eraserRemovedIdsRef.current.add(id));
+          const removedAnnotationSet = new Set(annotationsToRemove);
+          const removedImageSet = new Set(imagesToRemove);
+          
+          setAnnotations(prev => {
+            const updated = prev.filter(ann => !removedAnnotationSet.has(ann.id));
+            console.log('Updated annotations count:', updated.length);
+            return updated;
+          });
+          setImages(prev => {
+            const updated = prev.filter(img => !removedImageSet.has(img.id));
+            console.log('Updated images count:', updated.length);
+            return updated;
+          });
+          
+          // Re-render after state update - use a slightly longer delay
+          setTimeout(() => {
+            if (pdfDoc) {
+              console.log('Re-rendering page:', pageNum);
+              renderPage(pdfDoc, pageNum);
+            }
+          }, 50);
+        } else {
+          console.log('No annotations or images found to erase');
+        }
       }
     } else if (activeTool === TOOLS.IMAGE && selectedAnnotation) {
-      // Place image at clicked position
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (canvas.width / rect.width) / scale;
-      const y = (e.clientY - rect.top) * (canvas.height / rect.height) / scale;
-      
+      // Place image at clicked position (center the image on the click point)
       const imageAnnotation = annotations.find(a => a.id === selectedAnnotation);
       if (imageAnnotation && imageAnnotation.type === 'image') {
+        const imageWidth = imageAnnotation.width || 200;
+        const imageHeight = imageAnnotation.height || 200;
+        
+        // Center the image on the click point
+        const centerX = x - (imageWidth / 2);
+        const centerY = y - (imageHeight / 2);
+        
         const newImage = {
           id: `image-${Date.now()}`,
           page: pageNum,
-          x,
-          y,
-          width: imageAnnotation.width || 200,
-          height: imageAnnotation.height || 200,
+          x: centerX,
+          y: centerY,
+          width: imageWidth,
+          height: imageHeight,
           src: imageAnnotation.src
         };
-        setImages(prev => [...prev, newImage]);
-        setAnnotations(prev => prev.filter(a => a.id !== selectedAnnotation));
+        const newImages = [...images, newImage];
+        const newAnnotations = annotations.filter(a => a.id !== selectedAnnotation);
+        
+        setImages(newImages);
+        setAnnotations(newAnnotations);
         setSelectedAnnotation(null);
         setActiveTool(TOOLS.PEN);
+        
+        // Save to history
+        saveToHistory(newAnnotations, newImages);
+        
         toast.success('Image placed successfully');
       }
     }
   };
 
   const handleMouseMove = (e) => {
-    if (!isDrawing || !startPosRef.current) return;
-    
     const target = e.target;
     if (!target || target.tagName !== 'CANVAS') return;
     
@@ -267,40 +556,149 @@ export default function PdfAnnotationModal({
     if (!wrapper) return;
     
     const pageNum = parseInt(wrapper.getAttribute('data-page'));
-    const canvas = target;
+    if (isNaN(pageNum)) return;
     
+    const canvas = target;
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (canvas.width / rect.width);
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
     
+    // Validate coordinates
+    if (isNaN(x) || isNaN(y)) return;
+    
+    // Handle image dragging
+    if (draggingImage) {
+      console.log('Dragging image:', draggingImage.id, 'to position:', x.toFixed(0), y.toFixed(0));
+      const newX = x - dragOffset.x;
+      const newY = y - dragOffset.y;
+      
+      setImages(prev => prev.map(img => {
+        if (img.id === draggingImage.id) {
+          console.log('Updating image position to:', newX.toFixed(0), newY.toFixed(0));
+          return { ...img, x: newX, y: newY };
+        }
+        return img;
+      }));
+      
+      // Re-render for smooth dragging
+      requestAnimationFrame(() => {
+        if (pdfDoc) {
+          renderPage(pdfDoc, pageNum);
+        }
+      });
+      return;
+    } else if (activeTool === TOOLS.SELECT) {
+      console.log('In SELECT mode but draggingImage is null');
+    }
+    
+    // Change cursor when hovering over images in SELECT mode
+    if (activeTool === TOOLS.SELECT && !isDrawing && !draggingImage) {
+      const hoveredImage = getImageAtPosition(x, y, pageNum);
+      if (hoveredImage) {
+        console.log('Hovering over image:', hoveredImage.id);
+        canvas.style.cursor = 'grab';
+      } else {
+        canvas.style.cursor = 'pointer';
+      }
+    }
+    
+    if (!isDrawing || !startPosRef.current) return;
+    
     if (activeTool === TOOLS.PEN && selectedAnnotation) {
-      setAnnotations(prev => prev.map(ann => {
-        if (ann.id === selectedAnnotation && ann.page === pageNum) {
-          return {
-            ...ann,
-            path: [...ann.path, { x, y }]
-          };
-        }
-        return ann;
-      }));
+      // Draw directly on canvas without re-rendering
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      
+      context.strokeStyle = penColor;
+      context.lineWidth = penWidth;
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      
+      const lastPoint = startPosRef.current;
+      if (lastPoint && typeof lastPoint.x === 'number' && typeof lastPoint.y === 'number') {
+        context.beginPath();
+        context.moveTo(lastPoint.x, lastPoint.y);
+        context.lineTo(x, y);
+        context.stroke();
+      }
+      
+      startPosRef.current = { x, y, page: pageNum };
+      
+      // Update annotation data in state - batch updates for performance
+      setAnnotations(prev => {
+        return prev.map(ann => {
+          if (ann.id === selectedAnnotation && ann.page === pageNum) {
+            return {
+              ...ann,
+              path: [...ann.path, { x, y }]
+            };
+          }
+          return ann;
+        });
+      });
     } else if (activeTool === TOOLS.TRASH) {
-      // Erase annotations near the cursor
-      setAnnotations(prev => prev.map(ann => {
-        if (ann.page === pageNum && ann.path) {
-          const newPath = ann.path.filter(point => {
-            const distance = Math.sqrt(
-              Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2)
-            );
-            return distance > eraserWidth;
-          });
-          return { ...ann, path: newPath };
+      // Erase entire annotations when the eraser crosses any part of them
+      const annotationsToRemove = findAnnotationsToErase(x, y, pageNum, annotations);
+      
+      // Filter out already removed annotations in this session
+      const newRemovalsOnly = annotationsToRemove.filter(id => !eraserRemovedIdsRef.current.has(id));
+      
+      // Remove annotations and trigger re-render (throttled)
+      if (newRemovalsOnly.length > 0) {
+        console.log('Erasing during drag:', newRemovalsOnly);
+        // Track removed IDs
+        newRemovalsOnly.forEach(id => eraserRemovedIdsRef.current.add(id));
+        
+        const allRemovedSet = eraserRemovedIdsRef.current;
+        setAnnotations(prev => prev.filter(ann => !allRemovedSet.has(ann.id)));
+        
+        // Throttle re-renders to max 60fps (16ms)
+        const now = Date.now();
+        if (now - lastEraseTimeRef.current >= 50) { // Increased from 16ms to 50ms
+          lastEraseTimeRef.current = now;
+          setTimeout(() => {
+            if (pdfDoc) {
+              console.log('Re-rendering during drag, page:', pageNum);
+              renderPage(pdfDoc, pageNum);
+            }
+          }, 10);
         }
-        return ann;
-      }));
+      }
+      
+      startPosRef.current = { x, y, page: pageNum };
     }
   };
 
   const handleMouseUp = () => {
+    // Handle end of image dragging
+    if (draggingImage) {
+      setDraggingImage(null);
+      setDragOffset({ x: 0, y: 0 });
+      // Save to history after drag
+      saveToHistory(annotations, images);
+      return;
+    }
+    
+    if (isDrawing) {
+      // If erasing, ensure final re-render happens
+      if (activeTool === TOOLS.TRASH && startPosRef.current && eraserRemovedIdsRef.current.size > 0) {
+        const pageNum = startPosRef.current.page;
+        if (pdfDoc && pageNum) {
+          // Final re-render to clean up
+          console.log('Final eraser re-render for page:', pageNum);
+          setTimeout(() => {
+            renderPage(pdfDoc, pageNum);
+          }, 100); // Longer delay for final render
+        }
+        // Clear eraser session tracking
+        eraserRemovedIdsRef.current.clear();
+      }
+      
+      // Save to history when drawing/erasing is complete
+      setTimeout(() => {
+        saveToHistory(annotations, images);
+      }, 150); // Save after final render
+    }
     setIsDrawing(false);
     startPosRef.current = null;
   };
@@ -345,10 +743,132 @@ export default function PdfAnnotationModal({
     }
   };
 
-  const deleteAnnotation = (id) => {
-    setAnnotations(prev => prev.filter(a => a.id !== id));
-    setImages(prev => prev.filter(img => img.id !== id));
-    setSelectedAnnotation(null);
+  // History management helper
+  const saveToHistory = useCallback((newAnnotations, newImages) => {
+    // Don't save if nothing changed
+    if (history.length > 0 && historyIndex >= 0) {
+      const currentState = history[historyIndex];
+      if (JSON.stringify(currentState.annotations) === JSON.stringify(newAnnotations) &&
+          JSON.stringify(currentState.images) === JSON.stringify(newImages)) {
+        console.log('No changes detected, skipping history save');
+        return;
+      }
+    }
+    
+    const newState = { 
+      annotations: JSON.parse(JSON.stringify(newAnnotations)), 
+      images: JSON.parse(JSON.stringify(newImages)),
+      timestamp: Date.now()
+    };
+    
+    console.log('Saving to history:', {
+      annotationsCount: newAnnotations.length,
+      imagesCount: newImages.length,
+      currentIndex: historyIndex
+    });
+    
+    setHistory(prev => {
+      // Remove any future states if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state
+      newHistory.push(newState);
+      // Limit history to last 50 states
+      const trimmedHistory = newHistory.slice(-50);
+      console.log('New history length:', trimmedHistory.length);
+      return trimmedHistory;
+    });
+    
+    setHistoryIndex(prev => {
+      const newIndex = Math.min(prev + 1, 49);
+      console.log('New history index:', newIndex);
+      return newIndex;
+    });
+  }, [historyIndex, history]);
+
+  // Undo function
+  const handleUndo = () => {
+    if (historyIndex <= 0) {
+      toast.info('Nothing to undo');
+      return;
+    }
+    
+    const newIndex = historyIndex - 1;
+    const previousState = history[newIndex];
+    
+    console.log('Undo - Going from index', historyIndex, 'to', newIndex);
+    console.log('Previous state:', {
+      annotations: previousState.annotations.length,
+      images: previousState.images.length
+    });
+    
+    setAnnotations(JSON.parse(JSON.stringify(previousState.annotations)));
+    setImages(JSON.parse(JSON.stringify(previousState.images)));
+    setHistoryIndex(newIndex);
+    
+    // Re-render all pages to ensure consistency
+    if (pdfDoc) {
+      setTimeout(() => {
+        pdfPages.forEach(pageNum => {
+          renderPage(pdfDoc, pageNum);
+        });
+      }, 50);
+    }
+    
+    toast.success(`Undone (${history.length - newIndex - 1} more available)`);
+  };
+
+  // Redo function
+  const handleRedo = () => {
+    if (historyIndex >= history.length - 1) {
+      toast.info('Nothing to redo');
+      return;
+    }
+    
+    const newIndex = historyIndex + 1;
+    const nextState = history[newIndex];
+    
+    console.log('Redo - Going from index', historyIndex, 'to', newIndex);
+    console.log('Next state:', {
+      annotations: nextState.annotations.length,
+      images: nextState.images.length
+    });
+    
+    setAnnotations(JSON.parse(JSON.stringify(nextState.annotations)));
+    setImages(JSON.parse(JSON.stringify(nextState.images)));
+    setHistoryIndex(newIndex);
+    
+    // Re-render all pages to ensure consistency
+    if (pdfDoc) {
+      setTimeout(() => {
+        pdfPages.forEach(pageNum => {
+          renderPage(pdfDoc, pageNum);
+        });
+      }, 50);
+    }
+    
+    toast.success(`Redone (${newIndex} of ${history.length - 1})`);
+  };
+
+  // Clear all annotations
+  const handleClearAll = () => {
+    if (annotations.length === 0 && images.length === 0) {
+      toast.info('Nothing to clear');
+      return;
+    }
+    
+    // Save current state before clearing
+    saveToHistory([], []);
+    setAnnotations([]);
+    setImages([]);
+    
+    // Re-render all pages
+    if (pdfDoc) {
+      pdfPages.forEach(pageNum => {
+        renderPage(pdfDoc, pageNum);
+      });
+    }
+    
+    toast.success('All annotations cleared');
   };
 
   const handleSave = async () => {
@@ -405,6 +925,13 @@ export default function PdfAnnotationModal({
     setActiveTool(TOOLS.PEN);
     setCurrentPage(1);
     setScale(1.5);
+    setHistory([]);
+    setHistoryIndex(-1);
+    
+    // Clear refs
+    eraserRemovedIdsRef.current.clear();
+    lastEraseTimeRef.current = 0;
+    
     // Clear canvas refs
     Object.keys(canvasRefs.current).forEach(key => {
       const canvas = canvasRefs.current[key];
@@ -431,7 +958,7 @@ export default function PdfAnnotationModal({
       backdrop="static"
       className="pdf-annotation-modal"
     >
-      <Modal.Header style={{ borderBottom: '2px solid #E5E7EB', padding: '16px 24px' }}>
+      <Modal.Header style={{ borderBottom: '2px solid #E5E7EB', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 1000, backgroundColor: 'white' }}>
         <div className="d-flex justify-content-between align-items-center w-100">
           <div>
             <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0 }}>
@@ -446,7 +973,7 @@ export default function PdfAnnotationModal({
         </div>
       </Modal.Header>
 
-      <Modal.Body style={{ padding: 0, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)' }}>
+      <Modal.Body style={{ padding: 0, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', overflow: 'hidden' }}>
         {/* Toolbox */}
         <div className="annotation-toolbox" style={{
           borderBottom: '2px solid #E5E7EB',
@@ -480,6 +1007,16 @@ export default function PdfAnnotationModal({
             >
               <FiImage size={18} />
             </button>
+            <button
+              onClick={() => {
+                console.log('Select/Move tool clicked');
+                setActiveTool(TOOLS.SELECT);
+              }}
+              className={`btn btn-sm ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
+              title="Select/Move Tool - Click and drag images to move them"
+            >
+              <FiMove size={18} />
+            </button>
             <input
               ref={imageInputRef}
               type="file"
@@ -487,6 +1024,19 @@ export default function PdfAnnotationModal({
               onChange={handleImageUpload}
               style={{ display: 'none' }}
             />
+            
+            {/* Divider */}
+            <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+            
+            {/* Clear All button */}
+            <button
+              onClick={handleClearAll}
+              disabled={annotations.length === 0 && images.length === 0}
+              className="btn btn-sm btn-outline-danger"
+              title="Clear All Annotations"
+            >
+              <FiTrash2 size={18} />
+            </button>
           </div>
 
           {/* Pen Settings */}
@@ -595,7 +1145,11 @@ export default function PdfAnnotationModal({
                 style={{
                   position: 'relative',
                   marginBottom: '20px',
-                  cursor: activeTool === TOOLS.PEN || activeTool === TOOLS.TRASH ? 'crosshair' : 'default'
+                  cursor: activeTool === TOOLS.PEN ? 'crosshair' 
+                    : activeTool === TOOLS.TRASH ? 'not-allowed' 
+                    : activeTool === TOOLS.IMAGE ? 'copy'
+                    : activeTool === TOOLS.SELECT ? (draggingImage ? 'grabbing' : 'grab')
+                    : 'default'
                 }}
               >
                 {/* Canvas will be inserted here by renderPage */}
@@ -639,7 +1193,15 @@ export default function PdfAnnotationModal({
         )}
       </Modal.Body>
 
-      <Modal.Footer style={{ borderTop: '2px solid #E5E7EB', padding: '16px 24px' }}>
+      <Modal.Footer style={{ 
+        borderTop: '2px solid #E5E7EB', 
+        padding: '16px 24px', 
+        position: 'sticky', 
+        bottom: 0, 
+        zIndex: 1000, 
+        backgroundColor: 'white',
+        boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
+      }}>
         <div className="d-flex justify-content-between w-100 align-items-center">
           <div style={{ fontSize: '14px', color: '#6B7280' }}>
             {annotations.length} annotation{annotations.length !== 1 ? 's' : ''} • {images.length} image{images.length !== 1 ? 's' : ''}
