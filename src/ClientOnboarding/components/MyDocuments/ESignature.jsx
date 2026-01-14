@@ -625,39 +625,78 @@ export default function ESignature() {
                         Preview
                       </button>
                       
-                      {/* Hide Annotate PDF button for taxpayers when status is "processing" */}
-                      {request.status !== 'processing' && (
-                        <button
-                          className="btn d-flex align-items-center gap-2 rounded"
-                          style={{
-                            backgroundColor: "#00C0C6",
-                            color: "#fff",
-                            border: "none",
-                            fontSize: "12px",
-                            fontWeight: "500"
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedIndex(originalIndex);
-                            setSelectedDocumentForAnnotation({
-                              url: request.document_url,
-                              name: request.document_name || request.title || 'Document',
-                              id: request.id || request.esign_id,  // E-signature request ID
-                              document_id: request.document  // Actual document ID for backend
-                            });
-                            console.log('📄 Opening annotation modal for:', {
-                              esign_request_id: request.id,
-                              document_id: request.document,
-                              document_name: request.document_name
-                            });
-                            setShowAnnotationModal(true);
-                          }}
-                          title="Open PDF Annotation Tool"
-                        >
-                          <FiPenTool size={14} />
-                          Annotate PDF
-                        </button>
-                      )}
+                      {/* Check if both taxpayer and spouse have signed */}
+                      {(() => {
+                        const bothSigned = request.taxpayer_signed === true && request.spouse_signed === true;
+                        
+                        // If both have signed, show Preview Annotated PDF button (if annotated_pdf_url exists)
+                        if (bothSigned && request.annotated_pdf_url) {
+                          return (
+                            <button
+                              className="btn d-flex align-items-center gap-2 rounded"
+                              style={{
+                                backgroundColor: "#10B981",
+                                color: "#fff",
+                                border: "none",
+                                fontSize: "12px",
+                                fontWeight: "500"
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedIndex(originalIndex);
+                                // Open preview modal with annotated PDF
+                                setShowPreviewModal(true);
+                              }}
+                              title="Preview Annotated PDF"
+                            >
+                              <FaEye size={14} />
+                              Preview Annotated PDF
+                            </button>
+                          );
+                        }
+                        
+                        // If both haven't signed and status is not "processing", show Annotate PDF button
+                        if (!bothSigned && request.status !== 'processing') {
+                          return (
+                            <button
+                              className="btn d-flex align-items-center gap-2 rounded"
+                              style={{
+                                backgroundColor: "#00C0C6",
+                                color: "#fff",
+                                border: "none",
+                                fontSize: "12px",
+                                fontWeight: "500"
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedIndex(originalIndex);
+                                // Use annotated_pdf_url if available, otherwise use document_url
+                                const pdfUrl = request.annotated_pdf_url || request.document_url;
+                                setSelectedDocumentForAnnotation({
+                                  url: pdfUrl,
+                                  name: request.document_name || request.title || 'Document',
+                                  id: request.id || request.esign_id,  // E-signature request ID
+                                  document_id: request.document  // Actual document ID for backend
+                                });
+                                console.log('📄 Opening annotation modal for:', {
+                                  esign_request_id: request.id,
+                                  document_id: request.document,
+                                  document_name: request.document_name,
+                                  using_annotated_pdf: !!request.annotated_pdf_url,
+                                  pdf_url: pdfUrl
+                                });
+                                setShowAnnotationModal(true);
+                              }}
+                              title="Open PDF Annotation Tool"
+                            >
+                              <FiPenTool size={14} />
+                              Annotate PDF
+                            </button>
+                          );
+                        }
+                        
+                        return null;
+                      })()}
                     </>
                   )}
 
@@ -876,71 +915,42 @@ export default function ESignature() {
 
         <Modal.Header closeButton>
           <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
-            {selectedIndex !== null && signatureRequests[selectedIndex]
-              ? `E-Signature – ${signatureRequests[selectedIndex].document_name || signatureRequests[selectedIndex].title || 'Document'}`
-              : 'E-Signature – Document Preview'}
+            {selectedIndex !== null && signatureRequests[selectedIndex] ? (
+              (() => {
+                const request = signatureRequests[selectedIndex];
+                const isAnnotated = request.taxpayer_signed === true && request.spouse_signed === true && request.annotated_pdf_url;
+                const docName = request.document_name || request.title || 'Document';
+                return `E-Signature – ${isAnnotated ? 'Annotated ' : ''}${docName}`;
+              })()
+            ) : 'E-Signature – Document Preview'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
-          {selectedIndex !== null && signatureRequests[selectedIndex]?.document_url ? (
+          {selectedIndex !== null && signatureRequests[selectedIndex] ? ( 
             <>
-              <PDFViewer
-                pdfUrl={signatureRequests[selectedIndex]?.document_url}
-                height="70vh"
-                showThumbnails={true}
-              />
-              {/* Signature Fields Status */}
               {(() => {
                 const request = signatureRequests[selectedIndex];
-                const esignDocId = request?.id || request?.esign_id || request?.document;
-                const fieldsStatus = esignDocId ? signatureFieldsStatus[esignDocId] : null;
+                // Use annotated_pdf_url if both taxpayer and spouse have signed, otherwise use document_url
+                const pdfUrl = (request.taxpayer_signed === true && request.spouse_signed === true && request.annotated_pdf_url)
+                  ? request.annotated_pdf_url
+                  : request.document_url;
                 
-                if (!esignDocId) return null;
-                
-                return (
-                  <div className="p-3 border-top" style={{ backgroundColor: '#F9FAFB' }}>
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div>
-                        {fieldsStatus?.loading ? (
-                          <small className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            Checking signature fields...
-                          </small>
-                        ) : fieldsStatus?.hasFields ? (
-                          <small className="text-success" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            ✓ Found {fieldsStatus.totalFields} signature field(s)
-                          </small>
-                        ) : fieldsStatus?.error ? (
-                          <small className="text-danger" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            ⚠ {fieldsStatus.error}
-                          </small>
-                        ) : (
-                          <small className="text-warning" style={{ fontFamily: 'BasisGrotesquePro' }}>
-                            ⚠ No signature fields found
-                          </small>
-                        )}
-                      </div>
-                      {(!fieldsStatus?.hasFields || fieldsStatus?.error) && (
-                        <button
-                          className="btn btn-sm"
-                          style={{
-                            backgroundColor: "#F56D2D",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            padding: "4px 12px"
-                          }}
-                          onClick={() => regenerateSignatureFields(esignDocId)}
-                          disabled={fieldsStatus?.regenerating || false}
-                        >
-                          {fieldsStatus?.regenerating ? 'Regenerating...' : 'Regenerate Fields'}
-                        </button>
-                      )}
-                    </div>
+                return pdfUrl ? (
+                  <PDFViewer
+                    pdfUrl={pdfUrl}
+                    height="70vh"
+                    showThumbnails={true}
+                  />
+                ) : (
+                  <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+                    <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      No document available for preview.
+                    </p>
                   </div>
                 );
               })()}
+              {/* Signature Fields Status */}
+              
             </>
           ) : (
             <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
@@ -1028,6 +1038,10 @@ export default function ESignature() {
                   position: 'top-right',
                   autoClose: 5000
                 });
+                
+                // Close the annotation modal
+                setShowAnnotationModal(false);
+                setSelectedDocumentForAnnotation(null);
                 
                 // Refresh signature requests
                 setTimeout(() => {

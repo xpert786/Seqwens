@@ -56,6 +56,7 @@ export default function PdfAnnotationModal({
   const annotationIdCounter = useRef(0);
   const eraserRemovedIdsRef = useRef(new Set()); // Track IDs removed in current erase session
   const lastEraseTimeRef = useRef(0); // Throttle eraser re-renders
+  const annotationsRef = useRef([]); // Store current annotations to avoid stale closures
 
   // Initialize history when modal opens
   useEffect(() => {
@@ -71,20 +72,6 @@ export default function PdfAnnotationModal({
       loadPdf(documentUrl);
     }
   }, [isOpen, documentUrl]);
-
-  // Render page when currentPage or scale changes
-  useEffect(() => {
-    if (pdfDoc && currentPage) {
-      renderPage(pdfDoc, currentPage);
-    }
-  }, [currentPage, scale, pdfDoc]);
-
-  // Only redraw when images change (not on every annotation stroke)
-  useEffect(() => {
-    if (pdfDoc && currentPage) {
-      renderPage(pdfDoc, currentPage);
-    }
-  }, [images]);
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -153,6 +140,12 @@ export default function PdfAnnotationModal({
     });
   }, [activeTool, draggingImage]);
 
+  // Keep annotationsRef in sync with annotations state
+  // This allows renderPage to access latest annotations without them being in dependency array
+  useEffect(() => {
+    annotationsRef.current = annotations;
+  }, [annotations]);
+
   const loadPdf = async (url) => {
     try {
       setLoading(true);
@@ -204,7 +197,6 @@ export default function PdfAnnotationModal({
       }
       setPdfPages(pages);
       
-      toast.success(`PDF loaded successfully (${numPages} pages)`);
       setLoading(false);
     } catch (error) {
       console.error('Error loading PDF:', error);
@@ -241,7 +233,13 @@ export default function PdfAnnotationModal({
       // Get viewport with explicit rotation 0 to prevent inversion
       // PDF.js viewport rotation: 0 (0°), 90 (90°), 180 (180°), 270 (270°)
       // Always use 0 to ensure correct orientation
-      const viewport = page.getViewport({ scale: scale, rotation: 0 });
+      // Create a fresh viewport object each time to avoid any cached rotation
+      const viewport = page.getViewport({ 
+        scale: scale, 
+        rotation: 0,
+        offsetX: 0,
+        offsetY: 0
+      });
       
       // Find or create wrapper
       let wrapper = container.querySelector(`[data-page="${pageNum}"]`);
@@ -249,15 +247,20 @@ export default function PdfAnnotationModal({
         wrapper = document.createElement('div');
         wrapper.className = 'pdf-page-wrapper';
         wrapper.setAttribute('data-page', pageNum);
-        wrapper.style.position = 'relative';
-        wrapper.style.marginBottom = '20px';
-        wrapper.style.display = 'flex';
-        wrapper.style.justifyContent = 'center';
-        // Ensure no transforms on wrapper that could cause inversion
-        wrapper.style.transform = 'none';
-        wrapper.style.transformOrigin = 'top left';
         container.appendChild(wrapper);
       }
+      
+      // Always reset wrapper styles to prevent inversion
+      wrapper.style.position = 'relative';
+      wrapper.style.marginBottom = '20px';
+      wrapper.style.display = 'flex';
+      wrapper.style.justifyContent = 'center';
+      wrapper.style.transform = 'none';
+      wrapper.style.transformOrigin = 'top left';
+      wrapper.style.webkitTransform = 'none';
+      wrapper.style.mozTransform = 'none';
+      wrapper.style.msTransform = 'none';
+      wrapper.style.oTransform = 'none';
       
       // Update cursor based on active tool
       if (activeTool === TOOLS.PEN) {
@@ -292,17 +295,28 @@ export default function PdfAnnotationModal({
       // Ensure no CSS transforms are applied that could cause inversion
       canvas.style.transform = 'none';
       canvas.style.transformOrigin = 'top left';
+      canvas.style.webkitTransform = 'none';
+      canvas.style.mozTransform = 'none';
+      canvas.style.msTransform = 'none';
+      canvas.style.oTransform = 'none';
+      canvas.style.rotate = '0deg';
+      canvas.style.scale = '1';
       
       const context = canvas.getContext('2d');
       if (!context) return;
       
-      // Clear canvas
+      // Clear canvas completely
       context.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Reset any existing transforms
+      // Reset any existing transforms - ensure identity matrix
+      // This prevents any rotation or scaling from previous renders
       context.setTransform(1, 0, 0, 1, 0, 0);
       
-      // Render PDF page
+      // Ensure no rotation is applied to the context
+      context.rotate(0);
+      context.scale(1, 1);
+      
+      // Render PDF page - viewport already handles correct orientation
       const renderContext = {
         canvasContext: context,
         viewport: viewport
@@ -310,8 +324,8 @@ export default function PdfAnnotationModal({
       
       await page.render(renderContext).promise;
       
-      // Draw annotations for this page
-      drawAnnotations(context, pageNum, viewport);
+      // Draw annotations for this page - use ref to get latest annotations
+      drawAnnotations(context, pageNum, viewport, annotationsRef.current);
       
       // Draw images for this page
       drawImages(context, pageNum, viewport);
@@ -320,10 +334,39 @@ export default function PdfAnnotationModal({
       console.error('Error rendering page:', error);
       // Don't show error toast to avoid spam during erasing
     }
-  }, [scale, activeTool, annotations, images, draggingImage]);
+  }, [scale, activeTool, images, draggingImage]); // Removed 'annotations' to prevent re-renders during drawing
 
-  const drawAnnotations = (context, pageNum, viewport) => {
-    const pageAnnotations = annotations.filter(a => a.page === pageNum);
+  // Render all pages when PDF loads or scale changes (but NOT during active drawing)
+  useEffect(() => {
+    if (pdfDoc && pdfPages.length > 0 && !isDrawing) {
+      // Render all pages, not just current page
+      const renderAllPages = async () => {
+        for (const pageNum of pdfPages) {
+          await renderPage(pdfDoc, pageNum);
+        }
+      };
+      renderAllPages();
+    }
+  }, [pdfDoc, pdfPages, scale, activeTool, renderPage, isDrawing]);
+
+  // Re-render all pages when images change (but NOT during active drawing)
+  useEffect(() => {
+    if (pdfDoc && pdfPages.length > 0 && !isDrawing) {
+      const renderAllPages = async () => {
+        for (const pageNum of pdfPages) {
+          await renderPage(pdfDoc, pageNum);
+        }
+      };
+      renderAllPages();
+    }
+  }, [images, pdfDoc, pdfPages, renderPage, isDrawing]);
+
+  const drawAnnotations = (context, pageNum, viewport, annotationsToDraw = null) => {
+    // Use provided annotations, or ref (latest), or fall back to state
+    const allAnnotations = annotationsToDraw !== null 
+      ? annotationsToDraw 
+      : (annotationsRef.current.length > 0 ? annotationsRef.current : annotations);
+    const pageAnnotations = allAnnotations.filter(a => a.page === pageNum);
     
     pageAnnotations.forEach(annotation => {
       if (annotation.type === 'drawing') {
@@ -732,9 +775,10 @@ export default function PdfAnnotationModal({
     }
     
     if (isDrawing) {
+      const pageNum = startPosRef.current?.page;
+      
       // If erasing, ensure final re-render happens
       if (activeTool === TOOLS.TRASH && startPosRef.current && eraserRemovedIdsRef.current.size > 0) {
-        const pageNum = startPosRef.current.page;
         if (pdfDoc && pageNum) {
           // Final re-render to clean up
           console.log('Final eraser re-render for page:', pageNum);
@@ -744,6 +788,11 @@ export default function PdfAnnotationModal({
         }
         // Clear eraser session tracking
         eraserRemovedIdsRef.current.clear();
+      } else if (activeTool === TOOLS.PEN && pdfDoc && pageNum) {
+        // Re-render the page when pen drawing completes to finalize the annotation
+        setTimeout(() => {
+          renderPage(pdfDoc, pageNum);
+        }, 50);
       }
       
       // Save to history when drawing/erasing is complete

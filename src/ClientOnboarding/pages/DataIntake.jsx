@@ -98,7 +98,7 @@ export default function DataIntakeForm() {
     businessState: '',
     businessZip: '',
     totalIncome: '',
-    taxFormsReceived: 'none',
+    taxFormsReceived: [], // Array of selected forms: ['1099NEC', '1099MISC', '1099K']
     issuedRefunds: false,
     totalRefunded: '',
     otherBusinessIncome: false,
@@ -385,7 +385,9 @@ export default function DataIntakeForm() {
 
           // Income Information
           total_income: businessData.totalIncome || "",
-          tax_forms_received: businessData.taxFormsReceived || "none",
+          tax_forms_received: Array.isArray(businessData.taxFormsReceived) 
+            ? businessData.taxFormsReceived 
+            : (businessData.taxFormsReceived || []),
           issued_refunds: businessData.issuedRefunds || false,
           total_refunded: businessData.totalRefunded || "",
           other_business_income: businessData.otherBusinessIncome || false,
@@ -437,14 +439,79 @@ export default function DataIntakeForm() {
         setBusinessData(businessData);
         setHasExistingBusinessData(true);
         
-        // Update businesses list for UI display
+        // Calculate total expenses
+        const calculateTotalExpenses = (data) => {
+          let total = 0;
+          total += parseFloat(data.advertising || 0);
+          total += parseFloat(data.officeSupplies || 0);
+          total += parseFloat(data.cleaningRepairs || 0);
+          total += parseFloat(data.insurance || 0);
+          total += parseFloat(data.legalProfessional || 0);
+          total += parseFloat(data.phoneInternetUtilities || 0);
+          total += parseFloat(data.totalPaidContractors || 0);
+          total += parseFloat(data.parkingTollsTravel || 0);
+          total += parseFloat(data.businessMeals || 0);
+          total += parseFloat(data.travelExpenses || 0);
+          total += parseFloat(data.costItemsResold || 0);
+          total += parseFloat(data.retirementAmount || 0);
+          
+          // Add other expenses
+          if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
+            data.otherExpenses.forEach(exp => {
+              total += parseFloat(exp.amount || 0);
+            });
+          }
+          
+          return total.toFixed(2);
+        };
+
+        // Store full business data for editing and display
         const businessForDisplay = {
           id: result.data?.id || businessData.id || Date.now(),
-            businessName: businessData.businessName || "",
+          businessName: businessData.businessName || "",
           businessType: "Self-Employment",
-          income: businessData.totalIncome || "0",
+          totalIncome: businessData.totalIncome || "0",
+          totalExpenses: calculateTotalExpenses(businessData),
           address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
           workDescription: businessData.workDescription || "",
+          // Store all fields for editing
+          businessNameType: businessData.businessNameType || 'same',
+          differentBusinessName: businessData.differentBusinessName || '',
+          startedDuringYear: businessData.startedDuringYear || false,
+          homeBased: businessData.homeBased || false,
+          businessAddress: businessData.businessAddress || '',
+          businessCity: businessData.businessCity || '',
+          businessState: businessData.businessState || '',
+          businessZip: businessData.businessZip || '',
+          taxFormsReceived: businessData.taxFormsReceived || 'none',
+          issuedRefunds: businessData.issuedRefunds || false,
+          totalRefunded: businessData.totalRefunded || '',
+          otherBusinessIncome: businessData.otherBusinessIncome || false,
+          otherBusinessIncomeAmount: businessData.otherBusinessIncomeAmount || '',
+          advertising: businessData.advertising || '',
+          officeSupplies: businessData.officeSupplies || '',
+          cleaningRepairs: businessData.cleaningRepairs || '',
+          insurance: businessData.insurance || '',
+          legalProfessional: businessData.legalProfessional || '',
+          phoneInternetUtilities: businessData.phoneInternetUtilities || '',
+          paidContractors: businessData.paidContractors || false,
+          totalPaidContractors: businessData.totalPaidContractors || '',
+          otherExpenses: businessData.otherExpenses || [],
+          usedVehicle: businessData.usedVehicle || false,
+          businessMiles: businessData.businessMiles || '',
+          parkingTollsTravel: businessData.parkingTollsTravel || '',
+          businessMeals: businessData.businessMeals || '',
+          travelExpenses: businessData.travelExpenses || '',
+          homeOfficeUse: businessData.homeOfficeUse || false,
+          homeOfficeSize: businessData.homeOfficeSize || '',
+          sellProducts: businessData.sellProducts || false,
+          costItemsResold: businessData.costItemsResold || '',
+          inventoryLeftEnd: businessData.inventoryLeftEnd || '',
+          healthInsuranceBusiness: businessData.healthInsuranceBusiness || false,
+          selfEmployedRetirement: businessData.selfEmployedRetirement || false,
+          retirementAmount: businessData.retirementAmount || '',
+          isAccurate: businessData.isAccurate || false,
+          created_at: result.data?.created_at || new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
 
@@ -460,6 +527,10 @@ export default function DataIntakeForm() {
             return [...prev, businessForDisplay];
         }
         });
+        
+        // Reset form state after save
+        setIsAddingBusiness(false);
+        setEditingBusinessId(null);
         
         // Show success message
         toast.success('Business information saved successfully!', {
@@ -491,8 +562,58 @@ export default function DataIntakeForm() {
   };
 
   const handleEditBusiness = (businessId) => {
-    setEditingBusinessId(businessId);
-    setIsAddingBusiness(true);
+    const business = businesses.find(b => b.id === businessId);
+    if (business) {
+      // Load full business data into businessData state for editing
+      setBusinessData({
+        workDescription: business.workDescription || '',
+        businessName: business.businessName || '',
+        businessNameType: business.businessNameType || 'same',
+        differentBusinessName: business.differentBusinessName || '',
+        startedDuringYear: business.startedDuringYear || false,
+        homeBased: business.homeBased || false,
+        businessAddress: business.businessAddress || '',
+        businessCity: business.businessCity || '',
+        businessState: business.businessState || '',
+        businessZip: business.businessZip || '',
+        totalIncome: business.totalIncome || '',
+        taxFormsReceived: Array.isArray(business.taxFormsReceived) 
+          ? business.taxFormsReceived 
+          : (business.taxFormsReceived === 'none' ? [] : (business.taxFormsReceived ? [business.taxFormsReceived] : [])),
+        issuedRefunds: business.issuedRefunds || false,
+        totalRefunded: business.totalRefunded || '',
+        otherBusinessIncome: business.otherBusinessIncome || false,
+        otherBusinessIncomeAmount: business.otherBusinessIncomeAmount || '',
+        advertising: business.advertising || '',
+        officeSupplies: business.officeSupplies || '',
+        cleaningRepairs: business.cleaningRepairs || '',
+        insurance: business.insurance || '',
+        legalProfessional: business.legalProfessional || '',
+        phoneInternetUtilities: business.phoneInternetUtilities || '',
+        paidContractors: business.paidContractors || false,
+        totalPaidContractors: business.totalPaidContractors || '',
+        otherExpenses: business.otherExpenses || [],
+        otherExpenseDescription: business.otherExpenseDescription || '',
+        otherExpenseAmount: business.otherExpenseAmount || '',
+        usedVehicle: business.usedVehicle || false,
+        businessMiles: business.businessMiles || '',
+        parkingTollsTravel: business.parkingTollsTravel || '',
+        businessMeals: business.businessMeals || '',
+        travelExpenses: business.travelExpenses || '',
+        homeOfficeUse: business.homeOfficeUse || false,
+        homeOfficeSize: business.homeOfficeSize || '',
+        sellProducts: business.sellProducts || false,
+        costItemsResold: business.costItemsResold || '',
+        inventoryLeftEnd: business.inventoryLeftEnd || '',
+        healthInsuranceBusiness: business.healthInsuranceBusiness || false,
+        selfEmployedRetirement: business.selfEmployedRetirement || false,
+        retirementAmount: business.retirementAmount || '',
+        isAccurate: business.isAccurate || false,
+        id: business.id || null
+      });
+      setEditingBusinessId(businessId);
+      setIsAddingBusiness(true);
+    }
   };
 
   const handleRemoveBusiness = (businessId) => {
@@ -778,14 +899,87 @@ export default function DataIntakeForm() {
               id: businessData.id || null
             });
 
-            // Also populate the businesses array for UI display
+            // Calculate total expenses for display
+            const calculateTotalExpensesFromAPI = (data) => {
+              let total = 0;
+              total += parseFloat(data.advertising || 0);
+              total += parseFloat(data.office_supplies || 0);
+              total += parseFloat(data.cleaning_repairs || 0);
+              total += parseFloat(data.insurance || 0);
+              total += parseFloat(data.legal_professional || 0);
+              total += parseFloat(data.phone_internet_utilities || 0);
+              total += parseFloat(data.total_paid_contractors || 0);
+              total += parseFloat(data.parking_tolls_travel || 0);
+              total += parseFloat(data.business_meals || 0);
+              total += parseFloat(data.travel_expenses || 0);
+              total += parseFloat(data.cost_items_resold || 0);
+              total += parseFloat(data.retirement_amount || 0);
+              
+              // Add other expenses
+              if (data.other_expenses && Array.isArray(data.other_expenses)) {
+                data.other_expenses.forEach(exp => {
+                  total += parseFloat(exp.amount || 0);
+                });
+              }
+              
+              return total.toFixed(2);
+            };
+
+            // Store full business data for editing and display
             const businessForDisplay = {
               id: businessData.id || Date.now(),
               businessName: businessData.business_name || "",
-              businessType: "Self-Employment", // Default type for business-info API
-              income: businessData.total_income || "0",
+              businessType: "Self-Employment",
+              totalIncome: businessData.total_income || "0",
+              totalExpenses: calculateTotalExpensesFromAPI(businessData),
               address: `${businessData.business_address || ""} ${businessData.business_city || ""} ${businessData.business_state || ""} ${businessData.business_zip || ""}`.trim(),
               workDescription: businessData.work_description || "",
+              // Store all fields for editing
+              businessNameType: businessData.business_name_type || 'same',
+              differentBusinessName: businessData.different_business_name || '',
+              startedDuringYear: businessData.started_during_year || false,
+              homeBased: businessData.home_based || false,
+              businessAddress: businessData.business_address || '',
+              businessCity: businessData.business_city || '',
+              businessState: businessData.business_state || '',
+              businessZip: businessData.business_zip || '',
+              taxFormsReceived: (() => {
+                // Handle both array and string formats from API
+                const forms = businessData.tax_forms_received;
+                if (Array.isArray(forms)) {
+                  return forms;
+                } else if (typeof forms === 'string') {
+                  return forms === 'none' ? [] : [forms];
+                }
+                return [];
+              })(),
+              issuedRefunds: businessData.issued_refunds || false,
+              totalRefunded: businessData.total_refunded || '',
+              otherBusinessIncome: businessData.other_business_income || false,
+              otherBusinessIncomeAmount: businessData.other_business_income_amount || '',
+              advertising: businessData.advertising || '',
+              officeSupplies: businessData.office_supplies || '',
+              cleaningRepairs: businessData.cleaning_repairs || '',
+              insurance: businessData.insurance || '',
+              legalProfessional: businessData.legal_professional || '',
+              phoneInternetUtilities: businessData.phone_internet_utilities || '',
+              paidContractors: businessData.paid_contractors || false,
+              totalPaidContractors: businessData.total_paid_contractors || '',
+              otherExpenses: businessData.other_expenses || [],
+              usedVehicle: businessData.used_vehicle || false,
+              businessMiles: businessData.business_miles || '',
+              parkingTollsTravel: businessData.parking_tolls_travel || '',
+              businessMeals: businessData.business_meals || '',
+              travelExpenses: businessData.travel_expenses || '',
+              homeOfficeUse: businessData.home_office_use || false,
+              homeOfficeSize: businessData.home_office_size || '',
+              sellProducts: businessData.sell_products || false,
+              costItemsResold: businessData.cost_items_resold || '',
+              inventoryLeftEnd: businessData.inventory_left_end || '',
+              healthInsuranceBusiness: businessData.health_insurance_business || false,
+              selfEmployedRetirement: businessData.self_employed_retirement || false,
+              retirementAmount: businessData.retirement_amount || '',
+              isAccurate: businessData.is_accurate || false,
               created_at: businessData.created_at,
               updated_at: businessData.updated_at
             };
@@ -3316,45 +3510,246 @@ export default function DataIntakeForm() {
                 {/* List of existing businesses */}
                 {businesses.length > 0 && !isAddingBusiness && (
                   <div className="mb-4">
-                    {businesses.map((business) => (
-                      <div key={business.id} className="d-flex justify-content-between align-items-start p-3 mb-2 rounded border border-gray-100 bg-gray-50">
-                        <div className="flex-grow-1">
-                          <h6 className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontWeight: 600 }}>{business.businessName}</h6>
-                          <div className="text-muted small mb-1">{business.workDescription}</div>
-                          <div className="text-muted small">Total Income: ${parseFloat(business.income).toLocaleString()}</div>
-                          {business.address && (
-                            <div className="text-muted small">Address: {business.address}</div>
-                          )}
-                          {business.created_at && (
-                            <div className="text-muted small">
-                              Last updated: {new Date(business.updated_at || business.created_at).toLocaleDateString()}
+                    {businesses.map((business) => {
+                      const totalIncome = parseFloat(business.totalIncome || business.income || 0);
+                      const totalExpenses = parseFloat(business.totalExpenses || 0);
+                      const netIncome = totalIncome - totalExpenses;
+                      
+                      return (
+                        <div 
+                          key={business.id} 
+                          className="p-3 mb-3 rounded border"
+                          style={{
+                            borderColor: "#E5E7EB",
+                            backgroundColor: "#FFFFFF",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                          }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div className="flex-grow-1">
+                              <h6 
+                                className="mb-2" 
+                                style={{ 
+                                  fontFamily: "BasisGrotesquePro", 
+                                  fontWeight: 600,
+                                  color: "#3B4A66",
+                                  fontSize: "16px"
+                                }}
+                              >
+                                {business.businessName || "Unnamed Business"}
+                              </h6>
+                              {business.workDescription && (
+                                <div 
+                                  className="mb-2" 
+                                  style={{ 
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "14px",
+                                    color: "#6B7280"
+                                  }}
+                                >
+                                  {business.workDescription}
+                                </div>
+                              )}
+                              <div className="d-flex flex-wrap gap-3 mt-2">
+                                <div>
+                                  <span 
+                                    style={{ 
+                                      fontFamily: "BasisGrotesquePro",
+                                      fontSize: "12px",
+                                      color: "#6B7280",
+                                      fontWeight: 500
+                                    }}
+                                  >
+                                    Total Income:
+                                  </span>
+                                  <span 
+                                    className="ms-1"
+                                    style={{ 
+                                      fontFamily: "BasisGrotesquePro",
+                                      fontSize: "14px",
+                                      color: "#059669",
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span 
+                                    style={{ 
+                                      fontFamily: "BasisGrotesquePro",
+                                      fontSize: "12px",
+                                      color: "#6B7280",
+                                      fontWeight: 500
+                                    }}
+                                  >
+                                    Total Expenses:
+                                  </span>
+                                  <span 
+                                    className="ms-1"
+                                    style={{ 
+                                      fontFamily: "BasisGrotesquePro",
+                                      fontSize: "14px",
+                                      color: "#DC2626",
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span 
+                                    style={{ 
+                                      fontFamily: "BasisGrotesquePro",
+                                      fontSize: "12px",
+                                      color: "#6B7280",
+                                      fontWeight: 500
+                                    }}
+                                  >
+                                    Net Income:
+                                  </span>
+                                  <span 
+                                    className="ms-1"
+                                    style={{ 
+                                      fontFamily: "BasisGrotesquePro",
+                                      fontSize: "14px",
+                                      color: netIncome >= 0 ? "#059669" : "#DC2626",
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    ${netIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </div>
+                              {business.address && business.address.trim() && (
+                                <div 
+                                  className="mt-2"
+                                  style={{ 
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "12px",
+                                    color: "#9CA3AF"
+                                  }}
+                                >
+                                  📍 {business.address}
+                                </div>
+                              )}
+                              {business.updated_at && (
+                                <div 
+                                  className="mt-1"
+                                  style={{ 
+                                    fontFamily: "BasisGrotesquePro",
+                                    fontSize: "11px",
+                                    color: "#9CA3AF"
+                                  }}
+                                >
+                                  Last updated: {new Date(business.updated_at).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            <div className="d-flex gap-2 ms-3" style={{ flexShrink: 0 }}>
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => handleEditBusiness(business.id)}
+                                style={{
+                                  fontFamily: "BasisGrotesquePro",
+                                  backgroundColor: "#F3F4F6",
+                                  borderColor: "#E5E7EB",
+                                  color: "#3B4A66",
+                                  fontWeight: 500,
+                                  fontSize: "13px"
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => {
+                                  if (window.confirm(`Are you sure you want to remove "${business.businessName || 'this business'}"?`)) {
+                                    handleRemoveBusiness(business.id);
+                                  }
+                                }}
+                                style={{
+                                  fontFamily: "BasisGrotesquePro",
+                                  backgroundColor: "#FEF2F2",
+                                  borderColor: "#FECACA",
+                                  color: "#DC2626",
+                                  fontWeight: 500,
+                                  fontSize: "13px"
+                                }}
+                              >
+                                <FaTrash className="me-1" style={{ fontSize: "11px" }} />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                          )}
-                        </div>
-                        <div className="d-flex gap-2 ms-3">
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => handleEditBusiness(business.id)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleRemoveBusiness(business.id)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <button
-                      className="btn btn-sm btn-outline-primary mt-2"
+                      className="btn btn-sm mt-2"
                       onClick={() => {
                         setEditingBusinessId(null);
+                        setBusinessData({
+                          workDescription: '',
+                          businessName: '',
+                          businessNameType: 'same',
+                          differentBusinessName: '',
+                          startedDuringYear: false,
+                          homeBased: false,
+                          businessAddress: '',
+                          businessCity: '',
+                          businessState: '',
+                          businessZip: '',
+                          totalIncome: '',
+                          taxFormsReceived: 'none',
+                          issuedRefunds: false,
+                          totalRefunded: '',
+                          otherBusinessIncome: false,
+                          otherBusinessIncomeAmount: '',
+                          advertising: '',
+                          officeSupplies: '',
+                          cleaningRepairs: '',
+                          insurance: '',
+                          legalProfessional: '',
+                          phoneInternetUtilities: '',
+                          paidContractors: false,
+                          totalPaidContractors: '',
+                          otherExpenses: [],
+                          otherExpenseDescription: '',
+                          otherExpenseAmount: '',
+                          usedVehicle: false,
+                          businessMiles: '',
+                          parkingTollsTravel: '',
+                          businessMeals: '',
+                          travelExpenses: '',
+                          homeOfficeUse: false,
+                          homeOfficeSize: '',
+                          sellProducts: false,
+                          costItemsResold: '',
+                          inventoryLeftEnd: '',
+                          healthInsuranceBusiness: false,
+                          selfEmployedRetirement: false,
+                          retirementAmount: '',
+                          isAccurate: false,
+                          id: null
+                        });
                         setIsAddingBusiness(true);
                       }}
+                      style={{
+                        fontFamily: "BasisGrotesquePro",
+                        backgroundColor: "#3B4A66",
+                        borderColor: "#3B4A66",
+                        color: "#FFFFFF",
+                        fontWeight: 500,
+                        fontSize: "13px"
+                      }}
                     >
-                      <FaPlus className="me-1" /> Add Another Business
+                      <FaPlus className="me-1" style={{ fontSize: "11px" }} />
+                      Add Another Business
                     </button>
                   </div>
                 )}
@@ -3388,7 +3783,57 @@ export default function DataIntakeForm() {
                 {isAddingBusiness && (
                   <ComprehensiveBusinessForm
                     onSave={handleSaveBusiness}
-                    onCancel={handleCancelBusiness}
+                    onCancel={() => {
+                      setIsAddingBusiness(false);
+                      setEditingBusinessId(null);
+                      // Reset business data if canceling
+                      if (!editingBusinessId) {
+                        setBusinessData({
+                          workDescription: '',
+                          businessName: '',
+                          businessNameType: 'same',
+                          differentBusinessName: '',
+                          startedDuringYear: false,
+                          homeBased: false,
+                          businessAddress: '',
+                          businessCity: '',
+                          businessState: '',
+                          businessZip: '',
+                          totalIncome: '',
+                          taxFormsReceived: 'none',
+                          issuedRefunds: false,
+                          totalRefunded: '',
+                          otherBusinessIncome: false,
+                          otherBusinessIncomeAmount: '',
+                          advertising: '',
+                          officeSupplies: '',
+                          cleaningRepairs: '',
+                          insurance: '',
+                          legalProfessional: '',
+                          phoneInternetUtilities: '',
+                          paidContractors: false,
+                          totalPaidContractors: '',
+                          otherExpenses: [],
+                          otherExpenseDescription: '',
+                          otherExpenseAmount: '',
+                          usedVehicle: false,
+                          businessMiles: '',
+                          parkingTollsTravel: '',
+                          businessMeals: '',
+                          travelExpenses: '',
+                          homeOfficeUse: false,
+                          homeOfficeSize: '',
+                          sellProducts: false,
+                          costItemsResold: '',
+                          inventoryLeftEnd: '',
+                          healthInsuranceBusiness: false,
+                          selfEmployedRetirement: false,
+                          retirementAmount: '',
+                          isAccurate: false,
+                          id: null
+                        });
+                      }
+                    }}
                     initialData={editingBusinessId ? businessData : null}
                   />
                 )}

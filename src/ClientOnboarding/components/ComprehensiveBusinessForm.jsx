@@ -17,7 +17,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
     
     // 2. Money You Made (Income)
     totalIncome: '',
-    taxFormsReceived: 'none', // '1099NEC', '1099MISC', '1099K', 'none'
+    taxFormsReceived: [], // Array of selected forms: ['1099NEC', '1099MISC', '1099K']
     issuedRefunds: false,
     totalRefunded: '',
     otherBusinessIncome: false,
@@ -70,11 +70,23 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
 
   useEffect(() => {
     if (initialData) {
+      // Normalize taxFormsReceived - convert string to array if needed
+      let taxForms = initialData.taxFormsReceived || [];
+      if (typeof taxForms === 'string') {
+        // If it's a string, convert to array (handle 'none' or single value)
+        if (taxForms === 'none') {
+          taxForms = [];
+        } else {
+          taxForms = [taxForms];
+        }
+      }
+      
       setFormData({
         ...initialData,
         // Ensure arrays are properly initialized
         otherExpenses: initialData.otherExpenses || [],
-        expenses: initialData.expenses || []
+        expenses: initialData.expenses || [],
+        taxFormsReceived: taxForms
       });
     }
   }, [initialData]);
@@ -411,16 +423,82 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
               <label className="form-label" style={labelStyle}>
                 Did you receive any tax forms showing this income?
               </label>
-              <select
-                className="form-control"
-                value={formData.taxFormsReceived}
-                onChange={(e) => handleChange('taxFormsReceived', e.target.value)}
-              >
-                <option value="none">None / Not sure</option>
-                <option value="1099NEC">1099NEC</option>
-                <option value="1099MISC">1099MISC</option>
-                <option value="1099K">1099K</option>
-              </select>
+              <div className="d-flex flex-column gap-2 mt-2">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="taxForm1099NEC"
+                    checked={formData.taxFormsReceived.includes('1099NEC')}
+                    onChange={(e) => {
+                      const currentForms = formData.taxFormsReceived || [];
+                      if (e.target.checked) {
+                        handleChange('taxFormsReceived', [...currentForms, '1099NEC']);
+                      } else {
+                        handleChange('taxFormsReceived', currentForms.filter(form => form !== '1099NEC'));
+                      }
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="taxForm1099NEC" style={labelStyle}>
+                    1099NEC
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="taxForm1099MISC"
+                    checked={formData.taxFormsReceived.includes('1099MISC')}
+                    onChange={(e) => {
+                      const currentForms = formData.taxFormsReceived || [];
+                      if (e.target.checked) {
+                        handleChange('taxFormsReceived', [...currentForms, '1099MISC']);
+                      } else {
+                        handleChange('taxFormsReceived', currentForms.filter(form => form !== '1099MISC'));
+                      }
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="taxForm1099MISC" style={labelStyle}>
+                    1099MISC
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="taxForm1099K"
+                    checked={formData.taxFormsReceived.includes('1099K')}
+                    onChange={(e) => {
+                      const currentForms = formData.taxFormsReceived || [];
+                      if (e.target.checked) {
+                        handleChange('taxFormsReceived', [...currentForms, '1099K']);
+                      } else {
+                        handleChange('taxFormsReceived', currentForms.filter(form => form !== '1099K'));
+                      }
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="taxForm1099K" style={labelStyle}>
+                    1099K
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="taxFormNone"
+                    checked={formData.taxFormsReceived.length === 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        // If "None" is checked, clear all other selections
+                        handleChange('taxFormsReceived', []);
+                      }
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="taxFormNone" style={labelStyle}>
+                    None / Not sure
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 

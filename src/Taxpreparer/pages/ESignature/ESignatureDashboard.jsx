@@ -479,6 +479,72 @@ export default function ESignatureDashboard() {
     fetchSignatureRequests();
   };
 
+  // Helper function to check if all signees have signed
+  const areAllSigneesSigned = (request) => {
+    // Check taxpayer signature
+    if (!request.taxpayer_signed) {
+      return false;
+    }
+    
+    // Check preparer signature if required
+    if (request.preparer_must_sign === true && !request.preparer_signed) {
+      return false;
+    }
+    
+    // Check spouse signature if required
+    if (request.spouse_sign === true && !request.spouse_signed) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Handle marking e-sign request as completed
+  const handleCompleteRequest = async (requestId, e) => {
+    e?.stopPropagation();
+    
+    try {
+      const response = await taxPreparerClientAPI.completeSignatureRequest(requestId);
+      
+      if (response.success) {
+        toast.success('E-Sign Request marked as completed successfully!', {
+          position: "top-right",
+          autoClose: 3000
+        });
+        // Refresh the list
+        fetchSignatureRequests();
+      } else {
+        throw new Error(response.message || 'Failed to complete request');
+      }
+    } catch (error) {
+      console.error('Error completing signature request:', error);
+      handleAPIError(error);
+    }
+  };
+
+  // Handle re-requesting e-sign
+  const handleRerequestSignature = async (requestId, e) => {
+    e?.stopPropagation();
+    
+    try {
+      const response = await taxPreparerClientAPI.rerequestSignature(requestId);
+      
+      if (response.success) {
+        toast.success('E-Sign Request re-sent successfully!', {
+          position: "top-right",
+          autoClose: 3000
+        });
+        // Refresh the list
+        fetchSignatureRequests();
+      } else {
+        throw new Error(response.message || 'Failed to re-request signature');
+      }
+    } catch (error) {
+      console.error('Error re-requesting signature:', error);
+      handleAPIError(error);
+    }
+  };
+
   // Fetch clients for dropdown
   const fetchClients = async () => {
     try {
@@ -1217,11 +1283,20 @@ export default function ESignatureDashboard() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              // Use annotated_pdf_url if available, otherwise use document_url
+                              const pdfUrl = request.annotated_pdf_url || request.document_url;
                               setSelectedDocumentForAnnotation({
-                                url: request.document_url,
+                                url: pdfUrl,
                                 name: request.document_name || request.title || 'Document',
                                 id: request.id,
                                 document_id: request.document
+                              });
+                              console.log('📄 Opening annotation modal for preparer:', {
+                                esign_request_id: request.id,
+                                document_id: request.document,
+                                document_name: request.document_name,
+                                using_annotated_pdf: !!request.annotated_pdf_url,
+                                pdf_url: pdfUrl
                               });
                               setShowAnnotationModal(true);
                             }}
@@ -1240,6 +1315,86 @@ export default function ESignatureDashboard() {
                             <FiPenTool size={14} />
                             Annotate & Sign for Preparer
                           </button>
+                        )}
+                        
+                        {/* Show action buttons when all signees have signed */}
+                        {areAllSigneesSigned(request) && (
+                          <>
+                            {/* Preview Annotated Document Button */}
+                            {request.annotated_pdf_url && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedPreviewDocument({
+                                    url: request.annotated_pdf_url,
+                                    name: request.document_name || request.title || 'Document'
+                                  });
+                                  setShowPreviewModal(true);
+                                }}
+                                className="btn d-flex align-items-center gap-2"
+                                style={{
+                                  backgroundColor: '#F3F4F6',
+                                  color: '#3B4A66',
+                                  border: '1px solid #E5E7EB',
+                                  fontFamily: 'BasisGrotesquePro',
+                                  fontWeight: '500',
+                                  padding: '8px 16px',
+                                  borderRadius: '6px',
+                                  fontSize: '14px'
+                                }}
+                                title="Preview Annotated Document"
+                              >
+                                <FiEye size={14} />
+                                Preview Annotated Document
+                              </button>
+                            )}
+                            
+                            {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
+                            {request.status?.toLowerCase() !== 'completed' && 
+                             request.status?.toLowerCase() !== 'processed' && (
+                              <>
+                                {/* Mark as Completed Button */}
+                                <button
+                                  onClick={(e) => handleCompleteRequest(request.id, e)}
+                                  className="btn d-flex align-items-center gap-2"
+                                  style={{
+                                    backgroundColor: '#10B981',
+                                    color: 'white',
+                                    border: 'none',
+                                    fontFamily: 'BasisGrotesquePro',
+                                    fontWeight: '500',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    fontSize: '14px'
+                                  }}
+                                  title="Mark E-Sign Request as Completed"
+                                >
+                                  <FiCheckCircle size={14} />
+                                  Mark as Completed
+                                </button>
+                                
+                                {/* Re-Request E-Sign Button */}
+                                <button
+                                  onClick={(e) => handleRerequestSignature(request.id, e)}
+                                  className="btn d-flex align-items-center gap-2"
+                                  style={{
+                                    backgroundColor: '#F59E0B',
+                                    color: 'white',
+                                    border: 'none',
+                                    fontFamily: 'BasisGrotesquePro',
+                                    fontWeight: '500',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    fontSize: '14px'
+                                  }}
+                                  title="Re-Request E-Sign"
+                                >
+                                  <FiRefreshCw size={14} />
+                                  Re-Request E-Sign
+                                </button>
+                              </>
+                            )}
+                          </>
                         )}
                       </div>
                       {/* Sign Document Button for Ready Status */}
@@ -2113,6 +2268,10 @@ export default function ESignatureDashboard() {
                   position: 'top-right',
                   autoClose: 5000
                 });
+                
+                // Close the annotation modal
+                setShowAnnotationModal(false);
+                setSelectedDocumentForAnnotation(null);
                 
                 // Refresh signature requests
                 setTimeout(() => {

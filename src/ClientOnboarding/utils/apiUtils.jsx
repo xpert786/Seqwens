@@ -5011,6 +5011,18 @@ export const taxPreparerClientAPI = {
     return await apiRequest(`/user/unlinked-taxpayers/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
+  // Mark E-Sign Request as Completed
+  // POST /taxpayer/tax-preparer/signatures/requests/<request_id>/complete/
+  completeSignatureRequest: async (requestId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/signatures/requests/${requestId}/complete/`, 'POST');
+  },
+
+  // Re-Request E-Sign (Update ESignDocument Status)
+  // POST /taxpayer/tax-preparer/signatures/requests/<request_id>/rerequest/
+  rerequestSignature: async (requestId) => {
+    return await apiRequest(`/taxpayer/tax-preparer/signatures/requests/${requestId}/rerequest/`, 'POST');
+  },
+
   // Create e-signature request
   // POST /api/taxpayer/esign/create/
   createESignRequest: async (data) => {

@@ -920,7 +920,7 @@ export default function DocumentManager() {
                                         }}
                                       >
                                         <FaTrash /> Delete
-                                      </button>
+                                </button>
                                     </div>
                                   )}
                                 </div>

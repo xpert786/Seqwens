@@ -28,22 +28,22 @@ export const annotationAPI = {
       const payload = {
         document_id: annotationData.requestId || annotationData.documentId,  // Backend expects document_id
         esign_document_id: annotationData.esign_document_id,  // E-signature request ID
-        pdf_url: annotationData.pdfUrl || annotationData.document_url,
-        annotations: annotationData.annotations || [],
-        images: annotationData.images || [],
+          pdf_url: annotationData.pdfUrl || annotationData.document_url,
+          annotations: annotationData.annotations || [],
+          images: annotationData.images || [],
         spouse_annotations: annotationData.spouse_annotations || [],
         spouse_images: annotationData.spouse_images || [],
         pdf_scale: annotationData.pdf_scale || 1.5,
         zoom_percentage: annotationData.zoom_percentage || Math.round((annotationData.pdf_scale || 1.5) * 100), // Zoom percentage for backend processing
         canvas_info: annotationData.canvas_info || annotationData.metadata?.canvas_info,
-        metadata: annotationData.metadata || {},
-        // Backend processing instructions for Python script
-        processing_options: {
-          add_signatures: true,
-          merge_images: true,
-          preserve_quality: true,
-          output_format: 'pdf'
-        }
+          metadata: annotationData.metadata || {},
+          // Backend processing instructions for Python script
+          processing_options: {
+            add_signatures: true,
+            merge_images: true,
+            preserve_quality: true,
+            output_format: 'pdf'
+          }
       };
       
       console.log('📤 Saving annotations to backend:', {
@@ -67,7 +67,7 @@ export const annotationAPI = {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         console.error('❌ Backend error response:', {
           status: response.status,
