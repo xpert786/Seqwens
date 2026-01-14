@@ -4,6 +4,8 @@ import { getApiBaseUrl, fetchWithCors } from '../../../../ClientOnboarding/utils
 import { getAccessToken } from '../../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError, firmAdminClientsAPI } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import { Modal } from 'react-bootstrap';
+import { FaDownload, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
 import ClientDocumentUploadModal from './ClientDocumentUploadModal';
 import DocumentDetailsModal from './DocumentDetailsModal';
 
@@ -23,6 +25,14 @@ export default function DocumentsTab({ client }) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [documentToRename, setDocumentToRename] = useState(null);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  const [newDocumentName, setNewDocumentName] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch documents from API
   const fetchDocuments = useCallback(async (folderId = null) => {
@@ -103,6 +113,141 @@ export default function DocumentsTab({ client }) {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
       return dateString;
+    }
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuIndex !== null && !event.target.closest('.position-relative')) {
+        setOpenMenuIndex(null);
+      }
+    };
+
+    if (openMenuIndex !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuIndex]);
+
+  const handleDownload = (doc) => {
+    const fileUrl = doc.file_url || '';
+    if (!fileUrl) {
+      toast.error("Download link unavailable for this document.", {
+        position: 'top-right',
+        autoClose: 3000
+      });
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = doc.file_name || 'document';
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleRename = (doc) => {
+    setDocumentToRename(doc);
+    setNewDocumentName(doc.file_name || '');
+    setShowRenameModal(true);
+    setOpenMenuIndex(null);
+  };
+
+  const handleDelete = (doc) => {
+    setDocumentToDelete(doc);
+    setShowDeleteModal(true);
+    setOpenMenuIndex(null);
+  };
+
+  const confirmRename = async () => {
+    if (!documentToRename || !newDocumentName.trim() || !client?.id) {
+      toast.error("Please enter a valid document name", {
+        position: 'top-right',
+        autoClose: 3000
+      });
+      return;
+    }
+
+    setRenaming(true);
+    try {
+      const documentId = documentToRename.id;
+      const response = await firmAdminClientsAPI.updateClientDocument(client.id, documentId, {
+        file_name: newDocumentName.trim()
+      });
+
+      if (response.success) {
+        toast.success('Document renamed successfully!', {
+          position: 'top-right',
+          autoClose: 3000
+        });
+        setShowRenameModal(false);
+        setDocumentToRename(null);
+        setNewDocumentName("");
+        fetchDocuments(currentFolderId);
+      } else {
+        throw new Error(response.message || 'Failed to rename document');
+      }
+    } catch (error) {
+      console.error('Error renaming document:', error);
+      toast.error(handleAPIError(error) || 'Failed to rename document', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } finally {
+      setRenaming(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!documentToDelete || !client?.id) return;
+
+    setDeleting(true);
+    try {
+      const API_BASE_URL = getApiBaseUrl();
+      const token = getAccessToken();
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const documentId = documentToDelete.id;
+      const url = `${API_BASE_URL}/firm/clients/${client.id}/documents/${documentId}/`;
+
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      };
+
+      const response = await fetchWithCors(url, config);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      toast.success('Document deleted successfully!', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+      setShowDeleteModal(false);
+      setDocumentToDelete(null);
+      fetchDocuments(currentFolderId);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error(handleAPIError(error) || 'Failed to delete document', {
+        position: 'top-right',
+        autoClose: 3000
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -573,6 +718,62 @@ export default function DocumentsTab({ client }) {
                         >
                           View PDF
                         </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(document);
+                          }}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 !rounded-lg hover:bg-gray-100 transition-colors font-[BasisGrotesquePro]"
+                          title="Download"
+                        >
+                          <FaDownload size={14} />
+                        </button>
+                        <div className="position-relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuIndex(openMenuIndex === document.id ? null : document.id);
+                            }}
+                            className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 !rounded-lg hover:bg-gray-100 transition-colors font-[BasisGrotesquePro]"
+                            title="More options"
+                          >
+                            <FaEllipsisV size={14} />
+                          </button>
+                          {openMenuIndex === document.id && (
+                            <div
+                              className="position-absolute bg-white border rounded shadow-lg"
+                              style={{
+                                right: 0,
+                                top: '100%',
+                                zIndex: 1000,
+                                minWidth: '150px',
+                                marginTop: '4px'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className="btn btn-sm w-100 text-start d-flex align-items-center gap-2"
+                                style={{ border: 'none', borderRadius: 0 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRename(document);
+                                }}
+                              >
+                                <FaEdit /> Rename
+                              </button>
+                              <button
+                                className="btn btn-sm w-100 text-start d-flex align-items-center gap-2 text-danger"
+                                style={{ border: 'none', borderRadius: 0 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(document);
+                                }}
+                              >
+                                <FaTrash /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -676,6 +877,87 @@ export default function DocumentsTab({ client }) {
           fetchDocuments(currentFolderId);
         }}
       />
+
+      {/* Rename Modal */}
+      <Modal show={showRenameModal} onHide={() => {
+        setShowRenameModal(false);
+        setDocumentToRename(null);
+        setNewDocumentName("");
+      }} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Rename Document</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="mb-3">
+            <label className="form-label">Document Name</label>
+            <input
+              type="text"
+              className="form-control"
+              value={newDocumentName}
+              onChange={(e) => setNewDocumentName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  confirmRename();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowRenameModal(false);
+              setDocumentToRename(null);
+              setNewDocumentName("");
+            }}
+            disabled={renaming}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={confirmRename}
+            disabled={renaming || !newDocumentName.trim()}
+            style={{ backgroundColor: "#F56D2D", border: "none" }}
+          >
+            {renaming ? 'Renaming...' : 'Rename'}
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => {
+        setShowDeleteModal(false);
+        setDocumentToDelete(null);
+      }} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Document</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to delete "{documentToDelete ? (documentToDelete.file_name || 'this document') : ''}"? This action cannot be undone.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setDocumentToDelete(null);
+            }}
+            disabled={deleting}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={confirmDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

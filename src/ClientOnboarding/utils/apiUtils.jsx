@@ -6071,7 +6071,8 @@ export const customESignAPI = {
       deadline,
       message,
       send_reminders,
-      fields
+      fields,
+      folder_id
     } = data;
 
     if (!esign_draft_id && !document_id) {
@@ -6085,9 +6086,6 @@ export const customESignAPI = {
     }
     if (!fields || !Array.isArray(fields) || fields.length === 0) {
       throw new Error('At least one field is required');
-    }
-    if (has_spouse && !spouse_email) {
-      throw new Error('spouse_email is required when has_spouse is true');
     }
 
     // Format deadline to MM/DD/YYYY
@@ -6119,6 +6117,9 @@ export const customESignAPI = {
     if (preparer_must_sign !== undefined) requestBody.preparer_must_sign = preparer_must_sign;
     if (message) requestBody.message = message;
     if (send_reminders !== undefined) requestBody.send_reminders = send_reminders;
+    if (folder_id !== undefined && folder_id !== null && folder_id !== '') {
+      requestBody.folder_id = folder_id.toString();
+    }
 
     return await apiRequest('/taxpayer/esign/custom/create/', 'POST', requestBody);
   },
@@ -6208,41 +6209,6 @@ export const signWellAPI = {
   },
 
   // Apply signature via SignWell
-  applySignature: async (data) => {
-    const {
-      document_id,
-      document,
-      signer_email,
-      signer_name,
-      document_name,
-      test_mode = true
-    } = data;
-
-    // Use 'document_id' parameter if provided, otherwise fall back to 'document' for backward compatibility
-    const documentId = document_id || document;
-
-    if (!documentId) {
-      throw new Error('document_id is required');
-    }
-
-    if (!signer_email) {
-      throw new Error('signer_email is required');
-    }
-
-    if (!signer_name) {
-      throw new Error('signer_name is required');
-    }
-
-    const requestBody = {
-      document_id: documentId, // API expects 'document_id'
-      signer_email,
-      signer_name,
-      document_name: document_name || 'Document',
-      test_mode
-    };
-
-    return await apiRequest('/taxpayer/signwell/apply-signature/', 'POST', requestBody);
-  },
 
   // Check document status
   checkDocumentStatus: async (signwellDocumentId) => {

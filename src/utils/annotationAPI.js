@@ -31,7 +31,10 @@ export const annotationAPI = {
         pdf_url: annotationData.pdfUrl || annotationData.document_url,
         annotations: annotationData.annotations || [],
         images: annotationData.images || [],
+        spouse_annotations: annotationData.spouse_annotations || [],
+        spouse_images: annotationData.spouse_images || [],
         pdf_scale: annotationData.pdf_scale || 1.5,
+        zoom_percentage: annotationData.zoom_percentage || Math.round((annotationData.pdf_scale || 1.5) * 100), // Zoom percentage for backend processing
         canvas_info: annotationData.canvas_info || annotationData.metadata?.canvas_info,
         metadata: annotationData.metadata || {},
         // Backend processing instructions for Python script
@@ -49,6 +52,8 @@ export const annotationAPI = {
         esign_document_id: payload.esign_document_id,
         annotations_count: payload.annotations.length,
         images_count: payload.images.length,
+        spouse_annotations_count: payload.spouse_annotations.length,
+        spouse_images_count: payload.spouse_images.length,
         pdf_scale: payload.pdf_scale
       });
       
@@ -224,6 +229,178 @@ export const annotationAPI = {
       return {
         success: false,
         message: error.message || 'Failed to delete annotations'
+      };
+    }
+  },
+
+  /**
+   * Save annotations for tax preparer with A4 coordinate conversion
+   * @param {Object} annotationData - Complete annotation data including PDF info and annotations
+   * @returns {Promise} API response
+   */
+  savePreparerAnnotations: async (annotationData) => {
+    try {
+      const API_BASE_URL = getAPIBaseUrl();
+      const token = getAccessToken();
+      
+      // A4 page dimensions in points (PDF standard)
+      const A4_WIDTH = 595.276;  // 210mm
+      const A4_HEIGHT = 841.890; // 297mm
+      
+      // Get canvas dimensions from annotation data
+      const canvasWidth = annotationData.canvas_info?.width || annotationData.canvasWidth || 800;
+      const canvasHeight = annotationData.canvas_info?.height || annotationData.canvasHeight || 600;
+      const pdfScale = annotationData.pdf_scale || 1.5;
+      
+      // Convert coordinates from canvas to A4 page coordinates
+      const convertToA4Coordinates = (x, y, width, height) => {
+        // Calculate the actual PDF page dimensions at the current scale
+        const pdfPageWidth = canvasWidth / pdfScale;
+        const pdfPageHeight = canvasHeight / pdfScale;
+        
+        // Convert canvas coordinates to PDF page coordinates
+        const pdfX = x / pdfScale;
+        const pdfY = y / pdfScale;
+        const pdfWidth = width / pdfScale;
+        const pdfHeight = height / pdfScale;
+        
+        // Scale to A4 dimensions (assuming the PDF is A4 size)
+        const a4X = (pdfX / pdfPageWidth) * A4_WIDTH;
+        const a4Y = (pdfY / pdfPageHeight) * A4_HEIGHT;
+        const a4Width = (pdfWidth / pdfPageWidth) * A4_WIDTH;
+        const a4Height = (pdfHeight / pdfPageHeight) * A4_HEIGHT;
+        
+        return {
+          x: Math.round(a4X * 100) / 100, // Round to 2 decimal places
+          y: Math.round(a4Y * 100) / 100,
+          width: Math.round(a4Width * 100) / 100,
+          height: Math.round(a4Height * 100) / 100
+        };
+      };
+      
+      // Convert annotations (drawings) to A4 coordinates
+      const convertAnnotations = (annotations) => {
+        return annotations.map(ann => {
+          if (ann.type === 'drawing' && ann.data && ann.data.path) {
+            // Convert drawing path coordinates
+            const convertedPath = ann.data.path.map(point => {
+              const pdfX = point.x / pdfScale;
+              const pdfY = point.y / pdfScale;
+              const pdfPageWidth = canvasWidth / pdfScale;
+              const pdfPageHeight = canvasHeight / pdfScale;
+              
+              const a4X = (pdfX / pdfPageWidth) * A4_WIDTH;
+              const a4Y = (pdfY / pdfPageHeight) * A4_HEIGHT;
+              
+              return {
+                x: Math.round(a4X * 100) / 100,
+                y: Math.round(a4Y * 100) / 100
+              };
+            });
+            
+            return {
+              id: ann.id,
+              type: ann.type,
+              page: ann.page,
+              signer: ann.signer || 'preparer',
+              data: {
+                path: convertedPath,
+                color: ann.data.color,
+                width: ann.data.width ? Math.round((ann.data.width / pdfScale) * (A4_WIDTH / (canvasWidth / pdfScale)) * 100) / 100 : ann.data.width
+              }
+            };
+          }
+          return ann;
+        });
+      };
+      
+      // Convert images to A4 coordinates
+      const convertImages = (images) => {
+        return images.map(img => {
+          const converted = convertToA4Coordinates(img.x, img.y, img.width, img.height);
+          return {
+            id: img.id,
+            page: img.page,
+            x: converted.x,
+            y: converted.y,
+            width: converted.width,
+            height: converted.height,
+            src: img.src,
+            signer: img.signer || 'preparer'
+          };
+        });
+      };
+      
+      const payload = {
+        document_id: annotationData.requestId || annotationData.documentId,
+        esign_document_id: annotationData.esign_document_id,
+        pdf_url: annotationData.pdfUrl || annotationData.document_url,
+        annotations: convertAnnotations(annotationData.annotations || []),
+        images: convertImages(annotationData.images || []),
+        pdf_scale: 1.0, // A4 coordinates are already normalized
+        zoom_percentage: annotationData.zoom_percentage || Math.round((annotationData.pdf_scale || 1.5) * 100), // Zoom percentage for backend processing
+        page_size: 'A4', // Specify A4 page size
+        page_width: A4_WIDTH,
+        page_height: A4_HEIGHT,
+        canvas_info: {
+          original_width: canvasWidth,
+          original_height: canvasHeight,
+          original_scale: pdfScale
+        },
+        metadata: {
+          ...annotationData.metadata,
+          coordinate_system: 'A4',
+          timestamp: new Date().toISOString()
+        },
+        processing_options: {
+          add_signatures: true,
+          merge_images: true,
+          preserve_quality: true,
+          output_format: 'pdf'
+        }
+      };
+      
+      console.log('📤 Saving preparer annotations to backend:', {
+        url: `${API_BASE_URL}/tax-preparer/pdf/annotations/save/`,
+        document_id: payload.document_id,
+        esign_document_id: payload.esign_document_id,
+        annotations_count: payload.annotations.length,
+        images_count: payload.images.length,
+        page_size: payload.page_size,
+        page_dimensions: `${payload.page_width}x${payload.page_height}`
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/tax-preparer/pdf/annotations/save/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('❌ Backend error response:', {
+          status: response.status,
+          message: data.message || 'Unknown error',
+          data: data
+        });
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+
+      console.log('✅ Preparer annotations saved successfully:', data);
+      return {
+        success: true,
+        data: data,
+        message: data.message || 'Preparer annotations saved and processed successfully'
+      };
+    } catch (error) {
+      console.error('❌ Error saving preparer annotations:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to save preparer annotations'
       };
     }
   }

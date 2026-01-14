@@ -4,10 +4,11 @@ import { Modal } from 'react-bootstrap';
 import { customESignAPI, taxPreparerClientAPI, taxPreparerDocumentsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { getUserData } from '../../../ClientOnboarding/utils/userUtils';
 import { toast } from 'react-toastify';
-import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus, FiPenTool } from 'react-icons/fi';
+import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiFilter, FiRefreshCw, FiPlus, FiPenTool, FiEye, FiInfo } from 'react-icons/fi';
 import ProcessingModal from '../../../components/ProcessingModal';
 import PdfSignatureModal from '../../components/PdfSignatureModal.jsx';
 import PdfAnnotationModal from '../../../ClientOnboarding/components/PdfAnnotationModal';
+import PDFViewer from '../../../components/PDFViewer';
 import { annotationAPI } from '../../../utils/annotationAPI';
 import '../../styles/esignature-dashboard.css';
 
@@ -58,6 +59,14 @@ export default function ESignatureDashboard() {
   // PDF Annotation Modal state
   const [showAnnotationModal, setShowAnnotationModal] = useState(false);
   const [selectedDocumentForAnnotation, setSelectedDocumentForAnnotation] = useState(null);
+  
+  // PDF Preview Modal state
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedPreviewDocument, setSelectedPreviewDocument] = useState(null);
+  
+  // Signing Status Modal state
+  const [showSigningStatusModal, setShowSigningStatusModal] = useState(false);
+  const [selectedSigningStatus, setSelectedSigningStatus] = useState(null);
   
   // Data for dropdowns
   const [clients, setClients] = useState([]);
@@ -453,15 +462,15 @@ export default function ESignatureDashboard() {
         openSigningInNewWindow(signingUrl, request);
       }
     } else {
-      // Navigate to client details with e-sign logs
+      // Navigate to client details with e-sign logs, or open signing status modal
       if (request.taxpayer || request.taxpayer_id) {
         const taxpayerId = request.taxpayer || request.taxpayer_id;
         navigate(`/taxdashboard/clients/${taxpayerId}/esign-logs`);
       } else {
-        // Show a toast if no client ID is available
-        toast.info('View details functionality coming soon', {
-          position: "top-right"
-        });
+        // Open signing status modal if no client ID available
+        e?.stopPropagation();
+        setSelectedSigningStatus(request);
+        setShowSigningStatusModal(true);
       }
     }
   };
@@ -706,10 +715,6 @@ export default function ESignatureDashboard() {
       toast.error('Please select a deadline');
       return;
     }
-    if (hasSpouse && !spouseEmail) {
-      toast.error('Please enter spouse email');
-      return;
-    }
 
     try {
       setCreating(true);
@@ -814,7 +819,8 @@ export default function ESignatureDashboard() {
         spouse_name: hasSpouse && spouseName ? spouseName : undefined,
         preparer_must_sign: preparerMustSign,
         deadline: deadlineFormatted,
-        fields: fields
+        fields: fields,
+        folder_id: selectedFolder ? (selectedFolder.id || selectedFolder.folder_id) : undefined
       });
 
       if (createResponse.success) {
@@ -933,16 +939,16 @@ export default function ESignatureDashboard() {
   return (
     <div className="esignature-dashboard-container" style={{ fontFamily: 'BasisGrotesquePro' }}>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '8px' }}>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ color: '#3B4A66', fontWeight: '600', marginBottom: '8px', wordWrap: 'break-word' }}>
             E-Signature Dashboard
           </h2>
-          <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>
+          <p style={{ color: '#6B7280', fontSize: '14px', margin: 0, wordWrap: 'break-word' }}>
             Track and manage all e-signature requests across your clients
           </p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 flex-wrap" style={{ flexShrink: 0 }}>
           <button
             onClick={handleOpenCreateModal}
             className="btn d-flex align-items-center gap-2"
@@ -1175,12 +1181,39 @@ export default function ESignatureDashboard() {
                           </span>
                         )}
                       </div>
-                      {/* Annotate PDF Button - Show when preparer needs to sign and taxpayer has signed, or when status is processing */}
-                      {request.preparer_must_sign === true && 
-                       request.preparer_signed === false &&
-                       (request.status === 'processing' || 
-                        (request.taxpayer_signed === true && request.preparer_needs_to_sign === true)) && (
-                        <div className="mt-2 d-flex gap-2">
+                      {/* Action Buttons */}
+                      <div className="mt-2 d-flex gap-2 flex-wrap">
+                        {/* Preview Button - Show if document URL exists */}
+                        {request.document_url && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPreviewDocument({
+                                url: request.document_url,
+                                name: request.document_name || request.title || 'Document'
+                              });
+                              setShowPreviewModal(true);
+                            }}
+                            className="btn d-flex align-items-center gap-2"
+                            style={{
+                              backgroundColor: '#F3F4F6',
+                              color: '#3B4A66',
+                              border: '1px solid #E5E7EB',
+                              fontFamily: 'BasisGrotesquePro',
+                              fontWeight: '500',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              fontSize: '14px'
+                            }}
+                            title="Preview Document"
+                          >
+                            <FiEye size={14} />
+                            Preview
+                          </button>
+                        )}
+                        {/* Annotate & Sign for Preparer Button - Show when preparer must sign and hasn't signed yet */}
+                        {request.preparer_must_sign === true && 
+                         request.preparer_signed === false && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1205,10 +1238,10 @@ export default function ESignatureDashboard() {
                             }}
                           >
                             <FiPenTool size={14} />
-                            Annotate PDF
+                            Annotate & Sign for Preparer
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                       {/* Sign Document Button for Ready Status */}
                       {request.status === 'ready' && (
                         <div className="mt-2">
@@ -1366,25 +1399,91 @@ export default function ESignatureDashboard() {
               </div>
             </div>
 
-            {/* Has Spouse Checkbox */}
+            {/* Has Spouse Toggle */}
             <div>
-              <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={hasSpouse}
-                  onChange={(e) => {
-                    setHasSpouse(e.target.checked);
-                    if (!e.target.checked) {
-                      setSpouseEmail('');
-                      setSpouseName('');
-                    }
-                  }}
-                  disabled={creating || processing}
-                  style={{ cursor: creating || processing ? 'not-allowed' : 'pointer', opacity: creating || processing ? 0.6 : 1 }}
-                />
-                <span style={{ color: '#3B4A66', fontWeight: '500' }}>
-                  Client has a spouse (spouse signature required)
-                </span>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: creating || processing ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#3B4A66',
+                opacity: creating || processing ? 0.6 : 1
+              }}>
+                <span>Client has a spouse (spouse signature required)</span>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <input
+                    type="checkbox"
+                    checked={hasSpouse}
+                    onChange={async (e) => {
+                      const checked = e.target.checked;
+                      if (!checked) {
+                        setHasSpouse(false);
+                        setSpouseEmail('');
+                        setSpouseName('');
+                        return;
+                      }
+                      
+                      // If checking, validate that client has a spouse
+                      if (!selectedClient) {
+                        toast.error('Please select a client first.');
+                        return;
+                      }
+                      
+                      try {
+                        const clientId = selectedClient.id || selectedClient.client_id;
+                        const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
+                        
+                        if (response.success && response.data) {
+                          if (response.data.has_spouse) {
+                            setHasSpouse(true);
+                            // Try to get spouse email and name
+                            if (response.data.spouse_email || response.data.spouse_info?.spouse_email) {
+                              setSpouseEmail(response.data.spouse_email || response.data.spouse_info.spouse_email);
+                            }
+                            if (response.data.spouse_name || response.data.spouse_info?.spouse_name) {
+                              setSpouseName(response.data.spouse_name || response.data.spouse_info.spouse_name);
+                            }
+                          } else {
+                            toast.error('This client does not have a partner/spouse. Spouse signature cannot be required.');
+                          }
+                        } else {
+                          toast.error('Failed to check spouse information. Please try again.');
+                        }
+                      } catch (error) {
+                        console.error('Error checking spouse:', error);
+                        toast.error(handleAPIError(error) || 'Failed to check spouse information. Please try again.');
+                      }
+                    }}
+                    disabled={creating || processing}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      appearance: 'none',
+                      backgroundColor: hasSpouse ? '#00C0C6' : '#D1D5DB',
+                      borderRadius: '12px',
+                      position: 'relative',
+                      cursor: creating || processing ? 'not-allowed' : 'pointer',
+                      transition: 'background-color 0.2s',
+                      outline: 'none'
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: hasSpouse ? '22px' : '2px',
+                      width: '20px',
+                      height: '20px',
+                      backgroundColor: 'white',
+                      borderRadius: '50%',
+                      transition: 'left 0.2s',
+                      pointerEvents: 'none',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}
+                  />
+                </div>
               </label>
             </div>
 
@@ -1393,19 +1492,52 @@ export default function ESignatureDashboard() {
 
           
 
-            {/* Preparer Must Sign Checkbox */}
+            {/* Preparer Must Sign Toggle */}
             <div>
-              <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={preparerMustSign}
-                  onChange={(e) => setPreparerMustSign(e.target.checked)}
-                  disabled={creating || processing}
-                  style={{ cursor: creating || processing ? 'not-allowed' : 'pointer', opacity: creating || processing ? 0.6 : 1 }}
-                />
-                <span style={{ color: '#3B4A66', fontWeight: '500' }}>
-                  Preparer must sign
-                </span>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: creating || processing ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#3B4A66',
+                opacity: creating || processing ? 0.6 : 1
+              }}>
+                <span>Preparer must sign</span>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <input
+                    type="checkbox"
+                    checked={preparerMustSign}
+                    onChange={(e) => setPreparerMustSign(e.target.checked)}
+                    disabled={creating || processing}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      appearance: 'none',
+                      backgroundColor: preparerMustSign ? '#00C0C6' : '#D1D5DB',
+                      borderRadius: '12px',
+                      position: 'relative',
+                      cursor: creating || processing ? 'not-allowed' : 'pointer',
+                      transition: 'background-color 0.2s',
+                      outline: 'none'
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: preparerMustSign ? '22px' : '2px',
+                      width: '20px',
+                      height: '20px',
+                      backgroundColor: 'white',
+                      borderRadius: '50%',
+                      transition: 'left 0.2s',
+                      pointerEvents: 'none',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}
+                  />
+                </div>
               </label>
             </div>
 
@@ -1479,26 +1611,32 @@ export default function ESignatureDashboard() {
                   type="button"
                   className="form-control text-start d-flex justify-content-between align-items-center"
                   onClick={() => {
-                    if (creating || processing) return;
+                    if (creating || processing || loadingFolders) return;
                     setShowFolderDropdown(!showFolderDropdown);
                     if (!showFolderDropdown && folders.length === 0) {
                       fetchFolders();
                     }
                   }}
-                  disabled={creating || processing}
+                  disabled={creating || processing || loadingFolders}
                   style={{
                     borderColor: '#E5E7EB',
-                    backgroundColor: creating || processing ? '#F3F4F6' : 'white',
-                    cursor: creating || processing ? 'not-allowed' : 'pointer',
-                    opacity: creating || processing ? 0.6 : 1
+                    backgroundColor: creating || processing || loadingFolders ? '#F3F4F6' : 'white',
+                    cursor: creating || processing || loadingFolders ? 'not-allowed' : 'pointer',
+                    opacity: creating || processing || loadingFolders ? 0.6 : 1
                   }}
                 >
                   <span style={{ color: selectedFolder ? '#3B4A66' : '#9CA3AF' }}>
-                    {selectedFolder 
-                      ? (selectedFolder.name || selectedFolder.folder_name || `Folder #${selectedFolder.id}`)
-                      : 'Select a folder (optional)'}
+                    {loadingFolders ? 'Loading folders...' : (selectedFolder 
+                      ? (selectedFolder.title || selectedFolder.name || selectedFolder.folder_name || `Folder #${selectedFolder.id}`)
+                      : 'Select a folder (optional)')}
                   </span>
-                  <span style={{ color: '#6B7280' }}>▼</span>
+                  {loadingFolders ? (
+                    <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: '16px', height: '16px', borderWidth: '2px' }}>
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  ) : (
+                    <span style={{ color: '#6B7280' }}>▼</span>
+                  )}
                 </button>
                 {showFolderDropdown && (
                   <div
@@ -1549,7 +1687,7 @@ export default function ESignatureDashboard() {
                             setShowFolderDropdown(false);
                           }}
                         >
-                          {folder.name || folder.folder_name || `Folder #${folder.id || folder.folder_id}`}
+                          {folder.title || folder.name || folder.folder_name || `Folder #${folder.id || folder.folder_id}`}
                         </button>
                       ))
                     )}
@@ -1603,7 +1741,7 @@ export default function ESignatureDashboard() {
           <button
             className="btn"
             onClick={handleCreateESignRequest}
-            disabled={creating || processing || !selectedClient || !selectedFile || !deadline || (hasSpouse && !spouseEmail)}
+            disabled={creating || processing || !selectedClient || !selectedFile || !deadline}
             style={{
               backgroundColor: creating || processing || !selectedClient || !selectedFile ? '#D1D5DB' : '#00C0C6',
               border: 'none',
@@ -1765,6 +1903,168 @@ export default function ESignatureDashboard() {
         }}
       />
 
+      {/* Signing Status Modal */}
+      <Modal
+        show={showSigningStatusModal}
+        onHide={() => {
+          setShowSigningStatusModal(false);
+          setSelectedSigningStatus(null);
+        }}
+        centered
+        style={{ fontFamily: 'BasisGrotesquePro' }}
+      >
+        <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
+            Signing Status
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px' }}>
+          {selectedSigningStatus && (
+            <div className="d-flex flex-column gap-3">
+              {/* Taxpayer Signed */}
+              <div className="d-flex justify-content-between align-items-center" style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+                <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                  Taxpayer Signed:
+                </span>
+                <span style={{ 
+                  color: selectedSigningStatus.taxpayer_signed ? '#10B981' : '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {selectedSigningStatus.taxpayer_signed ? 'Signed' : 'Not Signed'}
+                </span>
+              </div>
+
+              {/* Preparer Signed */}
+              <div className="d-flex justify-content-between align-items-center" style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+                <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                  Preparer Signed:
+                </span>
+                <span style={{ 
+                  color: selectedSigningStatus.preparer_signed ? '#10B981' : '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {selectedSigningStatus.preparer_signed ? 'Signed' : 'Not Signed'}
+                </span>
+              </div>
+
+              {/* Spouse Signed */}
+              <div className="d-flex justify-content-between align-items-center" style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+                <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                  Spouse Signed:
+                </span>
+                <span style={{ 
+                  color: selectedSigningStatus.spouse_sign === false ? '#9CA3AF' : selectedSigningStatus.spouse_signed ? '#10B981' : '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {selectedSigningStatus.spouse_sign === false ? 'Not Required' : selectedSigningStatus.spouse_signed ? 'Signed' : 'Not Signed'}
+                </span>
+              </div>
+
+              {/* Preparer Must Sign */}
+              <div className="d-flex justify-content-between align-items-center" style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+                <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                  Preparer Must Sign:
+                </span>
+                <span style={{ 
+                  color: selectedSigningStatus.preparer_must_sign ? '#F59E0B' : '#9CA3AF',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {selectedSigningStatus.preparer_must_sign ? 'Yes' : 'No'}
+                </span>
+              </div>
+
+              {/* Preparer Needs to Sign */}
+              {selectedSigningStatus.preparer_must_sign && (
+                <div className="d-flex justify-content-between align-items-center" style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+                  <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
+                    Preparer Needs to Sign:
+                  </span>
+                  <span style={{ 
+                    color: selectedSigningStatus.preparer_needs_to_sign ? '#F59E0B' : '#9CA3AF',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    {selectedSigningStatus.preparer_needs_to_sign ? 'Yes' : 'No'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+          <button
+            className="btn"
+            onClick={() => {
+              setShowSigningStatusModal(false);
+              setSelectedSigningStatus(null);
+            }}
+            style={{
+              fontFamily: 'BasisGrotesquePro',
+              backgroundColor: '#F3F4F6',
+              color: '#3B4A66',
+              border: '1px solid #E5E7EB',
+              fontWeight: '500',
+              padding: '8px 16px',
+              borderRadius: '6px'
+            }}
+          >
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* PDF Preview Modal */}
+      <Modal
+        show={showPreviewModal}
+        onHide={() => {
+          setShowPreviewModal(false);
+          setSelectedPreviewDocument(null);
+        }}
+        size="xl"
+        centered
+        fullscreen="lg-down"
+        style={{ fontFamily: 'BasisGrotesquePro' }}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600' }}>
+            {selectedPreviewDocument
+              ? `E-Signature – ${selectedPreviewDocument.name}`
+              : 'E-Signature – Document Preview'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 0, minHeight: '70vh' }}>
+          {selectedPreviewDocument?.url ? (
+            <PDFViewer
+              pdfUrl={selectedPreviewDocument.url}
+              height="70vh"
+              showThumbnails={true}
+            />
+          ) : (
+            <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+              <p className="text-muted" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                No document available for preview.
+              </p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setShowPreviewModal(false);
+              setSelectedPreviewDocument(null);
+            }}
+            style={{ fontFamily: 'BasisGrotesquePro' }}
+          >
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
+
       {/* PDF Annotation Modal */}
       {showAnnotationModal && selectedDocumentForAnnotation && (
         <PdfAnnotationModal
@@ -1778,7 +2078,7 @@ export default function ESignatureDashboard() {
           requestId={selectedDocumentForAnnotation.id}
           onSave={async (annotationData) => {
             try {
-              console.log('💾 Preparing to save annotations:', {
+              console.log('💾 Preparing to save preparer annotations:', {
                 esign_request_id: selectedDocumentForAnnotation.id,
                 document_id: selectedDocumentForAnnotation.document_id,
                 annotations_count: annotationData.annotations?.length || 0,
@@ -1787,13 +2087,15 @@ export default function ESignatureDashboard() {
                 canvas_info: annotationData.canvas_info
               });
 
-              // Send to backend using annotationAPI
-              const response = await annotationAPI.saveAnnotations({
+              // Send to backend using tax preparer specific API with A4 coordinate conversion
+              const response = await annotationAPI.savePreparerAnnotations({
                 pdfUrl: selectedDocumentForAnnotation.url,
                 annotations: annotationData.annotations || [],
                 images: annotationData.images || [],
                 pdf_scale: annotationData.pdf_scale || 1.5,
                 canvas_info: annotationData.canvas_info,
+                canvasWidth: annotationData.canvas_info?.width,
+                canvasHeight: annotationData.canvas_info?.height,
                 requestId: selectedDocumentForAnnotation.document_id,
                 esign_document_id: selectedDocumentForAnnotation.id,
                 metadata: {

@@ -33,7 +33,7 @@ export default function MyDocumentsContent() {
     const [documentToDelete, setDocumentToDelete] = useState(null);
     const [deletingDocumentId, setDeletingDocumentId] = useState(null);
     const [showMenuIndex, setShowMenuIndex] = useState(null);
-    
+
     // Assign for E-Sign states
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [documentToAssign, setDocumentToAssign] = useState(null);
@@ -974,9 +974,9 @@ export default function MyDocumentsContent() {
                                                         {doc.is_folder || doc.type === 'folder' || doc.document_type === 'folder' ? (
                                                             <i className="bi bi-folder-fill" style={{ fontSize: '40px', color: '#F49C2D' }}></i>
                                                         ) : (
-                                                            <span className="mydocs-icon-wrapper">
-                                                                <FileIcon />
-                                                            </span>
+                                                        <span className="mydocs-icon-wrapper">
+                                                            <FileIcon />
+                                                        </span>
                                                         )}
                                                     </div>
 
@@ -995,8 +995,8 @@ export default function MyDocumentsContent() {
                                                                 <>Folder • Updated: {docDate}</>
                                                             ) : (
                                                                 <>Size: {docSize} • Updated: {docDate}
-                                                                {docCategory && docCategory.trim() && (
-                                                                    <> • Category: {docCategory}</>
+                                                            {docCategory && docCategory.trim() && (
+                                                                <> • Category: {docCategory}</>
                                                                 )}</>
                                                             )}
                                                         </div>
@@ -1060,44 +1060,44 @@ export default function MyDocumentsContent() {
                                                                 </button>
                                                             )}
                                                             
-                                                            {/* Show Preview button for pending_sign status, otherwise show status badge */}
-                                                            {(docStatusValue.toLowerCase() === 'pending_sign' || docStatusValue.toLowerCase() === 'pending sign') ? (
-                                                                <button
-                                                                    className="btn px-3 py-2"
-                                                                    style={{
-                                                                        borderRadius: "20px",
-                                                                        fontSize: "0.75rem",
-                                                                        fontWeight: "500",
-                                                                        fontFamily: "BasisGrotesquePro",
-                                                                        backgroundColor: "#3AD6F2",
-                                                                        color: "#FFFFFF",
-                                                                        border: "none",
-                                                                        cursor: "pointer"
-                                                                    }}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
-                                                                        if (isPdf && fileUrl) {
-                                                                            setSelectedDocument(doc);
-                                                                            setShowPdfModal(true);
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    Preview
-                                                                </button>
-                                                            ) : (
-                                                                <span
-                                                                    className={`badge ${getStatusBadgeClass(docStatusValue)} px-3 py-2`}
-                                                                    style={{
-                                                                        borderRadius: "20px",
-                                                                        fontSize: "0.75rem",
-                                                                        fontWeight: "500",
-                                                                        fontFamily: "BasisGrotesquePro",
-                                                                        color: "#FFFFFF"
-                                                                    }}
-                                                                >
-                                                                    {docStatus}
-                                                                </span>
+                                                    {/* Show Preview button for pending_sign status, otherwise show status badge */}
+                                                    {(docStatusValue.toLowerCase() === 'pending_sign' || docStatusValue.toLowerCase() === 'pending sign') ? (
+                                                        <button
+                                                            className="btn px-3 py-2"
+                                                            style={{
+                                                                borderRadius: "20px",
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: "500",
+                                                                fontFamily: "BasisGrotesquePro",
+                                                                backgroundColor: "#3AD6F2",
+                                                                color: "#FFFFFF",
+                                                                border: "none",
+                                                                cursor: "pointer"
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const isPdf = docType.toLowerCase() === 'pdf' || doc.file_extension?.toLowerCase() === 'pdf';
+                                                                if (isPdf && fileUrl) {
+                                                                    setSelectedDocument(doc);
+                                                                    setShowPdfModal(true);
+                                                                }
+                                                            }}
+                                                        >
+                                                            Preview
+                                                        </button>
+                                                    ) : (
+                                                        <span
+                                                            className={`badge ${getStatusBadgeClass(docStatusValue)} px-3 py-2`}
+                                                            style={{
+                                                                borderRadius: "20px",
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: "500",
+                                                                fontFamily: "BasisGrotesquePro",
+                                                                color: "#FFFFFF"
+                                                            }}
+                                                        >
+                                                            {docStatus}
+                                                        </span>
                                                             )}
                                                         </>
                                                     )}

@@ -1271,17 +1271,17 @@ export default function DocumentsPage() {
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setShowMenuIndex(null);
-                                            if (meta.canPreview) {
+                                      if (meta.canPreview) {
                                               openPreviewModal(doc, e.currentTarget);
-                                            }
-                                          }}
-                                        >
+                                      }
+                                    }}
+                                  >
                                           <i className="bi bi-eye me-2"></i>
-                                          Preview
-                                        </button>
+                                    Preview
+                                  </button>
                                       )}
                                       {isFile(doc) && (
-                                        <button
+                                  <button
                                           className="btn btn-white border-0 w-100 text-start px-3 py-2"
                                           style={{
                                             fontFamily: 'BasisGrotesquePro',
@@ -1324,11 +1324,11 @@ export default function DocumentsPage() {
                                           e.stopPropagation();
                                           setShowMenuIndex(null);
                                           handleDeleteDocument(doc);
-                                        }}
-                                      >
+                                    }}
+                                  >
                                         <i className="bi bi-trash me-2"></i>
                                         Delete
-                                      </button>
+                                  </button>
                                     </div>
                                   )}
                                 </div>

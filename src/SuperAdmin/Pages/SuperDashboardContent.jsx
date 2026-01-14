@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Modal } from 'react-bootstrap';
 import {
   AreaChart,
   Area,
@@ -58,6 +59,12 @@ export default function SuperDashboardContent() {
   const [securitySettings, setSecuritySettings] = useState(null);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [updatingSecuritySetting, setUpdatingSecuritySetting] = useState(null);
+
+  // All firms modal state
+  const [showAllFirmsModal, setShowAllFirmsModal] = useState(false);
+  const [allFirms, setAllFirms] = useState([]);
+  const [allFirmsLoading, setAllFirmsLoading] = useState(false);
+  const [allFirmsError, setAllFirmsError] = useState(null);
   
   // Generate current month value for default
   const getCurrentMonthValue = () => {
@@ -751,7 +758,29 @@ export default function SuperDashboardContent() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
-        <div className="bg-white h-auto rounded-xl border border-[#E8F0FF] p-7 relative">
+        <div 
+          className="bg-white h-auto rounded-xl border border-[#E8F0FF] p-7 relative cursor-pointer hover:shadow-md transition-shadow"
+          onClick={async () => {
+            setShowAllFirmsModal(true);
+            setAllFirmsLoading(true);
+            setAllFirmsError(null);
+            try {
+              // Fetch all firms with a large limit
+              const response = await superAdminAPI.getFirms(1, 1000, '', '', '');
+              if (response.success && response.data) {
+                setAllFirms(response.data.firms || []);
+              } else {
+                throw new Error(response.message || 'Failed to fetch firms');
+              }
+            } catch (err) {
+              console.error('Error fetching all firms:', err);
+              setAllFirmsError(handleAPIError(err));
+              setAllFirms([]);
+            } finally {
+              setAllFirmsLoading(false);
+            }
+          }}
+        >
           <div className="absolute top-4 right-4">
             <TotalFirmsIcon className="w-4 h-4" />
           </div>
@@ -1347,6 +1376,113 @@ export default function SuperDashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* All Firms Modal */}
+      <Modal
+        show={showAllFirmsModal}
+        onHide={() => {
+          setShowAllFirmsModal(false);
+          setAllFirms([]);
+          setAllFirmsError(null);
+        }}
+        size="xl"
+        centered
+        style={{ fontFamily: 'BasisGrotesquePro' }}
+      >
+        <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
+            All Firms ({allFirms.length})
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '0' }}>
+          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '24px' }}>
+            {allFirmsLoading ? (
+              <div className="text-center py-5">
+                <p className="text-gray-500">Loading firms...</p>
+              </div>
+            ) : allFirmsError ? (
+              <div className="text-center py-5">
+                <p className="text-red-500">{allFirmsError}</p>
+              </div>
+            ) : allFirms.length === 0 ? (
+              <div className="text-center py-5">
+                <p className="text-gray-500">No firms found</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {allFirms.map((firm) => (
+                  <div
+                    key={firm.id}
+                    className="border border-[#E8F0FF] rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h5 className="text-lg font-semibold text-gray-900 mb-1">
+                          {firm.name || firm.firm_name || 'Unnamed Firm'}
+                        </h5>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                          {firm.owner_name && (
+                            <div>
+                              <span className="font-medium">Owner:</span> {firm.owner_name}
+                            </div>
+                          )}
+                          {firm.email && (
+                            <div>
+                              <span className="font-medium">Email:</span> {firm.email}
+                            </div>
+                          )}
+                          {firm.subscription_plan && (
+                            <div>
+                              <span className="font-medium">Plan:</span> {firm.subscription_plan}
+                            </div>
+                          )}
+                          {firm.status && (
+                            <div>
+                              <span className="font-medium">Status:</span>{' '}
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${
+                                  firm.status.toLowerCase() === 'active'
+                                    ? 'bg-green-100 text-green-800'
+                                    : firm.status.toLowerCase() === 'suspended'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {firm.status}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+          <button
+            className="btn"
+            onClick={() => {
+              setShowAllFirmsModal(false);
+              setAllFirms([]);
+              setAllFirmsError(null);
+            }}
+            style={{
+              fontFamily: 'BasisGrotesquePro',
+              backgroundColor: '#F3F4F6',
+              color: '#3B4A66',
+              border: '1px solid #E5E7EB',
+              fontWeight: '500',
+              padding: '8px 16px',
+              borderRadius: '6px'
+            }}
+          >
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

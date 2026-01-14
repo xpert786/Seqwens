@@ -29,11 +29,22 @@
   background: white;
   padding: 10px;
   border-radius: 4px;
+  transform: none !important;
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
 }
 
 .pdf-page-wrapper canvas {
   display: block;
   border: 1px solid #E5E7EB;
+  transform: none !important;
+  transform-origin: top left !important;
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
 }
 
 .page-navigation {

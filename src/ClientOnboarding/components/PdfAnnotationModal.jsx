@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
-import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiZoomIn, FiZoomOut, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove } from 'react-icons/fi';
+import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove } from 'react-icons/fi';
 import { handleAPIError } from '../utils/apiUtils';
 import '../styles/PdfAnnotationModal.css';
 
@@ -24,12 +24,14 @@ export default function PdfAnnotationModal({
   documentUrl, 
   documentName,
   requestId,
-  onSave 
+  onSave,
+  spouseSignRequired = false,
+  spouseSigned = false
 }) {
   const [pdfDoc, setPdfDoc] = useState(null);
   const [pdfPages, setPdfPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1.5);
+  const [scale, setScale] = useState(1.0); // Fixed at 100% zoom
   const [loading, setLoading] = useState(true);
   const [activeTool, setActiveTool] = useState(TOOLS.PEN);
   const [penColor, setPenColor] = useState('#000000');
@@ -44,6 +46,8 @@ export default function PdfAnnotationModal({
   const [historyIndex, setHistoryIndex] = useState(-1); // Current position in history
   const [draggingImage, setDraggingImage] = useState(null); // Currently dragging image
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 }); // Offset for smooth dragging
+  const [activeSigner, setActiveSigner] = useState('primary'); // 'primary' or 'spouse'
+  const [isSaved, setIsSaved] = useState(false); // Track if annotations have been saved
   
   const canvasRefs = useRef({});
   const containerRef = useRef(null);
@@ -234,7 +238,10 @@ export default function PdfAnnotationModal({
       const page = await pdf.getPage(pageNum);
       if (!page) return;
       
-      const viewport = page.getViewport({ scale });
+      // Get viewport with explicit rotation 0 to prevent inversion
+      // PDF.js viewport rotation: 0 (0°), 90 (90°), 180 (180°), 270 (270°)
+      // Always use 0 to ensure correct orientation
+      const viewport = page.getViewport({ scale: scale, rotation: 0 });
       
       // Find or create wrapper
       let wrapper = container.querySelector(`[data-page="${pageNum}"]`);
@@ -246,6 +253,9 @@ export default function PdfAnnotationModal({
         wrapper.style.marginBottom = '20px';
         wrapper.style.display = 'flex';
         wrapper.style.justifyContent = 'center';
+        // Ensure no transforms on wrapper that could cause inversion
+        wrapper.style.transform = 'none';
+        wrapper.style.transformOrigin = 'top left';
         container.appendChild(wrapper);
       }
       
@@ -271,14 +281,26 @@ export default function PdfAnnotationModal({
         wrapper.appendChild(canvas);
       }
       
+      // Set canvas internal dimensions
       canvas.width = viewport.width;
       canvas.height = viewport.height;
+      
+      // Set canvas display size to match internal dimensions (1:1 pixel ratio)
+      // This ensures coordinates are calculated correctly regardless of scale
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      // Ensure no CSS transforms are applied that could cause inversion
+      canvas.style.transform = 'none';
+      canvas.style.transformOrigin = 'top left';
       
       const context = canvas.getContext('2d');
       if (!context) return;
       
       // Clear canvas
       context.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Reset any existing transforms
+      context.setTransform(1, 0, 0, 1, 0, 0);
       
       // Render PDF page
       const renderContext = {
@@ -414,6 +436,9 @@ export default function PdfAnnotationModal({
   }, [eraserWidth]);
 
   const handleMouseDown = (e) => {
+    // Disable editing if annotations have been saved
+    if (isSaved) return;
+    
     const target = e.target;
     if (!target || target.tagName !== 'CANVAS') return;
     
@@ -425,11 +450,21 @@ export default function PdfAnnotationModal({
     
     const canvas = target;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Validate rect dimensions
+    if (rect.width <= 0 || rect.height <= 0 || canvas.width <= 0 || canvas.height <= 0) return;
+    
+    // Calculate coordinates accounting for actual canvas display size
+    // Use the ratio of canvas internal dimensions to displayed dimensions
+    // This handles cases where canvas is scaled via CSS or browser zoom
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
     
     // Validate coordinates
-    if (isNaN(x) || isNaN(y)) return;
+    if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
     
     // Check if clicking on an existing image (for dragging)
     const clickedImage = getImageAtPosition(x, y, pageNum);
@@ -458,7 +493,8 @@ export default function PdfAnnotationModal({
           page: pageNum,
           color: penColor,
           width: penWidth,
-          path: [{ x, y }]
+          path: [{ x, y }],
+          signer: activeSigner
         };
         setAnnotations(prev => [...prev, newAnnotation]);
         setSelectedAnnotation(newAnnotation.id);
@@ -530,7 +566,8 @@ export default function PdfAnnotationModal({
           y: centerY,
           width: imageWidth,
           height: imageHeight,
-          src: imageAnnotation.src
+          src: imageAnnotation.src,
+          signer: activeSigner
         };
         const newImages = [...images, newImage];
         const newAnnotations = annotations.filter(a => a.id !== selectedAnnotation);
@@ -549,6 +586,9 @@ export default function PdfAnnotationModal({
   };
 
   const handleMouseMove = (e) => {
+    // Disable editing if annotations have been saved
+    if (isSaved) return;
+    
     const target = e.target;
     if (!target || target.tagName !== 'CANVAS') return;
     
@@ -560,11 +600,21 @@ export default function PdfAnnotationModal({
     
     const canvas = target;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Validate rect dimensions
+    if (rect.width <= 0 || rect.height <= 0 || canvas.width <= 0 || canvas.height <= 0) return;
+    
+    // Calculate coordinates accounting for actual canvas display size
+    // Use the ratio of canvas internal dimensions to displayed dimensions
+    // This handles cases where canvas is scaled via CSS or browser zoom
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
     
     // Validate coordinates
-    if (isNaN(x) || isNaN(y)) return;
+    if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
     
     // Handle image dragging
     if (draggingImage) {
@@ -670,6 +720,8 @@ export default function PdfAnnotationModal({
   };
 
   const handleMouseUp = () => {
+    // Disable editing if annotations have been saved
+    if (isSaved) return;
     // Handle end of image dragging
     if (draggingImage) {
       setDraggingImage(null);
@@ -704,6 +756,9 @@ export default function PdfAnnotationModal({
   };
 
   const handleImageUpload = (e) => {
+    // Disable editing if annotations have been saved
+    if (isSaved) return;
+    
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -725,7 +780,8 @@ export default function PdfAnnotationModal({
           type: 'image',
           src: event.target.result,
           width: defaultWidth,
-          height: defaultHeight
+          height: defaultHeight,
+          signer: activeSigner
         };
         
         setAnnotations(prev => [...prev, newAnnotation]);
@@ -851,6 +907,8 @@ export default function PdfAnnotationModal({
 
   // Clear all annotations
   const handleClearAll = () => {
+    // Disable editing if annotations have been saved
+    if (isSaved) return;
     if (annotations.length === 0 && images.length === 0) {
       toast.info('Nothing to clear');
       return;
@@ -875,28 +933,86 @@ export default function PdfAnnotationModal({
     try {
       setSaving(true);
       
+      // Separate primary and spouse annotations
+      const primaryAnnotations = annotations.filter(ann => !ann.signer || ann.signer === 'primary');
+      const spouseAnnotations = annotations.filter(ann => ann.signer === 'spouse');
+      const primaryImages = images.filter(img => !img.signer || img.signer === 'primary');
+      const spouseImages = images.filter(img => img.signer === 'spouse');
+      
+      // Validate spouse signature requirement
+      if (spouseSignRequired && !spouseSigned) {
+        const spouseHasAnnotations = spouseAnnotations.length > 0 || spouseImages.length > 0;
+        if (!spouseHasAnnotations) {
+          toast.error('Spouse signature is required. Please switch to "Spouse" mode and add a signature using the pen or image tool.', {
+            position: 'top-right',
+            autoClose: 5000
+          });
+          setSaving(false);
+          return;
+        }
+      }
+      
+      // Get canvas dimensions from the first page (assuming all pages have same dimensions)
+      let canvasWidth = 0;
+      let canvasHeight = 0;
+      if (pdfPages.length > 0) {
+        const firstCanvasId = `page-${pdfPages[0]}`;
+        const firstCanvas = canvasRefs.current[firstCanvasId];
+        if (firstCanvas) {
+          canvasWidth = firstCanvas.width;
+          canvasHeight = firstCanvas.height;
+        }
+      }
+      
       // Prepare annotation data for backend
       const annotationData = {
         request_id: requestId,
         document_url: documentUrl,
-        annotations: annotations.map(ann => ({
+        annotations: primaryAnnotations.map(ann => ({
           id: ann.id,
           type: ann.type,
           page: ann.page,
+          signer: 'primary',
           data: ann.type === 'drawing' 
             ? { path: ann.path, color: ann.color, width: ann.width }
             : { src: ann.src, width: ann.width, height: ann.height }
         })),
-        images: images.map(img => ({
+        images: primaryImages.map(img => ({
           id: img.id,
           page: img.page,
           x: img.x,
           y: img.y,
           width: img.width,
           height: img.height,
-          src: img.src
+          src: img.src,
+          signer: 'primary'
         })),
-        pdf_scale: scale
+        // Include spouse annotations and images if they exist
+        spouse_annotations: spouseAnnotations.length > 0 ? spouseAnnotations.map(ann => ({
+          id: ann.id,
+          type: ann.type,
+          page: ann.page,
+          signer: 'spouse',
+          data: ann.type === 'drawing' 
+            ? { path: ann.path, color: ann.color, width: ann.width }
+            : { src: ann.src, width: ann.width, height: ann.height }
+        })) : [],
+        spouse_images: spouseImages.length > 0 ? spouseImages.map(img => ({
+          id: img.id,
+          page: img.page,
+          x: img.x,
+          y: img.y,
+          width: img.width,
+          height: img.height,
+          src: img.src,
+          signer: 'spouse'
+        })) : [],
+        pdf_scale: scale,
+        zoom_percentage: Math.round(scale * 100), // Zoom percentage (e.g., 150 for 150%)
+        canvas_info: {
+          width: canvasWidth,
+          height: canvasHeight
+        }
       };
       
       // Call onSave callback if provided
@@ -908,7 +1024,8 @@ export default function PdfAnnotationModal({
         toast.success('Annotations saved successfully!');
       }
       
-      handleClose();
+      // Disable editing after successful save
+      setIsSaved(true);
     } catch (error) {
       console.error('Error saving annotations:', error);
       const errorMsg = handleAPIError(error);
@@ -924,9 +1041,10 @@ export default function PdfAnnotationModal({
     setSelectedAnnotation(null);
     setActiveTool(TOOLS.PEN);
     setCurrentPage(1);
-    setScale(1.5);
+    setScale(1.0); // Fixed at 100% zoom
     setHistory([]);
     setHistoryIndex(-1);
+    setIsSaved(false); // Reset saved state
     
     // Clear refs
     eraserRemovedIdsRef.current.clear();
@@ -943,8 +1061,7 @@ export default function PdfAnnotationModal({
     onClose();
   };
 
-  const zoomIn = () => setScale(prev => Math.min(prev + 0.25, 3));
-  const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
+  // Zoom is fixed at 100% - no zoom functions needed
 
   if (!isOpen) return null;
 
@@ -984,35 +1101,80 @@ export default function PdfAnnotationModal({
           gap: '16px',
           flexWrap: 'wrap'
         }}>
+          {/* Signer Toggle - Show only if spouse signature is required */}
+          {spouseSignRequired && (
+            <>
+              <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
+                <button
+                  onClick={() => setActiveSigner('primary')}
+                  className={`btn btn-sm ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  style={{ 
+                    fontSize: '12px',
+                    padding: '4px 12px',
+                    minWidth: '80px'
+                  }}
+                  title="Sign as Primary Taxpayer"
+                >
+                  Primary
+                </button>
+                <button
+                  onClick={() => setActiveSigner('spouse')}
+                  className={`btn btn-sm ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  style={{ 
+                    fontSize: '12px',
+                    padding: '4px 12px',
+                    minWidth: '80px',
+                    backgroundColor: activeSigner === 'spouse' ? '#F56D2D' : undefined,
+                    borderColor: activeSigner === 'spouse' ? '#F56D2D' : undefined
+                  }}
+                  title="Sign as Spouse"
+                >
+                  Spouse
+                </button>
+              </div>
+              <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+            </>
+          )}
+
           {/* Tools */}
           <div className="d-flex gap-2 align-items-center">
             <button
-              onClick={() => setActiveTool(TOOLS.PEN)}
+              onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
+              disabled={isSaved}
               className={`btn btn-sm ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
+              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Pen Tool"
             >
               <FiPenTool size={18} />
             </button>
             <button
-              onClick={() => setActiveTool(TOOLS.TRASH)}
+              onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
+              disabled={isSaved}
               className={`btn btn-sm ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
+              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Eraser Tool"
             >
               <FiTrash size={18} />
             </button>
             <button
-              onClick={() => imageInputRef.current?.click()}
+              onClick={() => !isSaved && imageInputRef.current?.click()}
+              disabled={isSaved}
               className={`btn btn-sm ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
+              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Upload Image"
             >
               <FiImage size={18} />
             </button>
             <button
               onClick={() => {
-                console.log('Select/Move tool clicked');
-                setActiveTool(TOOLS.SELECT);
+                if (!isSaved) {
+                  console.log('Select/Move tool clicked');
+                  setActiveTool(TOOLS.SELECT);
+                }
               }}
+              disabled={isSaved}
               className={`btn btn-sm ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
+              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Select/Move Tool - Click and drag images to move them"
             >
               <FiMove size={18} />
@@ -1031,8 +1193,9 @@ export default function PdfAnnotationModal({
             {/* Clear All button */}
             <button
               onClick={handleClearAll}
-              disabled={annotations.length === 0 && images.length === 0}
+              disabled={isSaved || (annotations.length === 0 && images.length === 0)}
               className="btn btn-sm btn-outline-danger"
+              style={{ opacity: isSaved ? 0.6 : 1, cursor: isSaved ? 'not-allowed' : 'pointer' }}
               title="Clear All Annotations"
             >
               <FiTrash2 size={18} />
@@ -1040,7 +1203,7 @@ export default function PdfAnnotationModal({
           </div>
 
           {/* Pen Settings */}
-          {activeTool === TOOLS.PEN && (
+          {activeTool === TOOLS.PEN && !isSaved && (
             <>
               <div className="d-flex align-items-center gap-2">
                 <label style={{ fontSize: '14px', color: '#3B4A66', margin: 0 }}>Color:</label>
@@ -1048,7 +1211,8 @@ export default function PdfAnnotationModal({
                   type="color"
                   value={penColor}
                   onChange={(e) => setPenColor(e.target.value)}
-                  style={{ width: '40px', height: '32px', border: '1px solid #E5E7EB', borderRadius: '4px', cursor: 'pointer' }}
+                  disabled={isSaved}
+                  style={{ width: '40px', height: '32px', border: '1px solid #E5E7EB', borderRadius: '4px', cursor: isSaved ? 'not-allowed' : 'pointer', opacity: isSaved ? 0.6 : 1 }}
                 />
               </div>
               <div className="d-flex align-items-center gap-2">
@@ -1059,7 +1223,8 @@ export default function PdfAnnotationModal({
                   max="10"
                   value={penWidth}
                   onChange={(e) => setPenWidth(parseInt(e.target.value))}
-                  style={{ width: '100px' }}
+                  disabled={isSaved}
+                  style={{ width: '100px', opacity: isSaved ? 0.6 : 1 }}
                 />
                 <span style={{ fontSize: '12px', color: '#6B7280', minWidth: '30px' }}>{penWidth}px</span>
               </div>
@@ -1067,7 +1232,7 @@ export default function PdfAnnotationModal({
           )}
 
           {/* Eraser Settings */}
-          {activeTool === TOOLS.TRASH && (
+          {activeTool === TOOLS.TRASH && !isSaved && (
             <div className="d-flex align-items-center gap-2">
               <label style={{ fontSize: '14px', color: '#3B4A66', margin: 0 }}>Size:</label>
               <input
@@ -1076,38 +1241,25 @@ export default function PdfAnnotationModal({
                 max="50"
                 value={eraserWidth}
                 onChange={(e) => setEraserWidth(parseInt(e.target.value))}
-                style={{ width: '100px' }}
+                disabled={isSaved}
+                style={{ width: '100px', opacity: isSaved ? 0.6 : 1 }}
               />
               <span style={{ fontSize: '12px', color: '#6B7280', minWidth: '30px' }}>{eraserWidth}px</span>
             </div>
           )}
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-            <button
-              onClick={zoomOut}
-              className="btn btn-sm btn-outline-secondary"
-              title="Zoom Out"
-            >
-              <FiZoomOut size={18} />
-            </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
             <span style={{ 
               fontSize: '14px', 
               color: '#3B4A66', 
               display: 'flex', 
-              alignItems: 'center', 
+              alignItems: 'center',
               padding: '0 8px',
               minWidth: '60px',
               justifyContent: 'center'
             }}>
               {Math.round(scale * 100)}%
             </span>
-            <button
-              onClick={zoomIn}
-              className="btn btn-sm btn-outline-secondary"
-              title="Zoom In"
-            >
-              <FiZoomIn size={18} />
-            </button>
           </div>
         </div>
 

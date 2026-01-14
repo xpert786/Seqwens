@@ -1045,6 +1045,10 @@ export default function ClientManage() {
         if (activeTab === 'unlinked-taxpayers') {
           await fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page, unlinkedTaxpayersPagination.page_size);
         }
+        // Refresh pending invites list if on that tab
+        if (activeTab === 'pending-invites') {
+          await fetchPendingInvites(pendingInvitesPagination.page);
+        }
       } else {
         throw new Error(result.message || 'Failed to assign/reassign tax preparer');
       }
@@ -1747,17 +1751,6 @@ export default function ClientManage() {
                                 {invite.phone_number}
                               </div>
                             )}
-                            <div className="d-flex flex-wrap gap-2 mt-2">
-                              {invite.is_expired ? (
-                                <span className="badge bg-danger text-white" style={{ fontSize: '10px', color: '#ffffff' }}>
-                                  Expired
-                                </span>
-                              ) : (
-                                <span className="badge bg-warning" style={{ fontSize: '10px' }}>
-                                  Pending
-                                </span>
-                              )}
-                            </div>
                             <div className="text-muted small mt-2">
                               <div>Invited: {invite.invited_at_formatted || (invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A')}</div>
                               {invite.expires_at && (
@@ -1776,7 +1769,45 @@ export default function ClientManage() {
                             </div>
                           </div>
                         </div>
-                        <div className="d-flex gap-2 flex-column align-items-end">
+                        <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
+                          <span className="badge bg-warning" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                            Pending
+                          </span>
+                          <button
+                            className="btn btn-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const clientId = invite.client_id || invite.taxpayer_id || invite.id;
+                              if (clientId) {
+                                setSelectedClientForReassign(clientId);
+                                setIsAssignMode(true);
+                                setShowReassignStaffModal(true);
+                              } else {
+                                toast.error('Unable to assign preparer: Client ID not found', getToastOptions());
+                              }
+                            }}
+                            style={{
+                              backgroundColor: '#F56D2D',
+                              color: 'white',
+                              border: 'none',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              padding: '6px 16px',
+                              borderRadius: '7px',
+                              whiteSpace: 'nowrap',
+                              fontFamily: 'BasisGrotesquePro, sans-serif',
+                              transition: 'background-color 0.2s ease',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#E55A1D';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#F56D2D';
+                            }}
+                          >
+                            Assign
+                          </button>
                           <button
                             className="btn btn-sm"
                             onClick={(e) => {

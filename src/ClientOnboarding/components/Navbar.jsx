@@ -4,11 +4,46 @@ import logo from "../../assets/logo.png";
 import "../styles/Navbar.css";
 import { profileAPI, handleAPIError } from "../utils/apiUtils";
 import { getUserData } from "../utils/userUtils";
+import { getApiBaseUrl } from "../utils/corsConfig";
 
 export default function Navbar() {
   const [profilePicture, setProfilePicture] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to normalize profile picture URL
+  const normalizeProfilePictureUrl = (url) => {
+    if (!url || url === 'null' || url === 'undefined') {
+      return null;
+    }
+
+    // If URL already starts with http:// or https://, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // If URL contains a malformed concatenation (base URL + https://), extract the correct part
+    const httpsIndex = url.indexOf('https://');
+    const httpIndex = url.indexOf('http://');
+    if (httpsIndex > 0) {
+      // Extract the part starting from https://
+      return url.substring(httpsIndex);
+    }
+    if (httpIndex > 0 && !url.startsWith('http://')) {
+      // Extract the part starting from http://
+      return url.substring(httpIndex);
+    }
+
+    // If URL starts with /, it's a relative path - prepend API base URL
+    if (url.startsWith('/')) {
+      const API_BASE_URL = getApiBaseUrl();
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      return `${baseUrl}${url}`;
+    }
+
+    // Otherwise, return as is (might be a data URL or other format)
+    return url;
+  };
 
   // Function to refresh profile picture (can be called from other components)
   const refreshProfilePicture = async () => {
@@ -21,8 +56,9 @@ export default function Navbar() {
 
       if (response.success && response.data) {
         if (response.data.has_profile_picture && response.data.profile_picture_url) {
-          console.log('🖼️ Profile picture refreshed:', response.data.profile_picture_url);
-          setProfilePicture(response.data.profile_picture_url);
+          const normalizedUrl = normalizeProfilePictureUrl(response.data.profile_picture_url);
+          console.log('🖼️ Profile picture refreshed:', normalizedUrl);
+          setProfilePicture(normalizedUrl);
           return;
         } else {
           console.log('❌ No profile picture found after refresh');
@@ -37,8 +73,9 @@ export default function Navbar() {
         // Check both profile_picture and profile_image fields
         const pictureUrl = userData.profile_picture || userData.profile_image;
         if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
-          console.log('🖼️ Profile picture from user data (fallback):', pictureUrl);
-          setProfilePicture(pictureUrl);
+          const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+          console.log('🖼️ Profile picture from user data (fallback):', normalizedUrl);
+          setProfilePicture(normalizedUrl);
           return;
         }
       }
@@ -53,8 +90,9 @@ export default function Navbar() {
       if (userData) {
         const pictureUrl = userData.profile_picture || userData.profile_image;
         if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
-          console.log('🖼️ Profile picture from user data (error fallback):', pictureUrl);
-          setProfilePicture(pictureUrl);
+          const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+          console.log('🖼️ Profile picture from user data (error fallback):', normalizedUrl);
+          setProfilePicture(normalizedUrl);
           return;
         }
       }
@@ -83,8 +121,9 @@ export default function Navbar() {
           const pictureUrl = userData.profile_picture || userData.profile_image;
           if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
             // Use profile picture from userData if available
-            console.log('🖼️ Profile picture from user data:', pictureUrl);
-            setProfilePicture(pictureUrl);
+            const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+            console.log('🖼️ Profile picture from user data:', normalizedUrl);
+            setProfilePicture(normalizedUrl);
             setLoading(false);
             return;
           } else {
@@ -100,8 +139,9 @@ export default function Navbar() {
           console.log('✅ API response successful, setting profile picture...');
 
           if (response.data.has_profile_picture && response.data.profile_picture_url) {
-            console.log('🖼️ Profile picture found:', response.data.profile_picture_url);
-            setProfilePicture(response.data.profile_picture_url);
+            const normalizedUrl = normalizeProfilePictureUrl(response.data.profile_picture_url);
+            console.log('🖼️ Profile picture found:', normalizedUrl);
+            setProfilePicture(normalizedUrl);
             console.log('✅ Profile picture state updated');
           } else {
             console.log('❌ No profile picture found in response');

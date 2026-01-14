@@ -9,7 +9,7 @@ import html2canvas from 'html2canvas';
 import '../style/FirmManagement.css';
 
 export default function FirmManagement() {
-    const PAGE_SIZE = 5;
+    const PAGE_SIZE = 10;
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All Status");

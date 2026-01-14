@@ -9,6 +9,7 @@ import NotificationPanel from "./Notifications/NotificationPanel";
 import { profileAPI, userAPI, clientNotificationAPI } from "../utils/apiUtils";
 import { clearUserData, getUserData } from "../utils/userUtils";
 import { useNotificationWebSocket } from "../utils/useNotificationWebSocket";
+import { getApiBaseUrl } from "../utils/corsConfig";
 import "../styles/Topbar.css";
 
 const CLIENT_AVATAR_KEY = "clientProfileImageUrl";
@@ -37,6 +38,40 @@ export default function Topbar({
             localStorage.removeItem(CLIENT_AVATAR_KEY);
             setProfilePicture(null);
         }
+    };
+
+    // Helper function to normalize profile picture URL
+    const normalizeProfilePictureUrl = (url) => {
+        if (!url || url === 'null' || url === 'undefined') {
+            return null;
+        }
+
+        // If URL already starts with http:// or https://, return as is
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+
+        // If URL contains a malformed concatenation (base URL + https://), extract the correct part
+        const httpsIndex = url.indexOf('https://');
+        const httpIndex = url.indexOf('http://');
+        if (httpsIndex > 0) {
+            // Extract the part starting from https://
+            return url.substring(httpsIndex);
+        }
+        if (httpIndex > 0 && !url.startsWith('http://')) {
+            // Extract the part starting from http://
+            return url.substring(httpIndex);
+        }
+
+        // If URL starts with /, it's a relative path - prepend API base URL
+        if (url.startsWith('/')) {
+            const API_BASE_URL = getApiBaseUrl();
+            const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            return `${baseUrl}${url}`;
+        }
+
+        // Otherwise, return as is (might be a data URL or other format)
+        return url;
     };
 
     const deriveInitials = (data) => {
@@ -71,8 +106,9 @@ export default function Topbar({
             console.log('📋 Refresh topbar profile picture API response:', response);
             
             if (response.success && response.data && response.data.has_profile_picture && response.data.profile_picture_url) {
-                console.log('🖼️ Topbar profile picture refreshed:', response.data.profile_picture_url);
-                setClientAvatar(response.data.profile_picture_url);
+                const normalizedUrl = normalizeProfilePictureUrl(response.data.profile_picture_url);
+                console.log('🖼️ Topbar profile picture refreshed:', normalizedUrl);
+                setClientAvatar(normalizedUrl);
                 
                 // Update user info and initials
                 const accountResponse = await profileAPI.getUserAccount();
@@ -89,8 +125,9 @@ export default function Topbar({
                 // Check both profile_picture and profile_image fields
                 const pictureUrl = userData.profile_picture || userData.profile_image;
                 if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
-                    console.log('🖼️ Topbar profile picture from user data (fallback):', pictureUrl);
-                    setClientAvatar(pictureUrl);
+                    const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+                    console.log('🖼️ Topbar profile picture from user data (fallback):', normalizedUrl);
+                    setClientAvatar(normalizedUrl);
                     setProfileInitials(deriveInitials(userData));
                     return;
                 }
@@ -99,8 +136,9 @@ export default function Topbar({
             // Check localStorage cache as last resort
             const stored = localStorage.getItem(CLIENT_AVATAR_KEY);
             if (stored && stored !== 'null' && stored !== 'undefined') {
-                console.log('🖼️ Topbar profile picture from localStorage cache:', stored);
-                setProfilePicture(stored);
+                const normalizedUrl = normalizeProfilePictureUrl(stored);
+                console.log('🖼️ Topbar profile picture from localStorage cache:', normalizedUrl);
+                setProfilePicture(normalizedUrl);
                 return;
             }
 
@@ -122,8 +160,9 @@ export default function Topbar({
             if (userData) {
                 const pictureUrl = userData.profile_picture || userData.profile_image;
                 if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
-                    console.log('🖼️ Topbar profile picture from user data (error fallback):', pictureUrl);
-                    setClientAvatar(pictureUrl);
+                    const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+                    console.log('🖼️ Topbar profile picture from user data (error fallback):', normalizedUrl);
+                    setClientAvatar(normalizedUrl);
                     setProfileInitials(deriveInitials(userData));
                     return;
                 }
@@ -187,8 +226,9 @@ export default function Topbar({
                     const pictureUrl = userData.profile_picture || userData.profile_image;
                     if (pictureUrl && pictureUrl !== 'null' && pictureUrl !== 'undefined') {
                         // Use profile picture from userData if available
-                        console.log('🖼️ Topbar profile picture from user data:', pictureUrl);
-                        setClientAvatar(pictureUrl);
+                        const normalizedUrl = normalizeProfilePictureUrl(pictureUrl);
+                        console.log('🖼️ Topbar profile picture from user data:', normalizedUrl);
+                        setClientAvatar(normalizedUrl);
                         setLoading(false);
                         return;
                     } else {
@@ -198,14 +238,16 @@ export default function Topbar({
                 
                 const storedAvatar = localStorage.getItem(CLIENT_AVATAR_KEY);
                 if (storedAvatar) {
-                    setProfilePicture(storedAvatar);
+                    const normalizedStored = normalizeProfilePictureUrl(storedAvatar);
+                    setProfilePicture(normalizedStored);
                 }
 
                 const profileResponse = await profileAPI.getProfilePicture();
                 
                 if (!storedAvatar && profileResponse.success && profileResponse.data) {
                     if (profileResponse.data.has_profile_picture && profileResponse.data.profile_picture_url) {
-                        setClientAvatar(profileResponse.data.profile_picture_url);
+                        const normalizedUrl = normalizeProfilePictureUrl(profileResponse.data.profile_picture_url);
+                        setClientAvatar(normalizedUrl);
                     } else {
                         setClientAvatar(null);
                     }
