@@ -14,6 +14,7 @@ import TimelineTab from './ClientTabs/TimelineTab';
 import AppointmentsTab from './ClientTabs/AppointmentsTab';
 import NotesTab from './ClientTabs/NotesTab';
 import DataEntryFormTab from './ClientTabs/DataEntryFormTab';
+// import SecurityTab from './ClientTabs/SecurityTab';
 import '../../styles/ClientDetails.css';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -44,6 +45,7 @@ export default function ClientDetails() {
       setLoading(false);
       return;
     }
+
 
     try {
       setLoading(true);
@@ -234,6 +236,8 @@ export default function ClientDetails() {
     },
     joinDate: client.account_details?.join_date || '',
     joinDateValue: client.account_details?.join_date_value || '',
+    lastLogin: client.account_details?.last_login || '',
+    lastLoginValue: client.account_details?.last_login_value || '',
     accountStatus: client.account_details?.status || client.profile?.account_status?.toLowerCase() || 'active',
     accountStatusDisplay: client.account_details?.status_display || client.profile?.account_status || 'Active',
     totalBilled: client.summary_cards?.total_billed || client.engagement_metrics?.outstanding_balance || '$0.00',
@@ -257,7 +261,8 @@ export default function ClientDetails() {
     'Billing',
     'Timeline',
     'Appointments',
-    'Notes'
+    'Notes',
+    'Security'
   ];
 
   const initials = clientData ? (clientData.initials || clientData.name || '')
@@ -553,7 +558,12 @@ export default function ClientDetails() {
           {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Setting activeTab to:', tab);
+                setActiveTab(tab);
+              }}
               className={`px-4 py-2 !rounded-lg text-sm font-medium font-[BasisGrotesquePro] whitespace-nowrap transition-colors flex-shrink-0 ${activeTab === tab
                 ? 'bg-[#3AD6F2] text-white'
                 : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -566,9 +576,10 @@ export default function ClientDetails() {
       </div>
 
       {/* Tab Content */}
+      {console.log('Rendering tab content for:', activeTab)}
       {activeTab === 'Overview' && (
-        <OverviewTab 
-          client={clientData} 
+        <OverviewTab
+          client={clientData}
           isEditMode={isEditMode}
           editFormData={editFormData}
           onEditFormChange={handleEditFormChange}
@@ -599,6 +610,19 @@ export default function ClientDetails() {
 
       {activeTab === 'Notes' && (
         <NotesTab client={clientData} />
+      )}
+
+      {activeTab === 'Security' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl p-6 border border-[#E8F0FF]">
+            <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+              Security Settings - Test
+            </h3>
+            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mt-1">
+              Active Tab: {activeTab}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

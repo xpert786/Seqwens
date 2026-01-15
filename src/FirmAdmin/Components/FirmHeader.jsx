@@ -32,8 +32,9 @@ import { LogoIcon } from "../../ClientOnboarding/components/icons";
 import NotificationPanel from "../../ClientOnboarding/components/Notifications/NotificationPanel";
 import AccountSwitcher from "../../ClientOnboarding/components/AccountSwitcher";
 import { firmAdminNotificationAPI, firmAdminDashboardAPI, handleAPIError, userAPI } from "../../ClientOnboarding/utils/apiUtils";
-import { clearUserData } from "../../ClientOnboarding/utils/userUtils";
+import { clearUserData, setTokens } from "../../ClientOnboarding/utils/userUtils";
 import { navigateToLogin } from "../../ClientOnboarding/utils/urlUtils";
+import { toast } from "react-toastify";
 export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
@@ -44,16 +45,39 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     const [profilePicture, setProfilePicture] = useState(null);
     const [profileName, setProfileName] = useState("User");
     const [profileInitials, setProfileInitials] = useState("FA");
+    const [isImpersonating, setIsImpersonating] = useState(false);
+    const [impersonationInfo, setImpersonationInfo] = useState(null);
+    const [isReverting, setIsReverting] = useState(false);
     const notificationButtonRef = useRef(null);
     const profileMenuRef = useRef(null);
     const profileButtonRef = useRef(null);
     const searchRef = useRef(null);
     const logoRef = useRef(null);
 
+    // Check if currently impersonating a firm
+    const checkImpersonationStatus = useCallback(() => {
+        const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+        const info = sessionStorage.getItem('impersonationInfo');
+
+        if (impersonationData && info) {
+            setIsImpersonating(true);
+            try {
+                setImpersonationInfo(JSON.parse(info));
+            } catch (e) {
+                console.error('Error parsing impersonation info:', e);
+                setImpersonationInfo(null);
+            }
+        } else {
+            setIsImpersonating(false);
+            setImpersonationInfo(null);
+        }
+    }, []);
+
     const menuItems = [
         { label: "Profile", action: "profile" },
         { label: "Settings", action: "settings" },
         { label: "Help", action: "help" },
+        ...(isImpersonating ? [{ label: "Revert to Super Admin", action: "revert_superadmin", isPrimary: true }] : []),
         { label: "Log Out", action: "logout", isDanger: true },
     ];
 
@@ -120,6 +144,76 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
         });
     };
 
+    const handleRevertToSuperAdmin = async () => {
+        if (isReverting) return;
+
+        try {
+            setIsReverting(true);
+
+            // Get stored Super Admin session data
+            const impersonationData = sessionStorage.getItem('superAdminImpersonationData');
+            if (!impersonationData) {
+                toast.error("Unable to revert: Original session data not found", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                return;
+            }
+
+            const sessionData = JSON.parse(impersonationData);
+
+            // Clear current firm admin session
+            clearUserData();
+            localStorage.removeItem('firmLoginData');
+            sessionStorage.removeItem('firmLoginData');
+
+            // Restore Super Admin session data
+            if (sessionData.accessToken) localStorage.setItem('accessToken', sessionData.accessToken);
+            if (sessionData.refreshToken) localStorage.setItem('refreshToken', sessionData.refreshToken);
+            if (sessionData.userData) localStorage.setItem('userData', sessionData.userData);
+            if (sessionData.userType) localStorage.setItem('userType', sessionData.userType);
+            if (sessionData.isLoggedIn) localStorage.setItem('isLoggedIn', sessionData.isLoggedIn);
+            if (sessionData.rememberMe) localStorage.setItem('rememberMe', sessionData.rememberMe);
+
+            // Restore session storage data
+            if (sessionData.sessionAccessToken) sessionStorage.setItem('accessToken', sessionData.sessionAccessToken);
+            if (sessionData.sessionRefreshToken) sessionStorage.setItem('refreshToken', sessionData.sessionRefreshToken);
+            if (sessionData.sessionUserData) sessionStorage.setItem('userData', sessionData.sessionUserData);
+            if (sessionData.sessionUserType) sessionStorage.setItem('userType', sessionData.sessionUserType);
+            if (sessionData.sessionIsLoggedIn) sessionStorage.setItem('isLoggedIn', sessionData.sessionIsLoggedIn);
+            if (sessionData.sessionRememberMe) sessionStorage.setItem('rememberMe', sessionData.sessionRememberMe);
+
+            // Clear impersonation data
+            sessionStorage.removeItem('superAdminImpersonationData');
+            sessionStorage.removeItem('impersonationInfo');
+
+            // Set tokens properly
+            if (sessionData.accessToken && sessionData.refreshToken) {
+                setTokens(sessionData.accessToken, sessionData.refreshToken, false);
+            }
+
+            toast.success("Successfully reverted to Super Admin account", {
+                position: "top-right",
+                autoClose: 2000,
+            });
+
+            // Navigate back to Super Admin dashboard
+            setTimeout(() => {
+                window.location.href = '/seqwens-frontend/superadmin';
+            }, 500);
+
+        } catch (error) {
+            console.error("Error reverting to Super Admin:", error);
+            toast.error("Failed to revert to Super Admin account", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setIsReverting(false);
+            closeProfileMenu();
+        }
+    };
+
     const handleMenuAction = async (action) => {
         if (action === "logout") {
             if (isLoggingOut) return;
@@ -134,6 +228,11 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                 closeProfileMenu();
                 navigateToLogin(navigate);
             }
+            return;
+        }
+
+        if (action === "revert_superadmin") {
+            await handleRevertToSuperAdmin();
             return;
         }
 
@@ -154,6 +253,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
     useEffect(() => {
         fetchUnreadCount();
         fetchProfileData();
+        checkImpersonationStatus();
         const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
 
         // Listen for profile picture updates from localStorage
@@ -176,7 +276,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
         };
-    }, [fetchUnreadCount, fetchProfileData]);
+    }, [fetchUnreadCount, fetchProfileData, checkImpersonationStatus]);
 
     // Close profile menu when clicking outside
     useEffect(() => {
@@ -537,7 +637,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                 >
                                     {menuItems.map((item, index) => (
                                         <React.Fragment key={item.action}>
-                                            {item.action === "logout" && (
+                                            {(item.action === "logout" || (item.action === "revert_superadmin" && isImpersonating)) && (
                                                 <div
                                                     className="border-top border-gray-200 my-1"
                                                     aria-hidden="true"
@@ -545,20 +645,26 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                                             )}
                                             <button
                                                 type="button"
-                                                className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${item.isDanger
-                                                    ? "text-danger"
-                                                    : "text-gray-700"
-                                                    } hover:bg-gray-50 transition-colors`}
+                                                className={`w-100 text-start px-4 py-2 text-sm font-[BasisGrotesquePro] border-0 bg-transparent ${
+                                                    item.isDanger
+                                                        ? "text-danger"
+                                                        : item.isPrimary
+                                                            ? "text-primary fw-bold"
+                                                            : "text-gray-700"
+                                                } hover:bg-gray-50 transition-colors`}
                                                 onClick={() => handleMenuAction(item.action)}
                                                 role="menuitem"
                                                 style={{
                                                     cursor: "pointer",
                                                     fontSize: "14px",
                                                 }}
+                                                disabled={item.action === "revert_superadmin" && isReverting}
                                             >
                                                 {item.action === "logout" && isLoggingOut
                                                     ? "Logging out..."
-                                                    : item.label}
+                                                    : item.action === "revert_superadmin" && isReverting
+                                                        ? "Reverting..."
+                                                        : item.label}
                                             </button>
                                         </React.Fragment>
                                     ))}
@@ -604,6 +710,26 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen }) {
                     onChange={handleNotificationChange}
                     userType="firm_admin"
                 />
+            )}
+
+            {/* Impersonation Banner */}
+            {isImpersonating && impersonationInfo && (
+                <div
+                    className="bg-warning text-dark text-center py-2 px-3"
+                    style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        borderBottom: "1px solid #ffc107",
+                        position: "relative",
+                        zIndex: 1020
+                    }}
+                >
+                    <i className="bi bi-shield-exclamation me-2"></i>
+                    You are currently impersonating: <strong>{impersonationInfo.firmName}</strong>
+                    <span className="ms-3 text-muted">
+                        Use the profile menu to revert to Super Admin
+                    </span>
+                </div>
             )}
         </>
     );

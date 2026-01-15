@@ -1,380 +1,1090 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import { FiPlus, FiTrash2, FiSave, FiX } from 'react-icons/fi';
+import { handleAPIError } from '../utils/apiUtils';
 
-export default function BusinessInfoForm({ onSave, onCancel, initialData = null }) {
-  const [formData, setFormData] = useState({
-    businessName: '',
-    businessType: '',
-    isHomeBased: false,
-    address: '',
-    city: '',
-    state: '',
-    zip: '',
-    income: '',
-    expenses: [],
-    vehicleUse: false,
-    homeOffice: false,
-    inventory: false,
-    healthInsurance: false,
-    // ID for internal tracking if editing
-    id: null
+const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
+  const [businessInfos, setBusinessInfos] = useState([]);
+
+  const [businessIncomes, setBusinessIncomes] = useState([]);
+
+  const [rentalProperties, setRentalProperties] = useState([]);
+
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('business');
+
+  // Modal states
+  const [showBusinessModal, setShowBusinessModal] = useState(false);
+  const [editingBusinessIndex, setEditingBusinessIndex] = useState(null);
+  const [businessFormData, setBusinessFormData] = useState({
+    business_name: '',
+    business_address: '',
+    business_city: '',
+    business_state: '',
+    business_zip: '',
+    business_phone: '',
+    business_email: '',
+    business_type: '',
+    ein: '',
+    start_date: '',
+    end_date: '',
+    is_active: true
   });
 
-  const [errors, setErrors] = useState({});
-
+  // Fetch existing data on mount
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        ...initialData,
-        // Ensure expenses is an array even if not provided
-        expenses: initialData.expenses || []
+    if (clientId) {
+      fetchExistingData();
+    }
+  }, [clientId]);
+
+  const fetchExistingData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch business info data
+      const response = await fetch(`/api/clients/${clientId}/business-info/`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Always set the data, even if empty arrays
+        setBusinessInfos(data.business_infos || []);
+        setBusinessIncomes(data.business_incomes || []);
+        setRentalProperties(data.rental_properties || []);
+      }
+    } catch (error) {
+      console.error('Error fetching business data:', error);
+      toast.error('Failed to load existing business data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Business Info Handlers
+  const openBusinessModal = (index = null) => {
+    if (index !== null) {
+      // Editing existing business
+      setEditingBusinessIndex(index);
+      setBusinessFormData(businessInfos[index]);
+    } else {
+      // Adding new business
+      setEditingBusinessIndex(null);
+      setBusinessFormData({
+        business_name: '',
+        business_address: '',
+        business_city: '',
+        business_state: '',
+        business_zip: '',
+        business_phone: '',
+        business_email: '',
+        business_type: '',
+        ein: '',
+        start_date: '',
+        end_date: '',
+        is_active: true
       });
     }
-  }, [initialData]);
+    setShowBusinessModal(true);
+  };
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear error for this field if it exists
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
+  const closeBusinessModal = () => {
+    setShowBusinessModal(false);
+    setEditingBusinessIndex(null);
+    setBusinessFormData({
+      business_name: '',
+      business_address: '',
+      business_city: '',
+      business_state: '',
+      business_zip: '',
+      business_phone: '',
+      business_email: '',
+      business_type: '',
+      ein: '',
+      start_date: '',
+      end_date: '',
+      is_active: true
+    });
+  };
+
+  const saveBusinessInfo = () => {
+    if (editingBusinessIndex !== null) {
+      // Update existing business
+      const updatedBusinesses = [...businessInfos];
+      updatedBusinesses[editingBusinessIndex] = businessFormData;
+      setBusinessInfos(updatedBusinesses);
+    } else {
+      // Add new business
+      setBusinessInfos([...businessInfos, businessFormData]);
+    }
+    closeBusinessModal();
+    toast.success(editingBusinessIndex !== null ? 'Business updated successfully!' : 'Business added successfully!');
+  };
+
+  const removeBusinessInfo = (index) => {
+    setBusinessInfos(businessInfos.filter((_, i) => i !== index));
+    toast.success('Business removed successfully!');
+  };
+
+  const updateBusinessInfo = (index, field, value) => {
+    const updated = [...businessInfos];
+    updated[index][field] = value;
+    setBusinessInfos(updated);
+  };
+
+  // Business Income Handlers
+  const addBusinessIncome = () => {
+    setBusinessIncomes([...businessIncomes, {
+      business_id: '',
+      tax_year: new Date().getFullYear(),
+      gross_receipts: '',
+      cost_of_goods_sold: '',
+      gross_profit: '',
+      other_income: '',
+      total_income: '',
+      advertising: '',
+      office_supplies: '',
+      repairs_maintenance: '',
+      insurance: '',
+      legal_professional: '',
+      utilities: '',
+      rent: '',
+      other_expenses: ''
+    }]);
+  };
+
+  const removeBusinessIncome = (index) => {
+    setBusinessIncomes(businessIncomes.filter((_, i) => i !== index));
+  };
+
+  const updateBusinessIncome = (index, field, value) => {
+    const updated = [...businessIncomes];
+    updated[index][field] = value;
+    setBusinessIncomes(updated);
+  };
+
+  // Rental Property Handlers
+  const addRentalProperty = () => {
+    setRentalProperties([...rentalProperties, {
+      property_address: '',
+      property_city: '',
+      property_state: '',
+      property_zip: '',
+      property_type: '',
+      purchase_date: '',
+      purchase_price: '',
+      current_value: '',
+      mortgage_balance: '',
+      monthly_rent: '',
+      annual_rent_income: '',
+      property_taxes: '',
+      insurance: '',
+      maintenance_repairs: '',
+      management_fees: '',
+      is_active: true
+    }]);
+  };
+
+  const removeRentalProperty = (index) => {
+    setRentalProperties(rentalProperties.filter((_, i) => i !== index));
+  };
+
+  const updateRentalProperty = (index, field, value) => {
+    const updated = [...rentalProperties];
+    updated[index][field] = value;
+    setRentalProperties(updated);
+  };
+
+  // Save all data
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      const payload = {
+        business_infos: businessInfos,
+        business_incomes: businessIncomes,
+        rental_properties: rentalProperties
+      };
+
+      const response = await fetch(`/api/clients/${clientId}/business-info/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
       });
+
+      if (response.ok) {
+        toast.success('Business information saved successfully');
+        onSave?.();
+        onClose?.();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save business information');
+      }
+    } catch (error) {
+      console.error('Error saving business data:', error);
+      toast.error(handleAPIError(error));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleAddExpense = () => {
-    setFormData(prev => ({
-      ...prev,
-      expenses: [
-        ...prev.expenses,
-        { id: Date.now(), category: '', amount: '' }
-      ]
-    }));
-  };
+  const businessTypes = [
+    'Sole Proprietorship',
+    'Partnership',
+    'LLC',
+    'Corporation',
+    'S-Corp',
+    'Other'
+  ];
 
-  const handleExpenseChange = (id, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      expenses: prev.expenses.map(exp => 
-        exp.id === id ? { ...exp, [field]: value } : exp
-      )
-    }));
-  };
+  const propertyTypes = [
+    'Single Family Home',
+    'Multi-Family Home',
+    'Condo/Apartment',
+    'Commercial Property',
+    'Vacation Rental',
+    'Other'
+  ];
 
-  const handleRemoveExpense = (id) => {
-    setFormData(prev => ({
-      ...prev,
-      expenses: prev.expenses.filter(exp => exp.id !== id)
-    }));
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
-    if (!formData.businessType) newErrors.businessType = 'Business type is required';
-    if (!formData.isHomeBased) {
-        if (!formData.address.trim()) newErrors.address = 'Address is required';
-        if (!formData.city.trim()) newErrors.city = 'City is required';
-        if (!formData.state.trim()) newErrors.state = 'State is required';
-        if (!formData.zip.trim()) newErrors.zip = 'ZIP code is required';
-    }
-    if (!formData.income) newErrors.income = 'Total annual income is required';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-      onSave(formData);
-    }
-  };
-
-  // Styles consistent with DataIntake.jsx
-  const labelStyle = {
-    fontFamily: "BasisGrotesquePro",
-    fontWeight: 400,
-    fontSize: "16px",
-    color: "#3B4A66"
-  };
-
-  const headerStyle = {
-    color: "#3B4A66",
-    fontSize: "18px",
-    fontWeight: "500",
-    fontFamily: "BasisGrotesquePro",
-    marginBottom: "16px",
-    marginTop: "24px"
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-sm text-gray-600 font-[BasisGrotesquePro]">Loading business information...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-3">
-      <h4 style={{
-        color: "#3B4A66",
-        fontSize: "20px",
-        fontWeight: "600",
-        fontFamily: "BasisGrotesquePro",
-        marginBottom: "20px"
-      }}>
-        {initialData ? 'Edit Business Details' : 'Add New Business'}
-      </h4>
-
-      {/* Basic Business Details */}
-      <h5 style={headerStyle} className="mt-0">General Information</h5>
-      
-      <div className="row g-3 mb-4">
-        <div className="col-md-6">
-          <label className="form-label" style={labelStyle}>
-            Business Name
-          </label>
-          <input
-            type="text"
-            className={`form-control ${errors.businessName ? 'is-invalid' : ''}`}
-            placeholder="e.g., Smith Consulting"
-            value={formData.businessName}
-            onChange={(e) => handleChange('businessName', e.target.value)}
-          />
-          {errors.businessName && <div className="invalid-feedback">{errors.businessName}</div>}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-[#E8F0FF]">
+          <h2 className="text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+            Business Information Form
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition"
+          >
+            <FiX size={24} />
+          </button>
         </div>
 
-        <div className="col-md-6">
-          <label className="form-label" style={labelStyle}>
-            Type of Work / Profession
-          </label>
-          <input
-            type="text"
-            className={`form-control ${errors.businessType ? 'is-invalid' : ''}`}
-            placeholder="e.g., Graphic Design, Landscaping, Online Sales"
-            value={formData.businessType}
-            onChange={(e) => handleChange('businessType', e.target.value)}
-          />
-          {errors.businessType && <div className="invalid-feedback">{errors.businessType}</div>}
+        {/* Tab Navigation */}
+        <div className="flex border-b border-[#E8F0FF]">
+          {[
+            { key: 'business', label: 'Business Info', count: businessInfos.length },
+            { key: 'income', label: 'Business Income', count: businessIncomes.length },
+            { key: 'rental', label: 'Rental Properties', count: rentalProperties.length }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-6 py-3 font-medium text-sm font-[BasisGrotesquePro] border-b-2 transition ${
+                activeTab === tab.key
+                  ? 'border-[#F56D2D] text-[#F56D2D]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
         </div>
 
-        <div className="col-12">
-          <div className="form-check">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="isHomeBased"
-              checked={formData.isHomeBased}
-              onChange={(e) => handleChange('isHomeBased', e.target.checked)}
-            />
-            <label className="form-check-label" htmlFor="isHomeBased" style={labelStyle}>
-              This is a home-based business (uses my home address)
-            </label>
-          </div>
-        </div>
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          {/* Business Info Tab */}
+          {activeTab === 'business' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                  Business Information
+                </h3>
+                <button
+                  onClick={() => openBusinessModal()}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                >
+                  <FiPlus size={16} />
+                  Add Business
+                </button>
+              </div>
 
-        {!formData.isHomeBased && (
-          <>
-            <div className="col-12">
-              <label className="form-label" style={labelStyle}>Business Address</label>
-              <input
-                type="text"
-                className={`form-control ${errors.address ? 'is-invalid' : ''}`}
-                value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-              />
-              {errors.address && <div className="invalid-feedback">{errors.address}</div>}
-            </div>
-            <div className="col-md-5">
-              <label className="form-label" style={labelStyle}>City</label>
-              <input
-                type="text"
-                className={`form-control ${errors.city ? 'is-invalid' : ''}`}
-                value={formData.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-              />
-              {errors.city && <div className="invalid-feedback">{errors.city}</div>}
-            </div>
-            <div className="col-md-4">
-              <label className="form-label" style={labelStyle}>State</label>
-              <input
-                type="text"
-                className={`form-control ${errors.state ? 'is-invalid' : ''}`}
-                value={formData.state}
-                onChange={(e) => handleChange('state', e.target.value)}
-              />
-              {errors.state && <div className="invalid-feedback">{errors.state}</div>}
-            </div>
-            <div className="col-md-3">
-              <label className="form-label" style={labelStyle}>ZIP Code</label>
-              <input
-                type="text"
-                className={`form-control ${errors.zip ? 'is-invalid' : ''}`}
-                value={formData.zip}
-                onChange={(e) => handleChange('zip', e.target.value)}
-              />
-              {errors.zip && <div className="invalid-feedback">{errors.zip}</div>}
-            </div>
-          </>
-        )}
-      </div>
+              {businessInfos.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-gray-400 mb-4">
+                    <FiPlus size={48} className="mx-auto" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-600 font-[BasisGrotesquePro] mb-2">
+                    No Business Information Added
+                  </h4>
+                  <p className="text-gray-500 font-[BasisGrotesquePro] mb-4">
+                    Click "Add Business" to add your first business entry
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {businessInfos.map((business, index) => (
+                    <div key={index} className="border border-[#E8F0FF] rounded-xl p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                          {business.business_name || `Business ${index + 1}`}
+                        </h4>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openBusinessModal(index)}
+                            className="text-blue-500 hover:text-blue-700 transition"
+                            title="Edit"
+                          >
+                            <FiSave size={16} />
+                          </button>
+                          <button
+                            onClick={() => removeBusinessInfo(index)}
+                            className="text-red-500 hover:text-red-700 transition"
+                            title="Delete"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
 
-      {/* Income */}
-      <h5 style={headerStyle}>Income</h5>
-      <div className="row g-3 mb-4">
-        <div className="col-md-6">
-          <label className="form-label" style={labelStyle}>
-            Total Annual Income (Gross Receipts)
-          </label>
-          <div className="input-group">
-            <span className="input-group-text">$</span>
-            <input
-              type="number"
-              className={`form-control ${errors.income ? 'is-invalid' : ''}`}
-              placeholder="0.00"
-              value={formData.income}
-              onChange={(e) => handleChange('income', e.target.value)}
-            />
-            {errors.income && <div className="invalid-feedback">{errors.income}</div>}
-          </div>
-          <div className="form-text">Total money earned before any expenses are taken out.</div>
-        </div>
-      </div>
-
-      {/* Expenses */}
-      <h5 style={headerStyle}>Expenses</h5>
-      <p style={{ fontSize: '14px', color: '#6B7280', fontFamily: "BasisGrotesquePro" }}>
-        List your major business expenses below (e.g., Advertising, Supplies, Legal fees).
-      </p>
-      
-      <div className="mb-4">
-        {formData.expenses.map((expense, index) => (
-          <div key={expense.id} className="row g-3 mb-3 align-items-end">
-            <div className="col-md-5">
-              <label className="form-label small text-muted">Category</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="e.g., Office Supplies"
-                value={expense.category}
-                onChange={(e) => handleExpenseChange(expense.id, 'category', e.target.value)}
-              />
+                      <div className="space-y-2 text-sm">
+                        {business.business_type && (
+                          <p><span className="font-medium">Type:</span> {business.business_type}</p>
+                        )}
+                        {business.business_address && (
+                          <p><span className="font-medium">Address:</span> {business.business_address}</p>
+                        )}
+                        {business.business_city && business.business_state && (
+                          <p><span className="font-medium">Location:</span> {business.business_city}, {business.business_state}</p>
+                        )}
+                        {business.business_phone && (
+                          <p><span className="font-medium">Phone:</span> {business.business_phone}</p>
+                        )}
+                        {business.ein && (
+                          <p><span className="font-medium">EIN:</span> {business.ein}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className={`inline-block w-2 h-2 rounded-full ${business.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                          <span className="text-xs text-gray-600">{business.is_active ? 'Active' : 'Inactive'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="col-md-5">
-              <label className="form-label small text-muted">Amount</label>
-              <div className="input-group">
-                <span className="input-group-text">$</span>
+          )}
+
+          {/* Business Income Tab */}
+          {activeTab === 'income' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                  Business Income & Expenses
+                </h3>
+                <button
+                  onClick={addBusinessIncome}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                >
+                  <FiPlus size={16} />
+                  Add Income Record
+                </button>
+              </div>
+
+
+              {businessIncomes.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-gray-400 mb-4">
+                    <FiPlus size={48} className="mx-auto" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-600 font-[BasisGrotesquePro] mb-2">
+                    No Income Records Added
+                  </h4>
+                  <p className="text-gray-500 font-[BasisGrotesquePro] mb-4">
+                    Click "Add Income Record" to track business income and expenses
+                  </p>
+                </div>
+              ) : (
+                businessIncomes.map((income, index) =>
+                <div key={index} className="border border-[#E8F0FF] rounded-xl p-6 bg-gray-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      Income Record #{index + 1}
+                    </h4>
+                    <button
+                      onClick={() => removeBusinessIncome(index)}
+                      className="text-red-500 hover:text-red-700 transition"
+                    >
+                      <FiTrash2 size={18} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Tax Year
+                      </label>
+                      <input
+                        type="number"
+                        value={income.tax_year}
+                        onChange={(e) => updateBusinessIncome(index, 'tax_year', parseInt(e.target.value) || new Date().getFullYear())}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        min="2000"
+                        max="2030"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Gross Receipts ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.gross_receipts}
+                        onChange={(e) => updateBusinessIncome(index, 'gross_receipts', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Cost of Goods Sold ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.cost_of_goods_sold}
+                        onChange={(e) => updateBusinessIncome(index, 'cost_of_goods_sold', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Advertising ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.advertising}
+                        onChange={(e) => updateBusinessIncome(index, 'advertising', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Office Supplies ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.office_supplies}
+                        onChange={(e) => updateBusinessIncome(index, 'office_supplies', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Repairs & Maintenance ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.repairs_maintenance}
+                        onChange={(e) => updateBusinessIncome(index, 'repairs_maintenance', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Insurance ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.insurance}
+                        onChange={(e) => updateBusinessIncome(index, 'insurance', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Legal & Professional ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.legal_professional}
+                        onChange={(e) => updateBusinessIncome(index, 'legal_professional', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Utilities ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.utilities}
+                        onChange={(e) => updateBusinessIncome(index, 'utilities', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Rent ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.rent}
+                        onChange={(e) => updateBusinessIncome(index, 'rent', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Other Expenses ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={income.other_expenses}
+                        onChange={(e) => updateBusinessIncome(index, 'other_expenses', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Rental Properties Tab */}
+          {activeTab === 'rental' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                  Rental Properties
+                </h3>
+                <button
+                  onClick={addRentalProperty}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                >
+                  <FiPlus size={16} />
+                  Add Property
+                </button>
+              </div>
+
+              {rentalProperties.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-gray-400 mb-4">
+                    <FiPlus size={48} className="mx-auto" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-600 font-[BasisGrotesquePro] mb-2">
+                    No Rental Properties Added
+                  </h4>
+                  <p className="text-gray-500 font-[BasisGrotesquePro] mb-4">
+                    Click "Add Property" to add rental property information
+                  </p>
+                </div>
+              ) : (
+                rentalProperties.map((property, index) => (
+                <div key={index} className="border border-[#E8F0FF] rounded-xl p-6 bg-gray-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                      Property #{index + 1}
+                    </h4>
+                    <button
+                      onClick={() => removeRentalProperty(index)}
+                      className="text-red-500 hover:text-red-700 transition"
+                    >
+                      <FiTrash2 size={18} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Property Address *
+                      </label>
+                      <input
+                        type="text"
+                        value={property.property_address}
+                        onChange={(e) => updateRentalProperty(index, 'property_address', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="Street address"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={property.property_city}
+                        onChange={(e) => updateRentalProperty(index, 'property_city', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="City"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        value={property.property_state}
+                        onChange={(e) => updateRentalProperty(index, 'property_state', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="State"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        ZIP Code
+                      </label>
+                      <input
+                        type="text"
+                        value={property.property_zip}
+                        onChange={(e) => updateRentalProperty(index, 'property_zip', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="ZIP code"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Property Type
+                      </label>
+                      <select
+                        value={property.property_type}
+                        onChange={(e) => updateRentalProperty(index, 'property_type', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                      >
+                        <option value="">Select property type</option>
+                        {propertyTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Purchase Date
+                      </label>
+                      <input
+                        type="date"
+                        value={property.purchase_date}
+                        onChange={(e) => updateRentalProperty(index, 'purchase_date', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Purchase Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.purchase_price}
+                        onChange={(e) => updateRentalProperty(index, 'purchase_price', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Current Value ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.current_value}
+                        onChange={(e) => updateRentalProperty(index, 'current_value', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Mortgage Balance ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.mortgage_balance}
+                        onChange={(e) => updateRentalProperty(index, 'mortgage_balance', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Monthly Rent ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.monthly_rent}
+                        onChange={(e) => updateRentalProperty(index, 'monthly_rent', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Annual Rent Income ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.annual_rent_income}
+                        onChange={(e) => updateRentalProperty(index, 'annual_rent_income', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Property Taxes ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.property_taxes}
+                        onChange={(e) => updateRentalProperty(index, 'property_taxes', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Insurance ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.insurance}
+                        onChange={(e) => updateRentalProperty(index, 'insurance', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Maintenance & Repairs ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.maintenance_repairs}
+                        onChange={(e) => updateRentalProperty(index, 'maintenance_repairs', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                        Management Fees ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={property.management_fees}
+                        onChange={(e) => updateRentalProperty(index, 'management_fees', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`rental-active-${index}`}
+                        checked={property.is_active}
+                        onChange={(e) => updateRentalProperty(index, 'is_active', e.target.checked)}
+                        className="w-4 h-4 text-[#F56D2D] focus:ring-[#F56D2D] border-gray-300 rounded"
+                      />
+                      <label htmlFor={`rental-active-${index}`} className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                        Property is currently active
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                ))
+              )}
+
+              {/* Business Form Section */}
+              {showBusinessModal && (
+          <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-[#E8F0FF]">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                {editingBusinessIndex !== null ? 'Edit Business' : 'Add New Business'}
+              </h4>
+              <button
+                onClick={closeBusinessModal}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  Business Name *
+                </label>
                 <input
-                  type="number"
-                  className="form-control"
-                  placeholder="0.00"
-                  value={expense.amount}
-                  onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
+                  type="text"
+                  value={businessFormData.business_name}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="Enter business name"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  Business Type
+                </label>
+                <select
+                  value={businessFormData.business_type}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_type: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                >
+                  <option value="">Select business type</option>
+                  <option value="Sole Proprietorship">Sole Proprietorship</option>
+                  <option value="Partnership">Partnership</option>
+                  <option value="LLC">LLC</option>
+                  <option value="Corporation">Corporation</option>
+                  <option value="S-Corporation">S-Corporation</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  Business Address
+                </label>
+                <input
+                  type="text"
+                  value={businessFormData.business_address}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_address: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="Street address"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  City
+                </label>
+                <input
+                  type="text"
+                  value={businessFormData.business_city}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_city: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="City"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  State
+                </label>
+                <input
+                  type="text"
+                  value={businessFormData.business_state}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_state: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="State"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  ZIP Code
+                </label>
+                <input
+                  type="text"
+                  value={businessFormData.business_zip}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_zip: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="ZIP code"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  Business Phone
+                </label>
+                <input
+                  type="tel"
+                  value={businessFormData.business_phone}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  Business Email
+                </label>
+                <input
+                  type="email"
+                  value={businessFormData.business_email}
+                  onChange={(e) => setBusinessFormData({...businessFormData, business_email: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="business@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  EIN
+                </label>
+                <input
+                  type="text"
+                  value={businessFormData.ein}
+                  onChange={(e) => setBusinessFormData({...businessFormData, ein: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                  placeholder="XX-XXXXXXX"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={businessFormData.start_date}
+                  onChange={(e) => setBusinessFormData({...businessFormData, start_date: e.target.value})}
+                  className="w-full px-3 py-2 border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro]"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-2">
+                  Business Status
+                </label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setBusinessFormData({...businessFormData, is_active: !businessFormData.is_active})}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
+                      businessFormData.is_active ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        businessFormData.is_active ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                    {businessFormData.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="col-md-2">
-              <button 
-                className="btn btn-outline-danger w-100"
-                onClick={() => handleRemoveExpense(expense.id)}
-                title="Remove Expense"
+
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                onClick={closeBusinessModal}
+                className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition font-[BasisGrotesquePro]"
               >
-                <FaTrash />
+                Cancel
+              </button>
+              <button
+                onClick={saveBusinessInfo}
+                className="flex items-center gap-2 px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+              >
+                <FiSave size={16} />
+                {editingBusinessIndex !== null ? 'Update Business' : 'Add Business'}
               </button>
             </div>
           </div>
-        ))}
-        
-        <button
-          className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
-          onClick={handleAddExpense}
-          style={{ fontFamily: "BasisGrotesquePro" }}
-        >
-          <FaPlus size={12} /> Add Expense Category
-        </button>
-      </div>
+        )}
 
-      {/* Optional Sections */}
-      <h5 style={headerStyle}>Additional Details</h5>
-      <div className="row g-3 mb-4">
-        <div className="col-12">
-            <p className="mb-2" style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}>Check all that apply to this business:</p>
-            
-            <div className="form-check mb-2">
-                <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="vehicleUse"
-                    checked={formData.vehicleUse}
-                    onChange={(e) => handleChange('vehicleUse', e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="vehicleUse" style={labelStyle}>
-                    I used a personal vehicle for business purposes (mileage, etc.)
-                </label>
-            </div>
+        </div>
 
-            <div className="form-check mb-2">
-                <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="homeOffice"
-                    checked={formData.homeOffice}
-                    onChange={(e) => handleChange('homeOffice', e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="homeOffice" style={labelStyle}>
-                    I used a dedicated space in my home exclusively for business
-                </label>
-            </div>
-
-            <div className="form-check mb-2">
-                <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="inventory"
-                    checked={formData.inventory}
-                    onChange={(e) => handleChange('inventory', e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="inventory" style={labelStyle}>
-                    I carry inventory (products held for sale)
-                </label>
-            </div>
-
-            <div className="form-check mb-2">
-                <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="healthInsurance"
-                    checked={formData.healthInsurance}
-                    onChange={(e) => handleChange('healthInsurance', e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="healthInsurance" style={labelStyle}>
-                    I paid for self-employed health insurance
-                </label>
-            </div>
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition font-[BasisGrotesquePro]"
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? (
+              <>
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <FiSave size={16} />
+                Save Business Information
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="d-flex justify-content-end gap-3 pt-3 border-top">
-        <button 
-          className="btn btn-light"
-          onClick={onCancel}
-          style={{ fontFamily: "BasisGrotesquePro", fontWeight: 500 }}
-        >
-          Cancel
-        </button>
-        <button 
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          style={{ 
-            fontFamily: "BasisGrotesquePro", 
-            fontWeight: 500,
-            background: "#3B4A66",
-            borderColor: "#3B4A66"
-          }}
-        >
-          Save Business
-        </button>
-      </div>
-    </div>
+
   );
-}
+};
+
+export default BusinessInfoForm;

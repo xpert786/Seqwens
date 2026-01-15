@@ -1085,6 +1085,12 @@ export default function DataIntakeForm() {
       return dateValue;
     }
 
+    // If it's in MM/DD/YYYY format, convert it to YYYY-MM-DD
+    if (typeof dateValue === 'string' && /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/.test(dateValue)) {
+      const [month, day, year] = dateValue.split('/');
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
     try {
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) {
@@ -1098,6 +1104,59 @@ export default function DataIntakeForm() {
       console.error('Error formatting date:', error);
       return "";
     }
+  };
+
+  // Validate date format - must be MM/DD/YYYY
+  const validateDateFormat = (dateString) => {
+    if (!dateString || dateString.trim() === '') {
+      return { valid: true }; // Empty dates are handled by required field validation
+    }
+
+    // Check if format matches MM/DD/YYYY
+    const datePattern = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+    if (!datePattern.test(dateString)) {
+      return {
+        valid: false,
+        error: 'Date must be in MM/DD/YYYY format (e.g., 01/15/1990)'
+      };
+    }
+
+    // Validate the actual date values
+    const [month, day, year] = dateString.split('/').map(Number);
+
+    // Check if it's a valid date
+    const date = new Date(year, month - 1, day);
+    const isValidDate = date.getFullYear() === year &&
+                       date.getMonth() === month - 1 &&
+                       date.getDate() === day;
+
+    if (!isValidDate) {
+      return {
+        valid: false,
+        error: 'Please enter a valid date'
+      };
+    }
+
+    // Check reasonable date ranges (not in future, not too far in past)
+    const today = new Date();
+    const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate()); // 120 years ago
+    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()); // 18 years ago for taxpayer
+
+    if (date < minDate) {
+      return {
+        valid: false,
+        error: 'Date appears to be too far in the past'
+      };
+    }
+
+    if (date > maxDate) {
+      return {
+        valid: false,
+        error: 'Taxpayers must be at least 18 years old'
+      };
+    }
+
+    return { valid: true };
   };
 
   // Validate phone number - extract number part (without country code) and check if exactly 10 digits
@@ -1487,6 +1546,11 @@ export default function DataIntakeForm() {
     }
     if (!personalInfo.dateOfBirth || personalInfo.dateOfBirth.trim() === '') {
       errors['personalInfo.dateOfBirth'] = ['Date of birth is required'];
+    } else {
+      const dateValidation = validateDateFormat(personalInfo.dateOfBirth);
+      if (!dateValidation.valid) {
+        errors['personalInfo.dateOfBirth'] = [dateValidation.error];
+      }
     }
     if (!personalInfo.ssn || personalInfo.ssn.trim() === '') {
       errors['personalInfo.ssn'] = ['SSN is required'];
@@ -1528,6 +1592,11 @@ export default function DataIntakeForm() {
       }
       if (!spouseInfo.dateOfBirth || spouseInfo.dateOfBirth.trim() === '') {
         errors['spouseInfo.dateOfBirth'] = ['Spouse date of birth is required'];
+      } else {
+        const dateValidation = validateDateFormat(spouseInfo.dateOfBirth);
+        if (!dateValidation.valid) {
+          errors['spouseInfo.dateOfBirth'] = [dateValidation.error];
+        }
       }
       if (!spouseInfo.ssn || spouseInfo.ssn.trim() === '') {
         errors['spouseInfo.ssn'] = ['Spouse SSN is required'];
@@ -1553,6 +1622,11 @@ export default function DataIntakeForm() {
         }
         if (!dep.dob || dep.dob.trim() === '') {
           errors[`dependents.${index}.dob`] = ['Dependent date of birth is required'];
+        } else {
+          const dateValidation = validateDateFormat(dep.dob);
+          if (!dateValidation.valid) {
+            errors[`dependents.${index}.dob`] = [dateValidation.error];
+          }
         }
         if (!dep.ssn || dep.ssn.trim() === '') {
           errors[`dependents.${index}.ssn`] = ['Dependent SSN is required'];
@@ -2304,7 +2378,7 @@ export default function DataIntakeForm() {
             <input
               type="text"
               className={`form-control ${getFieldError('personalInfo.dateOfBirth') ? 'is-invalid' : ''}`}
-              placeholder="YYYY-MM-DD"
+              placeholder="MM/DD/YYYY"
               value={personalInfo.dateOfBirth}
               onChange={(e) => handlePersonalInfoChange('dateOfBirth', e.target.value)}
               data-field="personalInfo.dateOfBirth"
@@ -2762,7 +2836,7 @@ export default function DataIntakeForm() {
             <input
               type="text"
               className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
-              placeholder="YYYY-MM-DD"
+              placeholder="MM/DD/YYYY"
               value={spouseInfo.dateOfBirth}
               onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
               data-field="spouseInfo.dateOfBirth"
@@ -3104,7 +3178,7 @@ export default function DataIntakeForm() {
                         <input
                           type="text"
                           className={`form-control ${getFieldError(`dependents.${index}.dob`) ? 'is-invalid' : ''}`}
-                          placeholder="YYYY-MM-DD"
+                          placeholder="MM/DD/YYYY"
                           value={dep.dob}
                           onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
                           data-field={`dependents.${index}.dob`}
@@ -3398,53 +3472,23 @@ export default function DataIntakeForm() {
             >
               Do you have other deductions or income your preparer should be aware of?
             </label>
-            <div className={`form-check mt-2 ${otherInfo.otherDeductions === "yes" ? "radio-item-checked" : ""}`}>
-              <input
-                className="form-check-input"
-                type="radio"
-                name="otherDeductions"
-                id="otherYes"
-                value="yes"
-                checked={otherInfo.otherDeductions === "yes"}
-                onChange={(e) => handleOtherInfoChange('otherDeductions', e.target.value)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="otherYes"
-                style={{
-                  color: "#3B4A66",
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  fontFamily: "BasisGrotesquePro",
-                  cursor: "pointer"
-                }}
+            <div className="flex items-center space-x-3 mt-2">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('otherDeductions', otherInfo.otherDeductions === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
+                  otherInfo.otherDeductions === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                }`}
               >
-                Yes
-              </label>
-            </div>
-            <div className={`form-check mt-2 ${otherInfo.otherDeductions === "no" ? "radio-item-checked" : ""}`}>
-              <input
-                className="form-check-input"
-                type="radio"
-                name="otherDeductions"
-                id="otherNo"
-                value="no"
-                checked={otherInfo.otherDeductions === "no"}
-                onChange={(e) => handleOtherInfoChange('otherDeductions', e.target.value)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="otherNo"
-                style={{
-                  color: "#3B4A66",
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  fontFamily: "BasisGrotesquePro",
-                  cursor: "pointer"
-                }}
-              >
-                No
-              </label>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    otherInfo.otherDeductions === "yes" ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.otherDeductions === "yes" ? 'Yes' : 'No'}
+              </span>
             </div>
           </div>
         </div>

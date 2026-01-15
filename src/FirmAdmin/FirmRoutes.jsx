@@ -16,6 +16,7 @@ import StaffManagement from './Pages/Staff/StaffManagement';
 import StaffDetails from './Pages/Staff/StaffDetails';
 import ClientManage from './Pages/ClientManagement/ClientManage';
 import ClientDetails from './Pages/ClientManagement/ClientDetails';
+import SecurityTabPage from './Pages/ClientManagement/ClientTabs/SecurityTabPage';
 import PendingInviteDetails from './Pages/ClientManagement/PendingInviteDetails';
 import Analytics from './Pages/Analytics/Analytics';
 import DocumentManagement from './Pages/DocumentManagement';
@@ -133,6 +134,7 @@ export default function FirmRoutes() {
             <Route path="staff/:id" element={<StaffDetails />} />
             <Route path="clients" element={<ClientManage />} />
             <Route path="clients/:id" element={<ClientDetails />} />
+            {/* <Route path="clients/:id/security" element={<SecurityTabPage />} /> */}
             <Route path="pending-invites/:id" element={<PendingInviteDetails />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="tasks" element={<TaskManagementMain />} />

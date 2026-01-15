@@ -5,14 +5,14 @@ import { getAccessToken } from '../../../ClientOnboarding/utils/userUtils';
 import { handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 
-const CreateEventModal = ({ isOpen, onClose, onSubmit }) => {
+const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
   const [formData, setFormData] = useState({
     event_title: '',
     appointment_duration: 30, // in minutes
     timezone: 'America/New_York',
     appointment_date: '',
     slots: [
-      { id: 1, time: '09:00', client_id: '' }
+      { id: 1, time: '09:00', client_id: preSelectedClient ? preSelectedClient.id : '' }
     ],
     description: '',
     meeting_type: 'zoom'
@@ -359,21 +359,30 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit }) => {
                     style={{ minWidth: '120px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
                     required
                   />
-                  <select
-                    value={slot.client_id}
-                    onChange={(e) => handleTimeSlotChange(slot.id, 'client_id', e.target.value)}
-                    className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white"
-                    style={{ minWidth: '200px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
-                    required
-                    disabled={loadingClients}
-                  >
-                    <option value="">Select Client</option>
-                    {clients.map((client) => (
-                      <option key={client.id} value={client.id}>
-                        {client.full_name || `${client.first_name} ${client.last_name}`}
-                      </option>
-                    ))}
-                  </select>
+                  {preSelectedClient && slot.id === 1 ? (
+                    <div
+                      className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm bg-gray-50 cursor-not-allowed"
+                      style={{ minWidth: '200px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+                    >
+                      {preSelectedClient.full_name || `${preSelectedClient.first_name} ${preSelectedClient.last_name}`}
+                    </div>
+                  ) : (
+                    <select
+                      value={slot.client_id}
+                      onChange={(e) => handleTimeSlotChange(slot.id, 'client_id', e.target.value)}
+                      className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white"
+                      style={{ minWidth: '200px', border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
+                      required
+                      disabled={loadingClients}
+                    >
+                      <option value="">Select Client</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.full_name || `${client.first_name} ${client.last_name}`}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   {formData.slots.length > 1 && (
                     <button
                       type="button"

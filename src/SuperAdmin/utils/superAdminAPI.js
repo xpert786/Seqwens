@@ -195,6 +195,11 @@ export const superAdminAPI = {
     return await apiRequest(endpoint, 'GET');
   },
 
+  // Get admin overview data (active users overview)
+  getAdminOverview: async () => {
+    return await apiRequest('/user/admin/overview/', 'GET');
+  },
+
   // Get user management data
   getUsers: async (page = 1, limit = 10, search = '', role = '') => {
     const params = new URLSearchParams({

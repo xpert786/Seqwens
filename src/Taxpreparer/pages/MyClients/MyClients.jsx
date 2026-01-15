@@ -1900,9 +1900,9 @@ export default function MyClients() {
                                 </span>
                               )}
                             </div>
-                            {taxpayer.last_login_formatted && (
+                            {(taxpayer.last_login || taxpayer.last_login_formatted) && (
                               <div className="text-muted small mt-2">
-                                Last login: {taxpayer.last_login_formatted}
+                                Last login: {taxpayer.last_login || taxpayer.last_login_formatted}
                               </div>
                             )}
                           </div>

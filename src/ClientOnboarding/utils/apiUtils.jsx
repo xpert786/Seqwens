@@ -3712,6 +3712,18 @@ export const firmAdminClientsAPI = {
 
     const endpoint = `/firm/clients/${clientId}/documents/${documentId}/`;
     return await apiRequest(endpoint, 'PATCH', payload);
+  },
+
+  // Reset taxpayer password (for firm admins)
+  // POST /api/firm/taxpayers/{taxpayer_id}/reset-password/
+  // Alternative: POST /api/firm/clients/{client_id}/reset-password/
+  resetTaxpayerPassword: async (taxpayerId, passwordData = {}) => {
+    return await apiRequest(`/firm/taxpayers/${taxpayerId}/reset-password/`, 'POST', passwordData);
+  },
+
+  // Reset taxpayer password using clients endpoint (alternative)
+  resetClientPassword: async (clientId) => {
+    return await apiRequest(`/firm/clients/${clientId}/reset-password/`, 'POST', {});
   }
 };
 
@@ -5258,6 +5270,12 @@ export const taxPreparerClientAPI = {
     }
 
     return await apiRequest('/taxpayer/firm-admin/taxpayers/import/send-invitations/', 'POST', payload);
+  },
+
+  // Reset taxpayer password (for tax preparers)
+  // POST /api/taxpayer/tax-preparer/taxpayers/{taxpayer_id}/reset-password/
+  resetTaxpayerPassword: async (taxpayerId, passwordData = {}) => {
+    return await apiRequest(`/taxpayer/tax-preparer/taxpayers/${taxpayerId}/reset-password/`, 'POST', passwordData);
   }
 };
 

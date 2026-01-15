@@ -10,6 +10,7 @@ const PersonalInfo = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -93,6 +94,7 @@ const PersonalInfo = () => {
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   const validateLength = password.length >= 8;
   const validateNumber = /\d/.test(password);
@@ -197,18 +199,30 @@ const PersonalInfo = () => {
               {/* Confirm Password */}
               <div className="mb-3">
                 <label className="custom-label">Confirm Password</label>
-                <input
-                  type="password"
-                  className={`custom-input ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                  placeholder="Enter Your Password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (errors.confirmPassword) {
-                      setErrors(prev => ({ ...prev, confirmPassword: '' }));
-                    }
-                  }}
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    className={`custom-input ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                    placeholder="Enter Your Password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (errors.confirmPassword) {
+                        setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-visibility-btn"
+                    onClick={toggleConfirmPasswordVisibility}
+                  >
+                    <i
+                      className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"
+                        }`}
+                    ></i>
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <div className="invalid-feedback">{errors.confirmPassword}</div>
                 )}

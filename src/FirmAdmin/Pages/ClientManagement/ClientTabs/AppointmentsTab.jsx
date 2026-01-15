@@ -334,10 +334,13 @@ export default function AppointmentsTab({ client }) {
         </div>
         <button
           onClick={() => setShowScheduleModal(true)}
-          className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition font-[BasisGrotesquePro]"
+          className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition font-[BasisGrotesquePro] flex items-center gap-2"
           style={{ backgroundColor: '#178109' }}
         >
-          + Schedule Appointment
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Create Appointment
         </button>
       </div>
 
@@ -533,10 +536,10 @@ export default function AppointmentsTab({ client }) {
             <div className="flex items-start justify-between p-6 border-b border-[#E8F0FF]">
               <div>
                 <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-                  Schedule Appointment
+                  Create Appointment
                 </h5>
                 <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                  Schedule a new appointment with {client?.name || 'client'}
+                  Create a new appointment for {client?.name || 'client'}
                 </p>
               </div>
               <button
@@ -654,7 +657,7 @@ export default function AppointmentsTab({ client }) {
                 className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition font-[BasisGrotesquePro] disabled:opacity-50"
                 style={{ backgroundColor: '#178109' }}
               >
-                {submitting ? 'Scheduling...' : 'Schedule Appointment'}
+                {submitting ? 'Creating...' : 'Create Appointment'}
               </button>
             </div>
           </div>

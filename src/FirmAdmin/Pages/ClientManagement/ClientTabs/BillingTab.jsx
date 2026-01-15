@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { firmAdminBillingHistoryAPI, handleAPIError } from '../../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
+import CreateInvoiceModal from '../../Billing/CreateInvoiceModal';
 
 export default function BillingTab({ client, billingHistory: propBillingHistory = [] }) {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
     end_date: '',
     search: ''
   });
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -69,61 +71,61 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
   };
 
   // Fetch billing history from API
-  useEffect(() => {
-    const fetchBillingHistory = async () => {
-      if (!client?.id) {
-        setLoading(false);
-        return;
-      }
+  const fetchBillingHistory = async () => {
+    if (!client?.id) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        const params = {
-          client_id: client.id,
-          page: pagination.page,
-          page_size: pagination.page_size,
-          sort_by: '-issue_date',
-          include_payments: true
-        };
+      const params = {
+        client_id: client.id,
+        page: pagination.page,
+        page_size: pagination.page_size,
+        sort_by: '-issue_date',
+        include_payments: true
+      };
 
-        if (filters.status) params.status = filters.status;
-        if (filters.start_date) params.start_date = filters.start_date;
-        if (filters.end_date) params.end_date = filters.end_date;
-        if (filters.search) params.search = filters.search;
+      if (filters.status) params.status = filters.status;
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.search) params.search = filters.search;
 
-        const response = await firmAdminBillingHistoryAPI.getBillingHistory(params);
-        
-        // Handle different response structures
-        if (response?.success && response?.data) {
-          // New API structure with data wrapper
-          setBillingHistory(response.data.invoices || []);
-          if (response.data.pagination) {
-            setPagination(response.data.pagination);
-          }
-        } else if (response?.invoices) {
-          // Direct response with invoices
-          setBillingHistory(response.invoices || []);
-          if (response.pagination) {
-            setPagination(response.pagination);
-          }
-        } else if (Array.isArray(response)) {
-          // Array of invoices
-          setBillingHistory(response);
-        } else {
-          setBillingHistory([]);
+      const response = await firmAdminBillingHistoryAPI.getBillingHistory(params);
+
+      // Handle different response structures
+      if (response?.success && response?.data) {
+        // New API structure with data wrapper
+        setBillingHistory(response.data.invoices || []);
+        if (response.data.pagination) {
+          setPagination(response.data.pagination);
         }
-      } catch (err) {
-        console.error('Error fetching billing history:', err);
-        setError(handleAPIError(err));
-        toast.error(handleAPIError(err));
+      } else if (response?.invoices) {
+        // Direct response with invoices
+        setBillingHistory(response.invoices || []);
+        if (response.pagination) {
+          setPagination(response.pagination);
+        }
+      } else if (Array.isArray(response)) {
+        // Array of invoices
+        setBillingHistory(response);
+      } else {
         setBillingHistory([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching billing history:', err);
+      setError(handleAPIError(err));
+      toast.error(handleAPIError(err));
+      setBillingHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBillingHistory();
   }, [client?.id, pagination.page, pagination.page_size, filters.status, filters.start_date, filters.end_date, filters.search]);
 
@@ -154,7 +156,16 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
             <h5 className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">Billing History</h5>
             <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">All invoices and payments for this client</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setShowCreateInvoiceModal(true)}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] flex items-center gap-2"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Create Invoice
+            </button>
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -327,6 +338,18 @@ export default function BillingTab({ client, billingHistory: propBillingHistory 
             </div>
           )}
         </>
+      )}
+
+      {/* Create Invoice Modal */}
+      {showCreateInvoiceModal && (
+        <CreateInvoiceModal
+          onClose={() => setShowCreateInvoiceModal(false)}
+          onInvoiceCreated={() => {
+            // Refresh billing history
+            fetchBillingHistory();
+          }}
+          preSelectedClient={client}
+        />
       )}
     </div>
   );

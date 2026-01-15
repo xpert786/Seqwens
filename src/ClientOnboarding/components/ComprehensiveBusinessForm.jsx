@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import BusinessAutocomplete from './BusinessAutocomplete';
 
 export default function ComprehensiveBusinessForm({ onSave, onCancel, initialData = null }) {
   const [formData, setFormData] = useState({
     // 1. About Your Business
     workDescription: '',
+    businessCodeId: null, // Selected business code ID from backend
+    businessCodeNaics: '', // NAICS code (read-only from backend)
+    businessCodeTitle: '', // Business code title (read-only from backend)
     businessName: '',
     businessNameType: 'same', // 'same' or 'different'
     differentBusinessName: '',
@@ -14,15 +18,15 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
     businessCity: '',
     businessState: '',
     businessZip: '',
-    
+
     // 2. Money You Made (Income)
     totalIncome: '',
-    taxFormsReceived: [], // Array of selected forms: ['1099NEC', '1099MISC', '1099K']
+    taxFormsReceived: [], // Array of selected forms: ['1099NEC', '1099MISC', '1099K', 'K1', 'OTHER', 'NONE']
     issuedRefunds: false,
     totalRefunded: '',
     otherBusinessIncome: false,
     otherBusinessIncomeAmount: '',
-    
+
     // 3. Business Expenses
     advertising: '',
     officeSupplies: '',
@@ -35,33 +39,33 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
     otherExpenses: [],
     otherExpenseDescription: '',
     otherExpenseAmount: '',
-    
+
     // 4. Vehicle & Travel
     usedVehicle: false,
     businessMiles: '',
     parkingTollsTravel: '',
-    
+
     // 5. Food & Travel
     businessMeals: '',
     travelExpenses: '',
-    
+
     // 6. Home Office (Optional)
     homeOfficeUse: false,
     homeOfficeSize: '',
-    
+
     // 7. Inventory or Products (Optional)
     sellProducts: false,
     costItemsResold: '',
     inventoryLeftEnd: '',
-    
+
     // 8. Health Insurance & Retirement (Optional)
     healthInsuranceBusiness: false,
     selfEmployedRetirement: false,
     retirementAmount: '',
-    
+
     // Final Confirmation
     isAccurate: false,
-    
+
     // ID for internal tracking if editing
     id: null
   });
@@ -74,8 +78,8 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
       let taxForms = initialData.taxFormsReceived || [];
       if (typeof taxForms === 'string') {
         // If it's a string, convert to array (handle 'none' or single value)
-        if (taxForms === 'none') {
-          taxForms = [];
+        if (taxForms.toLowerCase() === 'none') {
+          taxForms = ['NONE'];
         } else {
           taxForms = [taxForms];
         }
@@ -86,7 +90,11 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
         // Ensure arrays are properly initialized
         otherExpenses: initialData.otherExpenses || [],
         expenses: initialData.expenses || [],
-        taxFormsReceived: taxForms
+        taxFormsReceived: taxForms,
+        // Initialize business code fields
+        businessCodeId: initialData.business_code_id || initialData.businessCodeId || null,
+        businessCodeNaics: initialData.business_code_naics || initialData.businessCodeNaics || '',
+        businessCodeTitle: initialData.business_code_title || initialData.businessCodeTitle || ''
       });
     }
   }, [initialData]);
@@ -137,19 +145,23 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
     const newErrors = {};
     
     // Required validations
-    if (!formData.workDescription.trim()) newErrors.workDescription = 'Work description is required';
-    if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
+    if (!formData.workDescription.trim()) {
+      newErrors.workDescription = 'Please describe the kind of work you do';
+    } else if (formData.workDescription.trim().length < 3) {
+      newErrors.workDescription = 'Please provide a more detailed description (at least 3 characters)';
+    }
 
-    // Business address is required when business name is provided
-    if (formData.businessName.trim()) {
+    // Business name validation - only required if user selected "different"
+    if (formData.businessNameType === 'different' && !formData.businessName.trim()) {
+      newErrors.businessName = 'Business name is required';
+    }
+
+    // Business address is required when business name is provided (for different business names)
+    if (formData.businessNameType === 'different' && formData.businessName.trim()) {
       if (!formData.businessAddress.trim()) newErrors.businessAddress = 'Business address is required when business name is provided';
       if (!formData.businessCity.trim()) newErrors.businessCity = 'Business city is required when business name is provided';
       if (!formData.businessState.trim()) newErrors.businessState = 'Business state is required when business name is provided';
       if (!formData.businessZip.trim()) newErrors.businessZip = 'Business ZIP is required when business name is provided';
-    }
-
-    if (formData.businessNameType === 'different' && !formData.differentBusinessName.trim()) {
-      newErrors.differentBusinessName = 'Business name is required when different from personal name';
     }
     if (!formData.totalIncome.trim()) newErrors.totalIncome = 'Total income is required';
     
@@ -258,60 +270,85 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
             <label className="form-label" style={labelStyle}>
               What kind of work do you do?
             </label>
-            <input
-              type="text"
-              className={`form-control ${errors.workDescription ? 'is-invalid' : ''}`}
-              placeholder="e.g., Web Development, Consulting, Photography"
+            <BusinessAutocomplete
               value={formData.workDescription}
-              onChange={(e) => handleChange('workDescription', e.target.value)}
+              onChange={(value, codeData) => {
+                // Handle both free text and code selection
+                handleChange('workDescription', value);
+
+                if (codeData) {
+                  // If a business code was selected, store the code information
+                  handleChange('businessCodeId', codeData.codeId);
+                  handleChange('businessCodeNaics', codeData.naicsCode);
+                  handleChange('businessCodeTitle', codeData.text);
+                } else {
+                  // If free text was entered, clear code fields
+                  handleChange('businessCodeId', null);
+                  handleChange('businessCodeNaics', '');
+                  handleChange('businessCodeTitle', '');
+                }
+              }}
+              placeholder="e.g., Web Development, Consulting, Photography - Start typing for suggestions"
+              error={!!errors.workDescription}
+              className={errors.workDescription ? 'is-invalid' : ''}
             />
+            <div className="form-text text-muted small" style={{ fontFamily: 'BasisGrotesquePro' }}>
+              Select from common business types or enter your own description. This helps with accurate tax classification.
+            </div>
             {errors.workDescription && <div className="invalid-feedback">{errors.workDescription}</div>}
           </div>
         </div>
 
         <div className="row g-3 mb-3">
-          <div className="col-md-6">
+          <div className="col-12">
             <label className="form-label" style={labelStyle}>
-              Business name (if you have one):
+              What's your business name?
             </label>
-            <input
-              type="text"
-              className={`form-control ${errors.businessName ? 'is-invalid' : ''}`}
-              placeholder="Your Business Name"
-              value={formData.businessName}
-              onChange={(e) => handleChange('businessName', e.target.value)}
-            />
-            {errors.businessName && <div className="invalid-feedback">{errors.businessName}</div>}
-          </div>
-          <div className="col-md-6">
-            <label className="form-label" style={labelStyle}>
-              Same as my name / Different name
-            </label>
-            <select
-              className={`form-control ${errors.businessNameType ? 'is-invalid' : ''}`}
-              value={formData.businessNameType}
-              onChange={(e) => handleChange('businessNameType', e.target.value)}
-            >
-              <option value="same">Same as my name</option>
-              <option value="different">A business name</option>
-            </select>
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="businessNameType"
+                  id="businessNameSame"
+                  value="same"
+                  checked={formData.businessNameType === 'same'}
+                  onChange={(e) => handleChange('businessNameType', e.target.value)}
+                />
+                <label className="form-check-label" htmlFor="businessNameSame" style={labelStyle}>
+                  Same as my personal name
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="businessNameType"
+                  id="businessNameDifferent"
+                  value="different"
+                  checked={formData.businessNameType === 'different'}
+                  onChange={(e) => handleChange('businessNameType', e.target.value)}
+                />
+                <label className="form-check-label" htmlFor="businessNameDifferent" style={labelStyle}>
+                  I have a different business name
+                </label>
+              </div>
+            </div>
+
+            {formData.businessNameType === 'different' && (
+              <div className="mt-3">
+                <input
+                  type="text"
+                  className={`form-control ${errors.businessName ? 'is-invalid' : ''}`}
+                  placeholder="Enter your business name"
+                  value={formData.businessName}
+                  onChange={(e) => handleChange('businessName', e.target.value)}
+                />
+                {errors.businessName && <div className="invalid-feedback">{errors.businessName}</div>}
+              </div>
+            )}
           </div>
         </div>
-
-        {formData.businessNameType === 'different' && (
-          <div className="row g-3 mb-3">
-            <div className="col-12">
-              <input
-                type="text"
-                className={`form-control ${errors.differentBusinessName ? 'is-invalid' : ''}`}
-                placeholder="Enter business name"
-                value={formData.differentBusinessName}
-                onChange={(e) => handleChange('differentBusinessName', e.target.value)}
-              />
-              {errors.differentBusinessName && <div className="invalid-feedback">{errors.differentBusinessName}</div>}
-            </div>
-          </div>
-        )}
 
         <div className="row g-3 mb-3">
           <div className="col-md-6">
@@ -433,14 +470,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     onChange={(e) => {
                       const currentForms = formData.taxFormsReceived || [];
                       if (e.target.checked) {
-                        handleChange('taxFormsReceived', [...currentForms, '1099NEC']);
+                        // Remove 'NONE' if it was selected and user is now selecting a form
+                        const newForms = currentForms.filter(form => form !== 'NONE');
+                        handleChange('taxFormsReceived', [...newForms, '1099NEC']);
                       } else {
                         handleChange('taxFormsReceived', currentForms.filter(form => form !== '1099NEC'));
                       }
                     }}
                   />
                   <label className="form-check-label" htmlFor="taxForm1099NEC" style={labelStyle}>
-                    1099NEC
+                    Form 1099-NEC (Nonemployee Compensation)
                   </label>
                 </div>
                 <div className="form-check">
@@ -452,14 +491,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     onChange={(e) => {
                       const currentForms = formData.taxFormsReceived || [];
                       if (e.target.checked) {
-                        handleChange('taxFormsReceived', [...currentForms, '1099MISC']);
+                        // Remove 'NONE' if it was selected and user is now selecting a form
+                        const newForms = currentForms.filter(form => form !== 'NONE');
+                        handleChange('taxFormsReceived', [...newForms, '1099MISC']);
                       } else {
                         handleChange('taxFormsReceived', currentForms.filter(form => form !== '1099MISC'));
                       }
                     }}
                   />
                   <label className="form-check-label" htmlFor="taxForm1099MISC" style={labelStyle}>
-                    1099MISC
+                    Form 1099-MISC
                   </label>
                 </div>
                 <div className="form-check">
@@ -471,14 +512,58 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     onChange={(e) => {
                       const currentForms = formData.taxFormsReceived || [];
                       if (e.target.checked) {
-                        handleChange('taxFormsReceived', [...currentForms, '1099K']);
+                        // Remove 'NONE' if it was selected and user is now selecting a form
+                        const newForms = currentForms.filter(form => form !== 'NONE');
+                        handleChange('taxFormsReceived', [...newForms, '1099K']);
                       } else {
                         handleChange('taxFormsReceived', currentForms.filter(form => form !== '1099K'));
                       }
                     }}
                   />
                   <label className="form-check-label" htmlFor="taxForm1099K" style={labelStyle}>
-                    1099K
+                    Form 1099-K (Payment apps, card processors, platforms)
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="taxFormK1"
+                    checked={formData.taxFormsReceived.includes('K1')}
+                    onChange={(e) => {
+                      const currentForms = formData.taxFormsReceived || [];
+                      if (e.target.checked) {
+                        // Remove 'NONE' if it was selected and user is now selecting a form
+                        const newForms = currentForms.filter(form => form !== 'NONE');
+                        handleChange('taxFormsReceived', [...newForms, 'K1']);
+                      } else {
+                        handleChange('taxFormsReceived', currentForms.filter(form => form !== 'K1'));
+                      }
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="taxFormK1" style={labelStyle}>
+                    Schedule K-1 (Partnership / S-Corp income)
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="taxFormOther"
+                    checked={formData.taxFormsReceived.includes('OTHER')}
+                    onChange={(e) => {
+                      const currentForms = formData.taxFormsReceived || [];
+                      if (e.target.checked) {
+                        // Remove 'NONE' if it was selected and user is now selecting a form
+                        const newForms = currentForms.filter(form => form !== 'NONE');
+                        handleChange('taxFormsReceived', [...newForms, 'OTHER']);
+                      } else {
+                        handleChange('taxFormsReceived', currentForms.filter(form => form !== 'OTHER'));
+                      }
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="taxFormOther" style={labelStyle}>
+                    Other tax forms
                   </label>
                 </div>
                 <div className="form-check">
@@ -486,11 +571,14 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     className="form-check-input"
                     type="checkbox"
                     id="taxFormNone"
-                    checked={formData.taxFormsReceived.length === 0}
+                    checked={formData.taxFormsReceived.includes('NONE')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        // If "None" is checked, clear all other selections
-                        handleChange('taxFormsReceived', []);
+                        // If "None" is checked, clear all other selections and add NONE
+                        handleChange('taxFormsReceived', ['NONE']);
+                      } else {
+                        // If "None" is unchecked, remove it from the array
+                        handleChange('taxFormsReceived', formData.taxFormsReceived.filter(form => form !== 'NONE'));
                       }
                     }}
                   />

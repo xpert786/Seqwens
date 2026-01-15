@@ -65,6 +65,13 @@ export default function SuperDashboardContent() {
   const [allFirms, setAllFirms] = useState([]);
   const [allFirmsLoading, setAllFirmsLoading] = useState(false);
   const [allFirmsError, setAllFirmsError] = useState(null);
+
+  // Active users modal state
+  const [showActiveUsersModal, setShowActiveUsersModal] = useState(false);
+  const [activeUsersData, setActiveUsersData] = useState(null);
+  const [activeUsersLoading, setActiveUsersLoading] = useState(false);
+  const [activeUsersError, setActiveUsersError] = useState(null);
+  const [activeUsersTab, setActiveUsersTab] = useState('Firm');
   
   // Generate current month value for default
   const getCurrentMonthValue = () => {
@@ -793,7 +800,40 @@ export default function SuperDashboardContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#E8F0FF] p-6 relative">
+        <div
+          className="bg-white rounded-xl border border-[#E8F0FF] p-6 relative cursor-pointer hover:shadow-md transition-shadow"
+          onClick={async () => {
+            setShowActiveUsersModal(true);
+            setActiveUsersLoading(true);
+            setActiveUsersError(null);
+            setActiveUsersTab('Firm');
+            try {
+              // Fetch overview data from the new unified API
+              const overviewResponse = await superAdminAPI.getAdminOverview();
+
+              if (overviewResponse.success && overviewResponse.data) {
+                const { active_firms, active_taxpayers, active_tax_preparers, active_super_admins } = overviewResponse.data;
+
+                // Map the API response to the expected modal data structure
+                setActiveUsersData({
+                  firm_users: active_firms || [],
+                  taxpayer_users: active_taxpayers || [],
+                  taxpreparer_users: active_tax_preparers || [],
+                  billing_users: active_super_admins?.filter(user => user.role?.toLowerCase().includes('billing')) || [],
+                  support_users: active_super_admins?.filter(user => user.role?.toLowerCase().includes('support')) || []
+                });
+              } else {
+                throw new Error(overviewResponse.message || 'Failed to fetch overview data');
+              }
+            } catch (err) {
+              console.error('Error fetching active users data:', err);
+              setActiveUsersError(handleAPIError(err));
+              setActiveUsersData(null);
+            } finally {
+              setActiveUsersLoading(false);
+            }
+          }}
+        >
           <div className="absolute top-4 right-4">
             <ActiveUsersIcon className="w-4 h-4" />
           </div>
@@ -1376,6 +1416,356 @@ export default function SuperDashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Active Users Modal */}
+      <Modal
+        show={showActiveUsersModal}
+        onHide={() => {
+          setShowActiveUsersModal(false);
+          setActiveUsersData(null);
+          setActiveUsersError(null);
+          setActiveUsersTab('Firm');
+        }}
+        size="xl"
+        centered
+        style={{ fontFamily: 'BasisGrotesquePro' }}
+      >
+        <Modal.Header closeButton style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
+            Active Users Details
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '0' }}>
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <div className="flex gap-0">
+              <button
+                onClick={() => setActiveUsersTab('Firm')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
+                  activeUsersTab === 'Firm'
+                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Firm ({activeUsersData?.firm_users?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveUsersTab('Taxpayer')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
+                  activeUsersTab === 'Taxpayer'
+                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Taxpayer ({activeUsersData?.taxpayer_users?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveUsersTab('Taxpreparer')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
+                  activeUsersTab === 'Taxpreparer'
+                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Tax Preparer ({activeUsersData?.taxpreparer_users?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveUsersTab('Superadmin')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors font-[BasisGrotesquePro] flex-1 ${
+                  activeUsersTab === 'Superadmin'
+                    ? 'border-[#3AD6F2] text-[#3AD6F2]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Super Admin ({(activeUsersData?.billing_users?.length || 0) + (activeUsersData?.support_users?.length || 0)})
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '24px' }}>
+            {activeUsersLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A63] mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading active users...</p>
+              </div>
+            ) : activeUsersError ? (
+              <div className="text-center py-8">
+                <p className="text-red-500">{activeUsersError}</p>
+              </div>
+            ) : activeUsersData ? (
+              <div>
+                {activeUsersTab === 'Firm' && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Firms</h4>
+                    {activeUsersData.firm_users && activeUsersData.firm_users.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {activeUsersData.firm_users.map((firm, index) => (
+                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                {firm.name?.charAt(0)?.toUpperCase() || 'F'}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{firm.name || 'Unknown Firm'}</p>
+                                <p className="text-sm text-gray-500">{firm.email || 'No email'}</p>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <p><span className="font-medium">Phone:</span> {firm.phone || 'N/A'}</p>
+                              <p><span className="font-medium">Total Users:</span> {firm.total_users || 0}</p>
+                              <p><span className="font-medium">Subscription:</span>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  firm.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {firm.subscription_status || 'Unknown'}
+                                </span>
+                              </p>
+                              <p><span className="font-medium">Status:</span>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  firm.status === 'active' ? 'bg-green-100 text-green-800' :
+                                  firm.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {firm.status || 'Unknown'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No active firms found</p>
+                    )}
+                  </div>
+                )}
+
+                {activeUsersTab === 'Taxpayer' && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Taxpayers</h4>
+                    {activeUsersData.taxpayer_users && activeUsersData.taxpayer_users.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {activeUsersData.taxpayer_users.map((taxpayer, index) => (
+                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                {(taxpayer.first_name || taxpayer.last_name) ? `${taxpayer.first_name?.charAt(0) || ''}${taxpayer.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{`${taxpayer.first_name || ''} ${taxpayer.last_name || ''}`.trim() || 'Unknown User'}</p>
+                                <p className="text-sm text-gray-500">{taxpayer.email || 'No email'}</p>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <p><span className="font-medium">Phone:</span> {taxpayer.phone || 'N/A'}</p>
+                              <p><span className="font-medium">Firm:</span> {taxpayer.firm_name || 'N/A'}</p>
+                              <p><span className="font-medium">Email Verified:</span>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  taxpayer.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {taxpayer.email_verified ? 'Yes' : 'No'}
+                                </span>
+                              </p>
+                              <p><span className="font-medium">Status:</span>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  taxpayer.status === 'active' ? 'bg-green-100 text-green-800' :
+                                  taxpayer.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {taxpayer.status || 'Unknown'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No active taxpayers found</p>
+                    )}
+                  </div>
+                )}
+
+                {activeUsersTab === 'Taxpreparer' && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Tax Preparers</h4>
+                    {activeUsersData.taxpreparer_users && activeUsersData.taxpreparer_users.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {activeUsersData.taxpreparer_users.map((preparer, index) => (
+                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                {(preparer.first_name || preparer.last_name) ? `${preparer.first_name?.charAt(0) || ''}${preparer.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{`${preparer.first_name || ''} ${preparer.last_name || ''}`.trim() || 'Unknown User'}</p>
+                                <p className="text-sm text-gray-500">{preparer.email || 'No email'}</p>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <p><span className="font-medium">Phone:</span> {preparer.phone || 'N/A'}</p>
+                              <p><span className="font-medium">Role:</span> {preparer.role || 'Tax Preparer'}</p>
+                              <p><span className="font-medium">Firm:</span> {preparer.firm_name || 'N/A'}</p>
+                              <p><span className="font-medium">Email Verified:</span>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  preparer.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {preparer.email_verified ? 'Yes' : 'No'}
+                                </span>
+                              </p>
+                              <p><span className="font-medium">Status:</span>
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  preparer.status === 'active' ? 'bg-green-100 text-green-800' :
+                                  preparer.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {preparer.status || 'Unknown'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No active tax preparers found</p>
+                    )}
+                  </div>
+                )}
+
+                {activeUsersTab === 'Superadmin' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Billing Admins ({activeUsersData.billing_users?.length || 0})</h4>
+                      {activeUsersData.billing_users && activeUsersData.billing_users.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {activeUsersData.billing_users.map((admin, index) => (
+                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'Unknown Admin'}</p>
+                                  <p className="text-sm text-gray-500">{admin.email || 'No email'}</p>
+                                </div>
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
+                                <p><span className="font-medium">Role:</span> {admin.role || 'Billing Admin'}</p>
+                                <p><span className="font-medium">Email Verified:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                    admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {admin.email_verified ? 'Yes' : 'No'}
+                                  </span>
+                                </p>
+                                <p><span className="font-medium">Super User:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                    admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {admin.is_superuser ? 'Yes' : 'No'}
+                                  </span>
+                                </p>
+                                <p><span className="font-medium">Status:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                    admin.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {admin.status || 'Unknown'}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">No billing admins found</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Support Admins ({activeUsersData.support_users?.length || 0})</h4>
+                      {activeUsersData.support_users && activeUsersData.support_users.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {activeUsersData.support_users.map((admin, index) => (
+                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                  {(admin.first_name || admin.last_name) ? `${admin.first_name?.charAt(0) || ''}${admin.last_name?.charAt(0) || ''}`.toUpperCase() : 'U'}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{`${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'Unknown Admin'}</p>
+                                  <p className="text-sm text-gray-500">{admin.email || 'No email'}</p>
+                                </div>
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                <p><span className="font-medium">Phone:</span> {admin.phone || 'N/A'}</p>
+                                <p><span className="font-medium">Role:</span> {admin.role || 'Support Admin'}</p>
+                                <p><span className="font-medium">Email Verified:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                    admin.email_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {admin.email_verified ? 'Yes' : 'No'}
+                                  </span>
+                                </p>
+                                <p><span className="font-medium">Super User:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                    admin.is_superuser ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {admin.is_superuser ? 'Yes' : 'No'}
+                                  </span>
+                                </p>
+                                <p><span className="font-medium">Status:</span>
+                                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                    admin.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    admin.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {admin.status || 'Unknown'}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">No support admins found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No data available</p>
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #E5E7EB' }}>
+          <button
+            className="btn"
+            onClick={() => {
+              setShowActiveUsersModal(false);
+              setActiveUsersData(null);
+              setActiveUsersError(null);
+              setActiveUsersTab('Firm');
+            }}
+            style={{
+              fontFamily: 'BasisGrotesquePro',
+              backgroundColor: '#F3F4F6',
+              color: '#3B4A66',
+              border: '1px solid #E5E7EB',
+              fontWeight: '500',
+              padding: '8px 16px',
+              borderRadius: '6px'
+            }}
+          >
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
 
       {/* All Firms Modal */}
       <Modal

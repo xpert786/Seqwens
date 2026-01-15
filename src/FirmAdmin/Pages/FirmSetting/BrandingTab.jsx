@@ -24,6 +24,7 @@ export default function BrandingTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showPreviewPassword, setShowPreviewPassword] = useState(false);
   
   const logoInputRef = useRef(null);
   const faviconInputRef = useRef(null);
@@ -491,11 +492,20 @@ export default function BrandingTab() {
               placeholder="Enter your email"
               className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2.5 text-sm text-[#3B4A66] font-regular placeholder:text-[#3B4A66] focus:outline-none font-[BasisGrotesquePro] bg-white"
             />
-            <input
-              type="password"
-              placeholder="Enter your password"
-              className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2.5 text-sm text-[#3B4A66] font-regular placeholder:text-[#3B4A66] focus:outline-none font-[BasisGrotesquePro] bg-white mt-3"
-            />
+            <div className="relative mt-3">
+              <input
+                type={showPreviewPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                className="w-full rounded-lg !border border-[#E8F0FF] px-3 py-2.5 pr-10 text-sm text-[#3B4A66] font-regular placeholder:text-[#3B4A66] focus:outline-none font-[BasisGrotesquePro] bg-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPreviewPassword(!showPreviewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4B5563] hover:text-[#3B4A66] focus:outline-none"
+              >
+                <i className={`bi ${showPreviewPassword ? "bi-eye-slash" : "bi-eye"}`} style={{ fontSize: "18px" }}></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>

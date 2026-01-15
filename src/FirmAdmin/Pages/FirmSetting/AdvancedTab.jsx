@@ -13,6 +13,7 @@ export default function AdvancedTab() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [firmName, setFirmName] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -148,7 +149,24 @@ export default function AdvancedTab() {
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-[#3B4A66] mb-2">Enter Your Password <span className="text-red-500">*</span></label>
-                <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder="Enter your password to confirm" className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444]" disabled={deleting} />
+                <div className="relative">
+                  <input 
+                    type={showDeletePassword ? "text" : "password"} 
+                    value={deletePassword} 
+                    onChange={(e) => setDeletePassword(e.target.value)} 
+                    placeholder="Enter your password to confirm" 
+                    className="w-full px-3 py-2 pr-10 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EF4444]" 
+                    disabled={deleting} 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDeletePassword(!showDeletePassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4B5563] hover:text-[#3B4A66] focus:outline-none"
+                    disabled={deleting}
+                  >
+                    <i className={`bi ${showDeletePassword ? "bi-eye-slash" : "bi-eye"}`} style={{ fontSize: "18px" }}></i>
+                  </button>
+                </div>
               </div>
 
               <div>

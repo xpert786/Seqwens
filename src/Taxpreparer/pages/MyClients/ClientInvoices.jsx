@@ -4,6 +4,7 @@ import { File } from "../../component/icons";
 import { FaEye, FaFilePdf } from "react-icons/fa";
 import { taxPreparerClientAPI, handleAPIError } from "../../../ClientOnboarding/utils/apiUtils";
 import TaxPreparerInvoiceDetailsModal from "../Billing/TaxPreparerInvoiceDetailsModal";
+import TaxPreparerCreateInvoiceModal from "../Billing/TaxPreparerCreateInvoiceModal";
 
 export default function ClientInvoices() {
   const { clientId } = useParams();
@@ -40,6 +41,9 @@ export default function ClientInvoices() {
   // Invoice detail modal state
   const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
+
+  // Create invoice modal state
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
 
   // Fetch invoices from API
   const fetchInvoices = async () => {
@@ -268,6 +272,16 @@ export default function ClientInvoices() {
             </h3>
             <p className="text-sm text-gray-500">Manage and track client invoices</p>
           </div>
+          <button
+            onClick={() => setShowCreateInvoiceModal(true)}
+            className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
+            style={{ backgroundColor: '#F56D2D' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 1V7M7 7V13M7 7H13M7 7H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Create Invoice
+          </button>
         </div>
 
         {/* Summary Cards */}
@@ -662,6 +676,19 @@ export default function ClientInvoices() {
           }}
           invoiceId={selectedInvoiceId}
           clientId={clientId}
+        />
+      )}
+
+      {/* Create Invoice Modal */}
+      {showCreateInvoiceModal && (
+        <TaxPreparerCreateInvoiceModal
+          onClose={() => setShowCreateInvoiceModal(false)}
+          onInvoiceCreated={() => {
+            setShowCreateInvoiceModal(false);
+            // Refresh invoices list
+            fetchInvoices();
+          }}
+          preSelectedClient={clientInfo}
         />
       )}
       </div>

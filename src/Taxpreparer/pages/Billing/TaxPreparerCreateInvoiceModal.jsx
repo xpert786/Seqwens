@@ -7,9 +7,9 @@ import DateInput from '../../../components/DateInput';
 import '../../../FirmAdmin/styles/CreateInvoiceModel.css';
 const API_BASE_URL = getApiBaseUrl();
 
-export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreated }) {
+export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreated, preSelectedClient }) {
   const [invoiceData, setInvoiceData] = useState({
-    client_id: '',
+    client_id: preSelectedClient ? preSelectedClient.id : '',
     issue_date: '',
     due_date: ''
   });
@@ -19,9 +19,9 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
   ]);
 
   const [clients, setClients] = useState([]);
-  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [clientSearchTerm, setClientSearchTerm] = useState(preSelectedClient ? `${preSelectedClient.first_name} ${preSelectedClient.last_name}` : '');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
-  const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(preSelectedClient || null);
   const [loading, setLoading] = useState(false);
   const [loadingClients, setLoadingClients] = useState(true);
   const [clientsError, setClientsError] = useState('');
@@ -424,7 +424,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
             </h5>
             <div>
               <label className="block text-sm font-medium mb-2 font-[BasisGrotesquePro]" style={{ color: '#374151' }}>
-                Select Client <span className="text-red-500">*</span>
+                {preSelectedClient ? 'Client' : 'Select Client'} <span className="text-red-500">*</span>
               </label>
               {loadingClients ? (
                 <div className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 bg-gray-50 text-gray-500 text-sm">
@@ -433,6 +433,10 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
               ) : clientsError ? (
                 <div className="w-full !border border-red-200 rounded-lg px-3 py-2 bg-red-50 text-red-600 text-sm">
                   {clientsError}
+                </div>
+              ) : preSelectedClient ? (
+                <div className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed">
+                  {preSelectedClient.first_name} {preSelectedClient.last_name} {preSelectedClient.email ? `(${preSelectedClient.email})` : ''}
                 </div>
               ) : (
                 <select

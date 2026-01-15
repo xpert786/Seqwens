@@ -389,31 +389,59 @@ export default function FirmDetails() {
 
     const handleFirmLogin = async () => {
         if (!firmId) return;
-        
+
         try {
             setLoggingIn(true);
             const response = await superAdminAPI.generateFirmLogin(firmId);
 
             if (response.success && response.data) {
                 const { access_token, refresh_token, user, firm } = response.data;
-                
-                // STEP 1: Completely clear all superadmin session data using utility function
+
+                // STEP 1: Store original Super Admin session data for revert functionality
+                const originalSessionData = {
+                    accessToken: localStorage.getItem('accessToken'),
+                    refreshToken: localStorage.getItem('refreshToken'),
+                    userData: localStorage.getItem('userData'),
+                    userType: localStorage.getItem('userType'),
+                    isLoggedIn: localStorage.getItem('isLoggedIn'),
+                    rememberMe: localStorage.getItem('rememberMe'),
+                    sessionAccessToken: sessionStorage.getItem('accessToken'),
+                    sessionRefreshToken: sessionStorage.getItem('refreshToken'),
+                    sessionUserData: sessionStorage.getItem('userData'),
+                    sessionUserType: sessionStorage.getItem('userType'),
+                    sessionIsLoggedIn: sessionStorage.getItem('isLoggedIn'),
+                    sessionRememberMe: sessionStorage.getItem('rememberMe'),
+                    timestamp: Date.now()
+                };
+
+                // Store in sessionStorage so it's cleared when browser tab closes
+                sessionStorage.setItem('superAdminImpersonationData', JSON.stringify(originalSessionData));
+
+                // Also store firm info for UI display
+                const impersonationInfo = {
+                    firmName: firm?.name || 'Unknown Firm',
+                    firmId: firm?.id || firmId,
+                    impersonatedAt: new Date().toISOString()
+                };
+                sessionStorage.setItem('impersonationInfo', JSON.stringify(impersonationInfo));
+
+                // STEP 2: Completely clear all superadmin session data using utility function
                 clearUserData();
-                
+
                 // Also clear any additional superadmin-specific data
                 localStorage.removeItem('firmLoginData');
                 sessionStorage.removeItem('firmLoginData');
-                
-                // STEP 2: Set new firm admin tokens and user data
+
+                // STEP 3: Set new firm admin tokens and user data
                 // Use setTokens to properly set tokens
                 setTokens(access_token, refresh_token, true);
-                
+
                 // Set user data in both storages for consistency
                 localStorage.setItem('userData', JSON.stringify(user));
                 localStorage.setItem('userType', user.user_type || 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('rememberMe', 'true');
-                
+
                 sessionStorage.setItem('accessToken', access_token);
                 sessionStorage.setItem('refreshToken', refresh_token);
                 sessionStorage.setItem('userData', JSON.stringify(user));
@@ -426,7 +454,7 @@ export default function FirmDetails() {
                     autoClose: 2000,
                 });
 
-                // STEP 3: Navigate to firm admin dashboard with a small delay to ensure state is cleared
+                // STEP 4: Navigate to firm admin dashboard with a small delay to ensure state is cleared
                 // Use window.location.href for a hard navigation to ensure clean state and prevent loops
                 setTimeout(() => {
                     window.location.href = getPathWithPrefix('/firmadmin');

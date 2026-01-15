@@ -18,6 +18,7 @@ import MessagePage from './pages/Messages/Messages';
 import MyClients from './pages/MyClients/MyClients';
 import ClientDetails from './pages/MyClients/ClientDetails';
 import ClientDocuments from './pages/MyClients/ClientDocuments';
+import ClientSecurity from './pages/MyClients/ClientSecurity';
 import InvoicesPage from './pages/MyClients/InvoicesPage';
 import SchedulePage from './pages/MyClients/SchedulePage';
 import ClientESignLogs from './pages/MyClients/ClientESignLogs';
@@ -181,6 +182,7 @@ export default function TaxRoutes() {
           <Route index element={<MyClients />} />
           <Route path=":clientId" element={<ClientDetails />}>
             <Route path="documents" element={<ClientDocuments />} />
+            <Route path="security" element={<ClientSecurity />} />
             <Route path="invoices" element={<InvoicesPage />} />
             <Route path="schedule" element={<SchedulePage />} />
             <Route path="esign-logs" element={<ClientESignLogs />} />

@@ -65,6 +65,10 @@ export default function ClientDetails() {
   const isInvoices = currentPath.includes('/invoices');
   const isSchedulePath = currentPath.includes('/schedule');
   const isESignLogs = currentPath.includes('/esign-logs');
+  const isSecurity = currentPath.includes('/security');
+
+  // Tab state for sections that don't use routing
+  const [activeTab, setActiveTab] = useState('info');
   // If user is on invoices with ?view=schedule, treat Schedules as active
   const viewParam = new URLSearchParams(location.search).get('view');
   const isScheduleViaQuery = isInvoices && viewParam === 'schedule';
@@ -84,6 +88,8 @@ export default function ClientDetails() {
   const [phoneCountry, setPhoneCountry] = useState('us');
   const [originalFormData, setOriginalFormData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [canEditClient, setCanEditClient] = useState(false);
   const [customTags, setCustomTags] = useState([]);
   const [originalCustomTags, setOriginalCustomTags] = useState([]);
@@ -614,11 +620,14 @@ export default function ClientDetails() {
   };
 
   // Handle navigation with unsaved changes check
-  const handleNavigation = (targetPath) => {
+  const handleNavigation = (targetPath, tab = null) => {
     if (hasUnsavedChanges()) {
       setPendingNavigation(targetPath);
-      setShowUnsavedChangesModal(true);
+      setShowUnsavedChangesModal(true);     
     } else {
+      if (tab) {
+        setActiveTab(tab);
+      }
       navigate(targetPath);
     }
   };
@@ -740,6 +749,72 @@ export default function ClientDetails() {
     }
     setCustomTags(originalCustomTags);
     setNewTagInput("");
+  };
+
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState({});
+
+  // Validate password inputs
+  const validatePasswords = () => {
+    const errors = {};
+
+    if (!newPassword.trim()) {
+      errors.newPassword = 'New password is required';
+    } else if (newPassword.length < 8) {
+      errors.newPassword = 'Password must be at least 8 characters long';
+    }
+
+    if (!confirmPassword.trim()) {
+      errors.confirmPassword = 'Please confirm the new password';
+    } else if (newPassword !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    setPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handlePasswordReset = async () => {
+    if (!clientId) {
+      toast.error('Client ID is missing');
+      return;
+    }
+
+    if (!validatePasswords()) {
+      return;
+    }
+
+    try {
+      setResettingPassword(true);
+
+      const response = await taxPreparerClientAPI.resetTaxpayerPassword(clientId, {
+        new_password: newPassword,
+        confirm_password: confirmPassword
+      });
+
+      if (response.success) {
+        toast.success(response.message || 'Password reset successfully.', {
+          position: "top-right",
+          autoClose: 5000,
+        });
+        // Close modal and reset form
+        setShowPasswordDialog(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        setPasswordErrors({});
+      } else {
+        throw new Error(response.message || 'Failed to reset password');
+      }
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      toast.error(err.message || 'Failed to reset password. Please try again.', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   // Create new folder
@@ -1367,18 +1442,17 @@ export default function ClientDetails() {
               whiteSpace: "nowrap",
               padding: "5px 12px",
               border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
-              backgroundColor: currentPath === `/taxdashboard/clients/${clientId}`
+              backgroundColor: activeTab === 'info'
                 ? "var(--Palette2-TealBlue-900, #00C0C6)"
                 : "#fff",
-              color: currentPath === `/taxdashboard/clients/${clientId}`
+              color: activeTab === 'info'
                 ? "#ffffff"
                 : "var(--Palette2-Dark-blue-900, #3B4A66)",
               borderRadius: "7px",
             }}
-            onClick={() => {
-              if (currentPath !== `/taxdashboard/clients/${clientId}`) {
-                handleNavigation(`/taxdashboard/clients/${clientId}`);
-              }
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavigation(`/taxdashboard/clients/${clientId}`, "info");
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--Palette2-TealBlue-900, #00C0C6)";
@@ -1386,10 +1460,10 @@ export default function ClientDetails() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor =
-                currentPath === `/taxdashboard/clients/${clientId}`
+                activeTab === 'info'
                   ? "var(--Palette2-TealBlue-900, #00C0C6)"
                   : "#fff";
-              e.currentTarget.style.color = currentPath === `/taxdashboard/clients/${clientId}` ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+              e.currentTarget.style.color = activeTab === 'info' ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
           >
             Info
@@ -1419,7 +1493,7 @@ export default function ClientDetails() {
                 : "#fff";
               e.currentTarget.style.color = isDocuments ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/documents`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/documents`, "documents")}
 
           >
             Documents
@@ -1448,7 +1522,7 @@ export default function ClientDetails() {
                 ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff";
               e.currentTarget.style.color = isInvoicesActive ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/invoices`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/invoices`, "invoices")}
           >
             Invoices
           </button>
@@ -1477,7 +1551,7 @@ export default function ClientDetails() {
                 : "#fff";
               e.currentTarget.style.color = isSchedule ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/schedule`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/schedule`, "schedule")}
           >
             Schedules
           </button>
@@ -1506,15 +1580,47 @@ export default function ClientDetails() {
                 : "#fff";
               e.currentTarget.style.color = isESignLogs ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
             }}
-            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/esign-logs`)}
+            onClick={() => handleNavigation(`/taxdashboard/clients/${clientId}/esign-logs`, "esign-logs")}
           >
             E-Sign Activity
+          </button>
+
+          {/* Security */}
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              display: "inline-flex",
+              width: "auto",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              border: "1px solid var(--Palette2-Dark-blue-100, #E8F0FF)",
+              backgroundColor: activeTab === 'security' ? "var(--Palette2-TealBlue-900, #00C0C6)" : "#fff",
+              color: activeTab === 'security' ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)",
+              borderRadius: "7px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "var(--Palette2-TealBlue-900, #00C0C6)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = activeTab === 'security'
+                ? "var(--Palette2-TealBlue-900, #00C0C6)"
+                : "#fff";
+              e.currentTarget.style.color = activeTab === 'security' ? "#ffffff" : "var(--Palette2-Dark-blue-900, #3B4A66)";
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavigation(`/taxdashboard/clients/${clientId}/security`, "security");
+            }}
+          >
+            Security
           </button>
         </div>
       </div>
       <Outlet />
 
-      {!(isDocuments || isInvoices || isSchedule || isESignLogs) && (
+      {!(isDocuments || isInvoices || isSchedule || isESignLogs || isSecurity) && activeTab === 'info' && (
         <div className="flex flex-col gap-6 mt-6">
           {/* Personal Information */}
           <div className="bg-white rounded-xl p-6 ">
@@ -2637,6 +2743,101 @@ export default function ClientDetails() {
               >
                 {loadingTask ? 'Creating...' : 'Create Task'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Password Reset Dialog */}
+      {showPasswordDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
+                  Set New Password
+                </h3>
+              </div>
+
+              <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-4">
+                Enter a new password for <strong>{client?.first_name} {client?.last_name}</strong>.
+                The new password will be set immediately.
+              </p>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                    New Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={resettingPassword}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] ${
+                      passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
+                    } ${resettingPassword ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    placeholder="Enter new password"
+                  />
+                  {passwordErrors.newPassword && (
+                    <p className="text-xs text-red-600 mt-1">{passwordErrors.newPassword}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-[BasisGrotesquePro] mb-1">
+                    Confirm Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={resettingPassword}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] ${
+                      passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    } ${resettingPassword ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    placeholder="Confirm new password"
+                  />
+                  {passwordErrors.confirmPassword && (
+                    <p className="text-xs text-red-600 mt-1">{passwordErrors.confirmPassword}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setShowPasswordDialog(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    setPasswordErrors({});
+                    setResettingPassword(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-[BasisGrotesquePro] text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePasswordReset}
+                  disabled={resettingPassword || !newPassword || !confirmPassword}
+                  className="flex-1 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resettingPassword ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Setting...
+                    </>
+                  ) : (
+                    'Set Password'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

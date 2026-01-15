@@ -21,6 +21,11 @@ const Security = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
+  
+  // Password visibility states
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const fetchSecurityPreferences = async () => {
@@ -265,37 +270,133 @@ const Security = () => {
       </h6>
       <form>
         <div className="mb-3">
-          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}>Current Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="Enter current password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}
-          />
+          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>Current Password</label>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showCurrentPassword ? "text" : "password"}
+              className="form-control"
+              placeholder="Enter current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              style={{ 
+                color: "#3B4A66", 
+                fontSize: "15px", 
+                fontWeight: "400", 
+                fontFamily: "BasisGrotesquePro",
+                padding: "8px 40px 8px 12px"
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                color: "#4B5563",
+                cursor: "pointer",
+                fontSize: "18px",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                zIndex: 10
+              }}
+            >
+              <i className={`bi ${showCurrentPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+            </button>
+          </div>
         </div>
         <div className="mb-3">
-          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}>New Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}
-          />
+          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>New Password</label>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showNewPassword ? "text" : "password"}
+              className="form-control"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{ 
+                color: "#3B4A66", 
+                fontSize: "15px", 
+                fontWeight: "400", 
+                fontFamily: "BasisGrotesquePro",
+                padding: "8px 40px 8px 12px"
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                color: "#4B5563",
+                cursor: "pointer",
+                fontSize: "18px",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                zIndex: 10
+              }}
+            >
+              <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+            </button>
+          </div>
         </div>
         <div className="mb-3">
-          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", }}>Confirm New Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "400", fontFamily: "BasisGrotesquePro", }}
-          />
+          <label className="form-label" style={{ color: "#3B4A66", fontSize: "15px", fontWeight: "500", fontFamily: "BasisGrotesquePro", marginBottom: "8px", display: "block" }}>Confirm New Password</label>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              className="form-control"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{ 
+                color: "#3B4A66", 
+                fontSize: "15px", 
+                fontWeight: "400", 
+                fontFamily: "BasisGrotesquePro",
+                padding: "8px 40px 8px 12px"
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                color: "#4B5563",
+                cursor: "pointer",
+                fontSize: "18px",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                zIndex: 10
+              }}
+            >
+              <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+            </button>
+          </div>
         </div>
 
 
@@ -322,25 +423,6 @@ const Security = () => {
       </form>
 
 
-
-      <button
-        className="btn d-flex align-items-center gap-2"
-        onClick={handleSave}
-        disabled={saving}
-        style={{
-          backgroundColor: saving ? "#F56D2D" : "#F56D2D",
-          opacity: saving ? 0.7 : 1,
-          color: "#fff",
-          fontWeight: "400",
-          fontSize: "15px",
-          fontFamily: "BasisGrotesquePro",
-          cursor: saving ? "not-allowed" : "pointer",
-          transition: "opacity 0.2s ease",
-        }}
-      >
-        <SaveIcon />
-        Save Security Settings
-      </button>
 
 
     </div>

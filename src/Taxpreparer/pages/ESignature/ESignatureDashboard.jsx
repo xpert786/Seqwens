@@ -485,17 +485,32 @@ export default function ESignatureDashboard() {
     if (!request.taxpayer_signed) {
       return false;
     }
-    
+
     // Check preparer signature if required
     if (request.preparer_must_sign === true && !request.preparer_signed) {
       return false;
     }
-    
+
     // Check spouse signature if required
     if (request.spouse_sign === true && !request.spouse_signed) {
       return false;
     }
-    
+
+    return true;
+  };
+
+  // Helper function to check if taxpayer and spouse (if required) have signed
+  const areTaxpayerAndSpouseSigned = (request) => {
+    // Check taxpayer signature
+    if (!request.taxpayer_signed) {
+      return false;
+    }
+
+    // Check spouse signature if required
+    if (request.spouse_sign === true && !request.spouse_signed) {
+      return false;
+    }
+
     return true;
   };
 
@@ -1277,8 +1292,9 @@ export default function ESignatureDashboard() {
                             Preview
                           </button>
                         )}
-                        {/* Annotate & Sign for Preparer Button - Show when preparer must sign and hasn't signed yet */}
-                        {request.preparer_must_sign === true && 
+                        {/* Annotate & Sign for Preparer Button - Show when taxpayer and spouse (if required) have signed */}
+                        {areTaxpayerAndSpouseSigned(request) &&
+                         request.preparer_must_sign === true &&
                          request.preparer_signed === false && (
                           <button
                             onClick={(e) => {

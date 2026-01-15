@@ -14,6 +14,7 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
     const [firmLogo, setFirmLogo] = useState(null);
     const [firmName, setFirmName] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [showCVV, setShowCVV] = useState(false);
     const itemsPerPage = 5;
 
     const handlePayNowClick = async (invoice) => {
@@ -669,7 +670,35 @@ const OutstandingTab = ({ invoices = [], summary = {} }) => {
 
                                     <Form.Group className="mb-2" style={{ width: '90px' }}>
                                         <Form.Label style={{ color: "#3B4A66", fontSize: "14px", fontWeight: "600", fontFamily: "BasisGrotesquePro" }}>CVV</Form.Label>
-                                        <Form.Control size="sm" style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66" }} type="password" placeholder="123" />
+                                        <div style={{ position: "relative" }}>
+                                            <Form.Control 
+                                                size="sm" 
+                                                style={{ fontFamily: "BasisGrotesquePro", color: "#3B4A66", paddingRight: "30px" }} 
+                                                type={showCVV ? "text" : "password"} 
+                                                placeholder="123" 
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCVV(!showCVV)}
+                                                style={{
+                                                    position: "absolute",
+                                                    right: "8px",
+                                                    top: "50%",
+                                                    transform: "translateY(-50%)",
+                                                    background: "none",
+                                                    border: "none",
+                                                    color: "#4B5563",
+                                                    cursor: "pointer",
+                                                    fontSize: "14px",
+                                                    padding: "0",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    zIndex: 10
+                                                }}
+                                            >
+                                                <i className={`bi ${showCVV ? "bi-eye-slash" : "bi-eye"}`}></i>
+                                            </button>
+                                        </div>
                                     </Form.Group>
                                 </div>
                             </div>
