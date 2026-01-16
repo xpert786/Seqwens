@@ -2,6 +2,7 @@
 
 /* Responsive for screens below 767px */
 @media (max-width: 767px) {
+
   /* Main container */
   .clientmanage-header {
     flex-direction: column !important;
@@ -50,6 +51,82 @@
     width: 16px !important;
     height: 16px !important;
   }
+
+  /* Hide the table header on mobile as we'll switch to card view */
+  .client-list-card .row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Make the invite card stack vertically */
+  .client-list-card .client-card>div {
+    flex-direction: column;
+    padding: 16px !important;
+  }
+
+  /* Ensure full width and vertical spacing for the content section */
+  .client-list-card .client-card>div>div:first-child {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Adjust the initials avatar and text container layout */
+  .client-list-card .client-card>div>div:first-child>div:nth-child(2) {
+    width: 100%;
+  }
+
+  /* Actions container (assign/share buttons) */
+  .client-list-card .client-card>div>div:last-child {
+    width: 100%;
+    margin-left: 0 !important;
+    align-items: flex-start !important;
+    /* Align buttons to the left */
+    /* Buttons side-by-side or wrapped */
+    flex-wrap: wrap;
+    /* Allow wrapping if needed */
+    gap: 8px;
+    /* Consistent gap */
+  }
+
+  /* Remove margin-bottom from the "Pending" badge to treat it as a standalone element */
+  .client-list-card .client-card>div>div:last-child .badge {
+    margin-bottom: 0px !important;
+    display: inline-block;
+    width: 100%;
+  }
+
+  /* Full width buttons for easier tapping on mobile, or keep auto/flex based on preference */
+  /* Here we keep them somewhat compact but ensure they are easy to hit */
+  .client-list-card .client-card>div>div:last-child button {
+    flex: 1 1 auto;
+    /* Allow buttons to grow/shrink equally */
+    justify-content: center;
+    min-width: 120px;
+    /* Minimum width for touch targets */
+  }
+
+  /* Adjust padding and font sizes for mobile optimization */
+  .client-list-card h6 {
+    font-size: 1rem;
+  }
+
+  .client-list-card .text-muted.small {
+    font-size: 0.65rem;
+  }
+
+  /* Pagination improvements for mobile */
+  .client-list-card .d-flex.justify-content-between.align-items-center.mt-4 {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start !important;
+  }
+
+  .client-list-card .d-flex.justify-content-between.align-items-center.mt-4 .d-flex {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* Phone Input Dropdown Fix for Share Taxpayer Invite modal */
@@ -61,7 +138,8 @@
 
 .invite-actions-phone-container {
   position: relative;
-  z-index: 2000; /* Ensure container is above other modal elements */
+  z-index: 2000;
+  /* Ensure container is above other modal elements */
 }
 
 /* Override react-phone-input-2 default 300px widths inside Share Taxpayer Invite modal */
@@ -77,36 +155,50 @@
 /* Ensure the dropdown opens below the input and above modal footer */
 .invite-actions-phone-container .country-list {
   position: absolute !important;
-  top: calc(100% + 6px) !important; /* Position below the input */
+  top: calc(100% + 6px) !important;
+  /* Position below the input */
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
-  min-width: 100% !important; /* Ensure it takes full width */
-  max-width: 100% !important; /* Ensure it takes full width */
+  min-width: 100% !important;
+  /* Ensure it takes full width */
+  max-width: 100% !important;
+  /* Ensure it takes full width */
   box-sizing: border-box !important;
-  margin: 6px 0 0 0 !important; /* Remove default margin */
-  z-index: 2002 !important; /* Above modal content and footer */
+  margin: 6px 0 0 0 !important;
+  /* Remove default margin */
+  z-index: 2002 !important;
+  /* Above modal content and footer */
 
   /* General styling for the list */
   background: #fff !important;
   border-radius: 10px;
   overflow: hidden;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* Add subtle shadow */
 }
 
-.invite-actions-phone-container .flag-dropdown { z-index: 2001 !important; }
-.invite-actions-phone-container .flag-dropdown.open { width: 100% !important; left: 0 !important; }
+.invite-actions-phone-container .flag-dropdown {
+  z-index: 2001 !important;
+}
+
+.invite-actions-phone-container .flag-dropdown.open {
+  width: 100% !important;
+  left: 0 !important;
+}
 
 /* Improve country dropdown layout (flag/name spacing + remove unwanted lines) */
 .invite-actions-phone-container.react-tel-input .country-list .search {
   padding: 8px 10px !important;
-  border-bottom: none !important; /* Remove line under search */
+  border-bottom: none !important;
+  /* Remove line under search */
   margin: 0 !important;
   position: sticky !important;
   top: 0 !important;
   background: #fff !important;
-  z-index: 1 !important; /* Ensure search bar is above list items */
+  z-index: 1 !important;
+  /* Ensure search bar is above list items */
 }
 
 .invite-actions-phone-container.react-tel-input .country-list .search input {
@@ -119,23 +211,29 @@
 }
 
 .invite-actions-phone-container.react-tel-input .country-list .divider {
-  display: none !important; /* Remove separator lines */
+  display: none !important;
+  /* Remove separator lines */
 }
 
 .invite-actions-phone-container.react-tel-input .country-list .country {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important; /* Spacing between flag and name */
+  gap: 12px !important;
+  /* Spacing between flag and name */
   padding: 8px 12px !important;
-  border: none !important; /* Remove default borders */
+  border: none !important;
+  /* Remove default borders */
   position: relative !important;
-  z-index: 0 !important; /* Ensure country items are below search bar */
+  z-index: 0 !important;
+  /* Ensure country items are below search bar */
 }
 
 .invite-actions-phone-container.react-tel-input .country-list .country .flag {
   margin: 0 !important;
-  flex: 0 0 18px; /* Fixed width for flag to align names */
-  position: absolute; /* Position flag within the padding */
+  flex: 0 0 18px;
+  /* Fixed width for flag to align names */
+  position: absolute;
+  /* Position flag within the padding */
   left: 12px;
   top: 8px;
 }
@@ -145,7 +243,8 @@
   flex: 1 1 auto !important;
   min-width: 0;
   line-height: 1.2;
-  padding-left: 34px; /* Create space for the flag */
+  padding-left: 34px;
+  /* Create space for the flag */
 }
 
 .invite-actions-phone-container.react-tel-input .country-list .country .dial-code {
@@ -155,4 +254,3 @@
   color: #6B7280 !important;
   white-space: nowrap;
 }
-

@@ -77,14 +77,14 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
           <button
             type="button"
             onClick={() => setSignatureType('draw')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors font-[BasisGrotesquePro] ${
-              signatureType === 'draw'
-                ? 'text-white'
-                : 'text-gray-700'
-            }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro] ${signatureType === 'draw'
+              ? 'text-white'
+              : 'text-gray-700'
+              }`}
             style={{
               backgroundColor: signatureType === 'draw' ? '#F56D2D' : '#F3F7FF',
-              border: signatureType === 'draw' ? '1px solid #F56D2D' : '1px solid #E8F0FF'
+              border: signatureType === 'draw' ? '1px solid #F56D2D' : '1px solid #E8F0FF',
+              borderRadius: '8px'
             }}
             disabled={loading}
             onMouseEnter={(e) => {
@@ -103,14 +103,14 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
           <button
             type="button"
             onClick={() => setSignatureType('type')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors font-[BasisGrotesquePro] ${
-              signatureType === 'type'
-                ? 'text-white'
-                : 'text-gray-700'
-            }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro] ${signatureType === 'type'
+              ? 'text-white'
+              : 'text-gray-700'
+              }`}
             style={{
               backgroundColor: signatureType === 'type' ? '#F56D2D' : '#F3F7FF',
-              border: signatureType === 'type' ? '1px solid #F56D2D' : '1px solid #E8F0FF'
+              border: signatureType === 'type' ? '1px solid #F56D2D' : '1px solid #E8F0FF',
+              borderRadius: '8px'
             }}
             disabled={loading}
             onMouseEnter={(e) => {
@@ -191,11 +191,12 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
           <button
             type="button"
             onClick={handleClose}
-            className="inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro]"
+            className="inline-flex items-center justify-center border px-4 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro]"
             style={{
               color: '#4B5563',
               backgroundColor: '#ffffff',
-              borderColor: '#E8F0FF'
+              borderColor: '#E8F0FF',
+              borderRadius: '8px'
             }}
             disabled={loading}
             onMouseEnter={(e) => {
@@ -210,11 +211,12 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, loading = fa
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-5 py-2 text-sm font-medium transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: '#F56D2D',
               color: '#ffffff',
-              border: '1px solid #F56D2D'
+              border: '1px solid #F56D2D',
+              borderRadius: '8px'
             }}
             disabled={loading}
             onMouseEnter={(e) => {

@@ -8,6 +8,7 @@ import { AddClient, Archived, BulkAction, BulkImport, ExportReport, Filter, Sear
 import '../../../Taxpreparer/styles/taxdashboard.css';
 import '../../styles/ClientManage.css';
 import BulkActionModal from './BulkAction';
+
 import BulkImportModal from './BulkImportModal';
 import BulkTaxpayerImportModal from './BulkTaxpayerImportModal';
 import AddClientModal from "./AddClientModal";
@@ -385,7 +386,7 @@ export default function ClientManage() {
               const profile = client.profile || client;
               const firstName = profile.first_name || client.first_name || '';
               const lastName = profile.last_name || client.last_name || '';
-              
+
               // Construct name from first_name and last_name, prioritizing first_name + last_name
               let fullName = '';
               if (firstName || lastName) {
@@ -401,14 +402,14 @@ export default function ClientManage() {
                 // Last resort: use email
                 fullName = profile.email || client.email || 'Unknown Client';
               }
-              
+
               console.log('Client mapping:', {
                 original: client,
                 firstName,
                 lastName,
                 fullName
               });
-              
+
               return {
                 id: client.id || profile.id,
                 name: fullName,
@@ -452,7 +453,7 @@ export default function ClientManage() {
   // Filter clients by link status
   const filteredClients = useMemo(() => {
     if (!clients || clients.length === 0) return [];
-    
+
     const filtered = clients.filter(client => {
       if (linkStatusFilter === 'linked') {
         return client.is_linked === true || client.link_status === 'linked';
@@ -461,7 +462,7 @@ export default function ClientManage() {
       }
       return true; // 'all' - show all clients
     });
-    
+
     return filtered;
   }, [clients, linkStatusFilter]);
 
@@ -611,7 +612,7 @@ export default function ClientManage() {
       firm_name: inviteData.firm_name,
       is_expired: inviteData.is_expired
     };
-    
+
     setActiveInviteDetails(mappedInviteData);
     setShowInviteActionsModal(true);
     if (mappedInviteData?.email) {
@@ -619,7 +620,7 @@ export default function ClientManage() {
     } else {
       setEditedInviteEmail('');
     }
-    
+
     // If invite link is missing, try to fetch it
     if (!mappedInviteData.invite_link && mappedInviteData.invite_id) {
       try {
@@ -773,7 +774,7 @@ export default function ClientManage() {
         throw new Error("No invite ID or client ID available");
       }
       payload.regenerate = true;
-      
+
       const response = await firmAdminClientsAPI.generateInviteLink(payload);
       if (response.success) {
         const newLink = response.data?.invite_link || response.invite_link;
@@ -820,7 +821,7 @@ export default function ClientManage() {
 
   const handleDeleteInvite = () => {
     const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
-    
+
     if (!inviteId) {
       toast.error("No invite found to delete.", getToastOptions());
       return;
@@ -832,7 +833,7 @@ export default function ClientManage() {
 
   const confirmDeleteInvite = async () => {
     const inviteId = activeInviteDetails?.id || activeInviteDetails?.invite_id;
-    
+
     if (!inviteId) {
       toast.error("No invite found to delete.", getToastOptions());
       setShowDeleteInviteConfirmModal(false);
@@ -842,13 +843,13 @@ export default function ClientManage() {
     try {
       setDeletingInvite(true);
       setShowDeleteInviteConfirmModal(false);
-      
+
       const response = await firmAdminClientsAPI.deleteInvite(inviteId);
 
       if (response.success) {
         toast.success(response.message || "Invitation deleted successfully.", getToastOptions());
         closeInviteActionsModal();
-        
+
         // Refresh pending invites list
         if (activeTab === 'pending-invites') {
           await fetchPendingInvites(pendingInvitesPagination.page);
@@ -864,7 +865,7 @@ export default function ClientManage() {
     }
   };
 
-  const inviteExpiresOn = activeInviteDetails?.expires_at 
+  const inviteExpiresOn = activeInviteDetails?.expires_at
     ? new Date(activeInviteDetails.expires_at).toLocaleDateString()
     : null;
 
@@ -918,7 +919,7 @@ export default function ClientManage() {
             const profile = client.profile || client;
             const firstName = profile.first_name || client.first_name || '';
             const lastName = profile.last_name || client.last_name || '';
-            
+
             let fullName = '';
             if (firstName || lastName) {
               fullName = `${firstName} ${lastName}`.trim();
@@ -929,7 +930,7 @@ export default function ClientManage() {
             } else {
               fullName = profile.email || client.email || 'Unknown Client';
             }
-            
+
             return {
               id: client.id || profile.id,
               name: fullName,
@@ -985,7 +986,7 @@ export default function ClientManage() {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success(result.message || 'Client deleted successfully', getToastOptions());
         setShowDeleteConfirmModal(false);
@@ -1009,12 +1010,12 @@ export default function ClientManage() {
     try {
       setReassigning(true);
       const token = getAccessToken();
-      
+
       // Build payload based on whether it's a firm or tax preparer
-      const payload = isFirm 
+      const payload = isFirm
         ? { firm_id: parseInt(selectedStaffId) }
         : { tax_preparer_id: parseInt(selectedStaffId) };
-      
+
       const response = await fetchWithCors(`${API_BASE_URL}/firm/taxpayers/${clientId}/reassign-tax-preparer/`, {
         method: 'POST',
         headers: {
@@ -1030,9 +1031,9 @@ export default function ClientManage() {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        const successMessage = isAssignMode 
+        const successMessage = isAssignMode
           ? (result.message || 'Tax preparer assigned successfully')
           : (result.message || 'Tax preparer reassigned successfully');
         toast.success(successMessage, getToastOptions());
@@ -1316,7 +1317,7 @@ export default function ClientManage() {
           {/* Top Row - 2-3 buttons */}
           <div className="flex flex-wrap items-center gap-2 clientmanage-actions-top-row">
             {!advancedReportingEnabled && (
-              <button 
+              <button
                 className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
                 onClick={() => setShowBulkTaxpayerImportModal(true)}
               >
@@ -1324,7 +1325,7 @@ export default function ClientManage() {
                 Bulk Import Taxpayers
               </button>
             )}
-            <button 
+            <button
               className="px-3 py-2 text-white bg-orange-500 border border-orange-500 !rounded-[7px] hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
               onClick={() => setShowAddClientModal(true)}
             >
@@ -1419,7 +1420,7 @@ export default function ClientManage() {
       </div>
 
       {/* Tabs */}
-      <div className="d-flex gap-2 mb-4 align-items-center" style={{ 
+      <div className="d-flex gap-2 mb-4 align-items-center" style={{
         borderBottom: '2px solid #E8F0FF',
         paddingBottom: '0',
         marginTop: '20px',
@@ -1459,7 +1460,7 @@ export default function ClientManage() {
         >
           Pending Invites
           {(pendingInvites.length > 0 || pendingInvitesPagination.total_count > 0) && (
-            <span className="badge bg-danger text-white ms-2" style={{ 
+            <span className="badge bg-danger text-white ms-2" style={{
               fontSize: '10px',
               padding: '2px 6px',
               borderRadius: '10px',
@@ -1486,7 +1487,7 @@ export default function ClientManage() {
         >
           Unlinked Taxpayers
           {(unlinkedTaxpayers.length > 0 || unlinkedTaxpayersPagination.total_count > 0) && (
-            <span className="badge bg-warning ms-2" style={{ 
+            <span className="badge bg-warning ms-2" style={{
               fontSize: '10px',
               padding: '2px 6px',
               borderRadius: '10px'
@@ -1533,7 +1534,7 @@ export default function ClientManage() {
                       }}
                     >
                       <div className="d-flex justify-content-between align-items-start" style={{ gap: '12px' }}>
-                        <div 
+                        <div
                           className="d-flex gap-3 flex-grow-1"
                           onClick={() => navigate(`/firmadmin/clients/${taxpayer.id}`)}
                           style={{ cursor: "pointer" }}
@@ -1574,11 +1575,11 @@ export default function ClientManage() {
                             )}
                             <div className="d-flex flex-wrap gap-2 mt-2">
                               {taxpayer.is_active ? (
-                                <span className="badge bg-success" style={{ fontSize: '10px' }}>
+                                <span className="badge bg-success" style={{ fontSize: '10px', color: "#ffffff !important" }}>
                                   Active
                                 </span>
                               ) : (
-                                <span className="badge bg-secondary" style={{ fontSize: '10px' }}>
+                                <span className="badge bg-secondary" style={{ fontSize: '10px', color: "white" }}>
                                   Inactive
                                 </span>
                               )}
@@ -1708,7 +1709,7 @@ export default function ClientManage() {
             <>
               <div className="row g-3">
                 {pendingInvites.map((invite) => (
-                  <div key={invite.id} className="col-md-6 col-12">
+                  <div key={invite.id} className="">
                     <div
                       className="card client-card"
                       onClick={() => navigate(`/firmadmin/pending-invites/${invite.id || invite.invite_id || invite.client_id}`)}
@@ -1717,7 +1718,7 @@ export default function ClientManage() {
                         cursor: "pointer"
                       }}
                     >
-                      <div className="d-flex justify-content-between align-items-start">
+                      <div className="d-flex justify-content-between align-items-start p-6">
                         <div className="d-flex gap-3">
                           <div
                             className="client-initials"
@@ -1741,12 +1742,12 @@ export default function ClientManage() {
                             <div className="fw-semibold mb-1">
                               {invite.first_name} {invite.last_name}
                             </div>
-                            <div className="text-muted small mb-2">
+                            <div className="text-muted small mb-2 d-flex align-items-center gap-1">
                               <FaEnvelope className="me-1" size={12} />
                               {invite.email}
                             </div>
                             {invite.phone_number && (
-                              <div className="text-muted small mb-2">
+                              <div className="text-muted small mb-2 d-flex align-items-center gap-1">
                                 <FaPhone className="me-1" size={12} />
                                 {invite.phone_number}
                               </div>
@@ -1770,7 +1771,7 @@ export default function ClientManage() {
                           </div>
                         </div>
                         <div className="d-flex flex-column gap-2 align-items-end" style={{ marginLeft: '12px', minWidth: 'fit-content' }}>
-                          <span className="badge bg-warning" style={{ fontSize: '10px', marginBottom: '4px' }}>
+                          <span className="badge bg-warning" style={{ fontSize: '10px' }}>
                             Pending
                           </span>
                           <button
@@ -1809,7 +1810,7 @@ export default function ClientManage() {
                             Assign
                           </button>
                           <button
-                            className="btn btn-sm"
+                            className="btn btn-sm d-flex align-items-center justify-content-center gap-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               openInviteActionsModal(invite);
@@ -1823,29 +1824,13 @@ export default function ClientManage() {
                               padding: '6px 12px',
                               fontSize: '12px',
                               fontWeight: '500',
-                              whiteSpace: 'nowrap'
+                              whiteSpace: 'nowrap',
+                              display: 'inline-flex' // Ensures the button behaves correctly if not in a flex container
                             }}
                           >
-                            <FaLink className="me-1" size={11} />
-                            Share Invite
+                            <FaLink size={11} />
+                            <span>Share Invite</span>
                           </button>
-                          {invite.invite_link && (
-                            <button
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(invite.invite_link);
-                                toast.success('Invite link copied to clipboard!');
-                              }}
-                              title="Copy invite link"
-                              style={{
-                                fontSize: '11px',
-                                padding: '4px 8px'
-                              }}
-                            >
-                              <FaCopy size={11} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -1886,277 +1871,271 @@ export default function ClientManage() {
 
       {/* Client List Section - Only show for clients tab */}
       {activeTab === 'clients' && (
-      <div className="bg-white rounded-lg border border-gray-200">
-        {/* Section Header */}
-        <div className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h4 className="taxdashboardr-titler text-lg sm:text-xl">
-                All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
-              </h4>
-              <h5 className="taxdashboard-subtitle text-sm sm:text-base">Complete list of firm clients with status and assignment information</h5>
+        <div className="bg-white rounded-lg border border-gray-200">
+          {/* Section Header */}
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h4 className="taxdashboardr-titler text-lg sm:text-xl">
+                  All Clients ({clientsLoading ? '...' : clientsError ? 'Error' : clients.length})
+                </h4>
+                <h5 className="taxdashboard-subtitle text-sm sm:text-base">Complete list of firm clients with status and assignment information</h5>
+              </div>
             </div>
+            {clientsError && (
+              <div className="mt-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+                {clientsError}
+              </div>
+            )}
           </div>
-          {clientsError && (
-            <div className="mt-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
-              {clientsError}
-            </div>
-          )}
-        </div>
 
-        {/* Toolbar - Only show for clients tab */}
-        {activeTab === 'clients' && (
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Search clients by name, email or company.."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    setCurrentPage(1);
-                  }
-                }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <SearchIcon />
-              </div>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            {/* Active/Inactive Filter Button */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <button
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    activeFilter === 'true'
-                      ? 'bg-[#00C0C6] text-white'
-                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setActiveFilter('true');
-                    setCurrentPage(1);
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
-                >
-                  Active
-                </button>
-                <button
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    activeFilter === 'false'
-                      ? 'bg-[#00C0C6] text-white'
-                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setActiveFilter('false');
-                    setCurrentPage(1);
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
-                >
-                  Inactive
-                </button>
-                <button
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    activeFilter === 'all'
-                      ? 'bg-[#00C0C6] text-white'
-                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setActiveFilter('all');
-                    setCurrentPage(1);
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
-                >
-                  All
-                </button>
-              </div>
-              
-              {/* Link Status Filter */}
-              <div className="flex items-center gap-2 border-l border-gray-300 pl-2 ml-2">
-                <span className="text-xs text-gray-600 font-[BasisGrotesquePro] mr-1">Link:</span>
-                <button
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    linkStatusFilter === 'all'
-                      ? 'bg-[#00C0C6] text-white'
-                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setLinkStatusFilter('all');
-                    setCurrentPage(1);
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
-                >
-                  All
-                </button>
-                <button
-                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
-                    linkStatusFilter === 'linked'
-                      ? 'bg-[#00C0C6] text-white'
-                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setLinkStatusFilter('linked');
-                    setCurrentPage(1);
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Linked
-                </button>
-                <button
-                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
-                    linkStatusFilter === 'unlinked'
-                      ? 'bg-[#00C0C6] text-white'
-                      : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setLinkStatusFilter('unlinked');
-                    setCurrentPage(1);
-                  }}
-                  style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Unlinked
-                </button>
-              </div>
-            </div>
-            {/* <button
+          {/* Toolbar - Only show for clients tab */}
+          {activeTab === 'clients' && (
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Search clients by name, email or company.."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setCurrentPage(1);
+                      }
+                    }}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
+                  />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <SearchIcon />
+                  </div>
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {/* Active/Inactive Filter Button */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'true'
+                        ? 'bg-[#00C0C6] text-white'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setActiveFilter('true');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                    >
+                      Active
+                    </button>
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'false'
+                        ? 'bg-[#00C0C6] text-white'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setActiveFilter('false');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                    >
+                      Inactive
+                    </button>
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'all'
+                        ? 'bg-[#00C0C6] text-white'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setActiveFilter('all');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                    >
+                      All
+                    </button>
+                  </div>
+
+                  {/* Link Status Filter */}
+                  <div className="flex items-center gap-2 border-l border-gray-300 pl-2 ml-2">
+                    <span className="text-xs text-gray-600 font-[BasisGrotesquePro] mr-1">Link:</span>
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${linkStatusFilter === 'all'
+                        ? 'bg-[#00C0C6] text-white'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setLinkStatusFilter('all');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${linkStatusFilter === 'linked'
+                        ? 'bg-[#00C0C6] text-white'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setLinkStatusFilter('linked');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Linked
+                    </button>
+                    <button
+                      className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${linkStatusFilter === 'unlinked'
+                        ? 'bg-[#00C0C6] text-white'
+                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setLinkStatusFilter('unlinked');
+                        setCurrentPage(1);
+                      }}
+                      style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Unlinked
+                    </button>
+                  </div>
+                </div>
+                {/* <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
               onClick={() => setShowFiltersModal(true)}
             > */}
-              {/* <Filter />
+                {/* <Filter />
               Filter */}
-            {/* </button> */}
-            {/* <button
+                {/* </button> */}
+                {/* <button
               className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}
               onClick={() => setShowBulkActionModal(true)}
             > */}
-              {/* <BulkAction />
+                {/* <BulkAction />
               Bulk Action ({selectedClients.length}) */}
-            {/* </button> */}
-            {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
+                {/* </button> */}
+                {/* <button className="btn taxdashboard-btn btn-contacted d-flex align-items-center gap-2" style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)' }}>
               <Archived className="w-4 h-4" />
               Archived Clients
             </button> */}
-          </div>
-        </div>
-        )}
-
-        {/* Search Bar for Pending Invites Tab */}
-        {activeTab === 'pending-invites' && (
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Search invites by name, email or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <SearchIcon />
               </div>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Client Table */}
-        <div className="overflow-x-auto px-4 sm:px-6">
-          <table className="min-w-full">
-            <thead className="">
-              <tr className="flex gap-2 sm:gap-4 md:gap-6 lg:gap-8">
-                <th className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                <th className="w-[120px] sm:w-[150px] md:w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="w-[100px] sm:w-[120px] md:w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
-                <th className="w-[90px] sm:w-[100px] md:w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
-                <th className="w-[120px] sm:w-[140px] md:w-[160px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Staff</th>
-                <th className="w-[70px] sm:w-[80px] md:w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
+          {/* Search Bar for Pending Invites Tab */}
+          {activeTab === 'pending-invites' && (
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="Search invites by name, email or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ backgroundColor: 'var(--Palette2-Dark-blue-50, #F3F7FF)' }}
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <SearchIcon />
+                </div>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
-            <tbody className="bg-white">
-              {clientsLoading ? (
-                <tr>
-                  <td colSpan="6" className="p-6 text-center text-gray-500">
-                    Loading clients...
-                  </td>
+          {/* Client Table */}
+          <div className="overflow-x-auto px-4 sm:px-6">
+            <table className="min-w-full">
+              <thead className="">
+                <tr className="flex gap-2 sm:gap-4 md:gap-6 lg:gap-8">
+                  <th className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                  <th className="w-[120px] sm:w-[150px] md:w-[180px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="w-[100px] sm:w-[120px] md:w-[140px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
+                  <th className="w-[90px] sm:w-[100px] md:w-[120px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
+                  <th className="w-[120px] sm:w-[140px] md:w-[160px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Staff</th>
+                  <th className="w-[70px] sm:w-[80px] md:w-[100px] py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ) : clientsError ? (
-                <tr>
-                  <td colSpan="6" className="p-6 text-center text-red-500">
-                    {clientsError}
-                  </td>
-                </tr>
-              ) : filteredClients.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="p-6 text-center text-gray-500">
-                    No clients found
-                  </td>
-                </tr>
-              ) : (
-                filteredClients.map((client) => (
-                  <tr key={client.id}>
-                    <td colSpan="6" className="p-0">
-                      <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
-                        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8">
-                          {/* Client Column */}
-                          <div className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px]">
-                            <div className="flex items-center">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <div
-                                    className="font-semibold text-gray-900 text-sm cursor-pointer hover:text-blue-600 transition-colors"
-                                    onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
-                                  >
-                                    {client.name}
+              </thead>
+
+              <tbody className="bg-white">
+                {clientsLoading ? (
+                  <tr>
+                    <td colSpan="6" className="p-6 text-center text-gray-500">
+                      Loading clients...
+                    </td>
+                  </tr>
+                ) : clientsError ? (
+                  <tr>
+                    <td colSpan="6" className="p-6 text-center text-red-500">
+                      {clientsError}
+                    </td>
+                  </tr>
+                ) : filteredClients.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-6 text-center text-gray-500">
+                      No clients found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredClients.map((client) => (
+                    <tr key={client.id}>
+                      <td colSpan="6" className="p-0">
+                        <div className="border border-[#E8F0FF] p-3 mb-3 rounded-lg">
+                          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8">
+                            {/* Client Column */}
+                            <div className="flex-1 min-w-[150px] sm:min-w-[200px] md:min-w-[250px]">
+                              <div className="flex items-center">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    <div
+                                      className="font-semibold text-gray-900 text-sm cursor-pointer hover:text-blue-600 transition-colors"
+                                      onClick={() => navigate(`/firmadmin/clients/${client.id}`)}
+                                    >
+                                      {client.name}
+                                    </div>
+                                    {/* Link Status Badge */}
+                                    {client.is_linked === true || client.link_status === 'linked' ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Linked
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-300">
+                                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Unlinked
+                                      </span>
+                                    )}
                                   </div>
-                                  {/* Link Status Badge */}
-                                  {client.is_linked === true || client.link_status === 'linked' ? (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
-                                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                      Linked
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-300">
-                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                      </svg>
-                                      Unlinked
-                                    </span>
-                                  )}
-                                </div>
-                                {/* <div className="text-xs text-gray-600 flex items-center mb-1">
+                                  {/* <div className="text-xs text-gray-600 flex items-center mb-1">
                                   {client.company === "Smith Enterprises" || client.company === "Davis LLC" ? (
                                     <div className="mr-1">
                                       <Building />
@@ -2164,231 +2143,231 @@ export default function ClientManage() {
                                   ) : null}
                                   {client.company}
                                 </div> */}
-                                <div className="text-xs text-gray-400">{client.type}</div>
+                                  <div className="text-xs text-gray-400">{client.type}</div>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Contact Column */}
-                          <div className="w-[120px] sm:w-[150px] md:w-[180px] flex-shrink-0">
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2 text-xs text-gray-600">
-                                <MailIcon />
-                                <span className="break-all truncate">{client.email}</span>
-                              </div>
-                              <div className="flex items-center space-x-2 text-xs text-gray-600">
-                                <CallIcon />
-                                <span className="truncate">{client.phone}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Last Activity Column */}
-                          <div className="w-[100px] sm:w-[120px] md:w-[140px] flex-shrink-0">
-                            <div className="flex items-center space-x-2">
-                              {getActivityIcon(client.lastActivityIcon)}
-                              <div className="min-w-0">
-                                <div className="text-sm text-gray-600 truncate">{client.lastActivity}</div>
-                                <div className="text-xs text-gray-400 truncate">{client.lastActivityType}</div>
+                            {/* Contact Column */}
+                            <div className="w-[120px] sm:w-[150px] md:w-[180px] flex-shrink-0">
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2 text-xs text-gray-600">
+                                  <MailIcon />
+                                  <span className="break-all truncate">{client.email}</span>
+                                </div>
+                                <div className="flex items-center space-x-2 text-xs text-gray-600">
+                                  <CallIcon />
+                                  <span className="truncate">{client.phone}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Compliance Column */}
-                          <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
-                            <span
-                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getComplianceColor(client.compliance)}`}
-                              style={client.compliance === 'Complete' || client.compliance === 'Active' ? {
-                                background: '#22C55E',
-                                border: '0.5px solid #22C55E'
-                              } : client.compliance === 'Pending' ? {
-                                background: 'var(--color-yellow-400, #FBBF24)',
-                                border: '0.5px solid var(--color-yellow-400, #FBBF24)'
-                              } : client.compliance === 'Missing' ? {
-                                background: 'var(--color-red-500, #EF4444)',
-                                border: '0.5px solid var(--color-red-500, #EF4444)'
-                              } : {}}
-                            >
-                              {getComplianceIcon(client.compliance)}
-                              <span className="ml-1">{client.compliance}</span>
-                            </span>
-                          </div>
-
-                          {/* Assigned Staff Column */}
-                          <div className="w-[120px] sm:w-[140px] md:w-[160px] flex-shrink-0">
-                            {client.assignedStaff && client.assignedStaff.length > 0 ? (
-                              <div className="space-y-1">
-                                {client.assignedStaff.map((staff, index) => (
-                                  <div key={staff.id || index} className="text-xs text-gray-600 truncate" title={staff.name}>
-                                    {staff.name}
-                                  </div>
-                                ))}
+                            {/* Last Activity Column */}
+                            <div className="w-[100px] sm:w-[120px] md:w-[140px] flex-shrink-0">
+                              <div className="flex items-center space-x-2">
+                                {getActivityIcon(client.lastActivityIcon)}
+                                <div className="min-w-0">
+                                  <div className="text-sm text-gray-600 truncate">{client.lastActivity}</div>
+                                  <div className="text-xs text-gray-400 truncate">{client.lastActivityType}</div>
+                                </div>
                               </div>
-                            ) : (
+                            </div>
+
+                            {/* Compliance Column */}
+                            <div className="w-[90px] sm:w-[100px] md:w-[120px] flex justify-start flex-shrink-0">
+                              <span
+                                className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getComplianceColor(client.compliance)}`}
+                                style={client.compliance === 'Complete' || client.compliance === 'Active' ? {
+                                  background: '#22C55E',
+                                  border: '0.5px solid #22C55E'
+                                } : client.compliance === 'Pending' ? {
+                                  background: 'var(--color-yellow-400, #FBBF24)',
+                                  border: '0.5px solid var(--color-yellow-400, #FBBF24)'
+                                } : client.compliance === 'Missing' ? {
+                                  background: 'var(--color-red-500, #EF4444)',
+                                  border: '0.5px solid var(--color-red-500, #EF4444)'
+                                } : {}}
+                              >
+                                {getComplianceIcon(client.compliance)}
+                                <span className="ml-1">{client.compliance}</span>
+                              </span>
+                            </div>
+
+                            {/* Assigned Staff Column */}
+                            <div className="w-[120px] sm:w-[140px] md:w-[160px] flex-shrink-0">
+                              {client.assignedStaff && client.assignedStaff.length > 0 ? (
+                                <div className="space-y-1">
+                                  {client.assignedStaff.map((staff, index) => (
+                                    <div key={staff.id || index} className="text-xs text-gray-600 truncate" title={staff.name}>
+                                      {staff.name}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setSelectedClientForReassign(client.id);
+                                    setIsAssignMode(true);
+                                    setShowReassignStaffModal(true);
+                                  }}
+                                  className="text-xs px-2 py-1 rounded text-white hover:opacity-90 transition-opacity"
+                                  style={{
+                                    background: 'var(--Palette2-SkyBlue-900, #3AD6F2)',
+                                    fontSize: '11px'
+                                  }}
+                                >
+                                  Assign Staff
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Action Column */}
+                            <div className="w-[70px] sm:w-[80px] md:w-[100px] text-sm font-medium relative dropdown-container flex justify-center flex-shrink-0">
                               <button
-                                onClick={() => {
-                                  setSelectedClientForReassign(client.id);
-                                  setIsAssignMode(true);
-                                  setShowReassignStaffModal(true);
-                                }}
-                                className="text-xs px-2 py-1 rounded text-white hover:opacity-90 transition-opacity"
-                                style={{
-                                  background: 'var(--Palette2-SkyBlue-900, #3AD6F2)',
-                                  fontSize: '11px'
-                                }}
+                                onClick={() => setShowDropdown(showDropdown === client.id ? null : client.id)}
+                                className="text-gray-400 "
                               >
-                                Assign Staff
+                                <Action />
                               </button>
-                            )}
-                          </div>
-
-                          {/* Action Column */}
-                          <div className="w-[70px] sm:w-[80px] md:w-[100px] text-sm font-medium relative dropdown-container flex justify-center flex-shrink-0">
-                            <button
-                              onClick={() => setShowDropdown(showDropdown === client.id ? null : client.id)}
-                              className="text-gray-400 "
-                            >
-                              <Action />
-                            </button>
-                            {showDropdown === client.id && (
-                              <div
-                                className="absolute mt-2 w-48 bg-white shadow-lg z-10"
-                                style={{
-                                  border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
-                                  borderRadius: '8px',
-                                  marginTop: '8px',
-                                  right: '8px',
-                                  width: '200px',
-                                }}
-                              >
-                                <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
-                                  {/* View Details removed - clicking on client name now redirects to details page */}
-                                  {/* <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Client</button>
+                              {showDropdown === client.id && (
+                                <div
+                                  className="absolute mt-2 w-48 bg-white shadow-lg z-10"
+                                  style={{
+                                    border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)',
+                                    borderRadius: '8px',
+                                    marginTop: '8px',
+                                    right: '8px',
+                                    width: '200px',
+                                  }}
+                                >
+                                  <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
+                                    {/* View Details removed - clicking on client name now redirects to details page */}
+                                    {/* <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Client</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Timeline</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Send Message</button>
                                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedule Meeting</button> */}
-                                  {client.assignedStaff && client.assignedStaff.length > 0 ? (
-                                    <button 
+                                    {client.assignedStaff && client.assignedStaff.length > 0 ? (
+                                      <button
+                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        onClick={() => {
+                                          setSelectedClientForReassign(client.id);
+                                          setIsAssignMode(false);
+                                          setShowReassignStaffModal(true);
+                                          setShowDropdown(null);
+                                        }}
+                                      >
+                                        Reassign Staff
+                                      </button>
+                                    ) : (
+                                      <button
+                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        onClick={() => {
+                                          setSelectedClientForReassign(client.id);
+                                          setIsAssignMode(true);
+                                          setShowReassignStaffModal(true);
+                                          setShowDropdown(null);
+                                        }}
+                                      >
+                                        Assign Staff
+                                      </button>
+                                    )}
+                                    <button
                                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                       onClick={() => {
-                                        setSelectedClientForReassign(client.id);
-                                        setIsAssignMode(false);
-                                        setShowReassignStaffModal(true);
+                                        setSelectedClientForWorkflow({
+                                          id: client.id,
+                                          name: client.name || client.company || 'Client',
+                                          assignedPreparerId: client.assignedStaff?.[0]?.id || null
+                                        });
+                                        setShowStartWorkflowModal(true);
                                         setShowDropdown(null);
                                       }}
                                     >
-                                      Reassign Staff
+                                      Start Workflow
                                     </button>
-                                  ) : (
-                                    <button 
-                                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    <div style={{ borderTop: '0.2px solid #000000' }}></div>
+                                    <button
+                                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                      style={{ color: 'var(--color-red-500, #EF4444)' }}
                                       onClick={() => {
-                                        setSelectedClientForReassign(client.id);
-                                        setIsAssignMode(true);
-                                        setShowReassignStaffModal(true);
+                                        setSelectedClientForDelete(client.id);
+                                        setShowDeleteConfirmModal(true);
                                         setShowDropdown(null);
                                       }}
                                     >
-                                      Assign Staff
+                                      Delete Client
                                     </button>
-                                  )}
-                                  <button 
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    onClick={() => {
-                                      setSelectedClientForWorkflow({
-                                        id: client.id,
-                                        name: client.name || client.company || 'Client',
-                                        assignedPreparerId: client.assignedStaff?.[0]?.id || null
-                                      });
-                                      setShowStartWorkflowModal(true);
-                                      setShowDropdown(null);
-                                    }}
-                                  >
-                                    Start Workflow
-                                  </button>
-                                  <div style={{ borderTop: '0.2px solid #000000' }}></div>
-                                  <button
-                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                                    style={{ color: 'var(--color-red-500, #EF4444)' }}
-                                    onClick={() => {
-                                      setSelectedClientForDelete(client.id);
-                                      setShowDeleteConfirmModal(true);
-                                      setShowDropdown(null);
-                                    }}
-                                  >
-                                    Delete Client
-                                  </button>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {pagination.total_count > 0 && (
-          <div className="p-6 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-              Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} clients
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={!pagination.has_previous || currentPage === 1}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_previous || currentPage === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-              >
-                Previous
-              </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                  let pageNum;
-                  if (pagination.total_pages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= pagination.total_pages - 2) {
-                    pageNum = pagination.total_pages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
-                        ? 'bg-[#3AD6F2] text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
-                disabled={!pagination.has_next || currentPage === pagination.total_pages}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_next || currentPage === pagination.total_pages
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-              >
-                Next
-              </button>
-            </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+
+          {/* Pagination */}
+          {pagination.total_count > 0 && (
+            <div className="p-6 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-600 font-[BasisGrotesquePro]">
+                Showing {((pagination.page - 1) * pagination.page_size) + 1} to {Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count} clients
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!pagination.has_previous || currentPage === 1}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_previous || currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                    let pageNum;
+                    if (pagination.total_pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= pagination.total_pages - 2) {
+                      pageNum = pagination.total_pages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${currentPage === pageNum
+                          ? 'bg-[#3AD6F2] text-white'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
+                  disabled={!pagination.has_next || currentPage === pagination.total_pages}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors font-[BasisGrotesquePro] ${!pagination.has_next || currentPage === pagination.total_pages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Filters Modal */}
@@ -2785,9 +2764,9 @@ export default function ClientManage() {
               </div>
               <div className="modal-footer d-flex justify-content-end align-items-center gap-2" style={{ borderTop: '1px solid #E8F0FF', padding: '16px 24px' }}>
                 {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
-                  <button 
-                    className="btn btn-outline-danger d-flex align-items-center" 
-                    style={{ borderRadius: '8px' }} 
+                  <button
+                    className="btn btn-outline-danger d-flex align-items-center"
+                    style={{ borderRadius: '8px' }}
                     onClick={handleDeleteInvite}
                     disabled={deletingInvite}
                   >
@@ -2909,8 +2888,8 @@ export default function ClientManage() {
                     style={{ background: 'var(--Palette2-SkyBlue-900, #3AD6F2)' }}
                     disabled={reassigning}
                   >
-                    {reassigning 
-                      ? (isAssignMode ? 'Assigning...' : 'Reassigning...') 
+                    {reassigning
+                      ? (isAssignMode ? 'Assigning...' : 'Reassigning...')
                       : (isAssignMode ? 'Assign' : 'Reassign')
                     }
                   </button>

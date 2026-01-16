@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 
 export default function RentalPropertyForm({ onSave, onCancel, initialData = null }) {
@@ -11,17 +11,17 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
     propertyZip: '',
     propertyType: 'single', // 'single', 'apartment', 'vacation', 'other'
     ownershipType: '', // 'own_100', 'share', 'no'
-    
+
     // 2. How the Property Was Used
     rentedOutDuringYear: false,
     daysRentedOut: '',
     familyUse: false,
     familyUseDays: '',
-    
+
     // 3. Rental Income
     totalRentReceived: '',
-    taxFormsReceived: 'none', // '1099NEC', '1099MISC', '1099K', 'none'
-    
+    taxFormsReceived: [], // Array of selected forms: ['1099NEC', '1099MISC', '1099K', 'none']
+
     // 4. Common Rental Expenses
     advertising: '',
     cleaningMaintenance: '',
@@ -33,22 +33,22 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
     utilities: '',
     legalProfessional: '',
     supplies: '',
-    
+
     // 5. Other Rental Expenses
     otherExpenses: [],
     otherExpenseDescription: '',
     otherExpenseAmount: '',
-    
+
     // 6. Big Changes During the Year
     soldOrStoppedRenting: false,
     boughtMajorItems: false,
-    
+
     // 7. Prior-Year Information (Optional)
     hasRentalLosses: false,
-    
+
     // 8. Final Confirmation
     isComplete: false,
-    
+
     // ID for internal tracking if editing
     id: null
   });
@@ -57,8 +57,19 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
 
   useEffect(() => {
     if (initialData) {
+      // Normalize taxFormsReceived - convert string to array if needed
+      let taxForms = initialData.taxFormsReceived || [];
+      if (typeof taxForms === 'string') {
+        if (taxForms.toLowerCase() === 'none') {
+          taxForms = ['none'];
+        } else {
+          taxForms = [taxForms];
+        }
+      }
+
       setFormData({
         ...initialData,
+        taxFormsReceived: taxForms,
         // Ensure arrays are properly initialized
         otherExpenses: initialData.otherExpenses || []
       });
@@ -70,7 +81,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error for this field if it exists
     if (errors[field]) {
       setErrors(prev => {
@@ -94,7 +105,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
   const handleOtherExpenseChange = (id, field, value) => {
     setFormData(prev => ({
       ...prev,
-      otherExpenses: prev.otherExpenses.map(exp => 
+      otherExpenses: prev.otherExpenses.map(exp =>
         exp.id === id ? { ...exp, [field]: value } : exp
       )
     }));
@@ -109,7 +120,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
 
   const validate = () => {
     const newErrors = {};
-    
+
     // Required validations
     if (formData.isRentalProperty) {
       if (!formData.propertyAddress.trim()) newErrors.propertyAddress = 'Property address is required';
@@ -121,9 +132,9 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
         newErrors.ownershipType = 'Ownership percentage is required when owned 100%';
       }
     }
-    
+
     if (!formData.totalRentReceived.trim()) newErrors.totalRentReceived = 'Total rent received is required';
-    
+
     // Conditional validations
     if (formData.rentedOutDuringYear && !formData.daysRentedOut.trim()) {
       newErrors.daysRentedOut = 'Days rented out is required when property was rented during year';
@@ -185,7 +196,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 1. Property Basics */}
       <div className="mb-6">
         <h5 style={sectionStyle}>1. Property Basics</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -295,7 +306,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 2. How the Property Was Used */}
       <div className="mb-6">
         <h5 style={sectionStyle}>2. How the Property Was Used</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
@@ -366,7 +377,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 3. Rental Income */}
       <div className="mb-6">
         <h5 style={sectionStyle}>3. Rental Income</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -391,16 +402,86 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
             <label className="form-label" style={labelStyle}>
               Did you receive any tax forms for this rental income? (Optional)
             </label>
-            <select
-              className="form-control"
-              value={formData.taxFormsReceived}
-              onChange={(e) => handleChange('taxFormsReceived', e.target.value)}
-            >
-              <option value="none">None / Not sure</option>
-              <option value="1099NEC">1099-NEC</option>
-              <option value="1099MISC">1099-MISC</option>
-              <option value="1099K">1099-K</option>
-            </select>
+            <div className="d-flex flex-column gap-2 mt-2">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="rentalTaxFormNone"
+                  checked={formData.taxFormsReceived.includes('none')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      handleChange('taxFormsReceived', ['none']);
+                    } else {
+                      handleChange('taxFormsReceived', formData.taxFormsReceived.filter(f => f !== 'none'));
+                    }
+                  }}
+                />
+                <label className="form-check-label" htmlFor="rentalTaxFormNone" style={labelStyle}>
+                  None / Not sure
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="rentalTaxForm1099NEC"
+                  checked={formData.taxFormsReceived.includes('1099NEC')}
+                  onChange={(e) => {
+                    const current = formData.taxFormsReceived || [];
+                    if (e.target.checked) {
+                      const newForms = current.filter(f => f !== 'none');
+                      handleChange('taxFormsReceived', [...newForms, '1099NEC']);
+                    } else {
+                      handleChange('taxFormsReceived', current.filter(f => f !== '1099NEC'));
+                    }
+                  }}
+                />
+                <label className="form-check-label" htmlFor="rentalTaxForm1099NEC" style={labelStyle}>
+                  1099-NEC
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="rentalTaxForm1099MISC"
+                  checked={formData.taxFormsReceived.includes('1099MISC')}
+                  onChange={(e) => {
+                    const current = formData.taxFormsReceived || [];
+                    if (e.target.checked) {
+                      const newForms = current.filter(f => f !== 'none');
+                      handleChange('taxFormsReceived', [...newForms, '1099MISC']);
+                    } else {
+                      handleChange('taxFormsReceived', current.filter(f => f !== '1099MISC'));
+                    }
+                  }}
+                />
+                <label className="form-check-label" htmlFor="rentalTaxForm1099MISC" style={labelStyle}>
+                  1099-MISC
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="rentalTaxForm1099K"
+                  checked={formData.taxFormsReceived.includes('1099K')}
+                  onChange={(e) => {
+                    const current = formData.taxFormsReceived || [];
+                    if (e.target.checked) {
+                      const newForms = current.filter(f => f !== 'none');
+                      handleChange('taxFormsReceived', [...newForms, '1099K']);
+                    } else {
+                      handleChange('taxFormsReceived', current.filter(f => f !== '1099K'));
+                    }
+                  }}
+                />
+                <label className="form-check-label" htmlFor="rentalTaxForm1099K" style={labelStyle}>
+                  1099-K
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -408,7 +489,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 4. Common Rental Expenses */}
       <div className="mb-6">
         <h5 style={sectionStyle}>4. Common Rental Expenses</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
@@ -578,7 +659,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 5. Other Rental Expenses */}
       <div className="mb-6">
         <h5 style={sectionStyle}>5. Other Rental Expenses</h5>
-        
+
         {formData.otherExpenses.map((expense, index) => (
           <div key={expense.id} className="row g-3 mb-3 align-items-end">
             <div className="col-md-6">
@@ -609,7 +690,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
               </div>
             </div>
             <div className="col-md-2">
-              <button 
+              <button
                 className="btn btn-outline-danger w-100"
                 onClick={() => handleRemoveOtherExpense(expense.id)}
                 title="Remove Expense"
@@ -619,7 +700,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
             </div>
           </div>
         ))}
-        
+
         <button
           className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
           onClick={handleAddOtherExpense}
@@ -632,7 +713,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 6. Big Changes During the Year */}
       <div className="mb-6">
         <h5 style={sectionStyle}>6. Big Changes During the Year</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
@@ -667,7 +748,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 7. Prior-Year Information (Optional) */}
       <div className="mb-6">
         <h5 style={sectionStyle}>7. Prior-Year Information (Optional)</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -689,7 +770,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 8. Final Confirmation */}
       <div className="mb-6">
         <h5 style={sectionStyle}>Final Confirmation</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -717,18 +798,18 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
 
         {/* Actions */}
         <div className="d-flex justify-content-end gap-3 pt-3 border-top">
-          <button 
+          <button
             className="btn btn-light"
             onClick={onCancel}
             style={{ fontFamily: "BasisGrotesquePro", fontWeight: 500 }}
           >
             Cancel
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={handleSubmit}
-            style={{ 
-              fontFamily: "BasisGrotesquePro", 
+            style={{
+              fontFamily: "BasisGrotesquePro",
               fontWeight: 500,
               backgroundColor: "#3B4A66",
               borderColor: "#3B4A66"

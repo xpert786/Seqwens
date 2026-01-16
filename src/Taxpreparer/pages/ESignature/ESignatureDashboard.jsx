@@ -39,45 +39,45 @@ export default function ESignatureDashboard() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [deadline, setDeadline] = useState('');
-  
+
   // Processing state for async e-sign document creation
   const [processing, setProcessing] = useState(false);
   const [documentId, setDocumentId] = useState(null);
   const [processingStatus, setProcessingStatus] = useState(null);
   const [processingError, setProcessingError] = useState(null);
-  
+
   // SignWell embedded signing modal state
   const [showSignWellModal, setShowSignWellModal] = useState(false);
   const [signWellEmbeddedUrl, setSignWellEmbeddedUrl] = useState(null);
   const [currentSigningRequest, setCurrentSigningRequest] = useState(null);
   const signWellIframeRef = useRef(null);
-  
+
   // PDF Signature Modal state
   const [showPdfSignatureModal, setShowPdfSignatureModal] = useState(false);
   const [currentSignatureRequest, setCurrentSignatureRequest] = useState(null);
-  
+
   // PDF Annotation Modal state
   const [showAnnotationModal, setShowAnnotationModal] = useState(false);
   const [selectedDocumentForAnnotation, setSelectedDocumentForAnnotation] = useState(null);
-  
+
   // PDF Preview Modal state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedPreviewDocument, setSelectedPreviewDocument] = useState(null);
-  
+
   // Signing Status Modal state
   const [showSigningStatusModal, setShowSigningStatusModal] = useState(false);
   const [selectedSigningStatus, setSelectedSigningStatus] = useState(null);
-  
+
   // Data for dropdowns
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [folders, setFolders] = useState([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
-  
+
   // Dropdown visibility
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showFolderDropdown, setShowFolderDropdown] = useState(false);
-  
+
   const clientDropdownRef = useRef(null);
   const folderDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -93,11 +93,11 @@ export default function ESignatureDashboard() {
     const handleSignWellMessage = (event) => {
       // SignWell sends messages from app.signwell.com or signwell.com
       if (!event.origin.includes('signwell.com')) return;
-      
+
       try {
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         console.log('SignWell event received:', data);
-        
+
         // Handle different SignWell events
         if (data.event === 'completed' || data.type === 'signwell:document:completed') {
           toast.success('Document signed successfully!', {
@@ -145,19 +145,19 @@ export default function ESignatureDashboard() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch signature requests using the new API endpoint
       const response = await customESignAPI.listSignatureRequests();
-      
+
       if (response.success && response.data) {
         let requests = [];
-        
+
         if (Array.isArray(response.data)) {
           requests = response.data;
         } else if (response.data.requests && Array.isArray(response.data.requests)) {
           requests = response.data.requests;
         }
-        
+
         setSignatureRequests(requests);
         calculateStatistics(requests);
       } else {
@@ -187,7 +187,7 @@ export default function ESignatureDashboard() {
 
     requests.forEach(request => {
       const status = request.status?.toLowerCase();
-      
+
       if (status === 'created' || status === 'processing' || status === 'ready' || status === 'in_progress') {
         stats.pending++;
       } else if (status === 'signed') {
@@ -216,7 +216,7 @@ export default function ESignatureDashboard() {
     if (statusFilter !== 'all') {
       filtered = filtered.filter(request => {
         const status = request.status?.toLowerCase();
-        
+
         switch (statusFilter) {
           case 'pending':
             return status === 'created' || status === 'processing' || status === 'ready' || status === 'in_progress';
@@ -240,7 +240,7 @@ export default function ESignatureDashboard() {
         const documentName = request.document_name || request.document?.name || '';
         const title = request.title || '';
         const description = request.description || '';
-        
+
         return (
           clientName.toLowerCase().includes(searchLower) ||
           documentName.toLowerCase().includes(searchLower) ||
@@ -255,7 +255,7 @@ export default function ESignatureDashboard() {
 
   const getStatusBadge = (request) => {
     const status = request.status?.toLowerCase();
-    
+
     switch (status) {
       case 'created':
         return { text: 'Created', className: 'status-badge-pending' };
@@ -298,54 +298,54 @@ export default function ESignatureDashboard() {
     if (request.signer_urls) {
       const userData = getUserData();
       const userEmail = userData?.email || userData?.user?.email;
-      
+
       if (userEmail && request.signer_urls[userEmail]) {
         const signerData = request.signer_urls[userEmail];
         return signerData.url || signerData.signing_url;
       }
-      
+
       // If no email match, get first available signer
       const firstSigner = Object.values(request.signer_urls)[0];
       if (firstSigner) {
         return firstSigner.url || firstSigner.signing_url;
       }
     }
-    
+
     // Fallback to signing_url
     if (request.signing_url) {
       return request.signing_url;
     }
-    
+
     return null;
   };
 
   // Open signing URL in a new window as fallback
   const openSigningInNewWindow = (signingUrl, request) => {
     const signingWindow = window.open(signingUrl, '_blank', 'width=1200,height=800');
-    
+
     if (signingWindow) {
       toast.info('Opening signing page in a new window. Please sign the document there.', {
         autoClose: 5000,
         position: "top-right"
       });
-      
+
       // Poll for status updates
       const esignDocumentId = request.id || request.esign_document_id;
       if (esignDocumentId) {
         let pollInterval = null;
-        
+
         const pollStatus = async () => {
           try {
             const pollResponse = await customESignAPI.refreshStatus(esignDocumentId);
             if (pollResponse.success && pollResponse.data) {
-              setSignatureRequests(prevRequests => 
-                prevRequests.map(req => 
-                  req.id === esignDocumentId 
+              setSignatureRequests(prevRequests =>
+                prevRequests.map(req =>
+                  req.id === esignDocumentId
                     ? { ...req, ...pollResponse.data }
                     : req
                 )
               );
-              
+
               if (['signed', 'expired', 'failed'].includes(pollResponse.data.status)) {
                 if (pollInterval) clearInterval(pollInterval);
                 setTimeout(() => fetchSignatureRequests(), 1000);
@@ -355,10 +355,10 @@ export default function ESignatureDashboard() {
             console.error('Error polling e-sign status:', pollError);
           }
         };
-        
+
         pollStatus();
         pollInterval = setInterval(pollStatus, 10000);
-        
+
         // Stop polling when window is closed
         const windowCheckInterval = setInterval(() => {
           if (signingWindow.closed) {
@@ -367,7 +367,7 @@ export default function ESignatureDashboard() {
             setTimeout(() => fetchSignatureRequests(), 1000);
           }
         }, 2000);
-        
+
         // Clean up after 5 minutes
         setTimeout(() => {
           if (pollInterval) clearInterval(pollInterval);
@@ -393,13 +393,13 @@ export default function ESignatureDashboard() {
     const userData = getUserData();
     const userEmail = userData?.email || userData?.user?.email;
     const preparerEmail = request.preparer_email;
-    
+
     if (request.preparer_must_sign === true && userEmail === preparerEmail) {
       e?.stopPropagation();
-      
+
       // Get signing URL
       const signingUrl = getSigningUrl(request);
-      
+
       if (!signingUrl) {
         toast.error('No signing URL available. Please try again later.', {
           position: "top-right",
@@ -407,20 +407,20 @@ export default function ESignatureDashboard() {
         });
         return;
       }
-      
+
       console.log('Signing URL:', signingUrl);
-      
+
       // Check if URL is embeddable (from app.signwell.com)
-      const isEmbeddableUrl = signingUrl.includes('app.signwell.com') || 
-                              signingUrl.includes('/e/') || 
-                              signingUrl.includes('embedded');
-      
+      const isEmbeddableUrl = signingUrl.includes('app.signwell.com') ||
+        signingUrl.includes('/e/') ||
+        signingUrl.includes('embedded');
+
       if (isEmbeddableUrl) {
         // Try iframe embedding first
         setSignWellEmbeddedUrl(signingUrl);
         setCurrentSigningRequest(request);
         setShowSignWellModal(true);
-        
+
         // Start polling for status updates
         const esignDocumentId = request.id || request.esign_document_id;
         if (esignDocumentId) {
@@ -428,14 +428,14 @@ export default function ESignatureDashboard() {
             try {
               const pollResponse = await customESignAPI.refreshStatus(esignDocumentId);
               if (pollResponse.success && pollResponse.data) {
-                setSignatureRequests(prevRequests => 
-                  prevRequests.map(req => 
-                    req.id === esignDocumentId 
+                setSignatureRequests(prevRequests =>
+                  prevRequests.map(req =>
+                    req.id === esignDocumentId
                       ? { ...req, ...pollResponse.data }
                       : req
                   )
                 );
-                
+
                 if (['signed', 'expired', 'failed'].includes(pollResponse.data.status)) {
                   clearInterval(pollInterval);
                   setShowSignWellModal(false);
@@ -446,12 +446,12 @@ export default function ESignatureDashboard() {
               console.error('Error polling e-sign status:', pollError);
             }
           }, 10000);
-          
+
           // Store cleanup function
           window.signWellPollCleanup = () => {
             if (pollInterval) clearInterval(pollInterval);
           };
-          
+
           // Clean up after 5 minutes
           setTimeout(() => {
             if (pollInterval) clearInterval(pollInterval);
@@ -517,10 +517,10 @@ export default function ESignatureDashboard() {
   // Handle marking e-sign request as completed
   const handleCompleteRequest = async (requestId, e) => {
     e?.stopPropagation();
-    
+
     try {
       const response = await taxPreparerClientAPI.completeSignatureRequest(requestId);
-      
+
       if (response.success) {
         toast.success('E-Sign Request marked as completed successfully!', {
           position: "top-right",
@@ -540,10 +540,10 @@ export default function ESignatureDashboard() {
   // Handle re-requesting e-sign
   const handleRerequestSignature = async (requestId, e) => {
     e?.stopPropagation();
-    
+
     try {
       const response = await taxPreparerClientAPI.rerequestSignature(requestId);
-      
+
       if (response.success) {
         toast.success('E-Sign Request re-sent successfully!', {
           position: "top-right",
@@ -659,21 +659,21 @@ export default function ESignatureDashboard() {
     const maxAttempts = 100; // ~5 minutes max (100 * 3 seconds)
     let attempts = 0;
     let pollTimeoutId = null;
-    
+
     const poll = async () => {
       try {
         console.log(`[Poll ${attempts + 1}] Checking status for document ID: ${id}`);
         const response = await customESignAPI.refreshStatus(id);
         console.log(`[Poll ${attempts + 1}] Response:`, response);
-        
+
         if (response.success && response.data) {
           const { status, processing_status, processing_error, signing_url, signer_urls } = response.data;
-          
+
           console.log(`[Poll ${attempts + 1}] Status: ${status}, Processing Status: ${processing_status}`);
-          
+
           // Update processing status for UI
           setProcessingStatus(processing_status);
-          
+
           // Check if processing is complete
           if (status === 'ready' || status === 'in_progress') {
             // Ready for signing!
@@ -683,14 +683,14 @@ export default function ESignatureDashboard() {
               clearTimeout(pollTimeoutId);
               pollTimeoutId = null;
             }
-            
+
             toast.success('Document is ready for signing!', {
               position: "top-right",
               autoClose: 3000,
             });
             handleCloseCreateModal();
             fetchSignatureRequests(); // Refresh the list
-            
+
             // Log signing information for debugging
             if (signing_url) {
               console.log('Document ready - Signing URL:', signing_url);
@@ -698,7 +698,7 @@ export default function ESignatureDashboard() {
             if (signer_urls) {
               console.log('Document ready - Signer URLs:', signer_urls);
             }
-            
+
             return { ready: true, signingUrl: signing_url };
           } else if (status === 'failed' || processing_status === 'failed') {
             // Processing failed
@@ -719,7 +719,7 @@ export default function ESignatureDashboard() {
             attempts++;
             if (attempts < maxAttempts) {
               // Update loader message based on status - poll again in 3 seconds
-              console.log(`[Poll ${attempts}] Still processing, will poll again in ${POLL_INTERVAL/1000} seconds...`);
+              console.log(`[Poll ${attempts}] Still processing, will poll again in ${POLL_INTERVAL / 1000} seconds...`);
               pollTimeoutId = setTimeout(poll, POLL_INTERVAL);
               return { processing: true, status: processing_status || status };
             } else {
@@ -776,9 +776,9 @@ export default function ESignatureDashboard() {
         }
       }
     };
-    
+
     // Start polling immediately, then continue every 3 seconds
-    console.log(`Starting status polling for document ID: ${id} - will poll every ${POLL_INTERVAL/1000} seconds`);
+    console.log(`Starting status polling for document ID: ${id} - will poll every ${POLL_INTERVAL / 1000} seconds`);
     poll();
   };
 
@@ -800,9 +800,9 @@ export default function ESignatureDashboard() {
     try {
       setCreating(true);
       setProcessingError(null);
-      
+
       const taxpayerId = selectedClient.id || selectedClient.client_id;
-      
+
       // Step 1: Upload PDF
       console.log('Step 1: Uploading PDF...');
       const uploadResponse = await customESignAPI.uploadPDF({
@@ -822,12 +822,12 @@ export default function ESignatureDashboard() {
       // For now, we'll place default signature fields on the first page
       // In a full implementation, this would be done via drag & drop UI
       const fields = [];
-      
+
       // Get first page dimensions (default to US Letter if not available)
       const firstPage = pdf_info?.pages?.[0] || { width: 612, height: 792 };
       const pageWidth = firstPage.width || 612;
       const pageHeight = firstPage.height || 792;
-      
+
       // Place taxpayer signature field (bottom-left origin, so y is from bottom)
       fields.push({
         type: 'signature',
@@ -885,7 +885,7 @@ export default function ESignatureDashboard() {
       }
 
       console.log('Step 2: Creating e-sign request with fields...', fields);
-      
+
       // Format deadline to YYYY-MM-DD for date input
       let deadlineFormatted = deadline;
       if (deadline && !deadline.includes('T')) {
@@ -910,14 +910,14 @@ export default function ESignatureDashboard() {
         const status = documentData?.status;
         const processingStatus = documentData?.processing_status;
         const esignDocumentId = documentData?.esign_document_id;
-        
+
         console.log('Create response received:', {
           success: createResponse.success,
           esignDocumentId: esignDocumentId,
           status: status,
           processingStatus: processingStatus
         });
-        
+
         if (status === 'processing' || processingStatus || !esignDocumentId) {
           // Document is being processed asynchronously
           console.log('E-sign document created, starting background processing:', {
@@ -925,12 +925,12 @@ export default function ESignatureDashboard() {
             status: status,
             processing_status: processingStatus
           });
-          
+
           setDocumentId(esignDocumentId);
           setProcessingStatus(processingStatus || 'pending');
           setProcessing(true);
           setCreating(false);
-          
+
           // Start polling every 3 seconds
           console.log('Calling pollStatus with document ID:', esignDocumentId);
           pollStatus(esignDocumentId);
@@ -1178,12 +1178,12 @@ export default function ESignatureDashboard() {
             </p>
           </div>
         ) : (
-          <div className="d-flex flex-column gap-3">
+          <div className="d-flex flex-column gap-3 w-full">
             {filteredRequests.map((request, index) => {
               const statusBadge = getStatusBadge(request);
               const clientName = request.taxpayer_name || request.client_name || request.client?.full_name || 'Unknown Client';
               const documentName = request.document_name || request.document?.name || 'No Document';
-              
+
               return (
                 <div
                   key={`${request.id}-${index}`}
@@ -1231,9 +1231,9 @@ export default function ESignatureDashboard() {
                         if (userEmail === preparerEmail && request.signer_urls) {
                           return (
                             <div className="mb-2">
-                              <span style={{ 
-                                color: '#00C0C6', 
-                                fontSize: '13px', 
+                              <span style={{
+                                color: '#00C0C6',
+                                fontSize: '13px',
                                 fontWeight: '500',
                                 backgroundColor: '#E0F7FA',
                                 padding: '4px 8px',
@@ -1294,45 +1294,45 @@ export default function ESignatureDashboard() {
                         )}
                         {/* Annotate & Sign for Preparer Button - Show when taxpayer and spouse (if required) have signed */}
                         {areTaxpayerAndSpouseSigned(request) &&
-                         request.preparer_must_sign === true &&
-                         request.preparer_signed === false && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Use annotated_pdf_url if available, otherwise use document_url
-                              const pdfUrl = request.annotated_pdf_url || request.document_url;
-                              setSelectedDocumentForAnnotation({
-                                url: pdfUrl,
-                                name: request.document_name || request.title || 'Document',
-                                id: request.id,
-                                document_id: request.document
-                              });
-                              console.log('📄 Opening annotation modal for preparer:', {
-                                esign_request_id: request.id,
-                                document_id: request.document,
-                                document_name: request.document_name,
-                                using_annotated_pdf: !!request.annotated_pdf_url,
-                                pdf_url: pdfUrl
-                              });
-                              setShowAnnotationModal(true);
-                            }}
-                            className="btn d-flex align-items-center gap-2"
-                            style={{
-                              backgroundColor: '#00C0C6',
-                              color: 'white',
-                              border: 'none',
-                              fontFamily: 'BasisGrotesquePro',
-                              fontWeight: '500',
-                              padding: '8px 16px',
-                              borderRadius: '6px',
-                              fontSize: '14px'
-                            }}
-                          >
-                            <FiPenTool size={14} />
-                            Annotate & Sign for Preparer
-                          </button>
-                        )}
-                        
+                          request.preparer_must_sign === true &&
+                          request.preparer_signed === false && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Use annotated_pdf_url if available, otherwise use document_url
+                                const pdfUrl = request.annotated_pdf_url || request.document_url;
+                                setSelectedDocumentForAnnotation({
+                                  url: pdfUrl,
+                                  name: request.document_name || request.title || 'Document',
+                                  id: request.id,
+                                  document_id: request.document
+                                });
+                                console.log('📄 Opening annotation modal for preparer:', {
+                                  esign_request_id: request.id,
+                                  document_id: request.document,
+                                  document_name: request.document_name,
+                                  using_annotated_pdf: !!request.annotated_pdf_url,
+                                  pdf_url: pdfUrl
+                                });
+                                setShowAnnotationModal(true);
+                              }}
+                              className="btn d-flex align-items-center gap-2"
+                              style={{
+                                backgroundColor: '#00C0C6',
+                                color: 'white',
+                                border: 'none',
+                                fontFamily: 'BasisGrotesquePro',
+                                fontWeight: '500',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                fontSize: '14px'
+                              }}
+                            >
+                              <FiPenTool size={14} />
+                              Annotate & Sign for Preparer
+                            </button>
+                          )}
+
                         {/* Show action buttons when all signees have signed */}
                         {areAllSigneesSigned(request) && (
                           <>
@@ -1364,52 +1364,52 @@ export default function ESignatureDashboard() {
                                 Preview Annotated Document
                               </button>
                             )}
-                            
+
                             {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
-                            {request.status?.toLowerCase() !== 'completed' && 
-                             request.status?.toLowerCase() !== 'processed' && (
-                              <>
-                                {/* Mark as Completed Button */}
-                                <button
-                                  onClick={(e) => handleCompleteRequest(request.id, e)}
-                                  className="btn d-flex align-items-center gap-2"
-                                  style={{
-                                    backgroundColor: '#10B981',
-                                    color: 'white',
-                                    border: 'none',
-                                    fontFamily: 'BasisGrotesquePro',
-                                    fontWeight: '500',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontSize: '14px'
-                                  }}
-                                  title="Mark E-Sign Request as Completed"
-                                >
-                                  <FiCheckCircle size={14} />
-                                  Mark as Completed
-                                </button>
-                                
-                                {/* Re-Request E-Sign Button */}
-                                <button
-                                  onClick={(e) => handleRerequestSignature(request.id, e)}
-                                  className="btn d-flex align-items-center gap-2"
-                                  style={{
-                                    backgroundColor: '#F59E0B',
-                                    color: 'white',
-                                    border: 'none',
-                                    fontFamily: 'BasisGrotesquePro',
-                                    fontWeight: '500',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontSize: '14px'
-                                  }}
-                                  title="Re-Request E-Sign"
-                                >
-                                  <FiRefreshCw size={14} />
-                                  Re-Request E-Sign
-                                </button>
-                              </>
-                            )}
+                            {request.status?.toLowerCase() !== 'completed' &&
+                              request.status?.toLowerCase() !== 'processed' && (
+                                <>
+                                  {/* Mark as Completed Button */}
+                                  <button
+                                    onClick={(e) => handleCompleteRequest(request.id, e)}
+                                    className="btn d-flex align-items-center gap-2"
+                                    style={{
+                                      backgroundColor: '#10B981',
+                                      color: 'white',
+                                      border: 'none',
+                                      fontFamily: 'BasisGrotesquePro',
+                                      fontWeight: '500',
+                                      padding: '8px 16px',
+                                      borderRadius: '6px',
+                                      fontSize: '14px'
+                                    }}
+                                    title="Mark E-Sign Request as Completed"
+                                  >
+                                    <FiCheckCircle size={14} />
+                                    Mark as Completed
+                                  </button>
+
+                                  {/* Re-Request E-Sign Button */}
+                                  <button
+                                    onClick={(e) => handleRerequestSignature(request.id, e)}
+                                    className="btn d-flex align-items-center gap-2"
+                                    style={{
+                                      backgroundColor: '#F59E0B',
+                                      color: 'white',
+                                      border: 'none',
+                                      fontFamily: 'BasisGrotesquePro',
+                                      fontWeight: '500',
+                                      padding: '8px 16px',
+                                      borderRadius: '6px',
+                                      fontSize: '14px'
+                                    }}
+                                    title="Re-Request E-Sign"
+                                  >
+                                    <FiRefreshCw size={14} />
+                                    Re-Request E-Sign
+                                  </button>
+                                </>
+                              )}
                           </>
                         )}
                       </div>
@@ -1493,7 +1493,7 @@ export default function ESignatureDashboard() {
                   }}
                 >
                   <span style={{ color: selectedClient ? '#3B4A66' : '#9CA3AF' }}>
-                    {selectedClient 
+                    {selectedClient
                       ? (selectedClient.full_name || selectedClient.name || selectedClient.client_name || `Client #${selectedClient.id}`)
                       : 'Select a client'}
                   </span>
@@ -1557,7 +1557,7 @@ export default function ESignatureDashboard() {
                                     setSpouseName('');
                                   }
                                 })
-                                .catch(() => {});
+                                .catch(() => { });
                             }
                           }}
                         >
@@ -1596,17 +1596,17 @@ export default function ESignatureDashboard() {
                         setSpouseName('');
                         return;
                       }
-                      
+
                       // If checking, validate that client has a spouse
                       if (!selectedClient) {
                         toast.error('Please select a client first.');
                         return;
                       }
-                      
+
                       try {
                         const clientId = selectedClient.id || selectedClient.client_id;
                         const response = await taxPreparerClientAPI.checkClientSpouse(clientId);
-                        
+
                         if (response.success && response.data) {
                           if (response.data.has_spouse) {
                             setHasSpouse(true);
@@ -1660,9 +1660,9 @@ export default function ESignatureDashboard() {
             </div>
 
             {/* Spouse Email (required if has_spouse) */}
-            
 
-          
+
+
 
             {/* Preparer Must Sign Toggle */}
             <div>
@@ -1738,8 +1738,8 @@ export default function ESignatureDashboard() {
                   <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-2">
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M5 6H11M5 9H11M5 12H8" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M14 2H2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2Z" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M5 6H11M5 9H11M5 12H8" stroke="#3B4A66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span style={{ color: '#3B4A66', fontSize: '14px', fontFamily: 'BasisGrotesquePro' }}>
                         {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
@@ -1763,7 +1763,7 @@ export default function ESignatureDashboard() {
                       disabled={creating || processing}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
                   </div>
@@ -1799,7 +1799,7 @@ export default function ESignatureDashboard() {
                   }}
                 >
                   <span style={{ color: selectedFolder ? '#3B4A66' : '#9CA3AF' }}>
-                    {loadingFolders ? 'Loading folders...' : (selectedFolder 
+                    {loadingFolders ? 'Loading folders...' : (selectedFolder
                       ? (selectedFolder.title || selectedFolder.name || selectedFolder.folder_name || `Folder #${selectedFolder.id}`)
                       : 'Select a folder (optional)')}
                   </span>
@@ -1970,9 +1970,9 @@ export default function ESignatureDashboard() {
         </Modal.Header>
         <Modal.Body style={{ padding: 0, height: '80vh', minHeight: '600px', display: 'flex', flexDirection: 'column' }}>
           {/* Instructions */}
-          <div style={{ 
-            padding: '12px 16px', 
-            backgroundColor: '#F0FDFA', 
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: '#F0FDFA',
             borderBottom: '1px solid #99F6E4',
             fontSize: '13px',
             color: '#0D9488',
@@ -1981,9 +1981,9 @@ export default function ESignatureDashboard() {
             gap: '8px'
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4"/>
-              <path d="M12 8h.01"/>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
             </svg>
             <span>
               <strong>Drag & Drop Signing:</strong> Click on the document to place your signature. You can draw, type, or upload your signature.
@@ -2014,10 +2014,10 @@ export default function ESignatureDashboard() {
               }}
             />
           ) : (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               height: '100%',
               color: '#6B7280',
               flexDirection: 'column',
@@ -2054,9 +2054,9 @@ export default function ESignatureDashboard() {
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/>
-              <line x1="10" y1="14" x2="21" y2="3"/>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
             </svg>
             Open in New Window
           </button>
@@ -2099,7 +2099,7 @@ export default function ESignatureDashboard() {
                 <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
                   Taxpayer Signed:
                 </span>
-                <span style={{ 
+                <span style={{
                   color: selectedSigningStatus.taxpayer_signed ? '#10B981' : '#6B7280',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -2113,7 +2113,7 @@ export default function ESignatureDashboard() {
                 <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
                   Preparer Signed:
                 </span>
-                <span style={{ 
+                <span style={{
                   color: selectedSigningStatus.preparer_signed ? '#10B981' : '#6B7280',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -2127,7 +2127,7 @@ export default function ESignatureDashboard() {
                 <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
                   Spouse Signed:
                 </span>
-                <span style={{ 
+                <span style={{
                   color: selectedSigningStatus.spouse_sign === false ? '#9CA3AF' : selectedSigningStatus.spouse_signed ? '#10B981' : '#6B7280',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -2141,7 +2141,7 @@ export default function ESignatureDashboard() {
                 <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
                   Preparer Must Sign:
                 </span>
-                <span style={{ 
+                <span style={{
                   color: selectedSigningStatus.preparer_must_sign ? '#F59E0B' : '#9CA3AF',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -2156,7 +2156,7 @@ export default function ESignatureDashboard() {
                   <span style={{ color: '#3B4A66', fontSize: '14px', fontWeight: '500' }}>
                     Preparer Needs to Sign:
                   </span>
-                  <span style={{ 
+                  <span style={{
                     color: selectedSigningStatus.preparer_needs_to_sign ? '#F59E0B' : '#9CA3AF',
                     fontSize: '14px',
                     fontWeight: '500'
@@ -2286,11 +2286,11 @@ export default function ESignatureDashboard() {
                   position: 'top-right',
                   autoClose: 5000
                 });
-                
+
                 // Close the annotation modal
                 setShowAnnotationModal(false);
                 setSelectedDocumentForAnnotation(null);
-                
+
                 // Refresh signature requests
                 setTimeout(() => {
                   fetchSignatureRequests();

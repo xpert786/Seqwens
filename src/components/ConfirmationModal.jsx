@@ -8,15 +8,15 @@ const ConfirmationModal = ({
   message = "Are you sure you want to proceed?",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmButtonStyle = { backgroundColor: '#F56D2D', color: '#FFFFFF' },
-  cancelButtonStyle = { border: '1px solid #E8F0FF', color: '#3B4A66' },
+  confirmButtonStyle = { backgroundColor: '#F56D2D', color: '#FFFFFF', borderRadius: '8px' },
+  cancelButtonStyle = { border: '1px solid #E8F0FF', color: '#3B4A66', borderRadius: '8px' },
   isLoading = false,
   isDestructive = false
 }) => {
   if (!isOpen) return null;
 
   const defaultConfirmStyle = isDestructive
-    ? { backgroundColor: '#EF4444', color: '#FFFFFF' }
+    ? { backgroundColor: '#EF4444', color: '#FFFFFF', borderRadius: '8px' }
     : confirmButtonStyle;
 
   return (
@@ -52,9 +52,9 @@ const ConfirmationModal = ({
         {/* Body */}
         <div className="p-6">
           {typeof message === 'string' ? (
-          <p className="text-sm text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#4B5563', fontSize: '14px' }}>
-            {message}
-          </p>
+            <p className="text-sm text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#4B5563', fontSize: '14px' }}>
+              {message}
+            </p>
           ) : (
             <div className="text-sm text-gray-700 font-[BasisGrotesquePro]" style={{ color: '#4B5563', fontSize: '14px' }}>
               {message}

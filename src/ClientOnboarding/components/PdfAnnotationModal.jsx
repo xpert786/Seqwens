@@ -18,10 +18,10 @@ const TOOLS = {
   SELECT: 'select'
 };
 
-export default function PdfAnnotationModal({ 
-  isOpen, 
-  onClose, 
-  documentUrl, 
+export default function PdfAnnotationModal({
+  isOpen,
+  onClose,
+  documentUrl,
   documentName,
   requestId,
   onSave,
@@ -48,7 +48,7 @@ export default function PdfAnnotationModal({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 }); // Offset for smooth dragging
   const [activeSigner, setActiveSigner] = useState('primary'); // 'primary' or 'spouse'
   const [isSaved, setIsSaved] = useState(false); // Track if annotations have been saved
-  
+
   const canvasRefs = useRef({});
   const containerRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -57,6 +57,7 @@ export default function PdfAnnotationModal({
   const eraserRemovedIdsRef = useRef(new Set()); // Track IDs removed in current erase session
   const lastEraseTimeRef = useRef(0); // Throttle eraser re-renders
   const annotationsRef = useRef([]); // Store current annotations to avoid stale closures
+  const pdfRenderCache = useRef({}); // Cache for rendered PDF pages: { [pageScaleKey]: { canvas: OffscreenCanvas, width, height } }
 
   // Initialize history when modal opens
   useEffect(() => {
@@ -82,8 +83,8 @@ export default function PdfAnnotationModal({
         handleUndo();
       }
       // Ctrl+Shift+Z or Cmd+Shift+Z or Ctrl+Y for Redo
-      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || 
-          (e.ctrlKey && e.key === 'y')) {
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') ||
+        (e.ctrlKey && e.key === 'y')) {
         e.preventDefault();
         handleRedo();
       }
@@ -104,10 +105,10 @@ export default function PdfAnnotationModal({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    
+
     const wrappers = container.querySelectorAll('.pdf-page-wrapper');
     const canvases = container.querySelectorAll('canvas');
-    
+
     wrappers.forEach(wrapper => {
       if (activeTool === TOOLS.PEN) {
         wrapper.style.cursor = 'crosshair';
@@ -121,7 +122,7 @@ export default function PdfAnnotationModal({
         wrapper.style.cursor = 'default';
       }
     });
-    
+
     // Also update canvas cursors
     // For SELECT mode, we don't set it here because it's dynamic based on hover
     canvases.forEach(canvas => {
@@ -149,18 +150,18 @@ export default function PdfAnnotationModal({
   const loadPdf = async (url) => {
     try {
       setLoading(true);
-      
+
       let pdfBlobUrl = url;
-      
+
       // Try to fetch PDF as blob to avoid CORS issues, with fallback to direct URL
       try {
-        const response = await fetch(url, { 
+        const response = await fetch(url, {
           mode: 'cors',
           headers: {
             'Access-Control-Allow-Origin': '*'
           }
         });
-        
+
         if (response.ok) {
           const blob = await response.blob();
           pdfBlobUrl = URL.createObjectURL(blob);
@@ -172,23 +173,23 @@ export default function PdfAnnotationModal({
         console.warn('Could not fetch PDF as blob, using direct URL:', fetchError.message);
         // Fall back to direct URL
       }
-      
+
       // Load PDF document with error handling
-      const loadingTask = getDocument({ 
+      const loadingTask = getDocument({
         url: pdfBlobUrl,
         cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
         cMapPacked: true,
         standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/'
       });
-      
+
       loadingTask.onProgress = (progress) => {
         console.log('PDF loading progress:', progress);
       };
-      
+
       const pdf = await loadingTask.promise;
-      
+
       setPdfDoc(pdf);
-      
+
       // Get page count
       const numPages = pdf.numPages;
       const pages = [];
@@ -196,14 +197,17 @@ export default function PdfAnnotationModal({
         pages.push(i);
       }
       setPdfPages(pages);
-      
+
+      // Clear cache when new PDF loads
+      pdfRenderCache.current = {};
+
       setLoading(false);
     } catch (error) {
       console.error('Error loading PDF:', error);
-      
+
       // Provide more specific error messages
       let errorMessage = 'Failed to load PDF document';
-      
+
       if (error.name === 'UnexpectedResponseException') {
         errorMessage = 'PDF file not found or access denied';
       } else if (error.name === 'InvalidPDFException') {
@@ -213,7 +217,7 @@ export default function PdfAnnotationModal({
       } else if (error.message && error.message.includes('fetch')) {
         errorMessage = 'Network error: Could not download PDF. Please check your internet connection.';
       }
-      
+
       toast.error(errorMessage);
       setLoading(false);
     }
@@ -221,26 +225,23 @@ export default function PdfAnnotationModal({
 
   const renderPage = useCallback(async (pdf, pageNum) => {
     if (!pdf || !pageNum || isNaN(pageNum)) return;
-    
+
     const canvasId = `page-${pageNum}`;
     const container = containerRef.current;
     if (!container) return;
-    
+
     try {
       const page = await pdf.getPage(pageNum);
       if (!page) return;
-      
-      // Get viewport with explicit rotation 0 to prevent inversion
-      // PDF.js viewport rotation: 0 (0°), 90 (90°), 180 (180°), 270 (270°)
-      // Always use 0 to ensure correct orientation
-      // Create a fresh viewport object each time to avoid any cached rotation
-      const viewport = page.getViewport({ 
-        scale: scale, 
-        rotation: 0,
+
+      // Use page.rotate to respect native PDF rotation (handles landscape pages correctly)
+      const viewport = page.getViewport({
+        scale: scale,
+        rotation: page.rotate, // Use native rotation
         offsetX: 0,
         offsetY: 0
       });
-      
+
       // Find or create wrapper
       let wrapper = container.querySelector(`[data-page="${pageNum}"]`);
       if (!wrapper) {
@@ -249,32 +250,24 @@ export default function PdfAnnotationModal({
         wrapper.setAttribute('data-page', pageNum);
         container.appendChild(wrapper);
       }
-      
-      // Always reset wrapper styles to prevent inversion
+
+      // Base styles for wrapper
       wrapper.style.position = 'relative';
       wrapper.style.marginBottom = '20px';
       wrapper.style.display = 'flex';
       wrapper.style.justifyContent = 'center';
-      wrapper.style.transform = 'none';
-      wrapper.style.transformOrigin = 'top left';
-      wrapper.style.webkitTransform = 'none';
-      wrapper.style.mozTransform = 'none';
-      wrapper.style.msTransform = 'none';
-      wrapper.style.oTransform = 'none';
-      
+
       // Update cursor based on active tool
-      if (activeTool === TOOLS.PEN) {
-        wrapper.style.cursor = 'crosshair';
-      } else if (activeTool === TOOLS.TRASH) {
-        wrapper.style.cursor = 'not-allowed';
-      } else if (activeTool === TOOLS.IMAGE) {
-        wrapper.style.cursor = 'copy';
-      } else if (activeTool === TOOLS.SELECT) {
-        wrapper.style.cursor = draggingImage ? 'grabbing' : 'grab';
-      } else {
-        wrapper.style.cursor = 'default';
-      }
-      
+      const getCursorStyle = () => {
+        if (activeTool === TOOLS.PEN) return 'crosshair';
+        if (activeTool === TOOLS.TRASH) return 'not-allowed';
+        if (activeTool === TOOLS.IMAGE) return 'copy';
+        if (activeTool === TOOLS.SELECT) return draggingImage ? 'grabbing' : 'grab';
+        return 'default';
+      };
+
+      wrapper.style.cursor = getCursorStyle();
+
       // Find or create canvas
       let canvas = wrapper.querySelector('canvas');
       if (!canvas) {
@@ -283,56 +276,76 @@ export default function PdfAnnotationModal({
         canvasRefs.current[canvasId] = canvas;
         wrapper.appendChild(canvas);
       }
-      
+
       // Set canvas internal dimensions
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      
-      // Set canvas display size to match internal dimensions (1:1 pixel ratio)
-      // This ensures coordinates are calculated correctly regardless of scale
+      // Use standard rounding to avoid subpixel blurring
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      // Set canvas display size
       canvas.style.width = `${viewport.width}px`;
       canvas.style.height = `${viewport.height}px`;
-      // Ensure no CSS transforms are applied that could cause inversion
-      canvas.style.transform = 'none';
-      canvas.style.transformOrigin = 'top left';
-      canvas.style.webkitTransform = 'none';
-      canvas.style.mozTransform = 'none';
-      canvas.style.msTransform = 'none';
-      canvas.style.oTransform = 'none';
-      canvas.style.rotate = '0deg';
-      canvas.style.scale = '1';
-      
+
       const context = canvas.getContext('2d');
       if (!context) return;
-      
-      // Clear canvas completely
+
+      // Clear canvas (synchronous)
       context.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Reset any existing transforms - ensure identity matrix
-      // This prevents any rotation or scaling from previous renders
+
+      // --- Render PDF Content (Cached vs Fresh) ---
+
+      // Create a cache key based on page number, scale, and rotation
+      // limiting scale precision to avoid cache misses on tiny float diffs
+      const cacheKey = `${pageNum}-${scale.toFixed(3)}-${page.rotate}`;
+
+      if (pdfRenderCache.current[cacheKey]) {
+        // HIT: Draw cached offscreen canvas synchronously
+        const cached = pdfRenderCache.current[cacheKey];
+        context.drawImage(cached.canvas, 0, 0);
+      } else {
+        // MISS: Render to offscreen canvas and cache it
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = canvas.width;
+        offscreenCanvas.height = canvas.height;
+        const offscreenContext = offscreenCanvas.getContext('2d');
+
+        const renderContext = {
+          canvasContext: offscreenContext,
+          viewport: viewport
+        };
+
+        // This is the async part - we wait for it
+        await page.render(renderContext).promise;
+
+        // Save to cache
+        pdfRenderCache.current[cacheKey] = {
+          canvas: offscreenCanvas,
+          width: canvas.width,
+          height: canvas.height
+        };
+
+        // Draw to visible canvas
+        context.drawImage(offscreenCanvas, 0, 0);
+      }
+
+      // --- Match Context Transform to PDF Rotation ---
+      // This ensures subsequent draws (lines, images) align with the rotated coordinate system
+      // For 90/270 degree rotations, we need to swap coordinates or rotate context
+      // However, since we're drawing on a canvas that is already sized to the rotated viewport,
+      // and our annotations are stored in viewport coordinates (0..width, 0..height relative to the VIEWPORT),
+      // we usually don't need to rotate the context itself if line coordinates match visual coordinates.
+
+      // Reset context transform to identity for drawing annotations
       context.setTransform(1, 0, 0, 1, 0, 0);
-      
-      // Ensure no rotation is applied to the context
-      context.rotate(0);
-      context.scale(1, 1);
-      
-      // Render PDF page - viewport already handles correct orientation
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport
-      };
-      
-      await page.render(renderContext).promise;
-      
-      // Draw annotations for this page - use ref to get latest annotations
+
+      // Draw annotations for this page (Synchronous)
       drawAnnotations(context, pageNum, viewport, annotationsRef.current);
-      
-      // Draw images for this page
+
+      // Draw images for this page (Synchronous if loaded)
       drawImages(context, pageNum, viewport);
-      
+
     } catch (error) {
       console.error('Error rendering page:', error);
-      // Don't show error toast to avoid spam during erasing
     }
   }, [scale, activeTool, images, draggingImage]); // Removed 'annotations' to prevent re-renders during drawing
 
@@ -363,18 +376,18 @@ export default function PdfAnnotationModal({
 
   const drawAnnotations = (context, pageNum, viewport, annotationsToDraw = null) => {
     // Use provided annotations, or ref (latest), or fall back to state
-    const allAnnotations = annotationsToDraw !== null 
-      ? annotationsToDraw 
+    const allAnnotations = annotationsToDraw !== null
+      ? annotationsToDraw
       : (annotationsRef.current.length > 0 ? annotationsRef.current : annotations);
     const pageAnnotations = allAnnotations.filter(a => a.page === pageNum);
-    
+
     pageAnnotations.forEach(annotation => {
       if (annotation.type === 'drawing') {
         context.strokeStyle = annotation.color || penColor;
         context.lineWidth = annotation.width || penWidth;
         context.lineCap = 'round';
         context.lineJoin = 'round';
-        
+
         if (annotation.path && annotation.path.length > 0) {
           context.beginPath();
           annotation.path.forEach((point, index) => {
@@ -392,7 +405,7 @@ export default function PdfAnnotationModal({
 
   const drawImages = (context, pageNum, viewport) => {
     const pageImages = images.filter(img => img.page === pageNum);
-    
+
     pageImages.forEach(img => {
       const imageObj = new Image();
       imageObj.src = img.src;
@@ -404,7 +417,7 @@ export default function PdfAnnotationModal({
           img.width,
           img.height
         );
-        
+
         // Draw border if this image is being dragged
         if (draggingImage && draggingImage.id === img.id) {
           context.strokeStyle = '#00C0C6';
@@ -426,12 +439,12 @@ export default function PdfAnnotationModal({
       width: img.width,
       height: img.height
     })));
-    
+
     // Check from top to bottom (last drawn = on top)
     for (let i = pageImages.length - 1; i >= 0; i--) {
       const img = pageImages[i];
       const inBounds = x >= img.x && x <= img.x + img.width &&
-                       y >= img.y && y <= img.y + img.height;
+        y >= img.y && y <= img.y + img.height;
       console.log(`Image ${img.id}: inBounds=${inBounds}`);
       if (inBounds) {
         console.log('Found image at position!', img.id);
@@ -452,16 +465,16 @@ export default function PdfAnnotationModal({
   // Optimized function to find annotations to erase
   const findAnnotationsToErase = useCallback((x, y, pageNum, currentAnnotations) => {
     if (!Array.isArray(currentAnnotations) || currentAnnotations.length === 0) return [];
-    
+
     const annotationsToRemove = new Set();
     const eraserRadiusSquared = eraserWidth * eraserWidth;
-    
+
     for (const ann of currentAnnotations) {
       // Skip invalid annotations
       if (!ann || ann.page !== pageNum || !ann.path || !Array.isArray(ann.path) || ann.path.length === 0) {
         continue;
       }
-      
+
       // Check if eraser intersects with any point in the annotation path
       for (const point of ann.path) {
         if (point && typeof point.x === 'number' && typeof point.y === 'number') {
@@ -474,46 +487,46 @@ export default function PdfAnnotationModal({
         }
       }
     }
-    
+
     return Array.from(annotationsToRemove);
   }, [eraserWidth]);
 
   const handleMouseDown = (e) => {
     // Disable editing if annotations have been saved
     if (isSaved) return;
-    
+
     const target = e.target;
     if (!target || target.tagName !== 'CANVAS') return;
-    
+
     const wrapper = target.closest('[data-page]');
     if (!wrapper) return;
-    
+
     const pageNum = parseInt(wrapper.getAttribute('data-page'));
     if (isNaN(pageNum)) return;
-    
+
     const canvas = target;
     const rect = canvas.getBoundingClientRect();
-    
+
     // Validate rect dimensions
     if (rect.width <= 0 || rect.height <= 0 || canvas.width <= 0 || canvas.height <= 0) return;
-    
+
     // Calculate coordinates accounting for actual canvas display size
     // Use the ratio of canvas internal dimensions to displayed dimensions
     // This handles cases where canvas is scaled via CSS or browser zoom
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
-    
+
     // Validate coordinates
     if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
-    
+
     // Check if clicking on an existing image (for dragging)
     const clickedImage = getImageAtPosition(x, y, pageNum);
     console.log('Mouse down - Active tool:', activeTool, 'Clicked image:', clickedImage ? clickedImage.id : 'none');
     console.log('Images on this page:', images.filter(img => img.page === pageNum).length);
-    
+
     if (clickedImage && activeTool === TOOLS.SELECT) {
       console.log('Starting drag for image:', clickedImage.id);
       canvas.style.cursor = 'grabbing';
@@ -524,11 +537,11 @@ export default function PdfAnnotationModal({
       });
       return;
     }
-    
+
     if (activeTool === TOOLS.PEN || activeTool === TOOLS.TRASH) {
       setIsDrawing(true);
       startPosRef.current = { x, y, page: pageNum };
-      
+
       if (activeTool === TOOLS.PEN) {
         const newAnnotation = {
           id: `annotation-${annotationIdCounter.current++}`,
@@ -544,15 +557,15 @@ export default function PdfAnnotationModal({
       } else if (activeTool === TOOLS.TRASH) {
         // Reset eraser session tracking
         eraserRemovedIdsRef.current = new Set();
-        
+
         console.log('Eraser clicked at:', { x, y, pageNum, eraserWidth });
         console.log('Current annotations count:', annotations.length);
         console.log('Current images count:', images.length);
-        
+
         // Erase on click - check both annotations and images
         const annotationsToRemove = findAnnotationsToErase(x, y, pageNum, annotations);
         console.log('Annotations to remove:', annotationsToRemove);
-        
+
         // Also check if eraser is over any image
         const imagesToRemove = images.filter(img => {
           if (img.page !== pageNum) return false;
@@ -563,12 +576,12 @@ export default function PdfAnnotationModal({
           return (dx * dx + dy * dy) <= (eraserWidth * eraserWidth);
         }).map(img => img.id);
         console.log('Images to remove:', imagesToRemove);
-        
+
         if (annotationsToRemove.length > 0 || imagesToRemove.length > 0) {
           annotationsToRemove.forEach(id => eraserRemovedIdsRef.current.add(id));
           const removedAnnotationSet = new Set(annotationsToRemove);
           const removedImageSet = new Set(imagesToRemove);
-          
+
           setAnnotations(prev => {
             const updated = prev.filter(ann => !removedAnnotationSet.has(ann.id));
             console.log('Updated annotations count:', updated.length);
@@ -579,7 +592,7 @@ export default function PdfAnnotationModal({
             console.log('Updated images count:', updated.length);
             return updated;
           });
-          
+
           // Re-render after state update - use a slightly longer delay
           setTimeout(() => {
             if (pdfDoc) {
@@ -597,11 +610,11 @@ export default function PdfAnnotationModal({
       if (imageAnnotation && imageAnnotation.type === 'image') {
         const imageWidth = imageAnnotation.width || 200;
         const imageHeight = imageAnnotation.height || 200;
-        
+
         // Center the image on the click point
         const centerX = x - (imageWidth / 2);
         const centerY = y - (imageHeight / 2);
-        
+
         const newImage = {
           id: `image-${Date.now()}`,
           page: pageNum,
@@ -614,15 +627,15 @@ export default function PdfAnnotationModal({
         };
         const newImages = [...images, newImage];
         const newAnnotations = annotations.filter(a => a.id !== selectedAnnotation);
-        
+
         setImages(newImages);
         setAnnotations(newAnnotations);
         setSelectedAnnotation(null);
         setActiveTool(TOOLS.PEN);
-        
+
         // Save to history
         saveToHistory(newAnnotations, newImages);
-        
+
         toast.success('Image placed successfully');
       }
     }
@@ -631,40 +644,40 @@ export default function PdfAnnotationModal({
   const handleMouseMove = (e) => {
     // Disable editing if annotations have been saved
     if (isSaved) return;
-    
+
     const target = e.target;
     if (!target || target.tagName !== 'CANVAS') return;
-    
+
     const wrapper = target.closest('[data-page]');
     if (!wrapper) return;
-    
+
     const pageNum = parseInt(wrapper.getAttribute('data-page'));
     if (isNaN(pageNum)) return;
-    
+
     const canvas = target;
     const rect = canvas.getBoundingClientRect();
-    
+
     // Validate rect dimensions
     if (rect.width <= 0 || rect.height <= 0 || canvas.width <= 0 || canvas.height <= 0) return;
-    
+
     // Calculate coordinates accounting for actual canvas display size
     // Use the ratio of canvas internal dimensions to displayed dimensions
     // This handles cases where canvas is scaled via CSS or browser zoom
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
-    
+
     // Validate coordinates
     if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
-    
+
     // Handle image dragging
     if (draggingImage) {
       console.log('Dragging image:', draggingImage.id, 'to position:', x.toFixed(0), y.toFixed(0));
       const newX = x - dragOffset.x;
       const newY = y - dragOffset.y;
-      
+
       setImages(prev => prev.map(img => {
         if (img.id === draggingImage.id) {
           console.log('Updating image position to:', newX.toFixed(0), newY.toFixed(0));
@@ -672,7 +685,7 @@ export default function PdfAnnotationModal({
         }
         return img;
       }));
-      
+
       // Re-render for smooth dragging
       requestAnimationFrame(() => {
         if (pdfDoc) {
@@ -683,7 +696,7 @@ export default function PdfAnnotationModal({
     } else if (activeTool === TOOLS.SELECT) {
       console.log('In SELECT mode but draggingImage is null');
     }
-    
+
     // Change cursor when hovering over images in SELECT mode
     if (activeTool === TOOLS.SELECT && !isDrawing && !draggingImage) {
       const hoveredImage = getImageAtPosition(x, y, pageNum);
@@ -694,19 +707,19 @@ export default function PdfAnnotationModal({
         canvas.style.cursor = 'pointer';
       }
     }
-    
+
     if (!isDrawing || !startPosRef.current) return;
-    
+
     if (activeTool === TOOLS.PEN && selectedAnnotation) {
       // Draw directly on canvas without re-rendering
       const context = canvas.getContext('2d');
       if (!context) return;
-      
+
       context.strokeStyle = penColor;
       context.lineWidth = penWidth;
       context.lineCap = 'round';
       context.lineJoin = 'round';
-      
+
       const lastPoint = startPosRef.current;
       if (lastPoint && typeof lastPoint.x === 'number' && typeof lastPoint.y === 'number') {
         context.beginPath();
@@ -714,9 +727,9 @@ export default function PdfAnnotationModal({
         context.lineTo(x, y);
         context.stroke();
       }
-      
+
       startPosRef.current = { x, y, page: pageNum };
-      
+
       // Update annotation data in state - batch updates for performance
       setAnnotations(prev => {
         return prev.map(ann => {
@@ -732,19 +745,19 @@ export default function PdfAnnotationModal({
     } else if (activeTool === TOOLS.TRASH) {
       // Erase entire annotations when the eraser crosses any part of them
       const annotationsToRemove = findAnnotationsToErase(x, y, pageNum, annotations);
-      
+
       // Filter out already removed annotations in this session
       const newRemovalsOnly = annotationsToRemove.filter(id => !eraserRemovedIdsRef.current.has(id));
-      
+
       // Remove annotations and trigger re-render (throttled)
       if (newRemovalsOnly.length > 0) {
         console.log('Erasing during drag:', newRemovalsOnly);
         // Track removed IDs
         newRemovalsOnly.forEach(id => eraserRemovedIdsRef.current.add(id));
-        
+
         const allRemovedSet = eraserRemovedIdsRef.current;
         setAnnotations(prev => prev.filter(ann => !allRemovedSet.has(ann.id)));
-        
+
         // Throttle re-renders to max 60fps (16ms)
         const now = Date.now();
         if (now - lastEraseTimeRef.current >= 50) { // Increased from 16ms to 50ms
@@ -757,7 +770,7 @@ export default function PdfAnnotationModal({
           }, 10);
         }
       }
-      
+
       startPosRef.current = { x, y, page: pageNum };
     }
   };
@@ -773,10 +786,10 @@ export default function PdfAnnotationModal({
       saveToHistory(annotations, images);
       return;
     }
-    
+
     if (isDrawing) {
       const pageNum = startPosRef.current?.page;
-      
+
       // If erasing, ensure final re-render happens
       if (activeTool === TOOLS.TRASH && startPosRef.current && eraserRemovedIdsRef.current.size > 0) {
         if (pdfDoc && pageNum) {
@@ -794,7 +807,7 @@ export default function PdfAnnotationModal({
           renderPage(pdfDoc, pageNum);
         }, 50);
       }
-      
+
       // Save to history when drawing/erasing is complete
       setTimeout(() => {
         saveToHistory(annotations, images);
@@ -807,15 +820,15 @@ export default function PdfAnnotationModal({
   const handleImageUpload = (e) => {
     // Disable editing if annotations have been saved
     if (isSaved) return;
-    
+
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       toast.error('Please upload an image file');
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
@@ -823,7 +836,7 @@ export default function PdfAnnotationModal({
         const aspectRatio = img.width / img.height;
         const defaultWidth = 200;
         const defaultHeight = defaultWidth / aspectRatio;
-        
+
         const newAnnotation = {
           id: `image-annotation-${Date.now()}`,
           type: 'image',
@@ -832,7 +845,7 @@ export default function PdfAnnotationModal({
           height: defaultHeight,
           signer: activeSigner
         };
-        
+
         setAnnotations(prev => [...prev, newAnnotation]);
         setSelectedAnnotation(newAnnotation.id);
         setActiveTool(TOOLS.IMAGE);
@@ -841,7 +854,7 @@ export default function PdfAnnotationModal({
       img.src = event.target.result;
     };
     reader.readAsDataURL(file);
-    
+
     // Reset input
     if (imageInputRef.current) {
       imageInputRef.current.value = '';
@@ -854,24 +867,24 @@ export default function PdfAnnotationModal({
     if (history.length > 0 && historyIndex >= 0) {
       const currentState = history[historyIndex];
       if (JSON.stringify(currentState.annotations) === JSON.stringify(newAnnotations) &&
-          JSON.stringify(currentState.images) === JSON.stringify(newImages)) {
+        JSON.stringify(currentState.images) === JSON.stringify(newImages)) {
         console.log('No changes detected, skipping history save');
         return;
       }
     }
-    
-    const newState = { 
-      annotations: JSON.parse(JSON.stringify(newAnnotations)), 
+
+    const newState = {
+      annotations: JSON.parse(JSON.stringify(newAnnotations)),
       images: JSON.parse(JSON.stringify(newImages)),
       timestamp: Date.now()
     };
-    
+
     console.log('Saving to history:', {
       annotationsCount: newAnnotations.length,
       imagesCount: newImages.length,
       currentIndex: historyIndex
     });
-    
+
     setHistory(prev => {
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
@@ -882,7 +895,7 @@ export default function PdfAnnotationModal({
       console.log('New history length:', trimmedHistory.length);
       return trimmedHistory;
     });
-    
+
     setHistoryIndex(prev => {
       const newIndex = Math.min(prev + 1, 49);
       console.log('New history index:', newIndex);
@@ -896,20 +909,20 @@ export default function PdfAnnotationModal({
       toast.info('Nothing to undo');
       return;
     }
-    
+
     const newIndex = historyIndex - 1;
     const previousState = history[newIndex];
-    
+
     console.log('Undo - Going from index', historyIndex, 'to', newIndex);
     console.log('Previous state:', {
       annotations: previousState.annotations.length,
       images: previousState.images.length
     });
-    
+
     setAnnotations(JSON.parse(JSON.stringify(previousState.annotations)));
     setImages(JSON.parse(JSON.stringify(previousState.images)));
     setHistoryIndex(newIndex);
-    
+
     // Re-render all pages to ensure consistency
     if (pdfDoc) {
       setTimeout(() => {
@@ -918,7 +931,7 @@ export default function PdfAnnotationModal({
         });
       }, 50);
     }
-    
+
     toast.success(`Undone (${history.length - newIndex - 1} more available)`);
   };
 
@@ -928,20 +941,20 @@ export default function PdfAnnotationModal({
       toast.info('Nothing to redo');
       return;
     }
-    
+
     const newIndex = historyIndex + 1;
     const nextState = history[newIndex];
-    
+
     console.log('Redo - Going from index', historyIndex, 'to', newIndex);
     console.log('Next state:', {
       annotations: nextState.annotations.length,
       images: nextState.images.length
     });
-    
+
     setAnnotations(JSON.parse(JSON.stringify(nextState.annotations)));
     setImages(JSON.parse(JSON.stringify(nextState.images)));
     setHistoryIndex(newIndex);
-    
+
     // Re-render all pages to ensure consistency
     if (pdfDoc) {
       setTimeout(() => {
@@ -950,7 +963,7 @@ export default function PdfAnnotationModal({
         });
       }, 50);
     }
-    
+
     toast.success(`Redone (${newIndex} of ${history.length - 1})`);
   };
 
@@ -962,32 +975,32 @@ export default function PdfAnnotationModal({
       toast.info('Nothing to clear');
       return;
     }
-    
+
     // Save current state before clearing
     saveToHistory([], []);
     setAnnotations([]);
     setImages([]);
-    
+
     // Re-render all pages
     if (pdfDoc) {
       pdfPages.forEach(pageNum => {
         renderPage(pdfDoc, pageNum);
       });
     }
-    
+
     toast.success('All annotations cleared');
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // Separate primary and spouse annotations
       const primaryAnnotations = annotations.filter(ann => !ann.signer || ann.signer === 'primary');
       const spouseAnnotations = annotations.filter(ann => ann.signer === 'spouse');
       const primaryImages = images.filter(img => !img.signer || img.signer === 'primary');
       const spouseImages = images.filter(img => img.signer === 'spouse');
-      
+
       // Validate spouse signature requirement
       if (spouseSignRequired && !spouseSigned) {
         const spouseHasAnnotations = spouseAnnotations.length > 0 || spouseImages.length > 0;
@@ -1000,7 +1013,7 @@ export default function PdfAnnotationModal({
           return;
         }
       }
-      
+
       // Get canvas dimensions from the first page (assuming all pages have same dimensions)
       let canvasWidth = 0;
       let canvasHeight = 0;
@@ -1012,7 +1025,7 @@ export default function PdfAnnotationModal({
           canvasHeight = firstCanvas.height;
         }
       }
-      
+
       // Prepare annotation data for backend
       const annotationData = {
         request_id: requestId,
@@ -1022,7 +1035,7 @@ export default function PdfAnnotationModal({
           type: ann.type,
           page: ann.page,
           signer: 'primary',
-          data: ann.type === 'drawing' 
+          data: ann.type === 'drawing'
             ? { path: ann.path, color: ann.color, width: ann.width }
             : { src: ann.src, width: ann.width, height: ann.height }
         })),
@@ -1042,7 +1055,7 @@ export default function PdfAnnotationModal({
           type: ann.type,
           page: ann.page,
           signer: 'spouse',
-          data: ann.type === 'drawing' 
+          data: ann.type === 'drawing'
             ? { path: ann.path, color: ann.color, width: ann.width }
             : { src: ann.src, width: ann.width, height: ann.height }
         })) : [],
@@ -1063,7 +1076,7 @@ export default function PdfAnnotationModal({
           height: canvasHeight
         }
       };
-      
+
       // Call onSave callback if provided
       if (onSave) {
         await onSave(annotationData);
@@ -1072,7 +1085,7 @@ export default function PdfAnnotationModal({
         console.log('Annotation data to send to backend:', JSON.stringify(annotationData, null, 2));
         toast.success('Annotations saved successfully!');
       }
-      
+
       // Disable editing after successful save
       setIsSaved(true);
     } catch (error) {
@@ -1094,11 +1107,11 @@ export default function PdfAnnotationModal({
     setHistory([]);
     setHistoryIndex(-1);
     setIsSaved(false); // Reset saved state
-    
+
     // Clear refs
     eraserRemovedIdsRef.current.clear();
     lastEraseTimeRef.current = 0;
-    
+
     // Clear canvas refs
     Object.keys(canvasRefs.current).forEach(key => {
       const canvas = canvasRefs.current[key];
@@ -1127,8 +1140,8 @@ export default function PdfAnnotationModal({
       <Modal.Header style={{ borderBottom: '2px solid #E5E7EB', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 1000, backgroundColor: 'white' }}>
         <div className="d-flex justify-content-between align-items-center w-100">
           <div>
-            <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0 }}>
-              PDF Annotation Tool - {documentName || 'Document'}
+            <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0, textAlign: 'center' }}>
+              PDF Annotation Tool
             </Modal.Title>
           </div>
           <button
@@ -1157,7 +1170,7 @@ export default function PdfAnnotationModal({
                 <button
                   onClick={() => setActiveSigner('primary')}
                   className={`btn btn-sm ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{ 
+                  style={{
                     fontSize: '12px',
                     padding: '4px 12px',
                     minWidth: '80px'
@@ -1169,7 +1182,7 @@ export default function PdfAnnotationModal({
                 <button
                   onClick={() => setActiveSigner('spouse')}
                   className={`btn btn-sm ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{ 
+                  style={{
                     fontSize: '12px',
                     padding: '4px 12px',
                     minWidth: '80px',
@@ -1235,10 +1248,10 @@ export default function PdfAnnotationModal({
               onChange={handleImageUpload}
               style={{ display: 'none' }}
             />
-            
+
             {/* Divider */}
             <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-            
+
             {/* Clear All button */}
             <button
               onClick={handleClearAll}
@@ -1298,10 +1311,10 @@ export default function PdfAnnotationModal({
           )}
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ 
-              fontSize: '14px', 
-              color: '#3B4A66', 
-              display: 'flex', 
+            <span style={{
+              fontSize: '14px',
+              color: '#3B4A66',
+              display: 'flex',
               alignItems: 'center',
               padding: '0 8px',
               minWidth: '60px',
@@ -1313,7 +1326,7 @@ export default function PdfAnnotationModal({
         </div>
 
         {/* PDF Viewer Area */}
-        <div 
+        <div
           ref={containerRef}
           className="pdf-viewer-container"
           style={{
@@ -1346,11 +1359,11 @@ export default function PdfAnnotationModal({
                 style={{
                   position: 'relative',
                   marginBottom: '20px',
-                  cursor: activeTool === TOOLS.PEN ? 'crosshair' 
-                    : activeTool === TOOLS.TRASH ? 'not-allowed' 
-                    : activeTool === TOOLS.IMAGE ? 'copy'
-                    : activeTool === TOOLS.SELECT ? (draggingImage ? 'grabbing' : 'grab')
-                    : 'default'
+                  cursor: activeTool === TOOLS.PEN ? 'crosshair'
+                    : activeTool === TOOLS.TRASH ? 'not-allowed'
+                      : activeTool === TOOLS.IMAGE ? 'copy'
+                        : activeTool === TOOLS.SELECT ? (draggingImage ? 'grabbing' : 'grab')
+                          : 'default'
                 }}
               >
                 {/* Canvas will be inserted here by renderPage */}
@@ -1394,12 +1407,12 @@ export default function PdfAnnotationModal({
         )}
       </Modal.Body>
 
-      <Modal.Footer style={{ 
-        borderTop: '2px solid #E5E7EB', 
-        padding: '16px 24px', 
-        position: 'sticky', 
-        bottom: 0, 
-        zIndex: 1000, 
+      <Modal.Footer style={{
+        borderTop: '2px solid #E5E7EB',
+        padding: '16px 24px',
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 1000,
         backgroundColor: 'white',
         boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
       }}>
