@@ -2108,27 +2108,51 @@ export default function DataIntakeForm() {
     setDependents(updated);
   };
 
+  // Helper function to format date input with slashes
+  const formatDateInput = (value) => {
+    // Remove all non-numeric characters
+    const numericValue = value.replace(/\D/g, '');
+
+    // Add slashes at appropriate positions
+    if (numericValue.length >= 2 && numericValue.length < 4) {
+      return `${numericValue.slice(0, 2)}/${numericValue.slice(2)}`;
+    } else if (numericValue.length >= 4) {
+      return `${numericValue.slice(0, 2)}/${numericValue.slice(2, 4)}/${numericValue.slice(4, 8)}`;
+    }
+
+    return numericValue;
+  };
+
   const handleInputChange = (index, field, value) => {
+    // Format date fields with slashes
+    const formattedValue = field === 'dob' ? formatDateInput(value) : value;
+
     const updated = [...dependents];
-    updated[index][field] = value;
+    updated[index][field] = formattedValue;
     setDependents(updated);
     // Clear error when user starts typing
     clearFieldError(`dependents.${index}.${field}`);
   };
 
   const handlePersonalInfoChange = (field, value) => {
+    // Format date fields with slashes
+    const formattedValue = field === 'dateOfBirth' ? formatDateInput(value) : value;
+
     setPersonalInfo(prev => ({
       ...prev,
-      [field]: value
+      [field]: formattedValue
     }));
     // Clear error when user starts typing
     clearFieldError(`personalInfo.${field}`);
   };
 
   const handleSpouseInfoChange = (field, value) => {
+    // Format date fields with slashes
+    const formattedValue = field === 'dateOfBirth' ? formatDateInput(value) : value;
+
     setSpouseInfo(prev => ({
       ...prev,
-      [field]: value
+      [field]: formattedValue
     }));
     // Clear error when user starts typing
     clearFieldError(`spouseInfo.${field}`);
@@ -3472,13 +3496,14 @@ export default function DataIntakeForm() {
             >
               Do you have other deductions or income your preparer should be aware of?
             </label>
-            <div className="flex items-center space-x-3 mt-2">
+            <div className="flex items-center space-x-3 mt-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleOtherInfoChange('otherDeductions', otherInfo.otherDeductions === "yes" ? "no" : "yes")}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
                   otherInfo.otherDeductions === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
                 }`}
+                style={{ borderRadius: "9999px" }}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -3551,17 +3576,91 @@ export default function DataIntakeForm() {
                 padding: "16px",
                 marginTop: "8px"
               }}>
-                {/* List of existing businesses */}
+                {/* Add Another Business Button */}
                 {businesses.length > 0 && !isAddingBusiness && (
+                  <div className="mb-3 text-center">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setEditingBusinessId(null);
+                        setBusinessData({
+                          workDescription: '',
+                          businessName: '',
+                          businessNameType: 'same',
+                          differentBusinessName: '',
+                          startedDuringYear: false,
+                          homeBased: false,
+                          businessAddress: '',
+                          businessCity: '',
+                          businessState: '',
+                          businessZip: '',
+                          totalIncome: '',
+                          taxFormsReceived: 'none',
+                          issuedRefunds: false,
+                          totalRefunded: '',
+                          otherBusinessIncome: false,
+                          otherBusinessIncomeAmount: '',
+                          advertising: '',
+                          officeSupplies: '',
+                          cleaningRepairs: '',
+                          insurance: '',
+                          legalProfessional: '',
+                          phoneInternetUtilities: '',
+                          paidContractors: false,
+                          totalPaidContractors: '',
+                          otherExpenses: [],
+                          otherExpenseDescription: '',
+                          otherExpenseAmount: '',
+                          usedVehicle: false,
+                          businessMiles: '',
+                          parkingTollsTravel: '',
+                          businessMeals: '',
+                          travelExpenses: '',
+                          homeOfficeUse: false,
+                          homeOfficeSize: '',
+                          sellProducts: false,
+                          costItemsResold: '',
+                          inventoryLeftEnd: '',
+                          healthInsuranceBusiness: false,
+                          selfEmployedRetirement: false,
+                          retirementAmount: '',
+                          isAccurate: false,
+                          id: null
+                        });
+                        setIsAddingBusiness(true);
+                      }}
+                      style={{
+                        fontFamily: "BasisGrotesquePro",
+                        fontWeight: 500,
+                        background: "#3B4A66",
+                        borderColor: "#3B4A66"
+                      }}
+                    >
+                      Add Another Business
+                    </button>
+                  </div>
+                )}
+
+                {/* List of existing businesses */}
+                {businesses.length > 0 && (
                   <div className="mb-4">
+                    <h6 style={{
+                      color: "#3B4A66",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      fontFamily: "BasisGrotesquePro",
+                      marginBottom: "12px"
+                    }}>
+                      Your Businesses
+                    </h6>
                     {businesses.map((business) => {
                       const totalIncome = parseFloat(business.totalIncome || business.income || 0);
                       const totalExpenses = parseFloat(business.totalExpenses || 0);
                       const netIncome = totalIncome - totalExpenses;
-                      
+
                       return (
-                        <div 
-                          key={business.id} 
+                        <div
+                          key={business.id}
                           className="p-3 mb-3 rounded border"
                           style={{
                             borderColor: "#E5E7EB",
@@ -3709,119 +3808,32 @@ export default function DataIntakeForm() {
                               >
                                 Edit
                               </button>
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => {
-                                  if (window.confirm(`Are you sure you want to remove "${business.businessName || 'this business'}"?`)) {
-                                    handleRemoveBusiness(business.id);
-                                  }
-                                }}
-                                style={{
-                                  fontFamily: "BasisGrotesquePro",
-                                  backgroundColor: "#FEF2F2",
-                                  borderColor: "#FECACA",
-                                  color: "#DC2626",
-                                  fontWeight: 500,
-                                  fontSize: "13px"
-                                }}
-                              >
+
+                              {/* <button
+                                className="btn btn-sm" */}
+                               
+                              {/* >
                                 <FaTrash className="me-1" style={{ fontSize: "11px" }} />
-                                Delete
-                              </button>
+                              </button> */}
+                              <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => handleRemoveRentalProperty(property.id)}
+                              style={{ 
+                                fontFamily: "BasisGrotesquePro",
+                                fontSize: "12px"
+                              }}
+                            >
+                              <FaTrash size={12} />
+                            </button>
                             </div>
                           </div>
                         </div>
                       );
                     })}
-                    <button
-                      className="btn btn-sm mt-2"
-                      onClick={() => {
-                        setEditingBusinessId(null);
-                        setBusinessData({
-                          workDescription: '',
-                          businessName: '',
-                          businessNameType: 'same',
-                          differentBusinessName: '',
-                          startedDuringYear: false,
-                          homeBased: false,
-                          businessAddress: '',
-                          businessCity: '',
-                          businessState: '',
-                          businessZip: '',
-                          totalIncome: '',
-                          taxFormsReceived: 'none',
-                          issuedRefunds: false,
-                          totalRefunded: '',
-                          otherBusinessIncome: false,
-                          otherBusinessIncomeAmount: '',
-                          advertising: '',
-                          officeSupplies: '',
-                          cleaningRepairs: '',
-                          insurance: '',
-                          legalProfessional: '',
-                          phoneInternetUtilities: '',
-                          paidContractors: false,
-                          totalPaidContractors: '',
-                          otherExpenses: [],
-                          otherExpenseDescription: '',
-                          otherExpenseAmount: '',
-                          usedVehicle: false,
-                          businessMiles: '',
-                          parkingTollsTravel: '',
-                          businessMeals: '',
-                          travelExpenses: '',
-                          homeOfficeUse: false,
-                          homeOfficeSize: '',
-                          sellProducts: false,
-                          costItemsResold: '',
-                          inventoryLeftEnd: '',
-                          healthInsuranceBusiness: false,
-                          selfEmployedRetirement: false,
-                          retirementAmount: '',
-                          isAccurate: false,
-                          id: null
-                        });
-                        setIsAddingBusiness(true);
-                      }}
-                      style={{
-                        fontFamily: "BasisGrotesquePro",
-                        backgroundColor: "#3B4A66",
-                        borderColor: "#3B4A66",
-                        color: "#FFFFFF",
-                        fontWeight: 500,
-                        fontSize: "13px"
-                      }}
-                    >
-                      <FaPlus className="me-1" style={{ fontSize: "11px" }} />
-                      Add Another Business
-                    </button>
                   </div>
                 )}
 
-                {/* Initial Add Button (when no businesses and not adding) */}
-                {businesses.length === 0 && !isAddingBusiness && (
-                  <div className="text-center py-4">
-                    <p style={{
-                      fontFamily: "BasisGrotesquePro",
-                      fontSize: "14px",
-                      color: "#4B5563",
-                    }}>
-                      Do you have any business income to report?
-                    </p>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => setIsAddingBusiness(true)}
-                      style={{
-                        fontFamily: "BasisGrotesquePro",
-                        fontWeight: 500,
-                        background: "#3B4A66",
-                        borderColor: "#3B4A66"
-                      }}
-                    >
-                      Add a Business
-                    </button>
-                  </div>
-                )}
+               
 
                 {/* Business Form */}
                 {isAddingBusiness && (
@@ -4029,9 +4041,13 @@ export default function DataIntakeForm() {
                             <button
                               className="btn btn-outline-primary btn-sm"
                               onClick={() => handleEditRentalProperty(property.id)}
-                              style={{ 
+                              style={{
                                 fontFamily: "BasisGrotesquePro",
-                                fontSize: "12px"
+                                backgroundColor: "#F3F4F6",
+                                borderColor: "#E5E7EB",
+                                color: "#3B4A66",
+                                fontWeight: 500,
+                                fontSize: "13px"
                               }}
                             >
                               Edit

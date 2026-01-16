@@ -153,6 +153,10 @@
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+  text-align: -webkit-center;
+  align-items: center;
 }
 
 /* Responsive Design */

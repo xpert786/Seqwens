@@ -1166,7 +1166,7 @@ export default function ESignatureDashboard() {
       {/* Signature Requests List */}
       <div className="signature-requests-list">
         {filteredRequests.length === 0 ? (
-          <div className="text-center py-5">
+          <div className="py-5">
             <FiFileText size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
             <p style={{ color: '#6B7280', fontSize: '16px', marginBottom: '8px' }}>
               No signature requests found
@@ -1576,6 +1576,7 @@ export default function ESignatureDashboard() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
+                justifyContent: 'space-between',
                 cursor: creating || processing ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
@@ -1668,6 +1669,7 @@ export default function ESignatureDashboard() {
               <label style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: '12px',
                 cursor: creating || processing ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
