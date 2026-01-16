@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import BusinessAutocomplete from './BusinessAutocomplete';
 
-export default function ComprehensiveBusinessForm({ onSave, onCancel, initialData = null }) {
+export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, externalErrors = {}, initialData = null }) {
   const [formData, setFormData] = useState({
     // 1. About Your Business
     workDescription: '',
@@ -71,6 +71,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
   });
 
   const [errors, setErrors] = useState({});
+  const [apiErrors, setApiErrors] = useState({});
+
+  // Handle external API errors
+  useEffect(() => {
+    if (Object.keys(externalErrors).length > 0) {
+      setApiErrors(externalErrors);
+    } else {
+      setApiErrors({});
+    }
+  }, [externalErrors]);
 
   useEffect(() => {
     if (initialData) {
@@ -104,7 +114,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error for this field if it exists
     if (errors[field]) {
       setErrors(prev => {
@@ -181,6 +191,28 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
     if (formData.selfEmployedRetirement && !formData.retirementAmount.trim()) {
       newErrors.retirementAmount = 'Retirement amount is required when contributing to plan';
     }
+
+    // Number validation for optional fields
+    const numericFields = [
+      'totalPaidContractors', 'businessMiles', 'costItemsResold',
+      'inventoryLeftEnd', 'retirementAmount'
+    ];
+
+    numericFields.forEach(field => {
+      if (formData[field] && formData[field].trim() !== '') {
+        const numValue = parseFloat(formData[field]);
+        if (isNaN(numValue) || numValue < 0) {
+          const fieldNames = {
+            totalPaidContractors: 'Total paid to contractors',
+            businessMiles: 'Business miles',
+            costItemsResold: 'Cost of items resold',
+            inventoryLeftEnd: 'Inventory left at end of year',
+            retirementAmount: 'Retirement amount'
+          };
+          newErrors[field] = `${fieldNames[field]} must be a valid positive number`;
+        }
+      }
+    });
 
     // Calculate total expenses and compare with income
     const totalIncome = parseFloat(formData.totalIncome.replace(/,/g, '')) || 0;
@@ -273,16 +305,19 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
             <BusinessAutocomplete
               value={formData.workDescription}
               onChange={(value, codeData) => {
+                console.log('ComprehensiveBusinessForm: onChange called with:', value, codeData);
                 // Handle both free text and code selection
                 handleChange('workDescription', value);
 
                 if (codeData) {
                   // If a business code was selected, store the code information
+                  console.log('ComprehensiveBusinessForm: Setting code data:', codeData);
                   handleChange('businessCodeId', codeData.codeId);
                   handleChange('businessCodeNaics', codeData.naicsCode);
                   handleChange('businessCodeTitle', codeData.text);
                 } else {
                   // If free text was entered, clear code fields
+                  console.log('ComprehensiveBusinessForm: Clearing code fields');
                   handleChange('businessCodeId', null);
                   handleChange('businessCodeNaics', '');
                   handleChange('businessCodeTitle', '');
@@ -792,12 +827,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     </label>
                     <input
                       type="number"
-                      className={`form-control ${errors.businessMiles ? 'is-invalid' : ''}`}
+                      className={`form-control ${(errors.businessMiles || apiErrors.business_miles) ? 'is-invalid' : ''}`}
                       placeholder="0"
                       value={formData.businessMiles}
                       onChange={(e) => handleChange('businessMiles', e.target.value)}
                     />
-                    {errors.businessMiles && <div className="invalid-feedback">{errors.businessMiles}</div>}
+                    {(errors.businessMiles || apiErrors.business_miles) && (
+                      <div className="invalid-feedback">
+                        {errors.businessMiles || apiErrors.business_miles}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -888,13 +927,17 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                       <span className="input-group-text">$</span>
                       <input
                         type="number"
-                        className={`form-control ${errors.totalPaidContractors ? 'is-invalid' : ''}`}
+                        className={`form-control ${(errors.totalPaidContractors || apiErrors.total_paid_contractors) ? 'is-invalid' : ''}`}
                         placeholder="0.00"
                         value={formData.totalPaidContractors}
                         onChange={(e) => handleChange('totalPaidContractors', e.target.value)}
                       />
                     </div>
-                    {errors.totalPaidContractors && <div className="invalid-feedback">{errors.totalPaidContractors}</div>}
+                    {(errors.totalPaidContractors || apiErrors.total_paid_contractors) && (
+                      <div className="invalid-feedback">
+                        {errors.totalPaidContractors || apiErrors.total_paid_contractors}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -1025,11 +1068,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     <span className="input-group-text">$</span>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${(errors.costItemsResold || apiErrors.cost_items_resold) ? 'is-invalid' : ''}`}
                       placeholder="0.00"
                       value={formData.costItemsResold}
                       onChange={(e) => handleChange('costItemsResold', e.target.value)}
                     />
+                    {(errors.costItemsResold || apiErrors.cost_items_resold) && (
+                      <div className="invalid-feedback">
+                        {errors.costItemsResold || apiErrors.cost_items_resold}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -1040,11 +1088,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                     <span className="input-group-text">$</span>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${(errors.inventoryLeftEnd || apiErrors.inventory_left_end) ? 'is-invalid' : ''}`}
                       placeholder="0.00"
                       value={formData.inventoryLeftEnd}
                       onChange={(e) => handleChange('inventoryLeftEnd', e.target.value)}
                     />
+                    {(errors.inventoryLeftEnd || apiErrors.inventory_left_end) && (
+                      <div className="invalid-feedback">
+                        {errors.inventoryLeftEnd || apiErrors.inventory_left_end}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1098,12 +1151,17 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, initialDat
                   <span className="input-group-text">$</span>
                   <input
                     type="number"
-                    className="form-control"
+                    className={`form-control ${(errors.retirementAmount || apiErrors.retirement_amount) ? 'is-invalid' : ''}`}
                     placeholder="0.00"
                     value={formData.retirementAmount}
                     onChange={(e) => handleChange('retirementAmount', e.target.value)}
                   />
                 </div>
+                {(errors.retirementAmount || apiErrors.retirement_amount) && (
+                  <div className="invalid-feedback">
+                    {errors.retirementAmount || apiErrors.retirement_amount}
+                  </div>
+                )}
               </div>
             </div>
           )}

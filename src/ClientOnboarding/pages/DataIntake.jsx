@@ -14,7 +14,7 @@ import RentalPropertyForm from "../components/RentalPropertyForm";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState([]);
-  const [hasDependents, setHasDependents] = useState(false);
+  const [hasDependents, setHasDependents] = useState("no");
   const [dependents, setDependents] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -69,8 +69,8 @@ export default function DataIntakeForm() {
 
   // Other Information State
   const [otherInfo, setOtherInfo] = useState({
-    ownsHome: false,
-    inSchool: false,
+    ownsHome: "no",
+    inSchool: "no",
     otherDeductions: "",
   });
 
@@ -84,7 +84,6 @@ export default function DataIntakeForm() {
   const [businesses, setBusinesses] = useState([]);
   const [isAddingBusiness, setIsAddingBusiness] = useState(false);
   const [editingBusinessId, setEditingBusinessId] = useState(null);
-
   // Comprehensive Business Data State
   const [businessData, setBusinessData] = useState({
     workDescription: '',
@@ -505,7 +504,7 @@ export default function DataIntakeForm() {
                 firstName: dep.dependent_first_name || '',
                 middleInitial: dep.dependent_middle_name || '',
                 lastName: dep.dependent_last_name || '',
-                dob: formatDateToYYYYMMDD(dep.dependent_dateOfBirth),
+                dob: dep.dependent_dateOfBirth || '',
                 ssn: dep.dependent_ssn || ''
               }));
               setDependents(formattedDependents);
@@ -1348,10 +1347,10 @@ export default function DataIntakeForm() {
           filing_status: personalInfo.filingStatus || "",
           business_type: personalInfo.businessType || "",
           income_information: filingStatus.length > 0 ? filingStatus : ["w2"],
-          no_of_dependents: hasDependents ? dependents.length : 0,
+          no_of_dependents: hasDependents === "yes" ? dependents.length : 0,
           other_deductions: otherInfo.otherDeductions === "yes",
-          does_own_a_home: otherInfo.ownsHome,
-          in_school: otherInfo.inSchool,
+          does_own_a_home: otherInfo.ownsHome === "yes",
+          in_school: otherInfo.inSchool === "yes",
           spouse_info: {
             spouse_first_name: spouseInfo.firstName || "",
             spouse_middle_name: spouseInfo.middleInitial || "",
@@ -1361,7 +1360,7 @@ export default function DataIntakeForm() {
             spouse_email: spouseInfo.email || "",
             spouse_phone_number: spouseInfo.phone || ""
           },
-          dependents: hasDependents ? dependents.map(dep => ({
+          dependents: hasDependents === "yes" ? dependents.map(dep => ({
             dependent_first_name: dep.firstName || "",
             dependent_middle_name: dep.middleInitial || "",
             dependent_last_name: dep.lastName || "",
@@ -1722,10 +1721,10 @@ export default function DataIntakeForm() {
   };
 
   // Handle checkbox change
-  const handleDependentsCheckbox = (checked) => {
-    setHasDependents(checked);
-    if (!checked) {
-      // Clear dependents when unchecked
+  const handleDependentsCheckbox = (value) => {
+    setHasDependents(value);
+    if (value === "no") {
+      // Clear dependents when "no" is selected
       setDependents([]);
     }
   };
@@ -2648,28 +2647,35 @@ export default function DataIntakeForm() {
             Information about your dependents
           </p>
         </div>
-        <div className="form-check mb-3">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={hasDependents}
-            onChange={(e) => handleDependentsCheckbox(e.target.checked)}
-            id="hasDependents"
-          />
-          <label
-            className="form-check-label"
-            htmlFor="hasDependents"
-            style={{
-              color: "#3B4A66",
-              fontSize: "13px",
-              fontWeight: "400",
-              fontFamily: "BasisGrotesquePro"
-            }}
+        <label
+          className="form-label d-block"
+          style={{
+            color: "#3B4A66",
+            fontSize: "13px",
+            fontWeight: "400",
+            fontFamily: "BasisGrotesquePro"
+          }}
+        >
+          Do you have dependents?
+        </label>
+        <div className="flex items-center space-x-3 mt-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleDependentsCheckbox(hasDependents === "yes" ? "no" : "yes")}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${hasDependents === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+              }`}
+            style={{ borderRadius: "9999px" }}
           >
-            Do you have dependents?
-          </label>
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasDependents === "yes" ? 'translate-x-6' : 'translate-x-1'
+                }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+            {hasDependents === "yes" ? 'Yes' : 'No'}
+          </span>
         </div>
-        {hasDependents && (
+        {hasDependents === "yes" && (
           <>
             {dependents.length === 0 ? (
               <div className="text-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -3091,35 +3097,61 @@ export default function DataIntakeForm() {
         </div>
         <div className="row">
           <div className="col-md-6 mb-2">
-            <div className={otherInfo.ownsHome ? "form-check radio-item-checked" : "form-check"}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="ownHome"
-                checked={otherInfo.ownsHome}
-                onChange={(e) => handleOtherInfoChange('ownsHome', e.target.checked)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="ownHome"
+            <label
+              className="form-label d-block"
+              style={{
+                color: "#3B4A66",
+                fontSize: "13px",
+                fontWeight: "400",
+                fontFamily: "BasisGrotesquePro"
+              }}
+            >
+              Do you own a home?
+            </label>
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('ownsHome', otherInfo.ownsHome === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${otherInfo.ownsHome === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                  }`}
+                style={{ borderRadius: "9999px" }}
               >
-                Do you own a home?
-              </label>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${otherInfo.ownsHome === "yes" ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.ownsHome === "yes" ? 'Yes' : 'No'}
+              </span>
             </div>
-            <div className={otherInfo.inSchool ? "form-check mt-2 radio-item-checked" : "form-check mt-2"}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="inSchool"
-                checked={otherInfo.inSchool}
-                onChange={(e) => handleOtherInfoChange('inSchool', e.target.checked)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="inSchool"
+            <label
+              className="form-label d-block mt-3"
+              style={{
+                color: "#3B4A66",
+                fontSize: "13px",
+                fontWeight: "400",
+                fontFamily: "BasisGrotesquePro"
+              }}
+            >
+              Are you in school?
+            </label>
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('inSchool', otherInfo.inSchool === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${otherInfo.inSchool === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                  }`}
+                style={{ borderRadius: "9999px" }}
               >
-                Are you in school?
-              </label>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${otherInfo.inSchool === "yes" ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.inSchool === "yes" ? 'Yes' : 'No'}
+              </span>
             </div>
           </div>
           <div className="col-md-6 mb-2">
@@ -3478,6 +3510,7 @@ export default function DataIntakeForm() {
                     onCancel={() => {
                       setIsAddingBusiness(false);
                       setEditingBusinessId(null);
+                      setBusinessFormErrors({}); // Clear errors on cancel
                       // Reset business data if canceling
                       if (!editingBusinessId) {
                         setBusinessData({
@@ -3526,6 +3559,7 @@ export default function DataIntakeForm() {
                         });
                       }
                     }}
+                    externalErrors={businessFormErrors}
                     initialData={editingBusinessId ? businessData : null}
                   />
                 )}
