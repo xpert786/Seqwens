@@ -14,7 +14,7 @@ import RentalPropertyForm from "../components/RentalPropertyForm";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState([]);
-  const [hasDependents, setHasDependents] = useState(false);
+  const [hasDependents, setHasDependents] = useState("no");
   const [dependents, setDependents] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -69,8 +69,8 @@ export default function DataIntakeForm() {
 
   // Other Information State
   const [otherInfo, setOtherInfo] = useState({
-    ownsHome: false,
-    inSchool: false,
+    ownsHome: "no",
+    inSchool: "no",
     otherDeductions: "",
   });
 
@@ -84,6 +84,7 @@ export default function DataIntakeForm() {
   const [businesses, setBusinesses] = useState([]);
   const [isAddingBusiness, setIsAddingBusiness] = useState(false);
   const [editingBusinessId, setEditingBusinessId] = useState(null);
+  const [businessFormErrors, setBusinessFormErrors] = useState({});
   
   // Comprehensive Business Data State
   const [businessData, setBusinessData] = useState({
@@ -359,16 +360,123 @@ export default function DataIntakeForm() {
         return;
       }
 
-      console.log("Saving business info directly...");
-      
+      console.log("Saving business info...");
+
       const apiBaseUrl = getApiBaseUrl();
-      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
-        method: hasExistingBusinessData ? "PATCH" : "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+
+      // If there are already businesses saved, send all businesses in an array
+      const existingBusinesses = businesses.filter(b => b.id); // Only saved businesses (with IDs)
+      const shouldSendAll = existingBusinesses.length > 0;
+
+      let requestBody;
+      if (shouldSendAll) {
+        // Send all businesses in an array
+        console.log(`Sending ${existingBusinesses.length + 1} businesses in array`);
+
+        const allBusinesses = [
+          ...existingBusinesses.map(b => ({
+            // Convert display format back to API format
+            business_name: b.businessName || "",
+            business_address: b.address?.split(',')[0]?.trim() || "",
+            business_city: b.businessCity || "",
+            business_state: b.businessState || "",
+            business_zip: b.businessZip || "",
+            work_description: b.workDescription || "",
+            business_name_type: b.businessNameType || "same",
+            different_business_name: b.differentBusinessName || "",
+            started_during_year: b.startedDuringYear || false,
+            home_based: b.homeBased || false,
+            total_income: b.totalIncome || "",
+            tax_forms_received: b.taxFormsReceived || [],
+            issued_refunds: b.issuedRefunds || false,
+            total_refunded: b.totalRefunded || "",
+            other_business_income: b.otherBusinessIncome || false,
+            other_business_income_amount: b.otherBusinessIncomeAmount || "",
+            advertising: b.advertising || "",
+            office_supplies: b.officeSupplies || "",
+            cleaning_repairs: b.cleaningRepairs || "",
+            insurance: b.insurance || "",
+            legal_professional: b.legalProfessional || "",
+            phone_internet_utilities: b.phoneInternetUtilities || "",
+            paid_contractors: b.paidContractors || false,
+            total_paid_contractors: b.totalPaidContractors ? parseFloat(b.totalPaidContractors) || 0 : 0,
+            other_expenses: b.otherExpenses || [],
+            used_vehicle: b.usedVehicle || false,
+            business_miles: b.businessMiles ? parseInt(b.businessMiles) || 0 : 0,
+            parking_tolls_travel: b.parkingTollsTravel || "",
+            business_meals: b.businessMeals || "",
+            travel_expenses: b.travelExpenses || "",
+            home_office_use: b.homeOfficeUse || false,
+            home_office_size: b.homeOfficeSize || "",
+            sell_products: b.sellProducts || false,
+            cost_items_resold: b.costItemsResold ? parseFloat(b.costItemsResold) || 0 : 0,
+            inventory_left_end: b.inventoryLeftEnd ? parseFloat(b.inventoryLeftEnd) || 0 : 0,
+            health_insurance_business: b.healthInsuranceBusiness || false,
+            self_employed_retirement: b.selfEmployedRetirement || false,
+            retirement_amount: b.retirementAmount ? parseFloat(b.retirementAmount) || 0 : 0,
+            is_accurate: b.isAccurate || false,
+            id: b.id
+          })),
+          // Add the current business being saved
+          {
+            business_name: businessData.businessName || "",
+            business_address: businessData.businessAddress || "",
+            business_city: businessData.businessCity || "",
+            business_state: businessData.businessState || "",
+            business_zip: businessData.businessZip || "",
+
+            work_description: businessData.workDescription || "",
+            business_name_type: businessData.businessNameType || "same",
+            different_business_name: businessData.differentBusinessName || "",
+            started_during_year: businessData.startedDuringYear || false,
+            home_based: businessData.homeBased || false,
+
+            total_income: businessData.totalIncome || "",
+            tax_forms_received: Array.isArray(businessData.taxFormsReceived)
+              ? businessData.taxFormsReceived
+              : (businessData.taxFormsReceived || []),
+            issued_refunds: businessData.issuedRefunds || false,
+            total_refunded: businessData.totalRefunded || "",
+            other_business_income: businessData.otherBusinessIncome || false,
+            other_business_income_amount: businessData.otherBusinessIncomeAmount || "",
+
+            advertising: businessData.advertising || "",
+            office_supplies: businessData.officeSupplies || "",
+            cleaning_repairs: businessData.cleaningRepairs || "",
+            insurance: businessData.insurance || "",
+            legal_professional: businessData.legalProfessional || "",
+            phone_internet_utilities: businessData.phoneInternetUtilities || "",
+            paid_contractors: businessData.paidContractors || false,
+            total_paid_contractors: businessData.totalPaidContractors ? parseFloat(businessData.totalPaidContractors) || 0 : 0,
+            other_expenses: businessData.otherExpenses || [],
+
+            used_vehicle: businessData.usedVehicle || false,
+            business_miles: businessData.businessMiles ? parseInt(businessData.businessMiles) || 0 : 0,
+            parking_tolls_travel: businessData.parkingTollsTravel || "",
+
+            business_meals: businessData.businessMeals || "",
+            travel_expenses: businessData.travelExpenses || "",
+
+            home_office_use: businessData.homeOfficeUse || false,
+            home_office_size: businessData.homeOfficeSize || "",
+
+            sell_products: businessData.sellProducts || false,
+            cost_items_resold: businessData.costItemsResold ? parseFloat(businessData.costItemsResold) || 0 : 0,
+            inventory_left_end: businessData.inventoryLeftEnd ? parseFloat(businessData.inventoryLeftEnd) || 0 : 0,
+
+            health_insurance_business: businessData.healthInsuranceBusiness || false,
+            self_employed_retirement: businessData.selfEmployedRetirement || false,
+            retirement_amount: businessData.retirementAmount ? parseFloat(businessData.retirementAmount) || 0 : 0,
+
+            is_accurate: businessData.isAccurate || false
+          }
+        ];
+
+        requestBody = allBusinesses;
+      } else {
+        // Send single business (existing behavior)
+        console.log("Sending single business");
+        requestBody = {
           // Basic Business Info
           business_name: businessData.businessName || "",
           business_address: businessData.businessAddress || "",
@@ -401,12 +509,12 @@ export default function DataIntakeForm() {
           legal_professional: businessData.legalProfessional || "",
           phone_internet_utilities: businessData.phoneInternetUtilities || "",
           paid_contractors: businessData.paidContractors || false,
-          total_paid_contractors: businessData.totalPaidContractors || "",
+          total_paid_contractors: businessData.totalPaidContractors ? parseFloat(businessData.totalPaidContractors) || 0 : 0,
           other_expenses: businessData.otherExpenses || [],
 
           // Vehicle & Travel
           used_vehicle: businessData.usedVehicle || false,
-          business_miles: businessData.businessMiles || "",
+          business_miles: businessData.businessMiles ? parseInt(businessData.businessMiles) || 0 : 0,
           parking_tolls_travel: businessData.parkingTollsTravel || "",
 
           // Food & Travel
@@ -419,118 +527,219 @@ export default function DataIntakeForm() {
 
           // Inventory
           sell_products: businessData.sellProducts || false,
-          cost_items_resold: businessData.costItemsResold || "",
-          inventory_left_end: businessData.inventoryLeftEnd || "",
+          cost_items_resold: businessData.costItemsResold ? parseFloat(businessData.costItemsResold) || 0 : 0,
+          inventory_left_end: businessData.inventoryLeftEnd ? parseFloat(businessData.inventoryLeftEnd) || 0 : 0,
 
           // Health Insurance & Retirement
           health_insurance_business: businessData.healthInsuranceBusiness || false,
           self_employed_retirement: businessData.selfEmployedRetirement || false,
-          retirement_amount: businessData.retirementAmount || "",
+          retirement_amount: businessData.retirementAmount ? parseFloat(businessData.retirementAmount) || 0 : 0,
 
           // Confirmation
           is_accurate: businessData.isAccurate || false
-        })
+        };
+      }
+
+      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
+        method: shouldSendAll ? "PUT" : (hasExistingBusinessData ? "PATCH" : "POST"), // Use PUT for multiple businesses
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json();
       
       if (response.ok && result.success) {
-        // Update local state
-        setBusinessData(businessData);
-        setHasExistingBusinessData(true);
-        
-        // Calculate total expenses
-        const calculateTotalExpenses = (data) => {
-          let total = 0;
-          total += parseFloat(data.advertising || 0);
-          total += parseFloat(data.officeSupplies || 0);
-          total += parseFloat(data.cleaningRepairs || 0);
-          total += parseFloat(data.insurance || 0);
-          total += parseFloat(data.legalProfessional || 0);
-          total += parseFloat(data.phoneInternetUtilities || 0);
-          total += parseFloat(data.totalPaidContractors || 0);
-          total += parseFloat(data.parkingTollsTravel || 0);
-          total += parseFloat(data.businessMeals || 0);
-          total += parseFloat(data.travelExpenses || 0);
-          total += parseFloat(data.costItemsResold || 0);
-          total += parseFloat(data.retirementAmount || 0);
-          
-          // Add other expenses
-          if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
-            data.otherExpenses.forEach(exp => {
-              total += parseFloat(exp.amount || 0);
-            });
-          }
-          
-          return total.toFixed(2);
-        };
+        // Handle response based on whether we sent single or multiple businesses
+        if (shouldSendAll) {
+          // Multiple businesses were sent - API should return array of businesses
+          console.log("Multiple businesses saved:", result);
 
-        // Store full business data for editing and display
-        const businessForDisplay = {
-          id: result.data?.id || businessData.id || Date.now(),
-          businessName: businessData.businessName || "",
-          businessType: "Self-Employment",
-          totalIncome: businessData.totalIncome || "0",
-          totalExpenses: calculateTotalExpenses(businessData),
-          address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
-          workDescription: businessData.workDescription || "",
-          // Store all fields for editing
-          businessNameType: businessData.businessNameType || 'same',
-          differentBusinessName: businessData.differentBusinessName || '',
-          startedDuringYear: businessData.startedDuringYear || false,
-          homeBased: businessData.homeBased || false,
-          businessAddress: businessData.businessAddress || '',
-          businessCity: businessData.businessCity || '',
-          businessState: businessData.businessState || '',
-          businessZip: businessData.businessZip || '',
-          taxFormsReceived: businessData.taxFormsReceived || 'none',
-          issuedRefunds: businessData.issuedRefunds || false,
-          totalRefunded: businessData.totalRefunded || '',
-          otherBusinessIncome: businessData.otherBusinessIncome || false,
-          otherBusinessIncomeAmount: businessData.otherBusinessIncomeAmount || '',
-          advertising: businessData.advertising || '',
-          officeSupplies: businessData.officeSupplies || '',
-          cleaningRepairs: businessData.cleaningRepairs || '',
-          insurance: businessData.insurance || '',
-          legalProfessional: businessData.legalProfessional || '',
-          phoneInternetUtilities: businessData.phoneInternetUtilities || '',
-          paidContractors: businessData.paidContractors || false,
-          totalPaidContractors: businessData.totalPaidContractors || '',
-          otherExpenses: businessData.otherExpenses || [],
-          usedVehicle: businessData.usedVehicle || false,
-          businessMiles: businessData.businessMiles || '',
-          parkingTollsTravel: businessData.parkingTollsTravel || '',
-          businessMeals: businessData.businessMeals || '',
-          travelExpenses: businessData.travelExpenses || '',
-          homeOfficeUse: businessData.homeOfficeUse || false,
-          homeOfficeSize: businessData.homeOfficeSize || '',
-          sellProducts: businessData.sellProducts || false,
-          costItemsResold: businessData.costItemsResold || '',
-          inventoryLeftEnd: businessData.inventoryLeftEnd || '',
-          healthInsuranceBusiness: businessData.healthInsuranceBusiness || false,
-          selfEmployedRetirement: businessData.selfEmployedRetirement || false,
-          retirementAmount: businessData.retirementAmount || '',
-          isAccurate: businessData.isAccurate || false,
-          created_at: result.data?.created_at || new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
+          if (Array.isArray(result.data)) {
+            // Update all businesses in local state
+            const calculateTotalExpenses = (data) => {
+              let total = 0;
+              total += parseFloat(data.advertising || 0);
+              total += parseFloat(data.officeSupplies || 0);
+              total += parseFloat(data.cleaningRepairs || 0);
+              total += parseFloat(data.insurance || 0);
+              total += parseFloat(data.legalProfessional || 0);
+              total += parseFloat(data.phoneInternetUtilities || 0);
+              total += parseFloat(data.totalPaidContractors || 0);
+              total += parseFloat(data.parkingTollsTravel || 0);
+              total += parseFloat(data.businessMeals || 0);
+              total += parseFloat(data.travelExpenses || 0);
+              total += parseFloat(data.costItemsResold || 0);
+              total += parseFloat(data.retirementAmount || 0);
 
-        setBusinesses(prev => {
-          const existingIndex = prev.findIndex(b => b.id === businessForDisplay.id);
-          if (existingIndex >= 0) {
-            // Update existing business
-            const updated = [...prev];
-            updated[existingIndex] = businessForDisplay;
-            return updated;
+              // Add other expenses
+              if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
+                data.otherExpenses.forEach(exp => {
+                  total += parseFloat(exp.amount || 0);
+                });
+              }
+
+              return total.toFixed(2);
+            };
+
+            const updatedBusinesses = result.data.map(apiBusiness => ({
+              id: apiBusiness.id,
+              businessName: apiBusiness.business_name || "",
+              businessType: "Self-Employment",
+              totalIncome: apiBusiness.total_income || "0",
+              totalExpenses: calculateTotalExpenses(apiBusiness),
+              address: `${apiBusiness.business_address || ""} ${apiBusiness.business_city || ""} ${apiBusiness.business_state || ""} ${apiBusiness.business_zip || ""}`.trim(),
+              workDescription: apiBusiness.work_description || "",
+              // Store all fields for editing
+              businessNameType: apiBusiness.business_name_type || 'same',
+              differentBusinessName: apiBusiness.different_business_name || '',
+              startedDuringYear: apiBusiness.started_during_year || false,
+              homeBased: apiBusiness.home_based || false,
+              businessAddress: apiBusiness.business_address || '',
+              businessCity: apiBusiness.business_city || '',
+              businessState: apiBusiness.business_state || '',
+              businessZip: apiBusiness.business_zip || '',
+              taxFormsReceived: apiBusiness.tax_forms_received || [],
+              issuedRefunds: apiBusiness.issued_refunds || false,
+              totalRefunded: apiBusiness.total_refunded || '',
+              otherBusinessIncome: apiBusiness.other_business_income || false,
+              otherBusinessIncomeAmount: apiBusiness.other_business_income_amount || '',
+              advertising: apiBusiness.advertising || '',
+              officeSupplies: apiBusiness.office_supplies || '',
+              cleaningRepairs: apiBusiness.cleaning_repairs || '',
+              insurance: apiBusiness.insurance || '',
+              legalProfessional: apiBusiness.legal_professional || '',
+              phoneInternetUtilities: apiBusiness.phone_internet_utilities || '',
+              paidContractors: apiBusiness.paid_contractors || false,
+              totalPaidContractors: apiBusiness.total_paid_contractors || '',
+              otherExpenses: apiBusiness.other_expenses || [],
+              usedVehicle: apiBusiness.used_vehicle || false,
+              businessMiles: apiBusiness.business_miles || '',
+              parkingTollsTravel: apiBusiness.parking_tolls_travel || '',
+              businessMeals: apiBusiness.business_meals || '',
+              travelExpenses: apiBusiness.travel_expenses || '',
+              homeOfficeUse: apiBusiness.home_office_use || false,
+              homeOfficeSize: apiBusiness.home_office_size || '',
+              sellProducts: apiBusiness.sell_products || false,
+              costItemsResold: apiBusiness.cost_items_resold || '',
+              inventoryLeftEnd: apiBusiness.inventory_left_end || '',
+              healthInsuranceBusiness: apiBusiness.health_insurance_business || false,
+              selfEmployedRetirement: apiBusiness.self_employed_retirement || false,
+              retirementAmount: apiBusiness.retirement_amount || '',
+              isAccurate: apiBusiness.is_accurate || false,
+              created_at: apiBusiness.created_at || new Date().toISOString(),
+              updated_at: apiBusiness.updated_at || new Date().toISOString()
+            }));
+
+            setBusinesses(updatedBusinesses);
           } else {
-            // Add new business
-            return [...prev, businessForDisplay];
+            // Fallback: treat as single business response
+            console.warn("Expected array response for multiple businesses, got:", result);
+            // Handle as single business
+            setBusinessData(businessData);
+            setHasExistingBusinessData(true);
+          }
+        } else {
+          // Single business was sent (existing behavior)
+          setBusinessData(businessData);
+          setHasExistingBusinessData(true);
+
+          // Calculate total expenses
+          const calculateTotalExpenses = (data) => {
+            let total = 0;
+            total += parseFloat(data.advertising || 0);
+            total += parseFloat(data.officeSupplies || 0);
+            total += parseFloat(data.cleaningRepairs || 0);
+            total += parseFloat(data.insurance || 0);
+            total += parseFloat(data.legalProfessional || 0);
+            total += parseFloat(data.phoneInternetUtilities || 0);
+            total += parseFloat(data.totalPaidContractors || 0);
+            total += parseFloat(data.parkingTollsTravel || 0);
+            total += parseFloat(data.businessMeals || 0);
+            total += parseFloat(data.travelExpenses || 0);
+            total += parseFloat(data.costItemsResold || 0);
+            total += parseFloat(data.retirementAmount || 0);
+
+            // Add other expenses
+            if (data.otherExpenses && Array.isArray(data.otherExpenses)) {
+              data.otherExpenses.forEach(exp => {
+                total += parseFloat(exp.amount || 0);
+              });
+            }
+
+            return total.toFixed(2);
+          };
+
+          // Store full business data for editing and display
+          const businessForDisplay = {
+            id: result.data?.id || businessData.id || Date.now(),
+            businessName: businessData.businessName || "",
+            businessType: "Self-Employment",
+            totalIncome: businessData.totalIncome || "0",
+            totalExpenses: calculateTotalExpenses(businessData),
+            address: `${businessData.businessAddress || ""} ${businessData.businessCity || ""} ${businessData.businessState || ""} ${businessData.businessZip || ""}`.trim(),
+            workDescription: businessData.workDescription || "",
+            // Store all fields for editing
+            businessNameType: businessData.businessNameType || 'same',
+            differentBusinessName: businessData.differentBusinessName || '',
+            startedDuringYear: businessData.startedDuringYear || false,
+            homeBased: businessData.homeBased || false,
+            businessAddress: businessData.businessAddress || '',
+            businessCity: businessData.businessCity || '',
+            businessState: businessData.businessState || '',
+            businessZip: businessData.businessZip || '',
+            taxFormsReceived: businessData.taxFormsReceived || 'none',
+            issuedRefunds: businessData.issuedRefunds || false,
+            totalRefunded: businessData.totalRefunded || '',
+            otherBusinessIncome: businessData.otherBusinessIncome || false,
+            otherBusinessIncomeAmount: businessData.otherBusinessIncomeAmount || '',
+            advertising: businessData.advertising || '',
+            officeSupplies: businessData.officeSupplies || '',
+            cleaningRepairs: businessData.cleaningRepairs || '',
+            insurance: businessData.insurance || '',
+            legalProfessional: businessData.legalProfessional || '',
+            phoneInternetUtilities: businessData.phoneInternetUtilities || '',
+            paidContractors: businessData.paidContractors || false,
+            totalPaidContractors: businessData.totalPaidContractors || '',
+            otherExpenses: businessData.otherExpenses || [],
+            usedVehicle: businessData.usedVehicle || false,
+            businessMiles: businessData.businessMiles || '',
+            parkingTollsTravel: businessData.parkingTollsTravel || '',
+            businessMeals: businessData.businessMeals || '',
+            travelExpenses: businessData.travelExpenses || '',
+            homeOfficeUse: businessData.homeOfficeUse || false,
+            homeOfficeSize: businessData.homeOfficeSize || '',
+            sellProducts: businessData.sellProducts || false,
+            costItemsResold: businessData.costItemsResold || '',
+            inventoryLeftEnd: businessData.inventoryLeftEnd || '',
+            healthInsuranceBusiness: businessData.healthInsuranceBusiness || false,
+            selfEmployedRetirement: businessData.selfEmployedRetirement || false,
+            retirementAmount: businessData.retirementAmount || '',
+            isAccurate: businessData.isAccurate || false,
+            created_at: result.data?.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
+          setBusinesses(prev => {
+            const existingIndex = prev.findIndex(b => b.id === businessForDisplay.id);
+            if (existingIndex >= 0) {
+              // Update existing business
+              const updated = [...prev];
+              updated[existingIndex] = businessForDisplay;
+              return updated;
+            } else {
+              // Add new business
+              return [...prev, businessForDisplay];
+            }
+          });
         }
-        });
         
         // Reset form state after save
         setIsAddingBusiness(false);
         setEditingBusinessId(null);
+        setBusinessFormErrors({}); // Clear any previous errors
         
         // Show success message
         toast.success('Business information saved successfully!', {
@@ -546,10 +755,39 @@ export default function DataIntakeForm() {
       } else {
         // Handle error
         const errorMessage = result?.message || 'Failed to save business information';
-        toast.error(errorMessage, {
-          position: "top-right",
-          autoClose: 3000,
-        });
+
+        // If there are field-specific errors, pass them to the form
+        if (result?.errors && typeof result.errors === 'object') {
+          // Transform API field names to form field names
+          const fieldErrors = {};
+          Object.keys(result.errors).forEach(apiField => {
+            // Map API field names to form field names
+            const formFieldMap = {
+              'total_paid_contractors': 'totalPaidContractors',
+              'business_miles': 'businessMiles',
+              'cost_items_resold': 'costItemsResold',
+              'inventory_left_end': 'inventoryLeftEnd',
+              'retirement_amount': 'retirementAmount'
+            };
+
+            const formField = formFieldMap[apiField] || apiField;
+            fieldErrors[formField] = result.errors[apiField][0]; // Take first error message
+          });
+
+          // Pass errors to form component
+          setBusinessFormErrors(fieldErrors);
+
+          toast.error('Please correct the highlighted fields', {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        } else {
+          toast.error(errorMessage, {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        }
+
         console.error("Business info save error:", result);
       }
     } catch (error) {
@@ -693,7 +931,7 @@ export default function DataIntakeForm() {
               firstName: data.first_name || "",
               middleInitial: data.middle_name || "",
               lastName: data.last_name || "",
-              dateOfBirth: formatDateToYYYYMMDD(data.dateOfBirth),
+              dateOfBirth: data.dateOfBirth || "",
               ssn: data.ssn || "",
               email: data.email || "",
               phone: phoneValue, // Full phone number
@@ -725,7 +963,7 @@ export default function DataIntakeForm() {
                 firstName: data.spouse_info.spouse_first_name || "",
                 middleInitial: "",
                 lastName: data.spouse_info.spouse_last_name || "",
-                dateOfBirth: formatDateToYYYYMMDD(data.spouse_info.spouse_dateOfBirth),
+                dateOfBirth: data.spouse_info.spouse_dateOfBirth || "",
                 ssn: data.spouse_info.spouse_ssn || "",
                 email: data.spouse_info.spouse_email || "",
                 phone: spousePhoneValue, // Only country code, not full number
@@ -749,8 +987,8 @@ export default function DataIntakeForm() {
 
             // Pre-fill other information
             setOtherInfo({
-              ownsHome: data.does_own_a_home || false,
-              inSchool: data.in_school || false,
+              ownsHome: data.does_own_a_home ? "yes" : "no",
+              inSchool: data.in_school ? "yes" : "no",
               otherDeductions: data.other_deductions ? "yes" : "no"
             });
 
@@ -768,18 +1006,18 @@ export default function DataIntakeForm() {
 
             // Set dependents
             if (data.dependents && Array.isArray(data.dependents) && data.dependents.length > 0) {
-              setHasDependents(true);
+              setHasDependents("yes");
               // Map dependent data from API, formatting dates
               const formattedDependents = data.dependents.map((dep) => ({
                 firstName: dep.dependent_first_name || '',
                 middleInitial: dep.dependent_middle_name || '',
                 lastName: dep.dependent_last_name || '',
-                dob: formatDateToYYYYMMDD(dep.dependent_dateOfBirth),
+                dob: dep.dependent_dateOfBirth || '',
                 ssn: dep.dependent_ssn || ''
               }));
               setDependents(formattedDependents);
             } else if (data.no_of_dependents > 0) {
-              setHasDependents(true);
+              setHasDependents("yes");
               // Create empty dependent objects for the count
               const emptyDependents = Array(data.no_of_dependents).fill().map(() => ({
                 firstName: '',
@@ -1697,10 +1935,10 @@ export default function DataIntakeForm() {
           filing_status: personalInfo.filingStatus || "",
           business_type: personalInfo.businessType || "",
           income_information: filingStatus.length > 0 ? filingStatus : ["w2"],
-          no_of_dependents: hasDependents ? dependents.length : 0,
+          no_of_dependents: hasDependents === "yes" ? dependents.length : 0,
           other_deductions: otherInfo.otherDeductions === "yes",
-          does_own_a_home: otherInfo.ownsHome,
-          in_school: otherInfo.inSchool,
+          does_own_a_home: otherInfo.ownsHome === "yes",
+          in_school: otherInfo.inSchool === "yes",
           spouse_info: {
             spouse_first_name: spouseInfo.firstName || "",
             spouse_middle_name: spouseInfo.middleInitial || "",
@@ -1710,7 +1948,7 @@ export default function DataIntakeForm() {
             spouse_email: spouseInfo.email || "",
             spouse_phone_number: spouseInfo.phone || ""
           },
-          dependents: hasDependents ? dependents.map(dep => ({
+          dependents: hasDependents === "yes" ? dependents.map(dep => ({
             dependent_first_name: dep.firstName || "",
             dependent_middle_name: dep.middleInitial || "",
             dependent_last_name: dep.lastName || "",
@@ -2084,10 +2322,10 @@ export default function DataIntakeForm() {
   };
 
   // Handle checkbox change
-  const handleDependentsCheckbox = (checked) => {
-    setHasDependents(checked);
-    if (!checked) {
-      // Clear dependents when unchecked
+  const handleDependentsCheckbox = (value) => {
+    setHasDependents(value);
+    if (value === "no") {
+      // Clear dependents when "no" is selected
       setDependents([]);
     }
   };
@@ -3010,28 +3248,37 @@ export default function DataIntakeForm() {
             Information about your dependents
           </p>
         </div>
-        <div className="form-check mb-3">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={hasDependents}
-            onChange={(e) => handleDependentsCheckbox(e.target.checked)}
-            id="hasDependents"
-          />
-          <label
-            className="form-check-label"
-            htmlFor="hasDependents"
-            style={{
-              color: "#3B4A66",
-              fontSize: "13px",
-              fontWeight: "400",
-              fontFamily: "BasisGrotesquePro"
-            }}
+        <label
+          className="form-label d-block"
+          style={{
+            color: "#3B4A66",
+            fontSize: "13px",
+            fontWeight: "400",
+            fontFamily: "BasisGrotesquePro"
+          }}
+        >
+          Do you have dependents?
+        </label>
+        <div className="flex items-center space-x-3 mt-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleDependentsCheckbox(hasDependents === "yes" ? "no" : "yes")}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
+              hasDependents === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+            }`}
+            style={{ borderRadius: "9999px" }}
           >
-            Do you have dependents?
-          </label>
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                hasDependents === "yes" ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+            {hasDependents === "yes" ? 'Yes' : 'No'}
+          </span>
         </div>
-        {hasDependents && (
+        {hasDependents === "yes" && (
           <>
             {dependents.length === 0 ? (
               <div className="text-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -3453,35 +3700,65 @@ export default function DataIntakeForm() {
         </div>
         <div className="row">
           <div className="col-md-6 mb-2">
-            <div className={otherInfo.ownsHome ? "form-check radio-item-checked" : "form-check"}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="ownHome"
-                checked={otherInfo.ownsHome}
-                onChange={(e) => handleOtherInfoChange('ownsHome', e.target.checked)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="ownHome"
+            <label
+              className="form-label d-block"
+              style={{
+                color: "#3B4A66",
+                fontSize: "13px",
+                fontWeight: "400",
+                fontFamily: "BasisGrotesquePro"
+              }}
+            >
+              Do you own a home?
+            </label>
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('ownsHome', otherInfo.ownsHome === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
+                  otherInfo.ownsHome === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                }`}
+                style={{ borderRadius: "9999px" }}
               >
-                Do you own a home?
-              </label>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    otherInfo.ownsHome === "yes" ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.ownsHome === "yes" ? 'Yes' : 'No'}
+              </span>
             </div>
-            <div className={otherInfo.inSchool ? "form-check mt-2 radio-item-checked" : "form-check mt-2"}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="inSchool"
-                checked={otherInfo.inSchool}
-                onChange={(e) => handleOtherInfoChange('inSchool', e.target.checked)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="inSchool"
+            <label
+              className="form-label d-block mt-3"
+              style={{
+                color: "#3B4A66",
+                fontSize: "13px",
+                fontWeight: "400",
+                fontFamily: "BasisGrotesquePro"
+              }}
+            >
+              Are you in school?
+            </label>
+            <div className="flex items-center space-x-3 mt-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOtherInfoChange('inSchool', otherInfo.inSchool === "yes" ? "no" : "yes")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
+                  otherInfo.inSchool === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
+                }`}
+                style={{ borderRadius: "9999px" }}
               >
-                Are you in school?
-              </label>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    otherInfo.inSchool === "yes" ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
+                {otherInfo.inSchool === "yes" ? 'Yes' : 'No'}
+              </span>
             </div>
           </div>
           <div className="col-md-6 mb-2">
@@ -3842,6 +4119,7 @@ export default function DataIntakeForm() {
                     onCancel={() => {
                       setIsAddingBusiness(false);
                       setEditingBusinessId(null);
+                      setBusinessFormErrors({}); // Clear errors on cancel
                       // Reset business data if canceling
                       if (!editingBusinessId) {
                         setBusinessData({
@@ -3890,6 +4168,7 @@ export default function DataIntakeForm() {
                         });
                       }
                     }}
+                    externalErrors={businessFormErrors}
                     initialData={editingBusinessId ? businessData : null}
                   />
                 )}
