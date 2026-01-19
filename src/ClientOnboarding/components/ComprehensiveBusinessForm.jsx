@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import SlideSwitch from '../../components/SlideSwitch';
 import BusinessAutocomplete from './BusinessAutocomplete';
 
 export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, externalErrors = {}, initialData = null }) {
@@ -94,7 +95,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           taxForms = [taxForms];
         }
       }
-      
+
       setFormData({
         ...initialData,
         // Ensure arrays are properly initialized
@@ -138,7 +139,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
   const handleOtherExpenseChange = (id, field, value) => {
     setFormData(prev => ({
       ...prev,
-      otherExpenses: prev.otherExpenses.map(exp => 
+      otherExpenses: prev.otherExpenses.map(exp =>
         exp.id === id ? { ...exp, [field]: value } : exp
       )
     }));
@@ -153,42 +154,42 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
 
   const validate = () => {
     const newErrors = {};
-    
+
     // Required validations
-    if (!formData.workDescription.trim()) {
+    if (!String(formData.workDescription || '').trim()) {
       newErrors.workDescription = 'Please describe the kind of work you do';
-    } else if (formData.workDescription.trim().length < 3) {
+    } else if (String(formData.workDescription || '').trim().length < 3) {
       newErrors.workDescription = 'Please provide a more detailed description (at least 3 characters)';
     }
 
     // Business name validation - only required if user selected "different"
-    if (formData.businessNameType === 'different' && !formData.businessName.trim()) {
+    if (formData.businessNameType === 'different' && !String(formData.businessName || '').trim()) {
       newErrors.businessName = 'Business name is required';
     }
 
     // Business address is required when business name is provided (for different business names)
-    if (formData.businessNameType === 'different' && formData.businessName.trim()) {
-      if (!formData.businessAddress.trim()) newErrors.businessAddress = 'Business address is required when business name is provided';
-      if (!formData.businessCity.trim()) newErrors.businessCity = 'Business city is required when business name is provided';
-      if (!formData.businessState.trim()) newErrors.businessState = 'Business state is required when business name is provided';
-      if (!formData.businessZip.trim()) newErrors.businessZip = 'Business ZIP is required when business name is provided';
+    if (formData.businessNameType === 'different' && String(formData.businessName || '').trim()) {
+      if (!String(formData.businessAddress || '').trim()) newErrors.businessAddress = 'Business address is required when business name is provided';
+      if (!String(formData.businessCity || '').trim()) newErrors.businessCity = 'Business city is required when business name is provided';
+      if (!String(formData.businessState || '').trim()) newErrors.businessState = 'Business state is required when business name is provided';
+      if (!String(formData.businessZip || '').trim()) newErrors.businessZip = 'Business ZIP is required when business name is provided';
     }
-    if (!formData.totalIncome.trim()) newErrors.totalIncome = 'Total income is required';
-    
+    if (!String(formData.totalIncome || '').trim()) newErrors.totalIncome = 'Total income is required';
+
     // Conditional validations
-    if (formData.issuedRefunds && !formData.totalRefunded.trim()) {
+    if (formData.issuedRefunds && !String(formData.totalRefunded || '').trim()) {
       newErrors.totalRefunded = 'Refunded amount is required when refunds were issued';
     }
-    if (formData.otherBusinessIncome && !formData.otherBusinessIncomeAmount.trim()) {
+    if (formData.otherBusinessIncome && !String(formData.otherBusinessIncomeAmount || '').trim()) {
       newErrors.otherBusinessIncomeAmount = 'Amount is required for other business income';
     }
-    if (formData.usedVehicle && !formData.businessMiles.trim()) {
+    if (formData.usedVehicle && !String(formData.businessMiles || '').trim()) {
       newErrors.businessMiles = 'Business miles is required when vehicle was used';
     }
-    if (formData.paidContractors && !formData.totalPaidContractors.trim()) {
+    if (formData.paidContractors && !String(formData.totalPaidContractors || '').trim()) {
       newErrors.totalPaidContractors = 'Total paid to contractors is required';
     }
-    if (formData.selfEmployedRetirement && !formData.retirementAmount.trim()) {
+    if (formData.selfEmployedRetirement && !String(formData.retirementAmount || '').trim()) {
       newErrors.retirementAmount = 'Retirement amount is required when contributing to plan';
     }
 
@@ -296,7 +297,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
       {/* 1. About Your Business */}
       <div className="mb-6">
         <h5 style={sectionStyle}>1. About Your Business</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -390,27 +391,19 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
             <label className="form-label" style={labelStyle}>
               Did you start this business during the year?
             </label>
-            <select
-              className="form-control"
-              value={formData.startedDuringYear ? 'yes' : 'no'}
-              onChange={(e) => handleChange('startedDuringYear', e.target.value === 'yes')}
-            >
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
+            <SlideSwitch
+              value={formData.startedDuringYear}
+              onChange={(val) => handleChange('startedDuringYear', val)}
+            />
           </div>
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
               Do you run this business from your home?
             </label>
-            <select
-              className="form-control"
-              value={formData.homeBased ? 'yes' : 'no'}
-              onChange={(e) => handleChange('homeBased', e.target.value === 'yes')}
-            >
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
+            <SlideSwitch
+              value={formData.homeBased}
+              onChange={(val) => handleChange('homeBased', val)}
+            />
           </div>
         </div>
 
@@ -470,7 +463,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         {/* 2. Money You Made (Income) */}
         <div className="mb-6">
           <h5 style={sectionStyle}>2. Money You Made (Income)</h5>
-          
+
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
@@ -630,14 +623,10 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               <label className="form-label" style={labelStyle}>
                 Did you issue refunds to customers?
               </label>
-              <select
-                className="form-control"
-                value={formData.issuedRefunds ? 'yes' : 'no'}
-                onChange={(e) => handleChange('issuedRefunds', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes → Total refunded $</option>
-              </select>
+              <SlideSwitch
+                value={formData.issuedRefunds}
+                onChange={(val) => handleChange('issuedRefunds', val)}
+              />
             </div>
             <div className="col-md-6">
               {formData.issuedRefunds && (
@@ -666,14 +655,10 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               <label className="form-label" style={labelStyle}>
                 Any other business income?
               </label>
-              <select
-                className="form-control"
-                value={formData.otherBusinessIncome ? 'yes' : 'no'}
-                onChange={(e) => handleChange('otherBusinessIncome', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes → Amount $</option>
-              </select>
+              <SlideSwitch
+                value={formData.otherBusinessIncome}
+                onChange={(val) => handleChange('otherBusinessIncome', val)}
+              />
             </div>
             <div className="col-md-6">
               {formData.otherBusinessIncome && (
@@ -701,7 +686,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         {/* 3. Business Expenses */}
         <div className="mb-6">
           <h5 style={sectionStyle}>3. Business Expenses</h5>
-          
+
           <div className="row g-3 mb-3">
             <div className="col-md-6">
               <label className="form-label" style={labelStyle}>
@@ -804,20 +789,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           {/* 4. Vehicle & Travel */}
           <div className="mb-6">
             <h5 style={sectionStyle}>4. Vehicle & Travel</h5>
-            
+
             <div className="row g-3 mb-3">
               <div className="col-md-6">
                 <label className="form-label" style={labelStyle}>
                   Did you use a vehicle for business?
                 </label>
-                <select
-                  className="form-control"
-                  value={formData.usedVehicle ? 'yes' : 'no'}
-                  onChange={(e) => handleChange('usedVehicle', e.target.value === 'yes')}
-                >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
+                <SlideSwitch
+                  value={formData.usedVehicle}
+                  onChange={(val) => handleChange('usedVehicle', val)}
+                />
               </div>
               <div className="col-md-6">
                 {formData.usedVehicle && (
@@ -864,7 +845,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           {/* 5. Food & Travel */}
           <div className="mb-6">
             <h5 style={sectionStyle}>5. Food & Travel</h5>
-            
+
             <div className="row g-3 mb-3">
               <div className="col-md-6">
                 <label className="form-label" style={labelStyle}>
@@ -902,20 +883,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           {/* 6. Payments to Others */}
           <div className="mb-6">
             <h5 style={sectionStyle}>6. Payments to Others</h5>
-            
+
             <div className="row g-3 mb-3">
               <div className="col-md-6">
                 <label className="form-label" style={labelStyle}>
                   Did you pay contractors or helpers?
                 </label>
-                <select
-                  className="form-control"
-                  value={formData.paidContractors ? 'yes' : 'no'}
-                  onChange={(e) => handleChange('paidContractors', e.target.value === 'yes')}
-                >
-                  <option value="no">No</option>
-                  <option value="yes">Yes → Total paid $</option>
-                </select>
+                <SlideSwitch
+                  value={formData.paidContractors}
+                  onChange={(val) => handleChange('paidContractors', val)}
+                />
               </div>
               <div className="col-md-6">
                 {formData.paidContractors && (
@@ -947,7 +924,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
           {/* 7. Other Expenses */}
           <div className="mb-6">
             <h5 style={sectionStyle}>7. Other Expenses</h5>
-            
+
             {formData.otherExpenses.map((expense, index) => (
               <div key={expense.id} className="row g-3 mb-3 align-items-end">
                 <div className="col-md-6">
@@ -978,7 +955,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                   </div>
                 </div>
                 <div className="col-md-2">
-                  <button 
+                  <button
                     className="btn btn-outline-danger w-100"
                     onClick={() => handleRemoveOtherExpense(expense.id)}
                     title="Remove Expense"
@@ -988,7 +965,7 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
                 </div>
               </div>
             ))}
-            
+
             <button
               className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
               onClick={handleAddOtherExpense}
@@ -1002,20 +979,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         {/* 8. Home Office (Optional) */}
         <div className="mb-6">
           <h5 style={sectionStyle}>8. Home Office (Optional)</h5>
-          
+
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
                 Did you regularly use part of your home only for business?
               </label>
-              <select
-                className="form-control"
-                value={formData.homeOfficeUse ? 'yes' : 'no'}
-                onChange={(e) => handleChange('homeOfficeUse', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+              <SlideSwitch
+                value={formData.homeOfficeUse}
+                onChange={(val) => handleChange('homeOfficeUse', val)}
+              />
             </div>
           </div>
 
@@ -1040,20 +1013,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         {/* 9. Inventory or Products (Optional) */}
         <div className="mb-6">
           <h5 style={sectionStyle}>9. Inventory or Products (Optional)</h5>
-          
+
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
                 Do you sell physical products?
               </label>
-              <select
-                className="form-control"
-                value={formData.sellProducts ? 'yes' : 'no'}
-                onChange={(e) => handleChange('sellProducts', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+              <SlideSwitch
+                value={formData.sellProducts}
+                onChange={(val) => handleChange('sellProducts', val)}
+              />
             </div>
           </div>
 
@@ -1108,20 +1077,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         {/* 10. Health Insurance & Retirement (Optional) */}
         <div className="mb-6">
           <h5 style={sectionStyle}>10. Health Insurance & Retirement (Optional)</h5>
-          
+
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
                 Did you pay for health insurance through this business?
               </label>
-              <select
-                className="form-control"
-                value={formData.healthInsuranceBusiness ? 'yes' : 'no'}
-                onChange={(e) => handleChange('healthInsuranceBusiness', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+              <SlideSwitch
+                value={formData.healthInsuranceBusiness}
+                onChange={(val) => handleChange('healthInsuranceBusiness', val)}
+              />
             </div>
           </div>
 
@@ -1130,14 +1095,10 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
               <label className="form-label" style={labelStyle}>
                 Did you contribute to a self-employed retirement plan?
               </label>
-              <select
-                className="form-control"
-                value={formData.selfEmployedRetirement ? 'yes' : 'no'}
-                onChange={(e) => handleChange('selfEmployedRetirement', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+              <SlideSwitch
+                value={formData.selfEmployedRetirement}
+                onChange={(val) => handleChange('selfEmployedRetirement', val)}
+              />
             </div>
           </div>
 
@@ -1170,20 +1131,16 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
         {/* 11. Final Confirmation */}
         <div className="mb-6">
           <h5 style={sectionStyle}>Final Confirmation</h5>
-          
+
           <div className="row g-3 mb-3">
             <div className="col-12">
               <label className="form-label" style={labelStyle}>
                 Is this information accurate to the best of your knowledge?
               </label>
-              <select
-                className="form-control"
-                value={formData.isAccurate ? 'yes' : 'no'}
-                onChange={(e) => handleChange('isAccurate', e.target.value === 'yes')}
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+              <SlideSwitch
+                value={formData.isAccurate}
+                onChange={(val) => handleChange('isAccurate', val)}
+              />
             </div>
           </div>
         </div>
@@ -1199,18 +1156,18 @@ export default function ComprehensiveBusinessForm({ onSave, onCancel, onError, e
 
         {/* Actions */}
         <div className="d-flex justify-content-end gap-3 pt-3 border-top">
-          <button 
+          <button
             className="btn btn-light"
             onClick={onCancel}
             style={{ fontFamily: "BasisGrotesquePro", fontWeight: 500 }}
           >
             Cancel
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={handleSubmit}
-            style={{ 
-              fontFamily: "BasisGrotesquePro", 
+            style={{
+              fontFamily: "BasisGrotesquePro",
               fontWeight: 500,
               backgroundColor: "#3B4A66",
               borderColor: "#3B4A66"

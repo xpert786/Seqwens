@@ -11,6 +11,10 @@ import { toast } from "react-toastify";
 import SignatureModal from "../components/SignatureModal";
 import ComprehensiveBusinessForm from "../components/ComprehensiveBusinessForm";
 import RentalPropertyForm from "../components/RentalPropertyForm";
+import DateInput from "../../components/DateInput";
+import SlideSwitch from "../../components/SlideSwitch";
+import { formatDateForDisplay, formatDateForAPI, formatDateInput } from "../utils/dateUtils";
+import { formatSSN, isValidSSN } from "../utils/formatUtils";
 
 export default function DataIntakeForm() {
   const [filingStatus, setFilingStatus] = useState([]);
@@ -85,7 +89,7 @@ export default function DataIntakeForm() {
   const [isAddingBusiness, setIsAddingBusiness] = useState(false);
   const [editingBusinessId, setEditingBusinessId] = useState(null);
   const [businessFormErrors, setBusinessFormErrors] = useState({});
-  
+
   // Comprehensive Business Data State
   const [businessData, setBusinessData] = useState({
     workDescription: '',
@@ -209,7 +213,7 @@ export default function DataIntakeForm() {
       }
 
       console.log("Saving rental property info directly...");
-      
+
       const apiBaseUrl = getApiBaseUrl();
       const response = await fetch(`${apiBaseUrl}/taxpayer/rental-property-info/`, {
         method: hasExistingRentalData ? "PATCH" : "POST",
@@ -249,12 +253,12 @@ export default function DataIntakeForm() {
       });
 
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
         // Update local state
         if (editingRentalPropertyId) {
           // Update existing rental property
-          setRentalProperties(prev => prev.map(rp => 
+          setRentalProperties(prev => prev.map(rp =>
             rp.id === editingRentalPropertyId ? { ...rp, ...rentalData } : rp
           ));
         } else {
@@ -268,7 +272,7 @@ export default function DataIntakeForm() {
         setHasExistingRentalData(true);
         setEditingRentalPropertyId(null);
         setIsAddingRentalProperty(false);
-        
+
         // Show success message
         toast.success('Rental property information saved successfully!', {
           position: "top-right",
@@ -278,7 +282,7 @@ export default function DataIntakeForm() {
           pauseOnHover: true,
           draggable: true,
         });
-        
+
         console.log("Rental property info saved successfully:", result);
       } else {
         // Handle error
@@ -344,8 +348,35 @@ export default function DataIntakeForm() {
     }
   };
 
-  const handleRemoveRentalProperty = (rentalPropertyId) => {
+  const handleRemoveRentalProperty = async (rentalPropertyId) => {
+    const previousRentalProperties = [...rentalProperties];
     setRentalProperties(prev => prev.filter(rp => rp.id !== rentalPropertyId));
+
+    const token = getAccessToken();
+    if (!token) return;
+
+    try {
+      const apiBaseUrl = getApiBaseUrl();
+      const response = await fetch(`${apiBaseUrl}/taxpayer/rental-property-info/${rentalPropertyId}/`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Already deleted or not found, just ignore
+          return;
+        }
+        throw new Error("Failed to delete rental property");
+      }
+      toast.success("Rental property removed successfully");
+    } catch (error) {
+      console.error("Error removing rental property:", error);
+      toast.error("Failed to remove rental property");
+      setRentalProperties(previousRentalProperties);
+    }
   };
 
   // Handle Business Info Save
@@ -493,8 +524,8 @@ export default function DataIntakeForm() {
 
           // Income Information
           total_income: businessData.totalIncome || "",
-          tax_forms_received: Array.isArray(businessData.taxFormsReceived) 
-            ? businessData.taxFormsReceived 
+          tax_forms_received: Array.isArray(businessData.taxFormsReceived)
+            ? businessData.taxFormsReceived
             : (businessData.taxFormsReceived || []),
           issued_refunds: businessData.issuedRefunds || false,
           total_refunded: businessData.totalRefunded || "",
@@ -550,7 +581,7 @@ export default function DataIntakeForm() {
       });
 
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
         // Handle response based on whether we sent single or multiple businesses
         if (shouldSendAll) {
@@ -735,12 +766,12 @@ export default function DataIntakeForm() {
             }
           });
         }
-        
+
         // Reset form state after save
         setIsAddingBusiness(false);
         setEditingBusinessId(null);
         setBusinessFormErrors({}); // Clear any previous errors
-        
+
         // Show success message
         toast.success('Business information saved successfully!', {
           position: "top-right",
@@ -750,7 +781,7 @@ export default function DataIntakeForm() {
           pauseOnHover: true,
           draggable: true,
         });
-        
+
         console.log("Business info saved successfully:", result);
       } else {
         // Handle error
@@ -815,8 +846,8 @@ export default function DataIntakeForm() {
         businessState: business.businessState || '',
         businessZip: business.businessZip || '',
         totalIncome: business.totalIncome || '',
-        taxFormsReceived: Array.isArray(business.taxFormsReceived) 
-          ? business.taxFormsReceived 
+        taxFormsReceived: Array.isArray(business.taxFormsReceived)
+          ? business.taxFormsReceived
           : (business.taxFormsReceived === 'none' ? [] : (business.taxFormsReceived ? [business.taxFormsReceived] : [])),
         issuedRefunds: business.issuedRefunds || false,
         totalRefunded: business.totalRefunded || '',
@@ -854,8 +885,75 @@ export default function DataIntakeForm() {
     }
   };
 
-  const handleRemoveBusiness = (businessId) => {
-    setBusinesses(prev => prev.filter(b => b.id !== businessId));
+  const handleRemoveBusiness = async (businessId) => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    const previousBusinesses = [...businesses];
+    const updatedBusinesses = businesses.filter(b => b.id !== businessId);
+    setBusinesses(updatedBusinesses);
+
+    try {
+      const apiBaseUrl = getApiBaseUrl();
+      const requestBody = updatedBusinesses.map(b => ({
+        business_name: b.businessName || "",
+        business_address: b.address?.split(',')[0]?.trim() || (b.businessAddress || ""),
+        business_city: b.businessCity || "",
+        business_state: b.businessState || "",
+        business_zip: b.businessZip || "",
+        work_description: b.workDescription || "",
+        business_name_type: b.businessNameType || "same",
+        different_business_name: b.differentBusinessName || "",
+        started_during_year: b.startedDuringYear || false,
+        home_based: b.homeBased || false,
+        total_income: b.totalIncome || "",
+        tax_forms_received: b.taxFormsReceived || [],
+        issued_refunds: b.issuedRefunds || false,
+        total_refunded: b.totalRefunded || "",
+        other_business_income: b.otherBusinessIncome || false,
+        other_business_income_amount: b.otherBusinessIncomeAmount || "",
+        advertising: b.advertising || "",
+        office_supplies: b.officeSupplies || "",
+        cleaning_repairs: b.cleaningRepairs || "",
+        insurance: b.insurance || "",
+        legal_professional: b.legalProfessional || "",
+        phone_internet_utilities: b.phoneInternetUtilities || "",
+        paid_contractors: b.paidContractors || false,
+        total_paid_contractors: b.totalPaidContractors ? parseFloat(b.totalPaidContractors) || 0 : 0,
+        other_expenses: b.otherExpenses || [],
+        used_vehicle: b.usedVehicle || false,
+        business_miles: b.businessMiles ? parseInt(b.businessMiles) || 0 : 0,
+        parking_tolls_travel: b.parkingTollsTravel || "",
+        business_meals: b.businessMeals || "",
+        travel_expenses: b.travelExpenses || "",
+        home_office_use: b.homeOfficeUse || false,
+        home_office_size: b.homeOfficeSize || "",
+        sell_products: b.sellProducts || false,
+        cost_items_resold: b.costItemsResold ? parseFloat(b.costItemsResold) || 0 : 0,
+        inventory_left_end: b.inventoryLeftEnd ? parseFloat(b.inventoryLeftEnd) || 0 : 0,
+        health_insurance_business: b.healthInsuranceBusiness || false,
+        self_employed_retirement: b.selfEmployedRetirement || false,
+        retirement_amount: b.retirementAmount ? parseFloat(b.retirementAmount) || 0 : 0,
+        is_accurate: b.isAccurate || false,
+        id: b.id
+      }));
+
+      const response = await fetch(`${apiBaseUrl}/taxpayer/business-info/`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) throw new Error("Failed to delete business");
+      toast.success("Business removed successfully");
+    } catch (error) {
+      console.error("Error removing business:", error);
+      toast.error("Failed to remove business");
+      setBusinesses(previousBusinesses);
+    }
   };
 
   const handleCancelBusiness = () => {
@@ -931,7 +1029,7 @@ export default function DataIntakeForm() {
               firstName: data.first_name || "",
               middleInitial: data.middle_name || "",
               lastName: data.last_name || "",
-              dateOfBirth: data.dateOfBirth || "",
+              dateOfBirth: data.dateOfBirth ? formatDateForDisplay(data.dateOfBirth) : "",
               ssn: data.ssn || "",
               email: data.email || "",
               phone: phoneValue, // Full phone number
@@ -963,7 +1061,7 @@ export default function DataIntakeForm() {
                 firstName: data.spouse_info.spouse_first_name || "",
                 middleInitial: "",
                 lastName: data.spouse_info.spouse_last_name || "",
-                dateOfBirth: data.spouse_info.spouse_dateOfBirth || "",
+                dateOfBirth: data.spouse_info.spouse_dateOfBirth ? formatDateForDisplay(data.spouse_info.spouse_dateOfBirth) : "",
                 ssn: data.spouse_info.spouse_ssn || "",
                 email: data.spouse_info.spouse_email || "",
                 phone: spousePhoneValue, // Only country code, not full number
@@ -1012,7 +1110,7 @@ export default function DataIntakeForm() {
                 firstName: dep.dependent_first_name || '',
                 middleInitial: dep.dependent_middle_name || '',
                 lastName: dep.dependent_last_name || '',
-                dob: dep.dependent_dateOfBirth || '',
+                dob: dep.dependent_dateOfBirth ? formatDateForDisplay(dep.dependent_dateOfBirth) : '',
                 ssn: dep.dependent_ssn || ''
               }));
               setDependents(formattedDependents);
@@ -1088,10 +1186,10 @@ export default function DataIntakeForm() {
 
           if (businessResult.success && businessResult.data && Array.isArray(businessResult.data) && businessResult.data.length > 0) {
             const businessData = businessResult.data[0]; // Get first business from array
-            
+
             // Set flag for existing business data - will use PATCH
             setHasExistingBusinessData(true);
-            
+
             // Update business data state with fetched info
             setBusinessData({
               // Map API data to form structure
@@ -1152,14 +1250,14 @@ export default function DataIntakeForm() {
               total += parseFloat(data.travel_expenses || 0);
               total += parseFloat(data.cost_items_resold || 0);
               total += parseFloat(data.retirement_amount || 0);
-              
+
               // Add other expenses
               if (data.other_expenses && Array.isArray(data.other_expenses)) {
                 data.other_expenses.forEach(exp => {
                   total += parseFloat(exp.amount || 0);
                 });
               }
-              
+
               return total.toFixed(2);
             };
 
@@ -1240,10 +1338,10 @@ export default function DataIntakeForm() {
 
           if (rentalResult.success && rentalResult.data && Array.isArray(rentalResult.data) && rentalResult.data.length > 0) {
             const rentalData = rentalResult.data[0]; // Get first rental property from array
-            
+
             // Set flag for existing rental data - will use PATCH
             setHasExistingRentalData(true);
-            
+
             // Update rental properties list with fetched info
             const rentalProperty = {
               id: rentalData.id || Date.now(),
@@ -1365,8 +1463,8 @@ export default function DataIntakeForm() {
     // Check if it's a valid date
     const date = new Date(year, month - 1, day);
     const isValidDate = date.getFullYear() === year &&
-                       date.getMonth() === month - 1 &&
-                       date.getDate() === day;
+      date.getMonth() === month - 1 &&
+      date.getDate() === day;
 
     if (!isValidDate) {
       return {
@@ -1598,14 +1696,14 @@ export default function DataIntakeForm() {
           })
           : [String(errorData.errors.tax_documents)];
         generalErrorMessages.push(...taxDocErrors);
-        
+
         // Check if the error message indicates tax documents are required
-        const hasRequiredError = taxDocErrors.some(error => 
+        const hasRequiredError = taxDocErrors.some(error =>
           error.toLowerCase().includes('tax documents are required') ||
           error.toLowerCase().includes('supporting document') ||
           error.toLowerCase().includes('upload at least one')
         );
-        
+
         if (hasRequiredError) {
           // Clear the uploaded file when tax documents are required
           setUploadedFile(null);
@@ -1791,7 +1889,9 @@ export default function DataIntakeForm() {
       }
     }
     if (!personalInfo.ssn || personalInfo.ssn.trim() === '') {
-      errors['personalInfo.ssn'] = ['SSN is required'];
+      errors['personalInfo.ssn'] = ['SSN / ITIN (Tax ID) is required'];
+    } else if (!isValidSSN(personalInfo.ssn)) {
+      errors['personalInfo.ssn'] = ['SSN / ITIN (Tax ID) must be 9 digits'];
     }
     if (!personalInfo.email || personalInfo.email.trim() === '') {
       errors['personalInfo.email'] = ['Email is required'];
@@ -1820,8 +1920,9 @@ export default function DataIntakeForm() {
       errors['personalInfo.filingStatus'] = ['Filing status is required'];
     }
 
-    // Spouse Information - Required if filing status is "Married Filing Jointly" or "Married Filing Separately"
-    if (personalInfo.filingStatus === 'Married Filing Jointly' || personalInfo.filingStatus === 'Married Filing Separately') {
+    // Spouse Information - Required if filing status is Married Joint, Married Separate, Widow, or Not Sure
+    const spouseInfoRequired = ['married_joint', 'married_separate', 'widow', 'not_sure'].includes(personalInfo.filingStatus);
+    if (spouseInfoRequired) {
       if (!spouseInfo.firstName || spouseInfo.firstName.trim() === '') {
         errors['spouseInfo.firstName'] = ['Spouse first name is required'];
       }
@@ -1837,7 +1938,9 @@ export default function DataIntakeForm() {
         }
       }
       if (!spouseInfo.ssn || spouseInfo.ssn.trim() === '') {
-        errors['spouseInfo.ssn'] = ['Spouse SSN is required'];
+        errors['spouseInfo.ssn'] = ['Spouse SSN / ITIN (Tax ID) is required'];
+      } else if (!isValidSSN(spouseInfo.ssn)) {
+        errors['spouseInfo.ssn'] = ['Spouse SSN / ITIN (Tax ID) must be 9 digits'];
       }
       if (!spouseInfo.phone || spouseInfo.phone.trim() === '') {
         errors['spouseInfo.phone'] = ['Spouse phone number is required'];
@@ -1867,7 +1970,9 @@ export default function DataIntakeForm() {
           }
         }
         if (!dep.ssn || dep.ssn.trim() === '') {
-          errors[`dependents.${index}.ssn`] = ['Dependent SSN is required'];
+          errors[`dependents.${index}.ssn`] = ['Dependent SSN / ITIN (Tax ID) is required'];
+        } else if (!isValidSSN(dep.ssn)) {
+          errors[`dependents.${index}.ssn`] = ['Dependent SSN / ITIN (Tax ID) must be 9 digits'];
         }
       });
     }
@@ -1881,7 +1986,7 @@ export default function DataIntakeForm() {
   const handleSubmit = async () => {
     // Clear previous general errors
     setGeneralErrors([]);
-    
+
     // Set loading state to true
     setIsSubmitting(true);
 
@@ -2158,12 +2263,12 @@ export default function DataIntakeForm() {
 
       // Show single success message for the entire form submission
       const hasFileUpload = fileUploadResponse && fileUploadResponse.success;
-      
+
       let message = "Data intake form updated successfully!";
       if (hasFileUpload) {
-        message = "Data intake form and documents updated successfully!"; 
+        message = "Data intake form and documents updated successfully!";
       }
-      
+
       toast.success(message, {
         position: "top-right",
         autoClose: 3000,
@@ -2346,24 +2451,15 @@ export default function DataIntakeForm() {
     setDependents(updated);
   };
 
-  // Helper function to format date input with slashes
-  const formatDateInput = (value) => {
-    // Remove all non-numeric characters
-    const numericValue = value.replace(/\D/g, '');
-
-    // Add slashes at appropriate positions
-    if (numericValue.length >= 2 && numericValue.length < 4) {
-      return `${numericValue.slice(0, 2)}/${numericValue.slice(2)}`;
-    } else if (numericValue.length >= 4) {
-      return `${numericValue.slice(0, 2)}/${numericValue.slice(2, 4)}/${numericValue.slice(4, 8)}`;
-    }
-
-    return numericValue;
-  };
 
   const handleInputChange = (index, field, value) => {
-    // Format date fields with slashes
-    const formattedValue = field === 'dob' ? formatDateInput(value) : value;
+    // Format date fields with slashes and SSN with dashes
+    let formattedValue = value;
+    if (field === 'dob') {
+      formattedValue = formatDateInput(value);
+    } else if (field === 'ssn') {
+      formattedValue = formatSSN(value);
+    }
 
     const updated = [...dependents];
     updated[index][field] = formattedValue;
@@ -2373,8 +2469,7 @@ export default function DataIntakeForm() {
   };
 
   const handlePersonalInfoChange = (field, value) => {
-    // Format date fields with slashes
-    const formattedValue = field === 'dateOfBirth' ? formatDateInput(value) : value;
+    const formattedValue = field === 'ssn' ? formatSSN(value) : value;
 
     setPersonalInfo(prev => ({
       ...prev,
@@ -2385,8 +2480,7 @@ export default function DataIntakeForm() {
   };
 
   const handleSpouseInfoChange = (field, value) => {
-    // Format date fields with slashes
-    const formattedValue = field === 'dateOfBirth' ? formatDateInput(value) : value;
+    const formattedValue = field === 'ssn' ? formatSSN(value) : value;
 
     setSpouseInfo(prev => ({
       ...prev,
@@ -2637,10 +2731,8 @@ export default function DataIntakeForm() {
             }}>
               Date of Birth
             </label>
-            <input
-              type="text"
+            <DateInput
               className={`form-control ${getFieldError('personalInfo.dateOfBirth') ? 'is-invalid' : ''}`}
-              placeholder="MM/DD/YYYY"
               value={personalInfo.dateOfBirth}
               onChange={(e) => handlePersonalInfoChange('dateOfBirth', e.target.value)}
               data-field="personalInfo.dateOfBirth"
@@ -2667,13 +2759,54 @@ export default function DataIntakeForm() {
               fontSize: "16px",
               color: "#3B4A66"
             }}>
-              Social Security Number (SSN)
+              Filing Status
+            </label>
+            <select
+              className={`form-select ${getFieldError('personalInfo.filingStatus') ? 'is-invalid' : ''}`}
+              style={{ height: '45px' }}
+              value={personalInfo.filingStatus}
+              onChange={(e) => handlePersonalInfoChange('filingStatus', e.target.value)}
+              data-field="personalInfo.filingStatus"
+              ref={(el) => {
+                if (!fieldRefs.current['personalInfo.filingStatus']) {
+                  fieldRefs.current['personalInfo.filingStatus'] = el;
+                }
+              }}
+            >
+              <option value="">Select Status</option>
+              <option value="single">Single</option>
+              <option value="married_joint">Married Filing Jointly</option>
+              <option value="married_separate">Married Filing Separately</option>
+              <option value="head_household">Head of Household</option>
+              <option value="widow">Qualifying Widow</option>
+              <option value="not_sure">Not Sure</option>
+            </select>
+            {getFieldError('personalInfo.filingStatus') && (
+              <div className="invalid-feedback d-block" style={{
+                fontSize: "12px",
+                color: "#EF4444",
+                marginTop: "4px"
+              }}>
+                {getFieldError('personalInfo.filingStatus')}
+              </div>
+            )}
+          </div>
+          <div className="col-md-6">
+            <label className="form-label" style={{
+              fontFamily: "BasisGrotesquePro",
+              fontWeight: 400,
+              fontSize: "16px",
+              color: "#3B4A66"
+            }}>
+              SSN / ITIN (Tax ID)
             </label>
             <input
               type="text"
               className={`form-control ${getFieldError('personalInfo.ssn') ? 'is-invalid' : ''}`}
               value={personalInfo.ssn}
               onChange={(e) => handlePersonalInfoChange('ssn', e.target.value)}
+              inputMode="numeric"
+              maxLength={11}
               data-field="personalInfo.ssn"
               ref={(el) => {
                 if (!fieldRefs.current['personalInfo.ssn']) {
@@ -2910,323 +3043,252 @@ export default function DataIntakeForm() {
               </div>
             )}
           </div>
-          <div className="col-md-4">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Filing Status
-            </label>
-            <select
-              className={`form-select mt-2 ${getFieldError('personalInfo.filingStatus') ? 'is-invalid' : ''}`}
-              value={personalInfo.filingStatus}
-              onChange={(e) => handlePersonalInfoChange('filingStatus', e.target.value)}
-              data-field="personalInfo.filingStatus"
-              ref={(el) => {
-                if (!fieldRefs.current['personalInfo.filingStatus']) {
-                  fieldRefs.current['personalInfo.filingStatus'] = el;
-                }
-              }}
-            >
-              <option value="">Select Status</option>
-              <option value="single">Single</option>
-              <option value="married_joint">Married Filing Jointly</option>
-              <option value="married_separate">Married Filing Separately</option>
-              <option value="head_household">Head of Household</option>
-              <option value="widow">Qualifying Widow</option>
-            </select>
-            {getFieldError('personalInfo.filingStatus') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
-              }}>
-                {getFieldError('personalInfo.filingStatus')}
-              </div>
-            )}
-          </div>
-          <div className="col-md-4">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Business Type
-            </label>
-            <select
-              className={`form-select mt-2 ${getFieldError('personalInfo.businessType') ? 'is-invalid' : ''}`}
-              value={personalInfo.businessType}
-              onChange={(e) => handlePersonalInfoChange('businessType', e.target.value)}
-              data-field="personalInfo.businessType"
-              ref={(el) => {
-                if (!fieldRefs.current['personalInfo.businessType']) {
-                  fieldRefs.current['personalInfo.businessType'] = el;
-                }
-              }}
-            >
-              <option value="individual">Individual</option>
-              <option value="small_business">Small Business</option>
-              <option value="medium_business">Medium Business</option>
-              <option value="enterprise">Enterprise</option>
-            </select>
-            {getFieldError('personalInfo.businessType') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
-              }}>
-                {getFieldError('personalInfo.businessType')}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
       {/* Spouse Information */}
-      <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
-        <div className="align-items-center mb-3">
-          <h5 className="mb-0 me-3" style={{
-            color: "#3B4A66",
-            fontSize: "20px",
-            fontWeight: "500",
-            fontFamily: "BasisGrotesquePro"
-          }}>
-            Spouse Information
-          </h5>
-          <p className="mb-0" style={{
-            color: "#4B5563",
-            fontSize: "14px",
-            fontWeight: "400",
-            fontFamily: "BasisGrotesquePro"
-          }}>
-            Your spouse's information for joint filing
-          </p>
-        </div>
-        <div className="row g-3">
-          <div className="col-md-5">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
+      {['married_joint', 'married_separate', 'widow', 'not_sure'].includes(personalInfo.filingStatus) && (
+        <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
+          <div className="align-items-center mb-3">
+            <h5 className="mb-0 me-3" style={{
+              color: "#3B4A66",
+              fontSize: "20px",
+              fontWeight: "500",
+              fontFamily: "BasisGrotesquePro"
             }}>
-              First Name
-            </label>
-            <input
-              type="text"
-              className={`form-control ${getFieldError('spouseInfo.firstName') ? 'is-invalid' : ''}`}
-              placeholder="Sara"
-              value={spouseInfo.firstName}
-              onChange={(e) => handleSpouseInfoChange('firstName', e.target.value)}
-              data-field="spouseInfo.firstName"
-              ref={(el) => {
-                if (!fieldRefs.current['spouseInfo.firstName']) {
-                  fieldRefs.current['spouseInfo.firstName'] = el;
-                }
-              }}
-            />
-            {getFieldError('spouseInfo.firstName') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
+              Spouse Information
+            </h5>
+            <p className="mb-0" style={{
+              color: "#4B5563",
+              fontSize: "14px",
+              fontWeight: "400",
+              fontFamily: "BasisGrotesquePro"
+            }}>
+              Your spouse's information for joint filing
+            </p>
+          </div>
+          <div className="row g-3">
+            <div className="col-md-5">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
               }}>
-                {getFieldError('spouseInfo.firstName')}
-              </div>
-            )}
-          </div>
-          <div className="col-md-2">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Middle Initial
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              value={spouseInfo.middleInitial}
-              onChange={(e) => handleSpouseInfoChange('middleInitial', e.target.value)}
-            />
-          </div>
-          <div className="col-md-5">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Last Name
-            </label>
-            <input
-              type="text"
-              className={`form-control ${getFieldError('spouseInfo.lastName') ? 'is-invalid' : ''}`}
-              placeholder="Johnson"
-              value={spouseInfo.lastName}
-              onChange={(e) => handleSpouseInfoChange('lastName', e.target.value)}
-              data-field="spouseInfo.lastName"
-              ref={(el) => {
-                if (!fieldRefs.current['spouseInfo.lastName']) {
-                  fieldRefs.current['spouseInfo.lastName'] = el;
-                }
-              }}
-            />
-            {getFieldError('spouseInfo.lastName') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
-              }}>
-                {getFieldError('spouseInfo.lastName')}
-              </div>
-            )}
-          </div>
-          <div className="col-md-6">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Date of Birth
-            </label>
-            <input
-              type="text"
-              className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
-              placeholder="MM/DD/YYYY"
-              value={spouseInfo.dateOfBirth}
-              onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
-              data-field="spouseInfo.dateOfBirth"
-              ref={(el) => {
-                if (!fieldRefs.current['spouseInfo.dateOfBirth']) {
-                  fieldRefs.current['spouseInfo.dateOfBirth'] = el;
-                }
-              }}
-            />
-            {getFieldError('spouseInfo.dateOfBirth') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
-              }}>
-                {getFieldError('spouseInfo.dateOfBirth')}
-              </div>
-            )}
-          </div>
-          <div className="col-md-6">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Social Security Number
-            </label>
-            <input
-              type="text"
-              className={`form-control ${getFieldError('spouseInfo.ssn') ? 'is-invalid' : ''}`}
-              value={spouseInfo.ssn}
-              onChange={(e) => handleSpouseInfoChange('ssn', e.target.value)}
-              data-field="spouseInfo.ssn"
-              ref={(el) => {
-                if (!fieldRefs.current['spouseInfo.ssn']) {
-                  fieldRefs.current['spouseInfo.ssn'] = el;
-                }
-              }}
-            />
-            {getFieldError('spouseInfo.ssn') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
-              }}>
-                {getFieldError('spouseInfo.ssn')}
-              </div>
-            )}
-          </div>
-          <div className="col-md-6">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Email
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="sara@example.com"
-              style={{ height: '45px' }}
-              value={spouseInfo.email}
-              onChange={(e) => handleSpouseInfoChange('email', e.target.value)}
-              disabled={true}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label" style={{
-              fontFamily: "BasisGrotesquePro",
-              fontWeight: 400,
-              fontSize: "16px",
-              color: "#3B4A66"
-            }}>
-              Phone
-            </label>
-            <PhoneInput
-              country={spousePhoneCountry}
-              value={spouseInfo.phone || ''}
-              onChange={(phone) => {
-                handleSpouseInfoChange('phone', phone);
-                // Clear error when user starts typing
-                if (getFieldError('spouseInfo.phone')) {
-                  clearFieldError('spouseInfo.phone');
-                }
-              }}
-              onCountryChange={(countryCode) => {
-                setSpousePhoneCountry(countryCode.toLowerCase());
-              }}
-              inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
-              containerClass="w-100 phone-input-container"
-              inputStyle={{
-                height: '45px',
-                paddingLeft: '48px',
-                paddingRight: '12px',
-                paddingTop: '6px',
-                paddingBottom: '6px',
-                width: '100%',
-                fontSize: '1rem',
-                border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
-                borderRadius: '0.375rem',
-                backgroundColor: '#fff'
-              }}
-              enableSearch={true}
-              countryCodeEditable={false}
-              data-field="spouseInfo.phone"
-              ref={(el) => {
-                if (el && el.inputElement) {
-                  if (!fieldRefs.current['spouseInfo.phone']) {
-                    fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                First Name
+              </label>
+              <input
+                type="text"
+                className={`form-control ${getFieldError('spouseInfo.firstName') ? 'is-invalid' : ''}`}
+                placeholder="Sara"
+                value={spouseInfo.firstName}
+                onChange={(e) => handleSpouseInfoChange('firstName', e.target.value)}
+                data-field="spouseInfo.firstName"
+                ref={(el) => {
+                  if (!fieldRefs.current['spouseInfo.firstName']) {
+                    fieldRefs.current['spouseInfo.firstName'] = el;
                   }
-                }
-              }}
-            />
-            {getFieldError('spouseInfo.phone') && (
-              <div className="invalid-feedback d-block" style={{
-                fontSize: "12px",
-                color: "#EF4444",
-                marginTop: "4px"
+                }}
+              />
+              {getFieldError('spouseInfo.firstName') && (
+                <div className="invalid-feedback d-block" style={{
+                  fontSize: "12px",
+                  color: "#EF4444",
+                  marginTop: "4px"
+                }}>
+                  {getFieldError('spouseInfo.firstName')}
+                </div>
+              )}
+            </div>
+            <div className="col-md-2">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
               }}>
-                {getFieldError('spouseInfo.phone')}
-              </div>
-            )}
+                Middle Initial
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                value={spouseInfo.middleInitial}
+                onChange={(e) => handleSpouseInfoChange('middleInitial', e.target.value)}
+              />
+            </div>
+            <div className="col-md-5">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
+              }}>
+                Last Name
+              </label>
+              <input
+                type="text"
+                className={`form-control ${getFieldError('spouseInfo.lastName') ? 'is-invalid' : ''}`}
+                placeholder="Johnson"
+                value={spouseInfo.lastName}
+                onChange={(e) => handleSpouseInfoChange('lastName', e.target.value)}
+                data-field="spouseInfo.lastName"
+                ref={(el) => {
+                  if (!fieldRefs.current['spouseInfo.lastName']) {
+                    fieldRefs.current['spouseInfo.lastName'] = el;
+                  }
+                }}
+              />
+              {getFieldError('spouseInfo.lastName') && (
+                <div className="invalid-feedback d-block" style={{
+                  fontSize: "12px",
+                  color: "#EF4444",
+                  marginTop: "4px"
+                }}>
+                  {getFieldError('spouseInfo.lastName')}
+                </div>
+              )}
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
+              }}>
+                Date of Birth
+              </label>
+              <DateInput
+                className={`form-control ${getFieldError('spouseInfo.dateOfBirth') ? 'is-invalid' : ''}`}
+                value={spouseInfo.dateOfBirth}
+                onChange={(e) => handleSpouseInfoChange('dateOfBirth', e.target.value)}
+                data-field="spouseInfo.dateOfBirth"
+                ref={(el) => {
+                  if (!fieldRefs.current['spouseInfo.dateOfBirth']) {
+                    fieldRefs.current['spouseInfo.dateOfBirth'] = el;
+                  }
+                }}
+              />
+              {getFieldError('spouseInfo.dateOfBirth') && (
+                <div className="invalid-feedback d-block" style={{
+                  fontSize: "12px",
+                  color: "#EF4444",
+                  marginTop: "4px"
+                }}>
+                  {getFieldError('spouseInfo.dateOfBirth')}
+                </div>
+              )}
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
+              }}>
+                SSN / ITIN (Tax ID)
+              </label>
+              <input
+                type="text"
+                className={`form-control ${getFieldError('spouseInfo.ssn') ? 'is-invalid' : ''}`}
+                value={spouseInfo.ssn}
+                onChange={(e) => handleSpouseInfoChange('ssn', e.target.value)}
+                inputMode="numeric"
+                maxLength={11}
+                data-field="spouseInfo.ssn"
+                ref={(el) => {
+                  if (!fieldRefs.current['spouseInfo.ssn']) {
+                    fieldRefs.current['spouseInfo.ssn'] = el;
+                  }
+                }}
+              />
+              {getFieldError('spouseInfo.ssn') && (
+                <div className="invalid-feedback d-block" style={{
+                  fontSize: "12px",
+                  color: "#EF4444",
+                  marginTop: "4px"
+                }}>
+                  {getFieldError('spouseInfo.ssn')}
+                </div>
+              )}
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
+              }}>
+                Email
+              </label>
+              <input
+                type="email"
+                className="form-control"
+                placeholder="sara@example.com"
+                style={{ height: '45px' }}
+                value={spouseInfo.email}
+                onChange={(e) => handleSpouseInfoChange('email', e.target.value)}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" style={{
+                fontFamily: "BasisGrotesquePro",
+                fontWeight: 400,
+                fontSize: "16px",
+                color: "#3B4A66"
+              }}>
+                Phone
+              </label>
+              <PhoneInput
+                country={spousePhoneCountry}
+                value={spouseInfo.phone || ''}
+                onChange={(phone) => {
+                  handleSpouseInfoChange('phone', phone);
+                  // Clear error when user starts typing
+                  if (getFieldError('spouseInfo.phone')) {
+                    clearFieldError('spouseInfo.phone');
+                  }
+                }}
+                onCountryChange={(countryCode) => {
+                  setSpousePhoneCountry(countryCode.toLowerCase());
+                }}
+                inputClass={`form-control ${getFieldError('spouseInfo.phone') ? 'is-invalid' : ''}`}
+                containerClass="w-100 phone-input-container"
+                inputStyle={{
+                  height: '45px',
+                  paddingLeft: '48px',
+                  paddingRight: '12px',
+                  paddingTop: '6px',
+                  paddingBottom: '6px',
+                  width: '100%',
+                  fontSize: '1rem',
+                  border: getFieldError('spouseInfo.phone') ? '1px solid #EF4444' : '1px solid #ced4da',
+                  borderRadius: '0.375rem',
+                  backgroundColor: '#fff'
+                }}
+                enableSearch={true}
+                countryCodeEditable={false}
+                data-field="spouseInfo.phone"
+                ref={(el) => {
+                  if (el && el.inputElement) {
+                    if (!fieldRefs.current['spouseInfo.phone']) {
+                      fieldRefs.current['spouseInfo.phone'] = el.inputElement;
+                    }
+                  }
+                }}
+              />
+              {getFieldError('spouseInfo.phone') && (
+                <div className="invalid-feedback d-block" style={{
+                  fontSize: "12px",
+                  color: "#EF4444",
+                  marginTop: "4px"
+                }}>
+                  {getFieldError('spouseInfo.phone')}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Dependents Information */}
       <div className="card p-4 mb-4">
@@ -3259,25 +3321,10 @@ export default function DataIntakeForm() {
         >
           Do you have dependents?
         </label>
-        <div className="flex items-center space-x-3 mt-2 gap-3">
-          <button
-            type="button"
-            onClick={() => handleDependentsCheckbox(hasDependents === "yes" ? "no" : "yes")}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
-              hasDependents === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
-            }`}
-            style={{ borderRadius: "9999px" }}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                hasDependents === "yes" ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-          <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
-            {hasDependents === "yes" ? 'Yes' : 'No'}
-          </span>
-        </div>
+        <SlideSwitch
+          value={hasDependents}
+          onChange={handleDependentsCheckbox}
+        />
         {hasDependents === "yes" && (
           <>
             {dependents.length === 0 ? (
@@ -3446,10 +3493,8 @@ export default function DataIntakeForm() {
                         }}>
                           Date of Birth
                         </label>
-                        <input
-                          type="text"
+                        <DateInput
                           className={`form-control ${getFieldError(`dependents.${index}.dob`) ? 'is-invalid' : ''}`}
-                          placeholder="MM/DD/YYYY"
                           value={dep.dob}
                           onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
                           data-field={`dependents.${index}.dob`}
@@ -3476,13 +3521,15 @@ export default function DataIntakeForm() {
                           fontSize: "16px",
                           color: "#3B4A66"
                         }}>
-                          Social Security Number
+                          SSN / ITIN (Tax ID)
                         </label>
                         <input
                           type="text"
                           className={`form-control ${getFieldError(`dependents.${index}.ssn`) ? 'is-invalid' : ''}`}
                           value={dep.ssn}
                           onChange={(e) => handleInputChange(index, 'ssn', e.target.value)}
+                          inputMode="numeric"
+                          maxLength={11}
                           placeholder="123-45-6789"
                           data-field={`dependents.${index}.ssn`}
                           ref={(el) => {
@@ -3656,8 +3703,8 @@ export default function DataIntakeForm() {
           >
             <svg width="20" height="20" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g clip-path="url(#clip0_587_2011)">
-                <path d="M4.99968 3.33301V4.99968M9.16634 4.99968C9.16634 7.30086 7.30086 9.16634 4.99968 9.16634C2.69849 9.16634 0.833008 7.30086 0.833008 4.99968C0.833008 2.69849 2.69849 0.833008 4.99968 0.833008C7.30086 0.833008 9.16634 2.69849 9.16634 4.99968Z" stroke="#F56D2D" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M5 6.66699H5.01042" stroke="#F56D2D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M4.99968 3.33301V4.99968M9.16634 4.99968C9.16634 7.30086 7.30086 9.16634 4.99968 9.16634C2.69849 9.16634 0.833008 7.30086 0.833008 4.99968C0.833008 2.69849 2.69849 0.833008 4.99968 0.833008C7.30086 0.833008 9.16634 2.69849 9.16634 4.99968Z" stroke="#F56D2D" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M5 6.66699H5.01042" stroke="#F56D2D" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
               </g>
               <defs>
                 <clipPath id="clip0_587_2011">
@@ -3711,25 +3758,10 @@ export default function DataIntakeForm() {
             >
               Do you own a home?
             </label>
-            <div className="flex items-center space-x-3 mt-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleOtherInfoChange('ownsHome', otherInfo.ownsHome === "yes" ? "no" : "yes")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
-                  otherInfo.ownsHome === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
-                }`}
-                style={{ borderRadius: "9999px" }}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    otherInfo.ownsHome === "yes" ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
-                {otherInfo.ownsHome === "yes" ? 'Yes' : 'No'}
-              </span>
-            </div>
+            <SlideSwitch
+              value={otherInfo.ownsHome}
+              onChange={(val) => handleOtherInfoChange('ownsHome', val)}
+            />
             <label
               className="form-label d-block mt-3"
               style={{
@@ -3741,25 +3773,10 @@ export default function DataIntakeForm() {
             >
               Are you in school?
             </label>
-            <div className="flex items-center space-x-3 mt-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleOtherInfoChange('inSchool', otherInfo.inSchool === "yes" ? "no" : "yes")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
-                  otherInfo.inSchool === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
-                }`}
-                style={{ borderRadius: "9999px" }}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    otherInfo.inSchool === "yes" ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
-                {otherInfo.inSchool === "yes" ? 'Yes' : 'No'}
-              </span>
-            </div>
+            <SlideSwitch
+              value={otherInfo.inSchool}
+              onChange={(val) => handleOtherInfoChange('inSchool', val)}
+            />
           </div>
           <div className="col-md-6 mb-2">
             <label
@@ -3773,25 +3790,10 @@ export default function DataIntakeForm() {
             >
               Do you have other deductions or income your preparer should be aware of?
             </label>
-            <div className="flex items-center space-x-3 mt-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleOtherInfoChange('otherDeductions', otherInfo.otherDeductions === "yes" ? "no" : "yes")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2 ${
-                  otherInfo.otherDeductions === "yes" ? 'bg-[#F56D2D]' : 'bg-gray-200'
-                }`}
-                style={{ borderRadius: "9999px" }}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    otherInfo.otherDeductions === "yes" ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-sm font-medium text-gray-700 font-[BasisGrotesquePro]">
-                {otherInfo.otherDeductions === "yes" ? 'Yes' : 'No'}
-              </span>
-            </div>
+            <SlideSwitch
+              value={otherInfo.otherDeductions}
+              onChange={(val) => handleOtherInfoChange('otherDeductions', val)}
+            />
           </div>
         </div>
       </div>
@@ -3947,10 +3949,10 @@ export default function DataIntakeForm() {
                         >
                           <div className="d-flex justify-content-between align-items-start">
                             <div className="flex-grow-1">
-                              <h6 
-                                className="mb-2" 
-                                style={{ 
-                                  fontFamily: "BasisGrotesquePro", 
+                              <h6
+                                className="mb-2"
+                                style={{
+                                  fontFamily: "BasisGrotesquePro",
                                   fontWeight: 600,
                                   color: "#3B4A66",
                                   fontSize: "16px"
@@ -3959,9 +3961,9 @@ export default function DataIntakeForm() {
                                 {business.businessName || "Unnamed Business"}
                               </h6>
                               {business.workDescription && (
-                                <div 
-                                  className="mb-2" 
-                                  style={{ 
+                                <div
+                                  className="mb-2"
+                                  style={{
                                     fontFamily: "BasisGrotesquePro",
                                     fontSize: "14px",
                                     color: "#6B7280"
@@ -3972,8 +3974,8 @@ export default function DataIntakeForm() {
                               )}
                               <div className="d-flex flex-wrap gap-3 mt-2">
                                 <div>
-                                  <span 
-                                    style={{ 
+                                  <span
+                                    style={{
                                       fontFamily: "BasisGrotesquePro",
                                       fontSize: "12px",
                                       color: "#6B7280",
@@ -3982,9 +3984,9 @@ export default function DataIntakeForm() {
                                   >
                                     Total Income:
                                   </span>
-                                  <span 
+                                  <span
                                     className="ms-1"
-                                    style={{ 
+                                    style={{
                                       fontFamily: "BasisGrotesquePro",
                                       fontSize: "14px",
                                       color: "#059669",
@@ -3995,8 +3997,8 @@ export default function DataIntakeForm() {
                                   </span>
                                 </div>
                                 <div>
-                                  <span 
-                                    style={{ 
+                                  <span
+                                    style={{
                                       fontFamily: "BasisGrotesquePro",
                                       fontSize: "12px",
                                       color: "#6B7280",
@@ -4005,9 +4007,9 @@ export default function DataIntakeForm() {
                                   >
                                     Total Expenses:
                                   </span>
-                                  <span 
+                                  <span
                                     className="ms-1"
-                                    style={{ 
+                                    style={{
                                       fontFamily: "BasisGrotesquePro",
                                       fontSize: "14px",
                                       color: "#DC2626",
@@ -4018,8 +4020,8 @@ export default function DataIntakeForm() {
                                   </span>
                                 </div>
                                 <div>
-                                  <span 
-                                    style={{ 
+                                  <span
+                                    style={{
                                       fontFamily: "BasisGrotesquePro",
                                       fontSize: "12px",
                                       color: "#6B7280",
@@ -4028,9 +4030,9 @@ export default function DataIntakeForm() {
                                   >
                                     Net Income:
                                   </span>
-                                  <span 
+                                  <span
                                     className="ms-1"
-                                    style={{ 
+                                    style={{
                                       fontFamily: "BasisGrotesquePro",
                                       fontSize: "14px",
                                       color: netIncome >= 0 ? "#059669" : "#DC2626",
@@ -4042,9 +4044,9 @@ export default function DataIntakeForm() {
                                 </div>
                               </div>
                               {business.address && business.address.trim() && (
-                                <div 
+                                <div
                                   className="mt-2"
-                                  style={{ 
+                                  style={{
                                     fontFamily: "BasisGrotesquePro",
                                     fontSize: "12px",
                                     color: "#9CA3AF"
@@ -4054,18 +4056,18 @@ export default function DataIntakeForm() {
                                 </div>
                               )}
                               {business.updated_at && (
-                                <div 
+                                <div
                                   className="mt-1"
-                                  style={{ 
+                                  style={{
                                     fontFamily: "BasisGrotesquePro",
                                     fontSize: "11px",
                                     color: "#9CA3AF"
                                   }}
                                 >
-                                  Last updated: {new Date(business.updated_at).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: 'numeric' 
+                                  Last updated: {new Date(business.updated_at).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
                                   })}
                                 </div>
                               )}
@@ -4088,20 +4090,20 @@ export default function DataIntakeForm() {
 
                               {/* <button
                                 className="btn btn-sm" */}
-                               
+
                               {/* >
                                 <FaTrash className="me-1" style={{ fontSize: "11px" }} />
                               </button> */}
                               <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => handleRemoveRentalProperty(property.id)}
-                              style={{ 
-                                fontFamily: "BasisGrotesquePro",
-                                fontSize: "12px"
-                              }}
-                            >
-                              <FaTrash size={12} />
-                            </button>
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleRemoveBusiness(business.id)}
+                                style={{
+                                  fontFamily: "BasisGrotesquePro",
+                                  fontSize: "12px"
+                                }}
+                              >
+                                <FaTrash size={12} />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -4110,7 +4112,7 @@ export default function DataIntakeForm() {
                   </div>
                 )}
 
-               
+
 
                 {/* Business Form */}
                 {isAddingBusiness && (
@@ -4299,8 +4301,8 @@ export default function DataIntakeForm() {
                               fontFamily: "BasisGrotesquePro",
                               marginBottom: "0"
                             }}>
-                              {property.propertyCity && property.propertyState ? 
-                                `${property.propertyCity}, ${property.propertyState} ${property.propertyZip}` : 
+                              {property.propertyCity && property.propertyState ?
+                                `${property.propertyCity}, ${property.propertyState} ${property.propertyZip}` :
                                 'Address not specified'
                               }
                             </p>
@@ -4334,7 +4336,7 @@ export default function DataIntakeForm() {
                             <button
                               className="btn btn-outline-danger btn-sm"
                               onClick={() => handleRemoveRentalProperty(property.id)}
-                              style={{ 
+                              style={{
                                 fontFamily: "BasisGrotesquePro",
                                 fontSize: "12px"
                               }}
@@ -4582,7 +4584,7 @@ export default function DataIntakeForm() {
             >
               <div style={{ fontSize: "2rem", color: isDragging ? "#3B4A66" : "#00aaff", transition: "color 0.3s ease" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="#00C0C6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="#00C0C6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
 
               </div>
@@ -4782,9 +4784,9 @@ export default function DataIntakeForm() {
         >
           {isSubmitting ? (
             <>
-              <span 
-                className="spinner-border spinner-border-sm me-2" 
-                role="status" 
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                role="status"
                 aria-hidden="true"
                 style={{
                   width: '16px',

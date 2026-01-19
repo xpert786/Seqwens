@@ -50,10 +50,10 @@ export default function OverviewTab({ client, isEditMode, editFormData, onEditFo
                 <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro] break-words">{client.dob || 'N/A'}</div>
               </div>
             </div>
-            {/* Second Row: Social Security Number (SSN), Filing Status */}
+            {/* Second Row: SSN / ITIN (Tax ID), Filing Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="min-w-0">
-                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Social Security Number (SSN)</div>
+                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">SSN / ITIN (Tax ID)</div>
                 <div className="text-[13px] text-[#3B4A66] font-bold font-[BasisGrotesquePro] break-words">{client.ssn || 'N/A'}</div>
               </div>
               <div className="min-w-0">
@@ -198,7 +198,7 @@ export default function OverviewTab({ client, isEditMode, editFormData, onEditFo
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Social Security Number (SSN)</div>
+                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">SSN / ITIN (Tax ID)</div>
                 <div className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">{client.spouse.ssn}</div>
               </div>
               <div>

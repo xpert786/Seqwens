@@ -1,5 +1,6 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import SlideSwitch from '../../components/SlideSwitch';
 
 export default function RentalPropertyForm({ onSave, onCancel, initialData = null }) {
   const [formData, setFormData] = useState({
@@ -11,17 +12,17 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
     propertyZip: '',
     propertyType: 'single', // 'single', 'apartment', 'vacation', 'other'
     ownershipType: '', // 'own_100', 'share', 'no'
-    
+
     // 2. How the Property Was Used
     rentedOutDuringYear: false,
     daysRentedOut: '',
     familyUse: false,
     familyUseDays: '',
-    
+
     // 3. Rental Income
     totalRentReceived: '',
     taxFormsReceived: 'none', // '1099NEC', '1099MISC', '1099K', 'none'
-    
+
     // 4. Common Rental Expenses
     advertising: '',
     cleaningMaintenance: '',
@@ -33,22 +34,22 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
     utilities: '',
     legalProfessional: '',
     supplies: '',
-    
+
     // 5. Other Rental Expenses
     otherExpenses: [],
     otherExpenseDescription: '',
     otherExpenseAmount: '',
-    
+
     // 6. Big Changes During the Year
     soldOrStoppedRenting: false,
     boughtMajorItems: false,
-    
+
     // 7. Prior-Year Information (Optional)
     hasRentalLosses: false,
-    
+
     // 8. Final Confirmation
     isComplete: false,
-    
+
     // ID for internal tracking if editing
     id: null
   });
@@ -70,7 +71,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error for this field if it exists
     if (errors[field]) {
       setErrors(prev => {
@@ -94,7 +95,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
   const handleOtherExpenseChange = (id, field, value) => {
     setFormData(prev => ({
       ...prev,
-      otherExpenses: prev.otherExpenses.map(exp => 
+      otherExpenses: prev.otherExpenses.map(exp =>
         exp.id === id ? { ...exp, [field]: value } : exp
       )
     }));
@@ -109,7 +110,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
 
   const validate = () => {
     const newErrors = {};
-    
+
     // Required validations
     if (formData.isRentalProperty) {
       if (!formData.propertyAddress.trim()) newErrors.propertyAddress = 'Property address is required';
@@ -121,14 +122,14 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
         newErrors.ownershipType = 'Ownership percentage is required when owned 100%';
       }
     }
-    
-    if (!formData.totalRentReceived.trim()) newErrors.totalRentReceived = 'Total rent received is required';
-    
+
+    if (!String(formData.totalRentReceived || '').trim()) newErrors.totalRentReceived = 'Total rent received is required';
+
     // Conditional validations
-    if (formData.rentedOutDuringYear && !formData.daysRentedOut.trim()) {
+    if (formData.rentedOutDuringYear && !String(formData.daysRentedOut || '').trim()) {
       newErrors.daysRentedOut = 'Days rented out is required when property was rented during year';
     }
-    if (formData.familyUse && !formData.familyUseDays.trim()) {
+    if (formData.familyUse && !String(formData.familyUseDays || '').trim()) {
       newErrors.familyUseDays = 'Family use days is required when family used property';
     }
 
@@ -185,20 +186,16 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 1. Property Basics */}
       <div className="mb-6">
         <h5 style={sectionStyle}>1. Property Basics</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
               Is this a rental property?
             </label>
-            <select
-              className={`form-control ${errors.isRentalProperty ? 'is-invalid' : ''}`}
-              value={formData.isRentalProperty ? 'yes' : 'no'}
-              onChange={(e) => handleChange('isRentalProperty', e.target.value === 'yes')}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-            </select>
+            <SlideSwitch
+              value={formData.isRentalProperty}
+              onChange={(val) => handleChange('isRentalProperty', val)}
+            />
           </div>
         </div>
 
@@ -295,20 +292,16 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 2. How the Property Was Used */}
       <div className="mb-6">
         <h5 style={sectionStyle}>2. How the Property Was Used</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
               Was the property rented out during the year?
             </label>
-            <select
-              className="form-control"
-              value={formData.rentedOutDuringYear ? 'yes' : 'no'}
-              onChange={(e) => handleChange('rentedOutDuringYear', e.target.value === 'yes')}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-            </select>
+            <SlideSwitch
+              value={formData.rentedOutDuringYear}
+              onChange={(val) => handleChange('rentedOutDuringYear', val)}
+            />
           </div>
           <div className="col-md-6">
             {formData.rentedOutDuringYear && (
@@ -334,14 +327,10 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
             <label className="form-label" style={labelStyle}>
               Did you or your family use the property personally?
             </label>
-            <select
-              className="form-control"
-              value={formData.familyUse ? 'yes' : 'no'}
-              onChange={(e) => handleChange('familyUse', e.target.value === 'yes')}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes → About how many days?</option>
-            </select>
+            <SlideSwitch
+              value={formData.familyUse}
+              onChange={(val) => handleChange('familyUse', val)}
+            />
           </div>
           <div className="col-md-6">
             {formData.familyUse && (
@@ -366,7 +355,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 3. Rental Income */}
       <div className="mb-6">
         <h5 style={sectionStyle}>3. Rental Income</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -408,7 +397,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 4. Common Rental Expenses */}
       <div className="mb-6">
         <h5 style={sectionStyle}>4. Common Rental Expenses</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
@@ -578,7 +567,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 5. Other Rental Expenses */}
       <div className="mb-6">
         <h5 style={sectionStyle}>5. Other Rental Expenses</h5>
-        
+
         {formData.otherExpenses.map((expense, index) => (
           <div key={expense.id} className="row g-3 mb-3 align-items-end">
             <div className="col-md-6">
@@ -609,7 +598,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
               </div>
             </div>
             <div className="col-md-2">
-              <button 
+              <button
                 className="btn btn-outline-danger w-100"
                 onClick={() => handleRemoveOtherExpense(expense.id)}
                 title="Remove Expense"
@@ -619,7 +608,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
             </div>
           </div>
         ))}
-        
+
         <button
           className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
           onClick={handleAddOtherExpense}
@@ -632,20 +621,16 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 6. Big Changes During the Year */}
       <div className="mb-6">
         <h5 style={sectionStyle}>6. Big Changes During the Year</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
               Did you sell or completely stop renting this property this year?
             </label>
-            <select
-              className="form-control"
-              value={formData.soldOrStoppedRenting ? 'yes' : 'no'}
-              onChange={(e) => handleChange('soldOrStoppedRenting', e.target.value === 'yes')}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-            </select>
+            <SlideSwitch
+              value={formData.soldOrStoppedRenting}
+              onChange={(val) => handleChange('soldOrStoppedRenting', val)}
+            />
           </div>
           <div className="col-md-6">
             <label className="form-label" style={labelStyle}>
@@ -667,7 +652,7 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 7. Prior-Year Information (Optional) */}
       <div className="mb-6">
         <h5 style={sectionStyle}>7. Prior-Year Information (Optional)</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
@@ -689,20 +674,16 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
       {/* 8. Final Confirmation */}
       <div className="mb-6">
         <h5 style={sectionStyle}>Final Confirmation</h5>
-        
+
         <div className="row g-3 mb-3">
           <div className="col-12">
             <label className="form-label" style={labelStyle}>
               Is everything above complete to the best of your knowledge?
             </label>
-            <select
-              className="form-control"
-              value={formData.isComplete ? 'yes' : 'no'}
-              onChange={(e) => handleChange('isComplete', e.target.value === 'yes')}
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-            </select>
+            <SlideSwitch
+              value={formData.isComplete}
+              onChange={(val) => handleChange('isComplete', val)}
+            />
           </div>
         </div>
 
@@ -717,18 +698,18 @@ export default function RentalPropertyForm({ onSave, onCancel, initialData = nul
 
         {/* Actions */}
         <div className="d-flex justify-content-end gap-3 pt-3 border-top">
-          <button 
+          <button
             className="btn btn-light"
             onClick={onCancel}
             style={{ fontFamily: "BasisGrotesquePro", fontWeight: 500 }}
           >
             Cancel
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={handleSubmit}
-            style={{ 
-              fontFamily: "BasisGrotesquePro", 
+            style={{
+              fontFamily: "BasisGrotesquePro",
               fontWeight: 500,
               backgroundColor: "#3B4A66",
               borderColor: "#3B4A66"

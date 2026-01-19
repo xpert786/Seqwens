@@ -42,7 +42,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
     // Validate file type (CSV or PDF)
     const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel';
     const isPDF = file.name.endsWith('.pdf') || file.type === 'application/pdf';
-    
+
     if (!isCSV && !isPDF) {
       setError('Please upload a CSV or PDF file');
       return;
@@ -78,7 +78,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           .filter((row, idx) => row.is_valid && !(row.existing_taxpayer && row.existing_taxpayer.exists))
           .map((row) => row.row_index);
         setSelectedRows(validRowIndices);
-        
+
         // Initialize invitation preferences (default: false for all rows)
         const initialInvitationPrefs = {};
         const initialDuplicateHandling = {};
@@ -93,7 +93,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
         });
         setInvitationPreferences(initialInvitationPrefs);
         setDuplicateHandling(initialDuplicateHandling);
-        
+
         setCurrentStep(2);
       } else {
         throw new Error(response.message || 'Preview failed');
@@ -159,7 +159,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           const row = previewData.preview_data.find(r => r.row_index === rowIndex);
           return row && row.is_valid && row.has_email && invitationPreferences[rowIndex] === true;
         });
-        
+
         if (rowsToInvite.length > 0) {
           invitationOptions.rows_to_invite = rowsToInvite;
         }
@@ -173,7 +173,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           duplicateHandlingPrefs[rowIndex] = 'skip';
         }
       });
-      
+
       if (Object.keys(duplicateHandlingPrefs).length > 0) {
         invitationOptions.duplicate_handling = duplicateHandlingPrefs;
       }
@@ -187,11 +187,11 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       if (response.success && response.data) {
         setImportResults(response.data);
         setCurrentStep(3);
-        
+
         // Check if there are any errors
-        const hasErrors = (response.data.error_count && response.data.error_count > 0) || 
-                         (response.data.import_results && response.data.import_results.some(r => r.status === 'error'));
-        
+        const hasErrors = (response.data.error_count && response.data.error_count > 0) ||
+          (response.data.import_results && response.data.import_results.some(r => r.status === 'error'));
+
         if (hasErrors) {
           toast.warning(`Import completed with ${response.data.error_count || 0} error(s). Please review the errors before closing.`);
         } else {
@@ -251,9 +251,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
       // Get taxpayer IDs from import results that have email but no invitation sent
       const taxpayerIdsToInvite = importResults.import_results
-        .filter(result => 
-          result.status === 'imported' && 
-          result.email && 
+        .filter(result =>
+          result.status === 'imported' &&
+          result.email &&
           !result.invitation_sent &&
           result.taxpayer_id
         )
@@ -339,10 +339,10 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
               <h4 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>CSV Format:</h4>
               <div className="flex flex-col space-y-1" style={{ fontSize: '12px' }}>
                 <div>• Supported formats: CSV and PDF files</div>
-                <div>• CSV: Include headers: First Name, Last Name, Email, Phone, SSN, etc.</div>
+                <div>• CSV: Include headers: First Name, Last Name, Email, Phone, SSN / ITIN (Tax ID), etc.</div>
                 <div>• PDF: System will extract data using OCR</div>
                 <div>• System will auto-detect column mapping</div>
-                <div>• Required fields: First Name, Last Name, SSN/ITIN</div>
+                <div>• Required fields: First Name, Last Name, SSN / ITIN (Tax ID)</div>
                 <div>• Optional fields: Email, Phone, Address, City, State, ZIP</div>
               </div>
             </div>
@@ -374,9 +374,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
     if (currentStep === 2 && previewData) {
       const { total_rows, valid_rows, error_rows, preview_data, error_summary, existing_taxpayers_count, existing_in_firm_count } = previewData;
-      
+
       // Calculate valid non-duplicate rows count
-      const validNonDuplicateRowsCount = preview_data?.filter(row => 
+      const validNonDuplicateRowsCount = preview_data?.filter(row =>
         row.is_valid && !(row.existing_taxpayer && row.existing_taxpayer.exists)
       ).length || 0;
 
@@ -505,7 +505,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     All Valid Rows Are Duplicates
                   </h6>
                   <p className="text-xs text-orange-700 font-[BasisGrotesquePro]">
-                    All {valid_rows} valid row(s) in this import are duplicates that already exist in your firm. 
+                    All {valid_rows} valid row(s) in this import are duplicates that already exist in your firm.
                     No rows have been selected for import. If you want to update existing records, you can manually select individual duplicate rows below.
                   </p>
                 </div>
@@ -532,7 +532,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Email</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">SSN</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">SSN / ITIN (Tax ID)</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Duplicate</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Invite</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase font-[BasisGrotesquePro]">Issues</th>
@@ -556,8 +556,8 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     const userSSN = rowData.ssn || 'N/A';
 
                     return (
-                      <tr 
-                        key={row.row_index} 
+                      <tr
+                        key={row.row_index}
                         className={`hover:bg-gray-50 ${isDisabled ? 'opacity-50' : ''} ${hasDuplicate ? (isDuplicateInFirm ? 'bg-orange-50' : 'bg-yellow-50') : ''}`}
                       >
                         <td className="px-4 py-3">
@@ -740,9 +740,9 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
     if (currentStep === 3 && importResults) {
       // Check if there are errors in import results
-      const hasErrors = (importResults.error_count && importResults.error_count > 0) || 
-                       (importResults.import_results && importResults.import_results.some(r => r.status === 'error'));
-      
+      const hasErrors = (importResults.error_count && importResults.error_count > 0) ||
+        (importResults.import_results && importResults.import_results.some(r => r.status === 'error'));
+
       return (
         <div>
           {/* Import Completed */}
@@ -812,23 +812,23 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {importResults.import_results.slice(0, 20).map((result, idx) => {
                         // Use data from API response (new structure) or fallback to preview data
-                        const userName = result.taxpayer_name || 
-                                        (result.first_name && result.last_name ? `${result.first_name} ${result.last_name}` : null) ||
-                                        (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data ? 
-                                          `${previewData.preview_data.find(r => r.row_index === result.row_index).data.first_name || ''} ${previewData.preview_data.find(r => r.row_index === result.row_index).data.last_name || ''}`.trim() : null) ||
-                                        'N/A';
-                        const userEmail = result.email || 
-                                         (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.email) ||
-                                         'N/A';
-                        const userPhone = result.phone || 
-                                        (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.phone) ||
-                                        'N/A';
-                        const ssnDisplay = result.ssn_display || 
-                                         (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.ssn) ||
-                                         '-';
+                        const userName = result.taxpayer_name ||
+                          (result.first_name && result.last_name ? `${result.first_name} ${result.last_name}` : null) ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data ?
+                            `${previewData.preview_data.find(r => r.row_index === result.row_index).data.first_name || ''} ${previewData.preview_data.find(r => r.row_index === result.row_index).data.last_name || ''}`.trim() : null) ||
+                          'N/A';
+                        const userEmail = result.email ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.email) ||
+                          'N/A';
+                        const userPhone = result.phone ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.phone) ||
+                          'N/A';
+                        const ssnDisplay = result.ssn_display ||
+                          (previewData?.preview_data?.find(r => r.row_index === result.row_index)?.data?.ssn) ||
+                          '-';
                         // Use details if available, otherwise use message
                         const errorMessage = result.details || result.message || '-';
-                        
+
                         return (
                           <tr key={idx} className={`hover:bg-gray-50 ${result.status === 'error' ? 'bg-red-50' : ''}`}>
                             <td className="px-4 py-2 text-gray-900 font-[BasisGrotesquePro]">{result.row_index + 1}</td>
@@ -896,21 +896,21 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
           {/* Action Buttons */}
           <div className="flex justify-between items-center mt-6">
             {/* Send Invitations Button (if there are imported taxpayers without invitations) */}
-            {importResults.import_results && importResults.import_results.some(r => 
+            {importResults.import_results && importResults.import_results.some(r =>
               r.status === 'imported' && r.email && !r.invitation_sent && r.taxpayer_id
             ) && (
-              <button
-                onClick={handleSendInvitations}
-                disabled={sendingInvitations}
-                className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#32B582] rounded-lg font-semibold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {sendingInvitations ? 'Sending...' : (
-                  <>
-                    <span>Send Invitations to Remaining Taxpayers</span>
-                  </>
-                )}
-              </button>
-            )}
+                <button
+                  onClick={handleSendInvitations}
+                  disabled={sendingInvitations}
+                  className="px-5 py-2 text-white text-sm transition flex items-center gap-2 bg-[#32B582] rounded-lg font-semibold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingInvitations ? 'Sending...' : (
+                    <>
+                      <span>Send Invitations to Remaining Taxpayers</span>
+                    </>
+                  )}
+                </button>
+              )}
             <div className="flex gap-2 ml-auto">
               <button
                 onClick={onClose}
@@ -929,7 +929,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
 
   // Check if there are errors in import results (for backdrop and header X button)
   const hasErrors = importResults && (
-    (importResults.error_count && importResults.error_count > 0) || 
+    (importResults.error_count && importResults.error_count > 0) ||
     (importResults.import_results && importResults.import_results.some(r => r.status === 'error'))
   );
 

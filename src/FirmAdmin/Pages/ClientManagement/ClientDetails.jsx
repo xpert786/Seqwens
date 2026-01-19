@@ -127,7 +127,7 @@ export default function ClientDetails() {
 
     try {
       setSaving(true);
-      
+
       // Build payload with only changed fields
       const payload = {};
       if (editFormData.first_name !== originalFormData.first_name) {
@@ -153,7 +153,7 @@ export default function ClientDetails() {
       }
 
       const response = await firmAdminClientsAPI.updateClient(id, payload);
-      
+
       if (response.success) {
         toast.success('Client details updated successfully!', {
           position: "top-right",
@@ -189,7 +189,7 @@ export default function ClientDetails() {
   const clientData = client ? {
     id: client.profile?.id || client.id,
     initials: client.profile?.initials || '',
-    name: isEditMode && editFormData 
+    name: isEditMode && editFormData
       ? `${editFormData.first_name} ${editFormData.last_name}`.trim() || 'Unknown Client'
       : client.profile?.name || client.personal_information?.name || (client.profile?.first_name && client.profile?.last_name ? `${client.profile.first_name} ${client.profile.last_name}` : '') || 'Unknown Client',
     firstName: isEditMode && editFormData ? editFormData.first_name : (client.profile?.first_name || client.personal_information?.first_name || ''),
@@ -437,7 +437,7 @@ export default function ClientDetails() {
               </div>
               {/* SSN - Row 2, Col 2 */}
               <div>
-                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">Social Security Number (SSN)</div>
+                <div className="text-xs text-gray-500 font-[BasisGrotesquePro] mb-1">SSN / ITIN (Tax ID)</div>
                 <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{clientData.ssn || 'N/A'}</div>
               </div>
             </div>
@@ -481,7 +481,7 @@ export default function ClientDetails() {
                   </svg>
                   Edit
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     if (id) {
                       navigate(`/firmadmin/messages?clientId=${id}`);

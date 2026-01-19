@@ -72,8 +72,8 @@ export default function DueDiligenceTab({ client }) {
         },
         {
           id: 6,
-          title: 'Confirm Child Has Valid SSN/ITIN As Required.',
-          description: 'Verify child has a valid Social Security Number or ITIN as required.',
+          title: 'Confirm Child Has Valid SSN / ITIN (Tax ID) As Required.',
+          description: 'Verify child has a valid SSN / ITIN (Tax ID) as required.',
           required: true,
           checked: true
         }

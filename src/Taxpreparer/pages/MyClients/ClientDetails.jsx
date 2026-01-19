@@ -7,6 +7,7 @@ import { FaChevronDown, FaChevronRight, FaFolder, FaArrowLeft } from "react-icon
 import { getApiBaseUrl, fetchWithCors } from "../../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../../ClientOnboarding/utils/userUtils";
 import { handleAPIError, taxPreparerClientAPI, firmAdminClientsAPI } from "../../../ClientOnboarding/utils/apiUtils";
+import { formatDateForDisplay } from "../../../ClientOnboarding/utils/dateUtils";
 import { toast } from "react-toastify";
 import "../../styles/clientdetails.css";
 const FILING_STATUS_OPTIONS = [
@@ -300,7 +301,7 @@ export default function ClientDetails() {
         status: apiData.account_details?.status || apiData.status || 'active',
         priority: apiData.priority || 'medium',
         filingStatus: getFilingStatusLabel(normalizedFilingStatus),
-        dob: personalInfo.date_of_birth || personalInfo.date_of_birth_value || '',
+        dob: formatDateForDisplay(personalInfo.date_of_birth || personalInfo.date_of_birth_value || ''),
         gender: personalInfo.gender || personalInfo.gender_value || '',
         initials:
           profileInfo.initials ||
@@ -322,7 +323,7 @@ export default function ClientDetails() {
           phone: spouseContactInfo.phone || '',
           email: spouseContactInfo.email || '',
           gender: spouseInfo.gender || spouseInfo.gender_value || '',
-          dob: spouseInfo.date_of_birth || spouseInfo.date_of_birth_value || '',
+          dob: formatDateForDisplay(spouseInfo.date_of_birth || spouseInfo.date_of_birth_value || ''),
           filing_status: getFilingStatusLabel(normalizedSpouseFilingStatus),
         },
         statistics,
@@ -623,7 +624,7 @@ export default function ClientDetails() {
   const handleNavigation = (targetPath, tab = null) => {
     if (hasUnsavedChanges()) {
       setPendingNavigation(targetPath);
-      setShowUnsavedChangesModal(true);     
+      setShowUnsavedChangesModal(true);
     } else {
       if (tab) {
         setActiveTab(tab);
@@ -1065,12 +1066,12 @@ export default function ClientDetails() {
       const response = await fetchWithCors(apiUrl, config);
 
       const result = await response.json();
-      
+
       // Check if API returned success: false with errors
       if (!response.ok || (result.success === false && result.errors)) {
         // Extract all error messages from the errors object
         const errorMessages = [];
-        
+
         if (result.errors && typeof result.errors === 'object') {
           Object.keys(result.errors).forEach(field => {
             const fieldErrors = result.errors[field];
@@ -1081,7 +1082,7 @@ export default function ClientDetails() {
             }
           });
         }
-        
+
         // Show all error messages in toast notifications
         if (errorMessages.length > 0) {
           errorMessages.forEach(msg => {
@@ -1091,7 +1092,7 @@ export default function ClientDetails() {
           // Fallback to general error message
           toast.error(result.message || result.detail || 'Failed to create task. Please try again.', { position: "top-right", autoClose: 5000 });
         }
-        
+
         // Mark that errors have been shown and throw
         const error = new Error(result.message || result.detail || `HTTP error! status: ${response.status}`);
         error.errorsShown = true;
@@ -1298,7 +1299,7 @@ export default function ClientDetails() {
                     <span className="text-gray-700 text-xs font-medium">{client.filingStatus || "N/A"}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs mb-1">SSN</span>
+                    <span className="text-gray-400 text-xs mb-1">SSN / ITIN (Tax ID)</span>
                     <span className="text-gray-700 text-xs font-medium">{client.ssn || "N/A"}</span>
                   </div>
                 </div>
@@ -1671,7 +1672,7 @@ export default function ClientDetails() {
                     color: "var(--Palette2-Dark-blue-100, #3B4A66)",
                   }}>{client.name}</div>
                 )}
-                <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
+                <div className="text-xs text-gray-500 mt-3">SSN / ITIN (Tax ID)</div>
                 <div className="font-medium " style={{
                   color: "var(--Palette2-Dark-blue-100, #3B4A66)",
                 }}>{client.ssn || "N/A"}</div>
@@ -2018,7 +2019,7 @@ export default function ClientDetails() {
                 <div>
                   <div className="text-xs text-gray-500">Name</div>
                   <div className="font-medium text-gray-900">{client.spouse.name}</div>
-                  <div className="text-xs text-gray-500 mt-3">Social Security Number (SSN)</div>
+                  <div className="text-xs text-gray-500 mt-3">SSN / ITIN (Tax ID)</div>
                   <div className="font-medium text-gray-900">{client.spouse.ssn || "N/A"}</div>
                   {client.spouse.gender && (
                     <>
@@ -2780,9 +2781,8 @@ export default function ClientDetails() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     disabled={resettingPassword}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] ${
-                      passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
-                    } ${resettingPassword ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] ${passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
+                      } ${resettingPassword ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     placeholder="Enter new password"
                   />
                   {passwordErrors.newPassword && (
@@ -2799,9 +2799,8 @@ export default function ClientDetails() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={resettingPassword}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] ${
-                      passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                    } ${resettingPassword ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] ${passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                      } ${resettingPassword ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     placeholder="Confirm new password"
                   />
                   {passwordErrors.confirmPassword && (
